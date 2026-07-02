@@ -6,7 +6,7 @@ import { DataTable } from '@/components/DataTable';
 import { useComputePods } from '@/hooks/use-compute-pods';
 import { useComputes } from '@/hooks/use-computes';
 import type { ApiComputePod } from '@/lib/types';
-import { formatBytes } from '@/lib/utils';
+import { formatBytes, formatDateTime } from '@/lib/utils';
 
 const podColumns: Array<ColumnDef<ApiComputePod>> = [
     {
@@ -55,7 +55,7 @@ const podColumns: Array<ColumnDef<ApiComputePod>> = [
         header: 'Created',
         cell: ({ getValue }) => {
             const value = getValue<string | null>();
-            return value ? new Date(value).toLocaleString() : '—';
+            return value ? formatDateTime(value) : '—';
         },
         meta: { className: 'w-52' },
     },

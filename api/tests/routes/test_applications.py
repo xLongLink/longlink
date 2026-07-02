@@ -7,11 +7,12 @@ from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.models.computes import ComputeKind
-from src.models.metadata import LongLinkMetadata
+from src.models.metadata import EnvironmentMetadata, LongLinkMetadata
 from src.database.session import get_session
 from src.models.countries import Country
 from src.models.databases import DatabaseKind
 from src.models.storages import StorageKind
+from src.models.operations import OperationKind
 from kubernetes.client.rest import ApiException
 from src.models.applications import ApplicationStatus
 from src.models.applications import ApplicationResponse as AppResponse
@@ -23,6 +24,7 @@ from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.services.locations import locations
+from src.database.services.operations import operations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
 
@@ -31,6 +33,7 @@ db = SimpleNamespace(
     compute=compute,
     database=database,
     locations=locations,
+    operations=operations,
     organizations=organizations,
     storage=storage,
     users=users,
@@ -404,6 +407,7 @@ async def test_create_app_returns_app_response(
             "envs": {
                 "API_KEY": "secret-value",
                 "LONGLINK_ENV": "development",
+                "LONGLINK_INTERNAL": "user-controlled",
                 "PORT": "8080",
             },
         },
@@ -468,6 +472,9 @@ async def test_create_app_returns_app_response(
             "PORT": "8080",
         },
     }
+    application_payload = cast(dict[str, object], captured["application"])
+    application_secrets = cast(dict[str, str], application_payload["secrets"])
+    assert "LONGLINK_INTERNAL" not in application_secrets
 
 
 async def test_create_app_returns_409_when_image_metadata_is_missing(
@@ -499,6 +506,72 @@ async def test_create_app_returns_409_when_image_metadata_is_missing(
     # Assert
     assert response.status_code == 409
     assert response.json() == {"detail": "Image metadata could not be inspected"}
+    assert await db.applications.list_by_organization(organization.id) == []
+
+
+async def test_create_app_requires_storage_registry_for_required_storage_envs(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+    monkeypatch,
+) -> None:
+    """Reject apps that require platform storage envs when no storage backend is configured."""
+
+    # Arrange
+    owner = users[0]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    await db.compute.create(
+        kind=ComputeKind.kubernetes,
+        name="local",
+        kubeconfig="apiVersion: v1\nclusters: []\n",
+        ingress_host="apps.local.longlink.internal",
+        location_id=location.id,
+        user=owner,
+    )
+    await db.database.create(
+        kind=DatabaseKind.postgresql,
+        name="primary",
+        host="db.local.longlink.internal",
+        port=5432,
+        username="longlink",
+        password="secret",
+        location_id=location.id,
+        user=owner,
+    )
+
+    async def fake_metadata(image: str) -> LongLinkMetadata:
+        """Return metadata for an app that needs platform-managed storage."""
+
+        return LongLinkMetadata(
+            version="20250623_120000",
+            sdk="0.1.0",
+            environments=[
+                EnvironmentMetadata(name="LONGLINK_STORAGE_URL", type="str", required=True),
+            ],
+        )
+
+    monkeypatch.setattr("src.operations.provisioning.images.metadata", fake_metadata)
+    client = clients[0]
+
+    # Act
+    response = client.post(
+        f"/api/organizations/{organization.id}/applications",
+        json={
+            "name": "dashboard",
+            "image": "ghcr.io/longlink/dashboard:latest",
+            "envs": {"LONGLINK_STORAGE_URL": "s3+http://user-supplied"},
+        },
+    )
+
+    # Assert
+    assert response.status_code == 503
+    expected_detail = (
+        f"No storage configured for location '{organization.location_id}' "
+        "required by image environment variables: LONGLINK_STORAGE_URL"
+    )
+    assert response.json() == {
+        "detail": expected_detail
+    }
     assert await db.applications.list_by_organization(organization.id) == []
 
 
@@ -648,6 +721,42 @@ async def test_get_app_logs_returns_pod_logs(
         "application": "dashboard",
         "lines": 200,
     }
+
+
+async def test_delete_application_soft_deletes_and_queues_removal(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Soft-delete an application and queue immediate runtime removal."""
+
+    # Arrange
+    user = users[0]
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
+    organization = await db.organizations.create("acme", location.id, user)
+    app = await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        user=user,
+    )
+    client = clients[0]
+
+    # Act
+    response = client.delete(f"/api/applications/{app.id}")
+
+    # Assert
+    assert response.status_code == 204
+    assert await db.applications.get_by_id(app.id) is None
+    deleted = await db.applications.get_by_id(app.id, include_deleted=True)
+    assert deleted is not None
+    assert deleted.deleted_id == user.id
+    recorded_operations = await db.operations.list()
+    assert len(recorded_operations) == 1
+    assert recorded_operations[0].kind == OperationKind.application_delete
+    assert recorded_operations[0].step == "remove"
+    assert recorded_operations[0].application_id == app.id
+    assert recorded_operations[0].scheduled_at is not None
 
 
 async def test_proxy_app_forwards_request_to_internal_service(
@@ -815,6 +924,46 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert forwarded_headers["x-user-id"] == str(user.id)
     assert "cookie" not in forwarded_headers
     assert "set-cookie" not in response.headers
+
+
+async def test_proxy_app_requires_application_role_for_regular_member(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject app proxy access for regular org members without an app role."""
+
+    # Arrange
+    owner = users[0]
+    user = users[1]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    app = await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/xlonglink/sample:latest",
+        user=owner,
+    )
+    await db.applications.set_status(app.id, ApplicationStatus.running)
+    Session = await get_session()
+    async with Session() as session:
+        session.add(
+            UserOrganization(
+                user_id=user.id,
+                organization_id=organization.id,
+                role_name=OrganizationRoles.read,
+            )
+        )
+        await session.commit()
+
+    client = clients[1]
+
+    # Act
+    response = client.get(f"/api/applications/{app.id}/proxy/metadata.json")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Application access required"}
 
 
 async def test_proxy_app_strips_conditional_headers_before_forwarding(

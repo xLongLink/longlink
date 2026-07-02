@@ -1,6 +1,11 @@
 import { CodeBlock } from '@/components/CodeBlock';
 import { A } from '@/components/ui/a';
+import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
+import { Li } from '@/components/ui/li';
+import { P } from '@/components/ui/p';
+import { Stack } from '@/components/ui/stack';
+import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
     lastUpdated: '2026-05-25',
@@ -8,31 +13,19 @@ export const metadata = {
 };
 
 export const content = (
-    <div className="flex flex-col gap-4">
+    <Stack>
         <Heading id="storage" level="h1">
             Storage
         </Heading>
-        <p className="leading-7">
-            LongLink SDK exposes a native{' '}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">fs</code> object. You
-            can use it like a standard <A href="https://filesystem-spec.readthedocs.io/en/latest/">fsspec</A>{' '}
-            filesystem.
-        </p>
-        <p className="leading-7">
-            In production, the platform injects{' '}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                LONGLINK_STORAGE_URL
-            </code>
-            ,{' '}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                LONGLINK_STORAGE_BUCKET
-            </code>
-            , and{' '}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                LONGLINK_STORAGE_SHARED_BUCKET
-            </code>{' '}
-            for the backend connection, app bucket, and organization shared bucket.
-        </p>
+        <P>
+            LongLink SDK exposes a native <Code>fs</Code> object. You can use it like a standard{' '}
+            <A href="https://filesystem-spec.readthedocs.io/en/latest/">fsspec</A> filesystem.
+        </P>
+        <P>
+            In production, the platform injects <Code>LONGLINK_STORAGE_URL</Code>, <Code>LONGLINK_STORAGE_BUCKET</Code>,
+            and <Code>LONGLINK_STORAGE_SHARED_BUCKET</Code> for the backend connection, app bucket, and organization
+            shared bucket.
+        </P>
         <Heading id="usage" level="h2">
             Usage
         </Heading>
@@ -43,13 +36,13 @@ with fs.open("reports/example.txt", "wb") as f:
         <Heading id="resources" level="h2">
             Resources
         </Heading>
-        <ul className="ml-6 list-disc space-y-2">
-            <li>
+        <Ul>
+            <Li>
                 <A href="https://filesystem-spec.readthedocs.io/en/latest/">fsspec Documentation</A>
-            </li>
-            <li>
+            </Li>
+            <Li>
                 <A href="https://github.com/fsspec/filesystem_spec">fsspec GitHub</A>
-            </li>
-        </ul>
-    </div>
+            </Li>
+        </Ul>
+    </Stack>
 );

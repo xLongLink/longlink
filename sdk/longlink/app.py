@@ -7,6 +7,7 @@ from longlink.routes import routes
 from fastapi.responses import FileResponse
 from pydantic_settings import BaseSettings
 from longlink.constants import ROOT
+from longlink.utils.xml import Longlink as LonglinkXml
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from longlink.database.audit import install_audit_middleware
@@ -45,7 +46,8 @@ class LongLink(FastAPI):
         super().__init__(**kwargs)
 
         environments = env if isinstance(env, Envs) else Envs()
-        self.state.page_registry: list[PageDefinition] = []
+        page_registry: list[PageDefinition] = []
+        self.state.page_registry = page_registry
 
         for router in routes:
             self.include_router(router)
@@ -111,6 +113,7 @@ class LongLink(FastAPI):
         for page_file in sorted(pages_directory.rglob("*.xml")):
             relative_path = page_file.relative_to(pages_directory).as_posix()
             route_path = f"{normalized_prefix}/{relative_path}"
+            LonglinkXml(page_file).validate()
             page_content = page_file.read_text(encoding="utf-8")
             page_name, page_icon = extract_longlink_metadata(page_content)
 

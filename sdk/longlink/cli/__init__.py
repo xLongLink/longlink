@@ -14,10 +14,10 @@ def __getattr__(name: str) -> Any:
         from .docs import docs_command
 
         exports = {"docs_command": docs_command}
-    elif name in {"setup", "init_command"}:
-        from .init import setup, init_command
+    elif name == "init_command":
+        from .init import init_command
 
-        exports = {"setup": setup, "init_command": init_command}
+        exports = {"init_command": init_command}
     elif name == "main":
         from .main import main
 

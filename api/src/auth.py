@@ -123,7 +123,7 @@ async def authsupport(request: Request) -> User:
 async def organization_access(organization_id: UUID, user: User) -> OrganizationDetails:
     """Return one organization after verifying the user belongs to it."""
 
-    organization = await organizations.get(organization_id)
+    organization = await organizations.get(organization_id, application_user_id=user.id)
     if organization is None:
         raise NotFoundError("Organization", organization_id)
 

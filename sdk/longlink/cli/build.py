@@ -68,15 +68,6 @@ CMD ["sh", "-c", "python -m longlink.database.migrations && exec uvicorn main:ap
 """
 
 
-def resolve_sdk_version() -> str:
-    """Return the installed LongLink SDK version."""
-
-    try:
-        return package_version("longlink")
-    except PackageNotFoundError:
-        return "0.0.0"
-
-
 def read_env_spec(root: Path) -> dict[str, list[dict[str, object]]]:
     """Parse `src/envs.py` and return environment specs."""
 
@@ -139,6 +130,15 @@ def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
 
     if isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id == "Field":
         info: dict[str, object] = {"required": True, "env_name": None}
+
+        # Positional Field defaults use ellipsis for required values and any other value as optional.
+        if value.args:
+            first_argument = value.args[0]
+            required_default = (
+                isinstance(first_argument, ast.Constant)
+                and first_argument.value is Ellipsis
+            )
+            info["required"] = required_default
 
         for keyword in value.keywords:
             if keyword.arg in {"validation_alias", "alias"}:
@@ -254,7 +254,13 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     env_spec = read_env_spec(root)
     project_metadata = load_metadata(root / "pyproject.toml")
     metadata: dict[str, object] = project_metadata.model_dump()
-    metadata["sdk"] = resolve_sdk_version()
+
+    # Use the installed package version when available, falling back for editable source trees.
+    try:
+        metadata["sdk"] = package_version("longlink")
+    except PackageNotFoundError:
+        metadata["sdk"] = "0.0.0"
+
     version = tag or project_metadata.version
     labels = render_longlink_labels(metadata, env_spec)
 
@@ -279,37 +285,6 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     dockerfile_path.write_text(render_dockerfile(workdir, labels, str(metadata["sdk"])))
 
     return dockerfile_path, version, project_metadata.name
-
-
-def build_docker_image(dockerfile_path: Path, build_context: Path, image_tag: str, image_id_path: Path) -> None:
-    """Build the Docker image for the current app."""
-
-    # Build from a context that includes local path dependencies referenced by uv.
-    run_docker_command(
-        [
-            "docker",
-            "build",
-            "--iidfile",
-            str(image_id_path),
-            "-f",
-            str(dockerfile_path),
-            "-t",
-            image_tag,
-            str(build_context),
-        ]
-    )
-
-
-def push_docker_image(image_tag: str) -> None:
-    """Push the Docker image tag to its configured registry."""
-
-    run_docker_command(
-        [
-            "docker",
-            "push",
-            image_tag,
-        ]
-    )
 
 
 def run_docker_command(command: list[str]) -> None:
@@ -359,11 +334,24 @@ def build_command(tag: str | None, registry: str | None, push: bool):
             image_tag = resolve_image_tag(app_name, version, registry)
             image_id_path = build_context / "image-id.txt"
 
-            build_docker_image(dockerfile_path, build_context, image_tag, image_id_path)
+            # Build from a context that includes local path dependencies referenced by uv.
+            run_docker_command(
+                [
+                    "docker",
+                    "build",
+                    "--iidfile",
+                    str(image_id_path),
+                    "-f",
+                    str(dockerfile_path),
+                    "-t",
+                    image_tag,
+                    str(build_context),
+                ]
+            )
             image_id = image_id_path.read_text().strip()
 
             if push:
-                push_docker_image(image_tag)
+                run_docker_command(["docker", "push", image_tag])
 
         click.echo(f"Build completed for version {version}")
         click.echo(f"- Built image: {image_tag}")

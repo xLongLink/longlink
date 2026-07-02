@@ -60,12 +60,20 @@ class OperationsService:
         kind: OperationKind,
         step: str,
         application_id: UUID | None = None,
+        organization_id: UUID | None = None,
+        scheduled_at: datetime | None = None,
         user: User | None = None,
     ) -> Operation:
         """Create one operation record."""
 
         async with session_scope() as session:
-            operation = Operation(kind=kind, application_id=application_id, step=step)
+            operation = Operation(
+                kind=kind,
+                application_id=application_id,
+                organization_id=organization_id,
+                scheduled_at=scheduled_at,
+                step=step,
+            )
             if user is not None:
                 operation.created_id = user.id
                 operation.updated_id = user.id
@@ -84,6 +92,7 @@ class OperationsService:
                 .where(
                     Operation.id == operation_id,
                     Operation.stopped_at.is_(None),
+                    or_(Operation.scheduled_at.is_(None), Operation.scheduled_at <= now),
                     or_(
                         Operation.started_at.is_(None),
                         Operation.lease_expires_at.is_(None),
@@ -146,6 +155,7 @@ class OperationsService:
                 select(Operation)
                 .where(
                     Operation.stopped_at.is_(None),
+                    or_(Operation.scheduled_at.is_(None), Operation.scheduled_at <= now),
                     or_(
                         Operation.started_at.is_(None),
                         Operation.lease_expires_at.is_(None),

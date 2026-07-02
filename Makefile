@@ -1,4 +1,4 @@
-.PHONY: up down local-services build api\:build sdk\:build sdk\:image seed clean api\:clean sdk\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests api\:tests sdk\:tests web\:tests pyright api\:pyright sdk\:pyright
+.PHONY: up down local-services build api\:build sdk\:build seed clean api\:clean sdk\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests api\:tests sdk\:tests web\:tests pyright api\:pyright sdk\:pyright
 
 LOCAL_SDK_IMAGE := localhost:15000/longlink-app:dev
 LOCAL_SDK_IMAGE_LABEL := longlink.name=longlink-app
@@ -114,7 +114,7 @@ sdk\:clean:
 	find sdk -type f -name '*.py[co]' -delete
 
 
-# Remove local Docker images produced by `make sdk:image`.
+# Remove local Docker images produced by `make seed`.
 sdk\:image\:clean:
 	@if command -v docker >/dev/null 2>&1; then \
 		docker image rm "$(LOCAL_SDK_IMAGE)" >/dev/null 2>&1 || true; \
@@ -128,11 +128,26 @@ web\:clean:
 	rm -rf web/dist web/dist-ssr web/node_modules/.tmp web/node_modules/.vite
 
 
-# Start local services and cluster, then wait for service readiness.
+# Start local services, registry, Keycloak, and cluster, then wait for service readiness.
 up: local-services
 	docker compose -f dev/compose.yml up -d
-	k3d cluster create compute --api-port 0.0.0.0:8001 -p "8080:80@loadbalancer" -p "8443:443@loadbalancer" --registry-config dev/registries.yml
+	@if k3d cluster list compute >/dev/null 2>&1; then \
+		printf "k3d cluster compute already exists.\n"; \
+	else \
+		k3d cluster create compute --api-port 0.0.0.0:8001 -p "8080:80@loadbalancer" -p "8443:443@loadbalancer" --registry-config dev/registries.yml; \
+	fi
 	k3d kubeconfig get compute > api/kubeconfig.yaml
+	@printf "Waiting for registry...\n"
+	@attempt=1; \
+	while ! curl --fail --silent --output /dev/null http://localhost:15000/v2/; do \
+		if [ "$$attempt" -ge 60 ]; then \
+			printf "Registry did not become ready after %s attempts.\n" "$$attempt"; \
+			exit 1; \
+		fi; \
+		attempt=$$((attempt + 1)); \
+		sleep 1; \
+	done
+	@printf "Registry is ready.\n"
 	@printf "Waiting for Keycloak...\n"
 	@attempt=1; \
 	while ! curl --fail --silent --output /dev/null http://localhost:18080/realms/dev/.well-known/openid-configuration; do \
@@ -183,17 +198,18 @@ down:
 	find . -type f -name '*.py[co]' -delete
 
 
-# Run the local control plane API server after `make up` and `make sdk:image`.
+# Run the local control plane API server after `make seed`.
 api:
 	cd api && uv sync --extra dev
-	cd api && DEVELOPMENT=true uv run alembic upgrade head
-	cd api && DEVELOPMENT=true uv run python seed.py
 	cd api && DEVELOPMENT=true uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 
-# Build the local SDK app image, then run local control-plane migrations and seed data.
-seed: local-services sdk\:image
+# Start the local stack, build and push the SDK app image, then run migrations and seed data.
+seed: up
 	cd api && uv sync --extra dev
+	if [ ! -d sdk/dev ]; then cd sdk && uv run longlink init --folder dev; fi
+	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'
+	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
 	cd api && DEVELOPMENT=true uv run alembic upgrade head
 	cd api && DEVELOPMENT=true uv run python seed.py
 
@@ -210,11 +226,3 @@ sdk: sdk\:build
 	cd sdk && uv run longlink init --folder dev
 	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'
 	cd sdk/dev && uv run longlink dev
-
-
-# Build and push the generated SDK app image to the local registry.
-sdk\:image:
-	docker compose -f dev/compose.yml up -d registry
-	if [ ! -d sdk/dev ]; then cd sdk && uv run longlink init --folder dev; fi
-	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'
-	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev

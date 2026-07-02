@@ -1,6 +1,6 @@
 from longlink.app import LongLink
 from longlink.router import Router
-from longlink.storage import create_fs
+from longlink.storage import create_fs, create_shared_fs
 from longlink.database import User, create_db
 from longlink.utils.xml import Element, Longlink
 from longlink.utils.settings import Envs
@@ -16,11 +16,14 @@ __all__ = [
     "Environments",
     "create_db",
     "create_fs",
+    "create_shared_fs",
     "db",
     "env",
     "fs",
+    "shared_fs",
 ]
 
 env = Envs()
 fs = create_fs(env)
+shared_fs = create_shared_fs(env)
 db = create_db(env)

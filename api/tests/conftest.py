@@ -10,14 +10,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 # Seed the required settings before importing the FastAPI app.
-os.environ.setdefault("SESSION_KEY", "1234")
+os.environ.setdefault("SESSION_KEY", "test-session-key-that-is-long-enough")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./dev.db")
 os.environ.setdefault("DATABASE_SSLMODE", "disable")
 os.environ.setdefault("DEVELOPMENT", "false")
 os.environ.setdefault("OIDC_CLIENT_ID", "longlink-api")
 os.environ.setdefault("OIDC_CLIENT_SECRET", "longlink-secret")
-os.environ.setdefault("OIDC_ISSUER", "http://localhost:18080/realms/dev")
-os.environ.setdefault("OIDC_REDIRECT_URI", "http://localhost:5173/auth/oidc")
+os.environ.setdefault("OIDC_ISSUER", "https://identity.example/realms/dev")
+os.environ.setdefault("OIDC_REDIRECT_URI", "https://app.example/auth/oidc")
 
 from main import app
 from sqlmodel import SQLModel

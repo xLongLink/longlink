@@ -33,6 +33,14 @@ class Compute(ABC):
         """Create or replace one internal application Deployment and Service."""
 
     @abstractmethod
+    async def delete_application(self, organization: str, application: str) -> None:
+        """Delete one internal application Deployment, Service, and Secret."""
+
+    @abstractmethod
+    async def delete_namespace(self, organization: str) -> None:
+        """Delete the namespace for one organization."""
+
+    @abstractmethod
     async def logs(self, organization: str, application: str, lines: int = 200) -> str:
         """Return recent logs for one managed application."""
 

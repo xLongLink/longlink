@@ -2,7 +2,7 @@ import * as React from 'react';
 import type { TooltipValueType } from 'recharts';
 import * as RechartsPrimitive from 'recharts';
 
-import { cn } from '@/lib/utils';
+import { cn, formatNumber } from '@/lib/utils';
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: '', dark: '.dark' } as const;
@@ -74,6 +74,10 @@ function ChartContainer({
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
     const colorConfig = Object.entries(config).filter(([, config]) => config.theme ?? config.color);
+    const chartSelector =
+        typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+            ? `[data-chart=${CSS.escape(id)}]`
+            : `[data-chart=${JSON.stringify(id)}]`;
 
     if (!colorConfig.length) {
         return null;
@@ -85,7 +89,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
                 __html: Object.entries(THEMES)
                     .map(
                         ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
+${prefix} ${chartSelector} {
 ${colorConfig
     .map(([key, itemConfig]) => {
         const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ?? itemConfig.color;
@@ -221,7 +225,7 @@ function ChartTooltipContent({
                                             {item.value != null && (
                                                 <span className="font-mono font-medium text-foreground tabular-nums">
                                                     {typeof item.value === 'number'
-                                                        ? item.value.toLocaleString()
+                                                        ? formatNumber(item.value)
                                                         : String(item.value)}
                                                 </span>
                                             )}

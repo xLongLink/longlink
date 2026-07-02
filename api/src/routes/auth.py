@@ -1,5 +1,6 @@
 import httpx2
 from typing import Any, Final, Literal, cast
+from urllib.parse import urlsplit
 from fastapi import Query, Request, Response, APIRouter
 from pydantic import Field, BaseModel, ValidationError
 from src.auth import SessionAccountsService, oauth
@@ -14,6 +15,26 @@ from src.database.services.users import users
 router = APIRouter()
 DEFAULT_POST_LOGIN_REDIRECT: Final[str] = "/organizations"
 OIDC_NEXT_SESSION_KEY: Final[str] = "oidc_next"
+
+
+def sanitize_post_login_redirect(next_path: object) -> str:
+    """Return a safe same-origin post-login redirect path."""
+
+    if not isinstance(next_path, str):
+        return DEFAULT_POST_LOGIN_REDIRECT
+
+    if not next_path.startswith("/") or next_path.startswith("//") or "\\" in next_path:
+        return DEFAULT_POST_LOGIN_REDIRECT
+
+    if any(ord(character) < 32 or ord(character) == 127 for character in next_path):
+        return DEFAULT_POST_LOGIN_REDIRECT
+
+    # Use URL parsing so protocol-relative paths cannot be confused with local paths.
+    parsed_path = urlsplit(next_path)
+    if parsed_path.scheme or parsed_path.netloc:
+        return DEFAULT_POST_LOGIN_REDIRECT
+
+    return next_path
 
 
 class PasswordLoginRequest(BaseModel):
@@ -63,18 +84,7 @@ async def login_oidc(
 
     oidc = cast(Any, oauth).create_client("oidc")
 
-    post_login_redirect = DEFAULT_POST_LOGIN_REDIRECT
-    # The API issues the final redirect, so direct calls must stay on local paths.
-    if (
-        next_path is not None
-        and next_path.startswith("/")
-        and not next_path.startswith("//")
-        and "\\" not in next_path
-        and not any(ord(character) < 32 or ord(character) == 127 for character in next_path)
-    ):
-        post_login_redirect = next_path
-
-    request.session[OIDC_NEXT_SESSION_KEY] = post_login_redirect
+    request.session[OIDC_NEXT_SESSION_KEY] = sanitize_post_login_redirect(next_path)
     authorize_kwargs: dict[str, Any] = {}
 
     if provider is not None:
@@ -188,10 +198,7 @@ async def auth_oidc(request: Request) -> RedirectResponse:
     subject = await upsert_oidc_user(userinfo)
     SessionAccountsService(request).activate(subject)
     next_path = request.session.pop(OIDC_NEXT_SESSION_KEY, DEFAULT_POST_LOGIN_REDIRECT)
-    if not isinstance(next_path, str):
-        next_path = DEFAULT_POST_LOGIN_REDIRECT
-
-    return RedirectResponse(next_path)
+    return RedirectResponse(sanitize_post_login_redirect(next_path))
 
 
 @router.get("/auth/logout", response_model=SuccessResponse, include_in_schema=False)

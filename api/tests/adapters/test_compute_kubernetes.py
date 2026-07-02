@@ -1,5 +1,15 @@
+from decimal import Decimal
 from kubernetes.client.rest import ApiException
-from src.adapters.compute.k8s import K8s
+from src.adapters.compute.k8s import K8s, parse_quantity
+
+
+def test_parse_quantity_uses_kubernetes_quantity_semantics() -> None:
+    """Parse Kubernetes resource quantities with the Kubernetes utility parser."""
+
+    # Act and assert
+    assert parse_quantity("250m") == Decimal("0.250")
+    assert parse_quantity("128Mi") == Decimal(128 * 1024 * 1024)
+    assert parse_quantity("invalid") == Decimal(0)
 
 
 async def test_setup_is_noop(monkeypatch) -> None:

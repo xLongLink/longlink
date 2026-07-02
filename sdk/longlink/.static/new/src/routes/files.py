@@ -1,4 +1,5 @@
 from uuid import uuid4
+from urllib.parse import quote
 from fastapi import File, UploadFile, HTTPException
 from pathlib import PurePosixPath
 from longlink import Router, fs
@@ -66,10 +67,11 @@ async def files_download_endpoint(file_id: str) -> Response:
     with fs.open(storage_path, "rb") as stored_file:
         content = stored_file.read()
 
+    download_name = quote(_display_file_name(file_id), safe="")
     return Response(
         content=content,
         media_type="application/octet-stream",
-        headers={"content-disposition": f'attachment; filename="{_display_file_name(file_id)}"'},
+        headers={"content-disposition": f"attachment; filename*=UTF-8''{download_name}"},
     )
 
 

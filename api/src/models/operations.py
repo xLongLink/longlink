@@ -17,6 +17,8 @@ class OperationKind(str, Enum):
     """Supported long-running operation types."""
 
     application_create = "application.create"
+    application_delete = "application.delete"
+    organization_delete = "organization.delete"
 
 
 class OperationResponse(BaseModel):
@@ -35,8 +37,10 @@ class OperationResponse(BaseModel):
 
     # Relationships
     application_id: UUID | None = None
+    organization_id: UUID | None = None
 
     # Audit
     created_at: datetime
+    scheduled_at: datetime | None = None
     started_at: datetime | None = None
     stopped_at: datetime | None = None

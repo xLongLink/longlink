@@ -9,6 +9,7 @@ import { DataTable } from '@/components/DataTable';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUsers } from '@/hooks/use-users';
 import type { ApiUserSummary } from '@/lib/types';
+import { getInitials } from '@/lib/utils';
 
 const userColumns: Array<ColumnDef<ApiUserSummary>> = [
     {
@@ -22,7 +23,7 @@ const userColumns: Array<ColumnDef<ApiUserSummary>> = [
                 <div className="flex items-center gap-3">
                     <Avatar className="size-8">
                         <AvatarImage src={user.avatar} alt={user.name} />
-                        <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
                         <div className="truncate font-medium text-foreground">{user.name}</div>

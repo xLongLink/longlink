@@ -31,5 +31,5 @@ uv run pytest tests    # Run tests
 
 - Is not html, but similar.
 - Check with longlink docs <component>
-- Use `longlink translations generate` to refresh the translation catalog in the app scaffold at `.static/new/src/i18n/en.json` from XML `i18n` keys.
+- Use `longlink translations generate` from an app root to refresh `src/i18n/en.json` from XML `i18n` keys.
 - The SDK application serves translations at `/i18n/<lang>.json`.

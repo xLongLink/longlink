@@ -1,9 +1,51 @@
 import { parse } from 'acorn';
 import type { ExecutionContext } from '../types';
 
-import { createScopeProxy, resolvePath } from './resolve';
+import { createScopeProxy, hasSafeProperty, isSafePropertyName, readSafeProperty, resolvePath } from './resolve';
 import type { ExpressionNode } from './types';
 import { isReference } from './utils';
+
+const expressionNodeCache = new Map<string, ExpressionNode>();
+
+
+/** Parses and caches one JavaScript expression supported by the XML evaluator. */
+function parseExpression(expression: string): ExpressionNode {
+    const cachedNode = expressionNodeCache.get(expression);
+
+    if (cachedNode) {
+        return cachedNode;
+    }
+
+    const ast = parse(`(${expression})`, {
+        ecmaVersion: 'latest',
+        sourceType: 'script',
+    }) as unknown as { body: Array<{ expression: ExpressionNode }> };
+    const node = ast.body[0].expression;
+
+    expressionNodeCache.set(expression, node);
+    return node;
+}
+
+
+/** Parses expressions ahead of first runtime evaluation when possible. */
+export function prepareEvaluation(expr: string): void {
+    const input = expr.trim();
+
+    if (input.startsWith('${') && input.endsWith('}')) {
+        try {
+            parseExpression(input.slice(2, -1).trim());
+            return;
+        } catch {
+            // Fall through to mixed interpolation parsing for values that are not one full expression.
+        }
+    }
+
+    if (input.includes('${') && !isReference(input)) {
+        for (const match of input.matchAll(/\$\{([^{}]+)\}/g)) {
+            parseExpression(match[1]);
+        }
+    }
+}
 
 /** Evaluates a supported AST node against the current scope. */
 function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {}): unknown {
@@ -12,7 +54,7 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
             return node.value;
 
         case 'Identifier':
-            return scope[node.name as string];
+            return isSafePropertyName(node.name as string) ? scope[node.name as string] : undefined;
 
         case 'MemberExpression': {
             const object = evaluateNode(node.object, scope);
@@ -22,14 +64,14 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
             if (node.computed) {
                 const key = evaluateNode(node.property, scope);
 
-                return key == null ? undefined : (object as Record<string, unknown>)[String(key)];
+                return key == null ? undefined : readSafeProperty(object, String(key));
             }
 
             if (node.property.type !== 'Identifier') {
                 return undefined;
             }
 
-            return (object as Record<string, unknown>)[node.property.name];
+            return readSafeProperty(object, node.property.name);
         }
 
         case 'BinaryExpression': {
@@ -60,7 +102,9 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
                     }
 
                     if (right != null && typeof right === 'object') {
-                        return String(left) in (right as Record<string, unknown>);
+                        const key = String(left);
+
+                        return hasSafeProperty(right, key);
                     }
 
                     return false;
@@ -81,10 +125,13 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
                 const key =
                     property.key.type === 'Identifier' ? property.key.name : String(evaluateNode(property.key, scope));
 
+                // Skip prototype-related keys so XML object literals cannot mutate prototypes.
+                if (!isSafePropertyName(key)) return result;
+
                 result[key] = evaluateNode(property.value, scope);
 
                 return result;
-            }, {});
+            }, Object.create(null) as Record<string, unknown>);
 
         case 'TemplateLiteral': {
             let output = '';
@@ -114,12 +161,7 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
 
     /** Runs an expression with XML values exposed as local variables. */
     function run(expression: string, currentValues: Record<string, unknown>): unknown {
-        const ast = parse(`(${expression})`, {
-            ecmaVersion: 'latest',
-            sourceType: 'script',
-        }) as unknown as { body: Array<{ expression: ExpressionNode }> };
-
-        return evaluateNode(ast.body[0].expression, currentValues);
+        return evaluateNode(parseExpression(expression), currentValues);
     }
 
     if (input === '') return '';
@@ -129,11 +171,6 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
         const inner = input.slice(2, -1).trim();
 
         try {
-            parse(`(${inner})`, {
-                ecmaVersion: 'latest',
-                sourceType: 'script',
-            });
-
             return run(inner, values);
         } catch {
             // Fall through to mixed-text interpolation when the wrapped value is not a standalone expression.

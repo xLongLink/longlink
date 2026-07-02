@@ -1,5 +1,5 @@
 from uuid import UUID
-from fastapi import Depends, APIRouter
+from fastapi import Depends, Response, APIRouter
 from src.auth import authadmin, authsupport
 from src.utils import names
 from src.errors import ConflictError, NotFoundError
@@ -26,6 +26,21 @@ async def get_location(location_id: UUID, _: User = Depends(authsupport)) -> Loc
         raise NotFoundError("Location", location_id)
 
     return LocationResponse.model_validate(location)
+
+
+@router.delete("/api/locations/{location_id}", status_code=204)
+async def delete_location(location_id: UUID, user: User = Depends(authadmin)) -> Response:
+    """Soft-delete one location."""
+
+    try:
+        deleted = await locations.delete(location_id, user)
+    except ValueError as exc:
+        raise ConflictError(str(exc)) from exc
+
+    if not deleted:
+        raise NotFoundError("Location", location_id)
+
+    return Response(status_code=204)
 
 
 @router.post("/api/locations", response_model=LocationResponse)

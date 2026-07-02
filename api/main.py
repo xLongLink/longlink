@@ -21,7 +21,8 @@ from src.routes import operations as operations_route
 from src.routes import applications, organizations
 from src.operations import execute
 from collections.abc import AsyncIterator
-from src.environments import env
+from src.environments import (env, resolve_cors_origins,
+                              validate_production_settings)
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from src.database.services.operations import operations
@@ -80,6 +81,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await worker
 
 
+validate_production_settings(env)
+
 app = FastAPI(
     lifespan=lifespan,
     docs_url=None,
@@ -98,7 +101,7 @@ app.add_middleware(
     https_only=not env.DEVELOPMENT,
 )
 
-cors_origins = [origin for origin in env.CORS_ORIGINS if origin]
+cors_origins = [origin for origin in resolve_cors_origins(env.DEVELOPMENT, env.CORS_ORIGINS) if origin]
 if cors_origins:
     app.add_middleware(
         CORSMiddleware,

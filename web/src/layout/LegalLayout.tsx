@@ -2,6 +2,7 @@ import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { A } from '@/components/ui/a';
 import { Heading } from '@/components/ui/heading';
+import { formatDate } from '@/lib/utils';
 import { type ReactNode } from 'react';
 
 type LegalMetadata = {
@@ -21,13 +22,7 @@ export function LegalLayout({ title, content, metadata }: LegalLayoutProps) {
         ? (() => {
               const parsedDate = new Date(metadata.lastUpdated);
 
-              return Number.isNaN(parsedDate.getTime())
-                  ? metadata.lastUpdated
-                  : new Intl.DateTimeFormat('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                    }).format(parsedDate);
+              return Number.isNaN(parsedDate.getTime()) ? metadata.lastUpdated : formatDate(parsedDate);
           })()
         : '';
 

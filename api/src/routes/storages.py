@@ -1,5 +1,5 @@
 from uuid import UUID
-from fastapi import Depends, APIRouter
+from fastapi import Depends, Response, APIRouter
 from src.auth import authadmin, authsupport
 from src.errors import ConflictError, NotFoundError
 from src.adapters.storage import S3
@@ -30,6 +30,21 @@ async def get_storage_registry(registry_id: UUID, _: User = Depends(authsupport)
         raise NotFoundError("Storage registry", registry_id)
 
     return registry
+
+
+@router.delete("/api/storages/{registry_id}", status_code=204)
+async def delete_storage_registry(registry_id: UUID, user: User = Depends(authadmin)) -> Response:
+    """Soft-delete one storage backend registration."""
+
+    try:
+        deleted = await storage.delete(registry_id, user)
+    except ValueError as exc:
+        raise ConflictError(str(exc)) from exc
+
+    if not deleted:
+        raise NotFoundError("Storage registry", registry_id)
+
+    return Response(status_code=204)
 
 
 @router.post("/api/storages", response_model=StorageRegistryResponse)

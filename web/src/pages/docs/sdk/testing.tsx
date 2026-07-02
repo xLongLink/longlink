@@ -1,7 +1,12 @@
 import { CodeBlock } from '@/components/CodeBlock';
 import { A } from '@/components/ui/a';
+import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
+import { Li } from '@/components/ui/li';
+import { P } from '@/components/ui/p';
+import { Stack } from '@/components/ui/stack';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
     lastUpdated: '2026-05-26',
@@ -9,19 +14,18 @@ export const metadata = {
 };
 
 export const content = (
-    <div className="flex flex-col gap-4">
+    <Stack>
         <Heading id="testing" level="h1">
             Testing
         </Heading>
-        <p className="leading-7">
+        <P>
             Applications built with the LongLink SDK can be tested using standard{' '}
             <A href="https://docs.pytest.org/en/stable/">pytest</A> and{' '}
             <A href="https://pytest-asyncio.readthedocs.io/en/stable/">pytest-asyncio</A> workflows. When a project is
-            generated, these tools are already included as development dependencies in the{' '}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">pyproject.toml</code>{' '}
+            generated, these tools are already included as development dependencies in the <Code>pyproject.toml</Code>{' '}
             file.
-        </p>
-        <p className="leading-7">To install the development dependencies, run:</p>
+        </P>
+        <P>To install the development dependencies, run:</P>
         <Tabs defaultValue="pip">
             <TabsList>
                 <TabsTrigger value="pip">pip</TabsTrigger>
@@ -37,19 +41,18 @@ export const content = (
         <Heading id="usage" level="h2">
             Usage
         </Heading>
-        <p className="leading-7">
-            You can execute all tests or target a specific test file using the following commands. Use{' '}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">sdk/tests</code> for
-            SDK test files and keep file paths aligned with the repository layout:
-        </p>
-        <CodeBlock language="bash">pytest pytest sdk/tests/cli/test_init.py</CodeBlock>
+        <P>
+            You can execute all tests or target a specific test file using the LongLink test command. Arguments after{' '}
+            <Code>longlink test</Code> are forwarded to <Code>pytest</Code>.
+        </P>
+        <CodeBlock language="bash">{`uv run longlink test
+uv run longlink test tests/test_app.py -q`}</CodeBlock>
         <Heading id="example" level="h2">
             Example
         </Heading>
-        <p className="leading-7">
-            Illustrative snippet: asynchronous testing with{' '}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">pytest</code>
-        </p>
+        <P>
+            Illustrative snippet: asynchronous testing with <Code>pytest</Code>
+        </P>
         <CodeBlock language="python">{`import pytest
 
 
@@ -58,10 +61,10 @@ async def test_healthcheck(client):
     response = await client.get('/health')
 
     assert response.status_code == 200`}</CodeBlock>
-        <p className="leading-7">
+        <P>
             Illustrative snippet: testing with FastAPI{' '}
             <A href="https://fastapi.tiangolo.com/tutorial/testing/">TestClient</A>
-        </p>
+        </P>
         <CodeBlock language="python">{`from app import app
 from fastapi.testclient import TestClient
 
@@ -75,22 +78,22 @@ def test_healthcheck():
         <Heading id="resources" level="h2">
             Resources
         </Heading>
-        <ul className="ml-6 list-disc space-y-2">
-            <li>
+        <Ul>
+            <Li>
                 <A href="https://fastapi.tiangolo.com/tutorial/testing/">FastAPI TestClient</A>
-            </li>
-            <li>
+            </Li>
+            <Li>
                 <A href="https://docs.pytest.org/">pytest Documentation</A>
-            </li>
-            <li>
+            </Li>
+            <Li>
                 <A href="https://github.com/pytest-dev/pytest">pytest GitHub</A>
-            </li>
-            <li>
+            </Li>
+            <Li>
                 <A href="https://pytest-asyncio.readthedocs.io/en/stable/">pytest-asyncio Documentation</A>
-            </li>
-            <li>
+            </Li>
+            <Li>
                 <A href="https://github.com/pytest-dev/pytest-asyncio">pytest-asyncio GitHub</A>
-            </li>
-        </ul>
-    </div>
+            </Li>
+        </Ul>
+    </Stack>
 );

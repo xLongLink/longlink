@@ -1,11 +1,13 @@
 from uuid import UUID
 from src.utils import names
 from sqlalchemy import select
+from datetime import UTC, datetime
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.database.session import session_scope
 from src.models.databases import DatabaseKind
 from src.database.models.users import User
+from src.database.models.applications import Application
 from src.database.models.databases import DatabaseRegistry
 
 
@@ -97,5 +99,31 @@ class DatabaseService:
             )
             result = await session.execute(statement)
             return result.scalar_one()
+
+
+    async def delete(self, registry_id: UUID, user: User) -> bool:
+        """Soft-delete one database registry when no active app uses it."""
+
+        async with session_scope() as session:
+            registry = await session.get(DatabaseRegistry, registry_id)
+            if registry is None or registry.deleted_at is not None:
+                return False
+
+            active_application = await session.execute(
+                select(Application.id).where(
+                    Application.database_registry_id == registry_id,
+                    Application.deleted_at.is_(None),
+                )
+            )
+            if active_application.scalar_one_or_none() is not None:
+                raise ValueError("Database registry is used by active applications")
+
+            now = datetime.now(UTC)
+            registry.deleted_at = now
+            registry.deleted_id = user.id
+            registry.updated_at = now
+            registry.updated_id = user.id
+            await session.commit()
+            return True
 
 database = DatabaseService()

@@ -10,6 +10,8 @@ import { toast } from 'sonner';
 import { Wordmark } from '@/components/Wordmark';
 import { useUser } from '@/hooks/use-user';
 import { apiUrl } from '@/lib/api';
+import { sanitizeRedirectPath } from '@/lib/redirects';
+import { getInitials } from '@/lib/utils';
 
 type SignInCardProps = {
     redirectTo: string;
@@ -25,6 +27,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
     const [showEmailForm, setShowEmailForm] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { accounts, activateAccount, loginWithCredentials } = useUser();
+    const safeRedirectTo = sanitizeRedirectPath(redirectTo);
 
     /** Submits credentials, refreshes the session cache, and redirects. */
     async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
@@ -33,7 +36,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
 
         try {
             await loginWithCredentials({ username, password });
-            navigate(redirectTo, { replace: true });
+            navigate(safeRedirectTo, { replace: true });
         } catch (loginError) {
             toast.error(loginError instanceof Error ? loginError.message : 'Login failed');
         } finally {
@@ -50,7 +53,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
     async function handleAccountSelect(oidc: string) {
         try {
             await activateAccount(oidc);
-            navigate(redirectTo, { replace: true });
+            navigate(safeRedirectTo, { replace: true });
         } catch (accountError) {
             toast.error(accountError instanceof Error ? accountError.message : 'Failed to open account');
         }
@@ -58,7 +61,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
 
     /** Redirects the browser to the OIDC login endpoint with the provider hint and target path. */
     function handleProviderSignIn(provider: SocialLoginProvider) {
-        const redirectParameters = new URLSearchParams({ provider, next: redirectTo });
+        const redirectParameters = new URLSearchParams({ provider, next: safeRedirectTo });
 
         window.location.assign(apiUrl(`/auth/login/oidc?${redirectParameters.toString()}`));
     }
@@ -174,7 +177,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                                     >
                                         <Avatar className="size-9">
                                             <AvatarImage src={account.avatar} alt={`${account.name} profile`} />
-                                            <AvatarFallback>{account.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                            <AvatarFallback>{getInitials(account.name)}</AvatarFallback>
                                         </Avatar>
                                         <div className="min-w-0 flex-1">
                                             <p className="truncate text-sm font-medium text-foreground">

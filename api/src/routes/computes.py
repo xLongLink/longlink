@@ -1,5 +1,5 @@
 from uuid import UUID
-from fastapi import Depends, APIRouter
+from fastapi import Depends, Response, APIRouter
 from src.auth import authadmin, authsupport
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.models.computes import (PodResponse, NamespaceResponse,
@@ -29,6 +29,21 @@ async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)
         raise NotFoundError("Compute registry", registry_id)
 
     return registry
+
+
+@router.delete("/api/computes/{registry_id}", status_code=204)
+async def delete_compute_registry(registry_id: UUID, user: User = Depends(authadmin)) -> Response:
+    """Soft-delete one compute backend registration."""
+
+    try:
+        deleted = await compute.delete(registry_id, user)
+    except ValueError as exc:
+        raise ConflictError(str(exc)) from exc
+
+    if not deleted:
+        raise NotFoundError("Compute registry", registry_id)
+
+    return Response(status_code=204)
 
 
 @router.post("/api/computes", response_model=ComputeRegistryResponse)

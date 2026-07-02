@@ -10,7 +10,7 @@ from typing import cast
 from datetime import date, datetime
 from functools import partial
 from contextlib import asynccontextmanager
-from sqlalchemy import func, text, Table, inspect, update
+from sqlalchemy import func, text, Table, String, inspect, update
 from collections.abc import AsyncIterator
 from src.environments import env
 from sqlalchemy.engine import URL
@@ -146,6 +146,18 @@ class Postgres(Database):
                 await conn.exec_driver_sql(f"CREATE DATABASE {database_name}")
 
 
+    async def _organization_database_exists(self, organization: str) -> bool:
+        """Return whether an organization database currently exists."""
+
+        database_name_value = dbname(organization)
+        async with self._connection(self._maintenance_database, autocommit=True) as conn:
+            result = await conn.execute(
+                text("SELECT 1 FROM pg_database WHERE datname = :organization"),
+                {"organization": database_name_value},
+            )
+            return result.scalar_one_or_none() is not None
+
+
     async def _ensure_shared_users_table(self, conn: AsyncConnection) -> None:
         """Create the shared organization users table when it is missing."""
 
@@ -203,8 +215,11 @@ class Postgres(Database):
 
         result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": role_name})
         role = conn.engine.sync_engine.dialect.identifier_preparer.quote(role_name)
-        escaped_password = password.replace("'", "''")
-        password_literal = f"'{escaped_password}'"
+        password_processor = String().literal_processor(conn.engine.sync_engine.dialect)
+        if password_processor is None:
+            raise ValueError("PostgreSQL password literal processing is unavailable")
+
+        password_literal = password_processor(password)
         if result.scalar_one_or_none() is None:
             await conn.exec_driver_sql(f"CREATE ROLE {role} LOGIN PASSWORD {password_literal}")
             return
@@ -273,6 +288,49 @@ class Postgres(Database):
             await self._grant_application_permissions(conn, database_name, application, role_name)
 
         return self._runtime_url(database_name, role_name, role_password).render_as_string(hide_password=False)
+
+
+    async def delete_schema(self, organization: str, application: str) -> None:
+        """Delete an application schema and its runtime role when present."""
+
+        if not await self._organization_database_exists(organization):
+            return
+
+        database_name = dbname(organization)
+        role_name = self._application_role(organization, application)
+
+        async with self._connection(database_name) as conn:
+            preparer = conn.engine.sync_engine.dialect.identifier_preparer
+            schema = preparer.quote(application)
+            role = preparer.quote(role_name)
+            role_exists = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": role_name})
+            await conn.exec_driver_sql(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
+            if role_exists.scalar_one_or_none() is not None:
+                await conn.exec_driver_sql(f"DROP OWNED BY {role}")
+
+        async with self._connection(self._maintenance_database, autocommit=True) as conn:
+            role = conn.engine.sync_engine.dialect.identifier_preparer.quote(role_name)
+            await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
+
+
+    async def delete_database(self, organization: str) -> None:
+        """Delete one organization database and tolerate missing databases."""
+
+        database_name_value = dbname(organization)
+        async with self._connection(self._maintenance_database, autocommit=True) as conn:
+            database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(database_name_value)
+            await conn.execute(
+                text(
+                    """
+                    SELECT pg_terminate_backend(pid)
+                    FROM pg_stat_activity
+                    WHERE datname = :database_name
+                    AND pid <> pg_backend_pid()
+                    """
+                ),
+                {"database_name": database_name_value},
+            )
+            await conn.exec_driver_sql(f"DROP DATABASE IF EXISTS {database_name}")
 
 
     async def databases(self) -> list[str]:

@@ -67,9 +67,8 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
         setIsInspecting(true);
 
         try {
-            const metadata = await fetchApiJson<ApiImageMetadata>(
-                `/api/image?image=${encodeURIComponent(image.trim())}`
-            );
+            const query = new URLSearchParams({ image: image.trim() });
+            const metadata = await fetchApiJson<ApiImageMetadata>(`/api/image?${query.toString()}`);
 
             setImageMetadata(metadata);
             setName(metadata.title ?? '');

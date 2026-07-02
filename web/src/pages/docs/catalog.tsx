@@ -1,12 +1,21 @@
 import type { ReactNode } from 'react';
 
+import {
+    content as docsApiApplicationsContent,
+    metadata as docsApiApplicationsMetadata,
+} from '@/pages/docs/api/applications';
 import { content as docsApiIndexContent, metadata as docsApiIndexMetadata } from '@/pages/docs/api/index';
+import {
+    content as docsApiOrganizationsContent,
+    metadata as docsApiOrganizationsMetadata,
+} from '@/pages/docs/api/organizations';
 import {
     content as docsApiSelfHostedContent,
     metadata as docsApiSelfHostedMetadata,
 } from '@/pages/docs/api/self-hosted';
 import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/pages/docs/index';
 import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/pages/docs/sdk/building';
+import { content as docsSdkCliContent, metadata as docsSdkCliMetadata } from '@/pages/docs/sdk/cli';
 import {
     content as docsSdkComponentsContent,
     metadata as docsSdkComponentsMetadata,
@@ -26,6 +35,8 @@ import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } 
 import {
     Blocks,
     BookOpen,
+    Boxes,
+    Building2,
     Database,
     FileCode2,
     FlaskConical,
@@ -94,6 +105,26 @@ const selfHostedPage: GroupedDocPage = {
     metadata: docsApiSelfHostedMetadata,
 };
 
+const organizationsPage: GroupedDocPage = {
+    group: 'Control Plane',
+    title: 'Organizations',
+    path: '/docs/api/organizations',
+    id: 'organizations',
+    icon: Building2,
+    content: docsApiOrganizationsContent,
+    metadata: docsApiOrganizationsMetadata,
+};
+
+const applicationsPage: GroupedDocPage = {
+    group: 'Control Plane',
+    title: 'Applications',
+    path: '/docs/api/applications',
+    id: 'applications',
+    icon: Boxes,
+    content: docsApiApplicationsContent,
+    metadata: docsApiApplicationsMetadata,
+};
+
 const sdkOverviewPage: GroupedDocPage = {
     group: 'Application SDK',
     title: 'Overview',
@@ -102,6 +133,16 @@ const sdkOverviewPage: GroupedDocPage = {
     icon: Blocks,
     content: docsSdkIndexContent,
     metadata: docsSdkIndexMetadata,
+};
+
+const sdkCliPage: GroupedDocPage = {
+    group: 'Application SDK',
+    title: 'CLI Reference',
+    path: '/docs/sdk/cli',
+    id: 'cli-reference',
+    icon: FileCode2,
+    content: docsSdkCliContent,
+    metadata: docsSdkCliMetadata,
 };
 
 const sdkEnvironmentsPage: GroupedDocPage = {
@@ -197,8 +238,11 @@ const sdkPagesPage: GroupedDocPage = {
 export const DOC_PAGES: GroupedDocPage[] = [
     introductionPage,
     controlPlaneOverviewPage,
+    organizationsPage,
+    applicationsPage,
     selfHostedPage,
     sdkOverviewPage,
+    sdkCliPage,
     sdkEnvironmentsPage,
     sdkRoutesPage,
     sdkStoragePage,
@@ -228,12 +272,18 @@ export const DOC_GROUPS: Array<{ title: DocGroupTitle; items: DocNavigationItem[
     },
     {
         title: 'Control Plane',
-        items: [navigationItem(controlPlaneOverviewPage), navigationItem(selfHostedPage)],
+        items: [
+            navigationItem(controlPlaneOverviewPage),
+            navigationItem(organizationsPage),
+            navigationItem(applicationsPage),
+            navigationItem(selfHostedPage),
+        ],
     },
     {
         title: 'Application SDK',
         items: [
             navigationItem(sdkOverviewPage),
+            navigationItem(sdkCliPage),
             navigationItem(sdkEnvironmentsPage),
             navigationItem(sdkRoutesPage),
             navigationItem(sdkStoragePage),

@@ -10,9 +10,9 @@ import { useXmlContext } from '@xml/core/context';
 import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
-import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
+import { resolveXmlBoolean, resolveXmlNumber, resolveXmlString, resolveXmlValue } from './props';
 
-import { useBindableValue } from './binding';
+import { readBindableFileInputValue, useBindableValue } from './binding';
 
 /** Props accepted by the XML InputGroup component. */
 
@@ -93,7 +93,7 @@ export function InputGroupInput({ props, nodes }: Props) {
                 onChange={
                     binding.bound
                         ? (event) => {
-                              binding.setValue(readInputGroupFileValue(event.currentTarget, multiple));
+                              binding.setValue(readBindableFileInputValue(event.currentTarget, multiple));
                           }
                         : undefined
                 }
@@ -131,37 +131,26 @@ export function InputGroupInput({ props, nodes }: Props) {
     );
 }
 
-
-/** Returns the selected file value that should be stored for one input-group control. */
-function readInputGroupFileValue(input: HTMLInputElement, multiple: boolean): File | File[] | null {
-    const files = input.files ? Array.from(input.files) : [];
-
-    return multiple ? files : (files[0] ?? null);
-}
-
 /** Renders a reactive textarea control inside an input group. */
 export function InputGroupTextarea({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const cols = resolveXmlString(props, 'cols', ctx);
+    const cols = resolveXmlNumber(props, 'cols', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);
     const id = resolveXmlString(props, 'id', ctx);
     const label = resolveXmlString(props, 'label', ctx);
     const placeholder = props.i18n ? resolveTranslation(props, ctx) : resolveXmlValue(props, 'placeholder', ctx);
-    const rows = resolveXmlString(props, 'rows', ctx);
+    const rows = resolveXmlNumber(props, 'rows', ctx);
     const placeholderText = String(placeholder ?? label ?? '');
-    // Normalize XML string attributes to the numeric textarea props expected by React.
-    const resolvedCols = typeof cols === 'string' ? Number(cols) : cols;
-    const resolvedRows = typeof rows === 'string' ? Number(rows) : rows;
     const binding = useBindableValue(props, 'value', ctx);
 
     if (binding.bound) {
         return (
             <UIInputGroupTextarea
-                cols={Number.isNaN(resolvedCols ?? Number.NaN) ? undefined : resolvedCols}
+                cols={cols}
                 disabled={disabled}
                 id={id}
                 placeholder={placeholderText}
-                rows={Number.isNaN(resolvedRows ?? Number.NaN) ? undefined : resolvedRows}
+                rows={rows}
                 value={binding.currentValue}
                 onChange={(event) => {
                     binding.setValue(event.target.value);
@@ -172,11 +161,11 @@ export function InputGroupTextarea({ props, nodes }: Props) {
 
     return (
         <UIInputGroupTextarea
-            cols={Number.isNaN(resolvedCols ?? Number.NaN) ? undefined : resolvedCols}
+            cols={cols}
             disabled={disabled}
             id={id}
             placeholder={placeholderText}
-            rows={Number.isNaN(resolvedRows ?? Number.NaN) ? undefined : resolvedRows}
+            rows={rows}
             defaultValue={binding.initialValue}
         />
     );

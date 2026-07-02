@@ -4,6 +4,7 @@ import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { DataTable } from '@/components/DataTable';
 import { useOperations } from '@/hooks/use-operations';
 import type { ApiOperation } from '@/lib/types';
+import { formatDateTime } from '@/lib/utils';
 
 const OPERATION_STATUS_LABELS: Record<ApiOperation['status'], string> = {
     scheduled: 'Scheduled',
@@ -38,11 +39,11 @@ const operationColumns: Array<ColumnDef<ApiOperation>> = [
                 <div className="flex flex-col gap-1 leading-tight">
                     <div>
                         <span className="text-xs text-muted-foreground">Created</span>{' '}
-                        {new Date(operation.created_at).toLocaleString()}
+                        {formatDateTime(operation.created_at)}
                     </div>
                     <div>
                         <span className="text-xs text-muted-foreground">Started</span>{' '}
-                        {operation.started_at ? new Date(operation.started_at).toLocaleString() : '—'}
+                        {operation.started_at ? formatDateTime(operation.started_at) : '—'}
                     </div>
                 </div>
             );
@@ -55,7 +56,7 @@ const operationColumns: Array<ColumnDef<ApiOperation>> = [
         cell: ({ getValue }) => {
             const value = getValue<string | null>();
 
-            return value ? new Date(value).toLocaleString() : '—';
+            return value ? formatDateTime(value) : '—';
         },
         meta: { className: 'w-52' },
     },

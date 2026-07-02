@@ -38,17 +38,11 @@ def is_email_enabled() -> bool:
     )
 
 
-def _normalize_context(context: Mapping[str, object] | None = None) -> dict[str, object]:
-    """Convert optional template context into a mutable mapping."""
-
-    return dict(context or {})
-
-
 def _render_template(template_path: str | Path, context: Mapping[str, object] | None = None) -> str:
     """Render one text template with safe placeholder substitution."""
 
     content = Path(template_path).read_text(encoding="utf-8")
-    return Template(content).safe_substitute(_normalize_context(context))
+    return Template(content).safe_substitute(dict(context or {}))
 
 
 def render_mjml(mjml_content: str) -> str:

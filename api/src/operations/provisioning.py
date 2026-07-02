@@ -35,6 +35,42 @@ PLATFORM_ENVIRONMENT_NAMES = {
     "LONGLINK_STORAGE_SHARED_BUCKET",
     "LONGLINK_STORAGE_URL",
 }
+PLATFORM_ENVIRONMENT_PREFIX = "LONGLINK_"
+PLATFORM_STORAGE_ENVIRONMENT_NAMES = {
+    "LONGLINK_STORAGE_BUCKET",
+    "LONGLINK_STORAGE_SHARED_BUCKET",
+    "LONGLINK_STORAGE_URL",
+}
+
+
+def application_runtime_environment(payload: ApplicationCreate) -> dict[str, str]:
+    """Return user-supplied environment values that are safe to pass to the runtime."""
+
+    # Reserve LongLink-prefixed values for the platform so users cannot spoof managed runtime configuration.
+    return {
+        name: value
+        for name, value in payload.envs.items()
+        if not name.startswith(PLATFORM_ENVIRONMENT_PREFIX)
+    }
+
+
+def validate_storage_environment_requirements(
+    image_metadata: LongLinkMetadata,
+    storage_registry: StorageRegistry | None,
+    location_id: UUID,
+) -> None:
+    """Ensure required platform storage values can be provided by the selected location."""
+
+    missing_storage_envs = sorted(
+        environment.name
+        for environment in image_metadata.environments
+        if environment.required and environment.name in PLATFORM_STORAGE_ENVIRONMENT_NAMES
+    )
+    if storage_registry is None and missing_storage_envs:
+        raise RuntimeError(
+            f"No storage configured for location '{location_id}' required by image environment variables: "
+            f"{', '.join(missing_storage_envs)}"
+        )
 
 
 async def latest_compute_registry(location_id: UUID) -> ComputeRegistry | None:
@@ -88,6 +124,19 @@ async def application_image_metadata(
     if image_metadata is None:
         raise ValueError("Image metadata could not be inspected")
 
+    # Reject required LongLink-prefixed envs that the platform does not know how to provide.
+    unsupported_platform_envs = sorted(
+        environment.name
+        for environment in image_metadata.environments
+        if environment.required
+        and environment.name.startswith(PLATFORM_ENVIRONMENT_PREFIX)
+        and environment.name not in PLATFORM_ENVIRONMENT_NAMES
+    )
+    if unsupported_platform_envs:
+        raise ValueError(
+            f"Unsupported platform environment variables: {', '.join(unsupported_platform_envs)}"
+        )
+
     # Reject images that require app-managed values the creation payload does not provide.
     missing_envs = sorted(
         environment.name
@@ -117,10 +166,11 @@ async def application_compute_registry(
 
 async def organization_database_registry(
     organization: Organization | OrganizationDetails | OrganizationSummary,
+    include_deleted: bool = False,
 ) -> DatabaseRegistry | None:
     """Return the single database registry used by an organization."""
 
-    for application in await applications.list_by_organization(organization.id):
+    for application in await applications.list_by_organization(organization.id, include_deleted=include_deleted):
         if application.database_registry is not None:
             return application.database_registry
 
@@ -136,10 +186,11 @@ async def organization_database_registry(
 
 async def organization_storage_registry(
     organization: Organization | OrganizationDetails | OrganizationSummary,
+    include_deleted: bool = False,
 ) -> StorageRegistry | None:
     """Return the single storage registry used by an organization."""
 
-    for application in await applications.list_by_organization(organization.id):
+    for application in await applications.list_by_organization(organization.id, include_deleted=include_deleted):
         if application.storage_registry is not None:
             return application.storage_registry
 
@@ -162,6 +213,94 @@ async def application_storage_registry(
         return await storage.get(application.storage_registry_id, include_deleted=True)
 
     return None
+
+
+async def remove_application_runtime(
+    application: Application,
+    organization: Organization | OrganizationDetails | OrganizationSummary,
+) -> None:
+    """Remove runtime resources for one application."""
+
+    names.knames(organization.slug, "Organization")
+    names.knames(application.slug, "Application name")
+    k8name(organization.slug)
+    dbname(organization.slug)
+    s3name(f"{organization.slug}-{application.slug}")
+
+    compute_registry = await application_compute_registry(application, organization.location_id)
+    if compute_registry is not None:
+        k8s = K8s(compute_registry.kubeconfig, compute_registry.proxy_secret)
+        await k8s.delete_application(organization.slug, application.slug)
+
+    if application.database_registry_id is not None:
+        database_registry = await database.get(application.database_registry_id, include_deleted=True)
+        if database_registry is not None:
+            db_client = Postgres(
+                database_registry.host,
+                database_registry.port,
+                database_registry.username,
+                database_registry.password,
+            )
+            await db_client.delete_schema(organization.slug, application.slug)
+
+    storage_registry = await application_storage_registry(application)
+    if storage_registry is not None:
+        storage_client = S3(
+            storage_registry.protocol,
+            storage_registry.endpoint_url,
+            storage_registry.access_key_id,
+            storage_registry.secret_access_key,
+        )
+        await storage_client.delete_bucket(s3name(f"{organization.slug}-{application.slug}"))
+
+
+async def remove_organization_runtime(
+    organization: Organization | OrganizationDetails | OrganizationSummary,
+) -> None:
+    """Remove runtime resources for one organization and its applications."""
+
+    names.knames(organization.slug, "Organization")
+    k8name(organization.slug)
+    dbname(organization.slug)
+    s3name(f"{organization.slug}-shared")
+
+    organization_applications = await applications.list_by_organization(organization.id, include_deleted=True)
+    for application in organization_applications:
+        await remove_application_runtime(application, organization)
+
+    compute_registries = []
+    for application in organization_applications:
+        registry = await application_compute_registry(application, organization.location_id)
+        if registry is not None and registry.id not in {item.id for item in compute_registries}:
+            compute_registries.append(registry)
+
+    latest_compute = await latest_compute_registry(organization.location_id)
+    if latest_compute is not None and latest_compute.id not in {item.id for item in compute_registries}:
+        compute_registries.append(latest_compute)
+
+    for registry in compute_registries:
+        k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+        await k8s.delete_namespace(organization.slug)
+
+    database_registry = await organization_database_registry(organization, include_deleted=True)
+    if database_registry is not None:
+        db_client = Postgres(
+            database_registry.host,
+            database_registry.port,
+            database_registry.username,
+            database_registry.password,
+        )
+        await db_client.delete_database(organization.slug)
+
+    storage_registry = await organization_storage_registry(organization, include_deleted=True)
+    if storage_registry is not None:
+        storage_client = S3(
+            storage_registry.protocol,
+            storage_registry.endpoint_url,
+            storage_registry.access_key_id,
+            storage_registry.secret_access_key,
+        )
+        await storage_client.delete_bucket(s3name(f"{organization.slug}-shared"))
 
 
 def runtime_database_url(database_url: str) -> str:
@@ -280,6 +419,9 @@ async def create_application_runtime(
         )
 
     storage_registry = await latest_storage_registry(organization.location_id)
+    validate_storage_environment_requirements(
+        image_metadata, storage_registry, organization.location_id
+    )
 
     application = await applications.create(
         organization.id,
@@ -335,7 +477,7 @@ async def create_application_runtime(
             application_slug,
             payload.image,
             APP_SERVICE_PORT,
-            {**payload.envs, **runtime_envs},
+            {**application_runtime_environment(payload), **runtime_envs},
         )
     except Exception as exc:
         await applications.set_status(application.id, ApplicationStatus.failed)
@@ -405,6 +547,9 @@ async def sync_application_runtime(
     storage_registry = await application_storage_registry(application)
     if storage_registry is None:
         storage_registry = await latest_storage_registry(organization.location_id)
+    validate_storage_environment_requirements(
+        image_metadata, storage_registry, organization.location_id
+    )
 
     updated_application = await applications.update_runtime(
         application.id,
@@ -460,7 +605,7 @@ async def sync_application_runtime(
             application.slug,
             payload.image,
             APP_SERVICE_PORT,
-            {**payload.envs, **runtime_envs},
+            {**application_runtime_environment(payload), **runtime_envs},
             rollout_token=datetime.now(UTC).isoformat(),
         )
     except Exception as exc:

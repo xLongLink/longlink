@@ -1,16 +1,20 @@
 from uuid import UUID
 from typing import Any, cast
+from datetime import UTC, datetime, timedelta
 from fastapi import Depends, Request, Response, APIRouter
 from src.auth import authuser, authadmin, organization_access
 from src.utils import names
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.operations import provisioning
-from src.models.roles import OrganizationRoles
+from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
+from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate, ApplicationResponse
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
 from kubernetes.client.exceptions import ApiException as KubernetesApiException
+from src.database.models.applications import Application
+from src.database.services.operations import operations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
 
@@ -29,8 +33,38 @@ FORWARDED_REQUEST_BLOCKLIST = HOP_BY_HOP_HEADERS | {"authorization", "content-le
 FORWARDED_REQUEST_BLOCKLIST |= {"if-modified-since", "if-none-match"}
 FORWARDED_REQUEST_BLOCKLIST |= {"x-user-id"}
 FORWARDED_RESPONSE_BLOCKLIST = HOP_BY_HOP_HEADERS | {"content-length", "set-cookie"}
+APPLICATION_DELETE_DELAY_DAYS = 0
+APPLICATION_ACCESS_ORGANIZATION_ROLES = {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}
+APPLICATION_LOG_ROLES = {ApplicationRoles.admin, ApplicationRoles.maintain}
+APPLICATION_MANAGEMENT_ROLES = {ApplicationRoles.admin, ApplicationRoles.maintain}
 
 router = APIRouter()
+
+
+async def _application_access_roles(application: Application, user: User) -> tuple[OrganizationRoles | None, ApplicationRoles | None]:
+    """Return organization and application roles for one user/application pair."""
+
+    organization_role = await organizations.membership_role(application.organization_id, user.id)
+    application_role = await applications.membership_role(application.id, user.id)
+    return organization_role, application_role
+
+
+def _can_access_application(organization_role: OrganizationRoles | None, application_role: ApplicationRoles | None) -> bool:
+    """Return whether a user may access an application runtime."""
+
+    return application_role is not None or organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES
+
+
+def _can_manage_application(organization_role: OrganizationRoles | None, application_role: ApplicationRoles | None) -> bool:
+    """Return whether a user may perform application management actions."""
+
+    return application_role in APPLICATION_MANAGEMENT_ROLES or organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES
+
+
+def _can_view_application_logs(organization_role: OrganizationRoles | None, application_role: ApplicationRoles | None) -> bool:
+    """Return whether a user may view application logs."""
+
+    return application_role in APPLICATION_LOG_ROLES or organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES
 
 
 @router.get("/api/applications", response_model=list[ApplicationResponse])
@@ -70,6 +104,9 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
         raise NotFoundError("Application", application_id)
 
     organization_record = await organization_access(application.organization_id, user)
+    organization_role, application_role = await _application_access_roles(application, user)
+    if not _can_view_application_logs(organization_role, application_role):
+        raise ForbiddenError("Application log permissions required")
 
     registry = await provisioning.application_compute_registry(application, organization_record.location_id)
     if registry is None:
@@ -84,6 +121,33 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
         raise UnavailableError(str(exc)) from exc
 
     return Response(content=logs, media_type="text/plain")
+
+
+@router.delete("/api/applications/{application_id}", status_code=204)
+async def delete_application(application_id: UUID, user: User = Depends(authuser)) -> Response:
+    """Soft-delete one application and queue runtime resource removal."""
+
+    application = await applications.get_by_id(application_id)
+    if application is None:
+        raise NotFoundError("Application", application_id)
+
+    await organization_access(application.organization_id, user)
+    organization_role, application_role = await _application_access_roles(application, user)
+    if not _can_manage_application(organization_role, application_role):
+        raise ForbiddenError("Application deletion permissions required")
+
+    deleted = await applications.soft_delete(application_id, user)
+    if deleted is None:
+        raise NotFoundError("Application", application_id)
+
+    await operations.create(
+        OperationKind.application_delete,
+        application_id=application_id,
+        scheduled_at=datetime.now(UTC) + timedelta(days=APPLICATION_DELETE_DELAY_DAYS),
+        step="remove",
+        user=user,
+    )
+    return Response(status_code=204)
 
 
 @router.api_route(
@@ -105,6 +169,9 @@ async def proxy_application_request(
         raise NotFoundError("Application", application_id)
 
     organization = await organization_access(application.organization_id, user)
+    organization_role, application_role = await _application_access_roles(application, user)
+    if not _can_access_application(organization_role, application_role):
+        raise ForbiddenError("Application access required")
 
     if application.status != ApplicationStatus.running:
         return Response(status_code=503, headers={"cache-control": "no-store"})

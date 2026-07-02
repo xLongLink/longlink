@@ -41,12 +41,12 @@ Export the kubeconfig afterward:
 k3d kubeconfig get compute > api/kubeconfig.yaml
 ```
 
-## SDK image build
+## Local seed setup
 
-Build the generated SDK development application and push it to the local registry:
+Build the generated SDK development application, push it to the local registry, run API migrations, and seed local data:
 
 ```bash
-make sdk:image
+make seed
 ```
 
 The pushed image is `localhost:15000/longlink-app:dev` by default.

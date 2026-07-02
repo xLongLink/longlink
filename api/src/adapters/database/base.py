@@ -35,6 +35,16 @@ class Database(ABC):
 
 
     @abstractmethod
+    async def delete_schema(self, organization: str, application: str) -> None:
+        """Delete the schema and runtime login role for one application."""
+
+
+    @abstractmethod
+    async def delete_database(self, organization: str) -> None:
+        """Delete the database for one organization."""
+
+
+    @abstractmethod
     async def setup(self) -> None:
         """Initialize the database backend used by the control plane."""
 

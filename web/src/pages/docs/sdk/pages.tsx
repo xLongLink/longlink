@@ -1,207 +1,318 @@
 import { Link } from 'react-router';
 
 import { CodeBlock } from '@/components/CodeBlock';
+import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
+import { Li } from '@/components/ui/li';
+import { P } from '@/components/ui/p';
+import { Stack } from '@/components/ui/stack';
+import { Ul } from '@/components/ui/ul';
 
-type ConceptDoc = {
-    name: string;
-    id: string;
-    description: string;
-    parameters: string[];
-    example: string;
+export const metadata = {
+    lastUpdated: '2026-07-02',
+    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/pages.tsx',
 };
 
-const conceptDocs: ConceptDoc[] = [
-    {
-        name: 'longlink',
-        id: 'longlink',
-        description:
-            'Root XML page element. Use this as the top-level page wrapper to render page body and expose optional metadata for page tabs.',
-        parameters: [
-            'name: optional readable tab label override.',
-            'icon: optional Lucide icon name for the tab in the XML shell.',
-        ],
-        example: `<longlink name="Dashboard" icon="layout-dashboard">
+export const content = (
+    <Stack>
+        <Heading id="pages" level="h1">
+            Pages
+        </Heading>
+        <P>
+            Pages define the XML UI returned by SDK page handlers. The root page covers the runtime concepts shared by
+            every element: state, queries, loops, conditions, translations, expressions, bindings, and invalidation.
+        </P>
+        <P>
+            Element references live in the SDK pages section:{' '}
+            <Link className="text-foreground underline underline-offset-4" to="/docs/sdk/pages/layout">
+                layout elements
+            </Link>{' '}
+            and{' '}
+            <Link className="text-foreground underline underline-offset-4" to="/docs/sdk/pages/components">
+                component elements
+            </Link>
+            .
+        </P>
+        <Stack className="gap-3">
+            <Heading id="folder-conventions" level="h2">
+                Folder conventions
+            </Heading>
+            <P>
+                SDK apps use conventional folders under <Code>src</Code>. LongLink registers these folders at startup
+                when they exist, so pages and translations can be added without writing Python route code.
+            </P>
+            <Ul>
+                <Li>
+                    <Code>src/pages</Code> contains XML page files. Files are registered recursively under{' '}
+                    <Code>/pages</Code>, so <Code>src/pages/admin/users.xml</Code> is served as{' '}
+                    <Code>/pages/admin/users.xml</Code> and listed in <Code>/metadata.json</Code>.
+                </Li>
+                <Li>
+                    <Code>src/i18n</Code> contains locale catalogs. JSON files are served under <Code>/i18n</Code>, so{' '}
+                    <Code>src/i18n/en.json</Code> is available as <Code>/i18n/en.json</Code> for the XML runtime.
+                </Li>
+            </Ul>
+            <CodeBlock language="text">{`src/
+  pages/
+    dashboard.xml
+    admin/users.xml
+  i18n/
+    en.json`}</CodeBlock>
+        </Stack>
+        <Stack className="gap-3">
+            <Heading id="longlink-page-and-i18n-mounts" level="h2">
+                LongLink Page And I18n Mounts
+            </Heading>
+            <P>
+                <Code>LongLink()</Code> registers XML pages and translation catalogs from conventional source folders.
+                The scaffolded app uses the defaults through <Code>LongLink(env=env)</Code>, which is equivalent to
+                mounting pages from <Code>src/pages</Code> at <Code>/pages</Code> and translations from <Code>src/i18n</Code>{' '}
+                at <Code>/i18n</Code>.
+            </P>
+            <CodeBlock language="python">{`from longlink import LongLink
+
+from src.envs import Env
+
+
+env = Env()
+app = LongLink(
+    env=env,
+    pages="/pages",
+    i18n="/i18n",
+)`}</CodeBlock>
+            <P>
+                Change the paths when your application uses different source folders. For example,{' '}
+                <Code>pages=&quot;/screens&quot;</Code> registers XML files from <Code>src/screens</Code> under{' '}
+                <Code>/screens</Code>. Set <Code>pages=None</Code> or <Code>i18n=None</Code> when the application should
+                not use the SDK-managed page or translation mounts.
+            </P>
+        </Stack>
+        <Stack className="gap-3">
+            <Heading id="page-metadata" level="h2">
+                Page Metadata
+            </Heading>
+            <P>
+                The root <Code>longlink</Code> element can define page tab metadata with <Code>name</Code> and{' '}
+                <Code>icon</Code>. During page registration, the SDK reads these values and includes them in{' '}
+                <Code>/metadata.json</Code> so the web runtime can render application navigation consistently.
+            </P>
+            <Ul>
+                <Li>
+                    <Code>name</Code>: readable label shown for the page tab.
+                </Li>
+                <Li>
+                    <Code>icon</Code>: Lucide icon slug shown next to the page tab label.
+                </Li>
+            </Ul>
+            <CodeBlock language="xml">{`<longlink name="Orders" icon="clipboard-list">
   <H1 i18n="orders.title" />
   <P i18n="orders.description" />
-</longlink>`,
-    },
-    {
-        name: 'State',
-        id: 'state',
-        description:
-            'Declares local reactive page state before rendering. Descendant controls can read and write the state through XML value bindings.',
-        parameters: [
-            'id: required literal state name.',
-            'Any additional attribute becomes an initial state field. JSON values are parsed when possible, otherwise the value is evaluated.',
-            'State is setup-only, does not render, and cannot have children.',
-        ],
-        example: `<State id="form" name="" active="true" />
+</longlink>`}</CodeBlock>
+        </Stack>
+        <Stack className="gap-3">
+            <Heading id="translations" level="h2">
+                Translations
+            </Heading>
+            <P>
+                XML pages keep visible copy in translation catalogs through the <Code>i18n</Code> attribute. After
+                adding or renaming translation keys in page XML, run the generator from the app root to refresh{' '}
+                <Code>src/i18n/en.json</Code> while preserving existing translated values.
+            </P>
+            <CodeBlock language="bash">longlink translations generate</CodeBlock>
+        </Stack>
+        <Stack className="gap-3">
+            <Heading id="longlink" level="h2">
+                longlink
+            </Heading>
+            <P>
+                Root XML page element. Use this as the top-level page wrapper to render page body and expose optional
+                metadata for page tabs.
+            </P>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">Parameters</P>
+                <Ul>
+                    <Li>name: optional readable tab label override.</Li>
+                    <Li>icon: optional Lucide icon name for the tab in the XML shell.</Li>
+                </Ul>
+            </Stack>
+            <CodeBlock language="xml">{`<longlink name="Dashboard" icon="layout-dashboard">
+  <H1 i18n="orders.title" />
+  <P i18n="orders.description" />
+</longlink>`}</CodeBlock>
+        </Stack>
+        <Stack className="gap-3">
+            <Heading id="state" level="h2">
+                State
+            </Heading>
+            <P>
+                Declares local reactive page state before rendering. Descendant controls can read and write the state
+                through XML value bindings.
+            </P>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">Parameters</P>
+                <Ul>
+                    <Li>id: required literal state name.</Li>
+                    <Li>
+                        Any additional attribute becomes an initial state field. JSON values are parsed when possible,
+                        otherwise the value is evaluated.
+                    </Li>
+                    <Li>State is setup-only, does not render, and cannot have children.</Li>
+                </Ul>
+            </Stack>
+            <CodeBlock language="xml">{`<State id="form" name="" active="true" />
 
 <Field>
   <FieldLabel htmlFor="name" i18n="customers.name" />
   <FieldContent>
     <Input id="name" value="$form.name" />
   </FieldContent>
-</Field>`,
-    },
-    {
-        name: 'Text and styling',
-        id: 'text-and-styling',
-        description:
-            'XML pages intentionally reject literal text nodes and className attributes. Put copy in locale files and render it through i18n-capable elements so pages stay structured and translatable.',
-        parameters: [
-            'Use i18n on text-bearing elements such as H1, P, Button, Badge, Li, Th, and Td.',
-            'Use semantic XML elements for layout and state instead of className styling hooks.',
-        ],
-        example: `<H1 i18n="orders.title" />
+</Field>`}</CodeBlock>
+        </Stack>
+        <Stack className="gap-3">
+            <Heading id="text-and-styling" level="h2">
+                Text and styling
+            </Heading>
+            <P>
+                XML pages intentionally reject literal text nodes and className attributes. Put copy in locale files and
+                render it through i18n-capable elements so pages stay structured and translatable.
+            </P>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">Parameters</P>
+                <Ul>
+                    <Li>Use i18n on text-bearing elements such as H1, P, Button, Badge, Li, Th, and Td.</Li>
+                    <Li>Use semantic XML elements for layout and state instead of className styling hooks.</Li>
+                </Ul>
+            </Stack>
+            <CodeBlock language="xml">{`<H1 i18n="orders.title" />
 <P i18n="orders.summary" count="orders.items.length" />
-<Badge variant="outline" i18n="orders.pendingReview" />`,
-    },
-    {
-        name: 'Query',
-        id: 'query',
-        description:
-            'Fetches JSON data for the page before rendering. The response is stored in the runtime context and can be used by expressions, loops, and bindings.',
-        parameters: [
-            'id: required literal query name.',
-            'path: required literal request path, resolved relative to the current app base URL.',
-            'Query is setup-only, does not render, and cannot have children.',
-        ],
-        example: `<Query id="orders" path="/api/orders" />
+<Badge variant="outline" i18n="orders.pendingReview" />`}</CodeBlock>
+        </Stack>
+        <Stack className="gap-3">
+            <Heading id="query" level="h2">
+                Query
+            </Heading>
+            <P>
+                Fetches JSON data for the page before rendering. The response is stored in the runtime context and can
+                be used by expressions, loops, and bindings.
+            </P>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">Parameters</P>
+                <Ul>
+                    <Li>id: required literal query name.</Li>
+                    <Li>path: required literal request path, resolved relative to the current app base URL.</Li>
+                    <Li>Query is setup-only, does not render, and cannot have children.</Li>
+                </Ul>
+            </Stack>
+            <CodeBlock language="xml">{`<Query id="orders" path="/api/orders" />
 
 <For each="orders.items" as="order">
   <P i18n="orders.row" number="order.number" status="order.status" />
-</For>`,
-    },
-    {
-        name: 'For',
-        id: 'for',
-        description:
-            'Repeats child XML for each item in an array. Every iteration gets a child scope with the item alias and an index value.',
-        parameters: [
-            'each: required expression that must resolve to an array.',
-            'as: required local variable name for each item.',
-            'if: optional global condition for rendering the loop.',
-        ],
-        example: `<For each="orders.items" as="order">
+</For>`}</CodeBlock>
+        </Stack>
+        <Stack className="gap-3">
+            <Heading id="for" level="h2">
+                For
+            </Heading>
+            <P>
+                Repeats child XML for each item in an array. Every iteration gets a child scope with the item alias and
+                an index value.
+            </P>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">Parameters</P>
+                <Ul>
+                    <Li>each: required expression that must resolve to an array.</Li>
+                    <Li>as: required local variable name for each item.</Li>
+                    <Li>if: optional global condition for rendering the loop.</Li>
+                </Ul>
+            </Stack>
+            <CodeBlock language="xml">{`<For each="orders.items" as="order">
   <Card>
     <H3 i18n="orders.cardTitle" index="index + 1" number="order.number" />
     <Badge i18n="orders.status" status="order.status" />
   </Card>
-</For>`,
-    },
-    {
-        name: 'if',
-        id: 'if',
-        description:
-            'Global conditional prop supported by rendered XML nodes. When the expression is falsy, the node and its children are skipped.',
-        parameters: ['if: expression evaluated in the current XML runtime scope.'],
-        example: `<Badge if="order.blocked" variant="destructive" i18n="orders.blocked" />`,
-    },
-    {
-        name: 'i18n',
-        id: 'i18n',
-        description:
-            'Global translation prop used by text-bearing elements. The value is a literal dotted key into the active locale bundle, not an expression.',
-        parameters: [
-            'i18n: literal translation key.',
-            'count: optional expression used for plural translation entries.',
-            'Any additional attribute can fill {{name}} placeholders inside the translation string.',
-        ],
-        example: `<H1 i18n="orders.title" />
+</For>`}</CodeBlock>
+        </Stack>
+        <Stack className="gap-3">
+            <Heading id="if" level="h2">
+                if
+            </Heading>
+            <P>
+                Global conditional prop supported by rendered XML nodes. When the expression is falsy, the node and its
+                children are skipped.
+            </P>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">Parameters</P>
+                <Ul>
+                    <Li>if: expression evaluated in the current XML runtime scope.</Li>
+                </Ul>
+            </Stack>
+            <CodeBlock language="xml">{`<Badge if="order.blocked" variant="destructive" i18n="orders.blocked" />`}</CodeBlock>
+        </Stack>
+        <Stack className="gap-3">
+            <Heading id="i18n" level="h2">
+                i18n
+            </Heading>
+            <P>
+                Global translation prop used by text-bearing elements. The value is a literal dotted key into the active
+                locale bundle, not an expression.
+            </P>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">Parameters</P>
+                <Ul>
+                    <Li>i18n: literal translation key.</Li>
+                    <Li>count: optional expression used for plural translation entries.</Li>
+                    <Li>{'Any additional attribute can fill {{name}} placeholders inside the translation string.'}</Li>
+                </Ul>
+            </Stack>
+            <CodeBlock language="xml">{`<H1 i18n="orders.title" />
 <P i18n="orders.count" count="orders.items.length" />
-<Button i18n="orders.assign" user="assignee.name" />`,
-    },
-    {
-        name: 'Expressions',
-        id: 'expressions',
-        description:
-            'Most XML parameters are expression-aware. Use plain dotted paths, explicit $ bindings, or ${...} interpolation when mixing text and values.',
-        parameters: [
-            'path.to.value reads from the runtime context.',
-            '$state.field creates a writable binding for controls that support it.',
-            '${...} interpolates expression output inside a string parameter or text node.',
-        ],
-        example: `<Input value="$form.name" />
+<Button i18n="orders.assign" user="assignee.name" />`}</CodeBlock>
+        </Stack>
+        <Stack className="gap-3">
+            <Heading id="expressions" level="h2">
+                Expressions
+            </Heading>
+            <P>
+                {
+                    'Most XML parameters are expression-aware. Use plain dotted paths, explicit $ bindings, or ${...} interpolation when mixing text and values.'
+                }
+            </P>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">Parameters</P>
+                <Ul>
+                    <Li>path.to.value reads from the runtime context.</Li>
+                    <Li>$state.field creates a writable binding for controls that support it.</Li>
+                    <Li>{'${...} interpolates expression output inside a string parameter or text node.'}</Li>
+                </Ul>
+            </Stack>
+            <CodeBlock language="xml">{`<Input value="$form.name" />
 <P i18n="orders.summary" name="form.name" count="orders.items.length" />
-<Button disabled="form.saving" i18n="actions.save" />`,
-    },
-    {
-        name: 'Invalidation',
-        id: 'invalidation',
-        description:
-            'Actions can refresh setup values after a mutation. Use invalidate with a list of State or Query ids that should be recreated or refetched.',
-        parameters: [
-            'action: request path or URL for the mutation.',
-            'method: HTTP method, default POST.',
-            'json: expression payload sent as JSON.',
-            'invalidate: expression that resolves to an array of setup ids.',
-        ],
-        example: `<Action
-  action="/api/orders/${'${order.id}'}/complete"
+<Button disabled="form.saving" i18n="actions.save" />`}</CodeBlock>
+        </Stack>
+        <Stack className="gap-3">
+            <Heading id="invalidation" level="h2">
+                Invalidation
+            </Heading>
+            <P>
+                Actions can refresh setup values after a mutation. Use invalidate with a list of State or Query ids that
+                should be recreated or refetched.
+            </P>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">Parameters</P>
+                <Ul>
+                    <Li>action: request path or URL for the mutation.</Li>
+                    <Li>method: HTTP method, default POST.</Li>
+                    <Li>json: expression payload sent as JSON.</Li>
+                    <Li>invalidate: expression that resolves to an array of setup ids.</Li>
+                </Ul>
+            </Stack>
+            <CodeBlock language="xml">{`<Action
+  action="/api/orders/\${order.id}/complete"
   method="POST"
   invalidate="\${['orders']}"
 >
   <Button i18n="orders.complete" />
-</Action>`,
-    },
-];
-
-/** Renders one generic XML page concept. */
-function ConceptSection({ concept }: { concept: ConceptDoc }) {
-    return (
-        <section className="space-y-3">
-            <Heading id={concept.id} level="h2">
-                {concept.name}
-            </Heading>
-            <p className="leading-7">{concept.description}</p>
-            <div>
-                <p className="font-medium text-foreground">Parameters</p>
-                <ul className="ml-6 list-disc space-y-2">
-                    {concept.parameters.map((parameter) => (
-                        <li key={parameter}>{parameter}</li>
-                    ))}
-                </ul>
-            </div>
-            <CodeBlock language="xml">{concept.example}</CodeBlock>
-        </section>
-    );
-}
-
-/** Renders the SDK Pages documentation overview and XML runtime concepts. */
-function PagesContent() {
-    return (
-        <div className="flex flex-col gap-4">
-            <Heading id="pages" level="h1">
-                Pages
-            </Heading>
-            <p className="leading-7">
-                Pages define the XML UI returned by SDK page handlers. The root page covers the runtime concepts shared
-                by every element: state, queries, loops, conditions, translations, expressions, bindings, and
-                invalidation.
-            </p>
-            <p className="leading-7">
-                Element references live in the SDK pages section:{' '}
-                <Link className="text-foreground underline underline-offset-4" to="/docs/sdk/pages/layout">
-                    layout elements
-                </Link>{' '}
-                and{' '}
-                <Link className="text-foreground underline underline-offset-4" to="/docs/sdk/pages/components">
-                    component elements
-                </Link>
-                .
-            </p>
-            {conceptDocs.map((concept) => (
-                <ConceptSection key={concept.id} concept={concept} />
-            ))}
-        </div>
-    );
-}
-
-export const metadata = {
-    lastUpdated: '2026-06-28',
-    editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/pages.tsx',
-};
-
-export const content = <PagesContent />;
+</Action>`}</CodeBlock>
+        </Stack>
+    </Stack>
+);

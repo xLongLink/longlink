@@ -85,3 +85,38 @@ def test_production_storage_scopes_paths_to_application_bucket(monkeypatch) -> N
     assert isinstance(filesystem, storage_base.DirFileSystem)
     assert filesystem.path == "longlink-acme-dashboard"
     assert filesystem.fs is fake_filesystem
+
+
+def test_production_shared_storage_scopes_paths_to_shared_bucket(monkeypatch) -> None:
+    """Scope shared production storage paths to the organization shared bucket."""
+
+    class FakeFileSystem:
+        """Minimal fsspec implementation used by DirFileSystem in this test."""
+
+        async_impl = False
+        asynchronous = False
+
+        def _strip_protocol(self, path: str) -> str:
+            """Return the path unchanged for bucket scoping assertions."""
+
+            return path
+
+    fake_filesystem = FakeFileSystem()
+
+    def fake_filesystem_factory(protocol: str, **kwargs: object) -> object:
+        return fake_filesystem
+
+    monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem_factory)
+
+    filesystem = storage_base.create_shared_fs(
+        Envs(
+            ENV="production",
+            STORAGE_URL="s3+http://access%2Fkey:secret%40key@storage.runtime.longlink.internal:19000",
+            STORAGE_BUCKET="longlink-acme-dashboard",
+            STORAGE_SHARED_BUCKET="longlink-acme-shared",
+        )
+    )
+
+    assert isinstance(filesystem, storage_base.DirFileSystem)
+    assert filesystem.path == "longlink-acme-shared"
+    assert filesystem.fs is fake_filesystem

@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import kebabCase from 'lodash/kebabCase';
 import {
     Activity,
     ArrowRight,
@@ -90,12 +91,7 @@ const staticIconRegistry = {
 
 /** Normalizes XML and app icon names into Lucide's kebab-case format. */
 export function normalizeIconName(name: string): string {
-    return name
-        .trim()
-        .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-        .replace(/[^a-zA-Z0-9]+/g, '-')
-        .toLowerCase()
-        .replace(/^-+|-+$/g, '');
+    return kebabCase(name);
 }
 
 /** Returns a Lucide-compatible icon component for one normalized icon name. */

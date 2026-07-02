@@ -93,12 +93,13 @@ export default function Home() {
                 <section className="relative z-10 mx-auto flex w-full max-w-3xl -translate-y-20 flex-col items-center text-center sm:-translate-y-28">
                     <div className="space-y-5">
                         <h1 className="mx-auto flex max-w-2xl flex-col items-center text-center text-[1.65rem] font-medium leading-[1.08] text-foreground min-[380px]:text-3xl sm:text-6xl lg:text-7xl">
-                            <span className="block whitespace-nowrap text-center">Solutions for workflows,</span>
-                            <span className="block whitespace-nowrap text-center">data, and validation</span>
+                            <span className="block whitespace-nowrap text-center">Build workflow apps</span>
+                            <span className="block whitespace-nowrap text-center">not platform glue</span>
                         </h1>
                         <p className="mx-auto max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-                            Turns XML page definitions into authenticated web apps, with routing, metadata, access
-                            control, and a shared React runtime handled by the platform.
+                            LongLink gives technical teams a Python SDK for modeling data, validation, permissions, and
+                            XML interfaces locally, then runs them with shared authentication, storage, routing, and
+                            deployment.
                         </p>
                     </div>
 

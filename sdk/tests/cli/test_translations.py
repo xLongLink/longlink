@@ -5,24 +5,25 @@ from longlink.cli import translations
 from click.testing import CliRunner
 
 
-def test_generate_includes_scaffold_page_translation_keys(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    """Generate scaffold catalog keys from scaffold XML pages."""
+def test_generate_updates_current_app_translation_catalog(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    """Generate current application catalog keys from current application XML pages."""
 
     # Arrange
-    sdk_root = tmp_path / "sdk" / "longlink"
-    scaffold_pages_directory = sdk_root / ".static" / "new" / "src" / "pages"
-    catalog_path = sdk_root / ".static" / "new" / "src" / "i18n" / "en.json"
-    ignored_static_page = sdk_root / ".static" / "web" / "ignored.xml"
+    pages_directory = tmp_path / "src" / "pages"
+    nested_pages_directory = pages_directory / "admin"
+    catalog_path = tmp_path / "src" / "i18n" / "en.json"
+    ignored_static_page = tmp_path / ".static" / "new" / "src" / "pages" / "ignored.xml"
     runner = CliRunner()
 
-    scaffold_pages_directory.mkdir(parents=True)
+    pages_directory.mkdir(parents=True)
+    nested_pages_directory.mkdir(parents=True)
+    catalog_path.parent.mkdir(parents=True)
     ignored_static_page.parent.mkdir(parents=True)
-    scaffold_page = scaffold_pages_directory / "dashboard.xml"
-    scaffold_page.write_text('<P i18n="examples.scaffold.title" />', encoding="utf-8")
+    (pages_directory / "dashboard.xml").write_text('<P i18n="dashboard.title" />', encoding="utf-8")
+    (nested_pages_directory / "users.xml").write_text('<P i18n="admin.users.title" />', encoding="utf-8")
+    catalog_path.write_text(json.dumps({"dashboard": {"title": "Dashboard"}}), encoding="utf-8")
     ignored_static_page.write_text('<P i18n="examples.ignored.title" />', encoding="utf-8")
-    monkeypatch.setattr(translations, "ROOT", sdk_root)
-    monkeypatch.setattr(translations, "TRANSLATION_FILE", catalog_path)
-    monkeypatch.setattr(translations, "SCAFFOLD_PAGES_DIRECTORY", scaffold_pages_directory)
+    monkeypatch.chdir(tmp_path)
 
     # Act
     result = runner.invoke(translations.generate_command)
@@ -30,4 +31,8 @@ def test_generate_includes_scaffold_page_translation_keys(monkeypatch: MonkeyPat
     # Assert
     assert result.exit_code == 0
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
-    assert catalog == {"examples": {"scaffold": {"title": ""}}}
+    assert catalog == {
+        "admin": {"users": {"title": ""}},
+        "dashboard": {"title": "Dashboard"},
+    }
+    assert "Generated src/i18n/en.json from 2 translation keys." in result.output

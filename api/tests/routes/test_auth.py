@@ -68,6 +68,24 @@ def test_login_oidc_forwards_social_provider_hint(monkeypatch: pytest.MonkeyPatc
     ]
 
 
+@pytest.mark.parametrize(
+    ("next_path", "expected_path"),
+    [
+        ("/orgs/acme?tab=Apps#top", "/orgs/acme?tab=Apps#top"),
+        ("//evil.example", auth_routes.DEFAULT_POST_LOGIN_REDIRECT),
+        ("///evil.example", auth_routes.DEFAULT_POST_LOGIN_REDIRECT),
+        ("https://evil.example", auth_routes.DEFAULT_POST_LOGIN_REDIRECT),
+        ("/\\evil.example", auth_routes.DEFAULT_POST_LOGIN_REDIRECT),
+        ("settings", auth_routes.DEFAULT_POST_LOGIN_REDIRECT),
+        (None, auth_routes.DEFAULT_POST_LOGIN_REDIRECT),
+    ],
+)
+def test_sanitize_post_login_redirect(next_path: str | None, expected_path: str) -> None:
+    """Keep post-login redirects constrained to same-origin relative paths."""
+
+    assert auth_routes.sanitize_post_login_redirect(next_path) == expected_path
+
+
 def test_login_oidc_rejects_unsafe_next_path(monkeypatch: pytest.MonkeyPatch) -> None:
     """Fallback to the default page when an unsafe post-login path is supplied."""
 

@@ -88,4 +88,33 @@ describe('evaluate', () => {
 
         expect(evaluate('${form.value}', ctx)).toBe('draft');
     });
+
+    it('does not read inherited member values', () => {
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: {},
+            user: { name: 'Ada' },
+        };
+
+        expect(evaluate('${user.toString}', ctx)).toBeUndefined();
+        expect(evaluate('${"toString" in user}', ctx)).toBe(false);
+        expect(evaluate('${"name" in user}', ctx)).toBe(true);
+    });
+
+    it('ignores unsafe object literal keys', () => {
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: {},
+        };
+        const result = evaluate('${{ __proto__: { polluted: true }, constructor: true, safe: 1 }}', ctx) as Record<
+            string,
+            unknown
+        >;
+
+        expect(result.safe).toBe(1);
+        expect(result.constructor).toBeUndefined();
+        expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    });
 });

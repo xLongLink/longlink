@@ -7,7 +7,7 @@ import {
     createContext as createXmlContext,
     fromXml,
     RenderXML,
-    resolveUrl,
+    resolveRequestUrl,
     type ASTNode,
     type ExecutionContext,
 } from '@/xml';
@@ -195,18 +195,21 @@ export default function View({
             return;
         }
 
-        navigate(`?tab=${encodeURIComponent(metadataDocument.pages[0].tab)}`, { replace: true });
+        const query = new URLSearchParams({ tab: metadataDocument.pages[0].tab });
+
+        navigate(`?${query.toString()}`, { replace: true });
     }, [metadataDocument?.pages, navigate, normalizedRoutePath, selectedTab]);
 
     const tabs = useMemo(
         () =>
             Object.fromEntries(
                 metadataDocument?.pages?.map((page) => {
+                    const query = new URLSearchParams({ tab: page.tab });
                     const href = application
-                        ? `/orgs/${organization}/apps/${application}?tab=${encodeURIComponent(page.tab)}`
+                        ? `/orgs/${organization}/apps/${application}?${query.toString()}`
                         : organization
-                          ? `/orgs/${organization}?tab=${encodeURIComponent(page.tab)}`
-                          : `?tab=${encodeURIComponent(page.tab)}`;
+                          ? `/orgs/${organization}?${query.toString()}`
+                          : `?${query.toString()}`;
 
                     const label = page.name?.trim() || startCase(page.tab);
                     const iconName = page.icon?.trim();
@@ -245,16 +248,34 @@ export default function View({
             return;
         }
 
-        const controller = new AbortController();
-        const pagePath = activePagePath.startsWith('/') ? activePagePath : `/${activePagePath}`;
-        const pageUrl =
-            activePagePath.startsWith('http://') || activePagePath.startsWith('https://')
-                ? activePagePath
-                : resolveUrl(resolvedMetadataBaseUrl, pagePath);
         const loadingPageState = {
             ...createPageState(pageCacheKey, activePagePath, runtimeContextRef.current),
             loading: true,
         };
+        let pageUrl: string;
+
+        // Validate metadata page paths before fetch so app metadata cannot request external URLs.
+        try {
+            pageUrl = resolveRequestUrl(resolvedMetadataBaseUrl, activePagePath);
+        } catch (urlError: unknown) {
+            const errorPageState = {
+                ...loadingPageState,
+                error: urlError instanceof Error ? urlError.message : 'Invalid page URL',
+                loading: false,
+            };
+
+            setPageStates((current) => {
+                const next = { ...current, [activePageTab]: errorPageState };
+
+                pageStatesRef.current = next;
+
+                return next;
+            });
+
+            return;
+        }
+
+        const controller = new AbortController();
 
         inFlightPageKeysRef.current.add(pageKey);
         setPageStates((current) => {

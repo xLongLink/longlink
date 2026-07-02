@@ -1935,24 +1935,18 @@ class IconCatalog(BaseModel):
     icons: list[Icon]
 
 
-def normalize_icon_slug(icon: str | Icon) -> str:
-    """Return a normalized icon slug for validation and storage."""
-
-    if isinstance(icon, Icon):
-        return icon.value
-
-    normalized_icon = ICON_WORD_BOUNDARY.sub(r"\1-\2", icon.strip())
-
-    return ICON_NON_SLUG.sub("-", normalized_icon).lower().strip("-")
-
-
 def parse_icon(icon: str | Icon | None) -> Icon | None:
     """Return a normalized icon enum member or reject unknown slugs."""
 
     if icon is None:
         return None
 
-    normalized_icon = normalize_icon_slug(icon)
+    if isinstance(icon, Icon):
+        normalized_icon = icon.value
+    else:
+        normalized_icon = ICON_WORD_BOUNDARY.sub(r"\1-\2", icon.strip())
+        normalized_icon = ICON_NON_SLUG.sub("-", normalized_icon).lower().strip("-")
+
     if not normalized_icon:
         return None
 

@@ -108,6 +108,39 @@ def test_read_env_spec_emits_only_supported_environment_metadata(tmp_path: Path)
     }
 
 
+def test_read_env_spec_respects_positional_field_defaults(tmp_path: Path) -> None:
+    """Mark positional Field defaults as optional while keeping ellipsis fields required."""
+
+    # Arrange
+    src_path = tmp_path / "src"
+    src_path.mkdir()
+    (src_path / "envs.py").write_text(
+        "from pydantic import BaseModel, Field\n\n"
+        "class Envs(BaseModel):\n"
+        "    OPTIONAL_TOKEN: str = Field('dev', alias='OPTIONAL_TOKEN')\n"
+        "    REQUIRED_TOKEN: str = Field(..., alias='REQUIRED_TOKEN')\n"
+    )
+
+    # Act
+    env_spec = read_env_spec(tmp_path)
+
+    # Assert
+    assert env_spec == {
+        "environments": [
+            {
+                "name": "OPTIONAL_TOKEN",
+                "type": "str",
+                "required": False,
+            },
+            {
+                "name": "REQUIRED_TOKEN",
+                "type": "str",
+                "required": True,
+            },
+        ]
+    }
+
+
 def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path: Path) -> None:
     """Keep local-only files out of the temporary Docker build context."""
 

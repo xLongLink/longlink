@@ -71,3 +71,23 @@ def test_init_adds_github_workflows_when_requested() -> None:
         assert result.exit_code == 0
         assert (workflows / "tests.yml").exists()
         assert (workflows / "release.yml").exists()
+
+
+def test_init_refuses_existing_non_empty_folder() -> None:
+    """Avoid silently merging generated scaffold files into an existing project."""
+
+    # Arrange
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        target = Path.cwd() / "sample-app"
+        target.mkdir()
+        (target / "README.md").write_text("Existing project\n", encoding="utf-8")
+
+        # Act
+        result = runner.invoke(init_command, ["--folder", "sample-app"])
+
+        # Assert
+        assert result.exit_code == 1
+        assert "Target folder is not empty" in result.output
+        assert (target / "README.md").read_text(encoding="utf-8") == "Existing project\n"

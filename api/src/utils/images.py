@@ -7,6 +7,7 @@ from typing import Any, cast
 from src.logger import logger
 from urllib.parse import urlparse
 from src.environments import env
+from urllib.request import parse_http_list, parse_keqv_list
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 
@@ -238,10 +239,7 @@ async def _resolve_bearer_token(client: httpx2.AsyncClient, repository: str, res
     if not auth_header.startswith("Bearer "):
         return None
 
-    params: dict[str, str] = {}
-    for part in auth_header[7:].split(","):
-        key, _, value = part.strip().partition("=")
-        params[key] = value.strip('"')
+    params = parse_keqv_list(parse_http_list(auth_header.removeprefix("Bearer ")))
 
     realm = params.get("realm")
     if realm is None:

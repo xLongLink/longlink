@@ -1,4 +1,5 @@
 import { useSdkUser } from '@/hooks/use-sdk-user';
+import { getInitials } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import {
     DropdownMenu,
@@ -16,7 +17,7 @@ const sdkUserDropdownItemClassName =
 /** Renders the SDK-only local user selector. */
 export function SdkUserSelector() {
     const { user, users, selectUser } = useSdkUser();
-    const fallback = user.name.slice(0, 2).toUpperCase();
+    const fallback = getInitials(user.name);
 
     return (
         <DropdownMenu>
@@ -51,7 +52,7 @@ export function SdkUserSelector() {
                         >
                             <Avatar className="size-8">
                                 <AvatarImage src={option.avatar} alt={`${option.name} profile`} />
-                                <AvatarFallback>{option.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                                <AvatarFallback>{getInitials(option.name)}</AvatarFallback>
                             </Avatar>
                             <div className="min-w-0 flex-1">
                                 <p className="truncate text-sm font-medium text-foreground">{option.name}</p>

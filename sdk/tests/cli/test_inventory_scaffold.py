@@ -27,3 +27,23 @@ def test_init_adds_inventory_create_request_model() -> None:
         assert "payload.sku" in route_text
         assert "class InventoryItemCreate" in schema_text
         assert "sku: str = Field(min_length=1, max_length=64)" in schema_text
+
+
+def test_init_adds_safe_file_download_header() -> None:
+    """Generate file routes that encode download filenames safely."""
+
+    # Arrange
+    runner = CliRunner()
+
+    with runner.isolated_filesystem():
+        # Act
+        result = runner.invoke(init_command, ["--folder", "sample-app"])
+
+        # Assert
+        route_text = (Path.cwd() / "sample-app" / "src" / "routes" / "files.py").read_text(
+            encoding="utf-8",
+        )
+
+        assert result.exit_code == 0
+        assert "from urllib.parse import quote" in route_text
+        assert "filename*=UTF-8''{download_name}" in route_text

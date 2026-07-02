@@ -1,4 +1,5 @@
 from uuid import UUID
+from typing import Any
 from datetime import UTC, datetime
 from src.utils import names
 from sqlalchemy import select
@@ -15,7 +16,7 @@ from src.models.organizations import (OrganizationDetails,
                                       OrganizationInvitationResponse,
                                       OrganizationApplicationResponse)
 from src.database.models.users import User
-from src.database.models.association import UserOrganization
+from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
@@ -86,16 +87,25 @@ class OrganizationsService:
             ]
 
 
-    async def get(self, organization_id: UUID) -> OrganizationDetails | None:
+    async def get(
+        self,
+        organization_id: UUID,
+        include_deleted: bool = False,
+        application_user_id: UUID | None = None,
+    ) -> OrganizationDetails | None:
         """Return one organization by id."""
 
         async with session_scope() as session:
+            conditions = [Organization.id == organization_id]
+            if not include_deleted:
+                conditions.append(Organization.deleted_at.is_(None))
+
             statement = select(Organization).options(
                 selectinload(Organization.created_by),
                 selectinload(Organization.updated_by),
                 selectinload(Organization.deleted_by),
                 selectinload(Organization.location),
-            ).where(Organization.id == organization_id, Organization.deleted_at.is_(None))
+            ).where(*conditions)
             result = await session.execute(statement)
             organization = result.scalar_one_or_none()
             if organization is None:
@@ -112,6 +122,7 @@ class OrganizationsService:
                 .order_by(Application.name)
             )
             active_applications = list(applications_result.scalars().all())
+            application_roles = await self._application_roles(session, organization.id, application_user_id)
 
             invitations_result = await session.execute(
                 select(OrganizationInvitation)
@@ -155,8 +166,40 @@ class OrganizationsService:
                 deleted_by=UserSummary.model_validate(organization.deleted_by) if organization.deleted_by is not None else None,
                 users=members,
                 invitations=[OrganizationInvitationResponse.model_validate(invitation) for invitation in active_invitations],
-                applications=[OrganizationApplicationResponse.model_validate(application) for application in active_applications],
+                applications=[
+                    OrganizationApplicationResponse.model_validate(
+                        {
+                            **application.model_dump(),
+                            "created_by": application.created_by,
+                            "updated_by": application.updated_by,
+                            "deleted_by": application.deleted_by,
+                            "role": application_roles.get(application.id),
+                        }
+                    )
+                    for application in active_applications
+                ],
             )
+
+
+    async def _application_roles(
+        self,
+        session: Any,
+        organization_id: UUID,
+        user_id: UUID | None,
+    ) -> dict[UUID, Any]:
+        """Return application roles keyed by application id for one user."""
+
+        if user_id is None:
+            return {}
+
+        result = await session.execute(
+            select(UserApplication.application_id, UserApplication.role_name).where(
+                UserApplication.organization_id == organization_id,
+                UserApplication.user_id == user_id,
+                UserApplication.deleted_at.is_(None),
+            )
+        )
+        return dict(result.all())
 
     async def membership_role(self, organization_id: UUID, user_id: UUID) -> OrganizationRoles | None:
         """Return one member role for an organization."""
@@ -241,5 +284,72 @@ class OrganizationsService:
             ).where(Organization.id == organization.id)
             result = await session.execute(statement)
             return result.scalar_one()
+
+
+    async def soft_delete(self, organization_id: UUID, user: User) -> Organization | None:
+        """Soft-delete an organization and all nested access rows."""
+
+        async with session_scope() as session:
+            organization = await session.get(Organization, organization_id)
+            if organization is None or organization.deleted_at is not None:
+                return None
+
+            now = datetime.now(UTC)
+            organization.deleted_at = now
+            organization.deleted_id = user.id
+            organization.updated_at = now
+            organization.updated_id = user.id
+
+            applications_result = await session.execute(
+                select(Application).where(
+                    Application.organization_id == organization_id,
+                    Application.deleted_at.is_(None),
+                )
+            )
+            for application in applications_result.scalars().all():
+                application.deleted_at = now
+                application.deleted_id = user.id
+                application.updated_at = now
+                application.updated_id = user.id
+
+            user_applications_result = await session.execute(
+                select(UserApplication).where(
+                    UserApplication.organization_id == organization_id,
+                    UserApplication.deleted_at.is_(None),
+                )
+            )
+            for membership in user_applications_result.scalars().all():
+                membership.deleted_at = now
+                membership.deleted_id = user.id
+                membership.updated_at = now
+                membership.updated_id = user.id
+
+            user_organizations_result = await session.execute(
+                select(UserOrganization).where(
+                    UserOrganization.organization_id == organization_id,
+                    UserOrganization.deleted_at.is_(None),
+                )
+            )
+            for membership in user_organizations_result.scalars().all():
+                membership.deleted_at = now
+                membership.deleted_id = user.id
+                membership.updated_at = now
+                membership.updated_id = user.id
+
+            invitations_result = await session.execute(
+                select(OrganizationInvitation).where(
+                    OrganizationInvitation.organization_id == organization_id,
+                    OrganizationInvitation.deleted_at.is_(None),
+                )
+            )
+            for invitation in invitations_result.scalars().all():
+                invitation.deleted_at = now
+                invitation.deleted_id = user.id
+                invitation.updated_at = now
+                invitation.updated_id = user.id
+
+            await session.commit()
+            await session.refresh(organization)
+            return organization
 
 organizations = OrganizationsService()

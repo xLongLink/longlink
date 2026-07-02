@@ -2,7 +2,7 @@ import json
 import yaml
 from .base import Compute
 from typing import Any, cast
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from datetime import UTC, datetime
 from src.utils import names, templates
 from kubernetes import client, config
@@ -11,25 +11,7 @@ from src.constants import TEMPLATES
 from collections.abc import Callable
 from src.utils.namespace import k8name
 from kubernetes.client.exceptions import ApiException
-
-QUANTITY_SUFFIXES = {
-    "Ki": Decimal(1024),
-    "Mi": Decimal(1024) ** 2,
-    "Gi": Decimal(1024) ** 3,
-    "Ti": Decimal(1024) ** 4,
-    "Pi": Decimal(1024) ** 5,
-    "Ei": Decimal(1024) ** 6,
-    "n": Decimal("0.000000001"),
-    "u": Decimal("0.000001"),
-    "m": Decimal("0.001"),
-    "k": Decimal(1000),
-    "K": Decimal(1000),
-    "M": Decimal(1000) ** 2,
-    "G": Decimal(1000) ** 3,
-    "T": Decimal(1000) ** 4,
-    "P": Decimal(1000) ** 5,
-    "E": Decimal(1000) ** 6,
-}
+from kubernetes.utils.quantity import parse_quantity as parse_kubernetes_quantity
 
 
 def parse_quantity(value: object) -> Decimal:
@@ -39,17 +21,9 @@ def parse_quantity(value: object) -> Decimal:
     if raw_value == "":
         return Decimal(0)
 
-    for suffix, multiplier in sorted(QUANTITY_SUFFIXES.items(), key=lambda item: len(item[0]), reverse=True):
-        if raw_value.endswith(suffix):
-            number = raw_value[: -len(suffix)]
-            try:
-                return Decimal(number) * multiplier
-            except InvalidOperation:
-                return Decimal(0)
-
     try:
-        return Decimal(raw_value)
-    except InvalidOperation:
+        return parse_kubernetes_quantity(raw_value)
+    except ValueError:
         return Decimal(0)
 
 
@@ -250,6 +224,36 @@ class K8s(Compute):
                 )
 
         return f"/{namespace}/{name}/"
+
+
+    async def delete_application(self, organization: str, application: str) -> None:
+        """Delete one managed application workload and tolerate missing resources."""
+
+        namespace = k8name(names.knames(organization, "Organization"))
+        name = names.knames(application, "Application name")
+
+        delete_calls = (
+            (self._apps_api.delete_namespaced_deployment, "Deployment"),
+            (self._core_api.delete_namespaced_service, "Service"),
+            (self._core_api.delete_namespaced_secret, "Secret"),
+        )
+        for delete_call, kind in delete_calls:
+            try:
+                delete_call(name, namespace)
+            except ApiException as exc:
+                if exc.status != 404:
+                    raise ValueError(f"Failed deleting {kind} '{namespace}/{name}'") from exc
+
+
+    async def delete_namespace(self, organization: str) -> None:
+        """Delete one managed organization namespace and tolerate missing namespaces."""
+
+        namespace = k8name(names.knames(organization, "Organization"))
+        try:
+            self._core_api.delete_namespace(namespace)
+        except ApiException as exc:
+            if exc.status != 404:
+                raise ValueError(f"Failed deleting namespace '{namespace}'") from exc
 
 
     async def logs(self, organization: str, application: str, lines: int = 200) -> str:

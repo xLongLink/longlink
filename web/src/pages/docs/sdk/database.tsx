@@ -1,30 +1,29 @@
 import { CodeBlock } from '@/components/CodeBlock';
 import { A } from '@/components/ui/a';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
+import { Li } from '@/components/ui/li';
+import { P } from '@/components/ui/p';
+import { Stack } from '@/components/ui/stack';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-05-25',
+    lastUpdated: '2026-07-02',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/database.tsx',
 };
 
 export const content = (
-    <div className="flex flex-col gap-4">
+    <Stack>
         <Heading id="database" level="h1">
             Database
         </Heading>
-        <p className="leading-7">
-            LongLink SDK exposes a{' '}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">db</code> object for
-            database access. You use{' '}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">db.Table</code> to
-            define tables and{' '}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                await db.get_session()
-            </code>{' '}
-            to open a session.
-        </p>
-        <p className="leading-7">The SDK keeps the database API small and explicit.</p>
+        <P>
+            LongLink SDK exposes a <Code>db</Code> object for database access. You use <Code>db.Table</Code> to define
+            tables and <Code>await db.get_session()</Code> to open a session.
+        </P>
+        <P>The SDK keeps the database API small and explicit.</P>
         <Heading id="usage" level="h2">
             Usage
         </Heading>
@@ -43,7 +42,7 @@ async def create_project() -> None:
     async with session_maker() as session:
         session.add(Project(name="Launch", owner="ops"))
         await session.commit()`}</CodeBlock>
-        <p className="leading-7">After you add or change models, run migrations to keep the database schema aligned:</p>
+        <P>After you add or change models, run migrations to keep the database schema aligned:</P>
         <Tabs defaultValue="pip">
             <TabsList>
                 <TabsTrigger value="pip">pip</TabsTrigger>
@@ -56,29 +55,87 @@ async def create_project() -> None:
                 <CodeBlock language="bash">uv run longlink migrate</CodeBlock>
             </TabsContent>
         </Tabs>
-        <p className="leading-7">This keeps schema changes synchronized with application code.</p>
+        <P>This keeps schema changes synchronized with application code.</P>
+        <Accordion className="rounded-md border px-4" defaultValue={['table-fields']}>
+            <AccordionItem value="table-fields">
+                <AccordionTrigger>Fields Added By db.Table</AccordionTrigger>
+                <AccordionContent>
+                    <P>
+                        Models that inherit from <Code>db.Table</Code> receive audit and soft-delete fields. Application
+                        models should define their own primary key when needed; the scaffold uses normal SQLModel fields
+                        for domain data.
+                    </P>
+                    <Ul>
+                        <Li>
+                            <Code>created_at</Code> and <Code>updated_at</Code> store creation and update timestamps.
+                        </Li>
+                        <Li>
+                            <Code>deleted_at</Code> marks a row as soft-deleted instead of physically removing it.
+                        </Li>
+                        <Li>
+                            <Code>created_id</Code>, <Code>updated_id</Code>, and <Code>deleted_id</Code> store the
+                            user ids responsible for each audit event.
+                        </Li>
+                        <Li>
+                            <Code>created_by</Code>, <Code>updated_by</Code>, and <Code>deleted_by</Code> provide
+                            relationships to the shared users table.
+                        </Li>
+                    </Ul>
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
+        <Heading id="users" level="h2">
+            Users
+        </Heading>
+        <P>
+            LongLink applications use a shared <Code>users</Code> table for audit attribution and user display data. The
+            table belongs to the organization, while application tables can reference it through the audit fields added by{' '}
+            <Code>db.Table</Code>.
+        </P>
+        <Ul>
+            <Li>
+                In testing, the SDK uses an in-memory SQLite database and seeds deterministic local users for{' '}
+                <Code>read</Code>, <Code>write</Code>, <Code>maintain</Code>, <Code>admin</Code>, and <Code>owner</Code>.
+            </Li>
+            <Li>
+                In development, the SDK uses <Code>./dev.db</Code> and keeps the same deterministic local users synced
+                whenever the SQLite database is initialized.
+            </Li>
+            <Li>
+                In production, the control plane manages organization users and syncs them into the organization
+                database. Applications read those users; they do not own login or membership management.
+            </Li>
+            <Li>
+                Requests proxied through the control plane include <Code>x-user-id</Code>. The SDK audit middleware reads
+                that header and fills create, update, and delete audit fields during database writes.
+            </Li>
+            <Li>
+                Hard deletes of <Code>db.Table</Code> rows are converted into soft deletes by setting{' '}
+                <Code>deleted_at</Code> and <Code>deleted_id</Code>.
+            </Li>
+        </Ul>
         <Heading id="resources" level="h2">
             Resources
         </Heading>
-        <ul className="ml-6 list-disc space-y-2">
-            <li>
+        <Ul>
+            <Li>
                 <A href="https://github.com/fastapi/sqlmodel">SQLModel GitHub</A>
-            </li>
-            <li>
+            </Li>
+            <Li>
                 <A href="https://sqlmodel.tiangolo.com/">SQLModel Documentation</A>
-            </li>
-            <li>
+            </Li>
+            <Li>
                 <A href="https://github.com/sqlalchemy/sqlalchemy">SQLAlchemy GitHub</A>
-            </li>
-            <li>
+            </Li>
+            <Li>
                 <A href="https://www.sqlalchemy.org/">SQLAlchemy Documentation</A>
-            </li>
-            <li>
+            </Li>
+            <Li>
                 <A href="https://alembic.sqlalchemy.org/en/latest/">Alembic Documentation</A>
-            </li>
-            <li>
+            </Li>
+            <Li>
                 <A href="https://github.com/sqlalchemy/alembic">Alembic GitHub</A>
-            </li>
-        </ul>
-    </div>
+            </Li>
+        </Ul>
+    </Stack>
 );

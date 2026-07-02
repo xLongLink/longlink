@@ -18,6 +18,7 @@ class Operation(SQLModel, table=True):
 
     # Reference
     application_id: UUID | None = Field(default=None, foreign_key="applications.id")
+    organization_id: UUID | None = Field(default=None, foreign_key="organizations.id")
 
     # Metadata
     step: str = Field(sa_column=Column(String(length=100), nullable=False))
@@ -30,6 +31,7 @@ class Operation(SQLModel, table=True):
     # Timestamps
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     created_id: UUID | None = Field(default=None, foreign_key='users.id')
+    scheduled_at: datetime | None = None
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
     updated_id: UUID | None = Field(default=None, foreign_key='users.id')
     started_at: datetime | None = None

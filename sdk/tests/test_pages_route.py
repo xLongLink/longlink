@@ -1,3 +1,4 @@
+import pytest
 from pytest import MonkeyPatch
 from pathlib import Path
 from longlink.app import LongLink
@@ -52,3 +53,15 @@ def test_nested_xml_pages_are_registered_from_default_pages_directory(monkeypatc
     assert {page["path"] for page in metadata_response.json()["pages"]} >= {"pages/admin/users.xml"}
     assert {page["tab"] for page in metadata_response.json()["pages"]} >= {"admin/users"}
     assert all("content" not in page for page in metadata_response.json()["pages"])
+
+
+def test_invalid_xml_page_fails_during_registration(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    """Validate SDK XML pages against the bundled schema before registering routes."""
+
+    page_path = tmp_path / "src" / "pages" / "broken.xml"
+    page_path.parent.mkdir(parents=True, exist_ok=True)
+    page_path.write_text("<unknown />", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    with pytest.raises(ValueError, match="XML is invalid"):
+        LongLink()

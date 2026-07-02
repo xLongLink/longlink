@@ -1,11 +1,13 @@
 from uuid import UUID
+from datetime import UTC, datetime, timedelta
 from fastapi import Depends, Response, APIRouter
 from src.auth import authuser, authsupport, organization_access
 from src.errors import (ConflictError, NotFoundError, ForbiddenError,
                         UnavailableError)
 from src.logger import logger
 from src.operations import provisioning
-from src.models.roles import OrganizationRoles
+from src.models.roles import PlatformRoles, OrganizationRoles
+from src.models.operations import OperationKind
 from src.utils.namespace import dbname, s3name
 from src.models.databases import (OrganizationDatabaseResourceKind,
                                   OrganizationDatabaseTableResponse,
@@ -27,12 +29,14 @@ from src.database.models.users import User
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.applications import Application
+from src.database.services.operations import operations
 from src.database.services.invitations import invitations
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
 
 router = APIRouter()
 TABLE_PREVIEW_LIMIT = 100
+ORGANIZATION_DELETE_DELAY_DAYS = 0
 
 
 @router.get("/api/organizations", response_model=list[OrganizationSummary])
@@ -102,6 +106,10 @@ async def list_organization_database_resource_tables(
     """Return tables, columns, and preview rows for one organization database resource."""
 
     organization = await organization_access(organization_id, user)
+    membership_role = await organizations.membership_role(organization_id, user.id)
+    if membership_role not in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
+        raise ForbiddenError("Database resource inspection permissions required")
+
     registry = await provisioning.organization_database_registry(organization)
     if registry is None:
         raise NotFoundError("Database resource", resource_name)
@@ -177,6 +185,34 @@ async def update_organization_member(
     except Exception as exc:
         raise UnavailableError("Failed to synchronize organization members") from exc
 
+    return Response(status_code=204)
+
+
+@router.delete("/api/organizations/{organization_id}", status_code=204)
+async def delete_organization(organization_id: UUID, user: User = Depends(authuser)) -> Response:
+    """Soft-delete one organization and queue runtime resource removal."""
+
+    if user.role == PlatformRoles.administrator:
+        organization = await organizations.get(organization_id)
+        if organization is None:
+            raise NotFoundError("Organization", organization_id)
+    else:
+        await organization_access(organization_id, user)
+        membership_role = await organizations.membership_role(organization_id, user.id)
+        if membership_role != OrganizationRoles.owner:
+            raise ForbiddenError("Organization deletion permissions required")
+
+    deleted = await organizations.soft_delete(organization_id, user)
+    if deleted is None:
+        raise NotFoundError("Organization", organization_id)
+
+    await operations.create(
+        OperationKind.organization_delete,
+        organization_id=organization_id,
+        scheduled_at=datetime.now(UTC) + timedelta(days=ORGANIZATION_DELETE_DELAY_DAYS),
+        step="remove",
+        user=user,
+    )
     return Response(status_code=204)
 
 

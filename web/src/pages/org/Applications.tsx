@@ -20,12 +20,11 @@ export default function Applications({ organization, applications, isLoading, er
             header: 'Application',
             cell: ({ row, getValue }) => {
                 const name = getValue<string>();
-                const iconName = (row.original.icon ?? 'box').replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 
                 return (
                     <div className="flex items-start gap-3">
                         <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
-                            <Icon name={iconName} className="size-4" />
+                            <Icon name={row.original.icon ?? 'box'} className="size-4" />
                         </div>
                         <div className="min-w-0 space-y-1">
                             <Link

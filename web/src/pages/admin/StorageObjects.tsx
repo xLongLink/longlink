@@ -6,7 +6,7 @@ import { DataTable } from '@/components/DataTable';
 import { useStorageObjects } from '@/hooks/use-storage-objects';
 import { useStorages } from '@/hooks/use-storages';
 import type { ApiStorageObject } from '@/lib/types';
-import { formatBytes } from '@/lib/utils';
+import { formatBytes, formatDateTime } from '@/lib/utils';
 
 const objectColumns: Array<ColumnDef<ApiStorageObject>> = [
     {
@@ -41,7 +41,7 @@ const objectColumns: Array<ColumnDef<ApiStorageObject>> = [
         cell: ({ getValue }) => {
             const value = getValue<string | null>();
 
-            return value ? new Date(value).toLocaleString() : <span className="text-muted-foreground">—</span>;
+            return value ? formatDateTime(value) : <span className="text-muted-foreground">—</span>;
         },
         meta: { className: 'w-52' },
     },

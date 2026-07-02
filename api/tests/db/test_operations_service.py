@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from datetime import UTC, datetime, timedelta
 from src.environments import env
 from src.models.countries import Country
 from src.models.operations import OperationKind
@@ -91,6 +92,30 @@ async def test_operations_service_defers_active_operation() -> None:
     assert deferred.status == "scheduled"
     assert deferred.started_at is None
     assert deferred.stopped_at is None
+
+
+async def test_operations_service_skips_future_scheduled_operations() -> None:
+    """Leave future scheduled operations unclaimed until their scheduled time."""
+
+    # Arrange
+    user = await db.users.upsert(oidc="ops-oidc-future", email="opsfuture@longlink.dev", name="Ops Future", avatar="")
+    location = await db.locations.create("local", "Local testing", user, Country.CH)
+    organization = await db.organizations.create("acme", location.id, user)
+    application = await db.applications.create(organization.id, "dashboard", slug="dashboard", image="ghcr.io/longlink/dashboard:latest", user=user)
+    operation = await db.operations.create(
+        OperationKind.application_delete,
+        application_id=application.id,
+        scheduled_at=datetime.now(UTC) + timedelta(days=7),
+        step="remove",
+        user=user,
+    )
+
+    # Act
+    claimed = await db.operations.claim_next()
+
+    # Assert
+    assert operation.status == "scheduled"
+    assert claimed is None
 
 
 async def test_operations_service_resets_active_operations(monkeypatch) -> None:

@@ -1,5 +1,5 @@
 import { CheckIcon, ClipboardCopyIcon } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { toast } from 'sonner';
@@ -21,6 +21,15 @@ export function CodeBlock({ children, className, language = 'text' }: CodeBlockP
     // Trim shared JSX indentation without changing the actual code content.
     const code = children.trim();
     const isSingleLine = code.split('\n').length === 1;
+
+    useEffect(() => {
+        return () => {
+            if (resetCopyTimer.current != null) {
+                window.clearTimeout(resetCopyTimer.current);
+                resetCopyTimer.current = null;
+            }
+        };
+    }, []);
 
     // Copy the visible snippet to the clipboard and briefly confirm success.
     const handleCopy = async () => {

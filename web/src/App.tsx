@@ -3,6 +3,7 @@ import { useOrganization } from '@/hooks/use-organization';
 import { useSdkUser } from '@/hooks/use-sdk-user';
 import { useUser } from '@/hooks/use-user';
 import { LegalLayout } from '@/layout/LegalLayout';
+import { canAccessApplication, canViewApplicationLogs } from '@/lib/roles';
 import Admin from '@/pages/Admin';
 import AdminApplications from '@/pages/admin/Applications';
 import AdminCompute from '@/pages/admin/Compute';
@@ -251,17 +252,19 @@ function OrganizationApplicationView() {
     const { role: platformRole, organizations: userOrganizations } = useUser();
     const organizationApplication = organizationDetails?.applications.find((item) => item.slug === application);
     const organizationMembership = userOrganizations.find((item) => item.slug === organization);
+    const organizationRole = organizationMembership?.role ?? null;
+    const applicationRole = organizationApplication?.role ?? null;
+    const hasApplicationAccess = canAccessApplication(organizationRole, applicationRole);
     const canViewLogs =
         platformRole === 'administrator' ||
-        organizationMembership?.role === 'admin' ||
-        organizationMembership?.role === 'owner';
+        canViewApplicationLogs(organizationRole, applicationRole);
 
     if (isLoading) {
         return <View applicationStatus="loading" metadata="" />;
     }
 
     // Hide unknown org/app combinations behind the shared 404 page.
-    if (error?.status === 404 || !organizationDetails || !organizationApplication) {
+    if (error?.status === 404 || !organizationDetails || !organizationApplication || !hasApplicationAccess) {
         return <NotFound />;
     }
 

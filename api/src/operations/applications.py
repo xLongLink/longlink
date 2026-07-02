@@ -165,3 +165,64 @@ async def execute_application_create(operation: Operation) -> Operation:
 
     deferred = await operations.defer(operation.id, operation.lease_token)
     return deferred or operation
+
+
+@operation_handler(OperationKind.application_delete, step="remove")
+async def execute_application_delete(operation: Operation) -> Operation:
+    """Run one application deletion cleanup step."""
+
+    if operation.lease_token is None:
+        raise ValueError("Operation must be claimed before execution")
+
+    application_id = operation.application_id
+    if application_id is None:
+        raise ValueError("Operation missing application reference")
+
+    if operation.step != "remove":
+        raise ValueError(f"Unsupported application delete step '{operation.step}'")
+
+    application = await applications.get_by_id(application_id, include_deleted=True)
+    if application is None:
+        completed = await operations.complete(operation.id, operation.lease_token)
+        return completed or operation
+
+    organization = await organizations.get(application.organization_id, include_deleted=True)
+    if organization is None:
+        completed = await operations.complete(operation.id, operation.lease_token)
+        return completed or operation
+
+    await provisioning.remove_application_runtime(application, organization)
+    completed = await operations.complete(operation.id, operation.lease_token)
+    if completed is not None:
+        logger.info("Completed application deletion %s", operation.id)
+        return completed
+
+    return operation
+
+
+@operation_handler(OperationKind.organization_delete, step="remove")
+async def execute_organization_delete(operation: Operation) -> Operation:
+    """Run one organization deletion cleanup step."""
+
+    if operation.lease_token is None:
+        raise ValueError("Operation must be claimed before execution")
+
+    organization_id = operation.organization_id
+    if organization_id is None:
+        raise ValueError("Operation missing organization reference")
+
+    if operation.step != "remove":
+        raise ValueError(f"Unsupported organization delete step '{operation.step}'")
+
+    organization = await organizations.get(organization_id, include_deleted=True)
+    if organization is None:
+        completed = await operations.complete(operation.id, operation.lease_token)
+        return completed or operation
+
+    await provisioning.remove_organization_runtime(organization)
+    completed = await operations.complete(operation.id, operation.lease_token)
+    if completed is not None:
+        logger.info("Completed organization deletion %s", operation.id)
+        return completed
+
+    return operation

@@ -7,13 +7,14 @@ import { useOrganizationActions } from '@/hooks/use-organization';
 import { useOrganizationDatabaseResources } from '@/hooks/use-organization-database-resources';
 import { useOrganizationStorageResources } from '@/hooks/use-organization-storage-resources';
 import { useUser } from '@/hooks/use-user';
+import { canAccessApplication, canManageApplication, canViewApplicationLogs } from '@/lib/roles';
 import type {
     ApiOrganizationApplication,
     ApiOrganizationDatabaseResource,
     ApiOrganizationDetails,
     ApiOrganizationStorageResource,
 } from '@/lib/types';
-import { formatBytes } from '@/lib/utils';
+import { formatBytes, formatNumber, getInitials } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Badge } from '@ui/badge';
@@ -92,10 +93,7 @@ export default function Settings({ organization, organizationDetails, applicatio
     } = useOrganizationStorageResources(organizationDetails?.id ?? '');
 
     const organizationMembership = userOrganizations.find((item) => item.slug === organization);
-    const canViewLogs =
-        platformRole === 'administrator' ||
-        organizationMembership?.role === 'admin' ||
-        organizationMembership?.role === 'owner';
+    const organizationRole = organizationMembership?.role ?? null;
 
     const deleteTarget = applications.find((application) => application.id === deleteTargetId) ?? null;
 
@@ -104,22 +102,27 @@ export default function Settings({ organization, organizationDetails, applicatio
             accessorKey: 'name',
             header: 'Application',
             cell: ({ row, getValue }) => {
-                const iconName = (row.original.icon ?? 'box').replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+                const application = row.original;
+                const canOpen = canAccessApplication(organizationRole, application.role);
 
                 return (
                     <div className="flex items-start gap-3">
                         <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
-                            <Icon name={iconName} className="size-4" />
+                            <Icon name={application.icon ?? 'box'} className="size-4" />
                         </div>
                         <div className="min-w-0 space-y-1">
-                            <Link
-                                to={`/orgs/${organization}/apps/${row.original.slug}`}
-                                className="font-medium text-foreground hover:underline"
-                            >
-                                {getValue<string>()}
-                            </Link>
-                            {row.original.description ? (
-                                <p className="text-sm text-muted-foreground">{row.original.description}</p>
+                            {canOpen ? (
+                                <Link
+                                    to={`/orgs/${organization}/apps/${application.slug}`}
+                                    className="font-medium text-foreground hover:underline"
+                                >
+                                    {getValue<string>()}
+                                </Link>
+                            ) : (
+                                <span className="font-medium text-foreground">{getValue<string>()}</span>
+                            )}
+                            {application.description ? (
+                                <p className="text-sm text-muted-foreground">{application.description}</p>
                             ) : null}
                         </div>
                     </div>
@@ -127,51 +130,70 @@ export default function Settings({ organization, organizationDetails, applicatio
             },
         },
         {
+            accessorKey: 'role',
+            header: 'App role',
+            cell: ({ row }) => row.original.role ?? <span className="text-muted-foreground">Not assigned</span>,
+            meta: { className: 'w-32' },
+        },
+        {
             id: 'action',
             header: 'Action',
             meta: { className: 'w-44 text-right' },
-            cell: ({ row }) => (
-                <div className="flex justify-end">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger
-                            render={
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon-sm"
-                                    className="cursor-pointer"
-                                    aria-label={`Open actions for ${row.original.name}`}
-                                />
-                            }
-                        >
-                            <MoreVertical className="size-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                            {canViewLogs ? (
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    onClick={() => {
-                                        setLogsTarget(row.original);
-                                    }}
-                                >
-                                    Logs
-                                </DropdownMenuItem>
-                            ) : null}
-                            <DropdownMenuItem
-                                className="cursor-pointer"
-                                variant="destructive"
-                                onClick={() => {
-                                    // Select the application and open the delete confirmation dialog.
-                                    setDeleteTargetId(row.original.id);
-                                    setDeleteError(null);
-                                }}
+            cell: ({ row }) => {
+                const application = row.original;
+                const canReadLogs =
+                    platformRole === 'administrator' || canViewApplicationLogs(organizationRole, application.role);
+                const canDelete = canManageApplication(organizationRole, application.role);
+
+                if (!canReadLogs && !canDelete) {
+                    return <span className="text-muted-foreground">—</span>;
+                }
+
+                return (
+                    <div className="flex justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger
+                                render={
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon-sm"
+                                        className="cursor-pointer"
+                                        aria-label={`Open actions for ${application.name}`}
+                                    />
+                                }
                             >
-                                Delete
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            ),
+                                <MoreVertical className="size-4" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                                {canReadLogs ? (
+                                    <DropdownMenuItem
+                                        className="cursor-pointer"
+                                        onClick={() => {
+                                            setLogsTarget(application);
+                                        }}
+                                    >
+                                        Logs
+                                    </DropdownMenuItem>
+                                ) : null}
+                                {canDelete ? (
+                                    <DropdownMenuItem
+                                        className="cursor-pointer"
+                                        variant="destructive"
+                                        onClick={() => {
+                                            // Select the application and open the delete confirmation dialog.
+                                            setDeleteTargetId(application.id);
+                                            setDeleteError(null);
+                                        }}
+                                    >
+                                        Delete
+                                    </DropdownMenuItem>
+                                ) : null}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                );
+            },
         },
     ];
 
@@ -257,8 +279,8 @@ export default function Settings({ organization, organizationDetails, applicatio
                             {space_used === null ? 'Unknown' : formatBytes(space_used)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                            {table_count === null ? 'Unknown tables' : `${table_count.toLocaleString()} tables`} ·{' '}
-                            {row_estimate === null ? 'unknown rows' : `${row_estimate.toLocaleString()} rows`}
+                            {table_count === null ? 'Unknown tables' : `${formatNumber(table_count)} tables`} ·{' '}
+                            {row_estimate === null ? 'unknown rows' : `${formatNumber(row_estimate)} rows`}
                         </div>
                     </div>
                 );
@@ -351,9 +373,7 @@ export default function Settings({ organization, organizationDetails, applicatio
                                     src={organizationDetails?.avatar ?? ''}
                                     alt={organizationDetails?.name ?? organization}
                                 />
-                                <AvatarFallback>
-                                    {(organizationDetails?.name ?? organization).slice(0, 2).toUpperCase()}
-                                </AvatarFallback>
+                                <AvatarFallback>{getInitials(organizationDetails?.name ?? organization)}</AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
                                 <div className="truncate font-medium text-foreground">
@@ -468,7 +488,7 @@ export default function Settings({ organization, organizationDetails, applicatio
                 </MenuSection>
             </Menu>
 
-            {canViewLogs && logsTarget ? (
+            {logsTarget ? (
                 <LogsDialog
                     applicationId={logsTarget.id}
                     applicationName={logsTarget.name}

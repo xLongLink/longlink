@@ -1,5 +1,6 @@
 from uuid import UUID
 from typing import Any, cast
+from datetime import UTC, datetime
 from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
@@ -36,14 +37,18 @@ class ApplicationsService:
         return [_response_payload(application, None, user) for application in applications]
 
 
-    async def list_by_organization(self, organization_id: UUID) -> list[Application]:
+    async def list_by_organization(self, organization_id: UUID, include_deleted: bool = False) -> list[Application]:
         """Return all active applications for one organization."""
 
         async with session_scope() as session:
+            conditions = [Application.organization_id == organization_id]
+            if not include_deleted:
+                conditions.append(Application.deleted_at.is_(None))
+
             statement = (
                 select(Application)
                 .options(*_app_relation_options())
-                .where(Application.organization_id == organization_id, Application.deleted_at.is_(None))
+                .where(*conditions)
                 .order_by(Application.created_at.asc())
             )
             result = await session.execute(statement)
@@ -97,11 +102,28 @@ class ApplicationsService:
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
-    async def get_by_id(self, application_id: UUID) -> Application | None:
+    async def get_by_id(self, application_id: UUID, include_deleted: bool = False) -> Application | None:
         """Return a registered application by id."""
 
         async with session_scope() as session:
-            statement = select(Application).options(*_app_relation_options()).where(Application.id == application_id, Application.deleted_at.is_(None))
+            conditions = [Application.id == application_id]
+            if not include_deleted:
+                conditions.append(Application.deleted_at.is_(None))
+
+            statement = select(Application).options(*_app_relation_options()).where(*conditions)
+            result = await session.execute(statement)
+            return result.scalar_one_or_none()
+
+
+    async def membership_role(self, application_id: UUID, user_id: UUID) -> ApplicationRoles | None:
+        """Return one application membership role for one user."""
+
+        async with session_scope() as session:
+            statement = select(UserApplication.role_name).where(
+                UserApplication.application_id == application_id,
+                UserApplication.user_id == user_id,
+                UserApplication.deleted_at.is_(None),
+            )
             result = await session.execute(statement)
             return result.scalar_one_or_none()
 
@@ -220,6 +242,39 @@ class ApplicationsService:
             await session.commit()
             await session.refresh(application)
             return application
+
+
+    async def soft_delete(self, application_id: UUID, user: User) -> Application | None:
+        """Soft-delete one application and its application memberships."""
+
+        async with session_scope() as session:
+            application = await session.get(Application, application_id)
+            if application is None or application.deleted_at is not None:
+                return None
+
+            now = datetime.now(UTC)
+            application.deleted_at = now
+            application.deleted_id = user.id
+            application.updated_at = now
+            application.updated_id = user.id
+
+            memberships = await session.execute(
+                select(UserApplication).where(
+                    UserApplication.application_id == application_id,
+                    UserApplication.deleted_at.is_(None),
+                )
+            )
+            for membership in memberships.scalars().all():
+                membership.deleted_at = now
+                membership.deleted_id = user.id
+                membership.updated_at = now
+                membership.updated_id = user.id
+
+            await session.commit()
+            await session.refresh(application)
+            statement = select(Application).options(*_app_relation_options()).where(Application.id == application_id)
+            result = await session.execute(statement)
+            return result.scalar_one_or_none()
 
 
 def _app_relation_options() -> tuple[Any, ...]:

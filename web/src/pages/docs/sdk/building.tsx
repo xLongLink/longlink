@@ -1,117 +1,128 @@
 import { CodeBlock } from '@/components/CodeBlock';
+import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
+import { Li } from '@/components/ui/li';
+import { P } from '@/components/ui/p';
+import { Stack } from '@/components/ui/stack';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-06-30',
+    lastUpdated: '2026-07-02',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/building.tsx',
 };
 
 export const content = (
-    <div className="flex flex-col gap-4">
+    <Stack>
         <Heading id="building" level="h1">
             Building
         </Heading>
-        <ul className="ml-6 list-disc space-y-2">
-            <li>Applications can be built using Docker.</li>
-            <li>
-                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                    longlink build
-                </code>{' '}
-                builds the image from a temporary Docker context and leaves no build files in the app folder.
-            </li>
-            <li>Once containerized, applications can be pushed to any registry.</li>
-            <li>
-                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                    longlink build --registry localhost:15000 --push --tag dev
-                </code>{' '}
-                builds and pushes a reusable local development image tag.
-            </li>
-            <li>Applications can be connected to the control plane and deployed.</li>
-        </ul>
-        <div className="flex flex-col gap-2">
+        <Ul>
+            <Li>Applications can be built using Docker.</Li>
+            <Li>
+                <Code>longlink build</Code> builds the image from a temporary Docker context and leaves no build files
+                in the app folder.
+            </Li>
+            <Li>Once containerized, applications can be pushed to any registry.</Li>
+            <Li>
+                <Code>longlink build --registry localhost:15000 --push --tag dev</Code> builds and pushes a reusable
+                local development image tag.
+            </Li>
+            <Li>Applications can be connected to the control plane and deployed.</Li>
+        </Ul>
+        <Stack className="gap-2">
+            <Heading id="application-metadata" level="h2">
+                Application Metadata
+            </Heading>
+            <P>
+                LongLink loads application metadata from <Code>pyproject.toml</Code>. Values in{' '}
+                <Code>[tool.longlink]</Code> override standard <Code>[project]</Code> values where both are supported.
+                The SDK exposes the loaded metadata and registered XML pages through <Code>/metadata.json</Code>, and{' '}
+                <Code>longlink build</Code> writes the same app metadata into Docker labels for control-plane application
+                creation.
+            </P>
+            <CodeBlock language="toml">{`[project]
+name = "orders"
+version = "1.2.0"
+description = "Order workflow service"
+
+[tool.longlink]
+title = "Orders"
+summary = "Review, assign, and complete orders"
+description = "Operational order management for warehouse teams"
+terms_of_service = "https://example.com/terms"
+
+[tool.longlink.contact]
+name = "Operations Team"
+email = "ops@example.com"
+
+[tool.longlink.license_info]
+name = "Private"`}</CodeBlock>
+            <Ul>
+                <Li>
+                    <Code>name</Code> identifies the application. It falls back to <Code>[project].name</Code>.
+                </Li>
+                <Li>
+                    <Code>version</Code> identifies the application version. It falls back to{' '}
+                    <Code>[project].version</Code>.
+                </Li>
+                <Li>
+                    <Code>title</Code> and <Code>summary</Code> provide display text for app views and registration.
+                </Li>
+                <Li>
+                    <Code>description</Code> falls back to <Code>[project].description</Code> when omitted from{' '}
+                    <Code>[tool.longlink]</Code>.
+                </Li>
+                <Li>
+                    <Code>contact</Code>, <Code>license_info</Code>, and <Code>terms_of_service</Code> are optional
+                    metadata objects or URLs passed through to the runtime and image labels.
+                </Li>
+            </Ul>
+        </Stack>
+        <Stack className="gap-2">
             <Heading id="docker-labels" level="h2">
                 Docker Labels
             </Heading>
-            <p className="leading-7">
-                The build command writes these labels into the image metadata when values are available:
-            </p>
+            <P>The build command writes these labels into the image metadata when values are available:</P>
             <CodeBlock language="text">
                 {
                     'longlink.name=<app-name>\nlonglink.sdk=<installed-longlink-version>\nlonglink.version=<app-pyproject-version>\nlonglink.description=<app-description>\nlonglink.environments=<json-environment-list>\nlonglink.title=<app-title>\nlonglink.summary=<app-summary>\nlonglink.terms_of_service=<terms-url>\nlonglink.contact=<contact-metadata>\nlonglink.license_info=<license-metadata>'
                 }
             </CodeBlock>
-            <ul className="ml-6 list-disc space-y-2">
-                <li>
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                        longlink.name
-                    </code>{' '}
-                    is the application name.
-                </li>
-                <li>
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                        longlink.sdk
-                    </code>{' '}
-                    is the installed LongLink SDK version.
-                </li>
-                <li>
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                        longlink.version
-                    </code>{' '}
-                    is the application version from{' '}
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                        pyproject.toml
-                    </code>
-                    .
-                </li>
-                <li>
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                        longlink.description
-                    </code>{' '}
-                    is the optional application description.
-                </li>
-                <li>
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                        longlink.environments
-                    </code>{' '}
-                    lists the app environment variables when{' '}
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                        src/envs.py
-                    </code>{' '}
+            <Ul>
+                <Li>
+                    <Code>longlink.name</Code> is the application name.
+                </Li>
+                <Li>
+                    <Code>longlink.sdk</Code> is the installed LongLink SDK version.
+                </Li>
+                <Li>
+                    <Code>longlink.version</Code> is the application version from <Code>pyproject.toml</Code>.
+                </Li>
+                <Li>
+                    <Code>longlink.description</Code> is the optional application description.
+                </Li>
+                <Li>
+                    <Code>longlink.environments</Code> lists the app environment variables when <Code>src/envs.py</Code>{' '}
                     exists.
-                </li>
-                <li>
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                        longlink.title
-                    </code>{' '}
-                    is the optional application title.
-                </li>
-                <li>
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                        longlink.summary
-                    </code>{' '}
-                    is the optional short summary.
-                </li>
-                <li>
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                        longlink.terms_of_service
-                    </code>{' '}
-                    is the optional terms-of-service URL.
-                </li>
-                <li>
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                        longlink.contact
-                    </code>{' '}
-                    is the optional contact metadata.
-                </li>
-                <li>
-                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">
-                        longlink.license_info
-                    </code>{' '}
-                    is the optional license metadata.
-                </li>
-            </ul>
-        </div>
+                </Li>
+                <Li>
+                    <Code>longlink.title</Code> is the optional application title.
+                </Li>
+                <Li>
+                    <Code>longlink.summary</Code> is the optional short summary.
+                </Li>
+                <Li>
+                    <Code>longlink.terms_of_service</Code> is the optional terms-of-service URL.
+                </Li>
+                <Li>
+                    <Code>longlink.contact</Code> is the optional contact metadata.
+                </Li>
+                <Li>
+                    <Code>longlink.license_info</Code> is the optional license metadata.
+                </Li>
+            </Ul>
+        </Stack>
         <Tabs defaultValue="pip">
             <TabsList>
                 <TabsTrigger value="pip">pip</TabsTrigger>
@@ -124,91 +135,5 @@ export const content = (
                 <CodeBlock language="bash">uv run longlink build</CodeBlock>
             </TabsContent>
         </Tabs>
-        <div className="flex flex-col gap-2">
-            <Heading id="ci-workflows" level="h2">
-                CI Workflows
-            </Heading>
-            <p className="leading-7">
-                Use the same flow in GitHub Actions or GitLab CI. Strip a leading `v` from release tags.
-            </p>
-            <Tabs defaultValue="github">
-                <TabsList>
-                    <TabsTrigger value="github">GitHub</TabsTrigger>
-                    <TabsTrigger value="gitlab">GitLab</TabsTrigger>
-                </TabsList>
-                <TabsContent value="github">
-                    <CodeBlock language="yaml">{`name: build-sample-image
-
-on:
-  push:
-    tags:
-      - 'v*'
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.14'
-
-      - name: Install SDK dependencies
-        working-directory: sdk
-        run: uv sync
-
-      - name: Generate sample app scaffold
-        working-directory: sdk
-        run: .venv/bin/longlink init --folder sample-app
-
-      - name: Build sample app image
-        working-directory: sdk/sample-app
-        run: |
-          image_version="${'$'}{GITHUB_REF_NAME#v}"
-          ../.venv/bin/longlink build --tag "$image_version"
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${'$'}{{ github.actor }}
-          password: ${'$'}{{ secrets.GITHUB_TOKEN }}
-
-      - name: Publish sample image
-        working-directory: sdk/sample-app
-        run: |
-          image_version="${'$'}{GITHUB_REF_NAME#v}"
-          docker tag longlink-app:"$image_version" ghcr.io/xlonglink/sample:latest
-          docker tag longlink-app:"$image_version" ghcr.io/xlonglink/sample:"$image_version"
-          docker push ghcr.io/xlonglink/sample:latest
-          docker push ghcr.io/xlonglink/sample:"$image_version"`}</CodeBlock>
-                </TabsContent>
-                <TabsContent value="gitlab">
-                    <CodeBlock language="yaml">{`build-sample-image:
-  image: ghcr.io/astral-sh/uv:python3.14-bookworm
-  stage: build
-
-  script:
-    - cd sdk
-    - uv sync
-    - .venv/bin/longlink init --folder sample-app
-    - cd sample-app
-    - image_version="${'$'}{CI_COMMIT_TAG#v}"
-    - ../.venv/bin/longlink build --tag "$image_version"
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-    - docker tag longlink-app:"$image_version" "$CI_REGISTRY_IMAGE":latest
-    - docker tag longlink-app:"$image_version" "$CI_REGISTRY_IMAGE":"$image_version"
-    - docker push "$CI_REGISTRY_IMAGE":latest
-    - docker push "$CI_REGISTRY_IMAGE":"$image_version"`}</CodeBlock>
-                </TabsContent>
-            </Tabs>
-        </div>
-    </div>
+    </Stack>
 );

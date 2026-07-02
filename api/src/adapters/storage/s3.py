@@ -49,6 +49,26 @@ class S3(Storage):
             self._client.head_bucket(Bucket=bucket_name)
 
 
+    def _delete_bucket(self, bucket_name: str) -> None:
+        """Delete all objects in a bucket, then delete the bucket itself."""
+
+        try:
+            self._client.head_bucket(Bucket=bucket_name)
+        except ClientError as exc:
+            error_code = str(exc.response.get("Error", {}).get("Code", ""))
+            if error_code in {"404", "NoSuchBucket", "NotFound"}:
+                return
+            raise
+
+        paginator = self._client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=bucket_name):
+            objects = [{"Key": item["Key"]} for item in page.get("Contents", []) if "Key" in item]
+            if objects:
+                self._client.delete_objects(Bucket=bucket_name, Delete={"Objects": objects})
+
+        self._client.delete_bucket(Bucket=bucket_name)
+
+
     async def buckets(self) -> list[str]:
         """List storage buckets."""
 
@@ -59,6 +79,12 @@ class S3(Storage):
         """List object metadata for one bucket."""
 
         return await to_thread(self._objects, bucket_name, limit=limit)
+
+
+    async def delete_bucket(self, bucket_name: str) -> None:
+        """Delete one S3 bucket and all listed objects."""
+
+        await to_thread(self._delete_bucket, bucket_name)
 
 
     def _objects(self, bucket_name: str, *, limit: int = 1000) -> list[StorageObjectData]:

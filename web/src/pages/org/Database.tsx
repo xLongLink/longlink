@@ -6,7 +6,7 @@ import type {
     ApiOrganizationDatabaseTable,
     ApiOrganizationDetails,
 } from '@/lib/types';
-import { formatBytes } from '@/lib/utils';
+import { formatBytes, formatNumber } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@ui/badge';
 import { Link, useParams } from 'react-router';
@@ -81,13 +81,13 @@ export default function Database({ organization, organizationDetails, isLoading 
             {
                 id: 'columns',
                 header: 'Columns',
-                cell: ({ row }) => row.original.columns.length.toLocaleString(),
+                cell: ({ row }) => formatNumber(row.original.columns.length),
                 meta: { className: 'w-32' },
             },
             {
                 id: 'rows',
                 header: 'Preview rows',
-                cell: ({ row }) => row.original.rows.length.toLocaleString(),
+                cell: ({ row }) => formatNumber(row.original.rows.length),
                 meta: { className: 'w-36' },
             },
         ];
@@ -213,8 +213,8 @@ export default function Database({ organization, organizationDetails, isLoading 
                             {space_used === null ? 'Unknown' : formatBytes(space_used)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                            {table_count === null ? 'Unknown tables' : `${table_count.toLocaleString()} tables`} ·{' '}
-                            {row_estimate === null ? 'unknown rows' : `${row_estimate.toLocaleString()} rows`}
+                            {table_count === null ? 'Unknown tables' : `${formatNumber(table_count)} tables`} ·{' '}
+                            {row_estimate === null ? 'unknown rows' : `${formatNumber(row_estimate)} rows`}
                         </div>
                     </div>
                 );

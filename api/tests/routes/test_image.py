@@ -235,3 +235,46 @@ async def test_metadata_fetches_digest_image_references(monkeypatch) -> None:
         "repository": "longlink/dashboard",
         "tag": "sha256:deadbeef",
     }
+
+
+async def test_bearer_token_resolution_parses_quoted_auth_params(monkeypatch) -> None:
+    """Parse quoted WWW-Authenticate values without splitting inside quoted commas."""
+
+    # Arrange
+    captured: dict[str, object] = {}
+
+    class FakeResponse:
+        headers = {
+            "www-authenticate": 'Bearer realm="https://auth.example/token",service="registry.example",scope="repository:team/app:pull,push"'
+        }
+
+    class FakeTokenResponse:
+        is_success = True
+
+        def json(self) -> dict[str, str]:
+            return {"token": "registry-token"}
+
+    class FakeClient:
+        async def get(self, url: str, params: dict[str, str]) -> FakeTokenResponse:
+            captured["url"] = url
+            captured["params"] = params
+            return FakeTokenResponse()
+
+    async def fake_validate_public_host(hostname: str) -> None:
+        captured["hostname"] = hostname
+
+    monkeypatch.setattr(images, "_validate_public_host", fake_validate_public_host)
+
+    # Act
+    token = await images._resolve_bearer_token(FakeClient(), "team/app", FakeResponse())
+
+    # Assert
+    assert token == "registry-token"
+    assert captured == {
+        "hostname": "auth.example",
+        "url": "https://auth.example/token",
+        "params": {
+            "service": "registry.example",
+            "scope": "repository:team/app:pull,push",
+        },
+    }

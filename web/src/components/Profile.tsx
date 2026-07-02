@@ -1,4 +1,5 @@
 import { useUser } from '@/hooks/use-user';
+import { getInitials } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import {
     DropdownMenu,
@@ -73,7 +74,7 @@ export function UserProfile() {
             <DropdownMenuTrigger className="group flex cursor-pointer items-center gap-2 rounded-full border border-border bg-background/70 transition hover:bg-accent/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40">
                 <Avatar className="size-8">
                     <AvatarImage src={avatarUrl} alt={`${username} profile`} />
-                    <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback>{getInitials(username)}</AvatarFallback>
                 </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64 p-2">
@@ -84,7 +85,7 @@ export function UserProfile() {
                     >
                         <Avatar className="size-9">
                             <AvatarImage src={avatarUrl} alt={`${username} profile`} />
-                            <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                            <AvatarFallback>{getInitials(username)}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-semibold text-foreground">{username}</p>

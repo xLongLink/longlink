@@ -23,6 +23,13 @@ export function isBindableValue(value: XmlBindableValue | undefined): value is R
     return !!value && typeof value === 'object' && getVersion(value) !== undefined;
 }
 
+/** Returns the selected file value that should be stored for one XML control. */
+export function readBindableFileInputValue(input: HTMLInputElement, multiple: boolean): File | File[] | null {
+    const files = input.files ? Array.from(input.files) : [];
+
+    return multiple ? files : (files[0] ?? null);
+}
+
 /** Resolves XML input binding state for controlled and uncontrolled form controls. */
 export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionContext, type = 'text'): BindingResult {
     const rawValue = props[name];

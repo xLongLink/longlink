@@ -1,5 +1,5 @@
 from uuid import UUID
-from fastapi import Depends, APIRouter
+from fastapi import Depends, Response, APIRouter
 from src.auth import authadmin, authsupport
 from src.errors import ConflictError, NotFoundError
 from src.models.databases import (DatabaseUsageResponse,
@@ -30,6 +30,21 @@ async def get_database_registry(registry_id: UUID, _: User = Depends(authsupport
         raise NotFoundError("Database registry", registry_id)
 
     return registry
+
+
+@router.delete("/api/databases/{registry_id}", status_code=204)
+async def delete_database_registry(registry_id: UUID, user: User = Depends(authadmin)) -> Response:
+    """Soft-delete one database backend registration."""
+
+    try:
+        deleted = await database.delete(registry_id, user)
+    except ValueError as exc:
+        raise ConflictError(str(exc)) from exc
+
+    if not deleted:
+        raise NotFoundError("Database registry", registry_id)
+
+    return Response(status_code=204)
 
 
 @router.post("/api/databases", response_model=DatabaseRegistryResponse)
@@ -85,4 +100,3 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
     postgres = Postgres(registry.host, registry.port, registry.username, registry.password)
     data = await postgres.usage()
     return DatabaseUsageResponse(**data)
-

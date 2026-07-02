@@ -1,6 +1,22 @@
 from os import getenv
 from typing import Any, cast
+from urllib.parse import urlsplit
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DEVELOPMENT_CORS_ORIGINS = (
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:8000",
+)
+INSECURE_SESSION_KEYS = {
+    "1234",
+    "changeme",
+    "change-me",
+    "longlink-secret",
+    "replace-with-a-long-random-secret",
+    "secret",
+}
+MINIMUM_SESSION_KEY_LENGTH = 32
 
 
 def _development_enabled() -> bool:
@@ -20,6 +36,18 @@ def _environment_files() -> tuple[str, ...]:
         return (".env.sample", ".env")
 
     return (".env",)
+
+
+def resolve_cors_origins(development: bool, configured_origins: tuple[str, ...]) -> tuple[str, ...]:
+    """Return explicit CORS origins, adding localhost defaults only in development."""
+
+    if configured_origins:
+        return configured_origins
+
+    if development:
+        return DEVELOPMENT_CORS_ORIGINS
+
+    return ()
 
 
 class Env(BaseSettings):
@@ -56,11 +84,7 @@ class Env(BaseSettings):
     EMAIL_SMTP_USE_TLS: bool | None = None
 
     # Development CORS
-    CORS_ORIGINS: tuple[str, ...] = (
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:8000",
-    )
+    CORS_ORIGINS: tuple[str, ...] = ()
 
     # Development image registry
     LOCAL_CONTAINER_REGISTRY: str | None = None
@@ -74,6 +98,28 @@ class Env(BaseSettings):
         env_file=_environment_files(),
         env_file_encoding="utf-8",
     )
+
+
+def validate_production_settings(settings: Env) -> None:
+    """Fail fast when production settings are unsafe."""
+
+    if settings.DEVELOPMENT:
+        return
+
+    errors: list[str] = []
+    session_key = settings.SESSION_KEY.strip()
+    if len(session_key) < MINIMUM_SESSION_KEY_LENGTH or session_key in INSECURE_SESSION_KEYS:
+        errors.append("SESSION_KEY must be at least 32 random characters and cannot use a placeholder value")
+
+    # OIDC traffic carries authentication secrets, so production auth endpoints must be HTTPS.
+    for field_name in ("OIDC_ISSUER", "OIDC_REDIRECT_URI"):
+        value = str(getattr(settings, field_name)).strip()
+        parsed_url = urlsplit(value)
+        if parsed_url.scheme != "https" or not parsed_url.netloc:
+            errors.append(f"{field_name} must be an HTTPS URL outside development")
+
+    if errors:
+        raise RuntimeError(f"Invalid production configuration: {'; '.join(errors)}")
 
 
 env: Env = cast(Any, Env)()

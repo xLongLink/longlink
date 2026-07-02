@@ -161,22 +161,25 @@ describe('Action', () => {
     });
 
     /* The invalidation list must be an array expression so runtime refreshes stay predictable. */
-    it('throws when invalidate is not an array', async () => {
+    it('shows an error when invalidate is not an array', async () => {
         const ctx: ExecutionContext = {
             setups: {},
             invalidate: async () => {},
             values: {},
         };
+        let errorMessage = '';
 
-        await expect(
-            executeAction(
-                {
-                    invalidate: 'selectedUsers',
-                },
-                ctx,
-                ''
-            )
-        ).rejects.toThrow('invalidate must evaluate to an array');
+        await executeAction(
+            {
+                invalidate: 'selectedUsers',
+            },
+            ctx,
+            '',
+            fetch,
+            { success: () => {}, error: (message) => (errorMessage = message) }
+        );
+
+        expect(errorMessage).toBe('invalidate must evaluate to an array');
     });
 
     /* The runtime only exposes the initial supported HTTP method set. */
@@ -207,5 +210,87 @@ describe('Action', () => {
 
         expect(fetchCalls).toBe(0);
         expect(errorMessage).toBe('Unsupported action method PUT');
+    });
+
+    it('rejects external action URLs before fetching', async () => {
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: {},
+        };
+        let fetchCalls = 0;
+        let errorMessage = '';
+        const fetchImpl = (async () => {
+            fetchCalls += 1;
+
+            return new Response('', { status: 204 });
+        }) as unknown as typeof fetch;
+
+        await executeAction(
+            {
+                action: 'https://example.com/profile',
+            },
+            ctx,
+            'https://example.com/profile',
+            fetchImpl,
+            { success: () => {}, error: (message) => (errorMessage = message) }
+        );
+
+        expect(fetchCalls).toBe(0);
+        expect(errorMessage).toBe('Action URL must be app-relative');
+    });
+
+    it('rejects GET payloads before fetching', async () => {
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: { name: 'Ada' },
+        };
+        let fetchCalls = 0;
+        let errorMessage = '';
+        const fetchImpl = (async () => {
+            fetchCalls += 1;
+
+            return new Response('', { status: 204 });
+        }) as unknown as typeof fetch;
+
+        await executeAction(
+            {
+                action: '/profile',
+                json: '${{ name }}',
+                method: 'GET',
+            },
+            ctx,
+            '/profile',
+            fetchImpl,
+            { success: () => {}, error: (message) => (errorMessage = message) }
+        );
+
+        expect(fetchCalls).toBe(0);
+        expect(errorMessage).toBe('GET actions cannot send payloads');
+    });
+
+    it('shows an error when the request throws', async () => {
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            values: {},
+        };
+        let errorMessage = '';
+        const fetchImpl = (async () => {
+            throw new Error('Network unavailable');
+        }) as unknown as typeof fetch;
+
+        await executeAction(
+            {
+                action: '/profile',
+            },
+            ctx,
+            '/profile',
+            fetchImpl,
+            { success: () => {}, error: (message) => (errorMessage = message) }
+        );
+
+        expect(errorMessage).toBe('Network unavailable');
     });
 });

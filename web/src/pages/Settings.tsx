@@ -1,13 +1,14 @@
 import { DataTable } from '@/components/DataTable';
 import CreateOrganizationDialog from '@/components/dialogs/CreateOrganizationDialog';
+import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { useDeleteOrganization } from '@/hooks/use-organization';
 import { useUpdateUser, useUser } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
 import { ACCENT_OPTIONS, RADIUS_OPTIONS, THEME_OPTIONS, type Accent, type Radius, type Theme } from '@/lib/theme';
+import { getInitials, useDeleteDialog } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Button } from '@ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
 import { Input } from '@ui/input';
@@ -27,9 +28,6 @@ export default function Settings() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [accountError, setAccountError] = useState<string | null>(null);
-    const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
-    const deleteTargetOrganization = organizations.find((organization) => organization.id === deleteTarget) ?? null;
 
     // Keep the editable fields aligned with the authenticated user record.
     useEffect(() => {
@@ -48,6 +46,15 @@ export default function Settings() {
         (accountName !== user.name || accountEmail !== user.email) &&
         accountName.length > 0 &&
         accountEmail.length > 0;
+    const deleteDialog = useDeleteDialog({
+        title: 'Delete organization',
+        mutation: deleteOrganization,
+        items: organizations,
+        getId: (organization) => organization.id,
+        description: (organization) => `Delete ${organization.name} from your account?`,
+        errorMessage: 'Failed to delete organization',
+        fallbackDescription: 'Delete this organization?',
+    });
 
     const organizationColumns: Array<ColumnDef<(typeof organizations)[number]>> = [
         {
@@ -55,10 +62,10 @@ export default function Settings() {
             header: 'Name',
             cell: ({ row, getValue }) => (
                 <div className="flex items-center gap-3">
-                    <Avatar shape="squircle" className="size-8">
-                        <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
-                        <AvatarFallback>{row.original.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
+                        <Avatar shape="squircle" className="size-8">
+                            <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
+                            <AvatarFallback>{getInitials(row.original.name)}</AvatarFallback>
+                        </Avatar>
                     <span className="font-medium text-foreground">{getValue<string>()}</span>
                 </div>
             ),
@@ -95,16 +102,17 @@ export default function Settings() {
                             >
                                 Manage
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                                className="cursor-pointer"
-                                variant="destructive"
-                                onClick={() => {
-                                    setDeleteTarget(row.original.id);
-                                    setDeleteError(null);
-                                }}
-                            >
-                                Delete
-                            </DropdownMenuItem>
+                            {row.original.role === 'owner' ? (
+                                <DropdownMenuItem
+                                    className="cursor-pointer"
+                                    variant="destructive"
+                                    onClick={() => {
+                                        deleteDialog.openFor(row.original);
+                                    }}
+                                >
+                                    Delete
+                                </DropdownMenuItem>
+                            ) : null}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -309,68 +317,7 @@ export default function Settings() {
                     </MenuSection>
                 </Menu>
 
-                <Dialog
-                    open={deleteTarget !== null}
-                    onOpenChange={(open) => {
-                        if (!open) {
-                            setDeleteTarget(null);
-                            setDeleteError(null);
-                        }
-                    }}
-                >
-                    <DialogContent>
-                        <div className="space-y-4">
-                            <div className="space-y-1">
-                                <DialogTitle>Delete organization</DialogTitle>
-                                <DialogDescription>
-                                    {deleteTargetOrganization
-                                        ? `Delete ${deleteTargetOrganization.name} from your account?`
-                                        : 'Delete this organization?'}
-                                </DialogDescription>
-                            </div>
-
-                            {deleteError ? <p className="text-sm text-destructive">{deleteError}</p> : null}
-
-                            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => {
-                                        setDeleteTarget(null);
-                                        setDeleteError(null);
-                                    }}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="destructive"
-                                    disabled={deleteOrganization.isPending || deleteTarget === null}
-                                    onClick={async () => {
-                                        if (!deleteTarget) {
-                                            return;
-                                        }
-
-                                        // Delete the selected organization and close the dialog on success.
-                                        try {
-                                            await deleteOrganization.mutateAsync(deleteTarget);
-                                            setDeleteTarget(null);
-                                            setDeleteError(null);
-                                        } catch (mutationError) {
-                                            setDeleteError(
-                                                mutationError instanceof Error
-                                                    ? mutationError.message
-                                                    : 'Failed to delete organization'
-                                            );
-                                        }
-                                    }}
-                                >
-                                    {deleteOrganization.isPending ? 'Deleting...' : 'Delete'}
-                                </Button>
-                            </div>
-                        </div>
-                    </DialogContent>
-                </Dialog>
+                <DeleteConfirmationDialog {...deleteDialog.dialogProps} />
             </section>
         </Layout>
     );

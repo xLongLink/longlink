@@ -1,7 +1,7 @@
 import { fetchApiResponse } from '@/lib/api';
 import { useXmlContext } from '@xml/core/context';
 import { renderNode } from '@xml/core/node';
-import { useUrl } from '@xml/core/url';
+import { isAppRelativeUrl, useUrl } from '@xml/core/url';
 import type { Props } from '@xml/types';
 import { createContext, useContext } from 'react';
 import { toast } from 'sonner';
@@ -23,7 +23,11 @@ export function Action({ props, nodes }: Props) {
 
     /** Sends the configured request and shows a minimal toast result. */
     async function handleAction() {
-        await executeAction(props, ctx, requestUrl, fetch, toast);
+        try {
+            await executeAction(props, ctx, requestUrl, fetch, toast);
+        } catch (error: unknown) {
+            toast.error(error instanceof Error ? error.message : 'Action failed');
+        }
     }
 
     return <ActionHandlerContext.Provider value={handleAction}>{renderNode(nodes, ctx)}</ActionHandlerContext.Provider>;
@@ -37,62 +41,84 @@ export async function executeAction(
     fetchImpl: typeof fetch = fetch,
     toastApi: { success(message: string): void; error(message: string): void } = toast
 ): Promise<void> {
-    const invalidate = resolveXmlStringArray(props, 'invalidate', ctx);
-    const form = resolveXmlExpression(props, 'form');
-    const json = resolveXmlExpression(props, 'json');
-    const method = resolveXmlString(props, 'method', ctx, 'POST');
-    const invalidateRuntime = ctx.invalidate ?? (async () => {});
-    const normalizedMethod = method.trim().toUpperCase();
-    const actionUrl = String(resolveXmlString(props, 'action', ctx, '') ?? '');
-    const headers = new Headers();
+    // Keep XML authoring/runtime failures as user-visible action errors.
+    try {
+        const invalidate = resolveXmlStringArray(props, 'invalidate', ctx);
+        const form = resolveXmlExpression(props, 'form');
+        const json = resolveXmlExpression(props, 'json');
+        const method = resolveXmlString(props, 'method', ctx, 'POST');
+        const invalidateRuntime = ctx.invalidate ?? (async () => {});
+        const normalizedMethod = method.trim().toUpperCase();
+        const actionUrl = String(resolveXmlString(props, 'action', ctx, '') ?? '');
+        const headers = new Headers();
 
-    // Resolve the compiled payload at click time so it sees the latest state.
-    const formValue = form ? form(ctx) : undefined;
-    const jsonValue = json ? json(ctx) : undefined;
+        // Resolve the compiled payload at click time so it sees the latest state.
+        const formValue = form ? form(ctx) : undefined;
+        const jsonValue = json ? json(ctx) : undefined;
 
-    if (!actionUrl) {
+        if (!actionUrl) {
+            await invalidateRuntime(invalidate);
+
+            return;
+        }
+
+        if (!ALLOWED_ACTION_METHODS.has(normalizedMethod)) {
+            toastApi.error(`Unsupported action method ${normalizedMethod}`);
+            return;
+        }
+
+        if (!isAppRelativeUrl(actionUrl)) {
+            toastApi.error('Action URL must be app-relative');
+            return;
+        }
+
+        const init: RequestInit = { method: normalizedMethod };
+
+        if (formValue !== undefined && jsonValue !== undefined) {
+            toastApi.error('Action cannot send both form and json payloads');
+            return;
+        }
+
+        if (normalizedMethod === 'GET' && (formValue !== undefined || jsonValue !== undefined)) {
+            toastApi.error('GET actions cannot send payloads');
+            return;
+        }
+
+        if (formValue !== undefined) {
+            init.body = createActionFormData(formValue);
+        } else if (jsonValue !== undefined) {
+            init.body = JSON.stringify(jsonValue);
+            headers.set('content-type', 'application/json');
+        }
+
+        init.headers = headers;
+
+        let response: Response;
+
+        try {
+            response = await fetchApiResponse(requestUrl, init, fetchImpl);
+        } catch (error: unknown) {
+            toastApi.error(error instanceof Error ? error.message : 'Request failed');
+            return;
+        }
+
+        if (!response.ok) {
+            toastApi.error(`Request failed with status ${response.status}`);
+            return;
+        }
+
         await invalidateRuntime(invalidate);
 
-        return;
+        toastApi.success(`Request completed with status ${response.status}`);
+    } catch (error: unknown) {
+        toastApi.error(error instanceof Error ? error.message : 'Action failed');
     }
-
-    if (!ALLOWED_ACTION_METHODS.has(normalizedMethod)) {
-        toastApi.error(`Unsupported action method ${normalizedMethod}`);
-        return;
-    }
-
-    const init: RequestInit = { method: normalizedMethod };
-
-    if (formValue !== undefined && jsonValue !== undefined) {
-        toastApi.error('Action cannot send both form and json payloads');
-        return;
-    }
-
-    if (formValue !== undefined) {
-        init.body = createActionFormData(formValue);
-    } else if (jsonValue !== undefined) {
-        init.body = JSON.stringify(jsonValue);
-        headers.set('content-type', 'application/json');
-    }
-
-    init.headers = headers;
-
-    const response = await fetchApiResponse(requestUrl, init, fetchImpl);
-
-    if (!response.ok) {
-        toastApi.error(`Request failed with status ${response.status}`);
-        return;
-    }
-
-    await invalidateRuntime(invalidate);
-
-    toastApi.success(`Request completed with status ${response.status}`);
 }
 
 
 /** Builds multipart form data from an XML action form expression. */
 function createActionFormData(value: unknown): FormData {
-    if (isFormDataValue(value)) return value;
+    if (typeof FormData !== 'undefined' && value instanceof FormData) return value;
 
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
         throw new Error('form must evaluate to an object');
@@ -120,7 +146,7 @@ function appendActionFormValue(formData: FormData, key: string, value: unknown):
         return;
     }
 
-    if (isBlobValue(value)) {
+    if (typeof Blob !== 'undefined' && value instanceof Blob) {
         formData.append(key, value);
         return;
     }
@@ -131,16 +157,4 @@ function appendActionFormValue(formData: FormData, key: string, value: unknown):
     }
 
     formData.append(key, String(value));
-}
-
-
-/** Returns true when a value is already a FormData instance. */
-function isFormDataValue(value: unknown): value is FormData {
-    return typeof FormData !== 'undefined' && value instanceof FormData;
-}
-
-
-/** Returns true when a value can be appended to FormData as binary data. */
-function isBlobValue(value: unknown): value is Blob {
-    return typeof Blob !== 'undefined' && value instanceof Blob;
 }

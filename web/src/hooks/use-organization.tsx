@@ -246,11 +246,9 @@ export function useCreateOrganization() {
 /** Deletes one organization and refreshes the authenticated user cache. */
 export function useDeleteOrganization() {
     const queryClient = useQueryClient();
-    const { organizations } = useUser();
 
     return useMutation({
-        mutationFn: async (organizationSlug: string) => {
-            const organizationId = resolveOrganizationId(organizationSlug, organizations);
+        mutationFn: async (organizationId: string) => {
             if (!organizationId) {
                 throw new Error('Organization not found');
             }

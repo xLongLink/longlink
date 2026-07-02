@@ -218,7 +218,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column(
             "kind",
-            sa.Enum("application.create", "application.delete", name="operation_kind_enum", native_enum=False, create_constraint=True),
+            sa.Enum("application.create", "application.delete", "organization.delete", name="operation_kind_enum", native_enum=False, create_constraint=True),
             nullable=False,
         ),
         sa.Column("application_id", sa.Uuid(), nullable=True),

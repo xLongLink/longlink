@@ -3,6 +3,7 @@ import { Icon } from '@/components/ui/icon';
 import { useApplications } from '@/hooks/use-applications';
 import { useLocations } from '@/hooks/use-locations';
 import type { ApiApplicationResponse, ApiLocation } from '@/lib/types';
+import { formatDateTime, getInitials } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Badge } from '@ui/badge';
@@ -19,12 +20,11 @@ const appColumns: Array<ColumnDef<AdminApplicationResponse>> = [
         header: 'Application',
         cell: ({ row, getValue }) => {
             const app = row.original;
-            const iconName = (app.icon ?? 'box').replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
 
             return (
                 <div className="flex items-start gap-3">
                     <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
-                        <Icon name={iconName} className="size-4" />
+                        <Icon name={app.icon ?? 'box'} className="size-4" />
                     </div>
                     <div className="min-w-0 space-y-1">
                         <Link
@@ -49,7 +49,7 @@ const appColumns: Array<ColumnDef<AdminApplicationResponse>> = [
                 <div className="flex items-center gap-3">
                     <Avatar shape="squircle" className="size-9 shrink-0">
                         <AvatarImage src={organization.avatar ?? ''} alt={organization.name} />
-                        <AvatarFallback>{organization.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>{getInitials(organization.name)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
                         <Link to={`/orgs/${organization.slug}`} className="font-medium text-foreground hover:underline">
@@ -82,7 +82,7 @@ const appColumns: Array<ColumnDef<AdminApplicationResponse>> = [
     {
         accessorKey: 'created_at',
         header: 'Created',
-        cell: ({ getValue }) => new Date(getValue<string>()).toLocaleString(),
+        cell: ({ getValue }) => formatDateTime(getValue<string>()),
         meta: { className: 'w-52' },
     },
 ];

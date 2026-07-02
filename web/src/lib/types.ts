@@ -1,4 +1,4 @@
-import type { PlatformRole, Role } from '@/lib/roles';
+import type { ApplicationRole, PlatformRole, Role } from '@/lib/roles';
 import type { Accent, Radius, Theme } from '@/lib/theme';
 import type { IconName } from 'lucide-react/dynamic';
 
@@ -41,7 +41,7 @@ export type ApiOrganizationApplication = {
     slug: string;
     image: string;
     status: 'creating' | 'running' | 'failed';
-    role: Role | null;
+    role: ApplicationRole | null;
     description: string | null;
     icon: IconName | null;
     created_at: string;
@@ -279,7 +279,7 @@ export type ApiApplicationResponse = {
     slug: string;
     image: string;
     status: 'creating' | 'running' | 'failed';
-    role: Role | null;
+    role: ApplicationRole | null;
     description: string | null;
     icon: IconName | null;
     created_at: string;

@@ -3,7 +3,7 @@ import { useXmlContext } from '@xml/core/context';
 import type { Props } from '@xml/types';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
-import { useBindableValue } from './binding';
+import { readBindableFileInputValue, useBindableValue } from './binding';
 
 /** Props accepted by the XML Input component. */
 
@@ -35,7 +35,7 @@ export function Input({ props, nodes }: Props) {
                 onChange={
                     binding.bound
                         ? (event) => {
-                              binding.setValue(readFileInputValue(event.currentTarget, multiple));
+                              binding.setValue(readBindableFileInputValue(event.currentTarget, multiple));
                           }
                         : undefined
                 }
@@ -71,12 +71,4 @@ export function Input({ props, nodes }: Props) {
             defaultValue={binding.initialValue}
         />
     );
-}
-
-
-/** Returns the selected file value that should be stored for one XML input. */
-function readFileInputValue(input: HTMLInputElement, multiple: boolean): File | File[] | null {
-    const files = input.files ? Array.from(input.files) : [];
-
-    return multiple ? files : (files[0] ?? null);
 }

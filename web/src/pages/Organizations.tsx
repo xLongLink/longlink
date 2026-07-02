@@ -3,6 +3,8 @@ import CreateOrganizationDialog from '@/components/dialogs/CreateOrganizationDia
 import { SignInCard } from '@/components/SignInCard';
 import { useUser } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
+import { sanitizeRedirectPath } from '@/lib/redirects';
+import { getInitials } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Hero, HeroAction, HeroDescription, HeroTitle } from '@ui/hero';
@@ -19,7 +21,7 @@ const organizationColumns: Array<ColumnDef<ApiUserOrganizationMembership>> = [
             <div className="flex items-center gap-3">
                 <Avatar shape="squircle" className="size-8 shrink-0">
                     <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
-                    <AvatarFallback>{row.original.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    <AvatarFallback>{getInitials(row.original.name)}</AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
                     <Link to={`/orgs/${row.original.slug}`} className="font-medium text-foreground hover:underline">
@@ -44,7 +46,7 @@ export default function Organizations() {
     const { user, organizations, isLoading, error } = useUser();
     const location = useLocation();
     const nextPath = new URLSearchParams(location.search).get('next');
-    const redirectTo = nextPath?.startsWith('/') ? nextPath : '/organizations';
+    const redirectTo = sanitizeRedirectPath(nextPath);
 
     if (isLoading && !user) {
         return null;

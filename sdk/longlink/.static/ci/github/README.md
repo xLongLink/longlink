@@ -11,7 +11,7 @@ uvx longlink init --folder <folder-name> --ci github
 Tests run on pull requests and pushes to `main`:
 
 ```bash
-uv run pytest
+uv run longlink test
 ```
 
 ## Release

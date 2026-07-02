@@ -67,7 +67,7 @@ async def test_database_registry_endpoint_supports_create_and_list(
     clients: tuple[TestClient, TestClient, TestClient],
     users,
 ) -> None:
-    """Create and list one database registry without a delete path."""
+    """Create, list, and delete one database registry."""
 
     # Arrange
     client = clients[0]
@@ -137,9 +137,8 @@ async def test_database_registry_endpoint_supports_create_and_list(
             deleted_by=None,
         ).model_dump(mode="json")
     ]
-    assert delete_response.status_code == 405
-    assert get_response.status_code == 200
-    assert get_response.json()["id"] == registry_id
+    assert delete_response.status_code == 204
+    assert get_response.status_code == 404
 
 
 async def test_database_usage_endpoint_returns_backend_capacity(
@@ -191,7 +190,7 @@ async def test_storage_registry_endpoint_supports_create_and_list(
     clients: tuple[TestClient, TestClient, TestClient],
     users,
 ) -> None:
-    """Create and list one storage registry without a delete path."""
+    """Create, list, and delete one storage registry."""
 
     # Arrange
     client = clients[0]
@@ -258,9 +257,8 @@ async def test_storage_registry_endpoint_supports_create_and_list(
             deleted_by=None,
         ).model_dump(mode="json")
     ]
-    assert delete_response.status_code == 405
-    assert get_response.status_code == 200
-    assert get_response.json()["id"] == registry_id
+    assert delete_response.status_code == 204
+    assert get_response.status_code == 404
 
 
 async def test_storage_bucket_endpoint_returns_backend_buckets(
@@ -378,7 +376,7 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     monkeypatch,
     users,
 ) -> None:
-    """Create and list one compute registry without a delete path."""
+    """Create, list, and delete one compute registry."""
 
     # Arrange
     client = clients[0]
@@ -447,9 +445,8 @@ async def test_compute_registry_endpoint_supports_create_and_list(
             deleted_by=None,
         ).model_dump(mode="json")
     ]
-    assert delete_response.status_code == 405
-    assert get_response.status_code == 200
-    assert get_response.json()["id"] == registry_id
+    assert delete_response.status_code == 204
+    assert get_response.status_code == 404
     assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"
     assert captured["proxy_secret"]
     assert captured["setup_calls"] == 1

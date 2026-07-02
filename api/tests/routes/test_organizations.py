@@ -7,6 +7,7 @@ from src.database.session import get_session
 from src.models.countries import Country
 from src.models.databases import DatabaseKind
 from src.models.storages import StorageKind
+from src.models.operations import OperationKind
 from src.models.locations import LocationResponse
 from src.models.organizations import OrganizationDetails as OrgDetails
 from src.models.organizations import OrganizationSummary as OrgSummary
@@ -230,6 +231,7 @@ async def test_get_organization_returns_member_payload(
                 "organization_id": organization.id,
                 "organization": organization.name,
                 "name": "dashboard",
+                "role": "admin",
                 "status": application.status,
                 "version": None,
                 "sdk_version": None,
@@ -262,6 +264,7 @@ async def test_get_organization_returns_member_payload(
             "id": str(application.id),
             "slug": application.slug,
             "name": "dashboard",
+            "role": "admin",
             "status": "creating",
             "version": None,
             "sdk_version": None,
@@ -275,6 +278,43 @@ async def test_get_organization_returns_member_payload(
             "deleted_by": None,
         }
     ]
+
+
+async def test_delete_organization_soft_deletes_and_queues_removal(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Soft-delete an organization and queue immediate runtime removal."""
+
+    # Arrange
+    owner = users[0]
+    client = clients[0]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        user=owner,
+    )
+
+    # Act
+    response = client.delete(f"/api/organizations/{organization.id}")
+
+    # Assert
+    assert response.status_code == 204
+    assert await db.organizations.get(organization.id) is None
+    deleted = await db.organizations.get(organization.id, include_deleted=True)
+    assert deleted is not None
+    assert deleted.deleted_at is not None
+    assert await db.applications.list_by_organization(organization.id) == []
+    recorded_operations = await db.operations.list()
+    assert len(recorded_operations) == 1
+    assert recorded_operations[0].kind == OperationKind.organization_delete
+    assert recorded_operations[0].step == "remove"
+    assert recorded_operations[0].organization_id == organization.id
+    assert recorded_operations[0].scheduled_at is not None
 
 
 async def test_organization_database_endpoint_returns_schemas_and_shared_users(
@@ -727,6 +767,38 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
             "rows": [{"id": 100, "total": 42.5}],
         }
     ]
+
+
+async def test_organization_database_resource_tables_endpoint_requires_elevated_role(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject table previews for organization members without inspection permissions."""
+
+    # Arrange
+    owner, regular_member, _ = users
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+
+    Session = await get_session()
+    async with Session() as session:
+        session.add(
+            UserOrganization(
+                user_id=regular_member.id,
+                organization_id=organization.id,
+                role_name=OrganizationRoles.write,
+            )
+        )
+        await session.commit()
+
+    client = clients[1]
+
+    # Act
+    response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/dashboard/tables")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Database resource inspection permissions required"}
 
 
 async def test_get_organization_returns_invitations(

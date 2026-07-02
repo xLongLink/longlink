@@ -2,6 +2,7 @@ import secrets
 from uuid import UUID
 from src.utils import names
 from sqlalchemy import select
+from datetime import UTC, datetime
 from src.constants import INGRESS_NAME
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
@@ -9,6 +10,7 @@ from src.models.computes import ComputeKind
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
+from src.database.models.applications import Application
 
 
 class ComputeService:
@@ -94,5 +96,31 @@ class ComputeService:
             )
             result = await session.execute(statement)
             return result.scalar_one()
+
+
+    async def delete(self, registry_id: UUID, user: User) -> bool:
+        """Soft-delete one compute registry when no active app uses it."""
+
+        async with session_scope() as session:
+            registry = await session.get(ComputeRegistry, registry_id)
+            if registry is None or registry.deleted_at is not None:
+                return False
+
+            active_application = await session.execute(
+                select(Application.id).where(
+                    Application.compute_registry_id == registry_id,
+                    Application.deleted_at.is_(None),
+                )
+            )
+            if active_application.scalar_one_or_none() is not None:
+                raise ValueError("Compute registry is used by active applications")
+
+            now = datetime.now(UTC)
+            registry.deleted_at = now
+            registry.deleted_id = user.id
+            registry.updated_at = now
+            registry.updated_id = user.id
+            await session.commit()
+            return True
 
 compute = ComputeService()

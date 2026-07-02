@@ -14,7 +14,7 @@ import { useUser } from '@/hooks/use-user';
 import { fetchApiVoid } from '@/lib/api';
 import { organizationsQueryKey } from '@/lib/query-keys';
 import type { ApiOrganizationSummary } from '@/lib/types';
-import { useDeleteDialog } from '@/lib/utils';
+import { formatDateTime, getInitials, useDeleteDialog } from '@/lib/utils';
 
 const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
     {
@@ -27,7 +27,7 @@ const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
                 <div className="flex items-center gap-3">
                     <Avatar shape="squircle" className="size-8">
                         <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
-                        <AvatarFallback>{row.original.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>{getInitials(row.original.name)}</AvatarFallback>
                     </Avatar>
                     <Link to={`/orgs/${row.original.slug}`} className="font-medium text-foreground hover:underline">
                         {name}
@@ -50,12 +50,12 @@ const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
                 <div className="flex items-center gap-3">
                     <Avatar className="size-8">
                         <AvatarImage src={createdBy.avatar} alt={createdBy.name} />
-                        <AvatarFallback>{createdBy.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>{getInitials(createdBy.name)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
                         <div className="truncate font-medium text-foreground">{createdBy.name}</div>
                         <div className="truncate text-xs text-muted-foreground">
-                            {new Date(row.original.created_at).toLocaleString()}
+                            {formatDateTime(row.original.created_at)}
                         </div>
                     </div>
                 </div>
@@ -77,12 +77,12 @@ const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
                 <div className="flex items-center gap-3">
                     <Avatar className="size-8">
                         <AvatarImage src={updatedBy.avatar} alt={updatedBy.name} />
-                        <AvatarFallback>{updatedBy.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>{getInitials(updatedBy.name)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
                         <div className="truncate font-medium text-foreground">{updatedBy.name}</div>
                         <div className="truncate text-xs text-muted-foreground">
-                            {new Date(row.original.updated_at).toLocaleString()}
+                            {formatDateTime(row.original.updated_at)}
                         </div>
                     </div>
                 </div>
@@ -104,12 +104,12 @@ const organizationColumnsBase: Array<ColumnDef<ApiOrganizationSummary>> = [
                 <div className="flex items-center gap-3">
                     <Avatar className="size-8">
                         <AvatarImage src={deletedBy.avatar} alt={deletedBy.name} />
-                        <AvatarFallback>{deletedBy.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>{getInitials(deletedBy.name)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
                         <div className="truncate font-medium text-foreground">{deletedBy.name}</div>
                         <div className="truncate text-xs text-muted-foreground">
-                            {row.original.deleted_at ? new Date(row.original.deleted_at).toLocaleString() : '—'}
+                            {row.original.deleted_at ? formatDateTime(row.original.deleted_at) : '—'}
                         </div>
                     </div>
                 </div>

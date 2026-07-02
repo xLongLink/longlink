@@ -3,63 +3,54 @@ import click
 from lxml import etree
 from typing import cast
 from pathlib import Path
-from longlink.constants import ROOT
 
 PLURAL_KEYS = {"zero", "one", "two", "few", "many", "other"}
-TRANSLATION_FILE = ROOT / ".static" / "new" / "src" / "i18n" / "en.json"
-SCAFFOLD_PAGES_DIRECTORY = ROOT / ".static" / "new" / "src" / "pages"
+DEFAULT_PAGES_DIRECTORY = Path("src") / "pages"
+DEFAULT_TRANSLATION_FILE = Path("src") / "i18n" / "en.json"
 
 
 @click.group(name="translations")
 def translations_command() -> None:
-    """Manage the bundled XML translation catalog."""
+    """Manage the current application's XML translation catalog."""
 
 
 @click.command(name="generate")
 def generate_command() -> None:
-    """Generate the bundled translation file from XML `i18n` keys."""
+    """Generate the current application's translation file from XML `i18n` keys."""
 
-    # Scan the repository for XML fragments and collect every declared key.
-    repo_root = ROOT.parents[1]
-    xml_files = discover_xml_files(repo_root)
-    keys = collect_translation_keys(xml_files)
+    app_root = Path.cwd()
+    pages_directory = app_root / DEFAULT_PAGES_DIRECTORY
+    translation_file = app_root / DEFAULT_TRANSLATION_FILE
+
+    # Scan application XML pages and collect every declared translation key.
+    xml_files = discover_xml_files(pages_directory)
+    keys = collect_translation_keys(xml_files, app_root)
 
     # Preserve existing translations while normalizing the output structure.
-    existing_catalog = load_translation_catalog(TRANSLATION_FILE)
+    existing_catalog = load_translation_catalog(translation_file, app_root)
     flattened_catalog = flatten_translation_catalog(existing_catalog)
     generated_catalog = build_translation_catalog(keys, flattened_catalog)
 
-    TRANSLATION_FILE.parent.mkdir(parents=True, exist_ok=True)
+    translation_file.parent.mkdir(parents=True, exist_ok=True)
     rendered_catalog = json.dumps(generated_catalog, indent=4, ensure_ascii=False) + "\n"
-    TRANSLATION_FILE.write_text(rendered_catalog, encoding="utf-8")
+    translation_file.write_text(rendered_catalog, encoding="utf-8")
 
-    click.echo(f"Generated {TRANSLATION_FILE.relative_to(repo_root)} from {len(keys)} translation keys.")
+    click.echo(f"Generated {translation_file.relative_to(app_root)} from {len(keys)} translation keys.")
 
 
 translations_command.add_command(generate_command)
 
 
-def discover_xml_files(repo_root: Path) -> list[Path]:
+def discover_xml_files(pages_directory: Path) -> list[Path]:
     """Return XML source files that can contribute translation keys."""
 
-    # Skip generated assets and local development directories.
-    ignored_parts = {".git", ".venv", "build", "coverage", "dist", "node_modules"}
-    files: list[Path] = []
+    if not pages_directory.exists():
+        return []
 
-    for path in repo_root.rglob("*.xml"):
-        if ignored_parts.intersection(path.parts):
-            continue
-
-        # Keep bundled scaffold pages discoverable while ignoring generated static assets.
-        if ".static" in path.parts and not path.is_relative_to(SCAFFOLD_PAGES_DIRECTORY):
-            continue
-
-        files.append(path)
-
-    return sorted(files)
+    return sorted(path for path in pages_directory.rglob("*.xml") if path.is_file())
 
 
-def collect_translation_keys(xml_files: list[Path]) -> set[str]:
+def collect_translation_keys(xml_files: list[Path], app_root: Path) -> set[str]:
     """Collect every `i18n` key referenced by the XML sources."""
 
     keys: set[str] = set()
@@ -68,9 +59,11 @@ def collect_translation_keys(xml_files: list[Path]) -> set[str]:
         try:
             # Wrap fragments so mixed top-level XML snippets still parse cleanly.
             content = path.read_text(encoding="utf-8")
-            root = etree.fromstring(f"<root>{content}</root>")
+            parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
+            root = etree.fromstring(f"<root>{content}</root>", parser=parser)
         except etree.XMLSyntaxError as error:
-            raise click.ClickException(f"Invalid XML in {path.relative_to(ROOT.parents[1])}: {error}") from error
+            display_path = path.relative_to(app_root) if path.is_relative_to(app_root) else path
+            raise click.ClickException(f"Invalid XML in {display_path}: {error}") from error
 
         for element in root.iter():
             key = element.get("i18n")
@@ -81,7 +74,7 @@ def collect_translation_keys(xml_files: list[Path]) -> set[str]:
     return keys
 
 
-def load_translation_catalog(path: Path) -> dict[str, object]:
+def load_translation_catalog(path: Path, app_root: Path) -> dict[str, object]:
     """Load the existing translation catalog, if one is already present."""
 
     if not path.exists():
@@ -90,7 +83,8 @@ def load_translation_catalog(path: Path) -> dict[str, object]:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as error:
-        raise click.ClickException(f"Invalid JSON in {path.relative_to(ROOT.parents[1])}: {error}") from error
+        display_path = path.relative_to(app_root) if path.is_relative_to(app_root) else path
+        raise click.ClickException(f"Invalid JSON in {display_path}: {error}") from error
 
 
 def flatten_translation_catalog(value: object, prefix: str = "") -> dict[str, object]:

@@ -37,6 +37,10 @@ class Storage(ABC):
         """Create or replace the isolated storage bucket for one application and return a storage URI."""
 
     @abstractmethod
+    async def delete_bucket(self, bucket_name: str) -> None:
+        """Delete one bucket and its objects."""
+
+    @abstractmethod
     async def setup(self) -> None:
         """Initialize the storage backend used by the control plane."""
 

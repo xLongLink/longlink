@@ -18,6 +18,7 @@ import { useOrganizationActions } from '@/hooks/use-organization';
 import type { Role } from '@/lib/roles';
 import { ROLE_NAMES } from '@/lib/roles';
 import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
+import { formatDate, getInitials } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
@@ -56,7 +57,7 @@ const invitationColumns: Array<ColumnDef<ApiInvitation>> = [
     {
         accessorKey: 'created_at',
         header: 'Created',
-        cell: ({ getValue }) => new Date(getValue<string>()).toLocaleDateString(),
+        cell: ({ getValue }) => formatDate(getValue<string>()),
         meta: { className: 'w-32' },
     },
 ];
@@ -94,7 +95,7 @@ export default function People({ organization, people, invitations, isLoading, e
                     <div className="flex items-center gap-3">
                         <Avatar className="size-8">
                             <AvatarImage src={user.avatar} alt={`${user.name} avatar`} />
-                            <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 space-y-0.5">
                             <div className="text-sm font-medium text-foreground">{user.name}</div>

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 
 import { DocsSidebar } from '@/components/DocsSidebar';
-import { cn } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 import { DOC_GROUPS, DOC_PAGES, type DocItem, type DocNavigationItem } from '@/pages/docs/catalog';
 import { A } from '@ui/a';
 import {
@@ -13,6 +13,7 @@ import {
     Breadcrumb as UIBreadcrumb,
 } from '@ui/breadcrumb';
 import { buttonVariants } from '@ui/button';
+import { ScrollArea } from '@ui/scroll-area';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@ui/sidebar';
 
 type DocMetadata = {
@@ -51,6 +52,7 @@ function findDocNavigationItem(items: DocNavigationItem[], itemId?: string): Doc
 export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
     const location = useLocation();
     const contentRef = useRef<HTMLDivElement>(null);
+    const [activeTocHref, setActiveTocHref] = useState('');
     const [pageToc, setPageToc] = useState<PageTocItem[]>([]);
 
     // Prefer the longest matching path so nested pages do not resolve to their section overview.
@@ -107,9 +109,67 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
         };
     }, [location.pathname, content]);
 
+    useEffect(() => {
+        if (!pageToc.length) {
+            setActiveTocHref('');
+            return;
+        }
+
+        const headingElements = pageToc
+            .map((item) => document.getElementById(item.href.slice(1)))
+            .filter((heading): heading is HTMLElement => Boolean(heading));
+
+        const activeOffset = 112;
+
+        /** Returns the heading nearest to the fixed docs header. */
+        function getActiveHeadingHref(): string {
+            let nextActiveHref = pageToc[0]?.href ?? '';
+
+            // Keep the previous heading active until the next heading passes under the header.
+            for (const heading of headingElements) {
+                if (heading.getBoundingClientRect().top > activeOffset) {
+                    break;
+                }
+
+                nextActiveHref = `#${heading.id}`;
+            }
+
+            return nextActiveHref;
+        }
+
+        /** Commits the active heading without re-rendering when it has not changed. */
+        function setNextActiveHeading(nextActiveHref: string): void {
+            setActiveTocHref((currentHref) => (currentHref === nextActiveHref ? currentHref : nextActiveHref));
+        }
+
+        if (location.hash && pageToc.some((item) => item.href === location.hash)) {
+            setNextActiveHeading(location.hash);
+        } else {
+            setNextActiveHeading(getActiveHeadingHref());
+        }
+
+        const observer = new IntersectionObserver(
+            () => {
+                setNextActiveHeading(getActiveHeadingHref());
+            },
+            {
+                rootMargin: `-${activeOffset}px 0px -70% 0px`,
+                threshold: 0,
+            }
+        );
+
+        for (const heading of headingElements) {
+            observer.observe(heading);
+        }
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [location.hash, pageToc]);
+
     return (
         <SidebarProvider defaultOpen>
-            <DocsSidebar currentItemId={currentItem?.id} currentPath={`${location.pathname}${location.hash}`} />
+            <DocsSidebar currentItemId={currentItem?.id} currentPath={location.pathname} />
 
             <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
                 <div className="flex h-full w-full flex-col shadow-sm">
@@ -118,8 +178,8 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
 
                         <div className="grid h-14 lg:grid-cols-[minmax(0,1fr)_14rem]">
                             <div className="min-w-0 px-4 lg:px-6">
-                                <div className="mx-auto flex h-full w-full max-w-[56rem] items-center">
-                                    <div className="mx-auto w-full max-w-2xl">
+                                <div className="mx-auto flex h-full w-full max-w-[60rem] items-center">
+                                    <div className="mx-auto w-full max-w-3xl">
                                         <UIBreadcrumb>
                                             <BreadcrumbList>
                                                 <BreadcrumbItem>
@@ -200,36 +260,44 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
             <div className="relative z-10 w-full px-1 pb-1 pt-[4.25rem] lg:px-2 lg:pb-2 lg:pt-[4.375rem]">
                 <div className="grid lg:grid-cols-[minmax(0,1fr)_14rem]">
                     <div ref={contentRef} className="px-4 pt-4 pb-32 lg:px-6 lg:pt-6 lg:pb-40">
-                        <div className="mx-auto w-full max-w-[56rem]">
-                            <div className="mx-auto w-full max-w-2xl">
+                        <div className="mx-auto w-full max-w-[60rem]">
+                            <div className="mx-auto w-full max-w-3xl">
                                 <DocArticle content={content} metadata={metadata} />
                             </div>
                         </div>
                     </div>
 
-                    <aside className="hidden px-5 pt-4 pb-8 lg:fixed lg:top-[4.5rem] lg:right-2 lg:block lg:h-[calc(100vh-5rem)] lg:w-56 lg:overflow-y-auto lg:pt-6">
-                        <div className="relative pl-4">
-                            <div className="pointer-events-none absolute top-0 bottom-0 left-[0.55rem] w-px bg-border" />
-                            <div className="flex flex-col gap-4">
-                                <div className="pl-3 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                    <aside className="hidden px-5 pt-4 pb-8 lg:fixed lg:top-[4.5rem] lg:right-2 lg:flex lg:h-[calc(100vh-5rem)] lg:w-56 lg:pt-6">
+                        <div className="relative flex min-h-0 flex-1 pl-4">
+                            <div className="pointer-events-none absolute top-0 bottom-0 left-4 w-px bg-border" />
+                            <div className="flex min-h-0 flex-1 flex-col gap-4">
+                                <div className="shrink-0 pl-4 text-[0.68rem] font-semibold uppercase tracking-normal text-foreground">
                                     On this page
                                 </div>
-                                <nav aria-label="On this page">
-                                    <div className="space-y-1.5 text-sm">
-                                        {pageToc.map((item) => {
-                                            return (
-                                                <div key={item.href} className="relative">
-                                                    <A
-                                                        href={item.href}
-                                                        className="block pl-3 text-muted-foreground no-underline transition-colors hover:text-foreground"
-                                                    >
-                                                        {item.label}
-                                                    </A>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </nav>
+                                <ScrollArea className="-mr-3 min-h-0 flex-1 pr-3">
+                                    <nav aria-label="On this page">
+                                        <div className="space-y-1 text-sm">
+                                            {pageToc.map((item) => {
+                                                const isActive = activeTocHref === item.href;
+
+                                                return (
+                                                    <div key={item.href} className="relative">
+                                                        <A
+                                                            href={item.href}
+                                                            className={cn(
+                                                                'relative block py-1 pl-4 text-muted-foreground no-underline transition-colors before:absolute before:top-1 before:bottom-1 before:left-0 before:w-px before:rounded-full before:bg-transparent hover:text-foreground',
+                                                                isActive &&
+                                                                    'font-medium text-foreground before:bg-foreground'
+                                                            )}
+                                                        >
+                                                            {item.label}
+                                                        </A>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </nav>
+                                </ScrollArea>
                             </div>
                         </div>
                     </aside>
@@ -244,18 +312,12 @@ function DocArticle({ content, metadata }: DocsLayoutProps) {
         ? (() => {
               const parsedDate = new Date(metadata.lastUpdated);
 
-              return Number.isNaN(parsedDate.getTime())
-                  ? metadata.lastUpdated
-                  : new Intl.DateTimeFormat('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                    }).format(parsedDate);
+              return Number.isNaN(parsedDate.getTime()) ? metadata.lastUpdated : formatDate(parsedDate);
           })()
         : '';
 
     return (
-        <article className="space-y-6 text-base leading-7 text-foreground [&_h1>a]:-left-8 [&_h1>a]:top-0 [&_h1>a]:translate-y-0 [&_h1]:border-b [&_h1]:border-border [&_h1]:pb-2 [&_h2>a]:-left-7 [&_h2>a]:top-[0.6em] [&_h2]:mt-8 [&_h2]:border-b [&_h2]:border-border [&_h2]:pb-2 [&_h3>a]:-left-6 [&_h3>a]:top-[0.6em] [&_h3]:mt-6 [&_h3]:border-b [&_h3]:border-border [&_h3]:pb-2 [&_h4>a]:-left-5 [&_h4>a]:top-[0.6em] [&_h4]:mt-4 [&_h4]:border-b [&_h4]:border-border [&_h4]:pb-2">
+        <article className="space-y-7 text-[1.0625rem] leading-8 text-muted-foreground [&>div]:gap-5 [&_[data-slot=code-block]]:max-w-3xl [&_a]:font-medium [&_code]:text-foreground [&_h1>a]:-left-8 [&_h1>a]:top-1 [&_h1>a]:translate-y-0 [&_h1]:border-b [&_h1]:border-border [&_h1]:pb-4 [&_h1]:text-[2.5rem] [&_h1]:leading-[1.08] [&_h1]:font-semibold [&_h1]:tracking-normal [&_h1]:text-foreground [&_h2>a]:-left-7 [&_h2>a]:top-[0.55em] [&_h2]:mt-10 [&_h2]:border-b [&_h2]:border-border/80 [&_h2]:pb-3 [&_h2]:text-[1.75rem] [&_h2]:leading-tight [&_h2]:tracking-normal [&_h2]:text-foreground [&_h3>a]:-left-6 [&_h3>a]:top-[0.55em] [&_h3]:mt-7 [&_h3]:border-b [&_h3]:border-border/70 [&_h3]:pb-2 [&_h3]:text-[1.35rem] [&_h3]:leading-snug [&_h3]:tracking-normal [&_h3]:text-foreground [&_h4>a]:-left-5 [&_h4>a]:top-[0.55em] [&_h4]:mt-5 [&_h4]:border-b [&_h4]:border-border/70 [&_h4]:pb-2 [&_h4]:text-xl [&_h4]:tracking-normal [&_h4]:text-foreground [&_li]:leading-7 [&_p]:max-w-3xl sm:[&_h1]:text-[3.25rem] sm:[&_h1]:leading-[1.05] sm:[&_h2]:text-[2rem] sm:[&_h3]:text-[1.45rem]">
             {content}
             {metadata.lastUpdated || metadata.editUrl ? (
                 <footer className="mt-8 flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-6">

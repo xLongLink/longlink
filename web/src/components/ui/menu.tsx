@@ -1,4 +1,5 @@
 import { cva } from 'class-variance-authority';
+import startCase from 'lodash/startCase';
 import { ChevronDownIcon, type LucideIcon } from 'lucide-react';
 import * as React from 'react';
 
@@ -89,11 +90,7 @@ const menuItemVariants = cva(
 
 /** Formats a fallback label from a value. */
 function prettifyValue(value: string): string {
-    return value
-        .replace(/[-_]+/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .replace(/\b\w/g, (char) => char.toUpperCase());
+    return startCase(value);
 }
 
 /** Returns whether a child is a menu section marker. */

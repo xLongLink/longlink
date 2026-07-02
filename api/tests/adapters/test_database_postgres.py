@@ -39,6 +39,8 @@ class _FakeResult:
 class _FakePreparer:
     """Quote identifiers like the PostgreSQL dialect."""
 
+    _double_percents = False
+
     def quote(self, value: str) -> str:
         return f'"{value}"'
 
@@ -208,6 +210,24 @@ async def test_schema_creates_database_and_schema_with_managed_connection(monkey
     assert any("GRANT USAGE, CREATE ON SCHEMA \"dashboard\" TO \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
     assert any("GRANT SELECT, REFERENCES ON TABLE public.users TO \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
     assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
+
+
+async def test_application_role_uses_dialect_password_literal() -> None:
+    """Escape application role passwords through the SQLAlchemy dialect."""
+
+    # Arrange
+    log: list[tuple[str, object]] = []
+    adapter = Postgres("db.longlink.internal", 5432, "longlink", "secret")
+    connection = _FakeConnection(log, _FakeEngine(log))
+
+    # Act
+    await adapter._ensure_application_role(connection, "longlink_acme_dashboard", "pa'ss")
+
+    # Assert
+    assert any(
+        entry == ("driver_sql", 'CREATE ROLE "longlink_acme_dashboard" LOGIN PASSWORD \'pa\'\'ss\'')
+        for entry in log
+    )
 
 
 async def test_database_creates_shared_users_table_with_write_restrictions(monkeypatch) -> None:

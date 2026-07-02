@@ -1,6 +1,10 @@
 import { CodeBlock } from '@/components/CodeBlock';
 import { A } from '@/components/ui/a';
 import { Heading } from '@/components/ui/heading';
+import { Li } from '@/components/ui/li';
+import { P } from '@/components/ui/p';
+import { Stack } from '@/components/ui/stack';
+import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
     lastUpdated: '2026-05-25',
@@ -8,12 +12,12 @@ export const metadata = {
 };
 
 export const content = (
-    <div className="flex flex-col gap-4">
+    <Stack>
         <Heading id="endpoints" level="h1">
             Endpoints
         </Heading>
-        <p className="leading-7">LongLink SDK wraps FastAPI.</p>
-        <p className="leading-7">You define endpoint handlers on the wrapped FastAPI app.</p>
+        <P>LongLink SDK wraps FastAPI.</P>
+        <P>You define endpoint handlers on the wrapped FastAPI app.</P>
         <Heading id="usage" level="h2">
             Usage
         </Heading>
@@ -40,24 +44,24 @@ app.include_router(router)`}</CodeBlock>
         <Heading id="resources" level="h2">
             Resources
         </Heading>
-        <ul className="ml-6 list-disc space-y-2">
-            <li>
+        <Ul>
+            <Li>
                 <A href="https://fastapi.tiangolo.com/tutorial/">FastAPI tutorial</A>
-            </li>
-            <li>
+            </Li>
+            <Li>
                 <A href="https://fastapi.tiangolo.com/tutorial/path-operation-configuration/">
                     Path operation decorators
                 </A>
-            </li>
-            <li>
+            </Li>
+            <Li>
                 <A href="https://fastapi.tiangolo.com/tutorial/body/">Request body with Pydantic</A>
-            </li>
-            <li>
+            </Li>
+            <Li>
                 <A href="https://fastapi.tiangolo.com/tutorial/dependencies/">Dependencies</A>
-            </li>
-            <li>
+            </Li>
+            <Li>
                 <A href="https://fastapi.tiangolo.com/tutorial/response-model/">Response models</A>
-            </li>
-        </ul>
-    </div>
+            </Li>
+        </Ul>
+    </Stack>
 );

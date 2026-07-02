@@ -2,6 +2,7 @@ import { createContext as createReactContext, useContext as useReactContext } fr
 
 export const BaseUrlContext = createReactContext<string>('');
 const ABSOLUTE_URL_PATTERN = /^[A-Za-z][A-Za-z0-9+.-]*:/;
+const URL_VALIDATION_BASE = 'http://longlink.local';
 
 /** Resolves a request URL against a base URL string. */
 export function resolveUrl(baseUrl: string, path: string): string {
@@ -28,6 +29,37 @@ export function resolveUrl(baseUrl: string, path: string): string {
     }
 
     return `/${resolvedSegments.join('/')}${suffix}`;
+}
+
+
+/** Returns whether a URL can be safely fetched relative to an application base URL. */
+export function isAppRelativeUrl(path: string): boolean {
+    const value = path.trim();
+
+    if (!value) return true;
+    if (value.includes('\\') || ABSOLUTE_URL_PATTERN.test(value)) return false;
+
+    // Use URL parsing to catch protocol-relative values without hand-rolled host checks.
+    try {
+        const base = new URL(URL_VALIDATION_BASE);
+        const url = new URL(value, base);
+
+        return url.origin === base.origin;
+    } catch {
+        return false;
+    }
+}
+
+
+/** Resolves an XML request URL while blocking cross-origin and protocol URLs. */
+export function resolveRequestUrl(baseUrl: string, path: string): string {
+    const value = path.trim();
+
+    if (!isAppRelativeUrl(value)) {
+        throw new Error('XML request URL must be app-relative');
+    }
+
+    return resolveUrl(baseUrl, value);
 }
 
 /** Resolves a request URL against the active base URL. */

@@ -146,7 +146,7 @@ The SDK exposes application metadata through `/metadata.json`. XML files discove
 | File storage    | In-memory `fsspec`       | Local `fsspec` filesystem | S3-compatible buckets                    |
 | Web bundle      | Test runtime             | SDK bundle                | API bundle and app rendering             |
 | Environment     | Test settings            | Local settings            | Runtime secrets                          |
-| Build command   | `longlink tests`         | `longlink dev`            | `longlink build`                         |
+| Build command   | `longlink test`          | `longlink dev`            | `longlink build`                         |
 | Deployment      | None                     | Local process             | Platform deployment                      |
 | Operations      | Test assertions          | Local debugging           | Create, verify, delete, logs, status     |
 
@@ -161,6 +161,7 @@ Keep both web build modes working. API mode builds the authenticated control-pla
 - Do not add new helper functions unless they are explicitly needed.
 - Python functions must have docstrings, and non-trivial logic blocks must have preceding `# ...` comments.
 - JavaScript functions must have JSDoc comments, and non-trivial logic blocks must have preceding `// ...` comments.
+- Keep `FEATURES.md` updated when supported behavior is added, removed, renamed, or materially changed.
 - Always check at the end of the implementation, for potential simplifications.
 - Write simple, well designed and maintainable code. No strange hacks, use proper solutions
 - Pydantic models must group fields by commented sections, and fields inside each section must be ordered from shortest name to longest name.

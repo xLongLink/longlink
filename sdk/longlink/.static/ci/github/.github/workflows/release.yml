@@ -25,7 +25,7 @@ jobs:
         run: uv sync --all-groups
 
       - name: Run tests
-        run: uv run pytest
+        run: uv run longlink test
 
       - name: Build LongLink image
         run: uv run longlink build --tag ${{ github.event.release.tag_name }}

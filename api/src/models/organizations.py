@@ -2,7 +2,7 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import Field, EmailStr, BaseModel, ConfigDict, field_validator
 from src.models.icons import Icon, parse_icon
-from src.models.roles import OrganizationRoles
+from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import Avatar, UserSummary
 from src.models.statuses import ApplicationStatus
 from src.models.locations import LocationResponse
@@ -96,6 +96,7 @@ class OrganizationApplicationResponse(BaseModel):
     description: str | None = None
 
     # State
+    role: ApplicationRoles | None = None
     status: ApplicationStatus
 
     # Audit

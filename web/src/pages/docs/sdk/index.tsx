@@ -1,7 +1,12 @@
 import { CodeBlock } from '@/components/CodeBlock';
 import { A } from '@/components/ui/a';
+import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
+import { Li } from '@/components/ui/li';
+import { P } from '@/components/ui/p';
+import { Stack } from '@/components/ui/stack';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
     lastUpdated: '2026-05-25',
@@ -9,21 +14,21 @@ export const metadata = {
 };
 
 export const content = (
-    <div className="flex flex-col gap-4">
+    <Stack>
         <Heading id="application-sdk" level="h1">
             Application SDK
         </Heading>
-        <p className="leading-7">
+        <P>
             The LongLink SDK is a thin integration layer built on top of the standard Python backend ecosystem. It does
             not introduce a new framework or replace existing tools. Instead, it provides a structured way to compose
             and connect them within the LongLink platform.
-        </p>
-        <p className="leading-7">Applications follow a simple model:</p>
-        <ul className="ml-6 list-disc space-y-2">
-            <li>Business logic lives in the application code</li>
-            <li>Structured data is stored in a relational database</li>
-            <li>Unstructured data is stored in S3-compatible object storage</li>
-        </ul>
+        </P>
+        <P>Applications follow a simple model:</P>
+        <Ul>
+            <Li>Business logic lives in the application code</Li>
+            <Li>Structured data is stored in a relational database</Li>
+            <Li>Unstructured data is stored in S3-compatible object storage</Li>
+        </Ul>
         <Heading id="getting-started" level="h2">
             Getting Started
         </Heading>
@@ -60,12 +65,10 @@ export const content = (
         <Heading id="applications" level="h2">
             Applications
         </Heading>
-        <p className="leading-7">
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">longlink init</code>{' '}
-            creates a minimal application scaffold that{' '}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-[0.9em] text-foreground">longlink dev</code>{' '}
-            can run immediately:
-        </p>
+        <P>
+            <Code>longlink init</Code> creates a minimal application scaffold that <Code>longlink dev</Code> can run
+            immediately:
+        </P>
         <CodeBlock language="text">
             {
                 '├── src/\n│   ├── api/          # Route registration\n│   ├── models/       # Database models\n│   ├── pages/        # Page definitions\n│   ├── types/        # Data schemas\n│   └── envs.py       # Configuration\n├── tests/\n│   ├── api/          # API tests\n│   └── conftest.py   # Test setup\n├── main.py           # Entry point\n├── Dockerfile        # Container build definition\n├── pyproject.toml    # Project configuration\n├── .env.sample       # Environment template\n├── AGENTS.md         # Platform metadata\n└── README.md'
@@ -74,7 +77,7 @@ export const content = (
         <Heading id="local-development" level="h2">
             Local Development
         </Heading>
-        <p className="leading-7">Install development dependencies:</p>
+        <P>Install development dependencies:</P>
         <Tabs defaultValue="pip">
             <TabsList>
                 <TabsTrigger value="pip">pip</TabsTrigger>
@@ -87,7 +90,7 @@ export const content = (
                 <CodeBlock language="bash">uv sync --extra dev</CodeBlock>
             </TabsContent>
         </Tabs>
-        <p className="leading-7">Run the development server against the scaffolded app:</p>
+        <P>Run the development server against the scaffolded app:</P>
         <Tabs defaultValue="pip">
             <TabsList>
                 <TabsTrigger value="pip">pip</TabsTrigger>
@@ -103,12 +106,12 @@ export const content = (
         <Heading id="resources" level="h2">
             Resources
         </Heading>
-        <ul className="ml-6 list-disc space-y-2">
-            <li>
+        <Ul>
+            <Li>
                 <A href="https://github.com/fastapi/full-stack-fastapi-template/tree/master/backend">
                     Official FastAPI Backend Template
                 </A>
-            </li>
-        </ul>
-    </div>
+            </Li>
+        </Ul>
+    </Stack>
 );

@@ -1,13 +1,36 @@
 import type { ExecutionContext } from '../types';
 
+const UNSAFE_PROPERTY_NAMES = new Set(['__proto__', 'constructor', 'prototype']);
+
+
+/** Returns whether a property can be read from XML runtime data. */
+export function isSafePropertyName(key: string): boolean {
+    return !UNSAFE_PROPERTY_NAMES.has(key);
+}
+
+
+/** Returns whether a value owns a readable XML runtime property. */
+export function hasSafeProperty(value: unknown, key: string): boolean {
+    return isSafePropertyName(key) && value != null && Object.prototype.hasOwnProperty.call(value, key);
+}
+
+
+/** Reads one own property without traversing prototypes. */
+export function readSafeProperty(value: unknown, key: string): unknown {
+    return hasSafeProperty(value, key) ? (value as Record<string, unknown>)[key] : undefined;
+}
+
+
 /** Resolves a raw value from the current XML runtime scope chain. */
 function resolveRawValue(ctx: ExecutionContext | null | undefined, key: string): unknown {
+    if (!isSafePropertyName(key)) return undefined;
+
     for (let scope = ctx; scope; scope = scope.parent) {
         const values = scope.values ?? {};
 
-        if (key in values) return values[key];
+        if (hasSafeProperty(values, key)) return readSafeProperty(values, key);
 
-        if (key in scope) return (scope as Record<string, unknown>)[key];
+        if (hasSafeProperty(scope, key)) return readSafeProperty(scope, key);
     }
 
     return undefined;
@@ -44,9 +67,7 @@ export function resolvePath(ctx: ExecutionContext, parts: string[]): unknown {
 
     // Walk the remaining path segments directly on the live value.
     for (const part of parts.slice(1)) {
-        if (current == null) return undefined;
-
-        current = (current as Record<string, unknown>)[part];
+        current = readSafeProperty(current, part);
     }
 
     return current;
