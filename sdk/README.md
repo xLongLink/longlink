@@ -25,6 +25,8 @@ uv sync
 uv run longlink dev
 ```
 
+For a complete minimal application, see [`xLongLink/sample`](https://github.com/xLongLink/sample).
+
 <br />
 
 ## Commands

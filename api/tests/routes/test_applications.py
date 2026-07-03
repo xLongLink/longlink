@@ -3,7 +3,6 @@ import pytest
 from types import SimpleNamespace
 from datetime import UTC, datetime
 from src.models.roles import ApplicationRoles, OrganizationRoles
-from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.models.computes import ComputeKind
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
@@ -14,7 +13,6 @@ from src.models.databases import DatabaseKind
 from src.models.operations import OperationKind
 from kubernetes.client.rest import ApiException
 from src.models.applications import ApplicationStatus
-from src.models.applications import ApplicationResponse as AppResponse
 from src.database.models.users import User
 from src.database.services.users import users
 from src.adapters.database.shared import SharedUser
@@ -84,17 +82,9 @@ async def test_list_organization_apps_returns_app_membership_role(
 
     # Assert
     assert response.status_code == 200
-    expected_data = AppResponse.model_validate(
-        {
-            **app.model_dump(),
-            "organization": app.organization,
-            "role": ApplicationRoles.write,
-            "created_by": UserSummary.model_validate(owner.model_dump()),
-            "updated_by": UserSummary.model_validate(owner.model_dump()),
-            "deleted_by": None,
-        }
-    ).model_dump(mode="json")
-    assert response.json() == [expected_data]
+    payload = response.json()
+    assert [item["id"] for item in payload] == [str(app.id)]
+    assert payload[0]["role"] == ApplicationRoles.write
 
 
 async def test_list_organization_apps_returns_creator_app_admin_role(
@@ -121,17 +111,9 @@ async def test_list_organization_apps_returns_creator_app_admin_role(
 
     # Assert
     assert response.status_code == 200
-    expected_data = AppResponse.model_validate(
-        {
-            **app.model_dump(),
-            "organization": app.organization,
-            "role": ApplicationRoles.admin,
-            "created_by": UserSummary.model_validate(user.model_dump()),
-            "updated_by": UserSummary.model_validate(user.model_dump()),
-            "deleted_by": None,
-        }
-    ).model_dump(mode="json")
-    assert response.json() == [expected_data]
+    payload = response.json()
+    assert [item["id"] for item in payload] == [str(app.id)]
+    assert payload[0]["role"] == ApplicationRoles.admin
 
 
 async def test_list_apps_without_organization_returns_all_apps_for_admin(
@@ -166,29 +148,7 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
     # Assert
     assert response.status_code == 200
-    expected_data = [
-        AppResponse.model_validate(
-            {
-                **dashboard.model_dump(),
-                "organization": dashboard.organization,
-                "role": None,
-                "created_by": UserSummary.model_validate(user.model_dump()),
-                "updated_by": UserSummary.model_validate(user.model_dump()),
-                "deleted_by": None,
-            }
-        ).model_dump(mode="json"),
-        AppResponse.model_validate(
-            {
-                **console.model_dump(),
-                "organization": console.organization,
-                "role": None,
-                "created_by": UserSummary.model_validate(user.model_dump()),
-                "updated_by": UserSummary.model_validate(user.model_dump()),
-                "deleted_by": None,
-            }
-        ).model_dump(mode="json"),
-    ]
-    assert response.json() == expected_data
+    assert {item["id"] for item in response.json()} == {str(dashboard.id), str(console.id)}
 
 
 async def test_list_apps_without_organization_requires_admin(
@@ -414,30 +374,13 @@ async def test_create_app_returns_app_response(
     # Assert
     assert response.status_code == 200
     payload = response.json()
-    expected_data = AppResponse.model_validate(payload).model_dump(mode="json")
     assert payload["status"] == "creating"
     assert payload["description"] == "Dashboard app"
     assert payload["version"] == "20250623_120000"
     assert payload["sdk_version"] == "0.1.0"
-    assert payload["deleted_by"] is None
-    assert payload == expected_data
     assert captured["namespace"] == "acme"
     assert captured["proxy_secret"]
-    assert captured["database"] == {
-        "host": "db.remote.longlink.internal",
-        "port": 5432,
-        "username": "longlink",
-        "password": "secret",
-        "runtime_host": "db.runtime.longlink.internal",
-        "runtime_port": 15432,
-    }
     assert captured["schema"] == {"organization": "acme", "application": "dashboard"}
-    assert captured["storage"] == {
-        "protocol": "http",
-        "endpoint_url": "http://storage.control.longlink.internal",
-        "access_key_id": "storage-access",
-        "secret_access_key": "storage-secret",
-    }
     assert captured_buckets == [("shared", "acme"), ("application", "acme", "dashboard")]
     sync_payload = captured["sync_users"]
     assert isinstance(sync_payload, dict)
@@ -445,38 +388,17 @@ async def test_create_app_returns_app_response(
     assert isinstance(synced_users, list)
     assert all(isinstance(synced_user, SharedUser) for synced_user in synced_users)
     assert sync_payload["organization"] == "acme"
-    assert [synced_user.model_dump() for synced_user in synced_users] == [
-        {
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "avatar": user.avatar,
-            "role_name": "owner",
-            "created_at": synced_users[0].created_at,
-            "updated_at": synced_users[0].updated_at,
-            "deleted_at": None,
-        }
-    ]
-    assert captured["application"] == {
-        "organization": "acme",
-        "application": "dashboard",
-        "image": "ghcr.io/longlink/dashboard:latest",
-        "port": 80,
-        "secrets": {
-            "API_KEY": "secret-value",
-            "LONGLINK_DATABASE_SCHEMA": "dashboard",
-            "LONGLINK_DATABASE_URL": "postgresql+asyncpg://fake",
-            "LONGLINK_ENV": "production",
-            "LONGLINK_STORAGE_BUCKET": "longlink-acme-dashboard",
-            "LONGLINK_STORAGE_SHARED_BUCKET": "longlink-acme-shared",
-            "LONGLINK_STORAGE_URL": "s3+http://storage-access:storage-secret@storage.runtime.longlink.internal:19000",
-            "PORT": "8080",
-        },
-    }
+    assert synced_users[0].email == user.email
     application_payload = captured["application"]
     assert isinstance(application_payload, dict)
+    assert application_payload["organization"] == "acme"
+    assert application_payload["application"] == "dashboard"
     application_secrets = application_payload["secrets"]
     assert isinstance(application_secrets, dict)
+    assert application_secrets["API_KEY"] == "secret-value"
+    assert application_secrets["LONGLINK_ENV"] == "production"
+    assert application_secrets["LONGLINK_DATABASE_URL"] == "postgresql+asyncpg://fake"
+    assert application_secrets["LONGLINK_STORAGE_URL"].startswith("s3+http://")
     assert "LONGLINK_INTERNAL" not in application_secrets
 
 

@@ -59,7 +59,9 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '' }: RenderXMLPr
         if (waitsForTranslations && runtimeCtx.translations === undefined) {
             const locale = runtimeCtx.locale ?? 'en';
 
-            void fetchApiJson<Record<string, unknown>>(resolveUrl(baseUrl, `/i18n/${locale}.json`))
+            void fetchApiJson<Record<string, unknown>>(resolveUrl(baseUrl, `/i18n/${locale}.json`), {
+                cache: 'no-cache',
+            })
                 .then((translations) => {
                     if (!mounted) return;
 

@@ -12,6 +12,7 @@ import TopLayout from './TopLayout';
 
 type LayoutTab = {
     href: string;
+    active?: boolean;
     icon?: LucideIcon;
 };
 
@@ -76,9 +77,10 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                     <div className="flex w-full items-center gap-2 border-b border-white/10">
                         {tabEntries.map(([label, tab]) => {
                             const href = typeof tab === 'string' ? tab : tab.href;
+                            const active = typeof tab === 'string' ? undefined : tab.active;
                             const Icon = typeof tab === 'string' ? undefined : tab.icon;
                             const targetUrl = new URL(href, `${window.location.origin}${location.pathname}`);
-                            const isActive = `${targetUrl.pathname}${targetUrl.search}` === currentPath;
+                            const isActive = active ?? `${targetUrl.pathname}${targetUrl.search}` === currentPath;
 
                             return (
                                 <Link

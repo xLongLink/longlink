@@ -45,7 +45,8 @@ export const content = (
                 <Li>
                     <Code>src/pages</Code> contains XML page files. Files are registered recursively under{' '}
                     <Code>/pages</Code>, so <Code>src/pages/admin/users.xml</Code> is served as{' '}
-                    <Code>/pages/admin/users.xml</Code> and listed in <Code>/metadata.json</Code>.
+                    <Code>/pages/admin/users.xml</Code>, listed in <Code>/metadata.json</Code>, and available in the
+                    browser at <Code>/admin/users</Code>.
                 </Li>
                 <Li>
                     <Code>src/i18n</Code> contains locale catalogs. JSON files are served under <Code>/i18n</Code>, so{' '}
@@ -54,10 +55,47 @@ export const content = (
             </Ul>
             <CodeBlock language="text">{`src/
   pages/
+    index.xml
     dashboard.xml
+    issues.xml
+    issues/[issue].xml
     admin/users.xml
   i18n/
     en.json`}</CodeBlock>
+        </Stack>
+        <Stack className="gap-3">
+            <Heading id="dynamic-pages" level="h2">
+                Dynamic Pages
+            </Heading>
+            <P>
+                Dynamic browser pages come from file names. Use square brackets around one path segment to declare a
+                route parameter; the SDK keeps serving the XML file from its literal <Code>/pages</Code> path and
+                exposes the derived browser route through <Code>/metadata.json</Code>.
+            </P>
+            <Ul>
+                <Li>
+                    <Code>src/pages/index.xml</Code>: browser route <Code>/</Code>.
+                </Li>
+                <Li>
+                    <Code>src/pages/issues.xml</Code>: browser route <Code>/issues</Code>.
+                </Li>
+                <Li>
+                    <Code>src/pages/issues/[issue].xml</Code>: browser route <Code>/issues/:issue</Code>.
+                </Li>
+                <Li>
+                    <Code>src/pages/issues/[issue]/comments.xml</Code>: browser route{' '}
+                    <Code>/issues/:issue/comments</Code>.
+                </Li>
+            </Ul>
+            <P>
+                Dynamic pages inherit their navigation tab from the first static segment, so <Code>/issues</Code> and{' '}
+                <Code>/issues/123</Code> keep the same <Code>Issues</Code> tab active. Matched parameters are available
+                as <Code>params</Code> in XML expressions.
+            </P>
+            <CodeBlock language="xml">{`<longlink>
+  <Query id="issue" path="/api/issues/\${params.issue}" />
+  <H1 value="$issue.title" />
+</longlink>`}</CodeBlock>
         </Stack>
         <Stack className="gap-3">
             <Heading id="longlink-page-and-i18n-mounts" level="h2">
@@ -199,7 +237,10 @@ app = LongLink(
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
                     <Li>id: required literal query name.</Li>
-                    <Li>path: required literal request path, resolved relative to the current app base URL.</Li>
+                    <Li>
+                        path: required request path, resolved relative to the current app base URL and evaluated against
+                        the XML runtime scope.
+                    </Li>
                     <Li>Query is setup-only, does not render, and cannot have children.</Li>
                 </Ul>
             </Stack>
@@ -282,6 +323,7 @@ app = LongLink(
                 <Ul>
                     <Li>path.to.value reads from the runtime context.</Li>
                     <Li>$state.field creates a writable binding for controls that support it.</Li>
+                    <Li>params.name reads dynamic browser route parameters from files like [name].xml.</Li>
                     <Li>{'${...} interpolates expression output inside a string parameter or text node.'}</Li>
                 </Ul>
             </Stack>

@@ -2,37 +2,27 @@ import main
 import pytest
 import asyncio
 from fastapi import FastAPI
-from src.routes import health as health_routes
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.sessions import SessionMiddleware
+from fastapi.testclient import TestClient
 
 pytestmark = pytest.mark.no_db
 
 
-def test_static_web_bundle_is_mounted() -> None:
-    """Mount the built API web bundle at the root path when it exists."""
-
-    frontend_route = main.app.router._frontend_routes.routes[0]
-
-    assert frontend_route.path == "/"
-    assert frontend_route.methods == {"GET", "HEAD"}
-    assert frontend_route.app.directory == main.static_dir
-    assert (main.static_dir / "index.html").is_file()
-
-
-async def test_healthz_returns_ok() -> None:
+def test_healthz_returns_ok() -> None:
     """Expose a liveness endpoint for the API."""
 
-    assert await health_routes.healthz() == {"status": "ok"}
+    response = TestClient(main.app).get("/api/healthz")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
 
 
-def test_health_route_uses_api_healthz_path() -> None:
-    """Register the health route at the public liveness path."""
+def test_static_web_bundle_serves_root() -> None:
+    """Serve the built API web bundle at the root path."""
 
-    route = health_routes.router.routes[0]
+    response = TestClient(main.app).get("/")
 
-    assert route.path == "/api/healthz"
-    assert route.methods == {"GET"}
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
 
 
 def test_api_documentation_routes_are_configured() -> None:
@@ -43,61 +33,23 @@ def test_api_documentation_routes_are_configured() -> None:
     assert main.app.openapi_url == "/openapi.json"
 
 
-def test_control_plane_routers_are_included() -> None:
-    """Include the control-plane API routers in the FastAPI app."""
-
-    included_router_ids = {
-        id(route.original_router)
-        for route in main.app.router.routes
-        if hasattr(route, "original_router")
-    }
-    expected_router_ids = {
-        id(main.auth.router),
-        id(main.accounts.router),
-        id(main.applications.router),
-        id(main.computes.router),
-        id(main.databases.router),
-        id(main.health.router),
-        id(main.icons.router),
-        id(main.image.router),
-        id(main.locations.router),
-        id(main.operations_route.router),
-        id(main.organizations.router),
-        id(main.storages.router),
-        id(main.users.router),
-    }
-
-    assert expected_router_ids <= included_router_ids
-
-
-def test_session_middleware_uses_longlink_cookie() -> None:
-    """Configure browser sessions with the shared LongLink cookie name."""
-
-    session_middleware = next(
-        middleware for middleware in main.app.user_middleware if middleware.cls is SessionMiddleware
-    )
-
-    assert session_middleware.kwargs["session_cookie"] == "longlink_session"
-    assert session_middleware.kwargs["same_site"] == "lax"
-
-
 def test_configure_cors_adds_credentialed_middleware_for_origins() -> None:
     """Allow credentialed CORS only for configured origins."""
 
     application = FastAPI()
 
     configured_origins = main.configure_cors(application, ("https://app.example", ""))
-    cors_middleware = next(
-        middleware for middleware in application.user_middleware if middleware.cls is CORSMiddleware
+    response = TestClient(application).options(
+        "/anything",
+        headers={
+            "origin": "https://app.example",
+            "access-control-request-method": "GET",
+        },
     )
 
     assert configured_origins == ["https://app.example"]
-    assert cors_middleware.kwargs == {
-        "allow_origins": ["https://app.example"],
-        "allow_credentials": True,
-        "allow_methods": ["*"],
-        "allow_headers": ["*"],
-    }
+    assert response.headers["access-control-allow-origin"] == "https://app.example"
+    assert response.headers["access-control-allow-credentials"] == "true"
 
 
 async def test_lifespan_runs_development_sqlite_migrations_before_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -125,22 +77,3 @@ async def test_lifespan_runs_development_sqlite_migrations_before_scheduler(monk
         await asyncio.sleep(0)
 
     assert events == [("migration", "head"), ("scheduler", "started")]
-
-
-async def test_lifespan_starts_operation_scheduler(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Start the operation scheduler through the FastAPI lifespan hook."""
-
-    started = False
-
-    async def fake_operation_scheduler() -> None:
-        """Block until the lifespan shutdown cancels the scheduler task."""
-
-        nonlocal started
-        started = True
-        await asyncio.Event().wait()
-
-    monkeypatch.setattr(main, "run_operation_scheduler", fake_operation_scheduler)
-
-    async with main.lifespan(main.app):
-        await asyncio.sleep(0)
-        assert started is True

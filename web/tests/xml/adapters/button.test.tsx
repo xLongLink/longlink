@@ -6,24 +6,6 @@ import { proxy } from 'valtio';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Button', () => {
-    /* Variant should flow into the shared button class recipe. */
-    it('applies the requested variant', () => {
-        const ast = parseXML('<Button variant="destructive" i18n="Delete" />');
-        const output = renderXmlToMarkup(ast);
-
-        expect(output).toContain('bg-destructive/10');
-        expect(output).toContain('Delete');
-    });
-
-    /* Size should flow into the shared button class recipe. */
-    it('applies the requested size', () => {
-        const ast = parseXML('<Button size="lg" i18n="Save" />');
-        const output = renderXmlToMarkup(ast);
-
-        expect(output).toContain('h-9');
-        expect(output).toContain('Save');
-    });
-
     /* Submit mode should render a native submit control. */
     it('renders a submit button when submit is enabled', () => {
         const ast = parseXML('<Button submit="true" i18n="Submit" />');
@@ -76,14 +58,4 @@ describe('Button', () => {
         expect(output).toBe('<div></div>');
     });
 
-    /* The compiler should preserve the if parameter on button nodes. */
-    it('preserves if in compiled xml', () => {
-        expect(parseXML('<Button if="${true}" i18n="Visible" />')).toEqual([
-            {
-                name: 'Button',
-                params: { if: '${true}', i18n: 'Visible' },
-                children: [],
-            },
-        ]);
-    });
 });

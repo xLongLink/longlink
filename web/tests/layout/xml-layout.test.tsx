@@ -2,13 +2,12 @@ import { UserProvider } from '@/hooks/use-user';
 import XML from '@/layout/XmlLayout';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it } from 'bun:test';
-import { ShoppingCart } from 'lucide-react';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
 
 describe('XmlLayout', () => {
-    it('renders tab icons when provided', () => {
+    it('uses explicit tab active state when provided', () => {
         const previousWindow = globalThis.window;
 
         Object.defineProperty(globalThis, 'window', {
@@ -27,9 +26,9 @@ describe('XmlLayout', () => {
                         null,
                         createElement(
                             MemoryRouter,
-                            { initialEntries: ['/?tab=cart'] },
+                            { initialEntries: ['/issues/123'] },
                             createElement(XML, {
-                                tabs: { Cart: { href: '/?tab=cart', icon: ShoppingCart } },
+                                tabs: { Issues: { active: true, href: '/issues' } },
                                 children: createElement('main', null, 'Content'),
                             })
                         )
@@ -37,9 +36,8 @@ describe('XmlLayout', () => {
                 )
             );
 
-            expect(output).toContain('Cart');
-            expect(output).toContain('<svg');
-            expect(output).toContain('lucide-shopping-cart');
+            expect(output).toContain('aria-current="page"');
+            expect(output).toContain('Issues');
         } finally {
             Object.defineProperty(globalThis, 'window', {
                 configurable: true,

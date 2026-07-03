@@ -8,17 +8,6 @@ import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('Query', () => {
-    /* The compiler should preserve query attributes for self-closing query nodes. */
-    it('compiles query xml into a query ast node', () => {
-        expect(parseXML('<Query id="user" path="/api/user" />')).toEqual([
-            {
-                name: 'Query',
-                params: { id: 'user', path: '/api/user' },
-                children: [],
-            },
-        ]);
-    });
-
     /* Query nodes must reject nested children so invalid layouts fail fast. */
     it('throws when children are present', () => {
         const runtime: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };

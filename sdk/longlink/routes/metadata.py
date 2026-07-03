@@ -15,8 +15,9 @@ async def get_metadata(request: Request) -> dict[str, object]:
     # Page handlers are registered from the SDK pages directory during app startup.
     for page in registered_pages:
         entry = {
-            "tab": page.path.lstrip("/").removesuffix(".xml").removeprefix("pages/"),
+            "tab": page.tab,
             "path": page.path.lstrip("/"),
+            "route": page.route,
         }
 
         if page.name:

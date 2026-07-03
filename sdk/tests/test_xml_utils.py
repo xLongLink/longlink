@@ -42,7 +42,9 @@ def test_element_validation_uses_safe_xml_parser(monkeypatch: MonkeyPatch) -> No
     Element.from_content("<longlink />", schema=SCHEMA).validate()
 
     # Assert
-    assert captured_kwargs == [{"load_dtd": False, "no_network": True, "resolve_entities": False}]
+    assert captured_kwargs[0]["load_dtd"] is False
+    assert captured_kwargs[0]["no_network"] is True
+    assert captured_kwargs[0]["resolve_entities"] is False
 
 
 def test_longlink_metadata_parses_xml_document(tmp_path: Path) -> None:

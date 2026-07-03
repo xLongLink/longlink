@@ -1,0 +1,96 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink name="Requests" icon="clipboard-list">
+    <Query id="requests" path="/requests" />
+    <State
+        id="draft"
+        title="Laptop for field audit"
+        amount="1800"
+        vendor="Acme Hardware"
+        justification="The field team needs a dedicated machine for onsite audit work."
+    />
+
+    <Hero icon="clipboard-list">
+        <HeroTitle i18n="requests.title" />
+        <HeroDescription i18n="requests.description" />
+        <HeroAction>
+            <Dialog>
+                <DialogTrigger>
+                    <Button i18n="requests.create.open" />
+                </DialogTrigger>
+                <DialogContent>
+                    <Stack>
+                        <DialogTitle>
+                            <P i18n="requests.create.title" />
+                        </DialogTitle>
+                        <DialogDescription>
+                            <P i18n="requests.create.description" />
+                        </DialogDescription>
+
+                        <Grid columns="2">
+                            <Field>
+                                <FieldLabel htmlFor="request-title" i18n="requests.fields.title" />
+                                <Input id="request-title" value="$draft.title" />
+                            </Field>
+
+                            <Field>
+                                <FieldLabel htmlFor="request-vendor" i18n="requests.fields.vendor" />
+                                <Input id="request-vendor" value="$draft.vendor" />
+                            </Field>
+                        </Grid>
+
+                        <Field>
+                            <FieldLabel htmlFor="request-amount" i18n="requests.fields.amount" />
+                            <Input id="request-amount" type="number" value="$draft.amount" />
+                        </Field>
+
+                        <Field>
+                            <FieldLabel htmlFor="request-justification" i18n="requests.fields.justification" />
+                            <Textarea id="request-justification" value="$draft.justification" />
+                        </Field>
+
+                        <Field orientation="horizontal">
+                            <FieldLabel></FieldLabel>
+                            <Action
+                                action="/requests"
+                                method="POST"
+                                invalidate='${["requests"]}'
+                                json="${{ title: draft.title, amount: draft.amount, vendor: draft.vendor, justification: draft.justification }}"
+                            >
+                                <Button i18n="requests.create.submit" />
+                            </Action>
+                        </Field>
+                    </Stack>
+                </DialogContent>
+            </Dialog>
+        </HeroAction>
+    </Hero>
+
+    <DataTable data="$requests" as="request" empty="No purchase requests yet.">
+        <DataColumn>
+            <DataHeader i18n="requests.table.request" />
+            <DataCell>
+                <Stack>
+                    <A to="/requests/${request.id}" i18n="requests.table.open">
+                        <Icon name="arrow-right" />
+                    </A>
+                    <P value="$request.title" />
+                </Stack>
+            </DataCell>
+        </DataColumn>
+
+        <DataColumn field="vendor" header="Vendor" />
+        <DataColumn field="amount" header="Amount" />
+
+        <DataColumn>
+            <DataHeader i18n="requests.table.status" />
+            <DataCell>
+                <Badge variant="outline" value="$request.status" />
+            </DataCell>
+        </DataColumn>
+
+        <DataColumn>
+            <DataHeader i18n="requests.table.createdBy" />
+            <DataCell value="$request.created_by.name" />
+        </DataColumn>
+    </DataTable>
+</longlink>

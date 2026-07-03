@@ -75,70 +75,55 @@ async def test_get_session_normalizes_mysql_urls_to_aiomysql(monkeypatch) -> Non
     assert log[1:] == [("connect", None), ("run_sync", None)]
 
 
-def test_database_url_keeps_non_postgresql_urls_unchanged() -> None:
-    """Leave unsupported URLs untouched."""
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ("sqlite+aiosqlite:///./dev.db", "sqlite+aiosqlite:///./dev.db"),
+        (
+            "postgresql://control:secret@db:5432/longlink",
+            "postgresql+asyncpg://control:secret@db:5432/longlink",
+        ),
+        (
+            "postgres://control:secret@db:5432/longlink",
+            "postgresql+asyncpg://control:secret@db:5432/longlink",
+        ),
+        (
+            "postgresql+psycopg://control:secret@db:5432/longlink?sslmode=require&application_name=longlink",
+            "postgresql+asyncpg://control:secret@db:5432/longlink?application_name=longlink",
+        ),
+    ],
+)
+def test_database_url_normalization(source: str, expected: str) -> None:
+    """Normalize database URLs for async SQLAlchemy usage."""
 
-    source = "sqlite+aiosqlite:///./dev.db"
-
-    assert url.database(source) == source
-
-
-def test_database_url_converts_postgresql_url_to_asyncpg() -> None:
-    """Convert plain PostgreSQL URLs to the asyncpg dialect."""
-
-    source = "postgresql://control:secret@db:5432/longlink"
-
-    assert url.database(source) == "postgresql+asyncpg://control:secret@db:5432/longlink"
-
-
-def test_database_url_converts_postgresql_legacy_scheme_to_asyncpg() -> None:
-    """Accept postgres:// URLs in legacy format."""
-
-    source = "postgres://control:secret@db:5432/longlink"
-
-    assert url.database(source) == "postgresql+asyncpg://control:secret@db:5432/longlink"
-
-
-def test_database_url_converts_psycopg_urls_and_strips_sslmode() -> None:
-    """Convert psycopg URLs and drop SSL mode for asyncpg compatibility."""
-
-    source = (
-        "postgresql+psycopg://control:secret@db:5432/longlink?"
-        "sslmode=require&application_name=longlink"
-    )
-
-    assert (
-        url.database(source)
-        == "postgresql+asyncpg://control:secret@db:5432/longlink?application_name=longlink"
-    )
+    assert url.database(source) == expected
 
 
-def test_database_url_normalization_preserves_other_query_params() -> None:
-    """Preserve unrelated query parameters while removing sslmode."""
-
-    source = (
-        "postgresql://control:secret@db:5432/longlink?"
-        "sslmode=disable&search_path=%22public%22&application_name=longlink"
-    )
+@pytest.mark.parametrize(
+    ("source", "expected_query"),
+    [
+        (
+            "postgresql://control:secret@db:5432/longlink?sslmode=disable&search_path=%22public%22&application_name=longlink",
+            [("search_path", '"public"'), ("application_name", "longlink")],
+        ),
+        (
+            "postgresql+psycopg2://control:secret@db:5432/longlink?SSLMODE=disable&target_session_attrs=read-only",
+            [("target_session_attrs", "read-only")],
+        ),
+    ],
+)
+def test_database_url_strips_sslmode_and_preserves_other_query_params(
+    source: str,
+    expected_query: list[tuple[str, str]],
+) -> None:
+    """Remove SSL mode parameters while preserving unrelated PostgreSQL query options."""
 
     normalized = url.database(source)
-    parsed = dict(urllib.parse.parse_qsl(urllib.parse.urlsplit(normalized).query))
+    parsed_query = urllib.parse.parse_qsl(urllib.parse.urlsplit(normalized).query)
 
-    assert "sslmode" not in parsed
-    assert parsed == {"search_path": '"public"', "application_name": "longlink"}
-
-
-def test_database_url_strips_case_insensitive_sslmode_key() -> None:
-    """Handle uppercase SSLMODE keys in PostgreSQL URLs."""
-
-    source = "postgresql+psycopg2://control:secret@db:5432/longlink?SSLMODE=disable&target_session_attrs=read-only"
-    normalized = url.database(source)
-
-    assert "sslmode" not in normalized
     assert normalized.startswith("postgresql+asyncpg://")
-    assert urllib.parse.parse_qsl(urllib.parse.urlsplit(normalized).query) == [
-        ("target_session_attrs", "read-only")
-    ]
+    assert {key.lower() for key, _value in parsed_query}.isdisjoint({"sslmode"})
+    assert dict(parsed_query) == dict(expected_query)
 
 
 async def test_get_session_reuses_cached_session(monkeypatch) -> None:

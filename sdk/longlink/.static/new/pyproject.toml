@@ -1,7 +1,7 @@
 [project]
 name = "longlink-app"
 version = "0.0.0"
-description = "Minimal LongLink showcase application."
+description = "Minimal LongLink purchase request application."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [

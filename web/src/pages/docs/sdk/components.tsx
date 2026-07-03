@@ -807,16 +807,20 @@ export const content = (
                     <Heading id="a" level="h3">
                         A
                     </Heading>
-                    <P>Styled link to another page or external resource.</P>
+                    <P>Styled link to another app page or external resource.</P>
                     <Stack className="gap-2">
                         <P className="font-medium text-foreground">Parameters</P>
                         <Ul>
-                            <Li>href: optional destination URL.</Li>
+                            <Li>
+                                to: optional app page target, resolved inside the current SDK or deployed app route.
+                            </Li>
+                            <Li>href: optional resource or external destination URL.</Li>
                             <Li>active: optional always value for active styling.</Li>
                             <Li>i18n: optional translation key.</Li>
                         </Ul>
                     </Stack>
-                    <CodeBlock language="xml">{`<A href="/settings" i18n="settings.open" />`}</CodeBlock>
+                    <CodeBlock language="xml">{`<A to="/issues/\${issue.id}" i18n="issues.open" />
+<A href="/files/report.pdf" i18n="reports.download" />`}</CodeBlock>
                 </Stack>
                 <Stack className="gap-3">
                     <Heading id="b" level="h3">

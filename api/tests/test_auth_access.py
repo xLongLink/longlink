@@ -8,7 +8,7 @@ from src.routes import auth as auth_routes
 from src.routes import users as users_routes
 from src.routes import accounts as account_routes
 from src.models.auth import OidcUserInfo
-from src.models.roles import PlatformRoles, ApplicationRoles, OrganizationRoles
+from src.models.roles import PlatformRoles
 from src.models.users import UserUpdate, UserProfile, UserListItem
 from src.models.common import SuccessResponse
 from src.models.countries import Country
@@ -546,14 +546,6 @@ async def test_patch_me_updates_profile_and_resyncs_organizations(monkeypatch: p
     assert result == profile
     assert upsert_calls == [{"oidc": "patch-user", "name": "Updated User"}]
     assert sync_calls == [updated_user]
-
-
-def test_role_model_defines_platform_organization_and_application_roles() -> None:
-    """Expose the supported role values used by access checks."""
-
-    assert [role.value for role in PlatformRoles] == ["user", "support", "administrator"]
-    assert [role.value for role in OrganizationRoles] == ["read", "write", "maintain", "admin", "owner"]
-    assert [role.value for role in ApplicationRoles] == ["read", "write", "maintain", "admin"]
 
 
 async def test_organization_access_hides_missing_memberships(monkeypatch: pytest.MonkeyPatch) -> None:

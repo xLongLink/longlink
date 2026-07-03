@@ -12,3 +12,4 @@ def pytest_configure() -> None:
 
     os.environ["LONGLINK_ENV"] = "testing"
     os.environ["LONGLINK_DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+    os.environ["REQUIRED"] = "required"

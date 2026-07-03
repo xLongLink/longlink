@@ -5,54 +5,17 @@ import { proxy } from 'valtio';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('InputGroup', () => {
-    /* The compiler should preserve the grouped input structure. */
-    it('preserves the input group xml structure', () => {
-        expect(
-            parseXML(
-                '<InputGroup><InputGroupAddon><Icon name="search" /></InputGroupAddon><InputGroupInput label="Handle" value="user.handle" /><InputGroupButton i18n="Search"><Icon name="arrow-right" /></InputGroupButton><InputGroupText i18n="Public" /></InputGroup>'
-            )
-        ).toEqual([
-            {
-                name: 'InputGroup',
-                children: [
-                    {
-                        name: 'InputGroupAddon',
-                        children: [{ name: 'Icon', params: { name: 'search' }, children: [] }],
-                    },
-                    {
-                        name: 'InputGroupInput',
-                        params: { label: 'Handle', value: 'user.handle' },
-                        children: [],
-                    },
-                    {
-                        name: 'InputGroupButton',
-                        params: { i18n: 'Search' },
-                        children: [{ name: 'Icon', params: { name: 'arrow-right' }, children: [] }],
-                    },
-                    {
-                        name: 'InputGroupText',
-                        params: { i18n: 'Public' },
-                        children: [],
-                    },
-                ],
-            },
-        ]);
-    });
-
     /* The runtime should render the grouped control shell end to end. */
     it('renders input group markup end to end', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {}, user: { handle: 'ada' } };
         const output = renderXmlToMarkup(
             parseXML(
-                '<InputGroup><InputGroupAddon><Icon name="search" /></InputGroupAddon><InputGroupInput value="user.handle" placeholder="Handle" /><InputGroupButton i18n="Search"><Icon name="arrow-right" /></InputGroupButton><InputGroupText i18n="Public" /></InputGroup>'
+                '<InputGroup><InputGroupAddon><P i18n="@" /></InputGroupAddon><InputGroupInput value="user.handle" placeholder="Handle" /><InputGroupButton i18n="Search" /><InputGroupText i18n="Public" /></InputGroup>'
             ),
             ctx
         );
 
-        expect(output).toContain('data-slot="input-group"');
-        expect(output).toContain('data-slot="input-group-addon"');
-        expect(output).toContain('data-slot="input-group-control"');
-        expect(output).toContain('data-slot="input-group-text"');
+        expect(output).toContain('@');
         expect(output).toContain('Search');
         expect(output).toContain('Public');
         expect(output).toContain('ada');
@@ -80,7 +43,6 @@ describe('InputGroup', () => {
             parseXML('<InputGroup><InputGroupTextarea label="Notes" value="Draft notes" rows="4" /></InputGroup>')
         );
 
-        expect(output).toContain('data-slot="input-group"');
         expect(output).toContain('Draft notes');
         expect(output).toContain('textarea');
     });

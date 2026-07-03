@@ -1,0 +1,76 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink name="Requests" icon="clipboard-list">
+    <Query id="request" path="/requests/${params.request}" />
+    <Query id="attachments" path="/requests/${params.request}/attachments" />
+    <State id="attachment" file="${null}" />
+
+    <Hero icon="clipboard-list">
+        <HeroTitle i18n="requests.detail.title" />
+        <HeroDescription i18n="requests.detail.description" />
+        <HeroAction>
+            <A to="/requests" i18n="requests.detail.back">
+                <Icon name="list" />
+            </A>
+        </HeroAction>
+    </Hero>
+
+    <Grid columns="2">
+        <Card>
+            <Stack>
+                <Flex space="between">
+                    <P value="$request.title" />
+                    <Badge variant="outline" value="$request.status" />
+                </Flex>
+                <P value="${`${request.vendor} - CHF ${request.amount}`}" />
+                <P value="$request.justification" />
+                <P value="${`Created by ${request.created_by.name}`}" />
+
+                <ButtonGroup>
+                    <Action action="/requests/${params.request}/status" method="PATCH" invalidate='${["request"]}' json='${{ status: "approved" }}'>
+                        <Button i18n="requests.actions.approve" />
+                    </Action>
+                    <Action action="/requests/${params.request}/status" method="PATCH" invalidate='${["request"]}' json='${{ status: "rejected" }}'>
+                        <Button variant="outline" i18n="requests.actions.reject" />
+                    </Action>
+                </ButtonGroup>
+            </Stack>
+        </Card>
+
+        <Card>
+            <Stack>
+                <P i18n="requests.attachments.title" />
+                <Field>
+                    <FieldLabel htmlFor="attachment-file" i18n="requests.attachments.file" />
+                    <Input id="attachment-file" type="file" value="$attachment.file" />
+                </Field>
+                <Action
+                    action="/requests/${params.request}/attachments"
+                    method="POST"
+                    invalidate='${["attachments"]}'
+                    form="${{ file: attachment.file }}"
+                >
+                    <Button disabled="${attachment.file in [null]}" i18n="requests.attachments.upload" />
+                </Action>
+            </Stack>
+        </Card>
+    </Grid>
+
+    <DataTable data="$attachments" as="attachment" empty="No attachments uploaded yet.">
+        <DataColumn field="name" header="File" />
+        <DataColumn field="size" header="Bytes" />
+
+        <DataColumn>
+            <DataHeader i18n="requests.attachments.actions" />
+            <DataCell>
+                <Flex>
+                    <A href="$attachment.download_url" i18n="requests.attachments.download">
+                        <Icon name="download" />
+                    </A>
+                    <Action action="$attachment.download_url" method="DELETE" invalidate='${["attachments"]}'>
+                        <Button variant="outline" size="sm" i18n="requests.attachments.delete" />
+                    </Action>
+                </Flex>
+            </DataCell>
+        </DataColumn>
+    </DataTable>
+</longlink>

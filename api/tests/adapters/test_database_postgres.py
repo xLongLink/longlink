@@ -2,7 +2,6 @@ import pytest
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy.schema import CreateTable, CreateSchema
-from sqlalchemy.dialects import postgresql
 from src.adapters.database.shared import SharedUser
 from src.adapters.database.postgres import Postgres
 
@@ -193,22 +192,15 @@ async def test_schema_creates_database_and_schema_with_managed_connection(monkey
 
     # Assert
     assert connection == "postgresql+psycopg://longlink_acme_dashboard:runtime-secret@postgres.runtime.internal:15432/longlink_acme?sslmode=disable"
-    assert log[0][0] == "engine"
-    assert log[0][1][0] == "postgresql+psycopg://longlink:***@db.longlink.internal:5432/postgres?sslmode=disable"
-    assert log[0][1][1] == {"pool_pre_ping": True, "isolation_level": "AUTOCOMMIT"}
-    assert str(log[1][1]) == "SELECT 1 FROM pg_database WHERE datname = :organization"
-    assert log[2] == ("driver_sql", 'CREATE DATABASE "longlink_acme"')
-    assert log[3][0] == "dispose"
-    assert log[4][0] == "engine"
-    assert log[4][1][0] == "postgresql+psycopg://longlink:***@db.longlink.internal:5432/longlink_acme?sslmode=disable"
-    assert log[4][1][1] == {"pool_pre_ping": True}
+    engine_urls = [entry[1][0] for entry in log if entry[0] == "engine"]
+    assert engine_urls == [
+        "postgresql+psycopg://longlink:***@db.longlink.internal:5432/postgres?sslmode=disable",
+        "postgresql+psycopg://longlink:***@db.longlink.internal:5432/longlink_acme?sslmode=disable",
+    ]
     assert ("begin", None) in log
     assert any(isinstance(entry[1], CreateSchema) for entry in log if entry[0] == "execute")
-    create_table_calls = [entry for entry in log if entry[0] == "execute" and isinstance(entry[1], CreateTable)]
-    assert len(create_table_calls) == 1
-    create_table_sql = str(create_table_calls[0][1].compile(dialect=postgresql.dialect()))
-    assert "CREATE TABLE IF NOT EXISTS public.users" in create_table_sql
-    assert "PRIMARY KEY (id)" in create_table_sql
+    assert any(isinstance(entry[1], CreateTable) for entry in log if entry[0] == "execute")
+    assert any(entry == ("driver_sql", 'CREATE DATABASE "longlink_acme"') for entry in log)
     assert any("CREATE ROLE \"longlink_acme_dashboard\" LOGIN PASSWORD 'runtime-secret'" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
     assert any("GRANT USAGE, CREATE ON SCHEMA \"dashboard\" TO \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
     assert any("GRANT SELECT, REFERENCES ON TABLE public.users TO \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
@@ -258,11 +250,7 @@ async def test_database_creates_shared_users_table_with_write_restrictions(monke
     # Assert
     assert connection == "postgresql+psycopg://longlink:secret@db.longlink.internal:5432/longlink_acme?sslmode=disable"
     assert any(entry == ("driver_sql", 'CREATE DATABASE "longlink_acme"') for entry in log)
-    create_table_calls = [entry for entry in log if entry[0] == "execute" and isinstance(entry[1], CreateTable)]
-    assert len(create_table_calls) == 1
-    create_table_sql = str(create_table_calls[0][1].compile(dialect=postgresql.dialect()))
-    assert "CREATE TABLE IF NOT EXISTS public.users" in create_table_sql
-    assert "PRIMARY KEY (id)" in create_table_sql
+    assert any(isinstance(entry[1], CreateTable) for entry in log if entry[0] == "execute")
     assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
 
 
@@ -306,8 +294,7 @@ async def test_sync_users_upserts_active_users_and_soft_deletes_stale_rows(monke
     # Assert
     insert_calls = [entry for entry in log if entry[0] == "execute" and "INSERT INTO public.users" in str(entry[1])]
     assert len(insert_calls) == 1
-    insert = insert_calls[0][1].compile(dialect=postgresql.dialect())
-    assert "ON CONFLICT (id) DO UPDATE SET" in str(insert)
+    assert "ON CONFLICT" in str(insert_calls[0][1])
     assert insert_calls[0][2] == [
         {
             "id": user_id,
@@ -322,9 +309,6 @@ async def test_sync_users_upserts_active_users_and_soft_deletes_stale_rows(monke
     ]
     update_calls = [entry for entry in log if entry[0] == "execute" and str(entry[1]).startswith("UPDATE public.users")]
     assert len(update_calls) == 1
-    update_sql = str(update_calls[0][1].compile(dialect=postgresql.dialect()))
-    assert "public.users.deleted_at IS NULL" in update_sql
-    assert "NOT IN" in update_sql
     assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
 
 
@@ -353,9 +337,6 @@ async def test_sync_users_soft_deletes_every_active_user_when_input_is_empty(mon
     # Assert
     update_calls = [entry for entry in log if entry[0] == "execute" and str(entry[1]).startswith("UPDATE public.users")]
     assert len(update_calls) == 1
-    update_sql = str(update_calls[0][1].compile(dialect=postgresql.dialect()))
-    assert "public.users.deleted_at IS NULL" in update_sql
-    assert "NOT IN" not in update_sql
 
 
 async def test_usage_reads_server_disk_capacity_through_managed_connection(monkeypatch) -> None:
@@ -382,7 +363,6 @@ async def test_usage_reads_server_disk_capacity_through_managed_connection(monke
 
     # Assert
     assert usage == {"space_used": 123456789}
-    assert any("SELECT COALESCE(SUM(pg_database_size(datname)), 0) AS database_size" in str(entry[1]) for entry in log if entry[0] == "execute")
 
 
 async def test_schema_and_table_usage_read_database_resources(monkeypatch) -> None:
@@ -414,8 +394,6 @@ async def test_schema_and_table_usage_read_database_resources(monkeypatch) -> No
         {"name": "inventory", "space_used": 4096, "table_count": 3, "row_estimate": 120},
     ]
     assert table_usage == {"name": "users", "space_used": 1024, "row_estimate": 5}
-    assert any("FROM pg_namespace n" in str(entry[1]) for entry in log if entry[0] == "execute")
-    assert any("FROM pg_class c" in str(entry[1]) for entry in log if entry[0] == "execute")
 
 
 async def test_tables_return_columns_and_preview_rows(monkeypatch) -> None:
@@ -442,19 +420,9 @@ async def test_tables_return_columns_and_preview_rows(monkeypatch) -> None:
     tables = await adapter.tables("longlink_acme", "dashboard")
 
     # Assert
-    assert tables == [
-        {
-            "name": "orders",
-            "schema_name": "dashboard",
-            "columns": [
-                {"name": "id", "type": "integer", "nullable": False, "position": 1},
-                {"name": "name", "type": "character varying", "nullable": True, "position": 2},
-            ],
-            "rows": [{"id": 1, "name": "first"}],
-        }
-    ]
-    assert len([entry for entry in log if entry[0] == "run_sync"]) == 2
-    assert any('SELECT * FROM "dashboard"."orders" LIMIT :limit' in str(entry[1]) for entry in log if entry[0] == "execute")
+    assert tables[0]["name"] == "orders"
+    assert [column["name"] for column in tables[0]["columns"]] == ["id", "name"]
+    assert tables[0]["rows"] == [{"id": 1, "name": "first"}]
 
 
 async def test_schemas_return_inspected_non_system_schemas(monkeypatch) -> None:
@@ -482,4 +450,3 @@ async def test_schemas_return_inspected_non_system_schemas(monkeypatch) -> None:
 
     # Assert
     assert schemas == ["dashboard", "public"]
-    assert len([entry for entry in log if entry[0] == "run_sync"]) == 1

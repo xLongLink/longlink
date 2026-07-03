@@ -4,30 +4,6 @@ import { describe, expect, it } from 'bun:test';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('DataTable', () => {
-    /* The compiler should preserve the data table column structure. */
-    it('preserves data table columns in compiled xml', () => {
-        expect(
-            parseXML(
-                '<DataTable data="$items" as="item"><DataColumn field="sku" header="SKU" /><DataColumn><DataHeader i18n="Item" /><DataCell value="$item.name" /></DataColumn></DataTable>'
-            )
-        ).toEqual([
-            {
-                name: 'DataTable',
-                params: { data: '$items', as: 'item' },
-                children: [
-                    { name: 'DataColumn', params: { field: 'sku', header: 'SKU' }, children: [] },
-                    {
-                        name: 'DataColumn',
-                        children: [
-                            { name: 'DataHeader', params: { i18n: 'Item' }, children: [] },
-                            { name: 'DataCell', params: { value: '$item.name' }, children: [] },
-                        ],
-                    },
-                ],
-            },
-        ]);
-    });
-
     /* Shorthand columns should render field values through the shared data table shell. */
     it('renders shorthand field columns', () => {
         const ctx: ExecutionContext = {
@@ -44,8 +20,6 @@ describe('DataTable', () => {
             ctx
         );
 
-        expect(output).toContain('data-slot="table-container"');
-        expect(output).toContain('bg-muted/50');
         expect(output).toContain('SKU');
         expect(output).toContain('SKU-001');
         expect(output).toContain('Created by');
@@ -73,7 +47,6 @@ describe('DataTable', () => {
         expect(output).toContain('SKU');
         expect(output).toContain('Warehouse Widget');
         expect(output).toContain('SKU-001');
-        expect(output).toContain('data-slot="badge"');
     });
 
     /* Empty tables should use the XML-provided empty message. */

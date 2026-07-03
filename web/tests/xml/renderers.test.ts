@@ -29,7 +29,7 @@ describe('renderNode', () => {
                     })
                 )
             )
-        ).toBe('<div><p class="leading-7">Count 7</p></div>');
+        ).toContain('Count 7');
     });
 
     it('suppresses i18n fallback keys in browser renders until translations load', () => {

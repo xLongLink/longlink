@@ -36,7 +36,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
@@ -109,29 +109,3 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
           generate_release_notes: true
-
-      - name: Trigger apply workflow_dispatch linklong repo
-        uses: benc-uk/workflow-dispatch@v1
-        with:
-          workflow: apply.yml
-          repo: xLongLink/linklong
-          ref: main
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
-
-      - name: Trigger update workflow_dispatch linklong repo
-        uses: benc-uk/workflow-dispatch@v1
-        with:
-          workflow: update.yml
-          repo: xLongLink/linklong
-          inputs: >-
-            { "version": "${{ github.ref_name }}" }
-          ref: main
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
-
-      - name: Trigger update workflow_dispatch in sample repo
-        uses: benc-uk/workflow-dispatch@v1
-        with:
-          workflow: refresh-template.yml
-          repo: xLongLink/sample
-          ref: main
-          token: ${{ secrets.SAMPLE_ACTION }}

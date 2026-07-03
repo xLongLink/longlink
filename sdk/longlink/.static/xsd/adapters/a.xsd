@@ -14,6 +14,7 @@
     <xsd:complexContent>
       <xsd:extension base="AChildrenOnlyType">
         <xsd:attribute name="href" type="xsd:string" use="optional" />
+        <xsd:attribute name="to" type="xsd:string" use="optional" />
         <xsd:attribute name="active" use="optional" default="hover">
           <xsd:simpleType>
             <xsd:restriction base="xsd:string">

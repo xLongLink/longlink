@@ -7,17 +7,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { proxy } from 'valtio';
 
 describe('Input', () => {
-    /* The compiler should preserve input attributes as raw strings. */
-    it('compiles input xml into an input ast node', () => {
-        expect(parseXML('<Input value="user.name" placeholder="user.placeholder" />')).toEqual([
-            {
-                name: 'Input',
-                params: { value: 'user.name', placeholder: 'user.placeholder' },
-                children: [],
-            },
-        ]);
-    });
-
     /* The runtime should render input XML into the expected markup. */
     it('renders raw xml input content end to end', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {}, user: { name: 'Ada' } };

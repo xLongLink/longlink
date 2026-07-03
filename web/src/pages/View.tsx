@@ -1,5 +1,5 @@
 import { createLucideIconComponent } from '@/components/ui/icon';
-import { useMetadata } from '@/hooks/use-metadata';
+import { useMetadata, type MetadataPage } from '@/hooks/use-metadata';
 import XML from '@/layout/XmlLayout';
 import { ApiError, fetchApiText } from '@/lib/api';
 import type { ApiOrganizationApplication } from '@/lib/types';
@@ -47,6 +47,9 @@ type LogsStateProps = {
 type PageState = {
     cacheKey: string;
     path: string;
+    routePath: string;
+    stateKey: string;
+    tab: string;
     ast: ASTNode[] | null;
     parseError: string | null;
     error: string | null;
@@ -60,6 +63,13 @@ type PageParseResult = {
     parseError: string | null;
 };
 
+type PageRouteMatch = {
+    page: MetadataPage;
+    params: Record<string, string>;
+    path: string;
+    score: number;
+};
+
 type LogsState = {
     content: string;
     error: string | null;
@@ -71,12 +81,125 @@ const emptyLogsState: LogsState = {
     error: null,
     loading: false,
 };
+const emptyRouteParams: Record<string, string> = {};
 
 /**
  * Removes leading and trailing slashes from a route path.
  */
 function normalizePath(path: string): string {
     return path.replace(/^\/+|\/+$/g, '');
+}
+
+/** Returns the route pattern exposed by metadata, falling back to older tab-only metadata. */
+export function pageRoutePattern(page: MetadataPage): string {
+    return normalizePath(page.route ?? page.tab);
+}
+
+/** Returns true when a metadata route contains dynamic path segments. */
+function pageRouteIsDynamic(page: MetadataPage): boolean {
+    return pageRoutePattern(page)
+        .split('/')
+        .some((segment) => segment.startsWith(':'));
+}
+
+/** Matches one browser path against a metadata route pattern. */
+function matchRoutePattern(pattern: string, path: string): Omit<PageRouteMatch, 'page'> | null {
+    const routePattern = normalizePath(pattern);
+    const routePath = normalizePath(path);
+
+    if (!routePattern && !routePath) {
+        return { params: {}, path: routePath, score: 0 };
+    }
+
+    const patternSegments = routePattern.split('/').filter(Boolean);
+    const pathSegments = routePath.split('/').filter(Boolean);
+
+    if (patternSegments.length !== pathSegments.length) {
+        return null;
+    }
+
+    const params: Record<string, string> = {};
+    let score = 0;
+
+    for (let index = 0; index < patternSegments.length; index += 1) {
+        const patternSegment = patternSegments[index];
+        const pathSegment = pathSegments[index];
+
+        // Static segments outrank dynamic segments so exact page routes win first.
+        if (!patternSegment.startsWith(':')) {
+            if (patternSegment !== pathSegment) {
+                return null;
+            }
+
+            score += 2;
+            continue;
+        }
+
+        const parameterName = patternSegment.slice(1);
+
+        if (!parameterName || !pathSegment) {
+            return null;
+        }
+
+        params[parameterName] = pathSegment;
+        score += 1;
+    }
+
+    return { params, path: routePath, score };
+}
+
+/** Finds the best metadata page for the current app-relative browser path. */
+export function findPageRouteMatch(pages: MetadataPage[] | undefined, path: string): PageRouteMatch | null {
+    let bestMatch: PageRouteMatch | null = null;
+
+    for (const page of pages ?? []) {
+        const match = matchRoutePattern(pageRoutePattern(page), path);
+
+        if (!match) {
+            continue;
+        }
+
+        if (!bestMatch || match.score > bestMatch.score) {
+            bestMatch = { ...match, page };
+        }
+    }
+
+    return bestMatch;
+}
+
+/** Finds the preferred page for one tab, preferring static pages over dynamic detail pages. */
+export function findPageTabMatch(pages: MetadataPage[] | undefined, tab: string | null): MetadataPage | undefined {
+    if (!tab) {
+        return undefined;
+    }
+
+    const tabPages = pages?.filter((page) => page.tab === tab) ?? [];
+
+    return tabPages.find((page) => !pageRouteIsDynamic(page)) ?? tabPages[0];
+}
+
+/** Builds an app-shell href for one metadata route path. */
+function resolveApplicationHref(routePath: string, organization?: string, application?: string): string {
+    const normalizedRoutePath = normalizePath(routePath);
+    const basePath = application
+        ? `/orgs/${organization}/apps/${application}`
+        : organization
+          ? `/orgs/${organization}`
+          : '';
+
+    if (!normalizedRoutePath) {
+        return basePath || '/';
+    }
+
+    return `${basePath}/${normalizedRoutePath}`;
+}
+
+/** Builds the legacy query-string href for one metadata tab. */
+function resolveTabHref(tab: string, organization?: string, application?: string): string {
+    const query = new URLSearchParams({ tab });
+    const basePath = resolveApplicationHref('', organization, application);
+
+    return `${basePath === '/' ? '' : basePath}?${query.toString()}`;
 }
 
 /** Resolves route params inside a URL template. */
@@ -106,16 +229,33 @@ function createPageRuntimeContext(runtimeContext?: ExecutionContext): ExecutionC
 }
 
 /** Creates the cached state holder for one XML page. */
-function createPageState(key: string, path: string, runtimeContext?: ExecutionContext): PageState {
+function createPageState(
+    key: string,
+    stateKey: string,
+    path: string,
+    routePath: string,
+    tab: string,
+    params: Record<string, string>,
+    navigationBaseUrl: string,
+    runtimeContext?: ExecutionContext
+): PageState {
+    const pageRuntimeContext = createPageRuntimeContext(runtimeContext);
+
+    pageRuntimeContext.params = params;
+    pageRuntimeContext.navigationBaseUrl = navigationBaseUrl;
+
     return {
         cacheKey: key,
         path,
+        routePath,
+        stateKey,
+        tab,
         ast: null,
         error: null,
         loading: false,
         parseError: null,
         status: null,
-        runtimeContext: createPageRuntimeContext(runtimeContext),
+        runtimeContext: pageRuntimeContext,
     };
 }
 
@@ -154,24 +294,38 @@ export default function View({
     const routeParams = { organization, application } as Record<string, string | undefined>;
     const resolvedMetadata = resolveTemplate(metadata, routeParams);
     const resolvedMetadataBaseUrl = resolvedMetadata.replace(/metadata\.json(?:[?#].*)?$/i, '');
+    const navigationBaseUrl = resolveApplicationHref('', organization, application);
     const pageCacheKey = `${resolvedMetadata}\u0000${runtimeKey ?? ''}`;
     const applicationIsLoading = applicationStatus !== undefined && applicationStatus !== 'running';
     const { data: metadataDocument, isLoading, error } = useMetadata(resolvedMetadata, !applicationIsLoading);
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
     const selectedTab = searchParams.get('tab');
-    /* Resolve the active page from the selected tab path first, then the route path. */
+    const activeRouteMatch = useMemo(
+        () => findPageRouteMatch(metadataDocument?.pages, normalizedRoutePath),
+        [metadataDocument?.pages, normalizedRoutePath]
+    );
+    const selectedTabPage = findPageTabMatch(metadataDocument?.pages, selectedTab);
+    /* Resolve explicit browser routes first so dynamic detail views can share a tab with their list page. */
     const activePage =
-        metadataDocument?.pages?.find((page) => page.tab === selectedTab) ??
-        metadataDocument?.pages?.find(
-            (page) => normalizePath(page.path.replace(/\.xml$/i, '')) === normalizedRoutePath
-        ) ??
-        metadataDocument?.pages?.[0];
+        activeRouteMatch?.page ?? selectedTabPage ?? (!normalizedRoutePath ? metadataDocument?.pages?.[0] : undefined);
     const activePagePath = activePage?.path;
     const activePageTab = activePage?.tab;
-    const activePageState = activePageTab ? pageStates[activePageTab] : undefined;
+    let activeRoutePath = normalizedRoutePath;
+    let activeRouteParams = emptyRouteParams;
+
+    if (activeRouteMatch && activeRouteMatch.page === activePage) {
+        activeRoutePath = activeRouteMatch.path;
+        activeRouteParams = activeRouteMatch.params;
+    }
+
+    const activePageStateKey = activePage ? `${activePage.path}\u0000${activeRoutePath}\u0000${activePage.tab}` : '';
+    const activePageState = activePageStateKey ? pageStates[activePageStateKey] : undefined;
     const activePageStateIsCurrent =
-        activePageState?.cacheKey === pageCacheKey && activePageState.path === activePagePath;
-    const isNotFound = metadataDocument === null;
+        activePageState?.cacheKey === pageCacheKey &&
+        activePageState.path === activePagePath &&
+        activePageState.routePath === activeRoutePath;
+    const isNotFound =
+        metadataDocument === null || Boolean(metadataDocument?.pages && normalizedRoutePath && !activeRouteMatch);
     const metadataLoading = error instanceof ApiError && error.status === 503;
     const shouldShowLogs =
         canViewLogs &&
@@ -186,50 +340,93 @@ export default function View({
         setPageStates({});
     }, [pageCacheKey]);
 
-    // Make the first tab explicit in the URL when the page loads without a tab selection.
+    // Make the first page explicit in the URL when the app loads without a selected view.
     useEffect(() => {
         if (!metadataDocument?.pages?.length || selectedTab || normalizedRoutePath) {
             return;
         }
 
-        const query = new URLSearchParams({ tab: metadataDocument.pages[0].tab });
+        const firstPage = metadataDocument.pages[0];
+        const firstPageRoute = pageRoutePattern(firstPage);
 
-        navigate(`?${query.toString()}`, { replace: true });
-    }, [metadataDocument?.pages, navigate, normalizedRoutePath, selectedTab]);
-
-    const tabs = useMemo(
-        () =>
-            Object.fromEntries(
-                metadataDocument?.pages?.map((page) => {
-                    const query = new URLSearchParams({ tab: page.tab });
-                    const href = application
-                        ? `/orgs/${organization}/apps/${application}?${query.toString()}`
-                        : organization
-                          ? `/orgs/${organization}?${query.toString()}`
-                          : `?${query.toString()}`;
-
-                    const label = page.name?.trim() || startCase(page.tab);
-                    const iconName = page.icon?.trim();
-                    const icon = iconName ? createLucideIconComponent(iconName) : undefined;
-
-                    return [label, icon ? { href, icon } : href] as const;
-                }) ?? []
-            ),
-        [application, metadataDocument?.pages, organization]
-    );
-
-    /* Load each XML page once when the user first visits its tab. */
-    useEffect(() => {
-        if (shouldShowLogs || applicationIsLoading || !activePageTab || activePagePath === undefined) {
+        if (firstPage.route != null && firstPageRoute && !pageRouteIsDynamic(firstPage)) {
+            navigate(resolveApplicationHref(firstPageRoute, organization, application), { replace: true });
             return;
         }
 
-        const pageKey = `${pageCacheKey}\u0000${activePageTab}\u0000${activePagePath}`;
-        const existingPageState = pageStatesRef.current[activePageTab];
+        const query = new URLSearchParams({ tab: firstPage.tab });
+
+        navigate(`?${query.toString()}`, { replace: true });
+    }, [application, metadataDocument?.pages, navigate, normalizedRoutePath, organization, selectedTab]);
+
+    const tabs = useMemo(() => {
+        const tabGroups = new Map<
+            string,
+            {
+                active: boolean;
+                dynamic: boolean;
+                href: string;
+                icon?: ReturnType<typeof createLucideIconComponent>;
+                label: string;
+            }
+        >();
+
+        for (const page of metadataDocument?.pages ?? []) {
+            const label = page.name?.trim() || startCase(page.tab);
+            const iconName = page.icon?.trim();
+            const icon = iconName ? createLucideIconComponent(iconName) : undefined;
+            const routePattern = pageRoutePattern(page);
+            const dynamic = pageRouteIsDynamic(page);
+            const href =
+                page.route != null && routePattern && !dynamic
+                    ? resolveApplicationHref(routePattern, organization, application)
+                    : resolveTabHref(page.tab, organization, application);
+            const currentGroup = tabGroups.get(page.tab);
+
+            // Prefer static pages as tab targets because dynamic routes need concrete parameter values.
+            if (!currentGroup || (currentGroup.dynamic && !dynamic)) {
+                tabGroups.set(page.tab, {
+                    active: page.tab === activePageTab,
+                    dynamic,
+                    href,
+                    icon,
+                    label,
+                });
+                continue;
+            }
+
+            currentGroup.active = currentGroup.active || page.tab === activePageTab;
+        }
+
+        return Object.fromEntries(
+            Array.from(tabGroups.values()).map((tab) => [
+                tab.label,
+                tab.icon
+                    ? { active: tab.active, href: tab.href, icon: tab.icon }
+                    : { active: tab.active, href: tab.href },
+            ])
+        );
+    }, [activePageTab, application, metadataDocument?.pages, organization]);
+
+    /* Load each XML page once for the active route instance. */
+    useEffect(() => {
+        if (
+            shouldShowLogs ||
+            applicationIsLoading ||
+            !activePageTab ||
+            !activePageStateKey ||
+            activePagePath === undefined
+        ) {
+            return;
+        }
+
+        const pageKey = `${pageCacheKey}\u0000${activePageStateKey}`;
+        const existingPageState = pageStatesRef.current[activePageStateKey];
 
         if (
             existingPageState?.cacheKey === pageCacheKey &&
             existingPageState.path === activePagePath &&
+            existingPageState.routePath === activeRoutePath &&
             (existingPageState.ast !== null ||
                 existingPageState.error !== null ||
                 existingPageState.parseError !== null)
@@ -240,13 +437,23 @@ export default function View({
         if (
             existingPageState?.cacheKey === pageCacheKey &&
             existingPageState.path === activePagePath &&
+            existingPageState.routePath === activeRoutePath &&
             inFlightPageKeysRef.current.has(pageKey)
         ) {
             return;
         }
 
         const loadingPageState = {
-            ...createPageState(pageCacheKey, activePagePath, runtimeContextRef.current),
+            ...createPageState(
+                pageCacheKey,
+                activePageStateKey,
+                activePagePath,
+                activeRoutePath,
+                activePageTab,
+                activeRouteParams,
+                navigationBaseUrl,
+                runtimeContextRef.current
+            ),
             loading: true,
         };
         let pageUrl: string;
@@ -262,7 +469,7 @@ export default function View({
             };
 
             setPageStates((current) => {
-                const next = { ...current, [activePageTab]: errorPageState };
+                const next = { ...current, [activePageStateKey]: errorPageState };
 
                 pageStatesRef.current = next;
 
@@ -276,7 +483,7 @@ export default function View({
 
         inFlightPageKeysRef.current.add(pageKey);
         setPageStates((current) => {
-            const next = { ...current, [activePageTab]: loadingPageState };
+            const next = { ...current, [activePageStateKey]: loadingPageState };
 
             pageStatesRef.current = next;
 
@@ -292,15 +499,19 @@ export default function View({
                     const { ast, parseError } = parsePageContent(content);
 
                     setPageStates((current) => {
-                        const currentPageState = current[activePageTab];
+                        const currentPageState = current[activePageStateKey];
 
-                        if (currentPageState?.cacheKey !== pageCacheKey || currentPageState.path !== activePagePath) {
+                        if (
+                            currentPageState?.cacheKey !== pageCacheKey ||
+                            currentPageState.path !== activePagePath ||
+                            currentPageState.routePath !== activeRoutePath
+                        ) {
                             return current;
                         }
 
                         const next = {
                             ...current,
-                            [activePageTab]: {
+                            [activePageStateKey]: {
                                 ...currentPageState,
                                 ast,
                                 error: null,
@@ -322,15 +533,19 @@ export default function View({
                 }
 
                 setPageStates((current) => {
-                    const currentPageState = current[activePageTab];
+                    const currentPageState = current[activePageStateKey];
 
-                    if (currentPageState?.cacheKey !== pageCacheKey || currentPageState.path !== activePagePath) {
+                    if (
+                        currentPageState?.cacheKey !== pageCacheKey ||
+                        currentPageState.path !== activePagePath ||
+                        currentPageState.routePath !== activeRoutePath
+                    ) {
                         return current;
                     }
 
                     const next = {
                         ...current,
-                        [activePageTab]: {
+                        [activePageStateKey]: {
                             ...currentPageState,
                             error: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
                             loading: false,
@@ -351,7 +566,18 @@ export default function View({
             controller.abort();
             inFlightPageKeysRef.current.delete(pageKey);
         };
-    }, [activePagePath, activePageTab, applicationIsLoading, pageCacheKey, resolvedMetadataBaseUrl, shouldShowLogs]);
+    }, [
+        activePagePath,
+        activePageStateKey,
+        activePageTab,
+        activeRouteParams,
+        activeRoutePath,
+        applicationIsLoading,
+        navigationBaseUrl,
+        pageCacheKey,
+        resolvedMetadataBaseUrl,
+        shouldShowLogs,
+    ]);
 
     // Fetch logs only when the current user is allowed to inspect a running application.
     useEffect(() => {
@@ -429,34 +655,25 @@ export default function View({
         return <NotFound />;
     }
 
-    const renderedPagePanels =
-        metadataDocument?.pages?.map((page) => {
-            const pageState = pageStates[page.tab];
+    const renderedPagePanels = Object.values(pageStates).map((pageState) => {
+        if (!pageState.ast || pageState.cacheKey !== pageCacheKey || pageState.error || pageState.parseError) {
+            return null;
+        }
 
-            if (
-                !pageState?.ast ||
-                pageState.cacheKey !== pageCacheKey ||
-                pageState.path !== page.path ||
-                pageState.error ||
-                pageState.parseError
-            ) {
-                return null;
-            }
+        const pageIsActive = pageState.stateKey === activePageStateKey;
 
-            const pageIsActive = page.tab === activePageTab;
-
-            return (
-                <section key={page.tab} hidden={!pageIsActive} aria-hidden={!pageIsActive} className="space-y-6">
-                    <RenderXML
-                        key={`${runtimeKey ?? 'runtime'}-${page.tab}`}
-                        active={pageIsActive}
-                        ast={pageState.ast}
-                        baseUrl={resolvedMetadataBaseUrl}
-                        ctx={pageState.runtimeContext}
-                    />
-                </section>
-            );
-        }) ?? [];
+        return (
+            <section key={pageState.stateKey} hidden={!pageIsActive} aria-hidden={!pageIsActive} className="space-y-6">
+                <RenderXML
+                    key={`${runtimeKey ?? 'runtime'}-${pageState.stateKey}`}
+                    active={pageIsActive}
+                    ast={pageState.ast}
+                    baseUrl={resolvedMetadataBaseUrl}
+                    ctx={pageState.runtimeContext}
+                />
+            </section>
+        );
+    });
 
     let activeFallback: ReactNode = null;
 

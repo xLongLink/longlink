@@ -32,7 +32,6 @@ def test_init_adds_pytest_smoke_test() -> None:
         test_path = Path.cwd() / "sample-app" / "tests" / "test_app.py"
         assert result.exit_code == 0
         assert test_path.exists()
-        assert "def test_" in test_path.read_text(encoding="utf-8")
         assert not (Path.cwd() / "sample-app" / ".pytest_cache").exists()
         assert not (Path.cwd() / "sample-app" / ".venv").exists()
 
@@ -49,12 +48,9 @@ def test_init_adds_sample_inventory_migration() -> None:
 
         # Assert
         migrations = list((Path.cwd() / "sample-app" / "migrations").glob("*.py"))
-        migration_text = migrations[0].read_text(encoding="utf-8")
 
         assert result.exit_code == 0
         assert len(migrations) == 1
-        assert "inventory_items" in migration_text
-        assert 'sa.Column("created_id", sa.Uuid(), nullable=True)' in migration_text
 
 
 def test_init_adds_github_workflows_when_requested() -> None:

@@ -29,6 +29,10 @@ LongLink provides that structure. The platform defines the shared infrastructure
 
 The result is a faster, clearer, and more maintainable way to build internal applications.
 
+## Sample Application
+
+See [`xLongLink/sample`](https://github.com/xLongLink/sample) for a minimal LongLink application that demonstrates SDK setup, XML pages, translations, routes, tests, and Docker image builds.
+
 <br />
 <br />
 

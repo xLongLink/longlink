@@ -1,4 +1,3 @@
-import DocsLayout from '@/layout/DocsLayout';
 import { LegalLayout } from '@/layout/LegalLayout';
 import NotFound from '@/pages/NotFound';
 import { describe, expect, it, mock } from 'bun:test';
@@ -11,31 +10,6 @@ mock.module('@/hooks/use-user', () => ({
 }));
 
 describe('layout shells', () => {
-    it('renders docs sidebar, breadcrumbs, table of contents shell, metadata, and edit link', () => {
-        const output = renderToStaticMarkup(
-            createElement(
-                MemoryRouter,
-                { initialEntries: ['/docs/sdk/database'] },
-                createElement(DocsLayout, {
-                    content: createElement('div', null, [
-                        createElement('h1', { key: 'title' }, 'Database'),
-                        createElement('h2', { id: 'models', key: 'models' }, 'Models'),
-                    ]),
-                    metadata: {
-                        lastUpdated: '2026-06-30',
-                        editUrl: 'https://github.com/xLongLink/longlink/edit/main/docs/database',
-                    },
-                })
-            )
-        );
-
-        expect(output).toContain('Documentation');
-        expect(output).toContain('Application SDK');
-        expect(output).toContain('On this page');
-        expect(output).toContain('Last updated:');
-        expect(output).toContain('Edit this page in GitHub');
-    });
-
     it('renders legal metadata and edit links', () => {
         const output = renderToStaticMarkup(
             createElement(

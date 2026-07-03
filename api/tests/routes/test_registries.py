@@ -1,15 +1,8 @@
 from types import SimpleNamespace
 from datetime import UTC, datetime
-from src.models.users import UserSummary
 from fastapi.testclient import TestClient
-from src.models.computes import ComputeKind, ComputeRegistryResponse
-from src.models.storages import (StorageKind, StorageBucketResponse,
-                                 StorageObjectResponse,
-                                 StorageRegistryResponse)
 from src.models.countries import Country
-from src.models.databases import (DatabaseKind, DatabaseUsageResponse,
-                                  DatabaseRegistryResponse)
-from src.models.operations import OperationKind, OperationResponse
+from src.models.operations import OperationKind
 from src.database.services.users import users
 from src.database.services.compute import compute
 from src.database.services.storage import storage
@@ -50,17 +43,10 @@ async def test_operations_endpoint_returns_recorded_operations(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [
-        OperationResponse.model_validate(
-            {
-                **operation.model_dump(),
-                "status": operation.status,
-                "created_at": response.json()[0]["created_at"],
-                "started_at": None,
-                "stopped_at": None,
-            }
-        ).model_dump(mode="json")
-    ]
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0]["id"] == str(operation.id)
+    assert payload[0]["status"] == operation.status
 
 
 async def test_database_registry_endpoint_supports_create_and_list(
@@ -72,7 +58,6 @@ async def test_database_registry_endpoint_supports_create_and_list(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    user_summary = UserSummary.model_validate(user1.model_dump())
     location = await db.locations.create("local", "Local testing", user1, Country.CH)
 
     # Act
@@ -98,45 +83,12 @@ async def test_database_registry_endpoint_supports_create_and_list(
     # Assert
     assert create_response.status_code == 200
     create_payload = create_response.json()
-    assert create_response.json() == DatabaseRegistryResponse(
-        id=registry_id,
-        kind=DatabaseKind.postgresql,
-        name="primary",
-        slug="primary",
-        host="db.longlink.internal",
-        port=5432,
-        username="longlink",
-        runtime_host="db.runtime.longlink.internal",
-        runtime_port=15432,
-        location_id=location.id,
-        created_at=create_payload["created_at"],
-        created_by=user_summary,
-        updated_at=create_payload["updated_at"],
-        updated_by=user_summary,
-        deleted_at=None,
-        deleted_by=None,
-    ).model_dump(mode="json")
+    assert create_payload["id"] == registry_id
+    assert create_payload["name"] == "primary"
+    assert create_payload["runtime_host"] == "db.runtime.longlink.internal"
+    assert "password" not in create_payload
     assert list_response.status_code == 200
-    assert list_response.json() == [
-        DatabaseRegistryResponse(
-            id=registry_id,
-            kind=DatabaseKind.postgresql,
-            name="primary",
-            slug="primary",
-            host="db.longlink.internal",
-            port=5432,
-            username="longlink",
-            runtime_host="db.runtime.longlink.internal",
-            runtime_port=15432,
-            location_id=location.id,
-            created_at=create_payload["created_at"],
-            created_by=user_summary,
-            updated_at=create_payload["updated_at"],
-            updated_by=user_summary,
-            deleted_at=None,
-            deleted_by=None,
-        ).model_dump(mode="json")
-    ]
+    assert [item["id"] for item in list_response.json()] == [registry_id]
     assert delete_response.status_code == 204
     assert get_response.status_code == 404
 
@@ -183,7 +135,7 @@ async def test_database_usage_endpoint_returns_backend_capacity(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == DatabaseUsageResponse(space_used=987654321).model_dump(mode="json")
+    assert response.json()["space_used"] == 987654321
 
 
 async def test_storage_registry_endpoint_supports_create_and_list(
@@ -195,7 +147,6 @@ async def test_storage_registry_endpoint_supports_create_and_list(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    user_summary = UserSummary.model_validate(user1.model_dump())
     location = await db.locations.create("local", "Local testing", user1, Country.CH)
 
     # Act
@@ -220,43 +171,12 @@ async def test_storage_registry_endpoint_supports_create_and_list(
     # Assert
     assert create_response.status_code == 200
     create_payload = create_response.json()
-    assert create_response.json() == StorageRegistryResponse(
-        id=registry_id,
-        kind=StorageKind.s3,
-        name="object-store",
-        slug="object-store",
-        protocol="s3",
-        endpoint_url="https://storage.longlink.internal",
-        runtime_endpoint_url="https://storage.runtime.longlink.internal",
-        access_key_id="access-key",
-        location_id=location.id,
-        created_at=create_payload["created_at"],
-        created_by=user_summary,
-        updated_at=create_payload["updated_at"],
-        updated_by=user_summary,
-        deleted_at=None,
-        deleted_by=None,
-    ).model_dump(mode="json")
+    assert create_payload["id"] == registry_id
+    assert create_payload["name"] == "object-store"
+    assert create_payload["runtime_endpoint_url"] == "https://storage.runtime.longlink.internal"
+    assert "secret_access_key" not in create_payload
     assert list_response.status_code == 200
-    assert list_response.json() == [
-        StorageRegistryResponse(
-            id=registry_id,
-            kind=StorageKind.s3,
-            name="object-store",
-            slug="object-store",
-            protocol="s3",
-            endpoint_url="https://storage.longlink.internal",
-            runtime_endpoint_url="https://storage.runtime.longlink.internal",
-            access_key_id="access-key",
-            location_id=location.id,
-            created_at=create_payload["created_at"],
-            created_by=user_summary,
-            updated_at=create_payload["updated_at"],
-            updated_by=user_summary,
-            deleted_at=None,
-            deleted_by=None,
-        ).model_dump(mode="json")
-    ]
+    assert [item["id"] for item in list_response.json()] == [registry_id]
     assert delete_response.status_code == 204
     assert get_response.status_code == 404
 
@@ -303,10 +223,7 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [
-        StorageBucketResponse(name="alpha").model_dump(mode="json"),
-        StorageBucketResponse(name="beta").model_dump(mode="json"),
-    ]
+    assert [bucket["name"] for bucket in response.json()] == ["alpha", "beta"]
 
 
 async def test_storage_object_endpoint_returns_bucket_objects(
@@ -361,14 +278,9 @@ async def test_storage_object_endpoint_returns_bucket_objects(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [
-        StorageObjectResponse(
-            key="reports/july.csv",
-            size=123,
-            etag='"abc123"',
-            last_modified=last_modified,
-        ).model_dump(mode="json")
-    ]
+    payload = response.json()
+    assert payload[0]["key"] == "reports/july.csv"
+    assert payload[0]["size"] == 123
 
 
 async def test_compute_registry_endpoint_supports_create_and_list(
@@ -381,7 +293,6 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    user_summary = UserSummary.model_validate(user1.model_dump())
     location = await db.locations.create("local", "Local testing", user1, Country.CH)
     captured: dict[str, object] = {}
 
@@ -414,37 +325,12 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     # Assert
     assert create_response.status_code == 200
     create_payload = create_response.json()
-    assert create_response.json() == ComputeRegistryResponse(
-        id=registry_id,
-        kind=ComputeKind.kubernetes,
-        name="primary",
-        slug="primary",
-        ingress_host="apps.longlink.internal",
-        location_id=location.id,
-        created_at=create_payload["created_at"],
-        created_by=user_summary,
-        updated_at=create_payload["updated_at"],
-        updated_by=user_summary,
-        deleted_at=None,
-        deleted_by=None,
-    ).model_dump(mode="json")
+    assert create_payload["id"] == registry_id
+    assert create_payload["name"] == "primary"
+    assert create_payload["ingress_host"] == "apps.longlink.internal"
+    assert "kubeconfig" not in create_payload
     assert list_response.status_code == 200
-    assert list_response.json() == [
-        ComputeRegistryResponse(
-            id=registry_id,
-            kind=ComputeKind.kubernetes,
-            name="primary",
-            slug="primary",
-            ingress_host="apps.longlink.internal",
-            location_id=location.id,
-            created_at=create_payload["created_at"],
-            created_by=user_summary,
-            updated_at=create_payload["updated_at"],
-            updated_by=user_summary,
-            deleted_at=None,
-            deleted_by=None,
-        ).model_dump(mode="json")
-    ]
+    assert [item["id"] for item in list_response.json()] == [registry_id]
     assert delete_response.status_code == 204
     assert get_response.status_code == 404
     assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"

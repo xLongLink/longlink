@@ -1,10 +1,11 @@
-# Minimal LongLink showcase app
+# Purchase Requests
 
-## Showcase
+## App
 
-- Inventory uses an application database table and LongLink-managed users.
-- Documents uploads, lists, downloads, and deletes files through `longlink.fs` in the app-dedicated storage bucket.
-- Form, cart, quote, menu, and text pages demonstrate XML UI components and actions.
+- Purchase requests use an application database table and LongLink-managed audit users.
+- The request list and `requests/[request].xml` detail page demonstrate filename-based dynamic XML routing.
+- Attachments upload, list, download, and delete files through `longlink.fs` in the app-dedicated storage bucket.
+- Approval actions update request workflow status through typed FastAPI endpoints.
 
 ## Start
 

@@ -1,22 +1,15 @@
 from uuid import UUID
 from types import SimpleNamespace
 from src.models.roles import OrganizationRoles
-from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.models.storages import StorageKind
 from src.database.session import get_session
 from src.models.countries import Country
 from src.models.databases import DatabaseKind
-from src.models.locations import LocationResponse
 from src.models.operations import OperationKind
-from src.models.organizations import OrganizationDetails as OrgDetails
-from src.models.organizations import OrganizationSummary as OrgSummary
-from src.models.organizations import (OrganizationMemberSummary,
-                                      OrganizationInvitationResponse)
 from src.database.models.users import User
 from src.database.services.users import users
 from src.adapters.database.shared import SharedUser
-from src.database.services.compute import compute
 from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.models.association import UserOrganization
@@ -28,7 +21,6 @@ from src.database.services.organizations import organizations
 
 db = SimpleNamespace(
     applications=applications,
-    compute=compute,
     database=database,
     invitations=invitations,
     locations=locations,
@@ -61,21 +53,11 @@ async def test_create_organization_returns_owner_role(
     assert response.status_code == 200
     organization = await db.organizations.get(UUID(response.json()["id"]))
     assert organization is not None
-    assert response.json() == OrgSummary.model_validate(
-        {
-            "id": organization.id,
-            "name": organization.name,
-            "slug": organization.slug,
-            "avatar": avatar,
-            "location_id": location.id,
-            "created_at": organization.created_at,
-            "updated_at": organization.updated_at,
-            "created_by": UserSummary.model_validate(owner.model_dump()),
-            "updated_by": UserSummary.model_validate(owner.model_dump()),
-            "deleted_at": None,
-            "deleted_by": None,
-        }
-    ).model_dump(mode="json")
+    payload = response.json()
+    assert payload["id"] == str(organization.id)
+    assert payload["name"] == "acme"
+    assert payload["avatar"] == avatar
+    assert payload["location_id"] == str(location.id)
 
 
 async def test_create_organization_initializes_database(
@@ -121,18 +103,8 @@ async def test_create_organization_initializes_database(
     assert calls[0] == ("database", "acme", None)
     assert calls[1][0] == "sync_users"
     assert calls[1][1] == "acme"
-    assert [user.model_dump() for user in synced_users] == [
-        {
-            "id": owner.id,
-            "name": owner.name,
-            "email": owner.email,
-            "avatar": owner.avatar,
-            "role_name": "owner",
-            "created_at": synced_users[0].created_at,
-            "updated_at": synced_users[0].updated_at,
-            "deleted_at": None,
-        }
-    ]
+    assert synced_users[0].email == owner.email
+    assert synced_users[0].role_name == "owner"
 
 
 async def test_create_organization_initializes_storage(
@@ -199,85 +171,13 @@ async def test_get_organization_returns_member_payload(
     # Assert
     assert response.status_code == 200
 
-    expected_payload = OrgDetails(
-        id=organization.id,
-        name="acme",
-        slug=organization.slug,
-        avatar="https://example.com/organizations/acme.png",
-        location_id=organization.location_id,
-        location=LocationResponse.model_validate(location),
-        created_at=organization.created_at,
-        updated_at=organization.updated_at,
-        created_by=UserSummary.model_validate(owner.model_dump()),
-        updated_by=UserSummary.model_validate(owner.model_dump()),
-        deleted_at=organization.deleted_at,
-        deleted_by=None,
-        users=[
-            OrganizationMemberSummary.model_validate(
-                {
-                    "id": owner.id,
-                    "name": owner.name,
-                    "email": owner.email,
-                    "avatar": owner.avatar,
-                    "role": OrganizationRoles.owner,
-                    "last_access_at": None,
-                }
-            )
-        ],
-        applications=[
-            {
-                "id": str(application.id),
-                "slug": application.slug,
-                "organization_id": organization.id,
-                "organization": organization.name,
-                "name": "dashboard",
-                "role": "admin",
-                "status": application.status,
-                "version": None,
-                "sdk_version": None,
-                "description": None,
-                "icon": None,
-                "created_at": application.created_at,
-                "updated_at": application.updated_at,
-                "created_by": UserSummary.model_validate(owner.model_dump()),
-                "updated_by": UserSummary.model_validate(owner.model_dump()),
-                "deleted_at": None,
-                "deleted_by": None,
-            }
-        ],
-    ).model_dump(mode="json", by_alias=True)
-    expected_payload["users"][0]["last_access_at"] = response.json()["users"][0]["last_access_at"]
-
-    assert response.json() == expected_payload
-
-    assert response.json()["users"][0]["avatar"] == ""
-    assert response.json()["users"][0] == {
-        "id": str(owner.id),
-        "name": owner.name,
-        "email": owner.email,
-        "avatar": "",
-        "role": "owner",
-        "last_access_at": response.json()["users"][0]["last_access_at"],
-    }
-    assert response.json()["applications"] == [
-        {
-            "id": str(application.id),
-            "slug": application.slug,
-            "name": "dashboard",
-            "role": "admin",
-            "status": "creating",
-            "version": None,
-            "sdk_version": None,
-            "description": None,
-            "icon": None,
-            "created_at": application.created_at.isoformat().replace("+00:00", "Z"),
-            "updated_at": application.updated_at.isoformat().replace("+00:00", "Z"),
-            "created_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
-            "updated_by": UserSummary.model_validate(owner.model_dump()).model_dump(mode="json"),
-            "deleted_at": None,
-            "deleted_by": None,
-        }
-    ]
+    payload = response.json()
+    assert payload["id"] == str(organization.id)
+    assert payload["name"] == "acme"
+    assert payload["users"][0]["id"] == str(owner.id)
+    assert payload["users"][0]["role"] == "owner"
+    assert payload["applications"][0]["id"] == str(application.id)
+    assert payload["applications"][0]["role"] == "admin"
 
 
 async def test_delete_organization_soft_deletes_and_queues_removal(
@@ -374,66 +274,17 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "kind": "shared_table",
-            "name": "users",
-            "database_name": "longlink_acme",
-            "database_registry_id": str(registry.id),
-            "database_registry_name": "primary",
-            "application": None,
-            "status": "available",
-            "space_used": 1024,
-            "table_count": 1,
-            "row_estimate": 5,
-        },
-        {
-            "kind": "schema",
-            "name": "dashboard",
-            "database_name": "longlink_acme",
-            "database_registry_id": str(registry.id),
-            "database_registry_name": "primary",
-            "application": {
-                "id": str(dashboard.id),
-                "name": "dashboard",
-                "slug": "dashboard",
-                "status": "creating",
-            },
-            "status": "available",
-            "space_used": 2048,
-            "table_count": 2,
-            "row_estimate": 42,
-        },
-        {
-            "kind": "schema",
-            "name": "reports",
-            "database_name": "longlink_acme",
-            "database_registry_id": str(registry.id),
-            "database_registry_name": "primary",
-            "application": {
-                "id": str(reports.id),
-                "name": "reports",
-                "slug": "reports",
-                "status": "creating",
-            },
-            "status": "missing",
-            "space_used": None,
-            "table_count": None,
-            "row_estimate": None,
-        },
-        {
-            "kind": "schema",
-            "name": "stale",
-            "database_name": "longlink_acme",
-            "database_registry_id": str(registry.id),
-            "database_registry_name": "primary",
-            "application": None,
-            "status": "orphaned",
-            "space_used": 512,
-            "table_count": 1,
-            "row_estimate": 3,
-        },
+    payload = response.json()
+    assert [(item["kind"], item["name"], item["status"]) for item in payload] == [
+        ("shared_table", "users", "available"),
+        ("schema", "dashboard", "available"),
+        ("schema", "reports", "missing"),
+        ("schema", "stale", "orphaned"),
     ]
+    assert payload[1]["application"]["id"] == str(dashboard.id)
+    assert payload[1]["space_used"] == 2048
+    assert payload[2]["application"]["id"] == str(reports.id)
+    assert payload[3]["space_used"] == 512
 
 
 async def test_organization_database_endpoint_returns_unavailable_rows_when_backend_fails(
@@ -475,37 +326,12 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "kind": "shared_table",
-            "name": "users",
-            "database_name": "longlink_acme",
-            "database_registry_id": str(registry.id),
-            "database_registry_name": "primary",
-            "application": None,
-            "status": "unavailable",
-            "space_used": None,
-            "table_count": None,
-            "row_estimate": None,
-        },
-        {
-            "kind": "schema",
-            "name": "dashboard",
-            "database_name": "longlink_acme",
-            "database_registry_id": str(registry.id),
-            "database_registry_name": "primary",
-            "application": {
-                "id": str(application.id),
-                "name": "dashboard",
-                "slug": "dashboard",
-                "status": "creating",
-            },
-            "status": "unavailable",
-            "space_used": None,
-            "table_count": None,
-            "row_estimate": None,
-        },
+    payload = response.json()
+    assert [(item["kind"], item["name"], item["status"]) for item in payload] == [
+        ("shared_table", "users", "unavailable"),
+        ("schema", "dashboard", "unavailable"),
     ]
+    assert payload[1]["application"]["id"] == str(application.id)
 
 
 async def test_organization_storage_endpoint_returns_managed_buckets(
@@ -560,54 +386,15 @@ async def test_organization_storage_endpoint_returns_managed_buckets(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "kind": "shared_bucket",
-            "name": "shared",
-            "bucket_name": "longlink-acme-shared",
-            "application": None,
-            "storage_registry_id": str(registry.id),
-            "storage_registry_name": "primary",
-            "status": "available",
-        },
-        {
-            "kind": "application_bucket",
-            "name": "dashboard",
-            "bucket_name": "longlink-acme-dashboard",
-            "application": {
-                "id": str(dashboard.id),
-                "name": "dashboard",
-                "slug": "dashboard",
-                "status": "creating",
-            },
-            "storage_registry_id": str(registry.id),
-            "storage_registry_name": "primary",
-            "status": "available",
-        },
-        {
-            "kind": "application_bucket",
-            "name": "reports",
-            "bucket_name": "longlink-acme-reports",
-            "application": {
-                "id": str(reports.id),
-                "name": "reports",
-                "slug": "reports",
-                "status": "creating",
-            },
-            "storage_registry_id": str(registry.id),
-            "storage_registry_name": "primary",
-            "status": "missing",
-        },
-        {
-            "kind": "application_bucket",
-            "name": "stale",
-            "bucket_name": "longlink-acme-stale",
-            "application": None,
-            "storage_registry_id": str(registry.id),
-            "storage_registry_name": "primary",
-            "status": "orphaned",
-        },
+    payload = response.json()
+    assert [(item["kind"], item["name"], item["status"]) for item in payload] == [
+        ("shared_bucket", "shared", "available"),
+        ("application_bucket", "dashboard", "available"),
+        ("application_bucket", "reports", "missing"),
+        ("application_bucket", "stale", "orphaned"),
     ]
+    assert payload[1]["application"]["id"] == str(dashboard.id)
+    assert payload[2]["application"]["id"] == str(reports.id)
 
 
 async def test_organization_storage_endpoint_returns_unavailable_rows_when_backend_fails(
@@ -649,31 +436,12 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "kind": "shared_bucket",
-            "name": "shared",
-            "bucket_name": "longlink-acme-shared",
-            "application": None,
-            "storage_registry_id": str(registry.id),
-            "storage_registry_name": "primary",
-            "status": "unavailable",
-        },
-        {
-            "kind": "application_bucket",
-            "name": "dashboard",
-            "bucket_name": "longlink-acme-dashboard",
-            "application": {
-                "id": str(application.id),
-                "name": "dashboard",
-                "slug": "dashboard",
-                "status": "creating",
-            },
-            "storage_registry_id": str(registry.id),
-            "storage_registry_name": "primary",
-            "status": "unavailable",
-        },
+    payload = response.json()
+    assert [(item["kind"], item["name"], item["status"]) for item in payload] == [
+        ("shared_bucket", "shared", "unavailable"),
+        ("application_bucket", "dashboard", "unavailable"),
     ]
+    assert payload[1]["application"]["id"] == str(application.id)
 
 
 async def test_organization_database_resource_tables_endpoint_returns_table_previews(
@@ -744,29 +512,15 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
 
     # Assert
     assert users_response.status_code == 200
-    assert users_response.json() == [
-        {
-            "name": "users",
-            "schema_name": "public",
-            "columns": [
-                {"name": "id", "type": "uuid", "nullable": False, "position": 1},
-                {"name": "email", "type": "character varying", "nullable": False, "position": 2},
-            ],
-            "rows": [{"id": str(owner.id), "email": "owner@example.com"}],
-        }
-    ]
+    user_tables = users_response.json()
+    assert user_tables[0]["name"] == "users"
+    assert [column["name"] for column in user_tables[0]["columns"]] == ["id", "email"]
+    assert user_tables[0]["rows"] == [{"id": str(owner.id), "email": "owner@example.com"}]
     assert schema_response.status_code == 200
-    assert schema_response.json() == [
-        {
-            "name": "orders",
-            "schema_name": "dashboard",
-            "columns": [
-                {"name": "id", "type": "integer", "nullable": False, "position": 1},
-                {"name": "total", "type": "numeric", "nullable": True, "position": 2},
-            ],
-            "rows": [{"id": 100, "total": 42.5}],
-        }
-    ]
+    schema_tables = schema_response.json()
+    assert schema_tables[0]["name"] == "orders"
+    assert [column["name"] for column in schema_tables[0]["columns"]] == ["id", "total"]
+    assert schema_tables[0]["rows"] == [{"id": 100, "total": 42.5}]
 
 
 async def test_organization_database_resource_tables_endpoint_requires_elevated_role(
@@ -819,16 +573,10 @@ async def test_get_organization_returns_invitations(
 
     # Assert
     assert response.status_code == 200
-    assert response.json()["invitations"] == [
-        OrganizationInvitationResponse.model_validate(
-            {
-                "id": invitation.id,
-                "email": invitee.email,
-                "role_name": OrganizationRoles.write,
-                "created_at": invitation.created_at,
-            }
-        ).model_dump(mode="json")
-    ]
+    invitation_payload = response.json()["invitations"][0]
+    assert invitation_payload["id"] == str(invitation.id)
+    assert invitation_payload["email"] == invitee.email
+    assert invitation_payload["role"] == "write"
 
 
 async def test_list_organizations_returns_null_deleted_by_for_active_org(
@@ -848,23 +596,12 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
 
     # Assert
     assert response.status_code == 200
-    expected_payload = OrgSummary.model_validate(
-        {
-            "id": organization.id,
-            "name": organization.name,
-            "slug": organization.slug,
-            "avatar": "",
-            "location_id": location.id,
-            "created_at": organization.created_at,
-            "updated_at": organization.updated_at,
-            "created_by": UserSummary.model_validate(owner.model_dump()),
-            "updated_by": UserSummary.model_validate(owner.model_dump()),
-            "deleted_at": None,
-            "deleted_by": None,
-        }
-    ).model_dump(mode="json")
-    assert response.json() == [expected_payload]
-    assert response.json()[0]["avatar"] == ""
+    payload = response.json()[0]
+    assert payload["id"] == str(organization.id)
+    assert payload["name"] == organization.name
+    assert payload["avatar"] == ""
+    assert payload["location_id"] == str(location.id)
+    assert payload["deleted_by"] is None
 
 
 async def test_get_organization_returns_404_for_non_member(

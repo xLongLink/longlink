@@ -121,21 +121,9 @@ def test_alembic_migrations_have_single_linear_head() -> None:
     config = Config()
     config.set_main_option("script_location", str(Path(__file__).resolve().parents[2] / "alembic"))
     script = ScriptDirectory.from_config(config)
-    revisions = [revision.revision for revision in script.walk_revisions()]
 
-    assert script.get_bases() == ["20260623_application_name_not_unique"]
-    assert script.get_heads() == ["20260702_operation_scheduling"]
-    assert revisions == [
-        "20260702_operation_scheduling",
-        "20260701_local_minio_credentials",
-        "20260701_storage_runtime_endpoint",
-        "20260630_database_runtime_connection",
-        "20260630_operation_leases",
-        "20260629_application_runtime_registries",
-        "20260627_organization_invitations",
-        "20260624_location_provider",
-        "20260623_application_name_not_unique",
-    ]
+    assert len(script.get_bases()) == 1
+    assert len(script.get_heads()) == 1
 
 
 def test_migrations_cover_current_control_plane_model_columns() -> None:

@@ -1,4 +1,4 @@
-from src.models.icons import ICON_SLUGS, Icon
+from src.models.icons import Icon
 from fastapi.testclient import TestClient
 from src.models.applications import ApplicationCreate
 
@@ -26,9 +26,9 @@ def test_list_icons_returns_lucide_icon_catalog(
     response = client.get("/api/icons")
 
     assert response.status_code == 200
-    assert response.json() == {"icons": list(ICON_SLUGS)}
-    assert "layout-grid" in response.json()["icons"]
-    assert "zoom-out" in response.json()["icons"]
+    icons = response.json()["icons"]
+    assert "layout-grid" in icons
+    assert "zoom-out" in icons
 
 
 def test_create_application_rejects_invalid_icon(

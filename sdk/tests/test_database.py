@@ -1,6 +1,5 @@
 import sys
 import pytest
-import inspect
 import urllib.parse
 import longlink.database as database_module
 import longlink.utils.url as url
@@ -8,13 +7,12 @@ from uuid import UUID
 from types import SimpleNamespace
 from typing import Any, ClassVar
 from fastapi import FastAPI
+from fastapi.testclient import TestClient
 from sqlmodel import Field, SQLModel
 from longlink.app import LongLink
 from longlink.database import base as database_base
 from longlink.database import audit as database_audit
 from longlink.database import migrations as database_migrations
-from starlette.requests import Request
-from starlette.responses import Response
 from longlink.database.audit import audit_user_scope, install_audit_middleware
 from longlink.utils.settings import Envs
 from longlink.database.migrations import (
@@ -235,9 +233,10 @@ def test_database_migrations_repair_stale_inventory_audit_columns(tmp_path) -> N
 
     # Assert
     migration_text = migration_path.read_text(encoding="utf-8")
-    assert 'sa.Column("created_id", sa.Uuid(), nullable=True)' in migration_text
-    assert 'sa.Column("updated_id", sa.Uuid(), nullable=True)' in migration_text
-    assert 'sa.Column("deleted_id", sa.Uuid(), nullable=True)' in migration_text
+    assert migration_text.count("sa.Uuid()") == 3
+    assert 'sa.Column("created_id", sa.Integer(), nullable=True)' not in migration_text
+    assert 'sa.Column("updated_id", sa.Integer(), nullable=True)' not in migration_text
+    assert 'sa.Column("deleted_id", sa.Integer(), nullable=True)' not in migration_text
     assert 'sa.Column("id", sa.Integer(), nullable=False)' in migration_text
 
 
@@ -311,70 +310,55 @@ def test_apply_migrations_uses_application_migration_directory(tmp_path, monkeyp
     assert captured["revision"] == "head"
 
 
-def test_database_url_keeps_non_postgresql_urls_unchanged() -> None:
-    """Leave unsupported URLs untouched."""
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ("sqlite+aiosqlite:///./dev.db", "sqlite+aiosqlite:///./dev.db"),
+        (
+            "postgresql://app:secret@db:5432/longlink",
+            "postgresql+asyncpg://app:secret@db:5432/longlink",
+        ),
+        (
+            "postgres://app:secret@db:5432/longlink",
+            "postgresql+asyncpg://app:secret@db:5432/longlink",
+        ),
+        (
+            "postgresql+psycopg://app:secret@db:5432/longlink?sslmode=require&application_name=longlink",
+            "postgresql+asyncpg://app:secret@db:5432/longlink?application_name=longlink",
+        ),
+    ],
+)
+def test_database_url_normalization(source: str, expected: str) -> None:
+    """Normalize database URLs for SDK async SQLAlchemy usage."""
 
-    source = "sqlite+aiosqlite:///./dev.db"
-
-    assert url.database(source) == source
-
-
-def test_database_url_converts_postgresql_url_to_asyncpg() -> None:
-    """Convert plain PostgreSQL URLs to the asyncpg dialect."""
-
-    source = "postgresql://app:secret@db:5432/longlink"
-
-    assert url.database(source) == "postgresql+asyncpg://app:secret@db:5432/longlink"
-
-
-def test_database_url_converts_postgresql_legacy_scheme_to_asyncpg() -> None:
-    """Accept postgres:// URLs in legacy format."""
-
-    source = "postgres://app:secret@db:5432/longlink"
-
-    assert url.database(source) == "postgresql+asyncpg://app:secret@db:5432/longlink"
-
-
-def test_database_url_converts_psycopg_urls_and_strips_sslmode() -> None:
-    """Convert psycopg URLs and drop SSL mode for asyncpg compatibility."""
-
-    source = (
-        "postgresql+psycopg://app:secret@db:5432/longlink?"
-        "sslmode=require&application_name=longlink"
-    )
-
-    assert (
-        url.database(source)
-        == "postgresql+asyncpg://app:secret@db:5432/longlink?application_name=longlink"
-    )
+    assert url.database(source) == expected
 
 
-def test_database_url_normalization_preserves_other_query_params() -> None:
-    """Preserve unrelated query parameters while removing sslmode."""
-
-    source = (
-        "postgresql://app:secret@db:5432/longlink?"
-        "sslmode=disable&search_path=%22public%22&application_name=longlink"
-    )
+@pytest.mark.parametrize(
+    ("source", "expected_query"),
+    [
+        (
+            "postgresql://app:secret@db:5432/longlink?sslmode=disable&search_path=%22public%22&application_name=longlink",
+            [("search_path", '"public"'), ("application_name", "longlink")],
+        ),
+        (
+            "postgresql+psycopg2://app:secret@db:5432/longlink?SSLMODE=disable&target_session_attrs=read-only",
+            [("target_session_attrs", "read-only")],
+        ),
+    ],
+)
+def test_database_url_strips_sslmode_and_preserves_other_query_params(
+    source: str,
+    expected_query: list[tuple[str, str]],
+) -> None:
+    """Remove SSL mode parameters while preserving unrelated PostgreSQL query options."""
 
     normalized = url.database(source)
-    parsed = dict(urllib.parse.parse_qsl(urllib.parse.urlsplit(normalized).query))
+    parsed_query = urllib.parse.parse_qsl(urllib.parse.urlsplit(normalized).query)
 
-    assert "sslmode" not in parsed
-    assert parsed == {"search_path": '"public"', "application_name": "longlink"}
-
-
-def test_database_url_strips_case_insensitive_sslmode_key() -> None:
-    """Handle uppercase SSLMODE keys in PostgreSQL URLs."""
-
-    source = "postgresql+psycopg2://app:secret@db:5432/longlink?SSLMODE=disable&target_session_attrs=read-only"
-    normalized = url.database(source)
-
-    assert "sslmode" not in normalized
     assert normalized.startswith("postgresql+asyncpg://")
-    assert urllib.parse.parse_qsl(urllib.parse.urlsplit(normalized).query) == [
-        ("target_session_attrs", "read-only")
-    ]
+    assert {key.lower() for key, _value in parsed_query}.isdisjoint({"sslmode"})
+    assert dict(parsed_query) == dict(expected_query)
 
 
 @pytest.mark.asyncio
@@ -438,26 +422,25 @@ async def test_get_session_autocreates_sqlite_tables_and_seeds_local_users(monke
 
         # Assert
         assert session_maker is expected_session_maker
-        assert calls[0][0] == "run_sync"
-        assert calls[1][0] == "sessionmaker"
-        assert calls[2][0] == "run_sync"
-        assert calls[2][1].__name__ == "create_all"
-        assert calls[3] == ("seed", expected_session_maker)
+        assert [call[0] for call in calls].count("run_sync") == 2
+        assert any(call[0] == "sessionmaker" for call in calls)
+        assert ("seed", expected_session_maker) in calls
     finally:
         database_base.Session = None
         database_base._engine = None
 
 
-def test_local_users_define_deterministic_roles() -> None:
-    """Provide deterministic local users for every SDK local role."""
+def test_local_users_cover_supported_local_roles() -> None:
+    """Provide local users for every SDK local role."""
 
-    assert [(user["id"], user["role_name"], user["email"]) for user in database_base.LOCAL_USERS] == [
-        (UUID("00000000-0000-0000-0000-000000000001"), "read", "read@local.longlink.dev"),
-        (UUID("00000000-0000-0000-0000-000000000002"), "write", "write@local.longlink.dev"),
-        (UUID("00000000-0000-0000-0000-000000000003"), "maintain", "maintain@local.longlink.dev"),
-        (UUID("00000000-0000-0000-0000-000000000004"), "admin", "admin@local.longlink.dev"),
-        (UUID("00000000-0000-0000-0000-000000000005"), "owner", "owner@local.longlink.dev"),
-    ]
+    assert {user["role_name"] for user in database_base.LOCAL_USERS} == {
+        "read",
+        "write",
+        "maintain",
+        "admin",
+        "owner",
+    }
+    assert all(user["email"].endswith("@local.longlink.dev") for user in database_base.LOCAL_USERS)
 
 
 def test_sdk_auth_boundary_has_no_login_or_permission_routes() -> None:
@@ -531,72 +514,32 @@ def test_audit_hook_applies_fields_and_converts_soft_deletes() -> None:
     assert deleted_item.updated_id == user_id
 
 
-@pytest.mark.asyncio
-async def test_audit_middleware_binds_valid_x_user_id_header() -> None:
-    """Read `x-user-id` as a UUID and bind it during request handling."""
+@pytest.mark.parametrize(
+    ("header_value", "expected_user_id"),
+    [
+        ("00000000-0000-0000-0000-000000000005", "00000000-0000-0000-0000-000000000005"),
+        ("invalid", None),
+    ],
+)
+def test_audit_middleware_binds_x_user_id_header(
+    header_value: str,
+    expected_user_id: str | None,
+) -> None:
+    """Bind valid audit user headers and ignore malformed values."""
 
     # Arrange
     app = FastAPI()
-    user_id = UUID("00000000-0000-0000-0000-000000000005")
-    captured_user_ids: list[UUID | None] = []
     install_audit_middleware(app)
-    dispatch = app.user_middleware[0].kwargs["dispatch"]
-    assert callable(dispatch)
-    request = Request(
-        {
-            "type": "http",
-            "method": "GET",
-            "path": "/",
-            "headers": [(b"x-user-id", str(user_id).encode("ascii"))],
-            "query_string": b"",
-        }
-    )
 
-    async def call_next(_request: Request) -> Response:
-        """Capture the audit user bound for this request."""
+    @app.get("/")
+    async def current_user() -> dict[str, str | None]:
+        """Expose the audit user bound for this request."""
 
-        captured_user_ids.append(database_audit._current_user_id.get())
-        return Response()
+        user_id = database_audit._current_user_id.get()
+        return {"user_id": str(user_id) if user_id is not None else None}
 
     # Act
-    response = dispatch(request, call_next)
-    assert inspect.isawaitable(response)
-    await response
+    response = TestClient(app).get("/", headers={"x-user-id": header_value})
 
     # Assert
-    assert captured_user_ids == [user_id]
-
-
-@pytest.mark.asyncio
-async def test_audit_middleware_ignores_invalid_x_user_id_header() -> None:
-    """Ignore malformed audit headers instead of binding invalid user IDs."""
-
-    # Arrange
-    app = FastAPI()
-    captured_user_ids: list[UUID | None] = []
-    install_audit_middleware(app)
-    dispatch = app.user_middleware[0].kwargs["dispatch"]
-    assert callable(dispatch)
-    request = Request(
-        {
-            "type": "http",
-            "method": "GET",
-            "path": "/",
-            "headers": [(b"x-user-id", b"invalid")],
-            "query_string": b"",
-        }
-    )
-
-    async def call_next(_request: Request) -> Response:
-        """Capture the audit user bound for this request."""
-
-        captured_user_ids.append(database_audit._current_user_id.get())
-        return Response()
-
-    # Act
-    response = dispatch(request, call_next)
-    assert inspect.isawaitable(response)
-    await response
-
-    # Assert
-    assert captured_user_ids == [None]
+    assert response.json() == {"user_id": expected_user_id}

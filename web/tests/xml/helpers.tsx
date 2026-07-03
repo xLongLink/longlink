@@ -3,6 +3,7 @@ import { RenderXML } from '@xml/renderers.tsx';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter } from 'react-router';
 
 /** Renders XML AST through the providers required by runtime components. */
 export function renderXmlToMarkup(
@@ -16,7 +17,11 @@ export function renderXmlToMarkup(
         createElement(
             QueryClientProvider,
             { client: queryClient },
-            createElement('div', null, createElement(RenderXML, { ast, ctx, baseUrl }))
+            createElement(
+                MemoryRouter,
+                null,
+                createElement('div', null, createElement(RenderXML, { ast, ctx, baseUrl }))
+            )
         )
     );
 }

@@ -1,18 +1,22 @@
-import asyncio
+from src.schemas.requests import PurchaseRequestCreate
 
 
-def test_form_endpoint_returns_submitted_payload() -> None:
-    """Load the scaffolded application and run its starter form endpoint."""
+def test_purchase_request_schema_accepts_starter_payload() -> None:
+    """Load the scaffolded application and validate its starter request payload."""
 
     # Arrange
     from main import app
-    from src.routes.submissions import form_post_endpoint
 
-    submitted_payload = {"name": "Ada", "team": "ops"}
+    payload = {
+        "title": "Laptop for field audit",
+        "amount": 1800,
+        "vendor": "Acme Hardware",
+        "justification": "The field team needs a dedicated machine for onsite audit work.",
+    }
 
     # Act
-    payload = asyncio.run(form_post_endpoint(submitted_payload))
+    request = PurchaseRequestCreate(**payload)
 
     # Assert
     assert app is not None
-    assert payload == {"message": "Form submission received", "payload": submitted_payload}
+    assert request.model_dump() == payload

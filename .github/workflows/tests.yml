@@ -1,14 +1,12 @@
 name: Tests
 
-# As we are in early development, we will trigger tests manually for now. We can add automatic triggers on push to dev/main branches later.
 on:
-  # push:
-  #     branches:
-  #         - dev
+  push:
+  pull_request:
   workflow_dispatch:
 
 jobs:
-  # The API is packaged into a container, therefore only needs to be tested on a single python version. We will run tests on the latest stable version of python.
+  # The API is packaged into a container, so test it on the supported Python runtime.
   api-tests:
     runs-on: ubuntu-latest
 
@@ -19,25 +17,28 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.14"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
 
       - name: Install dependencies
         working-directory: api
-        run: pip install -e '.[dev]'
+        run: uv sync --extra dev
 
       - name: Run tests
         working-directory: api
-        run: pytest
+        run: ENVIRONMENT=testing uv run pytest --cov=src --cov-report=term-missing tests
 
-  # The SDK must support different python versions, so we will run tests on multiple versions using a matrix strategy.
+      - name: Run Pyright
+        working-directory: api
+        run: uv run --extra dev pyright
+
+  # The SDK requires Python 3.14 or newer.
   sdk-tests:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version:
-          - "3.12"
-          - "3.13"
-          - "3.14"
 
     steps:
       - name: Checkout repository
@@ -46,7 +47,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.14"
 
       - name: Setup uv
         uses: astral-sh/setup-uv@v7
@@ -55,11 +56,15 @@ jobs:
 
       - name: Install dependencies
         working-directory: sdk
-        run: uv pip install --system -e '.[dev]'
+        run: uv sync --extra dev
 
       - name: Run tests
         working-directory: sdk
-        run: uv run pytest
+        run: uv run pytest --cov=longlink --cov-report=term-missing tests
+
+      - name: Run Pyright
+        working-directory: sdk
+        run: uv run --group dev pyright
 
   # The web package uses Bun, so run its test suite separately.
   web-tests:
@@ -79,3 +84,15 @@ jobs:
       - name: Run tests
         working-directory: web
         run: bun test
+
+      - name: Run typecheck
+        working-directory: web
+        run: bun run typecheck
+
+      - name: Build API bundle
+        working-directory: web
+        run: bun run vite build --mode api --logLevel warn
+
+      - name: Build SDK bundle
+        working-directory: web
+        run: bun run vite build --mode sdk --logLevel warn

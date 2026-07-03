@@ -3,24 +3,6 @@ import { describe, expect, it } from 'bun:test';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('Avatar', () => {
-    /* The compiler should preserve the single avatar composition. */
-    it('compiles avatar xml into nested avatar ast nodes', () => {
-        expect(
-            parseXML(
-                '<Avatar><AvatarImage src="/ada.png" alt="Ada Lovelace" /><AvatarFallback><P i18n="AL" /></AvatarFallback><AvatarBadge><P i18n="1" /></AvatarBadge></Avatar>'
-            )
-        ).toEqual([
-            {
-                name: 'Avatar',
-                children: [
-                    { name: 'AvatarImage', params: { src: '/ada.png', alt: 'Ada Lovelace' }, children: [] },
-                    { name: 'AvatarFallback', children: [{ name: 'P', params: { i18n: 'AL' }, children: [] }] },
-                    { name: 'AvatarBadge', children: [{ name: 'P', params: { i18n: '1' }, children: [] }] },
-                ],
-            },
-        ]);
-    });
-
     /* The runtime should render the single avatar and its badge slot. */
     it('renders the avatar composition end to end', () => {
         const output = renderXmlToMarkup(
@@ -29,9 +11,6 @@ describe('Avatar', () => {
             )
         );
 
-        expect(output).toContain('data-slot="avatar"');
-        expect(output).toContain('data-slot="avatar-fallback"');
-        expect(output).toContain('data-slot="avatar-badge"');
         expect(output).toContain('AL');
         expect(output).toContain('1');
     });

@@ -1,12 +1,60 @@
 import sys
 import click
 import select
+import subprocess
 import uvicorn
 import threading
 import webbrowser
 from pathlib import Path
 from longlink.logger import logger, log_config
 from longlink.constants import DEV_PORT
+
+
+def _log_browser_output(browser_process: subprocess.Popen[str]) -> None:
+    """Log output emitted by the browser launch process."""
+
+    if browser_process.stdout is None:
+        return
+
+    for output_line in browser_process.stdout:
+        output_line = output_line.strip()
+        if output_line:
+            logger.info(output_line)
+
+
+def _open_browser(server_url: str) -> None:
+    """Open the development server URL while preserving LongLink log formatting."""
+
+    try:
+        browser = webbrowser.get()
+    except webbrowser.Error as error:
+        logger.info("Unable to open browser: %s", error)
+        return
+
+    if not isinstance(browser, (webbrowser.BackgroundBrowser, webbrowser.GenericBrowser)):
+        webbrowser.open(server_url)
+        return
+
+    command = [browser.name, *[argument.replace("%s", server_url) for argument in browser.args]]
+
+    try:
+        if sys.platform[:3] == "win":
+            browser_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        else:
+            # Match webbrowser.BackgroundBrowser on POSIX while piping child output into the logger.
+            browser_process = subprocess.Popen(
+                command,
+                close_fds=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                start_new_session=True,
+                text=True,
+            )
+    except OSError as error:
+        logger.info("Unable to open browser: %s", error)
+        return
+
+    threading.Thread(target=_log_browser_output, args=(browser_process,), daemon=True).start()
 
 
 def _print_shortcuts(server_url: str) -> None:
@@ -66,7 +114,7 @@ def dev_command() -> None:
                 continue
 
             if command == "o":
-                webbrowser.open(server_url)
+                _open_browser(server_url)
                 continue
 
             if command == "c":

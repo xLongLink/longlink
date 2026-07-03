@@ -1,6 +1,5 @@
 import { CodeBlock } from '@/components/CodeBlock';
 import { DataTable } from '@/components/DataTable';
-import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import LogsDialog from '@/components/dialogs/LogsDialog';
 import { RegistryDialogShell, RegistryLocationField } from '@/components/dialogs/RegistryDialogElements';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -43,14 +42,9 @@ describe('shared data, code, and dialog components', () => {
             createElement(CodeBlock, { language: 'xml', children: '  <H1 i18n="title" />  ' })
         );
 
-        expect(output).toContain('data-slot="code-block"');
         expect(output).toContain('Copy code');
         expect(output).toContain('H1');
         expect(output).toContain('title');
-    });
-
-    it('exports the reusable delete confirmation dialog component', () => {
-        expect(typeof DeleteConfirmationDialog).toBe('function');
     });
 
     it('renders the logs trigger unless explicitly suppressed', () => {

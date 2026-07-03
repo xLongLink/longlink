@@ -103,10 +103,17 @@ export const content = (
                 <CodeBlock language="bash">uv run longlink dev</CodeBlock>
             </TabsContent>
         </Tabs>
+        <P>
+            For a complete minimal application, see the{' '}
+            <A href="https://github.com/xLongLink/sample">LongLink sample repository</A>.
+        </P>
         <Heading id="resources" level="h2">
             Resources
         </Heading>
         <Ul>
+            <Li>
+                <A href="https://github.com/xLongLink/sample">LongLink Sample Application</A>
+            </Li>
             <Li>
                 <A href="https://github.com/fastapi/full-stack-fastapi-template/tree/master/backend">
                     Official FastAPI Backend Template

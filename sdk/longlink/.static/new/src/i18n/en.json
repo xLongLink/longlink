@@ -1,264 +1,41 @@
 {
-    "examples": {
-        "cart": {
-            "add": "Add to cart",
-            "apples": {
-                "description": "Bright red apples with a clean finish for snacks, salads, and lunch boxes.",
-                "name": "Apples",
-                "subtitle": "Crisp and sweet orchard fruit"
-            },
-            "bananas": {
-                "description": "Great for breakfast, smoothies, and quick energy on the go.",
-                "name": "Bananas",
-                "subtitle": "Soft, sweet, and easy to pack"
-            },
-            "description": "Browse fresh fruit cards, add items to the cart, and review the order summary.",
-            "pears": {
-                "description": "Ideal for a calm dessert plate or a simple afternoon snack.",
-                "name": "Pears",
-                "subtitle": "Soft texture with a mellow finish"
-            },
-            "search": "Search fruit",
-            "strawberries": {
-                "description": "Juicy berries that work well with yogurt, cream, and pastries.",
-                "name": "Strawberries",
-                "subtitle": "Small berries for fresh desserts"
-            },
-            "summary": {
-                "empty": "Cart is empty",
-                "order": "Order",
-                "title": "Cart"
-            },
-            "title": "Fruit cart"
+    "requests": {
+        "actions": {
+            "approve": "Approve",
+            "reject": "Reject"
         },
-        "form": {
-            "actions": {
-                "cancel": "Cancel",
-                "submit": "Submit"
-            },
-            "description": "A denser backoffice form with inline controls and grouped actions.",
-            "email": {
-                "invite": "Invite",
-                "label": "Email"
-            },
-            "name": {
-                "description": "This appears on invoices and emails.",
-                "label": "Full name"
-            },
-            "notes": {
-                "description": "Keep the note short and clear.",
-                "label": "Notes"
-            },
-            "password": {
-                "label": "Password"
-            },
-            "role": {
-                "admin": "Admin",
-                "group": "Roles",
-                "label": "Role",
-                "manager": "Manager",
-                "operator": "Operator",
-                "placeholder": "Select a role"
-            },
-            "team": {
-                "group": "Teams",
-                "label": "Team",
-                "operations": "Operations",
-                "placeholder": "Select a team",
-                "product": "Product",
-                "support": "Support"
-            },
-            "title": "Account profile",
-            "username": {
-                "check": "Check",
-                "label": "Username"
-            }
+        "attachments": {
+            "actions": "Actions",
+            "delete": "Delete",
+            "download": "Download",
+            "file": "Attachment",
+            "title": "Attachments",
+            "upload": "Upload attachment"
         },
-        "inventory": {
-            "actions": {
-                "create": "Create item",
-                "save": "Save item"
-            },
-            "description": "Track inventory rows owned by this application schema while LongLink resolves platform users from the shared users table.",
-            "fields": {
-                "name": {
-                    "description": "Human-readable item name.",
-                    "label": "Name"
-                },
-                "quantity": {
-                    "description": "Current quantity available in inventory.",
-                    "label": "Quantity"
-                },
-                "sku": {
-                    "description": "Unique stock keeping unit for this item.",
-                    "label": "SKU"
-                }
-            },
-            "modal": {
-                "description": "Create an application-owned inventory item. The current LongLink user is recorded automatically.",
-                "title": "Create inventory item"
-            },
-            "table": {
-                "createdBy": "Created by",
-                "empty": "No inventory items yet.",
-                "name": "Name",
-                "quantity": "Qty",
-                "sku": "SKU"
-            },
-            "title": "Inventory"
+        "create": {
+            "description": "Submit a request with enough context for an approver to make a decision.",
+            "open": "New request",
+            "submit": "Submit request",
+            "title": "Create purchase request"
         },
-        "menu": {
-            "billing": {
-                "description": "Review subscription status, invoices, and payment methods.",
-                "label": "Billing"
-            },
-            "catalog": {
-                "description": "Catalog management for product data, merchandising, and stock health.",
-                "label": "Catalog"
-            },
-            "categories": {
-                "description": "Organize the storefront taxonomy and featured collections.",
-                "label": "Categories"
-            },
-            "inventory": {
-                "description": "Monitor low-stock SKUs, warehouse counts, and replenishment triggers.",
-                "label": "Inventory"
-            },
-            "operations": {
-                "description": "Operations center for live queue management, fulfillment, and support escalations.",
-                "label": "Operations"
-            },
-            "orders": {
-                "description": "Open orders waiting on payment capture, packing, or shipment confirmation.",
-                "label": "Orders"
-            },
-            "overview": {
-                "description": "Today's snapshot: 128 orders, 14 refunds, and 3 alerts need attention.",
-                "label": "Overview"
-            },
-            "products": {
-                "description": "Manage product titles, pricing, variants, and publication status.",
-                "label": "Products"
-            },
-            "profile": {
-                "description": "Update your display name, role, notification preferences, and avatar.",
-                "label": "Profile"
-            },
-            "returns": {
-                "description": "Track return requests, inspection results, and refund approvals.",
-                "label": "Returns"
-            },
-            "settings": {
-                "actions": {
-                    "cancel": "Cancel",
-                    "label": "Actions",
-                    "reset": "Reset",
-                    "save": "Save changes"
-                },
-                "density": {
-                    "comfortable": "Comfortable",
-                    "compact": "Compact",
-                    "label": "Sidebar density",
-                    "spacious": "Spacious"
-                },
-                "description": "Configure the workspace for the current team and workflow.",
-                "emailDigest": "Email digest",
-                "label": "Settings",
-                "pushAlerts": "Push alerts",
-                "refresh": {
-                    "description": "Automatic refresh in minutes.",
-                    "label": "Refresh interval"
-                },
-                "theme": {
-                    "dark": "Dark",
-                    "label": "Theme",
-                    "light": "Light",
-                    "system": "System"
-                },
-                "title": "Workspace settings"
-            },
-            "team": {
-                "description": "Invite teammates, assign permissions, and review access history.",
-                "label": "Team"
-            }
+        "description": "Create purchase requests, route them through a simple approval state, and keep supporting files together.",
+        "detail": {
+            "back": "Back to requests",
+            "description": "Review the request, update its workflow status, and manage attachments.",
+            "title": "Purchase request detail"
         },
-        "quote": {
-            "actions": {
-                "copy": "Copy quote"
-            },
-            "address": {
-                "city": "City",
-                "company": "Company",
-                "description": "Where the quote should be sent and billed.",
-                "postal": "Postal code",
-                "street": "Street",
-                "title": "Billing address"
-            },
-            "conditions": {
-                "deposit": "Work begins after deposit confirmation.",
-                "description": "Net 30 payment terms apply after the final revision is accepted.",
-                "pricing": "Pricing is valid for 14 days.",
-                "scope": "Scope changes are quoted separately.",
-                "status": "Pending approval"
-            },
-            "description": "Items, conditions, address, texts, and settings for the current quote.",
-            "items": {
-                "discovery": "Discovery workshop",
-                "implementation": "Implementation support",
-                "review": "Review and revisions"
-            },
-            "quickActions": {
-                "description": "Quick actions for the current quote.",
-                "download": "Download PDF",
-                "duplicate": "Duplicate",
-                "send": "Send quote",
-                "status": "Awaiting client review"
-            },
-            "settings": {
-                "description": "Configure how the quote behaves for the current workflow.",
-                "discount": "Allow discount",
-                "status": {
-                    "approved": "Approved",
-                    "draft": "Draft",
-                    "label": "Quote status",
-                    "sent": "Sent"
-                },
-                "tax": "Include tax",
-                "title": "Quote settings"
-            },
-            "table": {
-                "amount": "Amount",
-                "item": "Item",
-                "quantity": "Qty",
-                "rate": "Rate",
-                "total": "Total"
-            },
-            "tabs": {
-                "address": "Address",
-                "conditions": "Conditions",
-                "items": "Items",
-                "settings": "Settings",
-                "texts": "Texts"
-            },
-            "texts": {
-                "footer": {
-                    "description": "Used for the approval reminder.",
-                    "title": "Footer text"
-                },
-                "intro": {
-                    "description": "Shown at the top of the quote email.",
-                    "title": "Intro text"
-                }
-            },
-            "title": "Quote #Q-2048-0192"
+        "fields": {
+            "amount": "Amount",
+            "justification": "Justification",
+            "title": "Title",
+            "vendor": "Vendor"
         },
-        "text": {
-            "apples": {
-                "one": "1 apple",
-                "other": "{{count}} apples"
-            },
-            "body": "The paragraph component now resolves translations from en.json.",
-            "title": "Localized text elements"
-        }
+        "table": {
+            "createdBy": "Created by",
+            "open": "Open",
+            "request": "Request",
+            "status": "Status"
+        },
+        "title": "Purchase requests"
     }
 }

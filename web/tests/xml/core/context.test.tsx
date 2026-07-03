@@ -37,4 +37,29 @@ describe('core/context', () => {
 
         expect((ctx.values.filter as { value: string }).value).toBe('day');
     });
+
+    it('evaluates query paths against route params', async () => {
+        const ctx = createContext();
+        const originalFetch = globalThis.fetch;
+        const ast: ASTNode[] = [{ name: 'Query', params: { id: 'issue', path: '/api/issues/${params.issue}' } }];
+        let requestedUrl = '';
+
+        ctx.params = { issue: '123' };
+        globalThis.fetch = (async (input: RequestInfo | URL) => {
+            requestedUrl = String(input);
+
+            return new Response(JSON.stringify({ id: '123' }), {
+                headers: { 'content-type': 'application/json' },
+            });
+        }) as unknown as typeof fetch;
+
+        try {
+            await setupContext(ast, ctx, '/proxy');
+        } finally {
+            globalThis.fetch = originalFetch;
+        }
+
+        expect(requestedUrl).toBe('/proxy/api/issues/123');
+        expect(ctx.values.issue).toEqual({ id: '123' });
+    });
 });

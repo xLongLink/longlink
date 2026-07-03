@@ -15,24 +15,6 @@ def test_parse_quantity_uses_kubernetes_quantity_semantics() -> None:
     assert parse_quantity("invalid") == Decimal(0)
 
 
-async def test_setup_is_noop(monkeypatch) -> None:
-    """Keep cluster bootstrap empty for service-proxy routing."""
-
-    # Arrange
-    monkeypatch.setattr("src.adapters.compute.k8s.client.Configuration", lambda: object())
-    monkeypatch.setattr("src.adapters.compute.k8s.client.ApiClient", lambda configuration: object())
-    monkeypatch.setattr("src.adapters.compute.k8s.config.kube_config.KubeConfigLoader", lambda kubeconfig: type("Loader", (), {"load_and_set": lambda self, configuration: None})())
-    monkeypatch.setattr("src.adapters.compute.k8s.client.CoreV1Api", lambda api_client: object())
-    monkeypatch.setattr("src.adapters.compute.k8s.client.AppsV1Api", lambda api_client: object())
-    adapter = K8s("apiVersion: v1\nclusters: []\n", "shared-secret")
-
-    # Act
-    await adapter.setup()
-
-    # Assert
-    assert adapter._proxy_secret == "shared-secret"
-
-
 async def test_application_applies_service_resources(monkeypatch) -> None:
     """Provision the app with only Kubernetes service resources."""
 

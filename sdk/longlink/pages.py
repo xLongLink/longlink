@@ -17,6 +17,8 @@ class PageDefinition:
 
     path: str
     handler: Callable[..., Any]
+    route: str
+    tab: str
     name: str | None = None
     icon: str | None = None
 
@@ -49,6 +51,57 @@ def extract_longlink_metadata(xml_content: str) -> tuple[str | None, str | None]
         _normalize_metadata_value(root.get("name")),
         _normalize_metadata_value(root.get("icon")),
     )
+
+
+def page_file_route(relative_path: str) -> str:
+    """Return the browser route pattern for one page file path."""
+
+    normalized_path = relative_path.strip("/")
+    if not normalized_path.endswith(".xml"):
+        raise ValueError("Page file routes must end with '.xml'")
+
+    path_without_suffix = normalized_path.removesuffix(".xml")
+    route_segments: list[str] = []
+
+    # Convert filesystem route conventions into React Router-style route patterns.
+    for segment in path_without_suffix.split("/"):
+        if segment == "index":
+            continue
+
+        if segment.startswith("[") and segment.endswith("]"):
+            parameter_name = segment[1:-1].strip()
+
+            if not parameter_name:
+                raise ValueError("Dynamic page parameters cannot be empty")
+
+            route_segments.append(f":{parameter_name}")
+            continue
+
+        route_segments.append(segment)
+
+    return "/".join(route_segments)
+
+
+def page_file_tab(relative_path: str) -> str:
+    """Return the navigation tab key for one page file path."""
+
+    route = page_file_route(relative_path)
+    tab_segments: list[str] = []
+
+    # Static pages keep their full route key, while dynamic pages inherit the static prefix.
+    for segment in route.split("/"):
+        if not segment:
+            continue
+
+        if segment.startswith(":"):
+            break
+
+        tab_segments.append(segment)
+
+    if tab_segments:
+        return "/".join(tab_segments)
+
+    return route.removeprefix(":") or "index"
 
 
 def normalize_page_path(path: str) -> str:

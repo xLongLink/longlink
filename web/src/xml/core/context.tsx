@@ -82,10 +82,19 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
 
                 const params = node.params!;
                 const id = params.id.trim();
-                const path = params.path.trim();
+                const rawPath = params.path.trim();
 
                 // We store the setup function so that in case of invalidation it can be re-run to refetch the data.
-                setups[id] = () => query(ctx, id, path, baseUrl);
+                setups[id] = () => {
+                    const path = evaluate(rawPath, ctx);
+
+                    // Query paths may interpolate route params, but must still resolve to a URL string.
+                    if (path == null || typeof path === 'object' || typeof path === 'function') {
+                        throw new Error('Query path must resolve to a string');
+                    }
+
+                    return query(ctx, id, String(path), baseUrl);
+                };
                 await setups[id]();
             }
 
@@ -132,6 +141,5 @@ function validateSetupNode(node: ASTNode): void {
         if (!node.params?.path) throw new Error('Query requires a string path');
         if ((node.children ?? []).length > 0) throw new Error('Query cannot have children');
         if (!isText(node.params.id)) throw new Error('Query id must be literal text');
-        if (!isText(node.params.path)) throw new Error('Query path must be literal text');
     }
 }

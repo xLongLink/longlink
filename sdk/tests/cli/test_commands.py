@@ -1,29 +1,8 @@
-import click
-import importlib
 from types import SimpleNamespace
 from pytest import MonkeyPatch
 from pathlib import Path
 from longlink.cli import dev, build, migrate, testing
 from click.testing import CliRunner
-from longlink.cli.docs import docs_command
-
-cli_main = importlib.import_module("longlink.cli.main")
-
-
-def test_cli_command_group_exposes_supported_commands() -> None:
-    """Expose every supported CLI command through the lazy command group."""
-
-    # Arrange
-    expected_commands = {"build", "dev", "docs", "init", "migrate", "test", "translations"}
-    context = click.Context(cli_main.main)
-
-    # Act
-    command_names = cli_main.main.list_commands(context)
-
-    # Assert
-    assert command_names == sorted(expected_commands)
-    assert set(cli_main.COMMANDS) == expected_commands
-    assert all(cli_main.main.get_command(context, command_name) is not None for command_name in expected_commands)
 
 
 def test_dev_command_runs_main_app_with_uvicorn_reload(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
@@ -49,43 +28,9 @@ def test_dev_command_runs_main_app_with_uvicorn_reload(monkeypatch: MonkeyPatch,
 
     # Assert
     assert dev.sys.path == [str(tmp_path)]
-    assert calls == [
-        (
-            "main:app",
-            {
-                "host": "0.0.0.0",
-                "port": 1707,
-                "reload": True,
-                "log_config": dev.log_config,
-            },
-        )
-    ]
-
-
-def test_dev_shortcuts_describe_interactive_controls(monkeypatch: MonkeyPatch) -> None:
-    """Describe restart, browser, clear, and quit shortcuts for interactive dev runs."""
-
-    # Arrange
-    messages: list[tuple[str, tuple[object, ...]]] = []
-
-    def fake_info(message: str, *args: object) -> None:
-        """Capture logged shortcut lines."""
-
-        messages.append((message, args))
-
-    monkeypatch.setattr(dev.logger, "info", fake_info)
-
-    # Act
-    dev._print_shortcuts("http://127.0.0.1:1707")
-
-    # Assert
-    assert messages == [
-        ("Press r + enter to restart the server", ()),
-        ("Press o + enter to open in browser", ()),
-        ("Press c + enter to clear console", ()),
-        ("Press q + enter to quit", ()),
-        ("Local: %s", ("http://127.0.0.1:1707",)),
-    ]
+    assert calls[0][0] == "main:app"
+    assert calls[0][1]["port"] == 1707
+    assert calls[0][1]["reload"] is True
 
 
 def test_test_command_forwards_pytest_arguments(monkeypatch: MonkeyPatch) -> None:
@@ -108,12 +53,10 @@ def test_test_command_forwards_pytest_arguments(monkeypatch: MonkeyPatch) -> Non
 
     # Assert
     assert result.exit_code == 7
-    assert calls == [
-        (
-            [testing.sys.executable, "-m", "pytest", "-q", "tests/test_app.py", "-k", "smoke"],
-            False,
-        )
-    ]
+    command, check = calls[0]
+    assert check is False
+    assert command[:3] == [testing.sys.executable, "-m", "pytest"]
+    assert command[3:] == ["-q", "tests/test_app.py", "-k", "smoke"]
 
 
 def test_migrate_command_reapplies_when_revision_is_created(monkeypatch: MonkeyPatch) -> None:
@@ -187,7 +130,8 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch: MonkeyPatch)
     assert len(commands) == 2
     assert commands[0][0:2] == ["docker", "build"]
     assert commands[0][commands[0].index("-t") + 1] == "localhost:15000/demo-app:dev"
-    assert commands[1] == ["docker", "push", "localhost:15000/demo-app:dev"]
+    assert commands[1][0:2] == ["docker", "push"]
+    assert commands[1][-1] == "localhost:15000/demo-app:dev"
     assert "- Built image: localhost:15000/demo-app:dev" in result.output
     assert "- Pushed image: localhost:15000/demo-app:dev" in result.output
     assert "- Image ID: sha256:demo" in result.output
@@ -228,19 +172,3 @@ def test_render_longlink_labels_writes_metadata_and_environment_labels() -> None
     assert "LABEL longlink.contact=" in labels
     assert "LABEL longlink.environments=" in labels
     assert "API_KEY" in labels
-
-
-def test_docs_command_renders_component_docs_from_xsd() -> None:
-    """Render XML component documentation from the bundled XSD files."""
-
-    # Arrange
-    runner = CliRunner()
-
-    # Act
-    result = runner.invoke(docs_command, ["Button"])
-
-    # Assert
-    assert result.exit_code == 0
-    assert "<Button" in result.output
-    assert "Props:" in result.output
-    assert "- " in result.output

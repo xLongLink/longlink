@@ -94,7 +94,11 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
+!.env.sample
+!**/.env.sample
 .venv
+.direnv/
 env/
 venv/
 ENV/
@@ -115,6 +119,7 @@ venv.bak/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+.pyright/
 
 # Pyre type checker
 .pyre/
@@ -139,12 +144,22 @@ test.py
 merge.py
 
 *.db
+*.sqlite
+*.sqlite3
 
 .sample
 script.bat
 
 
 .codex
+
+# Local secrets and machine-specific config
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*kubeconfig*.yaml
 
 # Project-specific nested ignore rules consolidated at root
 /api/src/.static/web/
@@ -153,6 +168,9 @@ script.bat
 /sdk/dev/
 
 /web/logs/
+/web/coverage/
+/web/*.tsbuildinfo
+/web/node_modules/.tmp/
 /web/node_modules/
 /web/dist/
 /web/dist-ssr/

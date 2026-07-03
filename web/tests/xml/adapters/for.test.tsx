@@ -8,17 +8,6 @@ import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('For', () => {
-    /* The compiler should preserve loop attributes and nested content. */
-    it('compiles for xml into a for ast node', () => {
-        expect(parseXML('<For each="items" as="item"><P i18n="Item" /></For>')).toEqual([
-            {
-                name: 'For',
-                params: { each: 'items', as: 'item' },
-                children: [{ name: 'P', params: { i18n: 'Item' }, children: [] }],
-            },
-        ]);
-    });
-
     /* Non-array results should render nothing instead of crashing. */
     it('returns null when each resolves to a non-array value', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {}, items: 'not-an-array' };

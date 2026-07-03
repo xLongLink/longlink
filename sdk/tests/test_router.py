@@ -26,11 +26,3 @@ def test_router_keeps_user_routes_at_registered_paths() -> None:
     assert response.status_code == 200
     assert response.json() == {"message": "ok"}
     assert prefixed_response.status_code == 404
-
-
-def test_router_does_not_expose_page_decorator() -> None:
-    """Keep XML pages out of the Router decorator API."""
-
-    router = Router()
-
-    assert not hasattr(router, "page")

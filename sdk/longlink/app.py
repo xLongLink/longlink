@@ -1,7 +1,8 @@
 from typing import Any
 from fastapi import FastAPI
 from pathlib import Path
-from longlink.pages import (XMLResponse, PageDefinition, normalize_page_path,
+from longlink.pages import (XMLResponse, PageDefinition, page_file_tab,
+                            page_file_route, normalize_page_path,
                             extract_longlink_metadata)
 from longlink.utils import Envs
 from longlink.routes import routes
@@ -128,6 +129,8 @@ class LongLink(FastAPI):
                 PageDefinition(
                     path=registered_path,
                     handler=page_endpoint,
+                    route=page_file_route(relative_path),
+                    tab=page_file_tab(relative_path),
                     name=page_name,
                     icon=page_icon,
                 )

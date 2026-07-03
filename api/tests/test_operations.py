@@ -193,12 +193,6 @@ def leased_operation(kind: OperationKind = OperationKind.application_create, ste
     )
 
 
-def compiled_params(statement: object) -> dict[str, object]:
-    """Return SQLAlchemy statement bind parameters."""
-
-    return statement.compile().params
-
-
 async def test_operation_records_and_listing_route(monkeypatch: pytest.MonkeyPatch) -> None:
     """Represent operation records and return them from the support listing route."""
 
@@ -263,30 +257,44 @@ async def test_operation_claim_sets_lease_token_and_expiry(monkeypatch: pytest.M
     assert session.refreshes == 1
 
 
-async def test_operation_mutations_require_matching_lease_tokens(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Complete, fail, defer, and renew operations with lease-token predicates."""
+@pytest.mark.parametrize(
+    ("method_name", "args"),
+    [
+        ("complete", (UUID("55555555-5555-5555-5555-555555555555"), "lease-token")),
+        ("fail", (UUID("55555555-5555-5555-5555-555555555555"), "boom", "lease-token")),
+        ("defer", (UUID("55555555-5555-5555-5555-555555555555"), "lease-token")),
+        ("renew_lease", (UUID("55555555-5555-5555-5555-555555555555"), "lease-token")),
+    ],
+)
+async def test_operation_mutations_require_active_lease(
+    monkeypatch: pytest.MonkeyPatch,
+    method_name: str,
+    args: tuple[object, ...],
+) -> None:
+    """Only commit operation mutations when an active lease row matches."""
 
     operation = leased_operation()
-    method_calls = [
-        ("complete", (operation.id, "lease-token")),
-        ("fail", (operation.id, "boom", "lease-token")),
-        ("defer", (operation.id, "lease-token")),
-        ("renew_lease", (operation.id, "lease-token")),
-    ]
+    active_session = FakeOperationSession(operation)
+    monkeypatch.setattr(
+        "src.database.services.operations.session_scope",
+        lambda: FakeSessionScope(active_session),
+    )
 
-    for method_name, args in method_calls:
-        session = FakeOperationSession(operation)
-        monkeypatch.setattr("src.database.services.operations.session_scope", lambda session=session: FakeSessionScope(session))
+    result = await getattr(operation_routes.operations, method_name)(*args)
 
-        result = await getattr(operation_routes.operations, method_name)(*args)
-        statement = session.statements[0]
-        params = compiled_params(statement)
+    assert result is operation
+    assert active_session.commits == 1
 
-        assert result is operation
-        assert "lease-token" in params.values()
-        assert operation.id in params.values()
-        assert "operations.lease_token" in str(statement)
-        assert session.commits == 1
+    stale_session = FakeOperationSession(operation, update_rowcount=0)
+    monkeypatch.setattr(
+        "src.database.services.operations.session_scope",
+        lambda: FakeSessionScope(stale_session),
+    )
+
+    stale_result = await getattr(operation_routes.operations, method_name)(*args)
+
+    assert stale_result is None
+    assert stale_session.commits == 0
 
 
 async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytest.MonkeyPatch) -> None:
