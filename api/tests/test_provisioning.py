@@ -1,12 +1,22 @@
+import pytest
+import urllib.parse
 from types import SimpleNamespace
-from urllib.parse import urlsplit, parse_qsl
-from src.operations.provisioning import runtime_database_url, runtime_storage_url
+from src.operations.provisioning import (runtime_storage_url,
+                                          runtime_database_url)
+
+pytestmark = pytest.mark.no_db
 
 
 def _query_dict(url: str) -> dict[str, list[str]]:
     """Build a URL query map for simple assertions."""
 
-    return {key: [value] for key, value in parse_qsl(urlsplit(url).query, keep_blank_values=True)}
+    return {
+        key: [value]
+        for key, value in urllib.parse.parse_qsl(
+            urllib.parse.urlsplit(url).query,
+            keep_blank_values=True,
+        )
+    }
 
 
 def test_runtime_database_url_strips_sslmode_for_asyncpg() -> None:

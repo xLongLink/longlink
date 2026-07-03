@@ -42,5 +42,5 @@ class User(SQLModel, table=True):
     language: Language = Field(default=Language.en, max_length=2)
 
     # Relationships
-    organizations: list['Organization'] = Relationship(back_populates='users', sa_relationship_kwargs={'secondary': UserOrganization.__table__, 'primaryjoin': 'User.id == UserOrganization.user_id', 'secondaryjoin': 'Organization.id == UserOrganization.organization_id'})
-    applications: list['Application'] = Relationship(back_populates='users', sa_relationship_kwargs={'secondary': UserApplication.__table__, 'primaryjoin': 'User.id == UserApplication.user_id', 'secondaryjoin': 'and_(UserApplication.organization_id == Application.organization_id, UserApplication.application_id == Application.id)'})
+    organizations: list["Organization"] = Relationship(back_populates='users', sa_relationship_kwargs={'secondary': UserOrganization.__table__, 'primaryjoin': 'User.id == UserOrganization.user_id', 'secondaryjoin': 'Organization.id == UserOrganization.organization_id'})
+    applications: list["Application"] = Relationship(back_populates='users', sa_relationship_kwargs={'secondary': UserApplication.__table__, 'primaryjoin': 'User.id == UserApplication.user_id', 'secondaryjoin': 'and_(UserApplication.organization_id == Application.organization_id, UserApplication.application_id == Application.id)'})

@@ -1,4 +1,4 @@
-from asyncio import run
+import asyncio
 
 
 def test_form_endpoint_returns_submitted_payload() -> None:
@@ -11,7 +11,7 @@ def test_form_endpoint_returns_submitted_payload() -> None:
     submitted_payload = {"name": "Ada", "team": "ops"}
 
     # Act
-    payload = run(form_post_endpoint(submitted_payload))
+    payload = asyncio.run(form_post_endpoint(submitted_payload))
 
     # Assert
     assert app is not None

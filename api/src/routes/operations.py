@@ -11,4 +11,5 @@ router = APIRouter()
 async def list_operations(_: User = Depends(authsupport)) -> list[OperationResponse]:
     """Return all recorded long-running operations."""
 
-    return await operations.list()
+    records = await operations.list()
+    return [OperationResponse.model_validate(record) for record in records]

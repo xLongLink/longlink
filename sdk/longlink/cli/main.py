@@ -1,5 +1,4 @@
 import click
-from typing import cast
 
 COMMANDS = {
     "build": "longlink.cli.build:build_command",
@@ -29,7 +28,11 @@ class LazyCommandGroup(click.Group):
 
         module_name, command_name = command_path.split(":", 1)
         module = __import__(module_name, fromlist=[command_name])
-        return cast(click.Command, getattr(module, command_name))
+        command = getattr(module, command_name)
+        if not isinstance(command, click.Command):
+            raise RuntimeError(f"{command_path} did not resolve to a click command")
+
+        return command
 
 
 @click.group(cls=LazyCommandGroup)

@@ -1,14 +1,14 @@
 from uuid import UUID
+from datetime import UTC, datetime
 from src.utils import names
 from sqlalchemy import select
-from datetime import UTC, datetime
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.storages import StorageKind
 from src.database.session import session_scope
 from src.database.models.users import User
-from src.database.models.applications import Application
 from src.database.models.storages import StorageRegistry
+from src.database.models.applications import Application
 
 
 class StorageService:

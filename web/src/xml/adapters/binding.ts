@@ -61,7 +61,6 @@ export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionCo
     };
 }
 
-
 /** Normalizes control values before writing them into XML state. */
 function normalizeBindableValue(type: string, value: unknown): unknown {
     if (type === 'number') return Number(value);

@@ -1,13 +1,13 @@
 import httpx2
-from typing import Any, Final, Literal, cast
-from urllib.parse import urlsplit
+import urllib.parse
+from typing import Any, Final, Literal
 from fastapi import Query, Request, Response, APIRouter
 from pydantic import Field, BaseModel, ValidationError
 from src.auth import SessionAccountsService, oauth
 from src.errors import UnavailableError, UnauthorizedError
+from src.operations import provisioning
 from src.models.auth import OidcUserInfo, OidcTokenResponse
 from src.environments import env
-from src.operations import provisioning
 from fastapi.responses import RedirectResponse
 from src.models.common import SuccessResponse
 from src.database.services.users import users
@@ -30,7 +30,7 @@ def sanitize_post_login_redirect(next_path: object) -> str:
         return DEFAULT_POST_LOGIN_REDIRECT
 
     # Use URL parsing so protocol-relative paths cannot be confused with local paths.
-    parsed_path = urlsplit(next_path)
+    parsed_path = urllib.parse.urlsplit(next_path)
     if parsed_path.scheme or parsed_path.netloc:
         return DEFAULT_POST_LOGIN_REDIRECT
 
@@ -82,7 +82,8 @@ async def login_oidc(
 ) -> Response:
     """Initiate OIDC login flow by redirecting to the identity provider."""
 
-    oidc = cast(Any, oauth).create_client("oidc")
+    oauth_client: Any = oauth
+    oidc = oauth_client.create_client("oidc")
 
     request.session[OIDC_NEXT_SESSION_KEY] = sanitize_post_login_redirect(next_path)
     authorize_kwargs: dict[str, Any] = {}
@@ -91,14 +92,15 @@ async def login_oidc(
         authorize_kwargs["kc_idp_hint"] = provider
 
     try:
-        return cast(
-            Response,
-            await oidc.authorize_redirect(
-                request,
-                redirect_uri=env.OIDC_REDIRECT_URI,
-                **authorize_kwargs,
-            ),
+        response = await oidc.authorize_redirect(
+            request,
+            redirect_uri=env.OIDC_REDIRECT_URI,
+            **authorize_kwargs,
         )
+        if not isinstance(response, Response):
+            raise UnavailableError("OIDC provider returned an invalid redirect response")
+
+        return response
     except httpx2.HTTPStatusError as exc:
         raise UnavailableError(
             "OIDC provider metadata is unavailable. Check OIDC_ISSUER and provider realm configuration."
@@ -175,7 +177,8 @@ async def login_password(request: Request, payload: PasswordLoginRequest) -> Res
 async def auth_oidc(request: Request) -> RedirectResponse:
     """Handle OIDC callback, exchange code for token, and create/update user."""
 
-    oidc = cast(Any, oauth).create_client("oidc")
+    oauth_client: Any = oauth
+    oidc = oauth_client.create_client("oidc")
 
     try:
         token: Any = await oidc.authorize_access_token(request)

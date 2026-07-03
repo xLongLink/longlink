@@ -66,8 +66,8 @@ export const content = (
             <P>
                 <Code>LongLink()</Code> registers XML pages and translation catalogs from conventional source folders.
                 The scaffolded app uses the defaults through <Code>LongLink(env=env)</Code>, which is equivalent to
-                mounting pages from <Code>src/pages</Code> at <Code>/pages</Code> and translations from <Code>src/i18n</Code>{' '}
-                at <Code>/i18n</Code>.
+                mounting pages from <Code>src/pages</Code> at <Code>/pages</Code> and translations from{' '}
+                <Code>src/i18n</Code> at <Code>/i18n</Code>.
             </P>
             <CodeBlock language="python">{`from longlink import LongLink
 

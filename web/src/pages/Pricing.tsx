@@ -47,7 +47,7 @@ export default function Pricing() {
                         {pricingOptions.map((option) => (
                             <article
                                 key={option.name}
-                                className="flex min-h-96 flex-col rounded-3xl border border-border bg-card p-6 shadow-sm"
+                                className="flex min-h-96 flex-col rounded-lg border border-border bg-card p-6 shadow-sm"
                             >
                                 <div className="space-y-3">
                                     <h2 className="text-xl font-semibold">{option.name}</h2>
@@ -57,7 +57,9 @@ export default function Pricing() {
                                             <span className="pb-1 text-sm text-muted-foreground">/ month</span>
                                         ) : null}
                                     </div>
-                                    <p className="min-h-16 text-sm leading-6 text-muted-foreground">{option.description}</p>
+                                    <p className="min-h-16 text-sm leading-6 text-muted-foreground">
+                                        {option.description}
+                                    </p>
                                 </div>
 
                                 <ul className="mt-8 flex-1 space-y-3 text-sm text-muted-foreground">
@@ -69,7 +71,10 @@ export default function Pricing() {
                                     ))}
                                 </ul>
 
-                                <Button className="mt-8 w-full" variant={option.name === 'Team' ? 'default' : 'outline'}>
+                                <Button
+                                    className="mt-8 w-full"
+                                    variant={option.name === 'Team' ? 'default' : 'outline'}
+                                >
                                     {option.action}
                                 </Button>
                             </article>

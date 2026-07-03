@@ -1,5 +1,6 @@
-from contextlib import asynccontextmanager
+import contextlib
 from collections.abc import AsyncIterator
+import src.utils.url as url
 from src.environments import env
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncSession,
@@ -16,25 +17,17 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
     if Session is not None:
         return Session
 
-    url = make_url(env.DATABASE_URL)
-
-    # MySQL needs an async DBAPI for SQLAlchemy's async engine.
-    if (
-        url.drivername == 'mysql'
-        or url.drivername.startswith('mysql+')
-        and not url.drivername.endswith('aiomysql')
-    ):
-        url = url.set(drivername='mysql+aiomysql')
+    database_url = make_url(url.database(env.DATABASE_URL))
 
     engine_kwargs = {
-        'pool_pre_ping': True,
-        'pool_recycle': 20,
+        "pool_pre_ping": True,
+        "pool_recycle": 20,
     }
 
-    if not url.drivername.startswith('sqlite+'):
-        engine_kwargs['pool_use_lifo'] = True
+    if not database_url.drivername.startswith("sqlite+"):
+        engine_kwargs["pool_use_lifo"] = True
 
-    _engine = create_async_engine(url, **engine_kwargs)
+    _engine = create_async_engine(database_url, **engine_kwargs)
 
     # Verify connection once before exposing the session factory.
     async with _engine.connect() as connection:
@@ -45,7 +38,7 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
     return Session
 
 
-@asynccontextmanager
+@contextlib.asynccontextmanager
 async def session_scope() -> AsyncIterator[AsyncSession]:
     """Yield one SQLAlchemy session from the shared session factory."""
 

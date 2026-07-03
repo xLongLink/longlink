@@ -43,11 +43,7 @@ export function Menu({ props, nodes }: Props) {
     }, [value]);
 
     return (
-        <UIMenu
-            value={activeValue}
-            onValueChange={setActiveValue}
-            hashNavigation={ctx.hashNavigation !== false}
-        >
+        <UIMenu value={activeValue} onValueChange={setActiveValue} hashNavigation={ctx.hashNavigation !== false}>
             {renderMenuNodes(nodes, ctx)}
         </UIMenu>
     );

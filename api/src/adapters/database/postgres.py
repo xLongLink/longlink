@@ -1,28 +1,26 @@
+import contextlib
+import functools
+import hashlib
 import secrets
 from uuid import UUID
 from .base import Database
-from .shared import SharedUser
 from .types import (DatabaseCellValue, DatabaseTableData, DatabaseTableUsage,
-                   DatabaseTableColumn, DatabaseSchemaUsage)
+                    DatabaseSchemaUsage, DatabaseTableColumn)
 from decimal import Decimal
-from hashlib import sha1
-from typing import cast
+from .shared import SharedUser
 from datetime import date, datetime
-from functools import partial
-from contextlib import asynccontextmanager
-from sqlalchemy import func, text, Table, String, inspect, update
+from sqlalchemy import Table, String, func, text, update, inspect
 from collections.abc import AsyncIterator
 from src.environments import env
 from sqlalchemy.engine import URL
-from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.schema import CreateTable, CreateSchema
 from src.utils.namespace import dbname
-from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncConnection,
                                     create_async_engine)
 from sqlalchemy.sql.elements import quoted_name
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
-shared_users_table = cast(Table, getattr(SharedUser, "__table__"))
+shared_users_table: Table = getattr(SharedUser, "__table__")
 
 
 class Postgres(Database):
@@ -92,7 +90,7 @@ class Postgres(Database):
         if len(role) <= 63:
             return role
 
-        digest = sha1(role.encode("utf-8")).hexdigest()[:12]
+        digest = hashlib.sha1(role.encode("utf-8")).hexdigest()[:12]
         return f"{role[:50]}_{digest}"
 
 
@@ -111,7 +109,7 @@ class Postgres(Database):
         return str(value)
 
 
-    @asynccontextmanager
+    @contextlib.asynccontextmanager
     async def _connection(self, database: str, *, autocommit: bool = False) -> AsyncIterator[AsyncConnection]:
         """Open one managed SQLAlchemy connection for a database.
 
@@ -354,7 +352,8 @@ class Postgres(Database):
         """Return user-visible schema names through SQLAlchemy inspection."""
 
         system_schemas = {"information_schema", "pg_catalog", "pg_toast"}
-        inspector = cast(Inspector, inspect(sync_conn))
+        inspector = inspect(sync_conn)
+        assert inspector is not None
         return sorted(name for name in inspector.get_schema_names() if name not in system_schemas)
 
 
@@ -424,13 +423,14 @@ class Postgres(Database):
     async def _table_names(self, conn: AsyncConnection, schema_name: str) -> list[str]:
         """Return queryable table names for one schema."""
 
-        return await conn.run_sync(partial(self._inspected_table_names, schema_name=schema_name))
+        return await conn.run_sync(functools.partial(self._inspected_table_names, schema_name=schema_name))
 
 
     def _inspected_table_names(self, sync_conn: object, *, schema_name: str) -> list[str]:
         """Return queryable table and materialized view names through SQLAlchemy inspection."""
 
-        inspector = cast(Inspector, inspect(sync_conn))
+        inspector = inspect(sync_conn)
+        assert inspector is not None
         names = set(inspector.get_table_names(schema=schema_name))
         names.update(inspector.get_materialized_view_names(schema=schema_name))
         return sorted(names)
@@ -445,7 +445,8 @@ class Postgres(Database):
     ) -> list[DatabaseTableColumn]:
         """Return table column metadata through SQLAlchemy inspection."""
 
-        inspector = cast(Inspector, inspect(sync_conn))
+        inspector = inspect(sync_conn)
+        assert inspector is not None
         return [
             {
                 "name": str(column["name"]),
@@ -467,7 +468,7 @@ class Postgres(Database):
         """Return columns and preview rows for one table."""
 
         columns = await conn.run_sync(
-            partial(self._inspected_table_columns, schema_name=schema_name, table_name=table_name)
+            functools.partial(self._inspected_table_columns, schema_name=schema_name, table_name=table_name)
         )
 
         preparer = conn.engine.sync_engine.dialect.identifier_preparer

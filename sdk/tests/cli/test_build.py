@@ -84,6 +84,7 @@ def test_read_env_spec_emits_only_supported_environment_metadata(tmp_path: Path)
         "from pydantic import BaseModel, Field\n\n"
         "class Envs(BaseModel):\n"
         "    API_KEY: str = Field(default='dev', alias='LONG_API_KEY', description='API key', secret=True)\n"
+        "    TOKEN: str = Field(default_factory=str, validation_alias='LONG_TOKEN')\n"
         "    PORT: int = 8080\n"
     )
 
@@ -98,6 +99,11 @@ def test_read_env_spec_emits_only_supported_environment_metadata(tmp_path: Path)
                 "type": "str",
                 "required": False,
                 "description": "API key",
+            },
+            {
+                "name": "LONG_TOKEN",
+                "type": "str",
+                "required": False,
             },
             {
                 "name": "PORT",
@@ -155,7 +161,7 @@ def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path
     (root / "dev.db").write_text("sqlite\n")
     (root / "data.sqlite3-wal").write_text("wal\n")
 
-    for directory_name in (".pytest_cache", "__pycache__", "dist", "build", "demo.egg-info"):
+    for directory_name in (".pytest_cache", "__pycache__", "dist", "build", "demo.egg-info", "node_modules"):
         directory = root / directory_name
         directory.mkdir()
         (directory / "artifact").write_text("generated\n")
@@ -174,7 +180,7 @@ def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path
     assert not (build_context / "dev.db").exists()
     assert not (build_context / "data.sqlite3-wal").exists()
 
-    for directory_name in (".pytest_cache", "__pycache__", "dist", "build", "demo.egg-info"):
+    for directory_name in (".pytest_cache", "__pycache__", "dist", "build", "demo.egg-info", "node_modules"):
         assert not (build_context / directory_name).exists()
 
 

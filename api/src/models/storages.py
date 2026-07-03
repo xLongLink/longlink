@@ -2,8 +2,8 @@ from enum import Enum
 from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
-from src.models.statuses import ApplicationStatus
 from src.models.users import UserSummary
+from src.models.statuses import ApplicationStatus
 
 
 class StorageKind(str, Enum):

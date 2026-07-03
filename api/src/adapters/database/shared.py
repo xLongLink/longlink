@@ -2,7 +2,7 @@ from uuid import UUID
 from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel
-from sqlalchemy import Uuid, Column, String, MetaData, TIMESTAMP
+from sqlalchemy import TIMESTAMP, Uuid, Column, String, MetaData
 
 shared_users_metadata = MetaData()
 

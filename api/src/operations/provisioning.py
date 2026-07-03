@@ -1,18 +1,18 @@
+import urllib.parse
 from uuid import UUID
 from datetime import UTC, datetime
-from urllib.parse import quote, urlsplit, urlunsplit
 from src.utils import names, images
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
 from sqlalchemy.engine import make_url
-from src.utils.namespace import dbname, k8name, s3name
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import ApplicationStatus
+from src.utils.namespace import dbname, k8name, s3name
+from src.adapters.storage import S3
 from src.adapters.database import Postgres
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
 from src.adapters.compute.k8s import K8s
-from src.adapters.storage import S3
 from src.models.organizations import OrganizationDetails, OrganizationSummary
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -22,8 +22,8 @@ from src.database.services.compute import compute
 from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.models.applications import Application
-from src.database.models.organizations import Organization
 from src.database.services.operations import operations
+from src.database.models.organizations import Organization
 from src.database.services.applications import applications
 from src.database.services.organizations import organizations
 
@@ -324,15 +324,17 @@ def runtime_storage_url(storage_registry: StorageRegistry) -> str:
     """Return a storage URL compatible with the SDK runtime."""
 
     endpoint_url = storage_registry.runtime_endpoint_url or storage_registry.endpoint_url
-    endpoint = urlsplit(endpoint_url)
+    endpoint = urllib.parse.urlsplit(endpoint_url)
     if not endpoint.scheme or not endpoint.netloc:
         raise ValueError(f"Invalid storage runtime endpoint URL: {endpoint_url}")
 
     # Store credentials in the runtime URL while preserving the endpoint URL shape for fsspec.
-    access_key_id = quote(storage_registry.access_key_id, safe="")
-    secret_access_key = quote(storage_registry.secret_access_key, safe="")
+    access_key_id = urllib.parse.quote(storage_registry.access_key_id, safe="")
+    secret_access_key = urllib.parse.quote(storage_registry.secret_access_key, safe="")
     netloc = f"{access_key_id}:{secret_access_key}@{endpoint.netloc}"
-    return urlunsplit((f"s3+{endpoint.scheme}", netloc, endpoint.path, endpoint.query, endpoint.fragment))
+    return urllib.parse.urlunsplit(
+        (f"s3+{endpoint.scheme}", netloc, endpoint.path, endpoint.query, endpoint.fragment)
+    )
 
 
 def runtime_environment(

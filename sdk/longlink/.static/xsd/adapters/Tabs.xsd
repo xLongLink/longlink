@@ -13,6 +13,15 @@
     <xsd:complexContent>
       <xsd:extension base="TabsChildrenOnlyType">
         <xsd:attribute name="default" type="xsd:string" use="optional" />
+        <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
+        <xsd:attribute name="orientation" use="optional" default="horizontal">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="horizontal" />
+              <xsd:enumeration value="vertical" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

@@ -6,14 +6,14 @@
 from __future__ import annotations
 
 import asyncio
+import email.utils
 import subprocess
-from ssl import create_default_context
+import ssl
 from string import Template
 from typing import Any
 from pathlib import Path
 from smtplib import SMTP, SMTP_SSL
 from src.logger import logger
-from email.utils import formataddr
 from email.message import EmailMessage
 from src.constants import MAIL_TEMPLATES
 from collections.abc import Mapping
@@ -94,7 +94,7 @@ def _format_sender(sender_name: str | None) -> str:
         sender_name = env.EMAIL_FROM_NAME
 
     if sender_name:
-        return formataddr((sender_name, env.EMAIL_FROM_ADDRESS))
+        return email.utils.formataddr((sender_name, env.EMAIL_FROM_ADDRESS))
 
     return env.EMAIL_FROM_ADDRESS
 
@@ -141,16 +141,26 @@ def _send_message(message: EmailMessage) -> None:
     if env.EMAIL_SMTP_PORT is None:
         raise MailDeliveryError("EMAIL_SMTP_PORT is required before sending mail")
 
-    timeout = env.EMAIL_SMTP_TIMEOUT_SECONDS
-    ssl_context = create_default_context()
+    timeout = float(env.EMAIL_SMTP_TIMEOUT_SECONDS) if env.EMAIL_SMTP_TIMEOUT_SECONDS is not None else None
+    ssl_context = ssl.create_default_context()
 
     if env.EMAIL_SMTP_USE_SSL:
-        with SMTP_SSL(env.EMAIL_SMTP_HOST, env.EMAIL_SMTP_PORT, timeout=timeout, context=ssl_context) as client:
+        if timeout is None:
+            smtp_client = SMTP_SSL(env.EMAIL_SMTP_HOST, env.EMAIL_SMTP_PORT, context=ssl_context)
+        else:
+            smtp_client = SMTP_SSL(env.EMAIL_SMTP_HOST, env.EMAIL_SMTP_PORT, timeout=timeout, context=ssl_context)
+
+        with smtp_client as client:
             _authenticate_client(client)
             client.send_message(message)
         return
 
-    with SMTP(env.EMAIL_SMTP_HOST, env.EMAIL_SMTP_PORT, timeout=timeout) as client:
+    if timeout is None:
+        smtp_client = SMTP(env.EMAIL_SMTP_HOST, env.EMAIL_SMTP_PORT)
+    else:
+        smtp_client = SMTP(env.EMAIL_SMTP_HOST, env.EMAIL_SMTP_PORT, timeout=timeout)
+
+    with smtp_client as client:
         if env.EMAIL_SMTP_USE_TLS:
             client.starttls(context=ssl_context)
         _authenticate_client(client)

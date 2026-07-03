@@ -34,17 +34,17 @@ export const content = (
                 <Code>c</Code> clear, and <Code>q</Code> quit.
             </Li>
             <Li>
-                <Code>longlink test [pytest args...]</Code>: runs application tests with <Code>pytest</Code> and forwards
-                additional arguments unchanged.
+                <Code>longlink test [pytest args...]</Code>: runs application tests with <Code>pytest</Code> and
+                forwards additional arguments unchanged.
             </Li>
             <Li>
                 <Code>longlink migrate</Code>: applies pending migrations, generates a migration when model changes are
                 detected, and applies the generated migration.
             </Li>
             <Li>
-                <Code>longlink build [--tag &lt;tag&gt;] [--registry &lt;prefix&gt;] [--push]</Code>: builds a Docker image
-                from a temporary context, writes LongLink image labels, optionally pushes the tag, and prints image
-                details.
+                <Code>longlink build [--tag &lt;tag&gt;] [--registry &lt;prefix&gt;] [--push]</Code>: builds a Docker
+                image from a temporary context, writes LongLink image labels, optionally pushes the tag, and prints
+                image details.
             </Li>
             <Li>
                 <Code>longlink docs [component]</Code>: prints bundled XML component documentation for one component or

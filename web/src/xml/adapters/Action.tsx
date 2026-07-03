@@ -115,7 +115,6 @@ export async function executeAction(
     }
 }
 
-
 /** Builds multipart form data from an XML action form expression. */
 function createActionFormData(value: unknown): FormData {
     if (typeof FormData !== 'undefined' && value instanceof FormData) return value;
@@ -132,7 +131,6 @@ function createActionFormData(value: unknown): FormData {
 
     return formData;
 }
-
 
 /** Appends one XML action form value to a multipart payload. */
 function appendActionFormValue(formData: FormData, key: string, value: unknown): void {

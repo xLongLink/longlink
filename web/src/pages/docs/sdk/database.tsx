@@ -73,8 +73,8 @@ async def create_project() -> None:
                             <Code>deleted_at</Code> marks a row as soft-deleted instead of physically removing it.
                         </Li>
                         <Li>
-                            <Code>created_id</Code>, <Code>updated_id</Code>, and <Code>deleted_id</Code> store the
-                            user ids responsible for each audit event.
+                            <Code>created_id</Code>, <Code>updated_id</Code>, and <Code>deleted_id</Code> store the user
+                            ids responsible for each audit event.
                         </Li>
                         <Li>
                             <Code>created_by</Code>, <Code>updated_by</Code>, and <Code>deleted_by</Code> provide
@@ -89,13 +89,14 @@ async def create_project() -> None:
         </Heading>
         <P>
             LongLink applications use a shared <Code>users</Code> table for audit attribution and user display data. The
-            table belongs to the organization, while application tables can reference it through the audit fields added by{' '}
-            <Code>db.Table</Code>.
+            table belongs to the organization, while application tables can reference it through the audit fields added
+            by <Code>db.Table</Code>.
         </P>
         <Ul>
             <Li>
                 In testing, the SDK uses an in-memory SQLite database and seeds deterministic local users for{' '}
-                <Code>read</Code>, <Code>write</Code>, <Code>maintain</Code>, <Code>admin</Code>, and <Code>owner</Code>.
+                <Code>read</Code>, <Code>write</Code>, <Code>maintain</Code>, <Code>admin</Code>, and <Code>owner</Code>
+                .
             </Li>
             <Li>
                 In development, the SDK uses <Code>./dev.db</Code> and keeps the same deterministic local users synced
@@ -106,8 +107,8 @@ async def create_project() -> None:
                 database. Applications read those users; they do not own login or membership management.
             </Li>
             <Li>
-                Requests proxied through the control plane include <Code>x-user-id</Code>. The SDK audit middleware reads
-                that header and fills create, update, and delete audit fields during database writes.
+                Requests proxied through the control plane include <Code>x-user-id</Code>. The SDK audit middleware
+                reads that header and fills create, update, and delete audit fields during database writes.
             </Li>
             <Li>
                 Hard deletes of <Code>db.Table</Code> rows are converted into soft deletes by setting{' '}

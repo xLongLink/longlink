@@ -86,7 +86,6 @@ function resolveTemplate(template: string, params: Record<string, string | undef
         .replace(/\{([A-Za-z0-9_]+)\}/g, (_, key: string) => params[key] ?? `{${key}}`);
 }
 
-
 /** Creates an isolated page runtime context while preserving shared runtime values like the user. */
 function createPageRuntimeContext(runtimeContext?: ExecutionContext): ExecutionContext {
     const pageRuntimeContext = createXmlContext();
@@ -106,7 +105,6 @@ function createPageRuntimeContext(runtimeContext?: ExecutionContext): ExecutionC
     return pageRuntimeContext;
 }
 
-
 /** Creates the cached state holder for one XML page. */
 function createPageState(key: string, path: string, runtimeContext?: ExecutionContext): PageState {
     return {
@@ -120,7 +118,6 @@ function createPageState(key: string, path: string, runtimeContext?: ExecutionCo
         runtimeContext: createPageRuntimeContext(runtimeContext),
     };
 }
-
 
 /** Parses page XML once so route rendering does not throw on malformed application XML. */
 function parsePageContent(content: string): PageParseResult {
@@ -354,14 +351,7 @@ export default function View({
             controller.abort();
             inFlightPageKeysRef.current.delete(pageKey);
         };
-    }, [
-        activePagePath,
-        activePageTab,
-        applicationIsLoading,
-        pageCacheKey,
-        resolvedMetadataBaseUrl,
-        shouldShowLogs,
-    ]);
+    }, [activePagePath, activePageTab, applicationIsLoading, pageCacheKey, resolvedMetadataBaseUrl, shouldShowLogs]);
 
     // Fetch logs only when the current user is allowed to inspect a running application.
     useEffect(() => {

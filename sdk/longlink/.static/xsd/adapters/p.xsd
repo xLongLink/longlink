@@ -8,6 +8,7 @@
     </xsd:sequence>
     <xsd:attribute name="if" type="xsd:string" use="optional" />
     <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
     <xsd:attribute name="value" type="xsd:string" use="optional" />
   </xsd:complexType>
 

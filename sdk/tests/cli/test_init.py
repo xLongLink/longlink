@@ -34,6 +34,7 @@ def test_init_adds_pytest_smoke_test() -> None:
         assert test_path.exists()
         assert "def test_" in test_path.read_text(encoding="utf-8")
         assert not (Path.cwd() / "sample-app" / ".pytest_cache").exists()
+        assert not (Path.cwd() / "sample-app" / ".venv").exists()
 
 
 def test_init_adds_sample_inventory_migration() -> None:

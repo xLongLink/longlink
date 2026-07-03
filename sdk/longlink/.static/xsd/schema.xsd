@@ -4,6 +4,7 @@
   <xsd:include schemaLocation="adapters/State.xsd" />
   <xsd:include schemaLocation="adapters/For.xsd" />
   <xsd:include schemaLocation="adapters/Query.xsd" />
+  <xsd:include schemaLocation="adapters/Action.xsd" />
   <xsd:include schemaLocation="adapters/p.xsd" />
   <xsd:include schemaLocation="adapters/a.xsd" />
   <xsd:include schemaLocation="adapters/br.xsd" />
@@ -29,12 +30,19 @@
   <xsd:include schemaLocation="adapters/Badge.xsd" />
   <xsd:include schemaLocation="adapters/Columns.xsd" />
   <xsd:include schemaLocation="adapters/Grid.xsd" />
+  <xsd:include schemaLocation="adapters/Flex.xsd" />
   <xsd:include schemaLocation="adapters/Stack.xsd" />
   <xsd:include schemaLocation="adapters/Card.xsd" />
   <xsd:include schemaLocation="adapters/Dialog.xsd" />
   <xsd:include schemaLocation="adapters/Hr.xsd" />
   <xsd:include schemaLocation="adapters/Icon.xsd" />
   <xsd:include schemaLocation="adapters/Label.xsd" />
+  <xsd:include schemaLocation="adapters/Field.xsd" />
+  <xsd:include schemaLocation="adapters/FieldContent.xsd" />
+  <xsd:include schemaLocation="adapters/FieldDescription.xsd" />
+  <xsd:include schemaLocation="adapters/FieldLabel.xsd" />
+  <xsd:include schemaLocation="adapters/FieldLegend.xsd" />
+  <xsd:include schemaLocation="adapters/FieldTitle.xsd" />
   <xsd:include schemaLocation="adapters/Input.xsd" />
   <xsd:include schemaLocation="adapters/Textarea.xsd" />
   <xsd:include schemaLocation="adapters/Select.xsd" />

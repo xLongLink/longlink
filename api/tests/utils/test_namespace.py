@@ -1,5 +1,4 @@
 import pytest
-
 from src.utils.namespace import dbname, k8name, s3name
 
 

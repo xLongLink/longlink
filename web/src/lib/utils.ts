@@ -84,9 +84,8 @@ export function getInitials(value: string | null | undefined): string {
     if (!name) return '--';
 
     const words = name.split(/\s+/).filter(Boolean);
-    const segmenter = typeof Intl.Segmenter === 'function'
-        ? new Intl.Segmenter(undefined, { granularity: 'grapheme' })
-        : null;
+    const segmenter =
+        typeof Intl.Segmenter === 'function' ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
 
     if (words.length > 1) {
         return words

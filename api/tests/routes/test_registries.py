@@ -4,8 +4,8 @@ from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.models.computes import ComputeKind, ComputeRegistryResponse
 from src.models.storages import (StorageKind, StorageBucketResponse,
-                                StorageObjectResponse,
-                                StorageRegistryResponse)
+                                 StorageObjectResponse,
+                                 StorageRegistryResponse)
 from src.models.countries import Country
 from src.models.databases import (DatabaseKind, DatabaseUsageResponse,
                                   DatabaseRegistryResponse)

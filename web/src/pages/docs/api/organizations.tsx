@@ -68,9 +68,9 @@ export const content = (
             Any authenticated user can create an organization. The creator becomes the initial <Code>owner</Code>.
         </P>
         <P>
-            During creation, LongLink initializes the organization infrastructure when configured backends are available.
-            This includes a compute namespace, an organization database with a shared users table, and a shared storage
-            bucket.
+            During creation, LongLink initializes the organization infrastructure when configured backends are
+            available. This includes a compute namespace, an organization database with a shared users table, and a
+            shared storage bucket.
         </P>
         <Heading id="roles" level="h2">
             Roles
@@ -96,8 +96,12 @@ export const content = (
                                     <Code>{role.name}</Code>
                                 </div>
                             </TableCell>
-                            <TableCell className="whitespace-normal text-muted-foreground">{role.description}</TableCell>
-                            <TableCell className="whitespace-normal text-muted-foreground">{role.capabilities}</TableCell>
+                            <TableCell className="whitespace-normal text-muted-foreground">
+                                {role.description}
+                            </TableCell>
+                            <TableCell className="whitespace-normal text-muted-foreground">
+                                {role.capabilities}
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -108,7 +112,8 @@ export const content = (
         </Heading>
         <P>
             Organization members are active users with one organization role. Invitations are pending email-based
-            membership requests. LongLink rejects duplicate invitations and invitations for users who are already members.
+            membership requests. LongLink rejects duplicate invitations and invitations for users who are already
+            members.
         </P>
         <P>
             Organization access is private. Users who are not members receive not-found style responses instead of

@@ -75,9 +75,9 @@ export const content = (
             Access And Proxying
         </Heading>
         <P>
-            Users access applications through the control plane, not directly through public application ingress. LongLink
-            checks access, rejects unavailable applications with a no-store <Code>503</Code>, strips unsafe headers, and
-            forwards the current user id as <Code>x-user-id</Code>.
+            Users access applications through the control plane, not directly through public application ingress.
+            LongLink checks access, rejects unavailable applications with a no-store <Code>503</Code>, strips unsafe
+            headers, and forwards the current user id as <Code>x-user-id</Code>.
         </P>
         <P>
             The proxy supports <Code>GET</Code>, <Code>POST</Code>, <Code>PATCH</Code>, and <Code>DELETE</Code> requests
@@ -92,8 +92,8 @@ export const content = (
             Logs
         </Heading>
         <P>
-            Elevated organization members and application maintainers or admins can fetch recent plain-text logs from the
-            newest application pod. Logs are intended for deployment verification and troubleshooting.
+            Elevated organization members and application maintainers or admins can fetch recent plain-text logs from
+            the newest application pod. Logs are intended for deployment verification and troubleshooting.
         </P>
     </Stack>
 );

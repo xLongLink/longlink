@@ -19,6 +19,25 @@ def test_testing_storage_uses_memory_filesystem(monkeypatch) -> None:
     assert captured == {"protocol": "memory", "kwargs": {}}
 
 
+def test_development_storage_uses_local_file_filesystem(monkeypatch) -> None:
+    """Use local file storage for SDK development."""
+
+    captured: dict[str, object] = {}
+
+    def fake_filesystem(protocol: str, **kwargs: object) -> object:
+        """Capture the fsspec filesystem request."""
+
+        captured["protocol"] = protocol
+        captured["kwargs"] = kwargs
+        return object()
+
+    monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem)
+
+    storage_base.create_fs(Envs(ENV="development"))
+
+    assert captured == {"protocol": "file", "kwargs": {}}
+
+
 def test_production_storage_url_builds_s3_filesystem_options(monkeypatch) -> None:
     """Parse a LongLink storage URL into fsspec S3 options."""
 

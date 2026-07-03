@@ -21,6 +21,7 @@ LOCAL_APP = {
     "icon": "Rocket",
     "envs": {"REQUIRED": "local-development"},
 }
+KUBECONFIG = Path(__file__).with_name("kubeconfig.yaml")
 
 
 async def sync_local_application(application_id: UUID, organization_id: UUID, user_id: UUID) -> None:
@@ -114,7 +115,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Compute registry
     # ------------------------------------------------------------------
-    kubeconfig = Path(__file__).with_name("kubeconfig.yaml").read_text(encoding="utf-8")
+    kubeconfig = KUBECONFIG.read_text(encoding="utf-8")
 
     computes = client.get("/api/computes").json()
     if not any(c["ingress_host"] == "localhost:8443" for c in computes):

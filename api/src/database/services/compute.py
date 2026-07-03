@@ -1,8 +1,8 @@
 import secrets
 from uuid import UUID
+from datetime import UTC, datetime
 from src.utils import names
 from sqlalchemy import select
-from datetime import UTC, datetime
 from src.constants import INGRESS_NAME
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload

@@ -1,21 +1,24 @@
 from uuid import UUID
-from typing import Any, ClassVar, TypedDict, cast
-from datetime import datetime, timezone
+from typing import Any, ClassVar, TypedDict
+from datetime import UTC, datetime
 from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel, select
-from sqlalchemy import Column, DateTime
+from sqlalchemy import DateTime
 from sqlalchemy.orm import relationship, declared_attr
-from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import (AsyncEngine, async_sessionmaker,
                                     create_async_engine)
+import longlink.utils.url as url
 from longlink.utils.settings import Envs
 from sqlmodel.ext.asyncio.session import AsyncSession
+
+# SQLModel accepts the SQLAlchemy type instance, while Pyright needs a looser value.
+UTC_DATETIME_TYPE: Any = DateTime(timezone=True)
 
 
 def utcnow() -> datetime:
     """Return the current UTC timestamp."""
 
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class Base(SQLModel):
@@ -36,17 +39,19 @@ class User(Base, table=True):
     role_name: str = Field(default="read", max_length=32)
     created_at: datetime | None = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=True),
+        nullable=True,
+        sa_type=UTC_DATETIME_TYPE,
     )
     updated_at: datetime | None = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=True),
+        nullable=True,
+        sa_type=UTC_DATETIME_TYPE,
     )
     deleted_at: datetime | None = Field(
         default=None,
-        sa_column=Column(DateTime(timezone=True), nullable=True),
+        nullable=True,
+        sa_type=UTC_DATETIME_TYPE,
     )
-
 
 
 class LocalUser(TypedDict):
@@ -120,7 +125,8 @@ async def seed_local_users(session_maker: async_sessionmaker[AsyncSession]) -> N
     """Create deterministic local users for SDK development auditing."""
 
     async with session_maker() as session:
-        result = await session.exec(select(User).where(cast(Any, User.id).in_([user["id"] for user in LOCAL_USERS])))
+        user_id_column = getattr(User, "id")
+        result = await session.exec(select(User).where(user_id_column.in_([user["id"] for user in LOCAL_USERS])))
         existing_users = {user.id: user for user in result.all()}
 
         # Keep seeded users deterministic if the SDK scaffold is restarted with existing data.
@@ -152,15 +158,18 @@ class Table(Base):
 
     created_at: datetime | None = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=True),
+        nullable=True,
+        sa_type=UTC_DATETIME_TYPE,
     )
     updated_at: datetime | None = Field(
         default_factory=utcnow,
-        sa_column=Column(DateTime(timezone=True), nullable=True),
+        nullable=True,
+        sa_type=UTC_DATETIME_TYPE,
     )
     deleted_at: datetime | None = Field(
         default=None,
-        sa_column=Column(DateTime(timezone=True), nullable=True),
+        nullable=True,
+        sa_type=UTC_DATETIME_TYPE,
     )
     created_id: UUID | None = Field(
         default=None,
@@ -185,34 +194,6 @@ class Table(Base):
 
 _engine: AsyncEngine | None = None
 Session: async_sessionmaker[AsyncSession] | None = None
-POSTGRESQL_DRIVER_NAMES = {
-    "postgres",
-    "postgresql",
-    "postgresql+psycopg",
-    "postgresql+psycopg2",
-    "postgresql+asyncpg",
-}
-
-
-def normalize_database_url(database_url: str) -> str:
-    """Normalize DATABASE_URL to a URL that SQLAlchemy can use in async mode."""
-
-    url = make_url(database_url)
-
-    # Keep local SQLite and any future non-PostgreSQL URLs untouched.
-    if url.drivername not in POSTGRESQL_DRIVER_NAMES:
-        return database_url
-
-    # SDK database access is async, so PostgreSQL connections use the asyncpg dialect.
-    if url.drivername != "postgresql+asyncpg":
-        url = url.set(drivername="postgresql+asyncpg")
-
-    # sslmode is a libpq/psycopg option; asyncpg receives it as an invalid kwarg through SQLAlchemy.
-    sslmode_query_keys = [key for key in url.query if key.lower() == "sslmode"]
-    if sslmode_query_keys:
-        url = url.difference_update_query(sslmode_query_keys)
-
-    return url.render_as_string(hide_password=False)
 
 
 def create_engine(env: Envs) -> AsyncEngine:
@@ -227,7 +208,7 @@ def create_engine(env: Envs) -> AsyncEngine:
     elif env.ENV == "development":
         dburl = "sqlite+aiosqlite:///./dev.db"
     else:
-        dburl = normalize_database_url(env.DATABASE_URL)
+        dburl = url.database(env.DATABASE_URL)
 
     engine_kwargs: dict[str, Any] = {
         "pool_pre_ping": True,

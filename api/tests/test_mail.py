@@ -1,7 +1,22 @@
+import pytest
 import src.utils.mail as mail
 from src.constants import MAIL_TEMPLATES
 from unittest.mock import Mock, AsyncMock
 from src.environments import env
+
+pytestmark = pytest.mark.no_db
+
+
+@pytest.fixture(autouse=True)
+def run_mail_threads_inline(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run mail thread offloads inline for deterministic unit tests."""
+
+    async def inline_to_thread(function, /, *args, **kwargs):
+        """Execute a normally-threaded mail call directly."""
+
+        return function(*args, **kwargs)
+
+    monkeypatch.setattr(mail.asyncio, "to_thread", inline_to_thread)
 
 
 def test_is_email_enabled_requires_switch_host_and_address(monkeypatch) -> None:

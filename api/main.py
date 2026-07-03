@@ -1,28 +1,22 @@
 import asyncio
+import contextlib
 from uuid import UUID
+from alembic import command
 from fastapi import FastAPI
 from pathlib import Path
-from contextlib import suppress, asynccontextmanager
 from src.errors import register_error_handlers
 from src.logger import logger
-from src.routes import (
-    auth,
-    image,
-    icons,
-    users,
-    health,
-    accounts,
-    computes,
-    storages,
-    databases,
-    locations,
-)
+from src.routes import (auth, icons, image, users, health, accounts, computes,
+                        storages, databases, locations)
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
+from alembic.config import Config
 from src.operations import execute
 from collections.abc import AsyncIterator
 from src.environments import (env, resolve_cors_origins,
                               validate_production_settings)
+import src.utils.url as url
+from sqlalchemy.engine import make_url
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from src.database.services.operations import operations
@@ -65,19 +59,33 @@ async def run_operation_scheduler() -> None:
             logger.exception("Operation scheduler failed for %s (%s)", operation.id, operation.kind)
         finally:
             heartbeat.cancel()
-            with suppress(asyncio.CancelledError):
+            with contextlib.suppress(asyncio.CancelledError):
                 await heartbeat
 
 
-@asynccontextmanager
+async def migrate_development_sqlite_database() -> None:
+    """Apply Alembic migrations for local SQLite development databases."""
+
+    database_url = make_url(url.database(env.DATABASE_URL))
+    if not env.DEVELOPMENT or not database_url.drivername.startswith("sqlite"):
+        return
+
+    # Alembic's async environment uses asyncio.run(), so execute it outside the
+    # running ASGI event loop.
+    config = Config(str(Path(__file__).with_name("alembic.ini")))
+    await asyncio.to_thread(command.upgrade, config, "head")
+
+
+@contextlib.asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Start the API and background operation worker."""
 
+    await migrate_development_sqlite_database()
     worker = asyncio.create_task(run_operation_scheduler())
     yield
 
     worker.cancel()
-    with suppress(asyncio.CancelledError):
+    with contextlib.suppress(asyncio.CancelledError):
         await worker
 
 
@@ -93,6 +101,23 @@ app = FastAPI(
 register_error_handlers(app)
 
 
+def configure_cors(application: FastAPI, origins: tuple[str, ...]) -> list[str]:
+    """Add credentialed CORS middleware for configured origins."""
+
+    cors_origins = [origin for origin in origins if origin]
+    if not cors_origins:
+        return []
+
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    return cors_origins
+
+
 app.add_middleware(
     SessionMiddleware,
     secret_key=env.SESSION_KEY,
@@ -101,15 +126,7 @@ app.add_middleware(
     https_only=not env.DEVELOPMENT,
 )
 
-cors_origins = [origin for origin in resolve_cors_origins(env.DEVELOPMENT, env.CORS_ORIGINS) if origin]
-if cors_origins:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=cors_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+cors_origins = configure_cors(app, resolve_cors_origins(env.DEVELOPMENT, env.CORS_ORIGINS))
 
 # Register API routes after importing the endpoint modules so their decorators run.
 app.include_router(auth.router)

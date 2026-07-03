@@ -83,6 +83,14 @@ const operationColumns: Array<ColumnDef<ApiOperation>> = [
                             '—'
                         )}
                     </div>
+                    <div className="truncate">
+                        <span className="text-xs text-muted-foreground">Organization</span>{' '}
+                        {operation.organization_id ? (
+                            <span className="font-mono text-xs">{operation.organization_id}</span>
+                        ) : (
+                            '—'
+                        )}
+                    </div>
                     {operation.error ? (
                         <div className="truncate text-destructive">
                             <span className="text-xs">Error</span> {operation.error}

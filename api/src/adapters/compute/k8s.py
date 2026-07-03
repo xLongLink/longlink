@@ -1,7 +1,8 @@
+import importlib
 import json
 import yaml
 from .base import Compute
-from typing import Any, cast
+from typing import Any
 from decimal import Decimal
 from datetime import UTC, datetime
 from src.utils import names, templates
@@ -11,7 +12,11 @@ from src.constants import TEMPLATES
 from collections.abc import Callable
 from src.utils.namespace import k8name
 from kubernetes.client.exceptions import ApiException
-from kubernetes.utils.quantity import parse_quantity as parse_kubernetes_quantity
+
+parse_kubernetes_quantity: Callable[[str], Decimal] = getattr(
+    importlib.import_module("kubernetes.utils.quantity"),
+    "parse_quantity",
+)
 
 
 def parse_quantity(value: object) -> Decimal:
@@ -35,8 +40,8 @@ class K8s(Compute):
 
         self._kubeconfig = kubeconfig
         self._proxy_secret = proxy_secret
-        kubernetes_client = cast(Any, client)
-        kubernetes_config = cast(Any, config)
+        kubernetes_client: Any = client
+        kubernetes_config: Any = config
         configuration = kubernetes_client.Configuration()
         loader = kubernetes_config.kube_config.KubeConfigLoader(yaml.safe_load(self._kubeconfig))
         loader.load_and_set(configuration)

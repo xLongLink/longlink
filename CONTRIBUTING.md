@@ -20,7 +20,7 @@ make build          # Typecheck and build API and SDK web bundles
 make api:build      # Build the API web bundle
 make sdk:build      # Build the embedded SDK web bundle
 
-make sdl            # 
+make sdl            #
 make seed           # Start the stack, build/push the SDK app image, migrate, and seed
 
 make clean          # Remove generated build and test artifacts
@@ -51,7 +51,6 @@ make down           # Stop services and remove the cluster
 ```
 
 ## Test the SDK in development
-
 
 ```bash
 make sdk            # Build the SDK web bundle and run the generated SDK app

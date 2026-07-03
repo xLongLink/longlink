@@ -1,7 +1,12 @@
-from collections.abc import Callable
+import pytest
+import urllib.parse
 from src.database import session
+import src.utils.url as url
+from collections.abc import Callable
 from src.environments import env
 from sqlalchemy.engine import make_url
+
+pytestmark = pytest.mark.no_db
 
 
 class _FakeConnection:
@@ -68,3 +73,85 @@ async def test_get_session_normalizes_mysql_urls_to_aiomysql(monkeypatch) -> Non
     assert log[0][1][0] == str(make_url("mysql+aiomysql://longlink:secret@db.longlink.internal:3306/longlink"))
     assert log[0][1][1] == {"pool_pre_ping": True, "pool_recycle": 20, "pool_use_lifo": True}
     assert log[1:] == [("connect", None), ("run_sync", None)]
+
+
+def test_database_url_keeps_non_postgresql_urls_unchanged() -> None:
+    """Leave unsupported URLs untouched."""
+
+    source = "sqlite+aiosqlite:///./dev.db"
+
+    assert url.database(source) == source
+
+
+def test_database_url_converts_postgresql_url_to_asyncpg() -> None:
+    """Convert plain PostgreSQL URLs to the asyncpg dialect."""
+
+    source = "postgresql://control:secret@db:5432/longlink"
+
+    assert url.database(source) == "postgresql+asyncpg://control:secret@db:5432/longlink"
+
+
+def test_database_url_converts_postgresql_legacy_scheme_to_asyncpg() -> None:
+    """Accept postgres:// URLs in legacy format."""
+
+    source = "postgres://control:secret@db:5432/longlink"
+
+    assert url.database(source) == "postgresql+asyncpg://control:secret@db:5432/longlink"
+
+
+def test_database_url_converts_psycopg_urls_and_strips_sslmode() -> None:
+    """Convert psycopg URLs and drop SSL mode for asyncpg compatibility."""
+
+    source = (
+        "postgresql+psycopg://control:secret@db:5432/longlink?"
+        "sslmode=require&application_name=longlink"
+    )
+
+    assert (
+        url.database(source)
+        == "postgresql+asyncpg://control:secret@db:5432/longlink?application_name=longlink"
+    )
+
+
+def test_database_url_normalization_preserves_other_query_params() -> None:
+    """Preserve unrelated query parameters while removing sslmode."""
+
+    source = (
+        "postgresql://control:secret@db:5432/longlink?"
+        "sslmode=disable&search_path=%22public%22&application_name=longlink"
+    )
+
+    normalized = url.database(source)
+    parsed = dict(urllib.parse.parse_qsl(urllib.parse.urlsplit(normalized).query))
+
+    assert "sslmode" not in parsed
+    assert parsed == {"search_path": '"public"', "application_name": "longlink"}
+
+
+def test_database_url_strips_case_insensitive_sslmode_key() -> None:
+    """Handle uppercase SSLMODE keys in PostgreSQL URLs."""
+
+    source = "postgresql+psycopg2://control:secret@db:5432/longlink?SSLMODE=disable&target_session_attrs=read-only"
+    normalized = url.database(source)
+
+    assert "sslmode" not in normalized
+    assert normalized.startswith("postgresql+asyncpg://")
+    assert urllib.parse.parse_qsl(urllib.parse.urlsplit(normalized).query) == [
+        ("target_session_attrs", "read-only")
+    ]
+
+
+async def test_get_session_reuses_cached_session(monkeypatch) -> None:
+    """Return the cached sessionmaker without creating another engine."""
+
+    # Arrange
+    cached_session = object()
+    session.Session = cached_session
+
+    def fail_create_async_engine(*args, **kwargs):
+        raise AssertionError("cached session should be reused")
+
+    monkeypatch.setattr(session, "create_async_engine", fail_create_async_engine)
+
+    # Act and assert
+    assert await session.get_session() is cached_session

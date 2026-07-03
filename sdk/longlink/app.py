@@ -1,7 +1,8 @@
 from typing import Any
 from fastapi import FastAPI
 from pathlib import Path
-from longlink.pages import XMLResponse, PageDefinition, normalize_page_path, extract_longlink_metadata
+from longlink.pages import (XMLResponse, PageDefinition, normalize_page_path,
+                            extract_longlink_metadata)
 from longlink.utils import Envs
 from longlink.routes import routes
 from fastapi.responses import FileResponse

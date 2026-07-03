@@ -1,6 +1,6 @@
 from longlink import Router
 from src.database.services import inventory
-from src.schemas.inventory import InventoryItemCreate, InventoryItemRead
+from src.schemas.inventory import InventoryItemRead, InventoryItemCreate
 
 router = Router()
 

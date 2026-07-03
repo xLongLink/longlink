@@ -7,15 +7,15 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.roles import OrganizationRoles
 from src.models.users import UserSummary
-from src.adapters.database.shared import SharedUser
+from src.utils.namespace import dbname, k8name, s3name
 from src.database.session import session_scope
 from src.models.locations import LocationResponse
-from src.utils.namespace import dbname, k8name, s3name
 from src.models.organizations import (OrganizationDetails,
                                       OrganizationMemberSummary,
                                       OrganizationInvitationResponse,
                                       OrganizationApplicationResponse)
 from src.database.models.users import User
+from src.adapters.database.shared import SharedUser
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:complexType name="FlexChildrenOnlyType">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:any processContents="lax" />
+      </xsd:choice>
+    </xsd:sequence>
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+
+  <xsd:complexType name="FlexType">
+    <xsd:complexContent>
+      <xsd:extension base="FlexChildrenOnlyType">
+        <xsd:attribute name="space" use="optional">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="around" />
+              <xsd:enumeration value="between" />
+              <xsd:enumeration value="center" />
+              <xsd:enumeration value="evenly" />
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:element name="Flex" type="FlexType" />
+</xsd:schema>

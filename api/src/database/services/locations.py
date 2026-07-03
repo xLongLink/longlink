@@ -1,15 +1,15 @@
 from uuid import UUID
-from sqlalchemy import select
 from datetime import UTC, datetime
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from src.database.session import session_scope
 from src.models.countries import Country
 from src.models.locations import LocationProvider
 from src.database.models.users import User
-from src.database.models.locations import Location
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
+from src.database.models.locations import Location
 from src.database.models.organizations import Organization
 
 

@@ -6,7 +6,7 @@ import shutil
 import tomllib
 import tempfile
 import subprocess
-from typing import Any, cast
+from typing import Any
 from pathlib import Path
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
@@ -213,15 +213,22 @@ def resolve_docker_paths(root: Path) -> tuple[Path, str]:
 
     # Read local uv source paths so Docker context includes editable dependencies.
     pyproject_data = read_pyproject(root)
-    tool_data = cast(dict[str, Any], pyproject_data.get("tool", {}))
-    uv_data = cast(dict[str, Any], tool_data.get("uv", {}))
-    uv_sources = cast(dict[str, Any], uv_data.get("sources", {}))
+    tool_data = pyproject_data.get("tool", {})
+    if not isinstance(tool_data, dict):
+        tool_data = {}
+
+    uv_data = tool_data.get("uv", {})
+    if not isinstance(uv_data, dict):
+        uv_data = {}
+
+    uv_sources = uv_data.get("sources", {})
+    if not isinstance(uv_sources, dict):
+        uv_sources = {}
 
     source_paths: list[Path] = [root]
     for source_config in uv_sources.values():
         if isinstance(source_config, dict):
-            source_mapping = cast(dict[str, object], source_config)
-            source_path = source_mapping.get("path")
+            source_path = source_config.get("path")
             if isinstance(source_path, str):
                 source_paths.append((root / source_path).resolve())
 
@@ -324,7 +331,7 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
     is_flag=True,
     help="Push the built image tag after building.",
 )
-def build_command(tag: str | None, registry: str | None, push: bool):
+def build_command(tag: str | None, registry: str | None, push: bool) -> None:
     """Create temporary Docker build artifacts and build the image locally."""
 
     try:

@@ -144,7 +144,6 @@ function getInitialValue(sections: ResolvedMenuSection[]): string | undefined {
     return firstSubSection?.value ?? firstSection.value;
 }
 
-
 /** Reads the current browser hash without the leading marker. */
 function getCurrentHashValue(): string | undefined {
     if (typeof window === 'undefined') {
@@ -163,7 +162,6 @@ function getCurrentHashValue(): string | undefined {
         return hash;
     }
 }
-
 
 /** Returns a selectable section or subsection value matching the candidate. */
 function getSelectableMenuValue(sections: ResolvedMenuSection[], candidate?: string): string | undefined {
@@ -186,7 +184,6 @@ function getSelectableMenuValue(sections: ResolvedMenuSection[], candidate?: str
     return undefined;
 }
 
-
 /** Resolves the initial active value, preferring a valid URL hash when enabled. */
 function getInitialActiveValue(
     sections: ResolvedMenuSection[],
@@ -197,7 +194,6 @@ function getInitialActiveValue(
 
     return hashValue ?? getSelectableMenuValue(sections, defaultValue) ?? getInitialValue(sections);
 }
-
 
 /** Replaces the current browser hash without adding a history entry. */
 function replaceLocationHash(value: string) {
@@ -217,7 +213,6 @@ function replaceLocationHash(value: string) {
         `${window.location.pathname}${window.location.search}${nextHash}`
     );
 }
-
 
 /** Finds the section that owns the active value. */
 function findActiveSection(sections: ResolvedMenuSection[], value: string): ResolvedMenuSection | undefined {

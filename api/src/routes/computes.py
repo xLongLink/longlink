@@ -17,7 +17,8 @@ router = APIRouter()
 async def list_compute_registries(_user: User = Depends(authsupport)) -> list[ComputeRegistryResponse]:
     """Return all registered compute backends."""
 
-    return await compute.list()
+    registries = await compute.list()
+    return [ComputeRegistryResponse.model_validate(registry) for registry in registries]
 
 
 @router.get("/api/computes/{registry_id}", response_model=ComputeRegistryResponse)
@@ -28,7 +29,7 @@ async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)
     if registry is None:
         raise NotFoundError("Compute registry", registry_id)
 
-    return registry
+    return ComputeRegistryResponse.model_validate(registry)
 
 
 @router.delete("/api/computes/{registry_id}", status_code=204)
@@ -62,7 +63,7 @@ async def create_compute_registry(payload: ComputeRegistryCreate, user: User = D
     except Exception as exc:
         raise UnavailableError("Failed to initialize the compute cluster") from exc
 
-    return registry
+    return ComputeRegistryResponse.model_validate(registry)
 
 
 @router.get("/api/computes/{registry_id}/resources", response_model=ComputeResourcesResponse)
@@ -75,7 +76,7 @@ async def get_compute_resources(registry_id: UUID, _: User = Depends(authsupport
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
     data = await k8s.resources()
-    return ComputeResourcesResponse(**data)
+    return ComputeResourcesResponse.model_validate(data)
 
 
 @router.get("/api/computes/{registry_id}/namespaces", response_model=list[NamespaceResponse])
@@ -101,4 +102,4 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
     pods = await k8s.pods(namespace)
-    return [PodResponse(**p) for p in pods]
+    return [PodResponse.model_validate(p) for p in pods]

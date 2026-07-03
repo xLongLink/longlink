@@ -1,6 +1,6 @@
 from fastapi import Depends, APIRouter
 from src.auth import authuser, authsupport
-from src.errors import UnavailableError
+from src.errors import NotFoundError, UnavailableError
 from src.operations import provisioning
 from src.models.users import UserUpdate, UserProfile, UserListItem
 from src.database.models.users import User
@@ -13,14 +13,19 @@ router = APIRouter()
 async def get_me(user: User = Depends(authuser)) -> UserProfile:
     """Return the authenticated user's details."""
 
-    return await users.profile(user.id)
+    profile = await users.profile(user.id)
+    if profile is None:
+        raise NotFoundError("User", user.id)
+
+    return profile
 
 
 @router.get("/api/users", response_model=list[UserListItem])
 async def list_users(_: User = Depends(authsupport)) -> list[UserListItem]:
     """Return all user summaries for support and administrator views."""
 
-    return await users.list()
+    records = await users.list()
+    return [UserListItem.model_validate(record) for record in records]
 
 
 @router.patch("/api/me", response_model=UserProfile)
@@ -34,4 +39,8 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser)) -> UserP
     except Exception as exc:
         raise UnavailableError("Failed to synchronize user profile") from exc
 
-    return await users.profile(updated_user.id)
+    profile = await users.profile(updated_user.id)
+    if profile is None:
+        raise NotFoundError("User", updated_user.id)
+
+    return profile

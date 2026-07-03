@@ -61,6 +61,7 @@ select = ["UP", "D300"]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["D300"]
+"src/database/models/*.py" = ["UP037", "UP045"]
 
 [tool.isort]
 from_first = false
@@ -75,11 +76,16 @@ venvPath = "."
 venv = ".venv"
 include = ["main.py", "seed.py", "src", "alembic"]
 exclude = [".venv", "build", "dist", "src/.static", "tests", "**/__pycache__"]
+# Pyright treats SQLModel descriptors as plain Python values, so keep ORM diagnostics
+# out of the gate while still checking callers and non-ORM API code.
+ignore = ["src/database/models", "src/database/services"]
 extraPaths = ["src", "../sdk"]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 markers = [
     "integration: marks integration tests requiring docker/keycloak",
+    "no_db: skips the API test database fixture for pure unit tests",
     "unit: marks unit tests",
 ]
 asyncio_mode = "auto"

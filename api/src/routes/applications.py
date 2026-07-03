@@ -1,10 +1,10 @@
 from uuid import UUID
-from typing import Any, cast
-from datetime import UTC, datetime, timedelta
 from fastapi import Depends, Request, Response, APIRouter
+from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authadmin, organization_access
 from src.utils import names
-from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
+from src.errors import (ConflictError, NotFoundError, ForbiddenError,
+                        UnavailableError)
 from src.operations import provisioning
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
@@ -207,12 +207,12 @@ async def proxy_application_request(
             body=await request.body(),
         )
     except KubernetesApiException as exc:
-        status = cast(Any, exc).status
+        status = getattr(exc, "status", None)
         if str(status) == "503":
             return Response(status_code=503, headers={"cache-control": "no-store"})
 
         if str(status) == "304":
-            headers = cast(Any, exc).headers or {}
+            headers = getattr(exc, "headers", None) or {}
             if hasattr(headers, "items"):
                 upstream_headers = dict(headers.items())
             else:
@@ -228,8 +228,9 @@ async def proxy_application_request(
             )
 
         status_code = int(status) if status is not None else 500
-        body = cast(Any, exc).body
-        response_headers = cast(Any, exc).headers or {}
+        body = getattr(exc, "body", b"")
+        raw_response_headers = getattr(exc, "headers", None) or {}
+        response_headers = dict(raw_response_headers.items()) if hasattr(raw_response_headers, "items") else {}
 
         return Response(
             content=body,

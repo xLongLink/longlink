@@ -3,7 +3,7 @@ from longlink.database.migrations import make_migrations, apply_migrations
 
 
 @click.command(name="migrate")
-def migrate_command():
+def migrate_command() -> None:
     """Generate and apply database migrations for the current app."""
     apply_migrations()
     migration_created = make_migrations()

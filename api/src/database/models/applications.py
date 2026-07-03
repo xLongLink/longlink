@@ -46,18 +46,18 @@ class Application(SQLModel, table=True):
 
     # User
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    created_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Application.created_id'})
+    created_by: Optional["User"] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Application.created_id'})
     created_id: UUID | None = Field(default=None, foreign_key='users.id')
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
-    updated_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Application.updated_id'})
+    updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Application.updated_id'})
     updated_id: UUID | None = Field(default=None, foreign_key='users.id')
     deleted_at: datetime | None = Field(default=None)
-    deleted_by: Optional['User'] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Application.deleted_id'})
+    deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Application.deleted_id'})
     deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
 
     # Relationships
-    organization: 'Organization' = Relationship(back_populates='applications')
-    compute_registry: Optional['ComputeRegistry'] = Relationship()
-    database_registry: Optional['DatabaseRegistry'] = Relationship()
-    storage_registry: Optional['StorageRegistry'] = Relationship()
-    users: list['User'] = Relationship(back_populates='applications', sa_relationship_kwargs={'secondary': UserApplication.__table__, 'primaryjoin': 'and_(Application.organization_id == UserApplication.organization_id, Application.id == UserApplication.application_id)', 'secondaryjoin': 'UserApplication.user_id == User.id'})
+    organization: "Organization" = Relationship(back_populates='applications')
+    compute_registry: Optional["ComputeRegistry"] = Relationship()
+    database_registry: Optional["DatabaseRegistry"] = Relationship()
+    storage_registry: Optional["StorageRegistry"] = Relationship()
+    users: list["User"] = Relationship(back_populates='applications', sa_relationship_kwargs={'secondary': UserApplication.__table__, 'primaryjoin': 'and_(Application.organization_id == UserApplication.organization_id, Application.id == UserApplication.application_id)', 'secondaryjoin': 'UserApplication.user_id == User.id'})

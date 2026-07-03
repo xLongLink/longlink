@@ -3,11 +3,11 @@ import httpx2
 import socket
 import asyncio
 import ipaddress
-from typing import Any, cast
+import urllib.parse
+import urllib.request
+from typing import Any
 from src.logger import logger
-from urllib.parse import urlparse
 from src.environments import env
-from urllib.request import parse_http_list, parse_keqv_list
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 
@@ -31,8 +31,6 @@ async def metadata(image: str) -> LongLinkMetadata | None:
             if not isinstance(manifest_config, dict):
                 return None
 
-            manifest_config = cast(dict[str, Any], manifest_config)
-
             config_digest = manifest_config.get("digest")
             if config_digest is None:
                 return None
@@ -45,13 +43,11 @@ async def metadata(image: str) -> LongLinkMetadata | None:
             if not isinstance(image_config, dict):
                 return None
 
-            image_config = cast(dict[str, Any], image_config)
-
             raw_labels: Any = image_config.get("Labels") or {}
             if not isinstance(raw_labels, dict):
                 return None
 
-            labels = cast(dict[str, Any], raw_labels)
+            labels = {str(key): value for key, value in raw_labels.items()}
 
             result = LongLinkMetadata(
                 sdk=labels.get("longlink.sdk"),
@@ -67,7 +63,7 @@ async def metadata(image: str) -> LongLinkMetadata | None:
                     if not isinstance(parsed_environments, list):
                         return None
 
-                    result.environments = [EnvironmentMetadata.model_validate(item) for item in cast(list[Any], parsed_environments)]
+                    result.environments = [EnvironmentMetadata.model_validate(item) for item in parsed_environments]
                 except (json.JSONDecodeError, TypeError, ValueError):
                     return None
 
@@ -113,7 +109,7 @@ def _parse_image_ref(image: str) -> tuple[str, str, str]:
 def _registry_hostname(registry: str) -> str:
     """Return the hostname portion of a registry reference."""
 
-    hostname = urlparse(f"https://{registry}").hostname
+    hostname = urllib.parse.urlparse(f"https://{registry}").hostname
     if hostname is None:
         raise ValueError("Image registry host is invalid")
 
@@ -149,6 +145,16 @@ def _registry_url(registry: str) -> str:
         return f"http://{_normalize_registry(registry)}"
 
     return f"https://{registry}"
+
+
+def _response_json_object(resp: httpx2.Response) -> dict[str, Any] | None:
+    """Return a response JSON payload only when it is an object."""
+
+    data = resp.json()
+    if not isinstance(data, dict):
+        return None
+
+    return data
 
 
 async def _validate_public_host(hostname: str) -> None:
@@ -188,17 +194,23 @@ async def _fetch_manifest(client: httpx2.AsyncClient, registry_url: str, reposit
         if not resp.is_success:
             return None
 
-    data = cast(dict[str, Any], resp.json())
+    data = _response_json_object(resp)
+    if data is None:
+        return None
 
     # Resolve multi-arch manifest list to a single platform manifest.
     manifests = data.get("manifests")
     if isinstance(manifests, list) and manifests:
-        manifest_entries = [cast(dict[str, Any], item) for item in cast(list[Any], manifests) if isinstance(item, dict)]
+        manifest_entries = [item for item in manifests if isinstance(item, dict)]
         if not manifest_entries:
             return None
 
         entry = next(
-            (item for item in manifest_entries if cast(dict[str, Any], item.get("platform", {})).get("architecture") == "amd64"),
+            (
+                item
+                for item in manifest_entries
+                if isinstance(platform := item.get("platform"), dict) and platform.get("architecture") == "amd64"
+            ),
             manifest_entries[0],
         )
 
@@ -209,7 +221,9 @@ async def _fetch_manifest(client: httpx2.AsyncClient, registry_url: str, reposit
         )
         if not resp.is_success:
             return None
-        data = cast(dict[str, Any], resp.json())
+        data = _response_json_object(resp)
+        if data is None:
+            return None
 
     return data
 
@@ -221,13 +235,13 @@ async def _fetch_blob(client: httpx2.AsyncClient, registry_url: str, repository:
 
     resp = await client.get(url)
     if resp.is_success:
-        return cast(dict[str, Any], resp.json())
+        return _response_json_object(resp)
 
     token = await _resolve_bearer_token(client, repository, resp)
     if token is not None:
         resp = await client.get(url, headers={"Authorization": f"Bearer {token}"})
         if resp.is_success:
-            return cast(dict[str, Any], resp.json())
+            return _response_json_object(resp)
 
     return None
 
@@ -239,13 +253,15 @@ async def _resolve_bearer_token(client: httpx2.AsyncClient, repository: str, res
     if not auth_header.startswith("Bearer "):
         return None
 
-    params = parse_keqv_list(parse_http_list(auth_header.removeprefix("Bearer ")))
+    params = urllib.request.parse_keqv_list(
+        urllib.request.parse_http_list(auth_header.removeprefix("Bearer "))
+    )
 
     realm = params.get("realm")
     if realm is None:
         return None
 
-    parsed_realm = urlparse(realm)
+    parsed_realm = urllib.parse.urlparse(realm)
     if parsed_realm.scheme != "https" or parsed_realm.hostname is None:
         return None
 

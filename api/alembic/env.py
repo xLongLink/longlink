@@ -1,10 +1,11 @@
 import asyncio
+import logging.config
 from alembic import context
 from sqlmodel import SQLModel
 from sqlalchemy import pool, engine_from_config
-from logging.config import fileConfig
 from src.environments import env
 from sqlalchemy.engine import Connection, make_url
+import src.utils.url as url
 from src.database.models import (users, computes, storages, databases,
                                  locations, operations, association,
                                  invitations, applications, organizations)
@@ -20,7 +21,7 @@ config.set_main_option('sqlalchemy.url', env.DATABASE_URL)
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    logging.config.fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -69,23 +70,15 @@ def run_migrations_online() -> None:
     if configured_url is None:
         raise RuntimeError('Alembic sqlalchemy.url is not configured')
 
-    url = make_url(configured_url)
-
-    # MySQL needs an async DBAPI for Alembic's async engine path.
-    if (
-        url.drivername == 'mysql'
-        or url.drivername.startswith('mysql+')
-        and not url.drivername.endswith('aiomysql')
-    ):
-        url = url.set(drivername='mysql+aiomysql')
+    database_url = make_url(url.database(configured_url))
 
     # Async drivers need Alembic's async engine path, while sync drivers can use the classic runner.
-    if url.drivername.endswith(('aiosqlite', 'aiomysql', 'asyncpg')):
+    if database_url.drivername.endswith(('aiosqlite', 'aiomysql', 'asyncpg')):
 
         async def run_async_migrations() -> None:
             """Run Alembic migrations through an async SQLAlchemy engine."""
 
-            connectable = create_async_engine(url, poolclass=pool.NullPool)
+            connectable = create_async_engine(database_url, poolclass=pool.NullPool)
 
             def do_run_migrations(sync_connection: Connection) -> None:
                 """Configure Alembic against the synchronous bridge connection."""

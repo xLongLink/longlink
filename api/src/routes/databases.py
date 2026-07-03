@@ -18,7 +18,8 @@ router = APIRouter()
 async def list_database_registries(_user: User = Depends(authsupport)) -> list[DatabaseRegistryResponse]:
     """Return all registered database backends."""
 
-    return await database.list()
+    registries = await database.list()
+    return [DatabaseRegistryResponse.model_validate(registry) for registry in registries]
 
 
 @router.get("/api/databases/{registry_id}", response_model=DatabaseRegistryResponse)
@@ -29,7 +30,7 @@ async def get_database_registry(registry_id: UUID, _: User = Depends(authsupport
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 
-    return registry
+    return DatabaseRegistryResponse.model_validate(registry)
 
 
 @router.delete("/api/databases/{registry_id}", status_code=204)
@@ -56,7 +57,7 @@ async def create_database_registry(payload: DatabaseRegistryCreate, user: User =
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
 
-    return registry
+    return DatabaseRegistryResponse.model_validate(registry)
 
 
 @router.get("/api/databases/{registry_id}/databases", response_model=list[DatabaseDatabaseResponse])

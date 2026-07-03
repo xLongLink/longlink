@@ -35,10 +35,14 @@ import { createContext as createXmlContext } from '@/xml';
 import { Toaster } from '@ui/sonner';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 
+type AppRouter = ReturnType<typeof createBrowserRouter>;
+
+let appRouter: AppRouter | null = null;
+
 /** Builds the route tree for the current bundle mode. */
-function getRoutes() {
+export function getRoutes(mode = import.meta.env.MODE) {
     // SDK bundle serves the app runtime without control-plane routes.
-    if (import.meta.env.MODE === 'sdk') {
+    if (mode === 'sdk') {
         return [
             {
                 path: '*',
@@ -255,9 +259,7 @@ function OrganizationApplicationView() {
     const organizationRole = organizationMembership?.role ?? null;
     const applicationRole = organizationApplication?.role ?? null;
     const hasApplicationAccess = canAccessApplication(organizationRole, applicationRole);
-    const canViewLogs =
-        platformRole === 'administrator' ||
-        canViewApplicationLogs(organizationRole, applicationRole);
+    const canViewLogs = platformRole === 'administrator' || canViewApplicationLogs(organizationRole, applicationRole);
 
     if (isLoading) {
         return <View applicationStatus="loading" metadata="" />;
@@ -279,13 +281,18 @@ function OrganizationApplicationView() {
     );
 }
 
-const router = createBrowserRouter(getRoutes());
+/** Returns the browser router, creating it lazily in the browser runtime. */
+function getRouter(): AppRouter {
+    appRouter ??= createBrowserRouter(getRoutes());
+
+    return appRouter;
+}
 
 /** Renders the app shell, router, and global toaster. */
 export default function App() {
     return (
         <>
-            <RouterProvider router={router} />
+            <RouterProvider router={getRouter()} />
             <Toaster position="bottom-right" />
         </>
     );

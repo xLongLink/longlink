@@ -1,5 +1,5 @@
 import click
-from shutil import copytree, ignore_patterns
+import shutil
 from pathlib import Path
 from longlink.constants import ROOT
 
@@ -29,14 +29,14 @@ def init_command(folder: str, ci_provider: str | None) -> None:
             raise click.ClickException(f"Target folder is not empty: {target}")
 
     # Copy the bundled blank project scaffold into the requested target directory.
-    copytree(
+    shutil.copytree(
         source,
         target,
         dirs_exist_ok=True,
-        ignore=ignore_patterns(".pytest_cache", "__pycache__"),
+        ignore=shutil.ignore_patterns(".pytest_cache", ".venv", "__pycache__"),
     )
 
     # Add provider-specific automation files only when explicitly requested.
     if ci_provider == "github":
         source = ROOT / ".static" / "ci" / "github"
-        copytree(source, target, dirs_exist_ok=True)
+        shutil.copytree(source, target, dirs_exist_ok=True)

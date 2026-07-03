@@ -1,5 +1,4 @@
 import re
-
 from src.utils.names import knames
 
 POSTGRES_IDENTIFIER_MAX_LENGTH = 63

@@ -38,8 +38,8 @@ export const content = (
                 LongLink loads application metadata from <Code>pyproject.toml</Code>. Values in{' '}
                 <Code>[tool.longlink]</Code> override standard <Code>[project]</Code> values where both are supported.
                 The SDK exposes the loaded metadata and registered XML pages through <Code>/metadata.json</Code>, and{' '}
-                <Code>longlink build</Code> writes the same app metadata into Docker labels for control-plane application
-                creation.
+                <Code>longlink build</Code> writes the same app metadata into Docker labels for control-plane
+                application creation.
             </P>
             <CodeBlock language="toml">{`[project]
 name = "orders"

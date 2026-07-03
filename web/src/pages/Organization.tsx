@@ -2,7 +2,7 @@ import { useOrganization } from '@/hooks/use-organization';
 import { useUser } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { LayoutGrid, Settings2, Users } from 'lucide-react';
+import { Database, HardDrive, LayoutGrid, Settings2, Users } from 'lucide-react';
 import { Navigate, useLocation, useParams } from 'react-router';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
@@ -98,6 +98,8 @@ export default function Organization({ sectionName }: OrganizationProps) {
             tabs={{
                 Applications: { href: `/orgs/${organization}`, icon: LayoutGrid },
                 People: { href: `/orgs/${organization}/people`, icon: Users },
+                Database: { href: `/orgs/${organization}/database`, icon: Database },
+                Storage: { href: `/orgs/${organization}/storage`, icon: HardDrive },
                 Settings: { href: `/orgs/${organization}/settings`, icon: Settings2 },
             }}
         >

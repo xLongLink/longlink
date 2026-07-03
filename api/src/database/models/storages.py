@@ -1,4 +1,5 @@
 from uuid import UUID, uuid4
+from typing import Optional
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum, Column
@@ -31,15 +32,15 @@ class StorageRegistry(SQLModel, table=True):
 
     # Audit
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    created_by: User | None = Relationship(sa_relationship_kwargs={'foreign_keys': 'StorageRegistry.created_id'})
+    created_by: Optional["User"] = Relationship(sa_relationship_kwargs={'foreign_keys': 'StorageRegistry.created_id'})
     created_id: UUID | None = Field(default=None, foreign_key='users.id')
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
-    updated_by: User | None = Relationship(sa_relationship_kwargs={'foreign_keys': 'StorageRegistry.updated_id'})
+    updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={'foreign_keys': 'StorageRegistry.updated_id'})
     updated_id: UUID | None = Field(default=None, foreign_key='users.id')
     deleted_at: datetime | None = Field(default=None)
-    deleted_by: User | None = Relationship(sa_relationship_kwargs={'foreign_keys': 'StorageRegistry.deleted_id'})
+    deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={'foreign_keys': 'StorageRegistry.deleted_id'})
     deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
 
     # Location
-    location: Location = Relationship()
+    location: "Location" = Relationship()
     location_id: UUID = Field(foreign_key='locations.id')

@@ -25,8 +25,8 @@ export default function Settings() {
     const { user, organizations, theme, accent, radius, isLoading } = useUser();
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
     const deleteOrganization = useDeleteOrganization();
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
+    const [name, setName] = useState(() => user?.name ?? '');
+    const [email, setEmail] = useState(() => user?.email ?? '');
     const [accountError, setAccountError] = useState<string | null>(null);
 
     // Keep the editable fields aligned with the authenticated user record.
@@ -62,10 +62,10 @@ export default function Settings() {
             header: 'Name',
             cell: ({ row, getValue }) => (
                 <div className="flex items-center gap-3">
-                        <Avatar shape="squircle" className="size-8">
-                            <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
-                            <AvatarFallback>{getInitials(row.original.name)}</AvatarFallback>
-                        </Avatar>
+                    <Avatar shape="squircle" className="size-8">
+                        <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
+                        <AvatarFallback>{getInitials(row.original.name)}</AvatarFallback>
+                    </Avatar>
                     <span className="font-medium text-foreground">{getValue<string>()}</span>
                 </div>
             ),
@@ -97,7 +97,12 @@ export default function Settings() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
                             <DropdownMenuItem
-                                render={<Link to="/organizations" className="flex w-full items-center text-inherit" />}
+                                render={
+                                    <Link
+                                        to={`/orgs/${row.original.slug}`}
+                                        className="flex w-full items-center text-inherit"
+                                    />
+                                }
                                 className="cursor-pointer"
                             >
                                 Manage

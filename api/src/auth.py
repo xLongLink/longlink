@@ -1,6 +1,7 @@
 import sys
 import httpx2
 from uuid import UUID
+from typing import Any
 from fastapi import Request
 from sqlmodel import select
 from src.errors import NotFoundError, ForbiddenError, UnauthorizedError
@@ -132,7 +133,7 @@ async def organization_access(organization_id: UUID, user: User) -> Organization
             select(UserOrganization).where(
                 UserOrganization.user_id == user.id,
                 UserOrganization.organization_id == organization_id,
-                UserOrganization.deleted_at.is_(None),
+                UserOrganization.deleted_at == None,
             )
         )
         membership = membership_result.scalar_one_or_none()

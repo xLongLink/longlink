@@ -1,5 +1,6 @@
-from typing import Any, Callable
+from typing import Any
 from fastapi import APIRouter
+from collections.abc import Callable
 
 
 class Router(APIRouter):

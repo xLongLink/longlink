@@ -6,6 +6,10 @@ import { defineConfig, loadEnv, type Plugin } from 'vite';
 type LucideIconNode = Array<[string, Record<string, string>]>;
 type LucideIconModule = { __iconNode: LucideIconNode };
 type LucideIconImport = () => Promise<LucideIconModule>;
+type LucideIconAssetsOptions = {
+    loadIconImports?: () => Promise<Record<string, LucideIconImport>>;
+    loadSvg?: (iconName: string) => Promise<string | null>;
+};
 
 let lucideIconImports: Promise<Record<string, LucideIconImport>> | null = null;
 const lucideIconAssetDirectory = 'lucide-icons';
@@ -57,7 +61,10 @@ async function loadLucideSvg(iconName: string): Promise<string | null> {
 }
 
 /** Serves and emits Lucide SVG assets without adding every icon to the JS graph. */
-function lucideIconAssets(): Plugin {
+export function lucideIconAssets(options: LucideIconAssetsOptions = {}): Plugin {
+    const loadIconImportsForPlugin = options.loadIconImports ?? loadLucideIconImports;
+    const loadSvgForPlugin = options.loadSvg ?? loadLucideSvg;
+
     return {
         name: 'longlink-lucide-icon-assets',
         configureServer(server) {
@@ -72,7 +79,7 @@ function lucideIconAssets(): Plugin {
                 const iconName = decodeURIComponent(
                     requestUrl.pathname.slice(lucideIconAssetPath.length).replace(/\.svg$/, '')
                 );
-                const svg = await loadLucideSvg(iconName);
+                const svg = await loadSvgForPlugin(iconName);
 
                 if (svg === null) {
                     response.statusCode = 404;
@@ -86,10 +93,10 @@ function lucideIconAssets(): Plugin {
             });
         },
         async generateBundle() {
-            const iconImports = await loadLucideIconImports();
+            const iconImports = await loadIconImportsForPlugin();
 
             for (const iconName of Object.keys(iconImports)) {
-                const svg = await loadLucideSvg(iconName);
+                const svg = await loadSvgForPlugin(iconName);
 
                 if (svg === null) {
                     continue;
@@ -105,13 +112,15 @@ function lucideIconAssets(): Plugin {
     };
 }
 
-export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, process.cwd(), '');
-
-    const isSdkBuild = mode === 'sdk';
-    const buildOutDir = isSdkBuild
+/** Resolves the bundle output directory for one Vite mode. */
+export function resolveBuildOutDir(mode: string): string {
+    return mode === 'sdk'
         ? path.resolve(__dirname, '../sdk/longlink/.static/web')
         : path.resolve(__dirname, '../api/src/.static/web');
+}
+
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, process.cwd(), '');
 
     const devServerPort = env.VITE_DEV_PORT ? parseInt(env.VITE_DEV_PORT) : 5173;
 
@@ -129,7 +138,7 @@ export default defineConfig(({ mode }) => {
         },
 
         build: {
-            outDir: buildOutDir,
+            outDir: resolveBuildOutDir(mode),
             emptyOutDir: true,
         },
 

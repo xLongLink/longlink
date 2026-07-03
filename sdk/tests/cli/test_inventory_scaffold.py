@@ -1,5 +1,4 @@
 from pathlib import Path
-
 from click.testing import CliRunner
 from longlink.cli.init import init_command
 
@@ -45,5 +44,6 @@ def test_init_adds_safe_file_download_header() -> None:
         )
 
         assert result.exit_code == 0
-        assert "from urllib.parse import quote" in route_text
+        assert "import urllib.parse" in route_text
+        assert "urllib.parse.quote" in route_text
         assert "filename*=UTF-8''{download_name}" in route_text

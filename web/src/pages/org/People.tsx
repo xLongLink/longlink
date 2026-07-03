@@ -64,7 +64,6 @@ const invitationColumns: Array<ColumnDef<ApiInvitation>> = [
 
 /** Renders the organization people menu and member tables. */
 export default function People({ organization, people, invitations, isLoading, error }: PeopleProps) {
-    const [peopleSection, setPeopleSection] = useState<'members' | 'invitations'>('members');
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] = useState<Role>('write');
@@ -74,14 +73,8 @@ export default function People({ organization, people, invitations, isLoading, e
         role: Role;
     } | null>(null);
     const [roleChangeError, setRoleChangeError] = useState<string | null>(null);
-    const {
-        inviteMember,
-        isInviting,
-        canInviteMembers,
-        changeMemberRole,
-        isChangingMemberRole,
-        canManageMembers,
-    } = useOrganizationActions(organization);
+    const { inviteMember, isInviting, canInviteMembers, changeMemberRole, isChangingMemberRole, canManageMembers } =
+        useOrganizationActions(organization);
     const roleChangeTargetLabel = roleChangeTarget ? ORGANIZATION_ROLE_LABELS[roleChangeTarget.role] : '';
 
     const peopleColumns: Array<ColumnDef<ApiOrganizationMemberSummary>> = [
@@ -169,14 +162,7 @@ export default function People({ organization, people, invitations, isLoading, e
 
     return (
         <>
-            <Menu
-                value={peopleSection}
-                onValueChange={(value) => setPeopleSection(value as 'members' | 'invitations')}
-                defaultValue="members"
-                hashNavigation
-                className="items-start"
-                ariaLabel="People menu"
-            >
+            <Menu defaultValue="members" hashNavigation className="items-start" ariaLabel="People menu">
                 <MenuSection value="members" label="Members" icon={Users}>
                     <div className="space-y-4">
                         <div className="space-y-1">

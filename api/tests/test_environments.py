@@ -1,6 +1,9 @@
 import pytest
 from src.environments import (Env, _environment_files, _development_enabled,
-                              resolve_cors_origins, validate_production_settings)
+                              resolve_cors_origins,
+                              validate_production_settings)
+
+pytestmark = pytest.mark.no_db
 
 
 def production_settings(**overrides: object) -> Env:

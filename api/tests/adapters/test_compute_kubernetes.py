@@ -1,6 +1,9 @@
+import pytest
 from decimal import Decimal
 from kubernetes.client.rest import ApiException
 from src.adapters.compute.k8s import K8s, parse_quantity
+
+pytestmark = pytest.mark.no_db
 
 
 def test_parse_quantity_uses_kubernetes_quantity_semantics() -> None:

@@ -1,8 +1,8 @@
+import base64
 import os
 import json
 import pytest
 import pytest_asyncio
-from base64 import b64encode
 from pathlib import Path
 from itsdangerous import TimestampSigner
 from collections.abc import AsyncIterator
@@ -30,8 +30,22 @@ SESSION_COOKIE = "longlink_session"
 
 
 @pytest_asyncio.fixture(autouse=True)
-async def reset_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[None]:
+async def reset_db(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    request: pytest.FixtureRequest,
+) -> AsyncIterator[None]:
     """Create a fresh SQLite database for each test."""
+
+    if request.node.get_closest_marker("no_db"):
+        session.Session = None
+        session._engine = None
+        try:
+            yield
+        finally:
+            session.Session = None
+            session._engine = None
+        return
 
     db_url = f"sqlite+aiosqlite:///{tmp_path / 'test.db'}"
     monkeypatch.setattr(env, 'DATABASE_URL', db_url)
@@ -62,7 +76,9 @@ def session_cookie(oidc: str, accounts: list[str] | None = None) -> dict[str, st
     if oidc not in saved_accounts:
         saved_accounts.append(oidc)
 
-    payload = b64encode(json.dumps({"oidc": oidc, "oidc_accounts": saved_accounts}).encode("utf-8"))
+    payload = base64.b64encode(
+        json.dumps({"oidc": oidc, "oidc_accounts": saved_accounts}).encode("utf-8")
+    )
     signed = TimestampSigner(str(env.SESSION_KEY)).sign(payload).decode("utf-8")
     return {SESSION_COOKIE: signed}
 

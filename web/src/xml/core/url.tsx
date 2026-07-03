@@ -31,7 +31,6 @@ export function resolveUrl(baseUrl: string, path: string): string {
     return `/${resolvedSegments.join('/')}${suffix}`;
 }
 
-
 /** Returns whether a URL can be safely fetched relative to an application base URL. */
 export function isAppRelativeUrl(path: string): boolean {
     const value = path.trim();
@@ -49,7 +48,6 @@ export function isAppRelativeUrl(path: string): boolean {
         return false;
     }
 }
-
 
 /** Resolves an XML request URL while blocking cross-origin and protocol URLs. */
 export function resolveRequestUrl(baseUrl: string, path: string): string {

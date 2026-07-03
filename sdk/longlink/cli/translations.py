@@ -1,7 +1,7 @@
 import json
 import click
 from lxml import etree
-from typing import cast
+from typing import TypeGuard
 from pathlib import Path
 
 PLURAL_KEYS = {"zero", "one", "two", "few", "many", "other"}
@@ -90,18 +90,16 @@ def load_translation_catalog(path: Path, app_root: Path) -> dict[str, object]:
 def flatten_translation_catalog(value: object, prefix: str = "") -> dict[str, object]:
     """Flatten a nested translation tree into dotted keys."""
 
-    if not isinstance(value, dict):
+    if not is_translation_branch(value):
         return {prefix: value} if prefix else {}
 
-    catalog = cast(dict[str, object], value)
-
     # Leave plural leaves intact so their category objects survive normalization.
-    if is_plural_catalog(catalog):
-        return {prefix: catalog} if prefix else {}
+    if is_plural_catalog(value):
+        return {prefix: value} if prefix else {}
 
     flattened: dict[str, object] = {}
 
-    for key, entry in catalog.items():
+    for key, entry in value.items():
         next_prefix = f"{prefix}.{key}" if prefix else key
         flattened.update(flatten_translation_catalog(entry, next_prefix))
 
@@ -133,18 +131,24 @@ def assign_translation_value(target: dict[str, object], segments: list[str], val
         if entry is None:
             entry = {}
             current[segment] = entry
-        elif not isinstance(entry, dict) or is_plural_catalog(cast(dict[str, object], entry)):
+        elif not is_translation_branch(entry) or is_plural_catalog(entry):
             raise click.ClickException(f"Translation key collision at {segment}")
 
-        current = cast(dict[str, object], entry)
+        current = entry
 
     leaf = segments[-1]
     entry = current.get(leaf)
 
-    if isinstance(entry, dict) and not is_plural_catalog(cast(dict[str, object], entry)):
+    if is_translation_branch(entry) and not is_plural_catalog(entry):
         raise click.ClickException(f"Translation key collision at {'.'.join(segments)}")
 
     current[leaf] = value
+
+
+def is_translation_branch(value: object) -> TypeGuard[dict[str, object]]:
+    """Return true when a translation value is a string-keyed object."""
+
+    return isinstance(value, dict) and all(isinstance(key, str) for key in value)
 
 
 def is_plural_catalog(value: dict[str, object]) -> bool:

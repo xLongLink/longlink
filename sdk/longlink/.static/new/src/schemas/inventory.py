@@ -1,5 +1,5 @@
 from longlink import User
-from pydantic import BaseModel, Field
+from pydantic import Field, BaseModel
 
 
 class InventoryItemCreate(BaseModel):

@@ -1,9 +1,9 @@
-from .base import Table, utcnow
+import contextlib
 from uuid import UUID
+from .base import Table, utcnow
 from typing import Any
 from fastapi import FastAPI, Request
 from sqlmodel import Session as SyncSession
-from contextlib import contextmanager
 from sqlalchemy import event
 from contextvars import ContextVar
 from collections.abc import Callable, Awaitable, Generator
@@ -12,8 +12,8 @@ from starlette.responses import Response
 _current_user_id: ContextVar[UUID | None] = ContextVar("current_user_id", default=None)
 
 
-@contextmanager
-def audit_user_scope(user_id: UUID | None) -> Generator[None, None, None]:
+@contextlib.contextmanager
+def audit_user_scope(user_id: UUID | None) -> Generator[None]:
     """Bind an audit user ID for the current execution scope."""
 
     token = _current_user_id.set(user_id)

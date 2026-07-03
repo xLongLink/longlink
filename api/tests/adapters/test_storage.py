@@ -1,7 +1,22 @@
-from unittest.mock import Mock
+import pytest
 from datetime import UTC, datetime
+from unittest.mock import Mock
 from botocore.exceptions import ClientError
 from src.adapters.storage.s3 import S3
+
+pytestmark = pytest.mark.no_db
+
+
+@pytest.fixture(autouse=True)
+def run_storage_threads_inline(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Run storage adapter thread offloads inline for deterministic unit tests."""
+
+    async def inline_to_thread(function, /, *args, **kwargs):
+        """Execute a normally-threaded call directly."""
+
+        return function(*args, **kwargs)
+
+    monkeypatch.setattr("src.adapters.storage.s3.asyncio.to_thread", inline_to_thread)
 
 
 def test_storage_list_returns_bucket_names(monkeypatch) -> None:

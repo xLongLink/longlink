@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from .shared import SharedUser
 from .types import DatabaseTableData, DatabaseTableUsage, DatabaseSchemaUsage
+from .shared import SharedUser
 
 
 class Database(ABC):

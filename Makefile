@@ -201,6 +201,7 @@ down:
 # Run the local control plane API server after `make seed`.
 api:
 	cd api && uv sync --extra dev
+	cd api && DEVELOPMENT=true uv run alembic upgrade head
 	cd api && DEVELOPMENT=true uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 

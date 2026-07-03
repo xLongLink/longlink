@@ -294,6 +294,7 @@ export type ApiOperation = {
     id: string;
     kind: string;
     application_id: string | null;
+    organization_id: string | null;
     step: string;
     status: ApiOperationStatus;
     error: string | null;

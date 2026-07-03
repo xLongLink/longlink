@@ -1,9 +1,15 @@
+from __future__ import annotations
+
+import asyncio
 import boto3
-from asyncio import to_thread
-from datetime import datetime
 from .base import Storage, StorageObjectData
+from typing import TYPE_CHECKING
+from datetime import datetime
 from botocore.exceptions import ClientError
 from src.utils.namespace import s3name
+
+if TYPE_CHECKING:
+    from mypy_boto3_s3.type_defs import ObjectIdentifierTypeDef
 
 
 class S3(Storage):
@@ -32,7 +38,7 @@ class S3(Storage):
     def list(self) -> list[str]:
         """List storage buckets."""
         response = self._client.list_buckets()
-        return [bucket["Name"] for bucket in response.get("Buckets", [])]
+        return [name for bucket in response.get("Buckets", []) if (name := bucket.get("Name")) is not None]
 
 
     def _create_bucket(self, bucket_name: str) -> None:
@@ -62,7 +68,9 @@ class S3(Storage):
 
         paginator = self._client.get_paginator("list_objects_v2")
         for page in paginator.paginate(Bucket=bucket_name):
-            objects = [{"Key": item["Key"]} for item in page.get("Contents", []) if "Key" in item]
+            objects: list[ObjectIdentifierTypeDef] = [
+                {"Key": str(item["Key"])} for item in page.get("Contents", []) if "Key" in item
+            ]
             if objects:
                 self._client.delete_objects(Bucket=bucket_name, Delete={"Objects": objects})
 
@@ -72,19 +80,19 @@ class S3(Storage):
     async def buckets(self) -> list[str]:
         """List storage buckets."""
 
-        return await to_thread(self.list)
+        return await asyncio.to_thread(self.list)
 
 
     async def objects(self, bucket_name: str, *, limit: int = 1000) -> list[StorageObjectData]:
         """List object metadata for one bucket."""
 
-        return await to_thread(self._objects, bucket_name, limit=limit)
+        return await asyncio.to_thread(self._objects, bucket_name, limit=limit)
 
 
     async def delete_bucket(self, bucket_name: str) -> None:
         """Delete one S3 bucket and all listed objects."""
 
-        await to_thread(self._delete_bucket, bucket_name)
+        await asyncio.to_thread(self._delete_bucket, bucket_name)
 
 
     def _objects(self, bucket_name: str, *, limit: int = 1000) -> list[StorageObjectData]:
@@ -137,7 +145,7 @@ class S3(Storage):
         """Create the shared organization bucket and return its name."""
 
         bucket_name = s3name(f"{organization}-shared")
-        await to_thread(self._create_bucket, bucket_name)
+        await asyncio.to_thread(self._create_bucket, bucket_name)
         return bucket_name
 
 
@@ -145,7 +153,7 @@ class S3(Storage):
         """Create the application bucket and return its name."""
 
         bucket_name = s3name(f"{organization}-{application}")
-        await to_thread(self._create_bucket, bucket_name)
+        await asyncio.to_thread(self._create_bucket, bucket_name)
         return bucket_name
 
 

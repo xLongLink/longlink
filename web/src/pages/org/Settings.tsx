@@ -373,7 +373,9 @@ export default function Settings({ organization, organizationDetails, applicatio
                                     src={organizationDetails?.avatar ?? ''}
                                     alt={organizationDetails?.name ?? organization}
                                 />
-                                <AvatarFallback>{getInitials(organizationDetails?.name ?? organization)}</AvatarFallback>
+                                <AvatarFallback>
+                                    {getInitials(organizationDetails?.name ?? organization)}
+                                </AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
                                 <div className="truncate font-medium text-foreground">

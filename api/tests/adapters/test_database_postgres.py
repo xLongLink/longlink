@@ -1,9 +1,12 @@
+import pytest
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy.schema import CreateTable, CreateSchema
 from sqlalchemy.dialects import postgresql
-from src.adapters.database.postgres import Postgres
 from src.adapters.database.shared import SharedUser
+from src.adapters.database.postgres import Postgres
+
+pytestmark = pytest.mark.no_db
 
 
 class _FakeResult:

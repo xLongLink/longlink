@@ -20,7 +20,7 @@ def _print_shortcuts(server_url: str) -> None:
 
 
 @click.command(name="dev")
-def dev_command():
+def dev_command() -> None:
     """Run LongLink application locally with auto-reload enabled."""
 
     app_directory = str(Path.cwd())

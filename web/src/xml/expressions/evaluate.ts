@@ -7,7 +7,6 @@ import { isReference } from './utils';
 
 const expressionNodeCache = new Map<string, ExpressionNode>();
 
-
 /** Parses and caches one JavaScript expression supported by the XML evaluator. */
 function parseExpression(expression: string): ExpressionNode {
     const cachedNode = expressionNodeCache.get(expression);
@@ -25,7 +24,6 @@ function parseExpression(expression: string): ExpressionNode {
     expressionNodeCache.set(expression, node);
     return node;
 }
-
 
 /** Parses expressions ahead of first runtime evaluation when possible. */
 export function prepareEvaluation(expr: string): void {
@@ -119,19 +117,24 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
             return node.elements.map((element) => (element ? evaluateNode(element, scope) : null));
 
         case 'ObjectExpression':
-            return node.properties.reduce<Record<string, unknown>>((result, property) => {
-                if (property.type !== 'Property') return result;
+            return node.properties.reduce<Record<string, unknown>>(
+                (result, property) => {
+                    if (property.type !== 'Property') return result;
 
-                const key =
-                    property.key.type === 'Identifier' ? property.key.name : String(evaluateNode(property.key, scope));
+                    const key =
+                        property.key.type === 'Identifier'
+                            ? property.key.name
+                            : String(evaluateNode(property.key, scope));
 
-                // Skip prototype-related keys so XML object literals cannot mutate prototypes.
-                if (!isSafePropertyName(key)) return result;
+                    // Skip prototype-related keys so XML object literals cannot mutate prototypes.
+                    if (!isSafePropertyName(key)) return result;
 
-                result[key] = evaluateNode(property.value, scope);
+                    result[key] = evaluateNode(property.value, scope);
 
-                return result;
-            }, Object.create(null) as Record<string, unknown>);
+                    return result;
+                },
+                Object.create(null) as Record<string, unknown>
+            );
 
         case 'TemplateLiteral': {
             let output = '';

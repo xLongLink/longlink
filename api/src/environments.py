@@ -1,6 +1,5 @@
-from os import getenv
-from typing import Any, cast
-from urllib.parse import urlsplit
+import os
+import urllib.parse
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEVELOPMENT_CORS_ORIGINS = (
@@ -22,11 +21,11 @@ MINIMUM_SESSION_KEY_LENGTH = 32
 def _development_enabled() -> bool:
     """Return whether local development configuration should be enabled."""
 
-    development = getenv("DEVELOPMENT")
+    development = os.getenv("DEVELOPMENT")
     if development is not None:
         return development.strip().lower() in {"1", "true", "yes", "on", "y"}
 
-    return getenv("ENVIRONMENT", "").strip().lower() == "development"
+    return os.getenv("ENVIRONMENT", "").strip().lower() == "development"
 
 
 def _environment_files() -> tuple[str, ...]:
@@ -114,7 +113,7 @@ def validate_production_settings(settings: Env) -> None:
     # OIDC traffic carries authentication secrets, so production auth endpoints must be HTTPS.
     for field_name in ("OIDC_ISSUER", "OIDC_REDIRECT_URI"):
         value = str(getattr(settings, field_name)).strip()
-        parsed_url = urlsplit(value)
+        parsed_url = urllib.parse.urlsplit(value)
         if parsed_url.scheme != "https" or not parsed_url.netloc:
             errors.append(f"{field_name} must be an HTTPS URL outside development")
 
@@ -122,4 +121,4 @@ def validate_production_settings(settings: Env) -> None:
         raise RuntimeError(f"Invalid production configuration: {'; '.join(errors)}")
 
 
-env: Env = cast(Any, Env)()
+env = Env(**{})

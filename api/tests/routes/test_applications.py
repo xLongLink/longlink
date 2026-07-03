@@ -1,24 +1,23 @@
 import json
 import pytest
 from types import SimpleNamespace
-from typing import cast
 from datetime import UTC, datetime
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from fastapi.testclient import TestClient
 from src.models.computes import ComputeKind
-from src.models.metadata import EnvironmentMetadata, LongLinkMetadata
+from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
+from src.models.storages import StorageKind
 from src.database.session import get_session
 from src.models.countries import Country
 from src.models.databases import DatabaseKind
-from src.models.storages import StorageKind
 from src.models.operations import OperationKind
 from kubernetes.client.rest import ApiException
 from src.models.applications import ApplicationStatus
 from src.models.applications import ApplicationResponse as AppResponse
-from src.adapters.database.shared import SharedUser
 from src.database.models.users import User
 from src.database.services.users import users
+from src.adapters.database.shared import SharedUser
 from src.database.services.compute import compute
 from src.database.services.storage import storage
 from src.database.services.database import database
@@ -308,6 +307,7 @@ async def test_create_app_returns_app_response(
     monkeypatch.setattr("src.operations.provisioning.images.metadata", fake_metadata)
 
     captured: dict[str, object] = {}
+    captured_buckets: list[tuple[str, ...]] = []
 
     class FakeCompute:
         """Fake compute adapter for app creation tests."""
@@ -383,13 +383,11 @@ async def test_create_app_returns_app_response(
             }
 
         async def shared_bucket(self, organization: str) -> str:
-            buckets = cast(list[tuple[str, ...]], captured.setdefault("buckets", []))
-            buckets.append(("shared", organization))
+            captured_buckets.append(("shared", organization))
             return f"longlink-{organization}-shared"
 
         async def bucket(self, organization: str, application: str) -> str:
-            buckets = cast(list[tuple[str, ...]], captured.setdefault("buckets", []))
-            buckets.append(("application", organization, application))
+            captured_buckets.append(("application", organization, application))
             return f"longlink-{organization}-{application}"
 
     monkeypatch.setattr("src.operations.provisioning.K8s", FakeCompute)
@@ -440,9 +438,12 @@ async def test_create_app_returns_app_response(
         "access_key_id": "storage-access",
         "secret_access_key": "storage-secret",
     }
-    assert captured["buckets"] == [("shared", "acme"), ("application", "acme", "dashboard")]
-    sync_payload = cast(dict[str, object], captured["sync_users"])
-    synced_users = cast(list[SharedUser], sync_payload["users"])
+    assert captured_buckets == [("shared", "acme"), ("application", "acme", "dashboard")]
+    sync_payload = captured["sync_users"]
+    assert isinstance(sync_payload, dict)
+    synced_users = sync_payload["users"]
+    assert isinstance(synced_users, list)
+    assert all(isinstance(synced_user, SharedUser) for synced_user in synced_users)
     assert sync_payload["organization"] == "acme"
     assert [synced_user.model_dump() for synced_user in synced_users] == [
         {
@@ -472,8 +473,10 @@ async def test_create_app_returns_app_response(
             "PORT": "8080",
         },
     }
-    application_payload = cast(dict[str, object], captured["application"])
-    application_secrets = cast(dict[str, str], application_payload["secrets"])
+    application_payload = captured["application"]
+    assert isinstance(application_payload, dict)
+    application_secrets = application_payload["secrets"]
+    assert isinstance(application_secrets, dict)
     assert "LONGLINK_INTERNAL" not in application_secrets
 
 
@@ -911,14 +914,16 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert captured["path"] == "anything"
     assert captured["method"] == "POST"
     assert captured["query_params"] == [("answer", "42")]
-    assert json.loads(cast(bytes, captured["body"]).decode("utf-8")) == {
+    request_body = captured["body"]
+    assert isinstance(request_body, bytes)
+    assert json.loads(request_body.decode("utf-8")) == {
         "sku": "SKU-001",
         "name": "Warehouse Widget",
         "quantity": 10,
     }
-    forwarded_headers = {
-        key.lower(): value for key, value in captured["headers"].items()
-    }
+    headers = captured["headers"]
+    assert isinstance(headers, dict)
+    forwarded_headers = {str(key).lower(): value for key, value in headers.items()}
     assert forwarded_headers["content-type"] == "application/json"
     assert "content-length" not in forwarded_headers
     assert forwarded_headers["x-user-id"] == str(user.id)
@@ -1052,10 +1057,9 @@ async def test_proxy_app_strips_conditional_headers_before_forwarding(
 
     # Assert
     assert response.status_code == 200
-    forwarded_headers = {
-        key.lower() for key in cast(dict[str, str], captured["headers"]).keys()
-    }
-    forwarded_values = cast(dict[str, str], captured["headers"])
+    forwarded_values = captured["headers"]
+    assert isinstance(forwarded_values, dict)
+    forwarded_headers = {str(key).lower() for key in forwarded_values}
     assert "if-none-match" not in forwarded_headers
     assert "if-modified-since" not in forwarded_headers
     assert "x-test" in forwarded_headers

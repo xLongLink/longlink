@@ -1,5 +1,5 @@
+from src.models.icons import ICON_SLUGS, Icon
 from fastapi.testclient import TestClient
-from src.models.icons import Icon, ICON_SLUGS
 from src.models.applications import ApplicationCreate
 
 

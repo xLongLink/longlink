@@ -1,5 +1,4 @@
 from uuid import UUID
-from typing import Any, cast
 from datetime import UTC, datetime
 from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
@@ -64,9 +63,8 @@ class ApplicationsService:
 
         async with session_scope() as session:
             # Join the membership row so the caller can render the app role in one query.
-            role_column = cast(Any, UserApplication.role_name)
             statement = (
-                select(Application, role_column)
+                select(Application, UserApplication.role_name)
                 .options(*_app_relation_options())
                 .outerjoin(
                     UserApplication,
@@ -80,7 +78,7 @@ class ApplicationsService:
                 .where(Application.organization_id == organization_id, Application.deleted_at.is_(None))
             )
             result = await session.execute(statement)
-            return cast(list[tuple[Application, ApplicationRoles | None]], result.all())
+            return [(application, role_name) for application, role_name in result.all()]
 
 
     async def list_responses(self, organization_id: UUID, user_id: UUID, user: User) -> list[ApplicationResponse]:

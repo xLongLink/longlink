@@ -15,12 +15,18 @@ const APPLICATION_LOG_ROLES = new Set<ApplicationRole>(['maintain', 'admin']);
 const APPLICATION_MANAGEMENT_ROLES = new Set<ApplicationRole>(['maintain', 'admin']);
 
 /** Returns whether a user can open an application runtime. */
-export function canAccessApplication(organizationRole: Role | null | undefined, applicationRole: ApplicationRole | null) {
+export function canAccessApplication(
+    organizationRole: Role | null | undefined,
+    applicationRole: ApplicationRole | null
+) {
     return applicationRole !== null || (organizationRole ? ELEVATED_ORGANIZATION_ROLES.has(organizationRole) : false);
 }
 
 /** Returns whether a user can view application logs. */
-export function canViewApplicationLogs(organizationRole: Role | null | undefined, applicationRole: ApplicationRole | null) {
+export function canViewApplicationLogs(
+    organizationRole: Role | null | undefined,
+    applicationRole: ApplicationRole | null
+) {
     return (
         (applicationRole ? APPLICATION_LOG_ROLES.has(applicationRole) : false) ||
         (organizationRole ? ELEVATED_ORGANIZATION_ROLES.has(organizationRole) : false)
@@ -28,7 +34,10 @@ export function canViewApplicationLogs(organizationRole: Role | null | undefined
 }
 
 /** Returns whether a user can manage application lifecycle actions. */
-export function canManageApplication(organizationRole: Role | null | undefined, applicationRole: ApplicationRole | null) {
+export function canManageApplication(
+    organizationRole: Role | null | undefined,
+    applicationRole: ApplicationRole | null
+) {
     return (
         (applicationRole ? APPLICATION_MANAGEMENT_ROLES.has(applicationRole) : false) ||
         (organizationRole ? ELEVATED_ORGANIZATION_ROLES.has(organizationRole) : false)

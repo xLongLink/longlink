@@ -1,30 +1,30 @@
 from uuid import UUID
-from datetime import UTC, datetime, timedelta
 from fastapi import Depends, Response, APIRouter
+from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authsupport, organization_access
 from src.errors import (ConflictError, NotFoundError, ForbiddenError,
                         UnavailableError)
 from src.logger import logger
 from src.operations import provisioning
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.operations import OperationKind
+from src.models.storages import (OrganizationStorageResourceKind,
+                                 OrganizationStorageResourceStatus,
+                                 OrganizationStorageResourceResponse,
+                                 OrganizationStorageApplicationResponse)
 from src.utils.namespace import dbname, s3name
+from src.adapters.storage import S3
 from src.models.databases import (OrganizationDatabaseResourceKind,
                                   OrganizationDatabaseTableResponse,
                                   OrganizationDatabaseResourceStatus,
                                   OrganizationDatabaseResourceResponse,
                                   OrganizationDatabaseApplicationResponse)
 from src.adapters.database import Postgres
-from src.adapters.storage import S3
+from src.models.operations import OperationKind
 from src.models.applications import ApplicationResponse
 from src.models.organizations import (OrganizationCreate, OrganizationDetails,
-                                       OrganizationSummary,
-                                       OrganizationMemberUpdate,
-                                       OrganizationInvitationCreate)
-from src.models.storages import (OrganizationStorageResourceKind,
-                                 OrganizationStorageResourceStatus,
-                                 OrganizationStorageResourceResponse,
-                                 OrganizationStorageApplicationResponse)
+                                      OrganizationSummary,
+                                      OrganizationMemberUpdate,
+                                      OrganizationInvitationCreate)
 from src.database.models.users import User
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
@@ -43,7 +43,8 @@ ORGANIZATION_DELETE_DELAY_DAYS = 0
 async def list_organizations(_user: User = Depends(authsupport)) -> list[OrganizationSummary]:
     """Return all organizations for support and administrator views."""
 
-    return await organizations.list()
+    records = await organizations.list()
+    return [OrganizationSummary.model_validate(record) for record in records]
 
 
 @router.get("/api/organizations/{organization_id}", response_model=OrganizationDetails)
@@ -126,7 +127,7 @@ async def list_organization_database_resource_tables(
             if table is None:
                 raise NotFoundError("Database resource", resource_name)
 
-            return [OrganizationDatabaseTableResponse(**table)]
+            return [OrganizationDatabaseTableResponse.model_validate(table)]
 
         if resource_name in {"information_schema", "pg_catalog", "pg_toast", "public"} or resource_name.startswith("pg_"):
             raise NotFoundError("Database resource", resource_name)
@@ -138,7 +139,7 @@ async def list_organization_database_resource_tables(
         logger.exception("Failed to inspect database resource '%s' for organization '%s'", resource_name, organization.slug)
         raise UnavailableError("Database resource unavailable") from exc
 
-    return [OrganizationDatabaseTableResponse(**table) for table in tables]
+    return [OrganizationDatabaseTableResponse.model_validate(table) for table in tables]
 
 
 @router.post("/api/organizations/{organization_id}/invitations", status_code=204)
@@ -468,4 +469,4 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     await provisioning.create_organization_database(organization)
     await provisioning.create_organization_storage(organization)
 
-    return organization
+    return OrganizationSummary.model_validate(organization)

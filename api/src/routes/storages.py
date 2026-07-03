@@ -2,11 +2,10 @@ from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from src.auth import authadmin, authsupport
 from src.errors import ConflictError, NotFoundError
+from src.models.storages import (StorageBucketResponse, StorageObjectResponse,
+                                 StorageRegistryCreate,
+                                 StorageRegistryResponse)
 from src.adapters.storage import S3
-from src.models.storages import (StorageBucketResponse,
-                                StorageObjectResponse,
-                                StorageRegistryCreate,
-                                StorageRegistryResponse)
 from src.database.models.users import User
 from src.database.services.storage import storage
 
@@ -18,7 +17,8 @@ STORAGE_OBJECT_LIST_LIMIT = 1000
 async def list_storage_registries(_: User = Depends(authsupport)) -> list[StorageRegistryResponse]:
     """Return all registered storage backends."""
 
-    return await storage.list()
+    registries = await storage.list()
+    return [StorageRegistryResponse.model_validate(registry) for registry in registries]
 
 
 @router.get("/api/storages/{registry_id}", response_model=StorageRegistryResponse)
@@ -29,7 +29,7 @@ async def get_storage_registry(registry_id: UUID, _: User = Depends(authsupport)
     if registry is None:
         raise NotFoundError("Storage registry", registry_id)
 
-    return registry
+    return StorageRegistryResponse.model_validate(registry)
 
 
 @router.delete("/api/storages/{registry_id}", status_code=204)
@@ -56,7 +56,7 @@ async def create_storage_registry(payload: StorageRegistryCreate, user: User = D
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
 
-    return registry
+    return StorageRegistryResponse.model_validate(registry)
 
 
 @router.get("/api/storages/{registry_id}/buckets", response_model=list[StorageBucketResponse])

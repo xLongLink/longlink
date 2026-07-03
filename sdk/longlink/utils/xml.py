@@ -1,6 +1,6 @@
 import xmltodict
 from lxml import etree
-from typing import Any, cast
+from typing import Any
 from pathlib import Path
 from longlink.constants import ROOT
 
@@ -47,7 +47,7 @@ class Element:
             raise ValueError(f"XML syntax is invalid: {error}") from error
 
         if not schema.validate(xml_doc):
-            error_log = cast(Any, schema.error_log)
+            error_log: Any = schema.error_log
             messages = [f"Line {error.line}: {error.message}" for error in error_log]
             raise ValueError("XML is invalid: " + "; ".join(messages))
 
