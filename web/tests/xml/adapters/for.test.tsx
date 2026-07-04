@@ -26,9 +26,14 @@ describe('For', () => {
 
     /* Loop children should keep access to the scoped item value. */
     it('renders children with the scoped item value', async () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            translations: { items: { name: '{{name}}' } },
+            values: {},
+        };
         const ast = parseXML(
-            '<longlink><State id="items" value="[{&quot;name&quot;:&quot;Alpha&quot;}]" /><For each="${items.value}" as="item"><Input value="$item.name" /></For></longlink>'
+            '<longlink><State id="items" value="[{&quot;name&quot;:&quot;Alpha&quot;}]" /><For each="${items.value}" as="item"><P i18n="items.name" name="$item.name" /></For></longlink>'
         );
 
         await setupContext(ast, ctx, '');

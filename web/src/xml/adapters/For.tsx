@@ -14,9 +14,8 @@ export function For({ props, nodes }: Props) {
 
     return (Array.isArray(each) ? each : []).map((item, index) => {
         const childCtx: typeof ctx = {
+            ...ctx,
             parent: ctx,
-            setups: ctx.setups,
-            invalidate: ctx.invalidate,
             values: {
                 [as]: item,
                 index,
