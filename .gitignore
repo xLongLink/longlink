@@ -152,6 +152,7 @@ script.bat
 
 
 .codex
+/.opencode/
 
 # Local secrets and machine-specific config
 *.pem
