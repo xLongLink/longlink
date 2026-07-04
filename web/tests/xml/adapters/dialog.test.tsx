@@ -7,7 +7,7 @@ describe('Dialog', () => {
     it('renders the dialog trigger in static markup', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Dialog open="${true}"><DialogTrigger><Button variant="outline"><P i18n="Open dialog" /></Button></DialogTrigger><DialogContent><DialogTitle><P i18n="Delete issue" /></DialogTitle><DialogDescription><P i18n="This cannot be undone." /></DialogDescription><Button i18n="Actions" /></DialogContent></Dialog>'
+                '<Dialog open="${true}"><DialogTrigger><Button variant="outline"><P i18n="dialogs.open" /></Button></DialogTrigger><DialogContent><DialogTitle><P i18n="dialogs.deleteIssue" /></DialogTitle><DialogDescription><P i18n="dialogs.cannotUndo" /></DialogDescription><Button i18n="dialogs.actions" /></DialogContent></Dialog>'
             )
         );
 
@@ -19,7 +19,7 @@ describe('Dialog', () => {
     it('renders a direct i18n button trigger label', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Dialog open="${true}"><DialogTrigger><Button i18n="Create item" /></DialogTrigger><DialogContent><DialogTitle i18n="Create inventory item" /><DialogDescription i18n="Create one item." /></DialogContent></Dialog>'
+                '<Dialog open="${true}"><DialogTrigger><Button i18n="dialogs.createItem" /></DialogTrigger><DialogContent><DialogTitle i18n="dialogs.createInventoryItem" /><DialogDescription i18n="dialogs.createOneItem" /></DialogContent></Dialog>'
             )
         );
 
@@ -30,7 +30,7 @@ describe('Dialog', () => {
     it('renders an anchor trigger in static markup', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Dialog open="${true}"><DialogTrigger><A href="/quotes/edit" active="hover"><P i18n="Edit quote" /></A></DialogTrigger><DialogContent><DialogTitle><P i18n="Edit quote" /></DialogTitle><DialogDescription><P i18n="Review the quote details before saving the next revision." /></DialogDescription><Button i18n="Actions" /></DialogContent></Dialog>'
+                '<Dialog open="${true}"><DialogTrigger><A href="/quotes/edit" active="hover"><P i18n="dialogs.editQuote" /></A></DialogTrigger><DialogContent><DialogTitle><P i18n="dialogs.editQuote" /></DialogTitle><DialogDescription><P i18n="dialogs.reviewQuote" /></DialogDescription><Button i18n="dialogs.actions" /></DialogContent></Dialog>'
             )
         );
 

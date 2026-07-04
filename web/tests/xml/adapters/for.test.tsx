@@ -14,7 +14,7 @@ describe('For', () => {
         const node: ASTNode = {
             name: 'For',
             params: { each: 'items', as: 'item' },
-            children: [{ name: 'P', params: { i18n: 'ignored' } }],
+            children: [{ name: 'P', params: { i18n: 'for.ignored' } }],
         };
 
         const output = renderToStaticMarkup(

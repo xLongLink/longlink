@@ -120,7 +120,7 @@ function resolveMenuSubSectionAttributes(
     };
 }
 
-/** Resolves a menu label while preserving direct component fallback behavior. */
+/** Resolves a menu label from a translation key or direct label prop. */
 function resolveMenuLabel(props: ASTProps, ctx: ExecutionContext, defaultValue?: string): string | undefined {
     if (props.i18n) {
         return resolveTranslation(props, ctx);

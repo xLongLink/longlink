@@ -52,7 +52,7 @@ describe('State', () => {
     /* State nodes must reject nested children so the runtime contract stays declarative. */
     it('throws when children are present', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const ast = parseXML('<State id="filter" value="day"><P i18n="Ready" /></State>');
+        const ast = parseXML('<State id="filter" value="day"><P i18n="state.ready" /></State>');
 
         expect(() =>
             renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))

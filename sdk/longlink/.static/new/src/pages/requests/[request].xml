@@ -17,6 +17,7 @@
     <Grid columns="2">
         <Card>
             <Stack>
+                <H2 i18n="requests.detail.summary" />
                 <Flex space="between">
                     <P value="$request.title" />
                     <Badge variant="outline" value="$request.status" />
@@ -24,13 +25,24 @@
                 <P value="${`${request.vendor} - CHF ${request.amount}`}" />
                 <P value="$request.justification" />
                 <P value="${`Created by ${request.created_by.name}`}" />
+                <P if="${request.status in ['approved']}" i18n="requests.detail.approvedNote" />
+                <P if="${request.status in ['rejected']}" i18n="requests.detail.rejectedNote" />
 
                 <ButtonGroup>
+                    <ButtonGroupText i18n="requests.actions.decision" />
                     <Action action="/requests/${params.request}/status" method="PATCH" invalidate='${["request"]}' json='${{ status: "approved" }}'>
-                        <Button i18n="requests.actions.approve" />
+                        <Button i18n="requests.actions.approve">
+                            <Icon name="check" />
+                        </Button>
                     </Action>
+                    <ButtonGroupSeparator />
                     <Action action="/requests/${params.request}/status" method="PATCH" invalidate='${["request"]}' json='${{ status: "rejected" }}'>
-                        <Button variant="outline" i18n="requests.actions.reject" />
+                        <Button variant="outline" i18n="requests.actions.reject">
+                            <Icon name="x" />
+                        </Button>
+                    </Action>
+                    <Action action="/requests/${params.request}/status" method="PATCH" invalidate='${["request"]}' json='${{ status: "submitted" }}'>
+                        <Icon name="rotate-ccw" />
                     </Action>
                 </ButtonGroup>
             </Stack>
@@ -38,10 +50,11 @@
 
         <Card>
             <Stack>
-                <P i18n="requests.attachments.title" />
+                <H2 i18n="requests.attachments.title" />
                 <Field>
                     <FieldLabel htmlFor="attachment-file" i18n="requests.attachments.file" />
                     <Input id="attachment-file" type="file" value="$attachment.file" />
+                    <FieldDescription i18n="requests.attachments.help" />
                 </Field>
                 <Action
                     action="/requests/${params.request}/attachments"

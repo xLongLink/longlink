@@ -1,0 +1,157 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink name="Settings" icon="settings">
+    <State id="profile" owner="Operations Desk" costCenter="OPS-100" note="Approve standard equipment within the monthly budget." />
+    <State id="draftLink" label="Vendor quote" />
+    <State id="quickLinks" value='${[]}' />
+    <State id="emailUpdates" value="true" />
+    <State id="notifications" value="true" />
+    <State id="pinned" value="false" />
+    <State id="budgetLimit" value="2500" />
+
+    <Hero icon="settings">
+        <HeroTitle i18n="settings.title" />
+        <HeroDescription i18n="settings.description" />
+    </Hero>
+
+    <Tabs defaultValue="profile">
+        <Tab value="profile" icon="building-2" i18n="settings.tabs.profile">
+            <Grid columns="2">
+                <Card>
+                    <Stack>
+                        <FieldLegend i18n="settings.profile.legend" />
+                        <Field>
+                            <FieldLabel htmlFor="owner" i18n="settings.profile.owner" />
+                            <Input id="owner" value="$profile.owner" />
+                            <FieldDescription i18n="settings.profile.ownerHelp" />
+                        </Field>
+
+                        <Field>
+                            <FieldLabel htmlFor="cost-center" i18n="settings.profile.costCenter" />
+                            <InputGroup>
+                                <InputGroupAddon>
+                                    <Icon name="building-2" />
+                                </InputGroupAddon>
+                                <InputGroupInput id="cost-center" value="$profile.costCenter" />
+                                <InputGroupButton i18n="settings.profile.lookup" />
+                            </InputGroup>
+                        </Field>
+
+                        <Field>
+                            <FieldLabel htmlFor="note" i18n="settings.profile.note" />
+                            <InputGroup>
+                                <InputGroupTextarea id="note" rows="4" value="$profile.note" />
+                                <InputGroupAddon align="block-end">
+                                    <InputGroupText i18n="settings.profile.noteHelp" />
+                                </InputGroupAddon>
+                            </InputGroup>
+                        </Field>
+                    </Stack>
+                </Card>
+
+                <Card>
+                    <Stack>
+                        <FieldLegend i18n="settings.preferences.legend" />
+                        <Field orientation="horizontal">
+                            <Checkbox id="email-updates" checked="$emailUpdates" />
+                            <FieldContent>
+                                <Label htmlFor="email-updates" i18n="settings.preferences.email" />
+                                <FieldDescription i18n="settings.preferences.emailHelp" />
+                            </FieldContent>
+                        </Field>
+
+                        <Field orientation="horizontal">
+                            <Switch id="notifications" checked="$notifications" />
+                            <FieldContent>
+                                <FieldTitle i18n="settings.preferences.notifications" />
+                                <FieldDescription i18n="settings.preferences.notificationsHelp" />
+                            </FieldContent>
+                        </Field>
+
+                        <Field>
+                            <FieldLabel htmlFor="budget-limit" i18n="settings.preferences.limit" />
+                            <Slider id="budget-limit" min="500" max="10000" step="500" value="$budgetLimit" />
+                            <P value="${`Auto-approve up to CHF ${budgetLimit.value}`}" />
+                        </Field>
+
+                        <Toggle pressed="$pinned">
+                            <Icon name="pin" />
+                            <B i18n="settings.preferences.pin" />
+                        </Toggle>
+                    </Stack>
+                </Card>
+            </Grid>
+        </Tab>
+
+        <Tab value="workflow" icon="sliders-horizontal" i18n="settings.tabs.workflow">
+            <Grid columns="2">
+                <Card>
+                    <Stack>
+                        <Field>
+                            <FieldLabel i18n="settings.workflow.owner" />
+                            <RadioGroup defaultValue="manager">
+                                <RadioGroupItem value="manager" i18n="settings.workflow.manager" />
+                                <RadioGroupItem value="finance" i18n="settings.workflow.finance" />
+                                <RadioGroupItem value="owner" i18n="settings.workflow.ownerRole" />
+                            </RadioGroup>
+                        </Field>
+
+                        <Field>
+                            <FieldLabel i18n="settings.workflow.tags" />
+                            <ToggleGroup type="multiple" defaultValue='${["finance"]}'>
+                                <ToggleGroupItem value="finance">
+                                    <Icon name="banknote" />
+                                </ToggleGroupItem>
+                                <ToggleGroupItem value="equipment">
+                                    <Icon name="laptop" />
+                                </ToggleGroupItem>
+                                <ToggleGroupItem value="travel">
+                                    <Icon name="plane" />
+                                </ToggleGroupItem>
+                            </ToggleGroup>
+                        </Field>
+
+                        <Field>
+                            <FieldLabel htmlFor="risk" i18n="settings.workflow.risk" />
+                            <Select defaultValue="medium">
+                                <SelectTrigger>
+                                    <SelectValue i18n="settings.workflow.riskPlaceholder" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectLabel i18n="settings.workflow.riskGroup" />
+                                        <SelectItem value="low" i18n="settings.workflow.low" />
+                                        <SelectItem value="medium" i18n="settings.workflow.medium" />
+                                        <SelectSeparator />
+                                        <SelectItem value="high" i18n="settings.workflow.high" />
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                        </Field>
+                    </Stack>
+                </Card>
+
+                <Card>
+                    <Stack>
+                        <FieldLegend i18n="settings.links.legend" />
+                        <Field>
+                            <FieldLabel htmlFor="quick-link" i18n="settings.links.label" />
+                            <Input id="quick-link" value="$draftLink.label" />
+                        </Field>
+                        <ButtonGroup>
+                            <ButtonGroupText i18n="settings.links.actions" />
+                            <Button append="${'quickLinks.value'}" item="${{ label: draftLink.label }}" disabled="${draftLink.label in ['']}" i18n="settings.links.add" />
+                            <ButtonGroupSeparator />
+                            <Action invalidate='${["quickLinks"]}'>
+                                <Button variant="outline" i18n="settings.links.reset" />
+                            </Action>
+                        </ButtonGroup>
+                        <P if="${quickLinks.value.length in [0]}" i18n="settings.links.empty" />
+                        <For each="$quickLinks.value" as="link">
+                            <Badge variant="outline" value="$link.label" />
+                        </For>
+                    </Stack>
+                </Card>
+            </Grid>
+        </Tab>
+    </Tabs>
+</longlink>

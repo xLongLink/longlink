@@ -15,21 +15,22 @@
         <HeroAction>
             <Dialog>
                 <DialogTrigger>
-                    <Button i18n="requests.create.open" />
+                    <Button i18n="requests.create.open">
+                        <Icon name="plus" />
+                    </Button>
                 </DialogTrigger>
                 <DialogContent>
                     <Stack>
-                        <DialogTitle>
-                            <P i18n="requests.create.title" />
-                        </DialogTitle>
-                        <DialogDescription>
-                            <P i18n="requests.create.description" />
-                        </DialogDescription>
+                        <DialogTitle i18n="requests.create.title" />
+                        <DialogDescription i18n="requests.create.description" />
+
+                        <FieldLegend i18n="requests.create.section" />
 
                         <Grid columns="2">
                             <Field>
                                 <FieldLabel htmlFor="request-title" i18n="requests.fields.title" />
                                 <Input id="request-title" value="$draft.title" />
+                                <FieldDescription i18n="requests.fields.titleHelp" />
                             </Field>
 
                             <Field>
@@ -40,12 +41,18 @@
 
                         <Field>
                             <FieldLabel htmlFor="request-amount" i18n="requests.fields.amount" />
-                            <Input id="request-amount" type="number" value="$draft.amount" />
+                            <InputGroup>
+                                <InputGroupAddon>
+                                    <Icon name="banknote" />
+                                </InputGroupAddon>
+                                <InputGroupInput id="request-amount" type="number" value="$draft.amount" />
+                                <InputGroupText i18n="requests.fields.currency" />
+                            </InputGroup>
                         </Field>
 
                         <Field>
                             <FieldLabel htmlFor="request-justification" i18n="requests.fields.justification" />
-                            <Textarea id="request-justification" value="$draft.justification" />
+                            <Textarea id="request-justification" rows="4" value="$draft.justification" />
                         </Field>
 
                         <Field orientation="horizontal">
@@ -56,7 +63,7 @@
                                 invalidate='${["requests"]}'
                                 json="${{ title: draft.title, amount: draft.amount, vendor: draft.vendor, justification: draft.justification }}"
                             >
-                                <Button i18n="requests.create.submit" />
+                                <Button disabled="${draft.title in ['']}" i18n="requests.create.submit" />
                             </Action>
                         </Field>
                     </Stack>
@@ -64,6 +71,8 @@
             </Dialog>
         </HeroAction>
     </Hero>
+
+    <P i18n="requests.count" count="${requests.length}" />
 
     <DataTable data="$requests" as="request" empty="No purchase requests yet.">
         <DataColumn>
@@ -78,8 +87,12 @@
             </DataCell>
         </DataColumn>
 
-        <DataColumn field="vendor" header="Vendor" />
-        <DataColumn field="amount" header="Amount" />
+        <DataColumn field="vendor" i18n="requests.table.vendor" />
+
+        <DataColumn>
+            <DataHeader i18n="requests.table.amount" />
+            <DataCell value="${`CHF ${request.amount}`}" />
+        </DataColumn>
 
         <DataColumn>
             <DataHeader i18n="requests.table.status" />

@@ -8,7 +8,7 @@ import { renderXmlToMarkup } from '../helpers';
 describe('Button', () => {
     /* Submit mode should render a native submit control. */
     it('renders a submit button when submit is enabled', () => {
-        const ast = parseXML('<Button submit="true" i18n="Submit" />');
+        const ast = parseXML('<Button submit="true" i18n="actions.submit" />');
         const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('<button');
@@ -18,7 +18,7 @@ describe('Button', () => {
 
     /* Disabled should mark the rendered button as inactive. */
     it('disables normal buttons when disabled is set', () => {
-        const ast = parseXML('<Button disabled="true" i18n="Submit" />');
+        const ast = parseXML('<Button disabled="true" i18n="actions.submit" />');
         const output = renderXmlToMarkup(ast);
 
         expect(output).toContain('<button');
@@ -52,7 +52,7 @@ describe('Button', () => {
 
     /* The runtime should honor conditional rendering on button nodes. */
     it('skips a button when if resolves false', () => {
-        const ast = parseXML('<Button if="${false}" i18n="Hidden" />');
+        const ast = parseXML('<Button if="${false}" i18n="actions.hidden" />');
         const output = renderXmlToMarkup(ast);
 
         expect(output).toBe('<div></div>');

@@ -32,7 +32,7 @@ describe('renderNode', () => {
         ).toContain('Count 7');
     });
 
-    it('suppresses i18n fallback keys in browser renders until translations load', () => {
+    it('waits for translations before browser renders localized XML', () => {
         const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'document');
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
 

@@ -90,7 +90,7 @@ function renderDocNavigationItem(
                 <SidebarMenuAction
                     aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${item.title}`}
                     aria-expanded={isOpen}
-                    className="top-1 size-5"
+                    className="top-1 size-5 cursor-pointer"
                     onClick={handleToggle}
                 >
                     <ChevronDownIcon className={cn('size-3.5 transition-transform', !isOpen && '-rotate-90')} />

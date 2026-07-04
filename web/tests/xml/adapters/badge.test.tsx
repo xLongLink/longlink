@@ -5,7 +5,7 @@ import { renderXmlToMarkup } from '../helpers';
 
 describe('Badge', () => {
     it('renders raw xml badge content end to end', () => {
-        const output = renderXmlToMarkup(parseXML('<Badge i18n="New" />'));
+        const output = renderXmlToMarkup(parseXML('<Badge i18n="badges.new" />'));
 
         expect(output).toContain('New');
     });

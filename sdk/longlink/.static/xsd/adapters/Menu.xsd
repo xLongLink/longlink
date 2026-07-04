@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="Types.xsd" />
   <xsd:complexType name="MenuChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -22,7 +23,7 @@
     <xsd:complexContent>
       <xsd:extension base="MenuChildrenOnlyType">
         <xsd:attribute name="value" type="xsd:string" use="required" />
-        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
         <xsd:attribute name="label" type="xsd:string" use="optional" />
         <xsd:attribute name="icon" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
@@ -34,7 +35,7 @@
     <xsd:complexContent>
       <xsd:extension base="MenuChildrenOnlyType">
         <xsd:attribute name="value" type="xsd:string" use="required" />
-        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
         <xsd:attribute name="label" type="xsd:string" use="optional" />
         <xsd:attribute name="disabled" type="xsd:string" use="optional" />
       </xsd:extension>

@@ -300,7 +300,7 @@ app = LongLink(
             <Stack className="gap-2">
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
-                    <Li>i18n: literal translation key.</Li>
+                    <Li>i18n: dotted translation key.</Li>
                     <Li>count: optional expression used for plural translation entries.</Li>
                     <Li>{'Any additional attribute can fill {{name}} placeholders inside the translation string.'}</Li>
                 </Ul>

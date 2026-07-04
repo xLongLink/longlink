@@ -7,7 +7,7 @@ describe('Avatar', () => {
     it('renders the avatar composition end to end', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Avatar><AvatarImage src="/ada.png" alt="Ada Lovelace" /><AvatarFallback><P i18n="AL" /></AvatarFallback><AvatarBadge><P i18n="1" /></AvatarBadge></Avatar>'
+                '<Avatar><AvatarImage src="/ada.png" alt="Ada Lovelace" /><AvatarFallback><P i18n="avatar.initials" /></AvatarFallback><AvatarBadge><P i18n="avatar.badgeCount" /></AvatarBadge></Avatar>'
             )
         );
 

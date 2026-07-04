@@ -1,7 +1,69 @@
 {
+    "dashboard": {
+        "cards": {
+            "budget": {
+                "label": "Monthly budget"
+            },
+            "requests": {
+                "count": {
+                    "one": "{{count}} request",
+                    "other": "{{count}} requests"
+                },
+                "label": "Open work"
+            },
+            "target": {
+                "label": "Review target"
+            }
+        },
+        "checklist": {
+            "items": {
+                "attachment": "Attach quotes, invoices, or screenshots before approval.",
+                "budget": "Check the budget owner before changing status.",
+                "context": "Explain the business reason in one paragraph."
+            },
+            "steps": {
+                "archive": "Archive supporting files with the approved request.",
+                "create": "Create the request from the Requests tab.",
+                "review": "Review the detail page and decide."
+            },
+            "title": "Healthy request checklist"
+        },
+        "description": "Track office purchase requests, review policy, and keep the approval queue visible.",
+        "openRequests": "Open requests",
+        "policy": {
+            "description": "The sample keeps the rules simple: amount decides who reviews and how quickly the team should respond.",
+            "table": {
+                "amount": "Amount",
+                "approver": "Approver",
+                "finance": "Finance",
+                "fiveDays": "5 days",
+                "footer": "Escalate overdue requests in the Team tab.",
+                "large": "Above CHF 5,000",
+                "manager": "Manager",
+                "medium": "CHF 1,000 to 5,000",
+                "oneDay": "1 day",
+                "owner": "Owner",
+                "sla": "SLA",
+                "small": "Below CHF 1,000",
+                "twoDays": "2 days"
+            },
+            "title": "Approval policy"
+        },
+        "recent": {
+            "empty": "No requests yet. Create the first one from the Requests tab.",
+            "open": "Open request",
+            "title": "Recent requests"
+        },
+        "tabs": {
+            "policy": "Policy",
+            "recent": "Recent"
+        },
+        "title": "Office operations"
+    },
     "requests": {
         "actions": {
             "approve": "Approve",
+            "decision": "Decision",
             "reject": "Reject"
         },
         "attachments": {
@@ -9,33 +71,130 @@
             "delete": "Delete",
             "download": "Download",
             "file": "Attachment",
+            "help": "Files are stored through the LongLink storage facade, so local and production storage use the same API.",
             "title": "Attachments",
             "upload": "Upload attachment"
+        },
+        "count": {
+            "one": "{{count}} request in the queue.",
+            "other": "{{count}} requests in the queue."
         },
         "create": {
             "description": "Submit a request with enough context for an approver to make a decision.",
             "open": "New request",
+            "section": "Request details",
             "submit": "Submit request",
             "title": "Create purchase request"
         },
         "description": "Create purchase requests, route them through a simple approval state, and keep supporting files together.",
         "detail": {
+            "approvedNote": "This request is approved and ready for procurement.",
             "back": "Back to requests",
             "description": "Review the request, update its workflow status, and manage attachments.",
+            "rejectedNote": "This request is rejected. Add context before reopening it.",
+            "summary": "Request summary",
             "title": "Purchase request detail"
         },
         "fields": {
             "amount": "Amount",
+            "currency": "CHF",
             "justification": "Justification",
             "title": "Title",
+            "titleHelp": "Use a short, searchable name.",
             "vendor": "Vendor"
         },
         "table": {
+            "amount": "Amount",
             "createdBy": "Created by",
             "open": "Open",
             "request": "Request",
-            "status": "Status"
+            "status": "Status",
+            "vendor": "Vendor"
         },
         "title": "Purchase requests"
+    },
+    "settings": {
+        "description": "Use local XML state to tune the sample workflow without adding backend settings.",
+        "links": {
+            "actions": "Links",
+            "add": "Add",
+            "empty": "No quick links added yet.",
+            "label": "Quick link label",
+            "legend": "Local quick links",
+            "reset": "Reset"
+        },
+        "preferences": {
+            "email": "Email updates",
+            "emailHelp": "Send a digest when request status changes.",
+            "legend": "Preferences",
+            "limit": "Auto-approval limit",
+            "notifications": "In-app notifications",
+            "notificationsHelp": "Show reminders for stale requests.",
+            "pin": "Pin policy"
+        },
+        "profile": {
+            "costCenter": "Cost center",
+            "legend": "Operations profile",
+            "lookup": "Lookup",
+            "note": "Approval note",
+            "noteHelp": "Visible to reviewers",
+            "owner": "Workflow owner",
+            "ownerHelp": "This is local state bound directly from XML."
+        },
+        "tabs": {
+            "profile": "Profile",
+            "workflow": "Workflow"
+        },
+        "title": "Settings",
+        "workflow": {
+            "finance": "Finance",
+            "high": "High",
+            "low": "Low",
+            "manager": "Manager",
+            "medium": "Medium",
+            "owner": "Default approver",
+            "ownerRole": "Owner",
+            "risk": "Risk level",
+            "riskGroup": "Risk",
+            "riskPlaceholder": "Select risk",
+            "tags": "Review tags"
+        }
+    },
+    "team": {
+        "description": "A compact directory and handoff runbook for the people who review and fulfill requests.",
+        "docs": "SDK docs",
+        "flow": {
+            "approval": "Approval",
+            "budget": "Budget check",
+            "budgetDescription": "Finance confirms budget owner and policy fit.",
+            "decision": "Decision",
+            "decisionDescription": "Approve, reject, or reopen from the request detail page.",
+            "intake": "Intake",
+            "title": "Review flow",
+            "triage": "Triage",
+            "triageDescription": "The desk verifies amount, vendor, and justification."
+        },
+        "member": "Team member",
+        "refresh": "Refresh team",
+        "runbook": {
+            "bold": "Finance owns budget checks. ",
+            "code": "PATCH /requests/{id}/status",
+            "example": "Example payload",
+            "handoff": "Handoff notes",
+            "outdated": "Old email approvals are retired.",
+            "payload": "{\n  \"status\": \"approved\"\n}",
+            "response": "Response rule",
+            "sub": " local",
+            "sup": " v1",
+            "title": "Runbook",
+            "underlined": "Attach evidence before approval. "
+        },
+        "table": {
+            "badge": "Badge",
+            "escalation": "Escalation",
+            "name": "Name",
+            "role": "Role"
+        },
+        "title": "Approval team"
     }
 }

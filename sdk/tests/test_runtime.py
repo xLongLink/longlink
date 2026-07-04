@@ -167,6 +167,6 @@ def test_page_metadata_helpers() -> None:
     assert page_file_tab("issues/[issue].xml") == "issues"
     assert page_file_tab("[issue].xml") == "issue"
     assert extract_longlink_metadata(
-        '<longlink name=" Dashboard " icon=" layout-dashboard "><P i18n="x" /></longlink>'
+        '<longlink name=" Dashboard " icon=" layout-dashboard "><P i18n="dashboard.title" /></longlink>'
     ) == ("Dashboard", "layout-dashboard")
     assert extract_longlink_metadata("<unknown />") == (None, None)

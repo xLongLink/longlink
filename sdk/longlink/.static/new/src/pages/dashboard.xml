@@ -1,0 +1,134 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink name="Dashboard" icon="layout-dashboard">
+    <Query id="requests" path="/requests" />
+    <State id="limits" monthlyBudget="12000" approvalTarget="2" />
+
+    <Hero icon="layout-dashboard">
+        <HeroTitle i18n="dashboard.title" />
+        <HeroDescription i18n="dashboard.description" />
+        <HeroAction>
+            <A to="/requests" i18n="dashboard.openRequests">
+                <Icon name="arrow-right" />
+            </A>
+        </HeroAction>
+    </Hero>
+
+    <Grid columns="3">
+        <Card>
+            <Stack>
+                <Flex space="between">
+                    <P i18n="dashboard.cards.requests.label" />
+                    <Icon name="clipboard-list" />
+                </Flex>
+                <P i18n="dashboard.cards.requests.count" count="${requests.length}" />
+            </Stack>
+        </Card>
+
+        <Card>
+            <Stack>
+                <Flex space="between">
+                    <P i18n="dashboard.cards.budget.label" />
+                    <Icon name="banknote" />
+                </Flex>
+                <P value="${`CHF ${limits.monthlyBudget}`}" />
+            </Stack>
+        </Card>
+
+        <Card>
+            <Stack>
+                <Flex space="between">
+                    <P i18n="dashboard.cards.target.label" />
+                    <Icon name="timer" />
+                </Flex>
+                <P value="${`${limits.approvalTarget} days`}" />
+            </Stack>
+        </Card>
+    </Grid>
+
+    <Columns>
+        <Column width="65">
+            <Card>
+                <Tabs defaultValue="recent">
+                    <Tab value="recent" icon="list-check" i18n="dashboard.tabs.recent">
+                        <Stack>
+                            <H2 i18n="dashboard.recent.title" />
+                            <P if="${requests.length in [0]}" i18n="dashboard.recent.empty" />
+                            <For each="$requests" as="request">
+                                <Card size="sm">
+                                    <Flex space="between">
+                                        <Stack>
+                                            <A to="/requests/${request.id}" i18n="dashboard.recent.open">
+                                                <Icon name="arrow-right" />
+                                            </A>
+                                            <P value="${`${request.vendor} - CHF ${request.amount}`}" />
+                                        </Stack>
+                                        <Badge variant="outline" value="$request.status" />
+                                    </Flex>
+                                </Card>
+                            </For>
+                        </Stack>
+                    </Tab>
+
+                    <Tab value="policy" icon="shield-check" i18n="dashboard.tabs.policy">
+                        <Stack>
+                            <H2 i18n="dashboard.policy.title" />
+                            <P i18n="dashboard.policy.description" />
+                            <Table>
+                                <Thead>
+                                    <Tr>
+                                        <Th i18n="dashboard.policy.table.amount" />
+                                        <Th i18n="dashboard.policy.table.approver" />
+                                        <Th i18n="dashboard.policy.table.sla" />
+                                    </Tr>
+                                </Thead>
+                                <Tbody>
+                                    <Tr>
+                                        <Td i18n="dashboard.policy.table.small" />
+                                        <Td i18n="dashboard.policy.table.manager" />
+                                        <Td i18n="dashboard.policy.table.oneDay" />
+                                    </Tr>
+                                    <Tr>
+                                        <Td i18n="dashboard.policy.table.medium" />
+                                        <Td i18n="dashboard.policy.table.finance" />
+                                        <Td i18n="dashboard.policy.table.twoDays" />
+                                    </Tr>
+                                    <Tr>
+                                        <Td i18n="dashboard.policy.table.large" />
+                                        <Td i18n="dashboard.policy.table.owner" />
+                                        <Td i18n="dashboard.policy.table.fiveDays" />
+                                    </Tr>
+                                </Tbody>
+                                <Tfoot>
+                                    <Tr>
+                                        <Td i18n="dashboard.policy.table.footer" />
+                                        <Td></Td>
+                                        <Td></Td>
+                                    </Tr>
+                                </Tfoot>
+                            </Table>
+                        </Stack>
+                    </Tab>
+                </Tabs>
+            </Card>
+        </Column>
+
+        <Column width="35">
+            <Card>
+                <Stack>
+                    <H3 i18n="dashboard.checklist.title" />
+                    <Ul>
+                        <Li i18n="dashboard.checklist.items.context" />
+                        <Li i18n="dashboard.checklist.items.budget" />
+                        <Li i18n="dashboard.checklist.items.attachment" />
+                    </Ul>
+                    <Hr />
+                    <Ol>
+                        <Li i18n="dashboard.checklist.steps.create" />
+                        <Li i18n="dashboard.checklist.steps.review" />
+                        <Li i18n="dashboard.checklist.steps.archive" />
+                    </Ol>
+                </Stack>
+            </Card>
+        </Column>
+    </Columns>
+</longlink>

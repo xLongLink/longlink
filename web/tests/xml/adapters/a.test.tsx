@@ -6,7 +6,7 @@ describe('A', () => {
     /* App navigation targets should resolve against the view route base, not the API request base. */
     it('renders app navigation anchors', () => {
         const output = renderXmlToMarkup(
-            parseXML('<A to="/issues/123" i18n="Open issue" />'),
+            parseXML('<A to="/issues/123" i18n="anchors.openIssue" />'),
             {
                 invalidate: async () => {},
                 navigationBaseUrl: '/orgs/acme/apps/tracker',
@@ -23,7 +23,7 @@ describe('A', () => {
     /* Internal anchors should resolve against the active XML base URL. */
     it('resolves internal anchors against the base url', () => {
         const output = renderXmlToMarkup(
-            parseXML('<A href="/files/document.pdf" i18n="Download" />'),
+            parseXML('<A href="/files/document.pdf" i18n="anchors.download" />'),
             { setups: {}, invalidate: async () => {}, values: {} },
             '/orgs/acme/apps/inventory'
         );
@@ -33,7 +33,7 @@ describe('A', () => {
 
     /* The runtime should omit href when the anchor is used as a triggerless label. */
     it('renders an anchor without href when omitted', () => {
-        const output = renderXmlToMarkup(parseXML('<A i18n="Label only" />'));
+        const output = renderXmlToMarkup(parseXML('<A i18n="anchors.labelOnly" />'));
 
         expect(output).not.toContain('href=');
         expect(output).toContain('Label only');

@@ -109,7 +109,7 @@ describe('Action', () => {
     /* Button children should become the clickable action trigger. */
     it('renders a wrapped button trigger in static markup', () => {
         const output = renderXmlToMarkup(
-            parseXML('<Action action="/example/profile"><Button i18n="Save profile" /></Action>')
+            parseXML('<Action action="/example/profile"><Button i18n="actions.saveProfile" /></Action>')
         );
 
         expect(output).toContain('<button');

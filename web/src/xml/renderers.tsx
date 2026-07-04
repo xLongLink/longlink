@@ -55,7 +55,7 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '' }: RenderXMLPr
         runtimeCtx.values = {};
         setSetupError(null);
 
-        // Hydrate translations from the SDK route before i18n nodes can render their fallback keys.
+        // Hydrate translations from the SDK route before localized nodes render.
         if (waitsForTranslations && runtimeCtx.translations === undefined) {
             const locale = runtimeCtx.locale ?? 'en';
 
@@ -68,11 +68,10 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '' }: RenderXMLPr
                     runtimeCtx.translations = translations;
                     setVersion((current) => current + 1);
                 })
-                .catch(() => {
+                .catch((error: unknown) => {
                     if (!mounted) return;
 
-                    runtimeCtx.translations = {};
-                    setVersion((current) => current + 1);
+                    setSetupError(error instanceof Error ? error : new Error('Failed to load XML translations'));
                 });
         }
 

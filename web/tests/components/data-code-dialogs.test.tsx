@@ -39,12 +39,12 @@ describe('shared data, code, and dialog components', () => {
 
     it('renders syntax-highlighted code blocks with copy controls', () => {
         const output = renderToStaticMarkup(
-            createElement(CodeBlock, { language: 'xml', children: '  <H1 i18n="title" />  ' })
+            createElement(CodeBlock, { language: 'xml', children: '  <H1 i18n="pages.title" />  ' })
         );
 
         expect(output).toContain('Copy code');
         expect(output).toContain('H1');
-        expect(output).toContain('title');
+        expect(output).toContain('pages.title');
     });
 
     it('renders the logs trigger unless explicitly suppressed', () => {

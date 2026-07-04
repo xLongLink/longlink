@@ -8,6 +8,8 @@
 
 ## Introduction
 
+The API folder contains the LongLink control plane. It manages authentication, permissions, organizations, applications, infrastructure connections, operations, and application routing.
+
 ```
 ┌───────────────────────────────────┐
 │           CONTROL PLANE           │
@@ -33,6 +35,19 @@
 │ • Storage                         │
 └───────────────────────────────────┘
 ```
+
+<br />
+
+## Development
+
+```bash
+uv sync --extra dev
+uv run alembic upgrade head
+uv run python seed.py
+DEVELOPMENT=true uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Run these commands from `api/`. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for migration, seeding, testing, and contribution details.
 
 <br />
 

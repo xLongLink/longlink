@@ -1,0 +1,99 @@
+<?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<longlink name="Team" icon="users">
+    <Query id="team" path="/team" />
+
+    <Hero icon="users">
+        <HeroTitle i18n="team.title" />
+        <HeroDescription i18n="team.description" />
+        <HeroAction>
+            <Action action="/team" method="GET" invalidate='${["team"]}'>
+                <Button variant="outline" i18n="team.refresh">
+                    <Icon name="refresh-cw" />
+                </Button>
+            </Action>
+            <A href="https://www.longlink.dev/docs" i18n="team.docs">
+                <Icon name="external-link" />
+            </A>
+        </HeroAction>
+    </Hero>
+
+    <Grid columns="3">
+        <For each="$team" as="member">
+            <Card>
+                <Stack>
+                    <Flex space="between">
+                        <Avatar>
+                            <AvatarImage src="$member.avatar_url" alt="$member.name" />
+                            <AvatarFallback>
+                                <P value="$member.initials" />
+                            </AvatarFallback>
+                            <AvatarBadge>
+                                <P value="$member.badge" />
+                            </AvatarBadge>
+                        </Avatar>
+                        <Badge variant="outline" value="$member.badge" />
+                    </Flex>
+                    <H3 i18n="team.member" />
+                    <P value="$member.name" />
+                    <P value="$member.role" />
+                    <P value="$member.escalation" />
+                </Stack>
+            </Card>
+        </For>
+    </Grid>
+
+    <Columns>
+        <Column width="45">
+            <Card>
+                <Stack>
+                    <H2 i18n="team.flow.title" />
+                    <Menu defaultValue="intake">
+                        <MenuSection value="intake" icon="inbox" i18n="team.flow.intake">
+                            <MenuSubSection value="triage" i18n="team.flow.triage">
+                                <P i18n="team.flow.triageDescription" />
+                            </MenuSubSection>
+                            <MenuSubSection value="budget" i18n="team.flow.budget">
+                                <P i18n="team.flow.budgetDescription" />
+                            </MenuSubSection>
+                        </MenuSection>
+                        <MenuSection value="approval" icon="shield-check" i18n="team.flow.approval">
+                            <MenuSubSection value="decision" i18n="team.flow.decision">
+                                <P i18n="team.flow.decisionDescription" />
+                            </MenuSubSection>
+                        </MenuSection>
+                    </Menu>
+                </Stack>
+            </Card>
+        </Column>
+
+        <Column width="55">
+            <Card>
+                <Stack>
+                    <H1 i18n="team.runbook.title" />
+                    <H2 i18n="team.runbook.handoff" />
+                    <P>
+                        <B i18n="team.runbook.bold" />
+                        <U i18n="team.runbook.underlined" />
+                        <S i18n="team.runbook.outdated" />
+                    </P>
+                    <P>
+                        <Code i18n="team.runbook.code" />
+                        <Sup i18n="team.runbook.sup" />
+                        <Sub i18n="team.runbook.sub" />
+                    </P>
+                    <Br />
+                    <H3 i18n="team.runbook.response" />
+                    <H4 i18n="team.runbook.example" />
+                    <Pre lang="json" i18n="team.runbook.payload" />
+                </Stack>
+            </Card>
+        </Column>
+    </Columns>
+
+    <DataTable data="$team" as="member" empty="No team members configured.">
+        <DataColumn field="name" i18n="team.table.name" />
+        <DataColumn field="role" i18n="team.table.role" />
+        <DataColumn field="badge" i18n="team.table.badge" />
+        <DataColumn field="escalation" i18n="team.table.escalation" />
+    </DataTable>
+</longlink>

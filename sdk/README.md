@@ -12,31 +12,49 @@ Python SDK for building and packaging LongLink applications.
 
 </div>
 
-<br/>
 
-## Quick Start
-
-Requirements: Python 3.14 or newer, `uv`, and Docker if you want to build an image.
+## Gettin started
 
 ```bash
-uvx longlink init --folder sample
-cd sample
-uv sync
-uv run longlink dev
+longlink init
 ```
 
-For a complete minimal application, see [`xLongLink/sample`](https://github.com/xLongLink/sample).
+> See [`xLongLink/sample`](https://github.com/xLongLink/sample) for a minimal LongLink application that demonstrates SDK setup, XML pages, translations, routes, tests, and Docker image builds.
 
-<br />
 
-## Commands
+<br/>
 
-| Command                                                     | Description                             |
-| ----------------------------------------------------------- | --------------------------------------- |
-| `longlink init --folder <name>`                             | Create a new app.                       |
-| `longlink dev`                                              | Run the app locally.                    |
-| `longlink test [pytest args...]`                            | Run application tests.                  |
-| `longlink migrate`                                          | Run database migrations.                |
-| `longlink docs [component]`                                 | Show XML component docs.                |
-| `longlink translations generate`                            | Update translation files from XML keys. |
-| `longlink build [--tag <tag>] [--registry <host>] [--push]` | Build the app Docker image.             |
+## Development
+
+```bash
+make sdk
+```
+
+This builds the SDK web bundle, recreates `sdk/dev`, links that generated app to the local SDK source, and starts the SDK development app. Do not keep manual changes in `sdk/dev`; it is recreated by this command.
+
+> Requirements: Python 3.14 or newer, `uv`, and Docker if you want to build an image. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for more details.
+
+
+<br/>
+
+## Testing
+
+```bash
+uv sync --extra dev
+uv run pytest tests
+```
+
+<br/>
+<br/>
+
+
+---
+
+<div align="center">
+LongLink 2026
+
+[License](./LICENSE) &nbsp; - &nbsp; [Contributing](./CONTRIBUTING.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.ch)
+
+</div>
+
+---

@@ -29,9 +29,27 @@ LongLink provides that structure. The platform defines the shared infrastructure
 
 The result is a faster, clearer, and more maintainable way to build internal applications.
 
-## Sample Application
+<br />
 
-See [`xLongLink/sample`](https://github.com/xLongLink/sample) for a minimal LongLink application that demonstrates SDK setup, XML pages, translations, routes, tests, and Docker image builds.
+## Development
+
+Work on the control plane:
+
+```bash
+make up
+make seed
+make api    # In one terminal
+make web    # In another terminal
+```
+
+Work on the SDK runtime::
+
+```bash
+make sdk
+```
+
+See detailed setup, testing, and contribution guidelines in [`CONTRIBUTING.md`](./CONTRIBUTING.md) and the folder-specific CONTRIBUTING files.
+
 
 <br />
 <br />

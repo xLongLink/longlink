@@ -46,3 +46,16 @@ class RequestAttachmentRead(BaseModel):
     name: str
     size: int
     download_url: str
+
+
+class TeamMemberRead(BaseModel):
+    """Typed response for a sample approval team member."""
+
+    # Team fields
+    id: str
+    name: str
+    role: str
+    badge: str
+    initials: str
+    avatar_url: str
+    escalation: str

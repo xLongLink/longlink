@@ -9,7 +9,7 @@ describe('Select', () => {
     it('renders the select shell in static markup', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Select defaultValue="overview"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectLabel i18n="Views" /><SelectItem value="overview" i18n="Overview" /><SelectItem value="settings" i18n="Settings" /></SelectGroup><SelectSeparator /><SelectGroup><SelectLabel i18n="Status" /><SelectItem value="active" i18n="Active" /><SelectItem value="archived" i18n="Archived" /></SelectGroup></SelectContent></Select>'
+                '<Select defaultValue="overview"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectLabel i18n="select.views" /><SelectItem value="overview" i18n="select.overview" /><SelectItem value="settings" i18n="select.settings" /></SelectGroup><SelectSeparator /><SelectGroup><SelectLabel i18n="select.status" /><SelectItem value="active" i18n="select.active" /><SelectItem value="archived" i18n="select.archived" /></SelectGroup></SelectContent></Select>'
             )
         );
 
@@ -28,7 +28,7 @@ describe('Select', () => {
         };
         const output = renderXmlToMarkup(
             parseXML(
-                '<Select value="$form.team"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="ops" i18n="Operations" /></SelectGroup></SelectContent></Select>'
+                '<Select value="$form.team"><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="ops" i18n="select.operations" /></SelectGroup></SelectContent></Select>'
             ),
             ctx
         );

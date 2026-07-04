@@ -163,7 +163,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Environment metadata labels    | Reads annotated `src/envs.py` fields and emits typed required/optional environment definitions.         |
 | Build context filtering        | Excludes local secrets, local databases, caches, generated directories, and `node_modules`.             |
 | XML component docs CLI         | Renders component docs from XSD.                                                                        |
-| Translation catalog generation | Scans XML `i18n` keys, preserves existing/plural translations, rejects collisions, and writes catalogs. |
+| Translation catalog generation | Scans strict dotted XML `i18n` keys, preserves existing/plural translations, rejects invalid keys and collisions, and writes catalogs. |
 
 ### Database, Audit, and Storage
 
@@ -193,10 +193,10 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | XML metadata parse           | Parses `<longlink>` XML metadata for page metadata extraction.                                                         |
 | XML schema root              | Defines the XSD entrypoint for root/app, state/query/loop/action, text, layout, input, table, tabs, and menu adapters. |
 | Schema-backed component docs | Uses XSD adapter files to generate XML component docs.                                                                 |
-| Scaffold app entrypoint      | New apps include `main.py` with LongLink app setup and the purchase-request router.                                     |
+| Scaffold app entrypoint      | New apps include `main.py` with LongLink app setup and the office-operations router.                                    |
 | Scaffold env sample          | New apps include required and optional environment examples.                                                           |
-| Scaffold request API         | New apps include purchase-request table, schemas, service, list/get/create/status routes, and attachment file routes.  |
-| Scaffold XML app             | New apps include purchase-request list and dynamic detail XML pages with actions, queries, translations, and file form. |
+| Scaffold request API         | New apps include purchase-request table, schemas, service, list/get/create/status routes, attachment file routes, and a typed team route. |
+| Scaffold XML app             | New apps include dashboard, purchase-request list/detail, team, and settings XML pages covering navigation tabs, actions, queries, translations, local state, form controls, tables, menus, dialogs, files, and dynamic routes. |
 | Scaffold initial migration   | New apps include an initial purchase-request Alembic migration.                                                        |
 | Scaffold testing mode        | New app tests use `LONGLINK_ENV=testing`, in-memory database settings, and a smoke test.                               |
 

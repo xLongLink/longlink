@@ -12,7 +12,7 @@ describe('Query', () => {
     it('throws when children are present', () => {
         const runtime: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const client = new QueryClient();
-        const ast = parseXML('<Query id="user" path="/api/user"><P i18n="Ready" /></Query>');
+        const ast = parseXML('<Query id="user" path="/api/user"><P i18n="query.ready" /></Query>');
 
         expect(() =>
             renderToStaticMarkup(

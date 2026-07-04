@@ -73,7 +73,7 @@ def test_generate_rejects_translation_key_collisions(monkeypatch: MonkeyPatch, t
 
     pages_directory.mkdir(parents=True)
     (pages_directory / "tasks.xml").write_text(
-        '<P i18n="tasks" /><P i18n="tasks.count" />',
+        '<P i18n="tasks.title" /><P i18n="tasks.title.count" />',
         encoding="utf-8",
     )
     monkeypatch.chdir(tmp_path)
@@ -83,4 +83,4 @@ def test_generate_rejects_translation_key_collisions(monkeypatch: MonkeyPatch, t
 
     # Assert
     assert result.exit_code == 1
-    assert "Translation key collision at tasks" in result.output
+    assert "Translation key collision at title" in result.output

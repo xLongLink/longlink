@@ -7,7 +7,7 @@ describe('Table', () => {
     it('renders the full table composition', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Table><Thead><Tr><Th i18n="Quarter" /><Th i18n="Revenue" /><Th i18n="Growth" /><Th i18n="Status" /></Tr></Thead><Tbody><Tr><Td i18n="Q1" /><Td i18n="$120k" /><Td i18n="12%" /><Td i18n="On track" /></Tr><Tr><Td i18n="Q2" /><Td i18n="$154k" /><Td i18n="28%" /><Td i18n="On track" /></Tr></Tbody><Tfoot><Tr><Td i18n="Total" /><Td i18n="$274k" /><Td i18n="20%" /><Td i18n="Projected" /></Tr></Tfoot></Table>'
+                '<Table><Thead><Tr><Th i18n="table.quarter" /><Th i18n="table.revenue" /><Th i18n="table.growth" /><Th i18n="table.status" /></Tr></Thead><Tbody><Tr><Td i18n="table.q1" /><Td i18n="table.revenueQ1" /><Td i18n="table.twelvePercent" /><Td i18n="table.onTrack" /></Tr><Tr><Td i18n="table.q2" /><Td i18n="table.revenueQ2" /><Td i18n="table.twentyEightPercent" /><Td i18n="table.onTrack" /></Tr></Tbody><Tfoot><Tr><Td i18n="table.total" /><Td i18n="table.totalRevenue" /><Td i18n="table.totalGrowth" /><Td i18n="table.projected" /></Tr></Tfoot></Table>'
             )
         );
 

@@ -2,34 +2,42 @@ import { evaluate } from '../expressions';
 import type { ASTProps, ExecutionContext, XmlTranslations } from '../types';
 
 const defaultLocale = 'en';
+const pluralCategories = new Set(['zero', 'one', 'two', 'few', 'many', 'other']);
 const pluralRulesCache = new Map<string, Intl.PluralRules>();
+const translationKeyPattern = /^[a-z][A-Za-z0-9]*(?:\.[a-z][A-Za-z0-9]*)+$/;
 
 /** Resolves a localized string or plural form from the active XML translation bundle. */
 export function resolveTranslation(props: ASTProps, ctx: ExecutionContext): string {
-    // The i18n prop is a literal dotted lookup key, not an expression.
+    // The i18n prop is a literal dotted lookup key, never fallback text.
     const key = props.i18n?.trim();
 
-    if (!key) return '';
+    if (!key || !isTranslationKey(key)) {
+        throw new Error(`i18n must be a dotted translation key, received "${props.i18n ?? ''}"`);
+    }
 
     const translations = ctx.translations;
 
     if (!translations) {
-        return key;
+        throw new Error(`Missing translation catalog for key "${key}"`);
     }
 
     const entry = findTranslationEntry(translations, key);
 
     if (entry == null) {
-        return key;
+        throw new Error(`Missing translation for key "${key}"`);
     }
 
     if (typeof entry === 'string') {
         return interpolate(entry, props, ctx);
     }
 
+    if (typeof entry !== 'object' || Array.isArray(entry) || !isPluralEntry(entry as Record<string, unknown>)) {
+        throw new Error(`Translation key "${key}" must resolve to a string or plural map`);
+    }
+
     const count = resolveCount(props, ctx);
     if (count == null) {
-        return key;
+        throw new Error(`Plural translation key "${key}" requires a count prop`);
     }
 
     // Plural entries use Intl.PluralRules categories and fall back to "other".
@@ -38,10 +46,16 @@ export function resolveTranslation(props: ASTProps, ctx: ExecutionContext): stri
     const template = pluralEntry[category] ?? pluralEntry.other ?? firstPluralTemplate(pluralEntry);
 
     if (typeof template !== 'string') {
-        return key;
+        throw new Error(`Plural translation key "${key}" does not contain a usable template`);
     }
 
     return interpolate(template, props, ctx, count);
+}
+
+
+/** Returns whether a value can be used as a LongLink translation catalog key. */
+function isTranslationKey(value: string): boolean {
+    return translationKeyPattern.test(value);
 }
 
 /** Resolves the active numeric count used for plural selection. */
@@ -80,6 +94,17 @@ function findTranslationEntry(translations: XmlTranslations, key: string): unkno
 
         return (current as Record<string, unknown>)[segment];
     }, translations);
+}
+
+
+/** Returns whether a translation object is a pluralized message leaf. */
+function isPluralEntry(entry: Record<string, unknown>): boolean {
+    const entries = Object.entries(entry);
+
+    if (!entries.length) return false;
+
+    // Plural leaves only contain Intl.PluralRules category names with string templates.
+    return entries.every(([key, value]) => pluralCategories.has(key) && typeof value === 'string');
 }
 
 /** Returns the first usable plural template when the exact category is missing. */

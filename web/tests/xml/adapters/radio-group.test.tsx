@@ -7,7 +7,7 @@ describe('RadioGroup', () => {
     it('renders radio group item markup end to end', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<RadioGroup name="priority" defaultValue="medium"><RadioGroupItem value="low" i18n="Low" /><RadioGroupItem value="medium" i18n="Medium" /><RadioGroupItem value="high" i18n="High" /></RadioGroup>'
+                '<RadioGroup name="priority" defaultValue="medium"><RadioGroupItem value="low" i18n="radio.low" /><RadioGroupItem value="medium" i18n="radio.medium" /><RadioGroupItem value="high" i18n="radio.high" /></RadioGroup>'
             )
         );
 
@@ -19,7 +19,7 @@ describe('RadioGroup', () => {
     /* Missing item values should fail fast with a tag-specific error. */
     it('throws when a radio group item value is missing', () => {
         expect(() =>
-            renderXmlToMarkup(parseXML('<RadioGroup name="priority"><RadioGroupItem i18n="Low" /></RadioGroup>'))
+            renderXmlToMarkup(parseXML('<RadioGroup name="priority"><RadioGroupItem i18n="radio.low" /></RadioGroup>'))
         ).toThrow('RadioGroupItem requires a string value');
     });
 });

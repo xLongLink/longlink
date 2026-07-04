@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="Types.xsd" />
   <xsd:complexType name="DialogChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -33,7 +34,7 @@
   <xsd:complexType name="DialogTitleType">
     <xsd:complexContent>
       <xsd:extension base="DialogChildrenOnlyType">
-        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -41,7 +42,7 @@
   <xsd:complexType name="DialogDescriptionType">
     <xsd:complexContent>
       <xsd:extension base="DialogChildrenOnlyType">
-        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>

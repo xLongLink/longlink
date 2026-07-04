@@ -7,7 +7,7 @@ describe('Tabs', () => {
     it('renders the tab composition', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Tabs defaultValue="overview"><Tab value="overview" i18n="Overview"><P i18n="Overview panel" /></Tab><Tab value="settings" i18n="Settings"><P i18n="Settings panel" /></Tab></Tabs>'
+                '<Tabs defaultValue="overview"><Tab value="overview" i18n="tabs.overview"><P i18n="tabs.overviewPanel" /></Tab><Tab value="settings" i18n="tabs.settings"><P i18n="tabs.settingsPanel" /></Tab></Tabs>'
             )
         );
 
@@ -19,7 +19,7 @@ describe('Tabs', () => {
 
     /* Missing tab values should fail fast with a tag-specific error. */
     it('throws when a tab value is missing', () => {
-        expect(() => renderXmlToMarkup(parseXML('<Tabs><Tab i18n="Overview" /></Tabs>'))).toThrow(
+        expect(() => renderXmlToMarkup(parseXML('<Tabs><Tab i18n="tabs.overview" /></Tabs>'))).toThrow(
             'Tab requires a string value'
         );
     });

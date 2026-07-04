@@ -12,7 +12,7 @@ def test_element_validates_file_and_memory_xml(tmp_path: Path) -> None:
     """Validate XML from disk and from in-memory content against XSD."""
 
     # Arrange
-    content = '<longlink name="Dashboard" icon="layout-dashboard"><P i18n="Dashboard" /></longlink>'
+    content = '<longlink name="Dashboard" icon="layout-dashboard"><P i18n="dashboard.title" /></longlink>'
     page_path = tmp_path / "dashboard.xml"
     page_path.write_text(content, encoding="utf-8")
     file_element = Element(page_path, schema=SCHEMA)
@@ -53,7 +53,7 @@ def test_longlink_metadata_parses_xml_document(tmp_path: Path) -> None:
     # Arrange
     page_path = tmp_path / "dashboard.xml"
     page_path.write_text(
-        '<longlink name="Dashboard" icon="layout-dashboard"><P i18n="Dashboard" /></longlink>',
+        '<longlink name="Dashboard" icon="layout-dashboard"><P i18n="dashboard.title" /></longlink>',
         encoding="utf-8",
     )
 

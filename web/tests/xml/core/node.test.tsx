@@ -26,10 +26,15 @@ describe('renderNode', () => {
     });
 
     it('preserves existing state when reactive conditions re-render', async () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async () => {},
+            translations: { core: { visible: 'Visible' } },
+            values: {},
+        };
         const nodes: ASTNode[] = [
             { name: 'State', params: { id: 'gridSearch', value: 'Revenue' } },
-            { name: 'P', params: { if: "${gridSearch.value in 'Usage'}", i18n: 'Visible' } },
+            { name: 'P', params: { if: "${gridSearch.value in 'Usage'}", i18n: 'core.visible' } },
         ];
 
         await setupContext(nodes, ctx, '');

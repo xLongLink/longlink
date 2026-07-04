@@ -11,7 +11,7 @@ def test_xml_pages_are_registered_from_default_pages_directory(monkeypatch: Monk
     page_path = tmp_path / "src" / "pages" / "dashboard.xml"
     page_path.parent.mkdir(parents=True, exist_ok=True)
     page_path.write_text(
-        '<longlink name="Dashboard" icon="layout-dashboard"><P i18n="Dashboard" /></longlink>',
+        '<longlink name="Dashboard" icon="layout-dashboard"><P i18n="dashboard.title" /></longlink>',
         encoding="utf-8",
     )
     monkeypatch.chdir(tmp_path)
@@ -23,7 +23,7 @@ def test_xml_pages_are_registered_from_default_pages_directory(monkeypatch: Monk
 
     assert response.status_code == 200
     assert response.text == (
-        '<longlink name="Dashboard" icon="layout-dashboard"><P i18n="Dashboard" /></longlink>'
+        '<longlink name="Dashboard" icon="layout-dashboard"><P i18n="dashboard.title" /></longlink>'
     )
     assert any(
         page["tab"] == "dashboard"
@@ -41,7 +41,7 @@ def test_nested_xml_pages_are_registered_from_default_pages_directory(monkeypatc
 
     page_path = tmp_path / "src" / "pages" / "admin" / "users.xml"
     page_path.parent.mkdir(parents=True, exist_ok=True)
-    page_path.write_text("<longlink><P i18n=\"Users\" /></longlink>", encoding="utf-8")
+    page_path.write_text("<longlink><P i18n=\"users.title\" /></longlink>", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
 
     client = TestClient(LongLink())
@@ -50,7 +50,7 @@ def test_nested_xml_pages_are_registered_from_default_pages_directory(monkeypatc
     metadata_response = client.get("/metadata.json")
 
     assert response.status_code == 200
-    assert response.text == "<longlink><P i18n=\"Users\" /></longlink>"
+    assert response.text == "<longlink><P i18n=\"users.title\" /></longlink>"
     assert {page["path"] for page in metadata_response.json()["pages"]} >= {"pages/admin/users.xml"}
     assert {page["tab"] for page in metadata_response.json()["pages"]} >= {"admin/users"}
     assert {page["route"] for page in metadata_response.json()["pages"]} >= {"admin/users"}
@@ -62,7 +62,7 @@ def test_dynamic_xml_pages_derive_routes_and_tabs(monkeypatch: MonkeyPatch, tmp_
 
     page_path = tmp_path / "src" / "pages" / "issues" / "[issue].xml"
     page_path.parent.mkdir(parents=True, exist_ok=True)
-    page_path.write_text('<longlink name="Issue"><P i18n="Issue" /></longlink>', encoding="utf-8")
+    page_path.write_text('<longlink name="Issue"><P i18n="issues.title" /></longlink>', encoding="utf-8")
     monkeypatch.chdir(tmp_path)
 
     client = TestClient(LongLink())

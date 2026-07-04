@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="Types.xsd" />
   <xsd:complexType name="AvatarChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -34,8 +35,8 @@
     </xsd:complexContent>
   </xsd:complexType>
 
-  <xsd:complexType name="AvatarFallbackType"><xsd:complexContent><xsd:extension base="AvatarChildrenOnlyType"><xsd:attribute name="i18n" type="xsd:string" use="optional" /></xsd:extension></xsd:complexContent></xsd:complexType>
-  <xsd:complexType name="AvatarBadgeType"><xsd:complexContent><xsd:extension base="AvatarChildrenOnlyType"><xsd:attribute name="i18n" type="xsd:string" use="optional" /></xsd:extension></xsd:complexContent></xsd:complexType>
+  <xsd:complexType name="AvatarFallbackType"><xsd:complexContent><xsd:extension base="AvatarChildrenOnlyType"><xsd:attribute name="i18n" type="TranslationKeyType" use="optional" /></xsd:extension></xsd:complexContent></xsd:complexType>
+  <xsd:complexType name="AvatarBadgeType"><xsd:complexContent><xsd:extension base="AvatarChildrenOnlyType"><xsd:attribute name="i18n" type="TranslationKeyType" use="optional" /></xsd:extension></xsd:complexContent></xsd:complexType>
   <xsd:element name="Avatar" type="AvatarType" />
   <xsd:element name="AvatarImage" type="AvatarImageType" />
   <xsd:element name="AvatarFallback" type="AvatarFallbackType" />

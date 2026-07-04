@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:simpleType name="TranslationKeyType">
+    <xsd:annotation>
+      <xsd:documentation>Dotted catalog key such as tasks.title or orders.statusOpen.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[a-z][A-Za-z0-9]*(\.[a-z][A-Za-z0-9]*)+" />
+    </xsd:restriction>
+  </xsd:simpleType>
+</xsd:schema>

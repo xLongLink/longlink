@@ -167,4 +167,5 @@ Keep both web build modes working. API mode builds the authenticated control-pla
 - Pydantic models must group fields by commented sections, and fields inside each section must be ordered from shortest name to longest name.
 - Use long domain names in code and filenames instead of abbreviations.
 - Keep related model module names plural and consistent across the API and database layers.
-- prefer single word naming for python filenames, and prefer not renaming imports
+- Prefer single word naming for python filenames, and prefer not renaming imports
+- Do NOT add any new test case unless the user specifically instruct you to do so.

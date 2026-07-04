@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="Types.xsd" />
   <xsd:complexType name="TableChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -42,7 +43,7 @@
   <xsd:complexType name="TableHeadType">
     <xsd:complexContent>
       <xsd:extension base="TableChildrenOnlyType">
-        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
         <xsd:attribute name="value" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
@@ -51,7 +52,7 @@
   <xsd:complexType name="TableCellType">
     <xsd:complexContent>
       <xsd:extension base="TableChildrenOnlyType">
-        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
         <xsd:attribute name="value" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
@@ -73,7 +74,7 @@
         <xsd:attribute name="id" type="xsd:string" use="optional" />
         <xsd:attribute name="field" type="xsd:string" use="optional" />
         <xsd:attribute name="header" type="xsd:string" use="optional" />
-        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
@@ -81,7 +82,7 @@
   <xsd:complexType name="DataHeaderType">
     <xsd:complexContent>
       <xsd:extension base="TableChildrenOnlyType">
-        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
         <xsd:attribute name="value" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>
@@ -90,7 +91,7 @@
   <xsd:complexType name="DataCellType">
     <xsd:complexContent>
       <xsd:extension base="TableChildrenOnlyType">
-        <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
         <xsd:attribute name="value" type="xsd:string" use="optional" />
       </xsd:extension>
     </xsd:complexContent>

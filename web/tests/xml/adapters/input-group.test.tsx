@@ -10,7 +10,7 @@ describe('InputGroup', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {}, user: { handle: 'ada' } };
         const output = renderXmlToMarkup(
             parseXML(
-                '<InputGroup><InputGroupAddon><P i18n="@" /></InputGroupAddon><InputGroupInput value="user.handle" placeholder="Handle" /><InputGroupButton i18n="Search" /><InputGroupText i18n="Public" /></InputGroup>'
+                '<InputGroup><InputGroupAddon><P i18n="inputGroup.symbolAt" /></InputGroupAddon><InputGroupInput value="user.handle" placeholder="Handle" /><InputGroupButton i18n="inputGroup.search" /><InputGroupText i18n="inputGroup.public" /></InputGroup>'
             ),
             ctx
         );

@@ -1,4 +1,5 @@
 import json
+import re
 import click
 from lxml import etree
 from typing import TypeGuard
@@ -7,6 +8,7 @@ from pathlib import Path
 PLURAL_KEYS = {"zero", "one", "two", "few", "many", "other"}
 DEFAULT_PAGES_DIRECTORY = Path("src") / "pages"
 DEFAULT_TRANSLATION_FILE = Path("src") / "i18n" / "en.json"
+TRANSLATION_KEY_PATTERN = re.compile(r"^[a-z][A-Za-z0-9]*(?:\.[a-z][A-Za-z0-9]*)+$")
 
 
 @click.group(name="translations")
@@ -69,7 +71,16 @@ def collect_translation_keys(xml_files: list[Path], app_root: Path) -> set[str]:
             key = element.get("i18n")
 
             if key:
-                keys.add(key.strip())
+                normalized_key = key.strip()
+
+                # Reject fallback-like labels before they enter the catalog.
+                if not is_translation_key(normalized_key):
+                    display_path = path.relative_to(app_root) if path.is_relative_to(app_root) else path
+                    raise click.ClickException(
+                        f'Invalid translation key "{normalized_key}" in {display_path}. Use dotted keys like "tasks.title".'
+                    )
+
+                keys.add(normalized_key)
 
     return keys
 
@@ -117,6 +128,12 @@ def build_translation_catalog(keys: set[str], existing_catalog: dict[str, object
         assign_translation_value(catalog, key.split("."), value)
 
     return catalog
+
+
+def is_translation_key(value: str) -> bool:
+    """Return true when a value can be used as a LongLink translation catalog key."""
+
+    return bool(TRANSLATION_KEY_PATTERN.fullmatch(value))
 
 
 def assign_translation_value(target: dict[str, object], segments: list[str], value: object) -> None:

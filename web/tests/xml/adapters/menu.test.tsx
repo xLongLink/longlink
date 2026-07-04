@@ -7,7 +7,7 @@ describe('Menu', () => {
     it('renders the menu shell in static markup', () => {
         const output = renderXmlToMarkup(
             parseXML(
-                '<Menu defaultValue="overview"><MenuSection value="overview" i18n="Overview"><P i18n="Overview content" /></MenuSection><MenuSection value="settings" i18n="Settings"><P i18n="Settings content" /><MenuSubSection value="profile" i18n="Profile"><P i18n="Profile content" /></MenuSubSection><MenuSubSection value="billing" i18n="Billing"><P i18n="Billing content" /></MenuSubSection></MenuSection></Menu>'
+                '<Menu defaultValue="overview"><MenuSection value="overview" i18n="menu.overview"><P i18n="menu.overviewContent" /></MenuSection><MenuSection value="settings" i18n="menu.settings"><P i18n="menu.settingsContent" /><MenuSubSection value="profile" i18n="menu.profile"><P i18n="menu.profileContent" /></MenuSubSection><MenuSubSection value="billing" i18n="menu.billing"><P i18n="menu.billingContent" /></MenuSubSection></MenuSection></Menu>'
             )
         );
 

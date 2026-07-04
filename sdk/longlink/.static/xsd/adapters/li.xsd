@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="Types.xsd" />
   <xsd:complexType name="LiChildrenOnlyType">
     <xsd:sequence>
       <xsd:choice minOccurs="0" maxOccurs="unbounded">
@@ -7,7 +8,7 @@
       </xsd:choice>
     </xsd:sequence>
     <xsd:attribute name="if" type="xsd:string" use="optional" />
-    <xsd:attribute name="i18n" type="xsd:string" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
     <xsd:attribute name="value" type="xsd:string" use="optional" />
     <xsd:anyAttribute processContents="lax" />
   </xsd:complexType>
