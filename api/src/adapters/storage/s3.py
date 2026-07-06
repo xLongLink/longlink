@@ -20,6 +20,7 @@ class S3(Storage):
     """S3-compatible storage adapter."""
 
     _ACCESS_DENIED_CODES = {"403", "AccessDenied", "AllAccessDisabled"}
+    _MISSING_OBJECT_CODES = {"404", "NoSuchKey", "NotFound"}
 
     def __init__(
         self,
@@ -51,6 +52,12 @@ class S3(Storage):
 
         error_code = str(exc.response.get("Error", {}).get("Code", ""))
         return error_code in self._ACCESS_DENIED_CODES
+
+    def _is_missing_object(self, exc: ClientError) -> bool:
+        """Return whether an S3 client error proves object read access for a missing key."""
+
+        error_code = str(exc.response.get("Error", {}).get("Code", ""))
+        return error_code in self._MISSING_OBJECT_CODES
 
     def list(self) -> list[str]:
         """List storage buckets."""
@@ -122,11 +129,13 @@ class S3(Storage):
 
             raise ValueError("Storage runtime credentials need read/write access to the application bucket") from exc
 
-        # Prove the runtime can read shared organization storage but cannot write it.
+        # Prove the runtime can list and read shared organization storage but cannot write it.
         try:
             runtime_client.list_objects_v2(Bucket=shared_bucket, MaxKeys=1)
+            runtime_client.get_object(Bucket=shared_bucket, Key=check_key)
         except ClientError as exc:
-            raise ValueError("Storage runtime credentials need read access to the shared bucket") from exc
+            if not self._is_missing_object(exc):
+                raise ValueError("Storage runtime credentials need read access to the shared bucket") from exc
 
         try:
             runtime_client.put_object(Bucket=shared_bucket, Key=check_key, Body=b"")
@@ -150,6 +159,16 @@ class S3(Storage):
             try:
                 runtime_client.list_objects_v2(Bucket=listed_bucket_name, MaxKeys=1)
             except ClientError as exc:
+                if not self._is_access_denied(exc):
+                    raise ValueError("Storage cross-application read check failed") from exc
+            else:
+                raise ValueError("Storage runtime credentials must not read other application buckets")
+
+            try:
+                runtime_client.get_object(Bucket=listed_bucket_name, Key=check_key)
+            except ClientError as exc:
+                if self._is_missing_object(exc):
+                    raise ValueError("Storage runtime credentials must not read other application buckets") from exc
                 if not self._is_access_denied(exc):
                     raise ValueError("Storage cross-application read check failed") from exc
             else:

@@ -490,18 +490,18 @@ export default function Home() {
                     <div className="space-y-5">
                         <h1 className="mx-auto flex max-w-4xl flex-col items-center text-center text-[1.875rem] font-medium leading-[1.02] text-foreground min-[420px]:text-[2.25rem] sm:text-6xl lg:text-7xl">
                             <span className="block whitespace-nowrap text-center">Just another dashboard</span>
-                            <span className="mt-1 block whitespace-nowrap text-center">Nothing to see here</span>
+                            <span className="mt-1 block whitespace-nowrap text-center line-through">Nothing to see here</span>
                         </h1>
                         <p className="mx-auto text-sm leading-6 text-muted-foreground sm:text-lg">
                             <span className="mx-auto block">
-                                Model data, validation, workflow states, screens, and actions in code.
+                                Lorem ipsum dolor sit amet consectetur adipiscing elit sed do
                             </span>
                             <span className="mx-auto block">
-                                LongLink handles auth, storage, deployment, and runtime.
+                                Eiusmod tempor incididunt ut labore et dolore magna
                             </span>
-                            <span className="mx-auto block">Keep apps portable across environments.</span>
-                            <span className="mx-auto block">Avoid platform lock-in.</span>
-                            <span className="mx-auto block">Change cleanly.</span>
+                            <span className="mx-auto block">Ut enim ad minim veniam quis nostrud</span>
+                            <span className="mx-auto block">Exercitation ullamco</span>
+                            <span className="mx-auto block">Nisi aliquip</span>
                         </p>
                     </div>
                 </section>
@@ -591,8 +591,8 @@ export default function Home() {
                     })}
                 </div>
             </section>
-            <section className="relative z-10 bg-background px-6 py-16 text-center">
-                <div className="mx-auto flex max-w-2xl flex-col items-center gap-6">
+            <section className="relative z-10 bg-background px-6 py-24 text-center sm:py-28">
+                <div className="mx-auto flex max-w-2xl flex-col items-center gap-8">
                     <div className="space-y-3">
                         <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent">Next step</p>
                         <h2 className="text-2xl font-medium tracking-tight text-foreground sm:text-4xl">

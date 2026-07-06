@@ -7,13 +7,14 @@ import { useLocation } from 'react-router';
 import { SignInCard } from '@/components/SignInCard';
 import type { PlatformRole } from '@/lib/roles';
 
-type AuthProps = {
+/** Protects routes and optionally requires a platform role. */
+export function Auth({
+    children,
+    requiredRole,
+}: {
     children: ReactElement;
     requiredRole?: PlatformRole;
-};
-
-/** Protects routes and optionally requires a platform role. */
-export function Auth({ children, requiredRole }: AuthProps) {
+}) {
     const { user, role, isLoading } = useUserProfile();
     const location = useLocation();
 

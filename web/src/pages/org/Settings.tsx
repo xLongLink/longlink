@@ -24,6 +24,8 @@ import type {
     ApiOrganizationDatabaseResource,
     ApiOrganizationDatabaseTable,
     ApiOrganizationDetails,
+    ApiOrganizationMemberSummary,
+    ApiInvitation,
     ApiOrganizationStorageResource,
     ApiStorageObject,
 } from '@/lib/types';
@@ -37,26 +39,39 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Menu, MenuSection } from '@/components/ui/menu';
-import { Boxes, Building2, Database, HardDrive, MoreVertical } from 'lucide-react';
+import { Menu, MenuSection, MenuSubSection } from '@/components/ui/menu';
+import { Boxes, Building2, Database, HardDrive, MoreVertical, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import People from './People';
 
 type SettingsProps = {
     organization: string;
     organizationDetails: ApiOrganizationDetails | undefined;
     applications: ApiOrganizationApplication[];
+    people: ApiOrganizationMemberSummary[];
+    invitations: ApiInvitation[];
     isLoading: boolean;
     error: Error | null;
 };
 
-type SettingsSection = 'organization' | 'applications' | 'database' | 'storage';
+type PeopleSection = 'members' | 'invitations';
+type SettingsSection = 'organization' | 'applications' | 'database' | 'storage' | PeopleSection;
 
 /** Renders the organization settings page body. */
-export default function Settings({ organization, organizationDetails, applications, isLoading, error }: SettingsProps) {
+export default function Settings({
+    organization,
+    organizationDetails,
+    applications,
+    people,
+    invitations,
+    isLoading,
+    error,
+}: SettingsProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const { pathname } = useLocation();
+    const location = useLocation();
+    const { pathname } = location;
     const {
         settingsApplication = '',
         settingsBucket = '',
@@ -87,12 +102,19 @@ export default function Settings({ organization, organizationDetails, applicatio
     const organizationMembership = userOrganizations.find((item) => item.slug === organization);
     const organizationRole = organizationMembership?.role ?? null;
     const routeSettingsSection = pathname.split('/')[4] ?? '';
+    const hashValue = location.hash.replace(/^#/, '');
+    const isPeopleSection = routeSettingsSection === 'people';
+    const settingsPeopleSection: PeopleSection = hashValue === 'invitations' ? 'invitations' : 'members';
     const settingsSection: SettingsSection =
-        routeSettingsSection === 'applications' ||
-        routeSettingsSection === 'database' ||
-        routeSettingsSection === 'storage'
-            ? routeSettingsSection
-            : 'organization';
+        routeSettingsSection === 'applications'
+            ? 'applications'
+            : routeSettingsSection === 'database'
+              ? 'database'
+              : routeSettingsSection === 'storage'
+                ? 'storage'
+                : isPeopleSection
+                  ? settingsPeopleSection
+                  : 'organization';
 
     const deleteTarget = applications.find((application) => application.id === deleteTargetId) ?? null;
     const selectedApplication = applications.find((application) => application.slug === settingsApplication) ?? null;
@@ -186,6 +208,13 @@ export default function Settings({ organization, organizationDetails, applicatio
 
         if (nextSection === 'applications' || nextSection === 'database' || nextSection === 'storage') {
             navigate(`/orgs/${organization}/settings/${nextSection}`);
+            return;
+        }
+
+        if (nextSection === 'people' || nextSection === 'members' || nextSection === 'invitations') {
+            const section = nextSection === 'people' || nextSection === 'members' ? 'members' : 'invitations';
+
+            navigate(`/orgs/${organization}/settings/people#${section}`);
         }
     }
 
@@ -616,6 +645,29 @@ export default function Settings({ organization, organizationDetails, applicatio
                             </div>
                         </div>
                     </div>
+                </MenuSection>
+
+                <MenuSection value="people" label={t('navigation.people')} icon={Users}>
+                    <MenuSubSection value="members" label={t('people.membersTitle')}>
+                        <People
+                            organization={organization}
+                            people={people}
+                            invitations={invitations}
+                            activeSection="members"
+                            isLoading={isLoading}
+                            error={error}
+                        />
+                    </MenuSubSection>
+                    <MenuSubSection value="invitations" label={t('people.invitationsTitle')}>
+                        <People
+                            organization={organization}
+                            people={people}
+                            invitations={invitations}
+                            activeSection="invitations"
+                            isLoading={isLoading}
+                            error={error}
+                        />
+                    </MenuSubSection>
                 </MenuSection>
 
                 <MenuSection value="applications" label={t('navigation.applications')} icon={Boxes}>

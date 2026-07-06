@@ -16,9 +16,7 @@ def context_options() -> dict[str, Any]:
 
     return {
         "target_metadata": target_metadata,
-        "include_schemas": True,
         "compare_type": True,
-        "version_table_schema": SHARED_SCHEMA,
     }
 
 
@@ -35,6 +33,7 @@ def run_migrations_offline() -> None:
 
     with context.begin_transaction():
         context.execute(f"CREATE SCHEMA IF NOT EXISTS {SHARED_SCHEMA}")
+        context.execute(f"SET search_path TO {SHARED_SCHEMA}")
         context.run_migrations()
 
 
@@ -43,6 +42,9 @@ def do_run_migrations(connection: Connection) -> None:
 
     connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {SHARED_SCHEMA}"))
     # Alembic creates its version table before running revisions, so the schema bootstrap must be committed first.
+    connection.commit()
+    connection.execute(text(f"SET search_path TO {SHARED_SCHEMA}"))
+    # Keep Alembic in charge of the migration transaction instead of reusing the SET statement transaction.
     connection.commit()
     context.configure(connection=connection, **context_options())
 

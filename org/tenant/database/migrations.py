@@ -35,7 +35,8 @@ def migration_config(database_url: str | URL, script_location: Path | None = Non
     url_value = database_url.render_as_string(hide_password=False) if isinstance(database_url, URL) else database_url
     config = Config()
     config.set_main_option("script_location", str(alembic_script_location(script_location)))
-    config.set_main_option("sqlalchemy.url", url_value)
+    # Alembic stores options in ConfigParser, where percent-encoded URL characters must be escaped.
+    config.set_main_option("sqlalchemy.url", url_value.replace("%", "%%"))
     return config
 
 

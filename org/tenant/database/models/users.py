@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlmodel import Field, SQLModel
 from sqlalchemy import TIMESTAMP, Uuid, Column, String, MetaData, Table
 
-from tenant.database.constants import SHARED_SCHEMA, SHARED_USERS_TABLE
+from tenant.database.constants import SHARED_USERS_TABLE
 
 shared_metadata = MetaData()
 
@@ -13,7 +13,6 @@ class SharedUser(SQLModel, table=True):
     """Represent one user in a tenant's shared database schema."""
 
     __tablename__: ClassVar[str] = SHARED_USERS_TABLE
-    __table_args__ = {"schema": SHARED_SCHEMA}
     metadata = shared_metadata
 
     # Identifier

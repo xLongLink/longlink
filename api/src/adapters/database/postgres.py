@@ -49,8 +49,9 @@ class Postgres(Database):
         self._runtime_port = runtime_port if runtime_port is not None else port
         self._sslmode = env.DATABASE_SSLMODE
         self._maintenance_database = "postgres"
+        self._migrated_database_names: set[str] = set()
 
-    def _url(self, database: str) -> URL:
+    def _url(self, database: str, search_path: str | None = None) -> URL:
         """Build one SQLAlchemy URL for the requested database."""
 
         # Keep the connection details inside the adapter so callers only pass registry fields.
@@ -62,7 +63,11 @@ class Postgres(Database):
             port=self._port,
             database=database,
         )
-        return url.update_query_dict({"sslmode": self._sslmode})
+        query = {"sslmode": self._sslmode}
+        if search_path is not None:
+            query["options"] = f"-csearch_path={search_path}"
+
+        return url.update_query_dict(query)
 
     def _runtime_url(self, database: str, username: str, password: str) -> URL:
         """Build one SQLAlchemy URL for an application runtime role."""
@@ -102,7 +107,13 @@ class Postgres(Database):
         return str(value)
 
     @contextlib.asynccontextmanager
-    async def _connection(self, database: str, *, autocommit: bool = False) -> AsyncIterator[AsyncConnection]:
+    async def _connection(
+        self,
+        database: str,
+        *,
+        autocommit: bool = False,
+        search_path: str | None = None,
+    ) -> AsyncIterator[AsyncConnection]:
         """Open one managed SQLAlchemy connection for a database.
 
         The adapter owns the engine lifecycle and disposes it after every operation.
@@ -112,7 +123,10 @@ class Postgres(Database):
         if autocommit:
             engine_kwargs["isolation_level"] = "AUTOCOMMIT"
 
-        engine: AsyncEngine = create_async_engine(self._url(database), **engine_kwargs)
+        engine: AsyncEngine = create_async_engine(
+            self._url(database, search_path=search_path),
+            **engine_kwargs,
+        )
         try:
             if autocommit:
                 async with engine.connect() as conn:
@@ -150,7 +164,11 @@ class Postgres(Database):
     async def _migrate_shared_schema(self, database_name: str) -> None:
         """Apply organization-owned shared schema migrations."""
 
+        if database_name in self._migrated_database_names:
+            return
+
         await migrate_database(self._url(database_name))
+        self._migrated_database_names.add(database_name)
 
     async def _restrict_shared_schema(self, conn: AsyncConnection) -> None:
         """Restrict default write access to organization shared schema tables."""
@@ -229,7 +247,7 @@ class Postgres(Database):
         database_name = dbname(organization)
         await self._migrate_shared_schema(database_name)
 
-        async with self._connection(database_name) as conn:
+        async with self._connection(database_name, search_path=SHARED_SCHEMA) as conn:
             await tenant_users.sync(conn, users)
             await self._restrict_shared_schema(conn)
 

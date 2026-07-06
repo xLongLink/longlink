@@ -88,7 +88,7 @@ function renderArticleNavigationItem(
                 <SidebarMenuAction
                     aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${item.title}`}
                     aria-expanded={isOpen}
-                    className="top-1 size-5 cursor-pointer"
+                    className="!top-0 !right-0 h-7 w-16 cursor-pointer justify-end pr-2"
                     onClick={handleToggle}
                 >
                     <ChevronDownIcon className={cn('size-3.5 transition-transform', !isOpen && '-rotate-90')} />
@@ -170,7 +170,7 @@ export function ArticleSidebar({ currentPath, groups }: ArticleSidebarProps) {
 
             <SidebarContent>
                 {groups.map((group) => (
-                    <SidebarGroup key={group.title} className="px-2 py-1">
+                    <SidebarGroup key={group.title} className="px-2 py-2">
                         <SidebarGroupLabel className="h-6 px-2.5 text-[0.65rem] font-semibold uppercase tracking-normal text-muted-foreground">
                             {group.title}
                         </SidebarGroupLabel>

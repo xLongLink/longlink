@@ -3,10 +3,13 @@ import pytest
 import importlib
 from collections.abc import Iterator
 from tenant.storage import shared_buckets
-from docker.errors import DockerException
-from testcontainers.core.container import DockerContainer
 from botocore.exceptions import EndpointConnectionError
 from src.adapters.storage.s3 import S3
+
+docker_errors = pytest.importorskip("docker.errors")
+testcontainers = pytest.importorskip("testcontainers.core.container")
+DockerException = docker_errors.DockerException
+DockerContainer = testcontainers.DockerContainer
 
 pytestmark = pytest.mark.no_db
 s3_module = importlib.import_module("src.adapters.storage.s3")

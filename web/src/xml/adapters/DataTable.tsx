@@ -122,11 +122,8 @@ function createDataRowContext(
     value: unknown
 ): ExecutionContext {
     return {
-        locale: ctx.locale,
-        translations: ctx.translations,
+        ...ctx,
         parent: ctx,
-        setups: ctx.setups,
-        invalidate: ctx.invalidate,
         values: {
             value,
             index,

@@ -23,13 +23,64 @@ type LayoutProps = {
     children: ReactNode;
 };
 
+type LayoutTabEntry = {
+    icon?: LucideIcon;
+    label: string;
+    href: string;
+    pathname: string;
+};
+
 /** Renders the shared page shell with either breadcrumbs or brand-only header chrome. */
 export default function Layout({ tabs, brandOnly = false, brandHref = '/organizations', children }: LayoutProps) {
     const { t } = useTranslation();
     const location = useLocation();
-    const tabEntries = Object.entries(tabs ?? {});
-    const currentPath = `${location.pathname}${location.search}`;
+    const currentPathname = location.pathname;
+    const normalizedCurrentPathname = normalizePathname(currentPathname);
+    const tabEntries = Object.entries(tabs ?? {}).map(([label, tab]) => {
+        const href = typeof tab === 'string' ? tab : tab.href;
+        const icon = typeof tab === 'string' ? undefined : tab.icon;
+        const targetUrl = new URL(href, `${window.location.origin}${location.pathname}`);
+
+        return {
+            label,
+            icon,
+            href,
+            pathname: normalizePathname(targetUrl.pathname),
+        };
+    });
+    const activeTabPathname = getActiveTabPathname(tabEntries, normalizedCurrentPathname);
     const { user } = useUserProfile();
+
+    /** Normalizes a pathname for deterministic active tab matching. */
+    function normalizePathname(pathname: string) {
+        if (pathname === '/') {
+            return '/';
+        }
+
+        return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+    }
+
+    /** Returns whether a tab pathname is active for the current path. */
+    function isTabPathActive(tabPathname: string, pathname: string): boolean {
+        if (tabPathname === pathname) {
+            return true;
+        }
+
+        return pathname.startsWith(`${tabPathname}/`);
+    }
+
+    /** Selects the deepest matching tab path for the current route. */
+    function getActiveTabPathname(items: LayoutTabEntry[], pathname: string): string | undefined {
+        const matching = items.filter((item) => isTabPathActive(item.pathname, pathname));
+
+        return matching.reduce<string | undefined>(
+            (best, item) =>
+                best === undefined || item.pathname.length > best.length
+                    ? item.pathname
+                    : best,
+            undefined
+        );
+    }
 
     const header = (
         <>
@@ -65,16 +116,14 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
             {!tabEntries.length ? null : (
                 <div className="mx-auto w-full px-6 pb-0 pt-0">
                     <div className="flex w-full items-center gap-2 border-b border-white/10">
-                        {tabEntries.map(([label, tab]) => {
-                            const href = typeof tab === 'string' ? tab : tab.href;
-                            const Icon = typeof tab === 'string' ? undefined : tab.icon;
-                            const targetUrl = new URL(href, `${window.location.origin}${location.pathname}`);
-                            const isActive = `${targetUrl.pathname}${targetUrl.search}` === currentPath;
+                        {tabEntries.map((tab) => {
+                            const Icon = tab.icon;
+                            const isActive = tab.pathname === activeTabPathname;
 
                             return (
                                 <Link
-                                    key={label}
-                                    to={href}
+                                    key={tab.label}
+                                    to={tab.href}
                                     replace
                                     aria-current={isActive ? 'page' : undefined}
                                     className={cn(
@@ -84,7 +133,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                                     )}
                                 >
                                     {Icon ? <Icon className="size-4 shrink-0" aria-hidden="true" /> : null}
-                                    {label}
+                                    {tab.label}
                                 </Link>
                             );
                         })}

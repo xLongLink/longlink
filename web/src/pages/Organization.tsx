@@ -3,16 +3,15 @@ import { useUserProfile } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
 import { useTranslation } from '@/lib/i18n';
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { LayoutGrid, Settings2, Users } from 'lucide-react';
+import { LayoutGrid, Settings2 } from 'lucide-react';
 import { Navigate, useLocation, useParams } from 'react-router';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
 import OrganizationDatabase from './org/Database';
-import People from './org/People';
 import OrganizationSettings from './org/Settings';
 import OrganizationStorage from './org/Storage';
 
-type OrganizationSection = 'applications' | 'people' | 'database' | 'settings' | 'storage';
+type OrganizationSection = 'applications' | 'database' | 'settings' | 'storage';
 
 type OrganizationProps = {
     sectionName?: OrganizationSection;
@@ -27,7 +26,6 @@ export default function Organization({ sectionName }: OrganizationProps) {
     const organization = routeOrganization || organizations[0]?.slug || '';
     const pathSection = pathname.split('/')[3] ?? '';
     const pathSectionIsOrganizationSection =
-        pathSection === 'people' ||
         pathSection === 'database' ||
         pathSection === 'storage' ||
         pathSection === 'settings';
@@ -71,18 +69,7 @@ export default function Organization({ sectionName }: OrganizationProps) {
         );
 
     // Swap the hero based on the active path segment.
-    if (section === 'people') {
-        content = (
-            <Hero icon="users" className="w-full">
-                <div className="flex w-full items-center justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                        <HeroTitle>{t('organization.peopleTitle')}</HeroTitle>
-                        <HeroDescription>{t('organization.peopleDescription')}</HeroDescription>
-                    </div>
-                </div>
-            </Hero>
-        );
-    } else if (section === 'settings') {
+    if (section === 'settings') {
         content = (
             <Hero icon="settings-2" className="w-full">
                 <div className="flex w-full items-center justify-between gap-4">
@@ -99,22 +86,11 @@ export default function Organization({ sectionName }: OrganizationProps) {
         <Layout
             tabs={{
                 [t('navigation.applications')]: { href: `/orgs/${organization}`, icon: LayoutGrid },
-                [t('navigation.people')]: { href: `/orgs/${organization}/people`, icon: Users },
                 [t('navigation.settings')]: { href: `/orgs/${organization}/settings`, icon: Settings2 },
             }}
         >
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
                 {content}
-
-                {section === 'people' ? (
-                    <People
-                        organization={organization}
-                        people={people}
-                        invitations={invitations}
-                        isLoading={isLoading}
-                        error={error}
-                    />
-                ) : null}
                 {section === 'applications' ? (
                     <Applications
                         organization={organization}
@@ -142,6 +118,8 @@ export default function Organization({ sectionName }: OrganizationProps) {
                         organization={organization}
                         organizationDetails={organizationDetails}
                         applications={applications}
+                        people={people}
+                        invitations={invitations}
                         isLoading={isLoading}
                         error={error}
                     />

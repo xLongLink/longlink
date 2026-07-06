@@ -58,7 +58,6 @@ export { Stack } from './Stack';
 export { Sub } from './Sub';
 export { Sup } from './Sup';
 export { Switch } from './Switch';
-export { Table, Tbody, Td, Tfoot, Th, Thead, Tr } from './Table';
 export { Tab, Tabs } from './Tabs';
 export { Textarea } from './Textarea';
 export { Toggle } from './Toggle';

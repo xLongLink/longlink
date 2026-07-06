@@ -65,39 +65,33 @@
                     <Stack>
                         <H2 i18n="dashboard.policy.title" />
                         <P i18n="dashboard.policy.description" />
-                        <Table>
-                            <Thead>
-                                <Tr>
-                                    <Th i18n="dashboard.policy.table.amount" />
-                                    <Th i18n="dashboard.policy.table.approver" />
-                                    <Th i18n="dashboard.policy.table.sla" />
-                                </Tr>
-                            </Thead>
-                            <Tbody>
-                                <Tr>
-                                    <Td i18n="dashboard.policy.table.small" />
-                                    <Td i18n="dashboard.policy.table.manager" />
-                                    <Td i18n="dashboard.policy.table.oneDay" />
-                                </Tr>
-                                <Tr>
-                                    <Td i18n="dashboard.policy.table.medium" />
-                                    <Td i18n="dashboard.policy.table.finance" />
-                                    <Td i18n="dashboard.policy.table.twoDays" />
-                                </Tr>
-                                <Tr>
-                                    <Td i18n="dashboard.policy.table.large" />
-                                    <Td i18n="dashboard.policy.table.owner" />
-                                    <Td i18n="dashboard.policy.table.fiveDays" />
-                                </Tr>
-                            </Tbody>
-                            <Tfoot>
-                                <Tr>
-                                    <Td i18n="dashboard.policy.table.footer" />
-                                    <Td></Td>
-                                    <Td></Td>
-                                </Tr>
-                            </Tfoot>
-                        </Table>
+                        <DataTable data="${[{ tier: 'small' }, { tier: 'medium' }, { tier: 'large' }, { tier: 'footer' }]}" as="policy">
+                            <DataColumn>
+                                <DataHeader i18n="dashboard.policy.table.amount" />
+                                <DataCell>
+                                    <P if="${policy.tier === 'small'}" i18n="dashboard.policy.table.small" />
+                                    <P if="${policy.tier === 'medium'}" i18n="dashboard.policy.table.medium" />
+                                    <P if="${policy.tier === 'large'}" i18n="dashboard.policy.table.large" />
+                                    <P if="${policy.tier === 'footer'}" i18n="dashboard.policy.table.footer" />
+                                </DataCell>
+                            </DataColumn>
+                            <DataColumn>
+                                <DataHeader i18n="dashboard.policy.table.approver" />
+                                <DataCell>
+                                    <P if="${policy.tier === 'small'}" i18n="dashboard.policy.table.manager" />
+                                    <P if="${policy.tier === 'medium'}" i18n="dashboard.policy.table.finance" />
+                                    <P if="${policy.tier === 'large'}" i18n="dashboard.policy.table.owner" />
+                                </DataCell>
+                            </DataColumn>
+                            <DataColumn>
+                                <DataHeader i18n="dashboard.policy.table.sla" />
+                                <DataCell>
+                                    <P if="${policy.tier === 'small'}" i18n="dashboard.policy.table.oneDay" />
+                                    <P if="${policy.tier === 'medium'}" i18n="dashboard.policy.table.twoDays" />
+                                    <P if="${policy.tier === 'large'}" i18n="dashboard.policy.table.fiveDays" />
+                                </DataCell>
+                            </DataColumn>
+                        </DataTable>
                     </Stack>
                 </Tab>
             </Tabs>

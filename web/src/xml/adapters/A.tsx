@@ -16,14 +16,17 @@ export function A({ props, nodes }: Props) {
     const to = resolveXmlString(props, 'to', ctx, '');
     const resolvedHref = useAnchorUrl(href);
     const resolvedTo = to ? resolveAnchorUrl(String(ctx.navigationBaseUrl ?? ''), to) : '';
-    const linkClassName =
-        active === 'always'
-            ? 'inline-flex items-center gap-1 text-accent underline underline-offset-4 hover:opacity-80'
-            : 'inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80';
 
     if (to && resolvedTo) {
         return (
-            <Link className={linkClassName} to={resolvedTo}>
+            <Link
+                className={
+                    active === 'always'
+                        ? 'inline-flex items-center gap-1 text-accent underline underline-offset-4 hover:opacity-80'
+                        : 'inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80'
+                }
+                to={resolvedTo}
+            >
                 {props.i18n ? childContent : null}
                 {text}
             </Link>
@@ -31,7 +34,14 @@ export function A({ props, nodes }: Props) {
     }
 
     return (
-        <a className={linkClassName} {...(resolvedHref ? { href: resolvedHref } : {})}>
+        <a
+            className={
+                active === 'always'
+                    ? 'inline-flex items-center gap-1 text-accent underline underline-offset-4 hover:opacity-80'
+                    : 'inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80'
+            }
+            {...(resolvedHref ? { href: resolvedHref } : {})}
+        >
             {props.i18n ? childContent : null}
             {text}
         </a>

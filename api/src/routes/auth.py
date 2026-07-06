@@ -188,8 +188,20 @@ async def auth_oidc(request: Request) -> RedirectResponse:
     raw_userinfo: Any = getattr(token, "userinfo", None)
     # Fall back to the userinfo endpoint when the token payload does not include profile claims.
     if raw_userinfo is None:
+        if isinstance(token, dict):
+            token_payload = token
+        elif hasattr(token, "model_dump"):
+            token_payload = token.model_dump(mode="python")
+        elif hasattr(token, "dict"):
+            token_payload = token.dict()
+        else:
+            try:
+                token_payload = dict(token)
+            except TypeError as exc:
+                raise UnavailableError("Authentication provider returned an invalid token payload") from exc
+
         try:
-            raw_userinfo = await oidc.userinfo(token=token.model_dump(mode="python"))
+            raw_userinfo = await oidc.userinfo(token=token_payload)
         except ValidationError as exc:
             raise UnavailableError("Authentication provider returned an invalid user profile") from exc
 

@@ -123,7 +123,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Kubernetes service proxy                  | Proxies requests through the Kubernetes service proxy API with bounded request and response bodies.                      |
 | PostgreSQL provisioning                   | Creates organization databases, migrates the shared schema, creates app schemas, runtime login roles, and read/write app plus read-only shared grants. |
 | PostgreSQL resource inspection            | Inspects databases, schemas, usage, tables, and preview rows.                                                            |
-| S3-compatible provisioning                | Creates or reuses shared and app buckets, and validates runtime credentials before injecting storage access.              |
+| S3-compatible provisioning                | Creates or reuses shared and app buckets, and validates runtime credentials for app read/write, shared read-only, and cross-app denial before injection. |
 | S3-compatible resource inspection         | Lists buckets and object metadata for storage browsers.                                                                  |
 | Invitation email utility                  | Provides MJML/SMTP invitation email helpers when email settings are complete.                                            |
 
@@ -307,7 +307,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Layout components      | Supports columns, grids, stacks, flex rows, cards, hero slots, tabs, dialogs, and menus.                                              |
 | Form components        | Supports buttons, fields, labels, inputs, textareas, input groups, checkboxes, switches, sliders, toggles, radio groups, and selects. |
 | Visual components      | Supports Lucide icons, badges, avatars, avatar images/fallbacks, and avatar badges.                                                   |
-| Table components       | Supports semantic tables and query-backed data tables with headers, cells, row scope, and empty messages.                             |
+| Table components       | Supports query-backed data tables with columns, headers, cell slots, row scope, and empty messages.                                    |
 | Registered render tags | Includes the currently registered XML render tags for text, layout, forms, tables, dialogs, menus, badges, avatars, and icons.        |
 | Special setup tags     | Handles `State`, `Query`, and `For` outside the render registry.                                                                      |
 

@@ -6,16 +6,20 @@ import { useTranslation } from '@/lib/i18n';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 
-type LogsDialogProps = {
+/** Renders the application logs dialog for an organization. */
+export default function LogsDialog({
+    applicationId,
+    applicationName,
+    open,
+    onOpenChange,
+    trigger,
+}: {
     applicationId: string;
     applicationName: string;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
     trigger?: ReactNode | null;
-};
-
-/** Renders the application logs dialog for an organization. */
-export default function LogsDialog({ applicationId, applicationName, open, onOpenChange, trigger }: LogsDialogProps) {
+}) {
     const { t } = useTranslation();
     const [internalOpen, setInternalOpen] = useState(false);
     const [logsContent, setLogsContent] = useState('');

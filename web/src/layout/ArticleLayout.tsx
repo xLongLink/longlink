@@ -3,6 +3,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 
 import { ArticleSidebar } from '@/components/ArticleSidebar';
+import { useUserProfile } from '@/hooks/use-user';
 import { cn, formatDate } from '@/lib/utils';
 import type { ArticleNavigationGroup, ArticlePage } from '@/pages/catalog';
 import { A } from '@/components/ui/a';
@@ -32,11 +33,13 @@ type PageTocItem = {
 /** Renders an article page using the shared article shell. */
 export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutProps) {
     const { t } = useTranslation();
+    const { user, organizations } = useUserProfile();
     const location = useLocation();
     const contentRef = useRef<HTMLDivElement>(null);
     const [activeTocHref, setActiveTocHref] = useState('');
     const [pageToc, setPageToc] = useState<PageTocItem[]>([]);
     const { content, metadata } = page;
+    const loginHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
 
     useEffect(() => {
         const contentElement = contentRef.current;
@@ -173,7 +176,7 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
                             </div>
 
                             <Link
-                                to="/organizations"
+                                to={loginHref}
                                 className={cn(
                                     buttonVariants({ size: 'sm' }),
                                     'absolute top-0 bottom-0 right-4 z-10 my-auto h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 lg:right-6'

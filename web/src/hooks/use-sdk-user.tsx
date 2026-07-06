@@ -27,7 +27,7 @@ export function SdkUserProvider({ children }: { children: React.ReactNode }) {
 
     /** Selects a local SDK user by ID from the dropdown value. */
     function selectUser(nextUserId: string): void {
-        setUserId(getSdkLocalUser(Number.parseInt(nextUserId, 10)).id);
+        setUserId(getSdkLocalUser(nextUserId).id);
     }
 
     return (

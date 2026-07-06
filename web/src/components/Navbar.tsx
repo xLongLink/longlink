@@ -4,10 +4,14 @@ import { Link } from 'react-router';
 import { buttonVariants } from '@/components/ui/button';
 
 import { Wordmark } from '@/components/Wordmark';
+import { useUserProfile } from '@/hooks/use-user';
 import { cn } from '@/lib/utils';
 
 /** Renders the public landing page navigation. */
 export function Navbar() {
+    const { user, organizations } = useUserProfile();
+    const loginHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
+
     return (
         <header className="relative z-20 px-4 py-5">
             <div className="mx-auto max-w-[620px] rounded-lg border border-border bg-card/80 text-card-foreground shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-md dark:shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_18px_60px_rgba(0,0,0,0.35)]">
@@ -54,7 +58,7 @@ export function Navbar() {
                     </ul>
 
                     <Link
-                        to="/organizations"
+                        to={loginHref}
                         className={cn(
                             buttonVariants({ size: 'sm' }),
                             'h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90'

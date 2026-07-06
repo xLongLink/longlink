@@ -131,14 +131,14 @@ clean: api\:clean sdk\:clean org\:clean sdk\:image\:clean web\:clean
 
 # Remove generated API build and test artifacts.
 api\:clean:
-	rm -rf api/.coverage api/.coverage.* api/coverage.xml api/htmlcov api/build api/dist api/*.egg-info api/openapi.yml api/src/.static/web
+	rm -rf api/.coverage api/.coverage.* api/coverage.xml api/htmlcov api/build api/dist api/*.egg-info api/kubeconfig.yaml api/openapi.yml api/src/.static/web
 	find api -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache -o -name .mypy_cache \) -prune -exec rm -rf {} +
 	find api -type f -name '*.py[co]' -delete
 
 
 # Remove generated SDK build and test artifacts.
 sdk\:clean:
-	rm -rf sdk/.coverage sdk/.coverage.* sdk/coverage.xml sdk/htmlcov sdk/build sdk/dist sdk/*.egg-info sdk/longlink/.static/web
+	rm -rf sdk/.coverage sdk/.coverage.* sdk/coverage.xml sdk/htmlcov sdk/build sdk/dev sdk/dist sdk/*.egg-info sdk/longlink/.static/web
 	find sdk -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache -o -name .mypy_cache \) -prune -exec rm -rf {} +
 	find sdk -type f -name '*.py[co]' -delete
 
@@ -161,7 +161,7 @@ sdk\:image\:clean:
 
 # Remove generated web build artifacts.
 web\:clean:
-	rm -rf web/dist web/dist-ssr web/node_modules/.tmp web/node_modules/.vite
+	rm -rf web/dist web/dist-ssr web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite
 
 
 # Start local services, registry, Keycloak, and cluster, then wait for service readiness.
@@ -226,8 +226,8 @@ local-services:
 
 # Stop local services, remove the cluster, and clean Python caches.
 down:
-	rm -f api/dev.db
-	-docker compose -f dev/compose.yml down
+	rm -f api/dev.db api/kubeconfig.yaml
+	-docker compose -f dev/compose.yml down --volumes --remove-orphans
 	-k3d cluster delete compute
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
 	find . -type d -name .mypy_cache -prune -exec rm -rf {} +

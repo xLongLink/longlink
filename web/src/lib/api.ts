@@ -45,7 +45,7 @@ export function createApiHeaders(initHeaders?: HeadersInit): Headers {
     const headers = new Headers(initHeaders);
 
     if (import.meta.env.MODE === 'sdk' && !headers.has('x-user-id')) {
-        headers.set('x-user-id', String(getStoredSdkUserId()));
+        headers.set('x-user-id', getStoredSdkUserId());
     }
 
     return headers;

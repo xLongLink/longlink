@@ -191,7 +191,6 @@ function RemoteIcon({ className, name, ...props }: IconProps) {
 /** Renders a Lucide icon by name without loading the full dynamic icon set up front. */
 export function Icon({ className, name, ...props }: IconProps) {
     const normalizedName = normalizeIconName(name);
-    const iconClassName = cn('size-4 shrink-0', className);
 
     if (!normalizedName) {
         throw new Error(`Unknown icon "${name}"`);
@@ -200,8 +199,8 @@ export function Icon({ className, name, ...props }: IconProps) {
     const StaticIcon = staticIconRegistry[normalizedName as keyof typeof staticIconRegistry];
 
     if (StaticIcon) {
-        return <StaticIcon aria-hidden={true} className={iconClassName} {...props} />;
+        return <StaticIcon aria-hidden={true} className={cn('size-4 shrink-0', className)} {...props} />;
     }
 
-    return <RemoteIcon name={normalizedName} aria-hidden={true} className={iconClassName} {...props} />;
+    return <RemoteIcon name={normalizedName} aria-hidden={true} className={cn('size-4 shrink-0', className)} {...props} />;
 }

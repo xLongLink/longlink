@@ -421,7 +421,9 @@ export function Menu({
                 <ul className="space-y-2" role="list">
                     {sections.map((section) => {
                         const hasSubSections = section.subSections.length > 0;
-                        const sectionIsActive = activeValue === section.value;
+                        const sectionIsActive =
+                            activeValue === section.value ||
+                            section.subSections.some((subSection) => subSection.value === activeValue);
                         const isExpanded = expandedSectionIds.has(section.value);
                         const SectionIcon = section.icon;
 

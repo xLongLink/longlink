@@ -1,4 +1,4 @@
-"""Create shared users schema.
+"""Create shared users table.
 
 Revision ID: 20260706_0001
 Revises:
@@ -17,9 +17,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    """Create the tenant shared schema and users table."""
+    """Create the tenant shared users table."""
 
-    op.execute("CREATE SCHEMA IF NOT EXISTS shared")
     op.create_table(
         "users",
         sa.Column("id", sa.Uuid(), nullable=False),
@@ -31,11 +30,10 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("deleted_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint("id"),
-        schema="shared",
     )
 
 
 def downgrade() -> None:
     """Drop the tenant shared users table."""
 
-    op.drop_table("users", schema="shared")
+    op.drop_table("users")

@@ -20,7 +20,8 @@ export const content = (
         </Heading>
         <P>
             Pages define the XML UI returned by SDK page handlers. The root page covers the runtime concepts shared by
-            every element: state, queries, loops, conditions, translations, expressions, bindings, and invalidation.
+            every element: state, queries, actions, loops, conditions, translations, expressions, bindings, and
+            invalidation.
         </P>
         <P>
             XML page references live in the SDK pages section:{' '}
@@ -163,26 +164,6 @@ app = LongLink(
             <CodeBlock language="bash">longlink translations generate</CodeBlock>
         </Stack>
         <Stack className="gap-3">
-            <Heading id="longlink" level="h2">
-                longlink
-            </Heading>
-            <P>
-                Root XML page element. Use this as the top-level page wrapper to render page body and expose optional
-                metadata for page tabs.
-            </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>name: optional readable tab label override.</Li>
-                    <Li>icon: optional Lucide icon name for the tab in the XML shell.</Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<longlink name="Dashboard" icon="layout-dashboard">
-  <H1 i18n="orders.title" />
-  <P i18n="orders.description" />
-</longlink>`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
             <Heading id="state" level="h2">
                 State
             </Heading>
@@ -211,25 +192,6 @@ app = LongLink(
 </Field>`}</CodeBlock>
         </Stack>
         <Stack className="gap-3">
-            <Heading id="text-and-styling" level="h2">
-                Text and styling
-            </Heading>
-            <P>
-                XML pages intentionally reject literal text nodes and className attributes. Put copy in locale files and
-                render it through i18n-capable elements so pages stay structured and translatable.
-            </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>Use i18n on text-bearing elements such as H1, P, Button, Badge, Li, Th, and Td.</Li>
-                    <Li>Use semantic XML elements for layout and state instead of className styling hooks.</Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<H1 i18n="orders.title" />
-<P i18n="orders.summary" count="\${orders.items.length}" />
-<Badge variant="outline" i18n="orders.pendingReview" />`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
             <Heading id="query" level="h2">
                 Query
             </Heading>
@@ -253,6 +215,24 @@ app = LongLink(
 <For each="$orders.items" as="order">
   <P i18n="orders.row" number="$order.number" status="$order.status" />
 </For>`}</CodeBlock>
+        </Stack>
+        <Stack className="gap-3">
+            <Heading id="action" level="h2">
+                Action
+            </Heading>
+            <P>Wraps a clickable trigger such as Button or Icon and sends a mutation request when it is activated.</P>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">Parameters</P>
+                <Ul>
+                    <Li>action: optional app-relative request path.</Li>
+                    <Li>method: optional HTTP method. Defaults to POST.</Li>
+                    <Li>json: optional expression payload sent as JSON.</Li>
+                    <Li>invalidate: optional expression resolving to setup ids to refresh.</Li>
+                </Ul>
+            </Stack>
+            <CodeBlock language="xml">{`<Action action="/api/orders/\${order.id}/complete" invalidate="\${['orders']}">
+  <Button i18n="orders.complete" />
+</Action>`}</CodeBlock>
         </Stack>
         <Stack className="gap-3">
             <Heading id="for" level="h2">
@@ -331,31 +311,6 @@ app = LongLink(
             <CodeBlock language="xml">{`<Input value="$form.name" />
 <P i18n="orders.summary" name="$form.name" count="\${orders.items.length}" />
 <Button disabled="\${form.saving || !form.name}" i18n="actions.save" />`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="invalidation" level="h2">
-                Invalidation
-            </Heading>
-            <P>
-                Actions can refresh setup values after a mutation. Use invalidate with a list of State or Query ids that
-                should be recreated or refetched.
-            </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>action: request path or URL for the mutation.</Li>
-                    <Li>method: HTTP method, default POST.</Li>
-                    <Li>json: expression payload sent as JSON.</Li>
-                    <Li>invalidate: expression that resolves to an array of setup ids.</Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Action
-  action="/api/orders/\${order.id}/complete"
-  method="POST"
-  invalidate="\${['orders']}"
->
-  <Button i18n="orders.complete" />
-</Action>`}</CodeBlock>
         </Stack>
     </Stack>
 );

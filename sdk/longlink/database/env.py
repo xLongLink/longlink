@@ -1,4 +1,5 @@
 import asyncio
+from typing import Any
 from alembic import context
 from sqlmodel import SQLModel
 from sqlalchemy.engine import Connection
@@ -9,17 +10,24 @@ from longlink.database.migrations import include_object
 settings = Envs()
 engine = create_engine(settings)
 target_metadata = SQLModel.metadata
+migration_context_options: dict[str, Any] = {
+    "target_metadata": target_metadata,
+    "include_object": include_object,
+    "compare_type": True,
+    "render_as_batch": True,
+}
+
+# Keep app migration state out of the shared schema resolved by the production search path.
+if settings.DATABASE_SCHEMA and str(engine.url).startswith("postgresql+"):
+    migration_context_options["version_table_schema"] = settings.DATABASE_SCHEMA
 
 
 def run_migrations_offline() -> None:
     """Run Alembic migrations in offline mode."""
     context.configure(
         url=str(engine.url),
-        target_metadata=target_metadata,
-        include_object=include_object,
         literal_binds=True,
-        compare_type=True,
-        render_as_batch=True,
+        **migration_context_options,
     )
 
     with context.begin_transaction():
@@ -30,10 +38,7 @@ def do_run_migrations(connection: Connection) -> None:
     """Run Alembic migrations using a synchronous migration connection."""
     context.configure(
         connection=connection,
-        target_metadata=target_metadata,
-        include_object=include_object,
-        compare_type=True,
-        render_as_batch=True,
+        **migration_context_options,
     )
 
     with context.begin_transaction():

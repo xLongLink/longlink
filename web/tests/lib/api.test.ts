@@ -42,14 +42,17 @@ describe('createApiHeaders', () => {
             configurable: true,
             value: {
                 localStorage: {
-                    getItem: (key: string) => (key === SDK_USER_STORAGE_KEY ? '4' : null),
+                    getItem: (key: string) =>
+                        key === SDK_USER_STORAGE_KEY ? '00000000-0000-0000-0000-000000000004' : null,
                     setItem: () => undefined,
                 },
             },
         });
 
-        expect(createApiHeaders().get('x-user-id')).toBe('4');
-        expect(createApiHeaders({ 'x-user-id': '2' }).get('x-user-id')).toBe('2');
+        expect(createApiHeaders().get('x-user-id')).toBe('00000000-0000-0000-0000-000000000004');
+        expect(createApiHeaders({ 'x-user-id': '00000000-0000-0000-0000-000000000002' }).get('x-user-id')).toBe(
+            '00000000-0000-0000-0000-000000000002'
+        );
     });
 });
 

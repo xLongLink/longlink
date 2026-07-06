@@ -25,7 +25,7 @@ make seed           # Start the stack, build/push the SDK app image, migrate, an
 
 make clean          # Remove generated build and test artifacts
 make api:clean      # Remove API generated artifacts and API web bundle
-make sdk:clean      # Remove SDK generated artifacts and SDK web bundle
+make sdk:clean      # Remove SDK generated artifacts, SDK dev app, and SDK web bundle
 make web:clean      # Remove web generated artifacts
 
 make format         # Format the code
@@ -47,7 +47,7 @@ make web            # Run the Vite web app
 make seed           # Prepare local services and seed data without starting the API server
 make api            # Run the control plane after seeding
 
-make down           # Stop services and remove the cluster
+make down           # Stop services, remove local volumes, and remove the cluster
 ```
 
 ## Test the SDK in development

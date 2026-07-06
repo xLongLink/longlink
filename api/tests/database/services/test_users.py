@@ -1,8 +1,11 @@
+import pytest
+from uuid import uuid4
 from types import SimpleNamespace
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.users import UserOrganizationMembership
+from src.models.users import Theme, Accent, Radius, Language, UserOrganizationMembership
 from src.models.countries import Country
 from src.models.locations import LocationResponse
+from src.database.models.users import User
 from src.database.services import users
 from src.database.services import compute
 from src.database.services import storage
@@ -22,6 +25,42 @@ db = SimpleNamespace(
     storage=storage,
     users=users,
 )
+
+
+async def test_fetch_all_get_by_id_and_get_return_persisted_users(users: tuple[User, User, User]) -> None:
+    """Return persisted users through all user read services."""
+
+    # Arrange
+    first_user, second_user, third_user = users
+
+    # Act
+    fetched = await db.users.fetch_all()
+    by_id = await db.users.get_by_id(second_user.id)
+    by_oidc = await db.users.get(third_user.oidc)
+
+    # Assert
+    assert {user.id for user in fetched} == {first_user.id, second_user.id, third_user.id}
+    assert by_id is not None
+    assert by_id.id == second_user.id
+    assert by_oidc is not None
+    assert by_oidc.id == third_user.id
+
+
+async def test_missing_user_reads_return_none() -> None:
+    """Return None when user read services cannot find a user."""
+
+    # Arrange
+    missing_id = uuid4()
+
+    # Act
+    by_id = await db.users.get_by_id(missing_id)
+    by_oidc = await db.users.get("missing-oidc")
+    profile = await db.users.profile(missing_id)
+
+    # Assert
+    assert by_id is None
+    assert by_oidc is None
+    assert profile is None
 
 
 async def test_upsert_creates_user_when_no_existing_match() -> None:
@@ -44,6 +83,20 @@ async def test_upsert_creates_user_when_no_existing_match() -> None:
     assert user.name == "Create User"
     assert user.avatar == "https://example.com/create.png"
     assert user.role == PlatformRoles.administrator
+
+
+async def test_upsert_requires_identity_fields_for_new_user() -> None:
+    """Require name and email when creating a new user."""
+
+    # Arrange
+
+    # Act
+    with pytest.raises(ValueError) as exc:
+        await db.users.upsert(oidc="oidc-subject-missing-fields")
+
+    # Assert
+    assert str(exc.value) == "Missing user fields"
+    assert await db.users.fetch_all() == []
 
 
 async def test_profile_returns_created_organization_membership() -> None:
@@ -99,6 +152,40 @@ async def test_upsert_does_not_mark_second_user_as_admin() -> None:
     # Assert
     assert user.id is not None
     assert user.role == PlatformRoles.user
+
+
+async def test_upsert_applies_explicit_user_settings_and_preserves_omitted_values() -> None:
+    """Apply explicit profile settings without overwriting omitted values later."""
+
+    # Arrange
+    original_user = await db.users.upsert(
+        oidc="oidc-subject-settings",
+        email="settings@example.com",
+        name="Settings User",
+        avatar="https://example.com/settings.png",
+        role=PlatformRoles.support,
+        theme=Theme.light,
+        accent=Accent.blue,
+        radius=Radius.large,
+        language=Language.fr,
+    )
+
+    # Act
+    updated_user = await db.users.upsert(
+        oidc="oidc-subject-settings",
+        name="Settings User Updated",
+    )
+
+    # Assert
+    assert updated_user.id == original_user.id
+    assert updated_user.name == "Settings User Updated"
+    assert updated_user.email == "settings@example.com"
+    assert updated_user.avatar == "https://example.com/settings.png"
+    assert updated_user.role == PlatformRoles.support
+    assert updated_user.theme == Theme.light
+    assert updated_user.accent == Accent.blue
+    assert updated_user.radius == Radius.large
+    assert updated_user.language == Language.fr
 
 
 async def test_upsert_updates_existing_user_by_oidc() -> None:

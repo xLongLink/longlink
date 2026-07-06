@@ -23,16 +23,13 @@ import { formatDate, getInitials } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Menu, MenuSection } from '@/components/ui/menu';
 import {
     BookOpen,
     Crown,
     GitPullRequest,
-    Mail,
     MoreVertical,
     PenLine,
     Settings2,
-    Users,
     type LucideIcon,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -42,6 +39,7 @@ type PeopleProps = {
     organization: string;
     people: ApiOrganizationMemberSummary[];
     invitations: ApiInvitation[];
+    activeSection?: 'members' | 'invitations';
     isLoading: boolean;
     error: Error | null;
 };
@@ -62,8 +60,8 @@ const ORGANIZATION_ROLE_ICONS: Record<Role, LucideIcon> = {
     owner: Crown,
 };
 
-/** Renders the organization people menu and member tables. */
-export default function People({ organization, people, invitations, isLoading, error }: PeopleProps) {
+/** Renders the organization people lists for settings sections. */
+export default function People({ organization, people, invitations, activeSection = 'members', isLoading, error }: PeopleProps) {
     const { t } = useTranslation();
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
@@ -77,6 +75,9 @@ export default function People({ organization, people, invitations, isLoading, e
     const { inviteMember, isInviting, canInviteMembers, changeMemberRole, isChangingMemberRole, canManageMembers } =
         useOrganizationActions(organization);
     const roleChangeTargetLabel = roleChangeTarget ? ORGANIZATION_ROLE_LABELS[roleChangeTarget.role] : '';
+
+    const isMembersSection = activeSection === 'members';
+    const isInvitationsSection = activeSection === 'invitations';
 
     const peopleColumns: Array<ColumnDef<ApiOrganizationMemberSummary>> = [
         {
@@ -193,63 +194,55 @@ export default function People({ organization, people, invitations, isLoading, e
 
     return (
         <>
-            <Menu defaultValue="members" hashNavigation className="items-start" ariaLabel={t('people.menuAria')}>
-                <MenuSection value="members" label={t('people.membersTitle')} icon={Users}>
-                    <div className="space-y-4">
-                        <div className="space-y-1">
-                            <h2 className="text-lg font-medium text-foreground">{t('people.membersTitle')}</h2>
-                            <p className="text-sm text-muted-foreground">{t('people.membersDescription')}</p>
-                        </div>
-                        <hr className="border-border" />
-                        {isLoading ? null : error ? (
-                            <div className="rounded-md border p-4 text-sm text-destructive">
-                                {t('errors.loadPeople')}
-                            </div>
-                        ) : people.length ? (
-                            <DataTable columns={peopleColumns} data={people} />
-                        ) : (
-                            <div className="rounded-md border p-4 text-sm text-muted-foreground">
-                                {t('people.noPeople')}
-                            </div>
-                        )}
+            {isMembersSection ? (
+                <div className="space-y-4">
+                    <div className="space-y-1">
+                        <h2 className="text-lg font-medium text-foreground">{t('people.membersTitle')}</h2>
+                        <p className="text-sm text-muted-foreground">{t('people.membersDescription')}</p>
                     </div>
-                </MenuSection>
+                    <hr className="border-border" />
+                    {isLoading ? null : error ? (
+                        <div className="rounded-md border p-4 text-sm text-destructive">{t('errors.loadPeople')}</div>
+                    ) : people.length ? (
+                        <DataTable columns={peopleColumns} data={people} />
+                    ) : (
+                        <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                            {t('people.noPeople')}
+                        </div>
+                    )}
+                </div>
+            ) : null}
 
-                <MenuSection value="invitations" label={t('people.invitationsTitle')} icon={Mail}>
-                    <div className="space-y-4">
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="space-y-1">
-                                <h2 className="text-lg font-medium text-foreground">{t('people.invitationsTitle')}</h2>
-                                <p className="text-sm text-muted-foreground">{t('people.invitationsDescription')}</p>
-                                {canInviteMembers ? null : (
-                                    <p className="text-sm text-muted-foreground">
-                                        {t('people.invitationsPermissionHint')}
-                                    </p>
-                                )}
-                            </div>
-                            <Button
-                                type="button"
-                                onClick={() => setInviteOpen(true)}
-                                disabled={organization.length === 0}
-                            >
-                                {t('actions.invite')}
-                            </Button>
+            {isInvitationsSection ? (
+                <div className="space-y-4">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="space-y-1">
+                            <h2 className="text-lg font-medium text-foreground">{t('people.invitationsTitle')}</h2>
+                            <p className="text-sm text-muted-foreground">{t('people.invitationsDescription')}</p>
+                            {canInviteMembers ? null : (
+                                <p className="text-sm text-muted-foreground">{t('people.invitationsPermissionHint')}</p>
+                            )}
                         </div>
-                        <hr className="border-border" />
-                        {isLoading ? null : error ? (
-                            <div className="rounded-md border p-4 text-sm text-destructive">
-                                {t('errors.loadInvitations')}
-                            </div>
-                        ) : invitations.length ? (
-                            <DataTable columns={localizedInvitationColumns} data={invitations} />
-                        ) : (
-                            <div className="rounded-md border p-4 text-sm text-muted-foreground">
-                                {t('people.noInvitations')}
-                            </div>
-                        )}
+                        <Button
+                            type="button"
+                            onClick={() => setInviteOpen(true)}
+                            disabled={organization.length === 0}
+                        >
+                            {t('actions.invite')}
+                        </Button>
                     </div>
-                </MenuSection>
-            </Menu>
+                    <hr className="border-border" />
+                    {isLoading ? null : error ? (
+                        <div className="rounded-md border p-4 text-sm text-destructive">{t('errors.loadInvitations')}</div>
+                    ) : invitations.length ? (
+                        <DataTable columns={localizedInvitationColumns} data={invitations} />
+                    ) : (
+                        <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                            {t('people.noInvitations')}
+                        </div>
+                    )}
+                </div>
+            ) : null}
 
             <AlertDialog
                 open={roleChangeTarget !== null}

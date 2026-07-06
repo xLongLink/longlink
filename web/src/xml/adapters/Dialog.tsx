@@ -9,6 +9,7 @@ import {
 import { useXmlContext } from '@/xml/core/context';
 import { resolveTranslation } from '@/xml/core/i18n';
 import { renderNode } from '@/xml/core/node';
+import { resolveAnchorUrl } from '@/xml/core/url';
 import { evaluate } from '@/xml/expressions';
 import type { Props } from '@/xml/types';
 import { resolveXmlBoolean, resolveXmlString } from './props';
@@ -51,14 +52,23 @@ export function DialogTrigger({ props, nodes }: Props) {
         const childContent = renderNode(anchorChild.children ?? [], ctx);
         const text = anchorChild.params?.i18n ? resolveTranslation(anchorChild.params, ctx) : childContent;
         const active = resolveXmlString(anchorChild.params ?? {}, 'active', ctx);
-        const href = anchorChild.params?.href ? String(evaluate(anchorChild.params.href, ctx) ?? '') : '';
-        const linkClassName =
-            active === 'always'
-                ? 'inline-flex items-center gap-1 text-accent underline underline-offset-4 hover:opacity-80'
-                : 'inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80';
+        const href = anchorChild.params?.href
+            ? resolveAnchorUrl(String(ctx.navigationBaseUrl ?? ''), String(evaluate(anchorChild.params.href, ctx) ?? ''))
+            : '';
 
         return (
-            <UIDialogTrigger render={<a className={linkClassName} {...(href ? { href } : {})} />}>
+            <UIDialogTrigger
+                render={
+                    <a
+                        className={
+                            active === 'always'
+                                ? 'inline-flex items-center gap-1 text-accent underline underline-offset-4 hover:opacity-80'
+                                : 'inline-flex items-center gap-1 text-foreground underline underline-offset-4 transition-colors hover:text-accent hover:opacity-80'
+                        }
+                        {...(href ? { href } : {})}
+                    />
+                }
+            >
                 {anchorChild.params?.i18n ? childContent : null}
                 {text}
             </UIDialogTrigger>

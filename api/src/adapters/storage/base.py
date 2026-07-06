@@ -43,7 +43,7 @@ class Storage(ABC):
 
     @abstractmethod
     async def application_credentials(self, organization: str, application: str) -> StorageRuntimeCredentials:
-        """Return credentials with read/write app access and read-only shared access."""
+        """Return validated credentials with read/write app access and read-only shared access."""
 
     @abstractmethod
     async def delete_bucket(self, bucket_name: str) -> None:

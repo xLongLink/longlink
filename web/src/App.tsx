@@ -158,14 +158,6 @@ export function getRoutes(mode = import.meta.env.MODE) {
             ),
         },
         {
-            path: 'orgs/:organization/people',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="people" />
-                </Auth>
-            ),
-        },
-        {
             path: 'orgs/:organization/database',
             element: (
                 <Auth requiredRole="user">
@@ -223,6 +215,14 @@ export function getRoutes(mode = import.meta.env.MODE) {
         },
         {
             path: 'orgs/:organization/settings/applications/:settingsApplication',
+            element: (
+                <Auth requiredRole="user">
+                    <Organization sectionName="settings" />
+                </Auth>
+            ),
+        },
+        {
+            path: 'orgs/:organization/settings/people',
             element: (
                 <Auth requiredRole="user">
                     <Organization sectionName="settings" />

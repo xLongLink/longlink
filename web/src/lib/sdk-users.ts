@@ -1,7 +1,7 @@
 import type { Role } from '@/lib/roles';
 
 export type SdkLocalUser = {
-    id: number;
+    id: string;
     name: string;
     role: Role;
     email: string;
@@ -14,7 +14,7 @@ export const SDK_USER_STORAGE_KEY = 'longlink.sdk.userId';
 
 export const SDK_LOCAL_USERS: readonly SdkLocalUser[] = [
     {
-        id: 1,
+        id: '00000000-0000-0000-0000-000000000001',
         name: 'Read User',
         role: 'read',
         email: 'read@local.longlink.dev',
@@ -23,7 +23,7 @@ export const SDK_LOCAL_USERS: readonly SdkLocalUser[] = [
         permissions: ['read'],
     },
     {
-        id: 2,
+        id: '00000000-0000-0000-0000-000000000002',
         name: 'Write User',
         role: 'write',
         email: 'write@local.longlink.dev',
@@ -32,7 +32,7 @@ export const SDK_LOCAL_USERS: readonly SdkLocalUser[] = [
         permissions: ['write'],
     },
     {
-        id: 3,
+        id: '00000000-0000-0000-0000-000000000003',
         name: 'Maintain User',
         role: 'maintain',
         email: 'maintain@local.longlink.dev',
@@ -41,7 +41,7 @@ export const SDK_LOCAL_USERS: readonly SdkLocalUser[] = [
         permissions: ['maintain'],
     },
     {
-        id: 4,
+        id: '00000000-0000-0000-0000-000000000004',
         name: 'Admin User',
         role: 'admin',
         email: 'admin@local.longlink.dev',
@@ -50,7 +50,7 @@ export const SDK_LOCAL_USERS: readonly SdkLocalUser[] = [
         permissions: ['admin'],
     },
     {
-        id: 5,
+        id: '00000000-0000-0000-0000-000000000005',
         name: 'Owner User',
         role: 'owner',
         email: 'owner@local.longlink.dev',
@@ -61,26 +61,30 @@ export const SDK_LOCAL_USERS: readonly SdkLocalUser[] = [
 ];
 
 /** Returns the SDK local user for a persisted ID, falling back to the read-only user. */
-export function getSdkLocalUser(userId: number): SdkLocalUser {
-    return SDK_LOCAL_USERS.find((user) => user.id === userId) ?? SDK_LOCAL_USERS[0];
+export function getSdkLocalUser(userId: string | null | undefined): SdkLocalUser {
+    const normalizedUserId = userId?.trim() ?? '';
+
+    if (/^[1-5]$/.test(normalizedUserId)) {
+        return SDK_LOCAL_USERS[Number.parseInt(normalizedUserId, 10) - 1];
+    }
+
+    return SDK_LOCAL_USERS.find((user) => user.id === normalizedUserId) ?? SDK_LOCAL_USERS[0];
 }
 
 /** Reads the selected SDK local user ID from browser storage. */
-export function getStoredSdkUserId(): number {
+export function getStoredSdkUserId(): string {
     if (typeof window === 'undefined') {
         return SDK_LOCAL_USERS[0].id;
     }
 
-    const storedUserId = Number.parseInt(window.localStorage.getItem(SDK_USER_STORAGE_KEY) ?? '', 10);
-
-    return getSdkLocalUser(storedUserId).id;
+    return getSdkLocalUser(window.localStorage.getItem(SDK_USER_STORAGE_KEY)).id;
 }
 
 /** Persists the selected SDK local user ID in browser storage. */
-export function storeSdkUserId(userId: number): void {
+export function storeSdkUserId(userId: string): void {
     if (typeof window === 'undefined') {
         return;
     }
 
-    window.localStorage.setItem(SDK_USER_STORAGE_KEY, String(getSdkLocalUser(userId).id));
+    window.localStorage.setItem(SDK_USER_STORAGE_KEY, getSdkLocalUser(userId).id);
 }

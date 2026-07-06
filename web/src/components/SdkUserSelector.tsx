@@ -40,11 +40,11 @@ export function SdkUserSelector() {
                     </div>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator className="my-2" />
-                <DropdownMenuRadioGroup value={String(user.id)} onValueChange={selectUser}>
+                <DropdownMenuRadioGroup value={user.id} onValueChange={selectUser}>
                     {users.map((option) => (
                         <DropdownMenuRadioItem
                             key={option.id}
-                            value={String(option.id)}
+                            value={option.id}
                             className="cursor-pointer items-center gap-3 p-2 text-muted-foreground transition-colors data-highlighted:bg-accent data-highlighted:text-accent-foreground data-highlighted:[&_p]:text-accent-foreground"
                         >
                             <Avatar className="size-8">

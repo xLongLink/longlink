@@ -56,10 +56,10 @@ async def test_sync_upserts_active_users_and_soft_deletes_stale_rows() -> None:
     assert len(connection.calls) == 2
     insert_statement, insert_params = connection.calls[0]
     update_statement, update_params = connection.calls[1]
-    assert "INSERT INTO shared.users" in compiled_sql(insert_statement)
+    assert "INSERT INTO users" in compiled_sql(insert_statement)
     assert "ON CONFLICT" in compiled_sql(insert_statement)
     assert insert_params == [active_user.model_dump()]
-    assert "UPDATE shared.users" in compiled_sql(update_statement)
+    assert "UPDATE users" in compiled_sql(update_statement)
     assert update_params is None
 
 
@@ -73,6 +73,6 @@ async def test_sync_soft_deletes_all_users_when_no_active_users_remain() -> None
     assert len(connection.calls) == 1
     statement, params = connection.calls[0]
     sql = compiled_sql(statement)
-    assert "UPDATE shared.users" in sql
+    assert "UPDATE users" in sql
     assert "id NOT IN" not in sql
     assert params is None
