@@ -7,7 +7,14 @@ from datetime import UTC, datetime, timedelta
 from src import adapters
 from src.auth import authuser, authadmin, organization_member_access
 from src.utils import names
-from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
+from src.errors import (
+    ConflictError,
+    NotFoundError,
+    ForbiddenError,
+    BadGatewayError,
+    UnavailableError,
+    PayloadTooLargeError,
+)
 from src.operations import provisioning
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
@@ -53,6 +60,8 @@ APPLICATION_ACCESS_ORGANIZATION_ROLES = {
 APPLICATION_LOG_ROLES = {ApplicationRoles.admin, ApplicationRoles.maintain}
 APPLICATION_MANAGEMENT_ROLES = {ApplicationRoles.admin, ApplicationRoles.maintain}
 INVALID_PERCENT_ESCAPE_PATTERN = re.compile(r"%(?![0-9A-Fa-f]{2})")
+PROXY_REQUEST_BODY_MAX_BYTES = 10 * 1024 * 1024
+PROXY_RESPONSE_BODY_MAX_BYTES = 25 * 1024 * 1024
 
 router = APIRouter()
 
@@ -130,6 +139,41 @@ def _proxy_upstream_path(path: str) -> str:
         raise NotFoundError("Proxy path", path)
 
     return upstream_path
+
+
+async def _proxy_request_body(request: Request) -> bytes:
+    """Read a proxy request body while enforcing the platform size limit."""
+
+    content_length = request.headers.get("content-length")
+    if content_length is not None:
+        try:
+            if int(content_length) > PROXY_REQUEST_BODY_MAX_BYTES:
+                raise PayloadTooLargeError("Application proxy request body is too large")
+        except ValueError:
+            pass
+
+    body_parts: list[bytes] = []
+    body_size = 0
+
+    # Read ASGI chunks directly so clients without Content-Length are still bounded.
+    async for chunk in request.stream():
+        body_size += len(chunk)
+        if body_size > PROXY_REQUEST_BODY_MAX_BYTES:
+            raise PayloadTooLargeError("Application proxy request body is too large")
+
+        body_parts.append(chunk)
+
+    return b"".join(body_parts)
+
+
+def _proxy_response_content(content: bytes | str) -> bytes | str:
+    """Return a proxy response body after enforcing the platform size limit."""
+
+    content_size = len(content.encode("utf-8")) if isinstance(content, str) else len(content)
+    if content_size > PROXY_RESPONSE_BODY_MAX_BYTES:
+        raise BadGatewayError("Application proxy response body is too large")
+
+    return content
 
 
 @router.get("/api/applications", response_model=list[ApplicationResponse])
@@ -312,6 +356,7 @@ async def proxy_application_request(
     forward_headers = {key: value for key, value in request.headers.items() if _forward_request_header_allowed(key)}
     forward_headers["x-user-id"] = str(user.id)
     k8s = adapters.compute(registry)
+    request_body = await _proxy_request_body(request)
 
     # Forward the request body and response stream directly through the Kubernetes API client.
     try:
@@ -322,7 +367,7 @@ async def proxy_application_request(
             request.method,
             query_params=list(request.query_params.multi_items()),
             headers=forward_headers,
-            body=await request.body(),
+            body=request_body,
         )
     except KubernetesApiException as exc:
         status = getattr(exc, "status", None)
@@ -346,7 +391,7 @@ async def proxy_application_request(
             )
 
         status_code = int(status) if status is not None else 500
-        body = getattr(exc, "body", b"")
+        body = _proxy_response_content(getattr(exc, "body", b""))
         raw_response_headers = getattr(exc, "headers", None) or {}
         response_headers = dict(raw_response_headers.items()) if hasattr(raw_response_headers, "items") else {}
 
@@ -360,7 +405,7 @@ async def proxy_application_request(
 
     # Filter hop-by-hop response headers so FastAPI can return a clean proxied response.
     return Response(
-        content=body,
+        content=_proxy_response_content(body),
         status_code=status_code,
         headers={
             key: value for key, value in upstream_headers.items() if key.lower() not in FORWARDED_RESPONSE_BLOCKLIST

@@ -1,7 +1,8 @@
-.PHONY: up down local-services build api\:build sdk\:build seed clean api\:clean sdk\:clean org\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format org\:format web\:format api web sdk install api\:install sdk\:install org\:install web\:install tests api\:tests sdk\:tests org\:tests web\:tests pyright api\:pyright sdk\:pyright org\:pyright
+.PHONY: up down local-services build api\:build sdk\:build seed clean api\:clean sdk\:clean org\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format org\:format web\:format api web sdk install api\:install sdk\:install org\:install web\:install tests tests\:all api\:tests sdk\:tests org\:tests web\:tests pyright api\:pyright sdk\:pyright org\:pyright
 
 LOCAL_SDK_IMAGE := localhost:15000/longlink-app:dev
 LOCAL_SDK_IMAGE_LABEL := longlink.name=longlink-app
+API_PYTEST_MARK ?=
 
 
 # Install all API, SDK, org, and web dependencies.
@@ -52,13 +53,21 @@ web\:format: web\:install
 	cd web && bunx prettier --log-level warn --write . $$(cd .. && find . -name '*.md' -o -name '*.yml' -o -name '*.yaml' | sed 's#^./#../#')
 
 
-# Run all API, SDK, org, and web tests/checks.
-tests: api\:tests sdk\:tests org\:tests web\:tests
+# Run all API, SDK, org, and web tests/checks without container-backed integration tests.
+tests:
+	$(MAKE) api:tests API_PYTEST_MARK='-m "not integration"'
+	$(MAKE) sdk:tests
+	$(MAKE) org:tests
+	$(MAKE) web:tests
 
 
-# Run API tests with coverage.
+# Run all API, SDK, org, and web tests/checks, including container-backed integration tests.
+tests\:all: api\:tests sdk\:tests org\:tests web\:tests
+
+
+# Run all API tests with coverage, including container-backed integration tests.
 api\:tests: api\:install
-	cd api && ENVIRONMENT=testing uv run pytest --cov=src --cov-report=term-missing tests
+	cd api && ENVIRONMENT=testing uv run pytest $(API_PYTEST_MARK) --cov=src --cov-report=term-missing tests
 
 
 # Run SDK tests with coverage.

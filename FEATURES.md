@@ -91,7 +91,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Feature                             | Supported behavior                                                                                                                      |
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | Image metadata inspection           | Reads LongLink OCI image labels plus the resolved manifest digest for app metadata and environment requirements.                         |
-| Image registry safety               | Rejects malformed image references and private/local/non-public registries unless development mode allows the configured local registry. |
+| Image registry safety               | Rejects malformed image references, private/local/non-public registries, and registries outside the configured allowlist unless development mode allows the configured local registry. |
 | Icon catalog                        | Returns supported Lucide icon slugs and validates normalized app icons.                                                                 |
 | Application creation and deployment | Creates apps from images, records image/app/SDK versions, deploys the resolved image digest, selects registries, and queues verification. |
 | Application deletion                | Lets permitted users soft-delete applications and queue immediate runtime resource removal with delay-ready scheduling.                 |
@@ -101,10 +101,10 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Application verification            | Marks apps running when rollout pods are ready and failed when current rollout pods crash.                                              |
 | Global application listing          | Lets platform administrators list all active applications.                                                                              |
 | Application logs                    | Lets application maintainers/admins and elevated organization members fetch recent plain-text logs from the newest application pod.     |
-| Application proxy                   | Proxies `GET`, `POST`, `PATCH`, and `DELETE` non-root paths into running application services for users with application access.        |
+| Application proxy                   | Proxies `GET`, `POST`, `PATCH`, and `DELETE` non-root paths into running application services for users with application access and bounded body sizes. |
 | Application access roles            | Uses application membership roles for runtime access, with elevated organization roles allowed to manage application lifecycle actions. |
 | Application member management       | Lets organization members view application permission rows and lets permitted app/org managers set or remove app roles for org members. |
-| Proxy header policy                 | Rejects unsafe proxy paths, strips unsafe/spoofable proxy headers, injects `x-user-id`, and returns no-store 503 for unavailable apps.  |
+| Proxy header policy                 | Rejects unsafe proxy paths, strips unsafe/spoofable proxy headers, injects `x-user-id`, caps proxy bodies, and returns no-store 503 for unavailable apps. |
 | Registry selection                  | Uses newest active compute registries and keeps database/storage registries consistent for all apps in an organization.                 |
 | Managed resource naming             | Validates slugs and managed Kubernetes/PostgreSQL/S3 resource names before provisioning.                                                |
 
@@ -119,8 +119,8 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Application create verification operation | Supports `application.create` step `verify` for checking rollout health.                                                 |
 | Application delete cleanup operation      | Supports `application.delete` step `remove` for deleting managed app runtime resources.                                  |
 | Organization delete cleanup operation     | Supports `organization.delete` step `remove` for deleting managed organization runtime resources.                        |
-| Kubernetes provisioning                   | Creates managed namespaces plus one Secret, Deployment, and ClusterIP Service per app.                                   |
-| Kubernetes service proxy                  | Proxies requests through the Kubernetes service proxy API.                                                               |
+| Kubernetes provisioning                   | Creates managed namespaces plus one Secret, restricted Deployment, and ClusterIP Service per app.                        |
+| Kubernetes service proxy                  | Proxies requests through the Kubernetes service proxy API with bounded request and response bodies.                      |
 | PostgreSQL provisioning                   | Creates organization databases, migrates the shared schema, creates app schemas, runtime login roles, and read/write app plus read-only shared grants. |
 | PostgreSQL resource inspection            | Inspects databases, schemas, usage, tables, and preview rows.                                                            |
 | S3-compatible provisioning                | Creates or reuses shared and app buckets, and validates runtime credentials before injecting storage access.              |
@@ -160,7 +160,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | App test command               | Runs application tests with pytest and forwards pytest arguments.                                                                      |
 | App migration command          | Applies pending migrations, autogenerates a revision if schema changes exist, then reapplies.                                          |
 | Docker image build             | Builds a Docker image in a temporary context, validates generated image tags, optionally pushes, and reports image details.             |
-| Generated Docker runtime       | Runs app migrations before starting `uvicorn main:app` on port 80.                                                                     |
+| Generated Docker runtime       | Runs app migrations as a non-root user before starting `uvicorn main:app` on port 8000.                                                |
 | Image metadata labels          | Writes LongLink app metadata and environment metadata into image labels.                                                               |
 | Environment metadata labels    | Reads annotated `src/envs.py` fields and emits typed required/optional environment definitions.                                        |
 | Build context filtering        | Excludes local secrets, local databases, caches, generated directories, and `node_modules`.                                            |

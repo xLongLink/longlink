@@ -11,9 +11,6 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const sdkUserDropdownItemClassName =
-    'cursor-pointer items-center gap-3 p-2 text-muted-foreground transition-colors data-highlighted:bg-accent data-highlighted:text-accent-foreground data-highlighted:[&_p]:text-accent-foreground';
-
 /** Renders the SDK-only local user selector. */
 export function SdkUserSelector() {
     const { user, users, selectUser } = useSdkUser();
@@ -48,7 +45,7 @@ export function SdkUserSelector() {
                         <DropdownMenuRadioItem
                             key={option.id}
                             value={String(option.id)}
-                            className={sdkUserDropdownItemClassName}
+                            className="cursor-pointer items-center gap-3 p-2 text-muted-foreground transition-colors data-highlighted:bg-accent data-highlighted:text-accent-foreground data-highlighted:[&_p]:text-accent-foreground"
                         >
                             <Avatar className="size-8">
                                 <AvatarImage src={option.avatar} alt={`${option.name} profile`} />

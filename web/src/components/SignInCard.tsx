@@ -14,14 +14,10 @@ import { apiUrl } from '@/lib/api';
 import { sanitizeRedirectPath } from '@/lib/redirects';
 import { getInitials } from '@/lib/utils';
 
-type SignInCardProps = {
-    redirectTo: string;
-};
-
 type SocialLoginProvider = 'github' | 'google';
 
 /** Renders the shared username and password sign-in card. */
-export function SignInCard({ redirectTo }: SignInCardProps) {
+export function SignInCard({ redirectTo }: { redirectTo: string }) {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [username, setUsername] = useState('');

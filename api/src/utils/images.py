@@ -22,12 +22,15 @@ async def metadata(image: str) -> LongLinkMetadata | None:
 
     try:
         image = validate_image_reference(image)
+        registry, repository, reference = _parse_image_ref(image)
+        if not _development_local_registry(registry):
+            _validate_allowed_registry(registry)
+
+        registry_url = _registry_url(registry)
     except ValueError as exc:
-        logger.warning("Invalid image reference '%s': %s", image, exc)
+        logger.warning("Failed to inspect image metadata for '%s': %s", image, exc)
         return None
 
-    registry, repository, reference = _parse_image_ref(image)
-    registry_url = _registry_url(registry)
     verify_tls = registry_url.startswith("https://")
 
     async with httpx2.AsyncClient(verify=verify_tls, follow_redirects=False, timeout=5.0) as client:
@@ -236,6 +239,23 @@ def _development_local_registry(registry: str) -> bool:
         return False
 
     return _normalize_registry(registry) == _normalize_registry(configured_registry)
+
+
+def _allowed_registries() -> set[str]:
+    """Return normalized image registries allowed for metadata inspection."""
+
+    return {
+        _normalize_registry(item)
+        for item in env.IMAGE_REGISTRY_ALLOWLIST.split(",")
+        if item.strip()
+    }
+
+
+def _validate_allowed_registry(registry: str) -> None:
+    """Reject registry hosts outside the configured image inspection allowlist."""
+
+    if _normalize_registry(registry) not in _allowed_registries():
+        raise ValueError("Image registry is not allowed")
 
 
 def _registry_url(registry: str) -> str:

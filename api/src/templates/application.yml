@@ -23,6 +23,14 @@ spec:
       labels:
         app: $name
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: $name
           image: $image
@@ -32,10 +40,25 @@ spec:
           envFrom:
             - secretRef:
                 name: $name
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
             limits:
               cpu: 500m
               memory: 256Mi
+      volumes:
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

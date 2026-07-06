@@ -31,6 +31,18 @@ class ConflictError(ApiError):
     status_code = 409
 
 
+class PayloadTooLargeError(ApiError):
+    """Return a standard payload-too-large response."""
+
+    status_code = 413
+
+
+class BadGatewayError(ApiError):
+    """Return a standard bad-gateway response."""
+
+    status_code = 502
+
+
 class ForbiddenError(ApiError):
     """Return a standard forbidden response."""
 

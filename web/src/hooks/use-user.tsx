@@ -35,6 +35,8 @@ type AccountsState = {
     error: Error | null;
 };
 
+type UserErrorHandler = () => void;
+
 type UserProfileState = {
     user: User | null;
     organizations: User['organizations'];
@@ -167,10 +169,14 @@ export function useUser() {
     };
 
     /** Signs the current user out and clears cached session state. */
-    const signOut = async () => {
-        await fetchApiVoid('/auth/logout');
-        queryClient.clear();
-        window.location.assign('/organizations');
+    const signOut = async (onError?: UserErrorHandler) => {
+        try {
+            await fetchApiVoid('/auth/logout');
+            queryClient.clear();
+            window.location.assign('/organizations');
+        } catch {
+            onError?.();
+        }
     };
 
     /** Signs in with username and password and refreshes the current session. */
@@ -199,14 +205,18 @@ export function useUser() {
     };
 
     /** Clears the active user on the server so another account can be selected. */
-    const switchAccount = async () => {
-        const savedAccounts = await fetchApiJson<ApiUserSummary[]>('/auth/accounts/deactivate', {
-            method: 'POST',
-        });
+    const switchAccount = async (onError?: UserErrorHandler) => {
+        try {
+            const savedAccounts = await fetchApiJson<ApiUserSummary[]>('/auth/accounts/deactivate', {
+                method: 'POST',
+            });
 
-        await queryClient.cancelQueries({ queryKey: accountsQueryKey() });
-        queryClient.setQueryData(accountsQueryKey(), savedAccounts);
-        queryClient.setQueryData(apiQueryKey('/api/me'), null);
+            await queryClient.cancelQueries({ queryKey: accountsQueryKey() });
+            queryClient.setQueryData(accountsQueryKey(), savedAccounts);
+            queryClient.setQueryData(apiQueryKey('/api/me'), null);
+        } catch {
+            onError?.();
+        }
     };
 
     return {

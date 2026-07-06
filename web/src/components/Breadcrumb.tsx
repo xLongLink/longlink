@@ -11,27 +11,75 @@ import { Link, useLocation } from 'react-router';
 
 import { Wordmark } from '@/components/Wordmark';
 
-/**
- * Render the top navigation breadcrumb for organization, app, and profile routes.
- */
-export function Breadcrumb() {
-    const { pathname } = useLocation();
-    const segments = pathname.split('/').filter(Boolean);
-    const hiddenSegments = new Set(['orgs', 'apps']);
+type BreadcrumbTrailItem = {
+    href: string;
+    label: string;
+};
 
-    // Build one breadcrumb item per visible path segment while preserving the full route target.
-    const crumbs = segments.flatMap((segment, index) => {
+const hiddenSegments = new Set(['orgs', 'apps']);
+
+function decodeSegment(segment: string): string {
+    try {
+        return decodeURIComponent(segment);
+    } catch {
+        return segment;
+    }
+}
+
+
+function buildOrganizationCrumbs(segments: string[]): BreadcrumbTrailItem[] {
+    const organization = segments[1] ?? '';
+    const application = segments[2] === 'apps' ? segments[3] : null;
+
+    const organizationCrumb: BreadcrumbTrailItem = {
+        label: startCase(decodeSegment(organization)),
+        href: `/orgs/${organization}`,
+    };
+
+    if (!application) {
+        return [organizationCrumb];
+    }
+
+    return [
+        organizationCrumb,
+        {
+            label: startCase(decodeSegment(application)),
+            href: `/orgs/${organization}/apps/${application}`,
+        },
+    ];
+}
+
+
+function buildDefaultCrumbs(segments: string[]): BreadcrumbTrailItem[] {
+    return segments.flatMap((segment, index) => {
         if (hiddenSegments.has(segment)) {
             return [];
         }
 
         return [
             {
-                label: startCase(segment),
+                label: startCase(decodeSegment(segment)),
                 href: `/${segments.slice(0, index + 1).join('/')}`,
             },
         ];
     });
+}
+
+/**
+ * Render the top navigation breadcrumb for organization, app, and profile routes.
+ */
+export function Breadcrumb() {
+    const { pathname } = useLocation();
+    const segments = pathname.split('/').filter(Boolean);
+    const isAdminSection = segments[0] === 'admin';
+    const isOrganizationSection = segments[0] === 'orgs' && segments.length >= 2;
+
+    const crumbs =
+        isAdminSection
+            ? [{ href: '/admin', label: 'Admin' }]
+            : isOrganizationSection
+              ? buildOrganizationCrumbs(segments)
+              : buildDefaultCrumbs(segments);
 
     return (
         <UIBreadcrumb>

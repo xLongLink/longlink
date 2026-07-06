@@ -67,8 +67,16 @@ COPY --from=builder /workspace /workspace
 {labels}
 
 ENV PATH="{workdir}/.venv/bin:$PATH"
+ENV HOME="/tmp"
+ENV PYTHONDONTWRITEBYTECODE="1"
 
-CMD ["sh", "-c", "python -m longlink.database.migrations && exec uvicorn main:app --host 0.0.0.0 --port 80 --log-level info"]
+RUN groupadd --system --gid 10001 longlink \
+    && useradd --system --uid 10001 --gid 10001 --home-dir /tmp --shell /usr/sbin/nologin longlink \
+    && chown -R 10001:10001 /workspace
+
+USER 10001:10001
+
+CMD ["sh", "-c", "python -m longlink.database.migrations && exec uvicorn main:app --host 0.0.0.0 --port 8000 --log-level info"]
 """
 
 
@@ -431,7 +439,7 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
             click.echo(f"- Pushed image: {image_tag}")
         click.echo(f"- Image ID: {image_id}")
         click.echo(f"- View it with: docker image inspect {image_tag}")
-        click.echo(f"- Run it with: docker run --rm -p 80:80 {image_tag}")
+        click.echo(f"- Run it with: docker run --rm -p 8000:8000 {image_tag}")
         click.echo(f"- Remove it with: docker rmi {image_tag}")
     except subprocess.CalledProcessError as error:
         raise click.ClickException(f"Docker command failed with exit code {error.returncode}") from error

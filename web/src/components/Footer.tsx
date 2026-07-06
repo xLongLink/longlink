@@ -1,40 +1,10 @@
-import { Github, Linkedin, Package } from 'lucide-react';
+import { Package } from 'lucide-react';
+
+import { GitHub } from '@/svg/GitHub';
+import { LinkedIn } from '@/svg/LinkedIn';
 import { Link } from 'react-router';
 
 import { Wordmark } from '@/components/Wordmark';
-
-const socialLinks = [
-    {
-        href: 'https://www.linkedin.com/company/swissgpu',
-        label: 'LinkedIn',
-        icon: Linkedin,
-    },
-    {
-        href: 'https://github.com/xLongLink/longlink',
-        label: 'GitHub',
-        icon: Github,
-    },
-    {
-        href: 'https://pypi.org/project/longlink/',
-        label: 'PyPI',
-        icon: Package,
-    },
-];
-
-const navigationLinks = [
-    {
-        label: 'Home',
-        href: '/',
-    },
-    {
-        label: 'Documentation',
-        href: '/docs',
-    },
-    {
-        label: 'Pricing',
-        href: '/pricing',
-    },
-];
 
 /** Renders the public landing page footer. */
 export function Footer() {
@@ -48,29 +18,55 @@ export function Footer() {
                         </Link>
 
                         <ul className="flex items-center justify-center gap-4 text-muted-foreground">
-                            {socialLinks.map(({ href, label, icon: Icon }) => (
-                                <li key={label}>
-                                    <a
-                                        href={href}
-                                        aria-label={label}
-                                        title={label}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-flex transition-colors hover:text-accent"
-                                    >
-                                        <Icon className="size-4" />
-                                    </a>
-                                </li>
-                            ))}
+                            <li>
+                                <a
+                                    href="https://www.linkedin.com/company/swissgpu"
+                                    aria-label="LinkedIn"
+                                    title="LinkedIn"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex transition-colors hover:text-accent"
+                                >
+                                    <LinkedIn className="size-4" />
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="https://github.com/xLongLink/longlink"
+                                    aria-label="GitHub"
+                                    title="GitHub"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex transition-colors hover:text-accent"
+                                >
+                                    <GitHub className="size-4" />
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="https://pypi.org/project/longlink/"
+                                    aria-label="PyPI"
+                                    title="PyPI"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex transition-colors hover:text-accent"
+                                >
+                                    <Package className="size-4" />
+                                </a>
+                            </li>
                         </ul>
                     </div>
 
                     <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-medium text-muted-foreground sm:justify-end">
-                        {navigationLinks.map(({ label, href }) => (
-                            <li key={label} className="transition-colors hover:text-accent">
-                                <Link to={href}>{label}</Link>
-                            </li>
-                        ))}
+                        <li className="transition-colors hover:text-accent">
+                            <Link to="/">Home</Link>
+                        </li>
+                        <li className="transition-colors hover:text-accent">
+                            <Link to="/docs">Documentation</Link>
+                        </li>
+                        <li className="transition-colors hover:text-accent">
+                            <Link to="/pricing">Pricing</Link>
+                        </li>
                     </ul>
                 </div>
 
