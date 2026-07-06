@@ -91,8 +91,10 @@ class OrganizationApplicationResponse(BaseModel):
     name: str
     slug: str
     icon: Icon | None = None
+    image: str
+    sdk: str | None = None
+    digest: str | None = None
     version: str | None = None
-    sdk_version: str | None = None
     description: str | None = None
 
     # State

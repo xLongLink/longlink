@@ -76,24 +76,24 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | Organization creation                 | Lets authenticated users create organizations and become owner.                                                                             |
 | Organization deletion                 | Lets owners and platform administrators soft-delete organizations and queue immediate runtime resource removal with delay-ready scheduling. |
-| Organization infrastructure bootstrap | Best-effort initializes compute namespace, organization database, shared users table, and shared storage bucket.                            |
+| Organization infrastructure bootstrap | Best-effort initializes compute namespace, organization database shared schema, and shared storage bucket.                                  |
 | Organization details                  | Lets members fetch an organization with location, users, pending invitations, and applications.                                             |
 | Organization listing                  | Lets support/admin users list all organizations.                                                                                            |
 | Organization applications             | Lets members list active applications in an organization, including caller application role when present.                                   |
 | Organization invitations              | Lets maintainers/admins/owners create pending email invitations while rejecting duplicates and existing members.                            |
 | Member role update                    | Lets organization admins/owners update active member roles and resync shared users.                                                         |
-| Organization database resources       | Shows existing shared/app database resources with usage metrics and fails when the backend cannot be inspected.                             |
-| Organization table preview            | Previews columns and up to 100 rows for shared users or app schema tables; system schemas are blocked.                                      |
+| Organization database resources       | Shows existing shared/app database schemas with usage metrics and fails when the backend cannot be inspected.                               |
+| Organization table preview            | Previews columns and up to 100 rows for shared schema or app schema tables; system schemas are blocked.                                     |
 | Organization storage resources        | Shows existing shared/app buckets with usage metrics and fails when the backend cannot be inspected.                                        |
 
 ### Applications
 
 | Feature                             | Supported behavior                                                                                                                      |
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Image metadata inspection           | Reads LongLink OCI image labels for app metadata and environment requirements.                                                          |
-| Image registry safety               | Rejects private/local/non-public image registries unless development mode explicitly allows the configured local registry.              |
+| Image metadata inspection           | Reads LongLink OCI image labels plus the resolved manifest digest for app metadata and environment requirements.                         |
+| Image registry safety               | Rejects malformed image references and private/local/non-public registries unless development mode allows the configured local registry. |
 | Icon catalog                        | Returns supported Lucide icon slugs and validates normalized app icons.                                                                 |
-| Application creation and deployment | Creates apps from images, selects location registries, provisions resources, and queues verification.                                   |
+| Application creation and deployment | Creates apps from images, records image/app/SDK versions, deploys the resolved image digest, selects registries, and queues verification. |
 | Application deletion                | Lets permitted users soft-delete applications and queue immediate runtime resource removal with delay-ready scheduling.                 |
 | Required application envs           | Requires image-declared envs unless they are platform-managed.                                                                          |
 | Platform env injection              | Strips user-supplied `LONGLINK_` envs and injects production database and validated storage runtime values.                              |
@@ -104,7 +104,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Application proxy                   | Proxies `GET`, `POST`, `PATCH`, and `DELETE` non-root paths into running application services for users with application access.        |
 | Application access roles            | Uses application membership roles for runtime access, with elevated organization roles allowed to manage application lifecycle actions. |
 | Application member management       | Lets organization members view application permission rows and lets permitted app/org managers set or remove app roles for org members. |
-| Proxy header policy                 | Strips unsafe request/response headers, injects `x-user-id`, and returns no-store 503 for unavailable apps.                             |
+| Proxy header policy                 | Rejects unsafe proxy paths, strips unsafe/spoofable proxy headers, injects `x-user-id`, and returns no-store 503 for unavailable apps.  |
 | Registry selection                  | Uses newest active compute registries and keeps database/storage registries consistent for all apps in an organization.                 |
 | Managed resource naming             | Validates slugs and managed Kubernetes/PostgreSQL/S3 resource names before provisioning.                                                |
 
@@ -121,7 +121,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Organization delete cleanup operation     | Supports `organization.delete` step `remove` for deleting managed organization runtime resources.                        |
 | Kubernetes provisioning                   | Creates managed namespaces plus one Secret, Deployment, and ClusterIP Service per app.                                   |
 | Kubernetes service proxy                  | Proxies requests through the Kubernetes service proxy API.                                                               |
-| PostgreSQL provisioning                   | Creates organization databases, shared tables, app schemas, runtime login roles, and read/write app plus read-only shared grants. |
+| PostgreSQL provisioning                   | Creates organization databases, migrates the shared schema, creates app schemas, runtime login roles, and read/write app plus read-only shared grants. |
 | PostgreSQL resource inspection            | Inspects databases, schemas, usage, tables, and preview rows.                                                            |
 | S3-compatible provisioning                | Creates or reuses shared and app buckets, and validates runtime credentials before injecting storage access.              |
 | S3-compatible resource inspection         | Lists buckets and object metadata for storage browsers.                                                                  |
@@ -137,13 +137,13 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | SDK environment model     | Reads `LONGLINK_` runtime mode, database, and storage settings from process env.                       |
 | App env file loading      | Loads app-defined `.env` and `.env.sample` settings while ignoring extra keys.                         |
 | SDK package data          | Packages static web and XSD assets and requires Python 3.14 or newer.                                  |
-| LongLink FastAPI app      | Includes SDK routes, audit middleware, optional i18n/pages, frontend assets, and development CORS.     |
+| LongLink FastAPI app      | Includes SDK routes, API-prefixed user routes, audit middleware, optional i18n/pages, frontend assets, and development CORS. |
 | SDK i18n route            | Mounts `src/i18n` under `/i18n` when translation files exist.                                          |
 | SDK XML page discovery    | Validates XML files in `src/pages` against XSD and registers them as GET routes under `/pages/...xml`. |
 | Dynamic SDK page routes   | Derives browser routes and route params from page filenames such as `issues/[issue].xml`.              |
-| SDK frontend entrypoint   | Serves the bundled SDK web app at `/` and mounts `/assets` when available.                             |
+| SDK frontend entrypoint   | Serves the bundled SDK web app at `/` and falls back to it for browser routes without shadowing API routes. |
 | SDK development CORS      | Allows localhost origins `3000`, `5173`, and `8000` in development mode.                               |
-| SDK router compatibility  | Provides a thin FastAPI `APIRouter` wrapper.                                                           |
+| SDK router compatibility  | Provides a thin FastAPI `APIRouter` wrapper whose included routes are exposed under `/api`.            |
 | SDK dev log filter        | Hides noisy frontend GET logs while keeping mutating, `/api/`, and `/auth/` logs.                      |
 | App metadata loading      | Loads metadata from `[tool.longlink]`, then PEP 621 `[project]`, with defaults.                        |
 | Runtime metadata endpoint | Returns app name, title, summary, description, version, and discovered pages.                          |
@@ -159,7 +159,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Local dev server               | Runs `main:app` with uvicorn reload on `0.0.0.0:1707` and interactive shortcuts when available.                                        |
 | App test command               | Runs application tests with pytest and forwards pytest arguments.                                                                      |
 | App migration command          | Applies pending migrations, autogenerates a revision if schema changes exist, then reapplies.                                          |
-| Docker image build             | Builds a Docker image in a temporary context, optionally tags, pushes, and reports image details.                                      |
+| Docker image build             | Builds a Docker image in a temporary context, validates generated image tags, optionally pushes, and reports image details.             |
 | Generated Docker runtime       | Runs app migrations before starting `uvicorn main:app` on port 80.                                                                     |
 | Image metadata labels          | Writes LongLink app metadata and environment metadata into image labels.                                                               |
 | Environment metadata labels    | Reads annotated `src/envs.py` fields and emits typed required/optional environment definitions.                                        |
@@ -197,8 +197,8 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Schema-backed component docs | Uses XSD adapter files to generate XML component docs.                                                                                                                                                                          |
 | Scaffold app entrypoint      | New apps include `main.py` with LongLink app setup and the office-operations router.                                                                                                                                            |
 | Scaffold env sample          | New apps include required and optional environment examples.                                                                                                                                                                    |
-| Scaffold request API         | New apps include purchase-request table, schemas, service, list/get/create/status routes, attachment file routes, and a typed team route.                                                                                       |
-| Scaffold XML app             | New apps include dashboard, purchase-request list/detail, team, and settings XML pages covering navigation tabs, actions, queries, translations, local state, form controls, tables, menus, dialogs, files, and dynamic routes. |
+| Scaffold request API         | New apps include purchase-request table, schemas, service, API-prefixed list/get/create/status routes, and attachment file routes.                                                                                              |
+| Scaffold XML app             | New apps include dashboard, purchase-request list/detail, and settings XML pages covering navigation tabs, actions, queries, translations, local state, form controls, tables, menus, dialogs, files, and dynamic routes.       |
 | Scaffold initial migration   | New apps include an initial purchase-request Alembic migration.                                                                                                                                                                 |
 | Scaffold testing mode        | New app tests use `LONGLINK_ENV=testing`, in-memory database settings, and a smoke test.                                                                                                                                        |
 
@@ -239,7 +239,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Organization applications UI  | Lists organization applications and links to proxied app views.                                                                               |
 | Organization people UI        | Shows members/invitations, supports invitations, and supports member role changes for allowed roles.                                          |
 | Organization settings UI      | Shows organization details, apps, app permission management, resources, logs, and app creation.                                               |
-| Organization database browser | Lists database resources, browses schemas/shared tables, and previews table rows.                                                             |
+| Organization database browser | Lists database resources, browses shared/app schemas, and previews table rows.                                                                |
 | Organization storage browser  | Lists storage resources and bucket details.                                                                                                   |
 | Admin shell                   | Provides support/admin tabs for users, apps, organizations, locations, database, storage, compute, and operations.                            |
 | Admin users UI                | Lists users, roles, emails, OIDC subjects, and copy actions.                                                                                  |

@@ -1,5 +1,6 @@
+from tenant.models import User
+
 from .base import Database
-from .shared import SharedUser
 from .postgres import Postgres
 
-__all__ = ["Database", "Postgres", "SharedUser"]
+__all__ = ["Database", "Postgres", "User"]

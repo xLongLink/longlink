@@ -1,4 +1,4 @@
-import { LegalLayout } from '@/layout/LegalLayout';
+import ArticleLayout from '@/layout/ArticleLayout';
 import NotFound from '@/pages/NotFound';
 import { describe, expect, it, mock } from 'bun:test';
 import { createElement } from 'react';
@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router';
 
 mock.module('@/hooks/use-user', () => ({
     useUser: () => ({ user: null }),
+    useUserProfile: () => ({ user: null }),
 }));
 
 describe('layout shells', () => {
@@ -15,9 +16,13 @@ describe('layout shells', () => {
             createElement(
                 MemoryRouter,
                 null,
-                createElement(LegalLayout, {
-                    title: 'Terms',
-                    content: createElement('p', null, 'Legal copy'),
+                createElement(ArticleLayout, {
+                    content: createElement(
+                        'div',
+                        null,
+                        createElement('h1', null, 'Terms'),
+                        createElement('p', null, 'Legal copy')
+                    ),
                     metadata: {
                         lastUpdated: '2026-06-30',
                         editUrl: 'https://github.com/xLongLink/longlink/edit/main/terms',

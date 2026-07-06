@@ -3,6 +3,7 @@ import { useXmlContext } from '@xml/core/context';
 import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
+import { headingId } from './heading';
 
 /** Props accepted by the XML h3 bridge component. */
 
@@ -12,7 +13,7 @@ export function H3({ props, nodes }: Props) {
     const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
 
     return (
-        <Heading anchorClassName="-translate-x-5" level="h3" source={nodes}>
+        <Heading id={props.id || headingId(text)} level="h3">
             {text}
         </Heading>
     );

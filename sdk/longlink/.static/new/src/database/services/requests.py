@@ -11,7 +11,7 @@ async def list_requests() -> list[PurchaseRequestRead]:
     session_maker = await db.get_session()
 
     async with session_maker() as session:
-        # Load audit relationships from LongLink's shared users table for display.
+        # Load audit relationships from LongLink's shared organization users for display.
         statement = (
             select(PurchaseRequest)
             .options(
@@ -32,7 +32,7 @@ async def get_request(request_id: int) -> PurchaseRequestRead | None:
     session_maker = await db.get_session()
 
     async with session_maker() as session:
-        # Load audit relationships from LongLink's shared users table for display.
+        # Load audit relationships from LongLink's shared organization users for display.
         statement = (
             select(PurchaseRequest)
             .options(

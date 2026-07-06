@@ -1,23 +1,20 @@
 # LongLink Agent Guide
 
-```xml
-<longlink name="Tasks" icon="list-check">
-  <State id="draft" title="" />
-  <Query id="tasks" path="/api/tasks" />
+LongLink is an open-source platform for building and running dedicated business-process applications. Companies constantly need software for workflows, approvals, procurement, onboarding, compliance, case handling, operations, and structured data management. These processes often follow recognizable patterns, but every company has different rules, roles, data, approvals, integrations, exceptions, and compliance requirements.
 
-  <H1 i18n="tasks.title" />
-  <P i18n="tasks.count" count="${tasks.length}" />
+Today, companies usually handle this gap in one of three ways. They force the process into generic SaaS tools, which are often too rigid. They manage it with spreadsheets, dashboards, and manual coordination, which becomes fragile as the process grows. Or they build fully custom software, which solves the fit problem but is expensive because teams repeatedly rebuild the same foundation around every application.
 
-  <Input value="$draft.title" placeholder="New task" />
-  <Action action="/api/tasks" json="${{ title: draft.title }}" invalidate="${['tasks']}">
-    <Button i18n="tasks.create" />
-  </Action>
+LongLink provides that foundation once. It handles authentication, organizations, permissions, deployment, databases, storage, routing, logs, status, and a consistent application shell, while developers build each business-process application as normal Python software. Each application owns its specific logic, data model, validation, workflow, integrations, APIs, and pages.
 
-  <For each="$tasks" as="task">
-    <P if="${task.status in ['open', 'pending']}" i18n="tasks.row" title="$task.title" />
-  </For>
-</longlink>
-```
+The product model is closest to GitHub for business applications and workflows. GitHub made repositories the standard unit for managing code; LongLink makes deployable business applications the standard unit for running process software. It sits between generic SaaS and fully custom software: more flexible than closed business platforms, faster and more governed than rebuilding everything from scratch.
+
+LongLink also avoids the lock-in of Salesforce, ServiceNow, Power Apps, SAP, and similar platforms, where customization often requires proprietary runtimes, specialist skills, and vendor-specific deployment models. Its advantage is that applications remain normal code, built with the Python stack many technical teams already know. This makes applications easier to understand, test, extend, review, deploy, and maintain over time.
+
+The Python stack has an additional advantage in the AI era. Python and its major web, data, API, validation, testing, and database libraries are heavily represented in AI training data and developer workflows. As AI reduces the cost and barrier of producing software, LongLink benefits from using technologies that AI systems can work with more reliably than niche enterprise languages or proprietary configuration models. The result is another layer of simplification: teams can generate, review, test, and evolve process-specific applications faster, while still keeping the output inside a structured and maintainable platform model.
+
+The wedge is the large volume of business processes that are too specific for generic SaaS but too common to justify rebuilding platform infrastructure repeatedly. LongLink can become the shared operating layer for these process-specific applications across teams, organizations, and eventually distribution channels. The long-term opportunity is a platform where reusable business-process applications can be built, adapted, deployed, governed, and operated with the same consistency that developers expect from modern software infrastructure.
+
+
 
 ## Goals
 
@@ -109,12 +106,13 @@ Cluster                         # Managed by the control plane
     └── Proxy                   # Shared internal proxy service
 ```
 
-Database uses one database per organization and one schema per application:
+Database uses one database per organization, one shared schema, and one schema per application:
 
 ```bash
 Database Server                 # Managed through the database adapter
 └── Organization Database        # One per organization
-    ├── public.users             # Shared organization users
+    ├── shared                   # Shared organization tables
+    │   └── users                # Shared organization users
     ├── App A Schema             # Tables owned by App A
     └── App B Schema             # Tables owned by App B
 ```
@@ -152,6 +150,27 @@ The SDK exposes application metadata through `/metadata.json`. XML files discove
 
 Keep both web build modes working. API mode builds the authenticated control-plane and documentation bundle into `api/src/.static/web`. SDK mode builds the embedded local runtime bundle into `sdk/longlink/.static/web`. Do not remove Vite mode checks, output directories, SDK/API-specific behavior, or the shadcn/ui primitives in `web/src/components/ui/` unless the product model explicitly changes.
 
+
+```xml
+<longlink name="Tasks" icon="list-check">
+  <State id="draft" title="" />
+  <Query id="tasks" path="/api/tasks" />
+
+  <H1 i18n="tasks.title" />
+  <P i18n="tasks.count" count="${tasks.length}" />
+
+  <Input value="$draft.title" placeholder="New task" />
+  <Action action="/api/tasks" json="${{ title: draft.title }}" invalidate="${['tasks']}">
+    <Button i18n="tasks.create" />
+  </Action>
+
+  <For each="$tasks" as="task">
+    <P if="${task.status in ['open', 'pending']}" i18n="tasks.row" title="$task.title" />
+  </For>
+</longlink>
+```
+
+
 ## Contributing model
 
 - Keep changes small and clear
@@ -170,3 +189,4 @@ Keep both web build modes working. API mode builds the authenticated control-pla
 - Keep related model module names plural and consistent across the API and database layers.
 - Prefer single word naming for python filenames, and prefer not renaming imports
 - Do NOT add any new test case unless the user specifically instruct you to do so.
+- When asked to make a list of improvements, always returns a numeric for easy reference 

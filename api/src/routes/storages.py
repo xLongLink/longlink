@@ -1,7 +1,8 @@
 from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from src.auth import authadmin, authsupport
-from src.errors import ConflictError, NotFoundError
+from src.logger import logger
+from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.models.storages import (StorageBucketResponse, StorageObjectResponse,
                                  StorageRegistryCreate,
                                  StorageRegistryResponse)
@@ -68,7 +69,12 @@ async def list_storage_buckets(registry_id: UUID, _: User = Depends(authsupport)
         raise NotFoundError("Storage registry", registry_id)
 
     s3 = S3(registry.protocol, registry.endpoint_url, registry.access_key_id, registry.secret_access_key)
-    names = await s3.buckets()
+    try:
+        names = await s3.buckets()
+    except Exception as exc:
+        logger.exception("Failed to inspect storage buckets for registry '%s'", registry_id)
+        raise UnavailableError("Storage buckets unavailable") from exc
+
     return [StorageBucketResponse(name=n) for n in names]
 
 
@@ -85,5 +91,10 @@ async def list_storage_bucket_objects(
         raise NotFoundError("Storage registry", registry_id)
 
     s3 = S3(registry.protocol, registry.endpoint_url, registry.access_key_id, registry.secret_access_key)
-    objects = await s3.objects(bucket_name, limit=STORAGE_OBJECT_LIST_LIMIT)
+    try:
+        objects = await s3.objects(bucket_name, limit=STORAGE_OBJECT_LIST_LIMIT)
+    except Exception as exc:
+        logger.exception("Failed to inspect objects in bucket '%s' for registry '%s'", bucket_name, registry_id)
+        raise UnavailableError("Storage objects unavailable") from exc
+
     return [StorageObjectResponse(**item) for item in objects]

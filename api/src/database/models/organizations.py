@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from src.database.models.association import UserOrganization
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class Organization(SQLModel, table=True):
     """Represent an org namespace in the control plane."""
 
-    __tablename__ = 'organizations'
+    __tablename__: ClassVar[str] = 'organizations'
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)

@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class Application(SQLModel, table=True):
     """Represent an application installed in the platform."""
 
-    __tablename__ = 'applications'
+    __tablename__: ClassVar[str] = 'applications'
     __table_args__ = (
         UniqueConstraint('organization_id', 'slug'),
     )
@@ -37,8 +37,9 @@ class Application(SQLModel, table=True):
     slug: str = Field(max_length=100)
     icon: str | None = Field(default=None, max_length=50)
     image: str = Field(max_length=255)
-    version: str | None = Field(default=None, max_length=20)
-    sdk_version: str | None = Field(default=None, max_length=20)
+    sdk: str | None = Field(default=None, max_length=128)
+    digest: str | None = Field(default=None, max_length=255)
+    version: str | None = Field(default=None, max_length=128)
     description: str | None = Field(default=None, max_length=255)
 
     # State

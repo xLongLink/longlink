@@ -243,8 +243,9 @@ class ApplicationsService:
         database_registry_id: UUID | None = None,
         storage_registry_id: UUID | None = None,
         version: str | None = None,
-        sdk_version: str | None = None,
+        sdk: str | None = None,
         description: str | None = None,
+        digest: str | None = None,
         icon: str | None = None,
     ) -> Application:
         """Add a new application to the database for one organization."""
@@ -267,8 +268,9 @@ class ApplicationsService:
                 'name': name,
                 'slug': slug,
                 'status': status,
+                'sdk': sdk,
+                'digest': digest,
                 'version': version,
-                'sdk_version': sdk_version,
                 'description': description,
                 'image': image,
                 'icon': icon,
@@ -320,8 +322,9 @@ class ApplicationsService:
         database_registry_id: UUID | None = None,
         storage_registry_id: UUID | None = None,
         version: str | None = None,
-        sdk_version: str | None = None,
+        sdk: str | None = None,
         description: str | None = None,
+        digest: str | None = None,
         icon: str | None = None,
     ) -> Application | None:
         """Update one existing application's runtime metadata."""
@@ -335,7 +338,8 @@ class ApplicationsService:
             application.compute_registry_id = compute_registry_id
             application.database_registry_id = database_registry_id
             application.storage_registry_id = storage_registry_id
-            application.sdk_version = sdk_version
+            application.sdk = sdk
+            application.digest = digest
             application.description = description
             application.updated_id = user.id
             application.version = version

@@ -2,10 +2,12 @@ import os
 import ast
 import json
 import click
+import re
 import shutil
 import tomllib
 import tempfile
 import subprocess
+import urllib.parse
 from typing import Any
 from pathlib import Path
 from importlib.metadata import PackageNotFoundError
@@ -43,6 +45,8 @@ BUILD_CONTEXT_IGNORE_PATTERNS = (
     "htmlcov",
     "node_modules",
 )
+DOCKER_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
+DOCKER_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
 
 DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.14-bookworm AS builder
 
@@ -66,6 +70,38 @@ ENV PATH="{workdir}/.venv/bin:$PATH"
 
 CMD ["sh", "-c", "python -m longlink.database.migrations && exec uvicorn main:app --host 0.0.0.0 --port 80 --log-level info"]
 """
+
+
+def _validate_registry_prefix(registry_prefix: str) -> None:
+    """Validate a Docker registry prefix before composing the final image tag."""
+
+    if registry_prefix.startswith("//") or "://" in registry_prefix:
+        raise ValueError("Docker registry prefix must not be a URL")
+
+    if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in registry_prefix):
+        raise ValueError("Docker registry prefix contains invalid characters")
+
+    registry_host = registry_prefix.split("/", 1)[0]
+    parsed_registry = urllib.parse.urlsplit(f"//{registry_host}")
+    if parsed_registry.hostname is None or parsed_registry.username or parsed_registry.password:
+        raise ValueError("Docker registry prefix is invalid")
+
+    try:
+        parsed_registry.port
+    except ValueError as exc:
+        raise ValueError("Docker registry port is invalid") from exc
+
+
+def _validate_docker_image_path(image_path: str) -> None:
+    """Validate Docker image path components after tag composition."""
+
+    components = image_path.split("/")
+    if not components:
+        raise ValueError("Docker image path is required")
+
+    repository_components = components[1:] if len(components) > 1 and ("." in components[0] or ":" in components[0] or components[0] == "localhost") else components
+    if any(not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(component) for component in repository_components):
+        raise ValueError(f"Invalid Docker image path '{image_path}'")
 
 
 def read_env_spec(root: Path) -> dict[str, list[dict[str, object]]]:
@@ -308,11 +344,21 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
 
     image_name = app_name.strip().lower().replace(" ", "-").replace("_", "-")
     registry_prefix = (registry or "").strip().rstrip("/")
+    image_path = image_name
+
+    if not DOCKER_NAME_COMPONENT_PATTERN.fullmatch(image_name):
+        raise ValueError(f"Invalid Docker image name '{image_name}' generated from project name '{app_name}'")
+
+    if not DOCKER_TAG_PATTERN.fullmatch(version):
+        raise ValueError(f"Invalid Docker image tag '{version}'")
 
     if registry_prefix:
-        return f"{registry_prefix}/{image_name}:{version}"
+        _validate_registry_prefix(registry_prefix)
+        image_path = f"{registry_prefix}/{image_name}"
 
-    return f"{image_name}:{version}"
+    _validate_docker_image_path(image_path)
+
+    return f"{image_path}:{version}"
 
 
 @click.command(name="build")
@@ -338,7 +384,10 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
         with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
             build_context = Path(temp_dir)
             dockerfile_path, version, app_name = build_app(build_context, tag=tag)
-            image_tag = resolve_image_tag(app_name, version, registry)
+            try:
+                image_tag = resolve_image_tag(app_name, version, registry)
+            except ValueError as exc:
+                raise click.ClickException(str(exc)) from exc
             image_id_path = build_context / "image-id.txt"
 
             # Build from a context that includes local path dependencies referenced by uv.

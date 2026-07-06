@@ -78,7 +78,7 @@ async def create_project() -> None:
                         </Li>
                         <Li>
                             <Code>created_by</Code>, <Code>updated_by</Code>, and <Code>deleted_by</Code> provide
-                            relationships to the shared users table.
+                            relationships to the shared organization users table.
                         </Li>
                     </Ul>
                 </AccordionContent>
@@ -88,9 +88,9 @@ async def create_project() -> None:
             Users
         </Heading>
         <P>
-            LongLink applications use a shared <Code>users</Code> table for audit attribution and user display data. The
-            table belongs to the organization, while application tables can reference it through the audit fields added
-            by <Code>db.Table</Code>.
+            LongLink applications use a shared <Code>users</Code> table for audit attribution and user display data. In
+            production this table lives in the organization <Code>shared</Code> schema, while application tables can
+            reference it through the audit fields added by <Code>db.Table</Code>.
         </P>
         <Ul>
             <Li>

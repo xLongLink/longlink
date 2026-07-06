@@ -1,7 +1,8 @@
 from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from src.auth import authadmin, authsupport
-from src.errors import ConflictError, NotFoundError
+from src.logger import logger
+from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.models.databases import (DatabaseUsageResponse,
                                   DatabaseRegistryCreate,
                                   DatabaseSchemaResponse,
@@ -69,7 +70,12 @@ async def list_database_databases(registry_id: UUID, _: User = Depends(authsuppo
         raise NotFoundError("Database registry", registry_id)
 
     postgres = Postgres(registry.host, registry.port, registry.username, registry.password)
-    names = await postgres.databases()
+    try:
+        names = await postgres.databases()
+    except Exception as exc:
+        logger.exception("Failed to inspect databases for registry '%s'", registry_id)
+        raise UnavailableError("Database resources unavailable") from exc
+
     return [DatabaseDatabaseResponse(name=n) for n in names]
 
 
@@ -86,7 +92,12 @@ async def list_database_schemas(
         raise NotFoundError("Database registry", registry_id)
 
     postgres = Postgres(registry.host, registry.port, registry.username, registry.password)
-    names = await postgres.schemas(database_name)
+    try:
+        names = await postgres.schemas(database_name)
+    except Exception as exc:
+        logger.exception("Failed to inspect schemas for database '%s' in registry '%s'", database_name, registry_id)
+        raise UnavailableError("Database schemas unavailable") from exc
+
     return [DatabaseSchemaResponse(name=n) for n in names]
 
 
@@ -99,5 +110,10 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
         raise NotFoundError("Database registry", registry_id)
 
     postgres = Postgres(registry.host, registry.port, registry.username, registry.password)
-    data = await postgres.usage()
+    try:
+        data = await postgres.usage()
+    except Exception as exc:
+        logger.exception("Failed to inspect database usage for registry '%s'", registry_id)
+        raise UnavailableError("Database usage unavailable") from exc
+
     return DatabaseUsageResponse(**data)

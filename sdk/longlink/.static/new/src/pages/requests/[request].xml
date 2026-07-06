@@ -1,25 +1,23 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink name="Requests" icon="clipboard-list">
-    <Query id="request" path="/requests/${params.request}" />
-    <Query id="attachments" path="/requests/${params.request}/attachments" />
+    <Query id="request" path="/api/requests/${params.request}" />
+    <Query id="attachments" path="/api/requests/${params.request}/attachments" />
     <State id="attachment" file="${null}" />
 
-    <Hero icon="clipboard-list">
-        <HeroTitle i18n="requests.detail.title" />
-        <HeroDescription i18n="requests.detail.description" />
-        <HeroAction>
-            <A to="/requests" i18n="requests.detail.back">
-                <Icon name="list" />
-            </A>
-        </HeroAction>
-    </Hero>
+    <Stack>
+        <A to="/requests" i18n="requests.detail.back">
+            <Icon name="list" />
+        </A>
+        <H1 i18n="requests.detail.title" />
+        <P i18n="requests.detail.description" />
+    </Stack>
 
     <Grid columns="2">
         <Stack>
             <H2 i18n="requests.detail.summary" />
             <Flex space="between">
                 <P value="$request.title" />
-                <Badge variant="outline" value="$request.status" />
+                <P value="$request.status" />
             </Flex>
             <P value="${`${request.vendor} - CHF ${request.amount}`}" />
             <P value="$request.justification" />
@@ -29,18 +27,18 @@
 
             <ButtonGroup>
                 <ButtonGroupText i18n="requests.actions.decision" />
-                <Action action="/requests/${params.request}/status" method="PATCH" invalidate='${["request"]}' json='${{ status: "approved" }}'>
+                <Action action="/api/requests/${params.request}/status" method="PATCH" invalidate='${["request"]}' json='${{ status: "approved" }}'>
                     <Button i18n="requests.actions.approve">
                         <Icon name="check" />
                     </Button>
                 </Action>
                 <ButtonGroupSeparator />
-                <Action action="/requests/${params.request}/status" method="PATCH" invalidate='${["request"]}' json='${{ status: "rejected" }}'>
+                <Action action="/api/requests/${params.request}/status" method="PATCH" invalidate='${["request"]}' json='${{ status: "rejected" }}'>
                     <Button variant="outline" i18n="requests.actions.reject">
                         <Icon name="x" />
                     </Button>
                 </Action>
-                <Action action="/requests/${params.request}/status" method="PATCH" invalidate='${["request"]}' json='${{ status: "submitted" }}'>
+                <Action action="/api/requests/${params.request}/status" method="PATCH" invalidate='${["request"]}' json='${{ status: "submitted" }}'>
                     <Icon name="rotate-ccw" />
                 </Action>
             </ButtonGroup>
@@ -54,7 +52,7 @@
                 <FieldDescription i18n="requests.attachments.help" />
             </Field>
             <Action
-                action="/requests/${params.request}/attachments"
+                action="/api/requests/${params.request}/attachments"
                 method="POST"
                 invalidate='${["attachments"]}'
                 form="${{ file: attachment.file }}"

@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class Location(SQLModel, table=True):
     """Represent a physical or cloud location where infrastructure runs."""
 
-    __tablename__ = 'locations'
+    __tablename__: ClassVar[str] = 'locations'
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)

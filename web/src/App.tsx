@@ -2,7 +2,6 @@ import { Auth } from '@/components/Auth';
 import { useOrganization } from '@/hooks/use-organization';
 import { useSdkUser } from '@/hooks/use-sdk-user';
 import { useUserProfile } from '@/hooks/use-user';
-import { LegalLayout } from '@/layout/LegalLayout';
 import { canAccessApplication, canViewApplicationLogs } from '@/lib/roles';
 import Admin from '@/pages/Admin';
 import AdminApplications from '@/pages/admin/Applications';
@@ -22,9 +21,8 @@ import AdminUsers from '@/pages/admin/Users';
 import { DOC_PAGES } from '@/pages/docs/catalog';
 import DocsPageRoute from '@/pages/docs/DocsPageRoute';
 import Home from '@/pages/Home';
-import { content as impressumContent, metadata as impressumMetadata } from '@/pages/legal/impressum';
-import { content as privacyContent, metadata as privacyMetadata } from '@/pages/legal/privacy';
-import { content as termsContent, metadata as termsMetadata } from '@/pages/legal/terms';
+import { LEGAL_PAGES } from '@/pages/legal/catalog';
+import LegalPageRoute from '@/pages/legal/LegalPageRoute';
 import NotFound from '@/pages/NotFound';
 import Organization from '@/pages/Organization';
 import Organizations from '@/pages/Organizations';
@@ -58,21 +56,13 @@ export function getRoutes(mode = import.meta.env.MODE) {
             path: page.path.replace(/^\//, ''),
             element: <DocsPageRoute page={page} />,
         })),
-        {
-            path: 'impressum',
-            element: <LegalLayout title="Impressum" content={impressumContent} metadata={impressumMetadata} />,
-        },
+        ...LEGAL_PAGES.map((page) => ({
+            path: page.path.replace(/^\//, ''),
+            element: <LegalPageRoute page={page} />,
+        })),
         {
             path: 'pricing',
             element: <Pricing />,
-        },
-        {
-            path: 'terms',
-            element: <LegalLayout title="Terms" content={termsContent} metadata={termsMetadata} />,
-        },
-        {
-            path: 'privacy',
-            element: <LegalLayout title="Privacy" content={privacyContent} metadata={privacyMetadata} />,
         },
         {
             path: 'organizations',

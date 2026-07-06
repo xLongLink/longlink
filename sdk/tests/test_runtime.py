@@ -57,6 +57,7 @@ def test_longlink_app_serves_runtime_routes_frontend_and_development_cors() -> N
 
     metadata_response = client.get("/metadata.json")
     frontend_response = client.get("/")
+    frontend_route_response = client.get("/settings")
     cors_response = client.options(
         "/metadata.json",
         headers={
@@ -68,6 +69,8 @@ def test_longlink_app_serves_runtime_routes_frontend_and_development_cors() -> N
     assert metadata_response.status_code == 200
     assert frontend_response.status_code == 200
     assert "text/html" in frontend_response.headers["content-type"]
+    assert frontend_route_response.status_code == 200
+    assert "text/html" in frontend_route_response.headers["content-type"]
     assert cors_response.headers["access-control-allow-origin"] == "http://localhost:5173"
 
 

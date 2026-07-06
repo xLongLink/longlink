@@ -1,4 +1,5 @@
 from uuid import UUID, uuid4
+from typing import ClassVar
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel
 from sqlalchemy import Enum, Column, String
@@ -8,7 +9,7 @@ from src.models.operations import OperationKind, OperationStatus
 class Operation(SQLModel, table=True):
     """Represent one long-running platform operation."""
 
-    __tablename__ = "operations"
+    __tablename__: ClassVar[str] = "operations"
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)

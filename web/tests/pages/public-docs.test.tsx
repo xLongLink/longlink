@@ -1,9 +1,7 @@
-import { LegalLayout } from '@/layout/LegalLayout';
 import Home from '@/pages/Home';
+import { LEGAL_PAGES } from '@/pages/legal/catalog';
+import LegalPageRoute from '@/pages/legal/LegalPageRoute';
 import Pricing from '@/pages/Pricing';
-import { content as impressumContent, metadata as impressumMetadata } from '@/pages/legal/impressum';
-import { content as privacyContent, metadata as privacyMetadata } from '@/pages/legal/privacy';
-import { content as termsContent, metadata as termsMetadata } from '@/pages/legal/terms';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -17,9 +15,9 @@ describe('public pages', () => {
         expect(output).toContain('Build workflow apps');
         expect(output).toContain('Get Started');
         expect(output).toContain('href="/organizations"');
-        expect(output).toContain('Runtime Pages');
-        expect(output).toContain('Access');
-        expect(output).toContain('Components');
+        expect(output).toContain('Real applications');
+        expect(output).toContain('Auth');
+        expect(output).toContain('Structured UI');
         expect(output).toContain('Deploy');
     });
 
@@ -35,23 +33,9 @@ describe('public pages', () => {
     });
 
     it('renders the minimal legal pages with metadata', () => {
-        const pages = [
-            { title: 'Impressum', content: impressumContent, metadata: impressumMetadata },
-            { title: 'Privacy', content: privacyContent, metadata: privacyMetadata },
-            { title: 'Terms', content: termsContent, metadata: termsMetadata },
-        ];
-
-        for (const page of pages) {
+        for (const page of LEGAL_PAGES) {
             const output = renderToStaticMarkup(
-                createElement(
-                    MemoryRouter,
-                    null,
-                    createElement(LegalLayout, {
-                        title: page.title,
-                        content: page.content,
-                        metadata: page.metadata,
-                    })
-                )
+                createElement(MemoryRouter, null, createElement(LegalPageRoute, { page }))
             );
 
             expect(output).toContain(page.title);

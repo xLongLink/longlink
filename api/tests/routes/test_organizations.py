@@ -9,7 +9,7 @@ from src.models.databases import DatabaseKind
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.services.users import users
-from src.adapters.database.shared import SharedUser
+from tenant.models import User as TenantUser
 from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.models.association import UserOrganization
@@ -65,12 +65,12 @@ async def test_create_organization_initializes_database(
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
-    """Create the organization database and shared users table during organization creation."""
+    """Create the organization database and shared users during organization creation."""
 
     # Arrange
     owner = users[0]
     client = clients[0]
-    calls: list[tuple[str, str, list[SharedUser] | None]] = []
+    calls: list[tuple[str, str, list[TenantUser] | None]] = []
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     await db.database.create(DatabaseKind.postgresql, "primary", "db.longlink.internal", 5432, "longlink", "secret", location.id, owner)
 
@@ -85,7 +85,7 @@ async def test_create_organization_initializes_database(
             calls.append(("database", organization, None))
             return f"postgresql://db/{organization}"
 
-        async def sync_users(self, organization: str, users: list[SharedUser]) -> None:
+        async def sync_users(self, organization: str, users: list[TenantUser]) -> None:
             calls.append(("sync_users", organization, users))
 
     monkeypatch.setattr("src.operations.provisioning.Postgres", FakePostgres)
@@ -222,7 +222,7 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
-    """Return existing application schema usage, orphan schemas, and shared users."""
+    """Return existing shared, application, and orphan schemas."""
 
     # Arrange
     owner = users[0]
@@ -259,15 +259,10 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
         async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
             assert database_name == "longlink_acme"
             return [
+                {"name": "shared", "space_used": 1024, "table_count": 1, "row_estimate": 5},
                 {"name": "dashboard", "space_used": 2048, "table_count": 2, "row_estimate": 42},
                 {"name": "stale", "space_used": 512, "table_count": 1, "row_estimate": 3},
             ]
-
-        async def table_usage(self, database_name: str, schema_name: str, table_name: str) -> dict[str, int | str]:
-            assert database_name == "longlink_acme"
-            assert schema_name == "public"
-            assert table_name == "users"
-            return {"name": "users", "space_used": 1024, "row_estimate": 5}
 
     monkeypatch.setattr("src.routes.organizations.Postgres", FakePostgres)
 
@@ -278,7 +273,7 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     assert response.status_code == 200
     payload = response.json()
     assert [(item["kind"], item["name"]) for item in payload] == [
-        ("shared_table", "users"),
+        ("schema", "shared"),
         ("schema", "dashboard"),
         ("schema", "stale"),
     ]
@@ -451,7 +446,7 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
-    """Return dynamic columns and rows for shared tables and app schemas."""
+    """Return dynamic columns and rows for shared and app schemas."""
 
     # Arrange
     owner = users[0]
@@ -475,25 +470,23 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
             self.username = username
             self.password = password
 
-        async def table(self, database_name: str, schema_name: str, table_name: str, *, limit: int = 100) -> dict[str, object]:
-            assert database_name == "longlink_acme"
-            assert schema_name == "public"
-            assert table_name == "users"
-            assert limit == 100
-            return {
-                "name": "users",
-                "schema_name": "public",
-                "columns": [
-                    {"name": "id", "type": "uuid", "nullable": False, "position": 1},
-                    {"name": "email", "type": "character varying", "nullable": False, "position": 2},
-                ],
-                "rows": [{"id": str(owner.id), "email": "owner@example.com"}],
-            }
-
         async def tables(self, database_name: str, schema_name: str, *, limit: int = 100) -> list[dict[str, object]]:
             assert database_name == "longlink_acme"
-            assert schema_name == "dashboard"
             assert limit == 100
+            if schema_name == "shared":
+                return [
+                    {
+                        "name": "users",
+                        "schema_name": "shared",
+                        "columns": [
+                            {"name": "id", "type": "uuid", "nullable": False, "position": 1},
+                            {"name": "email", "type": "character varying", "nullable": False, "position": 2},
+                        ],
+                        "rows": [{"id": str(owner.id), "email": "owner@example.com"}],
+                    }
+                ]
+
+            assert schema_name == "dashboard"
             return [
                 {
                     "name": "orders",
@@ -509,7 +502,7 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
     monkeypatch.setattr("src.routes.organizations.Postgres", FakePostgres)
 
     # Act
-    users_response = client.get(f"/api/organizations/{organization.id}/database/resources/shared_table/users/tables")
+    users_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/shared/tables")
     schema_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/dashboard/tables")
 
     # Assert

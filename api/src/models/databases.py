@@ -17,7 +17,6 @@ class OrganizationDatabaseResourceKind(str, Enum):
     """Supported organization database resource kinds."""
 
     schema = "schema"
-    shared_table = "shared_table"
 
 
 class DatabaseRegistryCreate(BaseModel):

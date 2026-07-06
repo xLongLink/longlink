@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from typing import Optional
+from typing import ClassVar, Optional
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum, Column
@@ -11,7 +11,7 @@ from src.database.models.locations import Location
 class StorageRegistry(SQLModel, table=True):
     """Represent a registered storage backend."""
 
-    __tablename__ = "storage_registries"
+    __tablename__: ClassVar[str] = "storage_registries"
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)

@@ -25,8 +25,12 @@ dependencies = [
     'starlette',
     'boto3',
     'kubernetes',
+    'tenant',
     "uvicorn<0.48.0",
 ]
+
+[tool.uv.sources]
+tenant = { path = "../org", editable = true }
 
 [project.optional-dependencies]
 dev = [
@@ -79,10 +83,10 @@ exclude = [".venv", "build", "dist", "src/.static", "tests", "**/__pycache__"]
 # Pyright treats SQLModel descriptors as plain Python values, so keep ORM diagnostics
 # out of the gate while still checking callers and non-ORM API code.
 ignore = ["src/database/models", "src/database/services"]
-extraPaths = ["src", "../sdk"]
+extraPaths = ["src", "../sdk", "../org"]
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = [".", "../org"]
 markers = [
     "integration: marks integration tests requiring docker/keycloak",
     "no_db: skips the API test database fixture for pure unit tests",

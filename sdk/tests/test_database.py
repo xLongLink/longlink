@@ -134,7 +134,7 @@ def test_create_engine_selects_database_url_by_environment(monkeypatch) -> None:
 
 
 def test_create_engine_sets_production_schema_search_path(monkeypatch) -> None:
-    """Use the application schema plus public for PostgreSQL production apps."""
+    """Use the application schema plus shared for PostgreSQL production apps."""
 
     # Arrange
     captured: dict[str, object] = {}
@@ -147,6 +147,7 @@ def test_create_engine_sets_production_schema_search_path(monkeypatch) -> None:
         return SimpleNamespace(url=database_url)
 
     monkeypatch.setattr(database_base, "create_async_engine", fake_create_async_engine)
+    database_base._engine = None
 
     try:
         # Act
@@ -164,7 +165,7 @@ def test_create_engine_sets_production_schema_search_path(monkeypatch) -> None:
             "pool_pre_ping": True,
             "pool_recycle": 20,
             "pool_use_lifo": True,
-            "connect_args": {"server_settings": {"search_path": "dashboard,public"}},
+            "connect_args": {"server_settings": {"search_path": "dashboard,shared"}},
         }
     finally:
         database_base._engine = None
@@ -433,14 +434,14 @@ async def test_get_session_autocreates_sqlite_tables_and_seeds_local_users(monke
 def test_local_users_cover_supported_local_roles() -> None:
     """Provide local users for every SDK local role."""
 
-    assert {user["role_name"] for user in database_base.LOCAL_USERS} == {
+    assert {user.role_name for user in database_base.LOCAL_USERS} == {
         "read",
         "write",
         "maintain",
         "admin",
         "owner",
     }
-    assert all(user["email"].endswith("@local.longlink.dev") for user in database_base.LOCAL_USERS)
+    assert all(user.email.endswith("@local.longlink.dev") for user in database_base.LOCAL_USERS)
 
 
 def test_sdk_auth_boundary_has_no_login_or_permission_routes() -> None:

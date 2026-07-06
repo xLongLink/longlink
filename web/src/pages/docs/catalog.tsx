@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react';
-
 import {
     content as docsApiApplicationsContent,
     metadata as docsApiApplicationsMetadata,
@@ -36,6 +34,7 @@ import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } fr
 import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/pages/docs/sdk/storage';
 import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } from '@/pages/docs/sdk/testing';
 
+import type { ArticleBreadcrumb, ArticleNavigationItem, ArticlePage } from '@/pages/catalog';
 import {
     Blocks,
     BookOpen,
@@ -53,31 +52,13 @@ import {
     Waypoints,
 } from 'lucide-react';
 
-type DocMetadata = {
-    lastUpdated?: string;
-    editUrl?: string;
-};
-
-export type DocItem = {
-    title: string;
-    path: string;
-    id: string;
-    icon: typeof BookOpen;
-};
-
-export type DocPage = DocItem & {
-    content: ReactNode;
-    metadata: DocMetadata;
-};
-
-export type DocNavigationItem = Omit<DocItem, 'icon'> & {
-    icon?: typeof BookOpen;
-    children?: DocNavigationItem[];
-};
-
 type DocGroupTitle = 'Overview' | 'Control Plane' | 'Application SDK';
 
-type GroupedDocPage = DocPage & { group: DocGroupTitle };
+type GroupedDocPage = ArticlePage & { group: DocGroupTitle };
+
+const documentationBreadcrumb: ArticleBreadcrumb = { title: 'Documentation', path: '/docs' };
+const controlPlaneBreadcrumb: ArticleBreadcrumb = { title: 'Control Plane', path: '/docs/api' };
+const applicationSdkBreadcrumb: ArticleBreadcrumb = { title: 'Application SDK', path: '/docs/sdk' };
 
 const introductionPage: GroupedDocPage = {
     group: 'Overview',
@@ -85,6 +66,7 @@ const introductionPage: GroupedDocPage = {
     path: '/docs',
     id: 'introduction',
     icon: BookOpen,
+    breadcrumbs: [documentationBreadcrumb],
     content: docsIndexContent,
     metadata: docsIndexMetadata,
 };
@@ -95,6 +77,7 @@ const controlPlaneOverviewPage: GroupedDocPage = {
     path: '/docs/api',
     id: 'control-plane-overview',
     icon: ShieldCheck,
+    breadcrumbs: [documentationBreadcrumb, controlPlaneBreadcrumb],
     content: docsApiIndexContent,
     metadata: docsApiIndexMetadata,
 };
@@ -105,6 +88,11 @@ const selfHostedPage: GroupedDocPage = {
     path: '/docs/api/self-hosted',
     id: 'self-hosted',
     icon: ServerCog,
+    breadcrumbs: [
+        documentationBreadcrumb,
+        controlPlaneBreadcrumb,
+        { title: 'Self-hosted', path: '/docs/api/self-hosted' },
+    ],
     content: docsApiSelfHostedContent,
     metadata: docsApiSelfHostedMetadata,
 };
@@ -115,6 +103,11 @@ const organizationsPage: GroupedDocPage = {
     path: '/docs/api/organizations',
     id: 'organizations',
     icon: Building2,
+    breadcrumbs: [
+        documentationBreadcrumb,
+        controlPlaneBreadcrumb,
+        { title: 'Organizations', path: '/docs/api/organizations' },
+    ],
     content: docsApiOrganizationsContent,
     metadata: docsApiOrganizationsMetadata,
 };
@@ -125,6 +118,11 @@ const applicationsPage: GroupedDocPage = {
     path: '/docs/api/applications',
     id: 'applications',
     icon: Boxes,
+    breadcrumbs: [
+        documentationBreadcrumb,
+        controlPlaneBreadcrumb,
+        { title: 'Applications', path: '/docs/api/applications' },
+    ],
     content: docsApiApplicationsContent,
     metadata: docsApiApplicationsMetadata,
 };
@@ -135,6 +133,7 @@ const sdkOverviewPage: GroupedDocPage = {
     path: '/docs/sdk',
     id: 'sdk-overview',
     icon: Blocks,
+    breadcrumbs: [documentationBreadcrumb, applicationSdkBreadcrumb],
     content: docsSdkIndexContent,
     metadata: docsSdkIndexMetadata,
 };
@@ -145,6 +144,7 @@ const sdkCliPage: GroupedDocPage = {
     path: '/docs/sdk/cli',
     id: 'cli-reference',
     icon: FileCode2,
+    breadcrumbs: [documentationBreadcrumb, applicationSdkBreadcrumb, { title: 'CLI Reference', path: '/docs/sdk/cli' }],
     content: docsSdkCliContent,
     metadata: docsSdkCliMetadata,
 };
@@ -155,6 +155,11 @@ const sdkEnvironmentsPage: GroupedDocPage = {
     path: '/docs/sdk/environments',
     id: 'environments',
     icon: Globe,
+    breadcrumbs: [
+        documentationBreadcrumb,
+        applicationSdkBreadcrumb,
+        { title: 'Environments', path: '/docs/sdk/environments' },
+    ],
     content: docsSdkEnvironmentsContent,
     metadata: docsSdkEnvironmentsMetadata,
 };
@@ -165,6 +170,7 @@ const sdkRoutesPage: GroupedDocPage = {
     path: '/docs/sdk/routes',
     id: 'routes',
     icon: Waypoints,
+    breadcrumbs: [documentationBreadcrumb, applicationSdkBreadcrumb, { title: 'Routes', path: '/docs/sdk/routes' }],
     content: docsSdkRoutesContent,
     metadata: docsSdkRoutesMetadata,
 };
@@ -175,6 +181,7 @@ const sdkStoragePage: GroupedDocPage = {
     path: '/docs/sdk/storage',
     id: 'storage',
     icon: HardDrive,
+    breadcrumbs: [documentationBreadcrumb, applicationSdkBreadcrumb, { title: 'Storage', path: '/docs/sdk/storage' }],
     content: docsSdkStorageContent,
     metadata: docsSdkStorageMetadata,
 };
@@ -185,6 +192,7 @@ const sdkDatabasePage: GroupedDocPage = {
     path: '/docs/sdk/database',
     id: 'database',
     icon: Database,
+    breadcrumbs: [documentationBreadcrumb, applicationSdkBreadcrumb, { title: 'Database', path: '/docs/sdk/database' }],
     content: docsSdkDatabaseContent,
     metadata: docsSdkDatabaseMetadata,
 };
@@ -195,6 +203,7 @@ const sdkTestingPage: GroupedDocPage = {
     path: '/docs/sdk/testing',
     id: 'testing',
     icon: FlaskConical,
+    breadcrumbs: [documentationBreadcrumb, applicationSdkBreadcrumb, { title: 'Testing', path: '/docs/sdk/testing' }],
     content: docsSdkTestingContent,
     metadata: docsSdkTestingMetadata,
 };
@@ -205,6 +214,7 @@ const sdkBuildingPage: GroupedDocPage = {
     path: '/docs/sdk/building',
     id: 'building',
     icon: Rocket,
+    breadcrumbs: [documentationBreadcrumb, applicationSdkBreadcrumb, { title: 'Building', path: '/docs/sdk/building' }],
     content: docsSdkBuildingContent,
     metadata: docsSdkBuildingMetadata,
 };
@@ -215,6 +225,11 @@ const xmlLayoutPage: GroupedDocPage = {
     path: '/docs/sdk/pages/layout',
     id: 'layout',
     icon: LayoutTemplate,
+    breadcrumbs: [
+        documentationBreadcrumb,
+        applicationSdkBreadcrumb,
+        { title: 'Layout', path: '/docs/sdk/pages/layout' },
+    ],
     content: docsSdkLayoutContent,
     metadata: docsSdkLayoutMetadata,
 };
@@ -225,6 +240,11 @@ const xmlComponentsPage: GroupedDocPage = {
     path: '/docs/sdk/pages/components',
     id: 'components',
     icon: Blocks,
+    breadcrumbs: [
+        documentationBreadcrumb,
+        applicationSdkBreadcrumb,
+        { title: 'Components', path: '/docs/sdk/pages/components' },
+    ],
     content: docsSdkComponentsContent,
     metadata: docsSdkComponentsMetadata,
 };
@@ -235,6 +255,11 @@ const xmlExpressionsPage: GroupedDocPage = {
     path: '/docs/sdk/pages/expressions',
     id: 'expressions',
     icon: FileCode2,
+    breadcrumbs: [
+        documentationBreadcrumb,
+        applicationSdkBreadcrumb,
+        { title: 'Expressions', path: '/docs/sdk/pages/expressions' },
+    ],
     content: docsSdkExpressionsContent,
     metadata: docsSdkExpressionsMetadata,
 };
@@ -245,6 +270,7 @@ const sdkPagesPage: GroupedDocPage = {
     path: '/docs/sdk/pages',
     id: 'pages',
     icon: FileCode2,
+    breadcrumbs: [documentationBreadcrumb, applicationSdkBreadcrumb, { title: 'Pages', path: '/docs/sdk/pages' }],
     content: docsSdkPagesContent,
     metadata: docsSdkPagesMetadata,
 };
@@ -270,7 +296,7 @@ export const DOC_PAGES: GroupedDocPage[] = [
 ];
 
 /** Converts a full docs page into a sidebar navigation item. */
-function navigationItem(page: DocPage, children?: DocNavigationItem[]): DocNavigationItem {
+function navigationItem(page: ArticlePage, children?: ArticleNavigationItem[]): ArticleNavigationItem {
     return {
         title: page.title,
         path: page.path,
@@ -280,7 +306,7 @@ function navigationItem(page: DocPage, children?: DocNavigationItem[]): DocNavig
     };
 }
 
-export const DOC_GROUPS: Array<{ title: DocGroupTitle; items: DocNavigationItem[] }> = [
+export const DOC_GROUPS: Array<{ title: DocGroupTitle; items: ArticleNavigationItem[] }> = [
     {
         title: 'Overview',
         items: [navigationItem(introductionPage)],

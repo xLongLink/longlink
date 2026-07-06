@@ -1,18 +1,22 @@
 from typing import Any
+from fastapi import APIRouter
 from fastapi import FastAPI
 from pathlib import Path
+from collections.abc import Callable
 from longlink.pages import (XMLResponse, PageDefinition, page_file_tab,
                             page_file_route, normalize_page_path,
                             extract_longlink_metadata)
 from longlink.utils import Envs
 from longlink.routes import routes
-from fastapi.responses import FileResponse
 from pydantic_settings import BaseSettings
 from longlink.constants import ROOT
 from longlink.utils.xml import Longlink as LonglinkXml
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from longlink.database.audit import install_audit_middleware
+
+API_PREFIX = "/api"
+RouteDecorator = Callable[[Callable[..., Any]], Callable[..., Any]]
 
 
 def normalize_mount_path(path: str) -> str:
@@ -34,6 +38,28 @@ def default_source_directory(route_path: str) -> Path:
     return Path.cwd() / "src" / route_path.strip("/")
 
 
+def user_api_path(path: str) -> str:
+    """Return a user API path under the SDK API prefix."""
+
+    normalized_path = normalize_mount_path(path)
+    if normalized_path == API_PREFIX or normalized_path.startswith(f"{API_PREFIX}/"):
+        return normalized_path
+
+    if normalized_path == "/":
+        return API_PREFIX
+
+    return f"{API_PREFIX}{normalized_path}"
+
+
+def user_router_prefix(prefix: str) -> str:
+    """Return the include-router prefix for user-defined API routes."""
+
+    if not prefix:
+        return API_PREFIX
+
+    return user_api_path(prefix)
+
+
 class LongLink(FastAPI):
     """FastAPI app that owns SDK service creation and shared request state."""
 
@@ -52,7 +78,7 @@ class LongLink(FastAPI):
         self.state.page_registry = page_registry
 
         for router in routes:
-            self.include_router(router)
+            super().include_router(router)
 
         install_audit_middleware(self)
 
@@ -74,19 +100,7 @@ class LongLink(FastAPI):
                 self.register_page_directory(pages_path, pages_directory)
 
         if frontend_directory.exists():
-            assets_directory = frontend_directory / "assets"
-
-            # Serve the built SDK frontend entrypoint without shadowing app routes.
-            def frontend_index() -> FileResponse:
-                """Return the packaged frontend entry document."""
-
-                return FileResponse(frontend_directory / "index.html")
-
-            self.add_api_route("/", frontend_index, methods=["GET"], include_in_schema=False)
-
-            # Serve frontend bundles from the generated assets directory.
-            if assets_directory.exists():
-                self.mount("/assets", StaticFiles(directory=assets_directory), name="assets")
+            self.frontend("/", directory=frontend_directory)
 
         # Enable CORS in development for local frontend access to API routes
         if environments.ENV == "development":
@@ -101,6 +115,72 @@ class LongLink(FastAPI):
                 allow_methods=["*"],
                 allow_headers=["*"],
             )
+
+
+    def add_api_route(self, path: str, endpoint: Callable[..., Any], **kwargs: Any) -> None:
+        """Register a user-defined route under `/api`."""
+
+        return super().add_api_route(user_api_path(path), endpoint, **kwargs)
+
+
+    def api_route(self, path: str, **kwargs: Any) -> RouteDecorator:
+        """Return a user-defined route decorator under `/api`."""
+
+        return super().api_route(user_api_path(path), **kwargs)
+
+
+    def delete(self, path: str, **kwargs: Any) -> RouteDecorator:
+        """Return a user-defined DELETE route decorator under `/api`."""
+
+        return super().delete(user_api_path(path), **kwargs)
+
+
+    def get(self, path: str, **kwargs: Any) -> RouteDecorator:
+        """Return a user-defined GET route decorator under `/api`."""
+
+        return super().get(user_api_path(path), **kwargs)
+
+
+    def head(self, path: str, **kwargs: Any) -> RouteDecorator:
+        """Return a user-defined HEAD route decorator under `/api`."""
+
+        return super().head(user_api_path(path), **kwargs)
+
+
+    def include_router(self, router: APIRouter, *, prefix: str = "", **kwargs: Any) -> None:
+        """Include a user-defined router under `/api`."""
+
+        return super().include_router(router, prefix=user_router_prefix(prefix), **kwargs)
+
+
+    def options(self, path: str, **kwargs: Any) -> RouteDecorator:
+        """Return a user-defined OPTIONS route decorator under `/api`."""
+
+        return super().options(user_api_path(path), **kwargs)
+
+
+    def patch(self, path: str, **kwargs: Any) -> RouteDecorator:
+        """Return a user-defined PATCH route decorator under `/api`."""
+
+        return super().patch(user_api_path(path), **kwargs)
+
+
+    def post(self, path: str, **kwargs: Any) -> RouteDecorator:
+        """Return a user-defined POST route decorator under `/api`."""
+
+        return super().post(user_api_path(path), **kwargs)
+
+
+    def put(self, path: str, **kwargs: Any) -> RouteDecorator:
+        """Return a user-defined PUT route decorator under `/api`."""
+
+        return super().put(user_api_path(path), **kwargs)
+
+
+    def trace(self, path: str, **kwargs: Any) -> RouteDecorator:
+        """Return a user-defined TRACE route decorator under `/api`."""
+
+        return super().trace(user_api_path(path), **kwargs)
 
 
     def register_page_directory(self, route_prefix: str, pages_directory: Path) -> None:
@@ -135,7 +215,7 @@ class LongLink(FastAPI):
                     icon=page_icon,
                 )
             )
-            self.add_api_route(
+            super().add_api_route(
                 registered_path,
                 page_endpoint,
                 methods=["GET"],

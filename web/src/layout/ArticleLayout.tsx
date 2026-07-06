@@ -1,10 +1,11 @@
 import { useTranslation } from '@/lib/i18n';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 
-import { DocsSidebar } from '@/components/DocsSidebar';
+import { ArticleSidebar } from '@/components/ArticleSidebar';
 import { cn, formatDate } from '@/lib/utils';
-import { DOC_GROUPS, DOC_PAGES, type DocItem, type DocNavigationItem } from '@/pages/docs/catalog';
+import type { ArticleBreadcrumb, ArticleItem, ArticleMetadata, ArticleNavigationGroup } from '@/pages/catalog';
+import { DOC_GROUPS, DOC_PAGES } from '@/pages/docs/catalog';
 import { A } from '@ui/a';
 import {
     BreadcrumbItem,
@@ -17,40 +18,29 @@ import { buttonVariants } from '@ui/button';
 import { ScrollArea } from '@ui/scroll-area';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@ui/sidebar';
 
-type DocMetadata = {
-    lastUpdated?: string;
-    editUrl?: string;
+type ArticleLayoutProps = {
+    content: ReactNode;
+    metadata: ArticleMetadata;
+    breadcrumbs?: ArticleBreadcrumb[];
+    navigationGroups?: ArticleNavigationGroup[];
+    navigationPages?: ArticleItem[];
 };
 
-type DocsLayoutProps = {
-    content: ReactNode;
-    metadata: DocMetadata;
-};
+type ArticleContentProps = Pick<ArticleLayoutProps, 'content' | 'metadata'>;
 
 type PageTocItem = {
     href: string;
     label: string;
 };
 
-/** Finds a docs navigation item by id in a nested item list. */
-function findDocNavigationItem(items: DocNavigationItem[], itemId?: string): DocNavigationItem | undefined {
-    for (const item of items) {
-        if (item.id === itemId) {
-            return item;
-        }
-
-        const childMatch = item.children ? findDocNavigationItem(item.children, itemId) : undefined;
-
-        if (childMatch) {
-            return childMatch;
-        }
-    }
-
-    return undefined;
-}
-
-/** Renders a docs page using the shared docs layout. */
-export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
+/** Renders an article page using the shared documentation shell. */
+export default function ArticleLayout({
+    content,
+    metadata,
+    breadcrumbs,
+    navigationGroups = DOC_GROUPS,
+    navigationPages = DOC_PAGES,
+}: ArticleLayoutProps) {
     const { t } = useTranslation();
     const location = useLocation();
     const contentRef = useRef<HTMLDivElement>(null);
@@ -58,7 +48,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
     const [pageToc, setPageToc] = useState<PageTocItem[]>([]);
 
     // Prefer the longest matching path so nested pages do not resolve to their section overview.
-    const currentItem = DOC_PAGES.reduce<DocItem | undefined>((match, item) => {
+    const currentItem = navigationPages.reduce<ArticleItem | undefined>((match, item) => {
         const isPathMatch = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
 
         if (!isPathMatch) {
@@ -71,11 +61,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
 
         return match;
     }, undefined);
-    const currentGroup = DOC_GROUPS.find((group) => findDocNavigationItem(group.items, currentItem?.id));
-    const pageLabel = currentItem?.title ?? t('common.overview');
-    const pagePath = currentItem?.path ?? '/docs';
-    const isRootDocsPage = pagePath === '/docs';
-    const isSectionOverviewPage = !isRootDocsPage && currentItem?.id === currentGroup?.items[0]?.id;
+    const currentBreadcrumbs = breadcrumbs ?? currentItem?.breadcrumbs ?? [];
 
     useEffect(() => {
         const contentElement = contentRef.current;
@@ -90,11 +76,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
             const headings = Array.from(contentElement.querySelectorAll<HTMLHeadingElement>('h2[id]'))
                 .filter((heading) => heading.id)
                 .map((heading) => {
-                    const label = Array.from(heading.childNodes)
-                        .filter((node) => node.nodeName.toLowerCase() !== 'a')
-                        .map((node) => node.textContent ?? '')
-                        .join(' ')
-                        .trim();
+                    const label = heading.textContent?.trim() ?? '';
 
                     return {
                         href: `#${heading.id}`,
@@ -171,7 +153,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
 
     return (
         <SidebarProvider defaultOpen>
-            <DocsSidebar currentItemId={currentItem?.id} currentPath={location.pathname} />
+            <ArticleSidebar currentItemId={currentItem?.id} currentPath={location.pathname} groups={navigationGroups} />
 
             <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
                 <div className="flex h-full w-full flex-col shadow-sm">
@@ -184,55 +166,31 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
                                     <div className="mx-auto w-full max-w-3xl">
                                         <UIBreadcrumb>
                                             <BreadcrumbList>
-                                                <BreadcrumbItem>
-                                                    <BreadcrumbLink
-                                                        render={(props) => (
-                                                            <Link
-                                                                {...props}
-                                                                to="/docs"
-                                                                className="transition-colors hover:text-foreground"
-                                                            >
-                                                                {t('common.documentation')}
-                                                            </Link>
-                                                        )}
-                                                    />
-                                                </BreadcrumbItem>
-                                                {!isRootDocsPage ? (
-                                                    <>
-                                                        <BreadcrumbSeparator />
-                                                        <BreadcrumbItem>
-                                                            <BreadcrumbLink
-                                                                render={(props) => (
-                                                                    <Link
-                                                                        {...props}
-                                                                        to={currentGroup?.items[0]?.path ?? '/docs'}
-                                                                        className="transition-colors hover:text-foreground"
-                                                                    >
-                                                                        {currentGroup?.title ?? t('common.overview')}
-                                                                    </Link>
-                                                                )}
-                                                            />
-                                                        </BreadcrumbItem>
-                                                        {!isSectionOverviewPage ? (
-                                                            <>
-                                                                <BreadcrumbSeparator />
-                                                                <BreadcrumbItem>
-                                                                    <BreadcrumbLink
-                                                                        render={(props) => (
-                                                                            <Link
-                                                                                {...props}
-                                                                                to={pagePath}
-                                                                                className="font-medium text-foreground"
-                                                                            >
-                                                                                {pageLabel}
-                                                                            </Link>
-                                                                        )}
-                                                                    />
-                                                                </BreadcrumbItem>
-                                                            </>
-                                                        ) : null}
-                                                    </>
-                                                ) : null}
+                                                {currentBreadcrumbs.map((item, index) => {
+                                                    const isLast = index === currentBreadcrumbs.length - 1;
+
+                                                    return (
+                                                        <Fragment key={item.path}>
+                                                            {index > 0 ? <BreadcrumbSeparator /> : null}
+                                                            <BreadcrumbItem>
+                                                                <BreadcrumbLink
+                                                                    render={(props) => (
+                                                                        <Link
+                                                                            {...props}
+                                                                            to={item.path}
+                                                                            className={cn(
+                                                                                'transition-colors hover:text-foreground',
+                                                                                isLast && 'font-medium text-foreground'
+                                                                            )}
+                                                                        >
+                                                                            {item.title}
+                                                                        </Link>
+                                                                    )}
+                                                                />
+                                                            </BreadcrumbItem>
+                                                        </Fragment>
+                                                    );
+                                                })}
                                             </BreadcrumbList>
                                         </UIBreadcrumb>
                                     </div>
@@ -264,7 +222,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
                     <div ref={contentRef} className="px-4 pt-4 pb-32 lg:px-6 lg:pt-6 lg:pb-40">
                         <div className="mx-auto w-full max-w-[60rem]">
                             <div className="mx-auto w-full max-w-3xl">
-                                <DocArticle content={content} metadata={metadata} />
+                                <ArticleContent content={content} metadata={metadata} />
                             </div>
                         </div>
                     </div>
@@ -309,7 +267,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
     );
 }
 
-function DocArticle({ content, metadata }: DocsLayoutProps) {
+function ArticleContent({ content, metadata }: ArticleContentProps) {
     const { t } = useTranslation();
     const lastUpdated = metadata.lastUpdated
         ? (() => {
@@ -320,7 +278,7 @@ function DocArticle({ content, metadata }: DocsLayoutProps) {
         : '';
 
     return (
-        <article className="space-y-7 text-[1.0625rem] leading-8 text-muted-foreground [&>div]:gap-5 [&_[data-slot=code-block]]:max-w-3xl [&_a]:font-medium [&_code]:text-foreground [&_h1>a]:-left-8 [&_h1>a]:top-1 [&_h1>a]:translate-y-0 [&_h1]:border-b [&_h1]:border-border [&_h1]:pb-4 [&_h1]:text-[2.5rem] [&_h1]:leading-[1.08] [&_h1]:font-semibold [&_h1]:tracking-normal [&_h1]:text-foreground [&_h2>a]:-left-7 [&_h2>a]:top-[0.55em] [&_h2]:mt-10 [&_h2]:border-b [&_h2]:border-border/80 [&_h2]:pb-3 [&_h2]:text-[1.75rem] [&_h2]:leading-tight [&_h2]:tracking-normal [&_h2]:text-foreground [&_h3>a]:-left-6 [&_h3>a]:top-[0.55em] [&_h3]:mt-7 [&_h3]:border-b [&_h3]:border-border/70 [&_h3]:pb-2 [&_h3]:text-[1.35rem] [&_h3]:leading-snug [&_h3]:tracking-normal [&_h3]:text-foreground [&_h4>a]:-left-5 [&_h4>a]:top-[0.55em] [&_h4]:mt-5 [&_h4]:border-b [&_h4]:border-border/70 [&_h4]:pb-2 [&_h4]:text-xl [&_h4]:tracking-normal [&_h4]:text-foreground [&_li]:leading-7 [&_p]:max-w-3xl sm:[&_h1]:text-[3.25rem] sm:[&_h1]:leading-[1.05] sm:[&_h2]:text-[2rem] sm:[&_h3]:text-[1.45rem]">
+        <article className="space-y-7 text-[1.0625rem] leading-8 text-muted-foreground [&>div]:gap-5 [&_[data-slot=code-block]]:max-w-3xl [&_a]:font-medium [&_code]:text-foreground [&_h1]:border-b [&_h1]:border-border [&_h1]:pb-4 [&_h1]:text-[2.5rem] [&_h1]:leading-[1.08] [&_h1]:font-semibold [&_h1]:tracking-normal [&_h1]:text-foreground [&_h2]:mt-10 [&_h2]:border-b [&_h2]:border-border/80 [&_h2]:pb-3 [&_h2]:text-[1.75rem] [&_h2]:leading-tight [&_h2]:tracking-normal [&_h2]:text-foreground [&_h3]:mt-7 [&_h3]:border-b [&_h3]:border-border/70 [&_h3]:pb-2 [&_h3]:text-[1.35rem] [&_h3]:leading-snug [&_h3]:tracking-normal [&_h3]:text-foreground [&_h4]:mt-5 [&_h4]:border-b [&_h4]:border-border/70 [&_h4]:pb-2 [&_h4]:text-xl [&_h4]:tracking-normal [&_h4]:text-foreground [&_li]:leading-7 [&_p]:max-w-3xl sm:[&_h1]:text-[3.25rem] sm:[&_h1]:leading-[1.05] sm:[&_h2]:text-[2rem] sm:[&_h3]:text-[1.45rem]">
             {content}
             {metadata.lastUpdated || metadata.editUrl ? (
                 <footer className="mt-8 flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-6">

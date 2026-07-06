@@ -1,4 +1,5 @@
 from uuid import UUID
+from typing import ClassVar
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel
 from sqlalchemy import Enum, Column, ForeignKeyConstraint
@@ -8,7 +9,7 @@ from src.models.roles import ApplicationRoles, OrganizationRoles
 class UserOrganization(SQLModel, table=True):
     """Represent one user's membership in an organization."""
 
-    __tablename__ = "user_organizations"
+    __tablename__: ClassVar[str] = "user_organizations"
 
     # Identifier
     user_id: UUID = Field(default=None, primary_key=True, foreign_key="users.id")
@@ -31,7 +32,7 @@ class UserOrganization(SQLModel, table=True):
 class UserApplication(SQLModel, table=True):
     """Represent one user's membership in an application."""
 
-    __tablename__ = "user_applications"
+    __tablename__: ClassVar[str] = "user_applications"
 
     # Identifier
     application_id: UUID = Field(default=None, primary_key=True)

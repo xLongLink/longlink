@@ -4,8 +4,8 @@ from datetime import UTC, datetime
 from src.utils import names, images
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
-from sqlalchemy.engine import make_url
 from src.models.metadata import LongLinkMetadata
+from src.utils.url import database as normalize_database_url
 from src.models.statuses import ApplicationStatus
 from src.utils.namespace import dbname, k8name, s3name
 from src.adapters.storage import S3
@@ -124,6 +124,9 @@ async def application_image_metadata(
     image_metadata = await images.metadata(payload.image)
     if image_metadata is None:
         raise ValueError("Image metadata could not be inspected")
+
+    if image_metadata.digest is None:
+        raise ValueError("Image digest could not be resolved")
 
     # Reject required LongLink-prefixed envs that the platform does not know how to provide.
     unsupported_platform_envs = sorted(
@@ -307,18 +310,7 @@ async def remove_organization_runtime(
 def runtime_database_url(database_url: str) -> str:
     """Return a database URL compatible with the SDK runtime."""
 
-    url = make_url(database_url)
-
-    # Runtime applications use the SDK async engine, so PostgreSQL connections use asyncpg.
-    if url.drivername != "postgresql+asyncpg":
-        url = url.set(drivername="postgresql+asyncpg")
-
-    # sslmode is a libpq/psycopg option; asyncpg receives it as an invalid kwarg through SQLAlchemy.
-    sslmode_query_keys = [key for key in url.query if key.lower() == "sslmode"]
-    if sslmode_query_keys:
-        url = url.difference_update_query(sslmode_query_keys)
-
-    return url.render_as_string(hide_password=False)
+    return normalize_database_url(database_url)
 
 
 def runtime_storage_url(storage_registry: StorageRegistry, credentials: StorageRuntimeCredentials) -> str:
@@ -372,7 +364,7 @@ async def sync_organization_users(
     organization: Organization | OrganizationDetails | OrganizationSummary,
     registry: DatabaseRegistry | None = None,
 ) -> None:
-    """Synchronize organization members into the shared users table."""
+    """Synchronize organization members into the shared users schema."""
 
     database_registry = registry or await organization_database_registry(organization)
     if database_registry is None:
@@ -412,6 +404,9 @@ async def create_application_runtime(
     logger.info("Provisioning application %s/%s", organization.slug, application_slug)
 
     image_metadata = await application_image_metadata(payload)
+    digest = image_metadata.digest
+    assert digest is not None
+    runtime_image = images.pin_image_reference(payload.image, digest)
 
     compute_registry = await latest_compute_registry(organization.location_id)
     if compute_registry is None:
@@ -440,8 +435,9 @@ async def create_application_runtime(
         storage_registry_id=storage_registry.id
         if storage_registry is not None
         else None,
+        sdk=image_metadata.sdk,
+        digest=digest,
         version=image_metadata.version,
-        sdk_version=image_metadata.sdk,
         status=ApplicationStatus.creating,
         description=payload.description,
         icon=payload.icon.value if payload.icon is not None else None,
@@ -487,7 +483,7 @@ async def create_application_runtime(
         await k8s.application(
             organization.slug,
             application_slug,
-            payload.image,
+            runtime_image,
             APP_SERVICE_PORT,
             {**application_runtime_environment(payload), **runtime_envs},
         )
@@ -541,6 +537,9 @@ async def sync_application_runtime(
     s3name(f"{organization.slug}-shared")
     s3name(f"{organization.slug}-{application.slug}")
     image_metadata = await application_image_metadata(payload)
+    digest = image_metadata.digest
+    assert digest is not None
+    runtime_image = images.pin_image_reference(payload.image, digest)
 
     compute_registry = await application_compute_registry(
         application, organization.location_id
@@ -571,8 +570,9 @@ async def sync_application_runtime(
         storage_registry_id=storage_registry.id
         if storage_registry is not None
         else None,
+        sdk=image_metadata.sdk,
+        digest=digest,
         version=image_metadata.version,
-        sdk_version=image_metadata.sdk,
         status=ApplicationStatus.creating,
         description=payload.description,
         icon=payload.icon.value if payload.icon is not None else None,
@@ -620,7 +620,7 @@ async def sync_application_runtime(
         await k8s.application(
             organization.slug,
             application.slug,
-            payload.image,
+            runtime_image,
             APP_SERVICE_PORT,
             {**application_runtime_environment(payload), **runtime_envs},
             rollout_token=datetime.now(UTC).isoformat(),

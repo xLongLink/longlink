@@ -1,8 +1,8 @@
 import pytest
 from uuid import UUID
 from datetime import UTC, datetime
-from sqlalchemy.schema import CreateTable, CreateSchema
-from src.adapters.database.shared import SharedUser
+from tenant.models import User as TenantUser
+from sqlalchemy.schema import CreateSchema
 from src.adapters.database.postgres import Postgres
 
 pytestmark = pytest.mark.no_db
@@ -175,7 +175,11 @@ async def test_schema_creates_database_and_schema_with_managed_connection(monkey
         log.append(("engine", (str(url), kwargs)))
         return _FakeEngine(log)
 
+    async def fake_migrate_database(database_url) -> None:
+        log.append(("migrate_database", str(database_url)))
+
     monkeypatch.setattr("src.adapters.database.postgres.create_async_engine", fake_create_async_engine)
+    monkeypatch.setattr("src.adapters.database.postgres.migrate_database", fake_migrate_database)
     monkeypatch.setattr("src.adapters.database.postgres.secrets.token_urlsafe", lambda _: "runtime-secret")
 
     adapter = Postgres(
@@ -198,17 +202,17 @@ async def test_schema_creates_database_and_schema_with_managed_connection(monkey
         "postgresql+psycopg://longlink:***@db.longlink.internal:5432/longlink_acme?sslmode=disable",
     ]
     assert ("begin", None) in log
+    assert ("migrate_database", "postgresql+psycopg://longlink:***@db.longlink.internal:5432/longlink_acme?sslmode=disable") in log
     assert any(isinstance(entry[1], CreateSchema) for entry in log if entry[0] == "execute")
-    assert any(isinstance(entry[1], CreateTable) for entry in log if entry[0] == "execute")
     assert any(entry == ("driver_sql", 'CREATE DATABASE "longlink_acme"') for entry in log)
     assert any("CREATE ROLE \"longlink_acme_dashboard\" LOGIN PASSWORD 'runtime-secret'" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
     assert any("GRANT USAGE, CREATE ON SCHEMA \"dashboard\" TO \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
-    assert any("REVOKE CREATE ON SCHEMA public FROM \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
-    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
-    assert any("GRANT SELECT, REFERENCES ON ALL TABLES IN SCHEMA public TO \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
-    assert any("ALTER ROLE \"longlink_acme_dashboard\" IN DATABASE \"longlink_acme\" SET search_path = \"dashboard\", public" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
+    assert any("REVOKE CREATE ON SCHEMA \"shared\" FROM \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
+    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA \"shared\" FROM \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
+    assert any("GRANT SELECT, REFERENCES ON ALL TABLES IN SCHEMA \"shared\" TO \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
+    assert any("ALTER ROLE \"longlink_acme_dashboard\" IN DATABASE \"longlink_acme\" SET search_path = \"dashboard\", \"shared\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
     assert any("REVOKE CREATE ON SCHEMA public FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
-    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
+    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA \"shared\" FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
 
 
 async def test_application_role_uses_dialect_password_literal() -> None:
@@ -229,8 +233,8 @@ async def test_application_role_uses_dialect_password_literal() -> None:
     )
 
 
-async def test_database_creates_shared_users_table_with_write_restrictions(monkeypatch) -> None:
-    """Create an organization database with the shared users table and write restrictions."""
+async def test_database_migrates_shared_schema_with_write_restrictions(monkeypatch) -> None:
+    """Create an organization database with the shared schema and write restrictions."""
 
     # Arrange
     log: list[tuple[str, object]] = []
@@ -239,7 +243,11 @@ async def test_database_creates_shared_users_table_with_write_restrictions(monke
         log.append(("engine", (str(url), kwargs)))
         return _FakeEngine(log)
 
+    async def fake_migrate_database(database_url) -> None:
+        log.append(("migrate_database", str(database_url)))
+
     monkeypatch.setattr("src.adapters.database.postgres.create_async_engine", fake_create_async_engine)
+    monkeypatch.setattr("src.adapters.database.postgres.migrate_database", fake_migrate_database)
 
     adapter = Postgres(
         host="db.longlink.internal",
@@ -254,13 +262,13 @@ async def test_database_creates_shared_users_table_with_write_restrictions(monke
     # Assert
     assert connection == "postgresql+psycopg://longlink:secret@db.longlink.internal:5432/longlink_acme?sslmode=disable"
     assert any(entry == ("driver_sql", 'CREATE DATABASE "longlink_acme"') for entry in log)
-    assert any(isinstance(entry[1], CreateTable) for entry in log if entry[0] == "execute")
+    assert ("migrate_database", "postgresql+psycopg://longlink:***@db.longlink.internal:5432/longlink_acme?sslmode=disable") in log
     assert any("REVOKE CREATE ON SCHEMA public FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
-    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
+    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA \"shared\" FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
 
 
 async def test_sync_users_upserts_active_users_and_soft_deletes_stale_rows(monkeypatch) -> None:
-    """Synchronize active organization users into the shared users table."""
+    """Synchronize active organization users into the shared schema."""
 
     # Arrange
     log: list[tuple] = []
@@ -271,7 +279,11 @@ async def test_sync_users_upserts_active_users_and_soft_deletes_stale_rows(monke
         log.append(("engine", (str(url), kwargs)))
         return _FakeEngine(log)
 
+    async def fake_migrate_database(database_url) -> None:
+        log.append(("migrate_database", str(database_url)))
+
     monkeypatch.setattr("src.adapters.database.postgres.create_async_engine", fake_create_async_engine)
+    monkeypatch.setattr("src.adapters.database.postgres.migrate_database", fake_migrate_database)
 
     adapter = Postgres(
         host="db.longlink.internal",
@@ -284,7 +296,7 @@ async def test_sync_users_upserts_active_users_and_soft_deletes_stale_rows(monke
     await adapter.sync_users(
         "acme",
         [
-            SharedUser(
+            TenantUser(
                 id=user_id,
                 name="Owner User",
                 email="owner@example.com",
@@ -297,7 +309,7 @@ async def test_sync_users_upserts_active_users_and_soft_deletes_stale_rows(monke
     )
 
     # Assert
-    insert_calls = [entry for entry in log if entry[0] == "execute" and "INSERT INTO public.users" in str(entry[1])]
+    insert_calls = [entry for entry in log if entry[0] == "execute" and "INSERT INTO shared.users" in str(entry[1])]
     assert len(insert_calls) == 1
     assert "ON CONFLICT" in str(insert_calls[0][1])
     assert insert_calls[0][2] == [
@@ -312,9 +324,9 @@ async def test_sync_users_upserts_active_users_and_soft_deletes_stale_rows(monke
             "deleted_at": None,
         }
     ]
-    update_calls = [entry for entry in log if entry[0] == "execute" and str(entry[1]).startswith("UPDATE public.users")]
+    update_calls = [entry for entry in log if entry[0] == "execute" and str(entry[1]).startswith("UPDATE shared.users")]
     assert len(update_calls) == 1
-    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
+    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA \"shared\" FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
 
 
 async def test_sync_users_soft_deletes_every_active_user_when_input_is_empty(monkeypatch) -> None:
@@ -327,7 +339,11 @@ async def test_sync_users_soft_deletes_every_active_user_when_input_is_empty(mon
         log.append(("engine", (str(url), kwargs)))
         return _FakeEngine(log)
 
+    async def fake_migrate_database(database_url) -> None:
+        log.append(("migrate_database", str(database_url)))
+
     monkeypatch.setattr("src.adapters.database.postgres.create_async_engine", fake_create_async_engine)
+    monkeypatch.setattr("src.adapters.database.postgres.migrate_database", fake_migrate_database)
 
     adapter = Postgres(
         host="db.longlink.internal",
@@ -340,7 +356,7 @@ async def test_sync_users_soft_deletes_every_active_user_when_input_is_empty(mon
     await adapter.sync_users("acme", [])
 
     # Assert
-    update_calls = [entry for entry in log if entry[0] == "execute" and str(entry[1]).startswith("UPDATE public.users")]
+    update_calls = [entry for entry in log if entry[0] == "execute" and str(entry[1]).startswith("UPDATE shared.users")]
     assert len(update_calls) == 1
 
 

@@ -18,6 +18,7 @@ dependencies = [
     "aiosqlite",
     "asyncpg",
     "sqlmodel",
+    "tenant",
     "xmltodict",
 ]
 requires-python = ">=3.14"
@@ -37,6 +38,9 @@ classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.14",
 ]
+
+[tool.uv.sources]
+tenant = { path = "../org", editable = true }
 
 [project.optional-dependencies]
 cli = [
@@ -114,4 +118,4 @@ venvPath = "."
 venv = ".venv"
 include = ["longlink", "tests"]
 exclude = [".venv", "build", "dist", "dev", "longlink/.static", "**/__pycache__"]
-extraPaths = ["."]
+extraPaths = [".", "../org"]

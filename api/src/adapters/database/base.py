@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
+from tenant.models import User
 from .types import DatabaseTableData, DatabaseTableUsage, DatabaseSchemaUsage
-from .shared import SharedUser
 
 
 class Database(ABC):
@@ -12,9 +12,10 @@ class Database(ABC):
             └── Tables  # Managed by the application ORM, e.g. Prisma, SQLAlchemy
 
     Database structure for one organization:
-    ├── (org) Users + other shared tables
-    ├── (app a) Schema
-    └── (app ...) Schema
+    ├── shared Schema
+    │   └── Users + other shared tables
+    ├── app_a Schema
+    └── app_n Schema
 
     Each application has read/write access to its own schema, and read-only access to shared tables.
     """
@@ -25,8 +26,8 @@ class Database(ABC):
 
 
     @abstractmethod
-    async def sync_users(self, organization: str, users: list[SharedUser]) -> None:
-        """Synchronize the shared organization users table."""
+    async def sync_users(self, organization: str, users: list[User]) -> None:
+        """Synchronize shared organization users."""
 
 
     @abstractmethod

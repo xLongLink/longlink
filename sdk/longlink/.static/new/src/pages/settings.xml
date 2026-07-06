@@ -1,6 +1,7 @@
 <?xml-model href="https://longlink.dev/docs/schema.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <longlink name="Settings" icon="settings-2">
     <State id="profile" owner="Operations Desk" costCenter="OPS-100" note="Approve standard equipment within the monthly budget." />
+    <State id="reviewer" name="Mira Tanner" initials="MT" badge="Approver" avatarUrl="https://api.dicebear.com/9.x/initials/svg?seed=Mira%20Tanner" />
     <State id="draftLink" label="Vendor quote" />
     <State id="quickLinks" value='${[]}' />
     <State id="emailUpdates" value="true" />
@@ -8,10 +9,10 @@
     <State id="pinned" value="false" />
     <State id="budgetLimit" value="2500" />
 
-    <Hero icon="settings-2">
-        <HeroTitle i18n="settings.title" />
-        <HeroDescription i18n="settings.description" />
-    </Hero>
+    <Stack>
+        <H1 i18n="settings.title" />
+        <P i18n="settings.description" />
+    </Stack>
 
     <Menu defaultValue="application">
         <MenuSection value="application" icon="box" i18n="settings.sections.application">
@@ -20,6 +21,19 @@
                 <P i18n="settings.application.description" />
                 <Stack>
                     <FieldLegend i18n="settings.application.legend" />
+                    <Flex space="between">
+                        <Avatar>
+                            <AvatarImage src="$reviewer.avatarUrl" alt="$reviewer.name" />
+                            <AvatarFallback>
+                                <P value="$reviewer.initials" />
+                            </AvatarFallback>
+                            <AvatarBadge>
+                                <P value="$reviewer.badge" />
+                            </AvatarBadge>
+                        </Avatar>
+                        <P i18n="settings.application.reviewer" />
+                    </Flex>
+
                     <Field>
                         <FieldLabel htmlFor="owner" i18n="settings.application.owner" />
                         <Input id="owner" value="$profile.owner" />
@@ -46,8 +60,25 @@
                             </InputGroupAddon>
                         </InputGroup>
                     </Field>
+
+                    <H4 i18n="settings.application.runbook" />
+                    <P>
+                        <B i18n="settings.application.bold" />
+                        <U i18n="settings.application.underlined" />
+                        <S i18n="settings.application.outdated" />
+                    </P>
+                    <P>
+                        <Code i18n="settings.application.code" />
+                        <Sup i18n="settings.application.sup" />
+                        <Sub i18n="settings.application.sub" />
+                    </P>
+                    <Br />
+                    <Pre lang="json" i18n="settings.application.payload" />
                 </Stack>
             </Stack>
+            <MenuSubSection value="profile" i18n="settings.sections.profile">
+                <P i18n="settings.application.profileTip" />
+            </MenuSubSection>
         </MenuSection>
 
         <MenuSection value="preferences" icon="bell" i18n="settings.sections.preferences">
@@ -80,7 +111,7 @@
 
                     <Toggle pressed="$pinned">
                         <Icon name="pin" />
-                        <B i18n="settings.preferences.pin" />
+                        <P i18n="settings.preferences.pin" />
                     </Toggle>
                 </Stack>
             </Stack>

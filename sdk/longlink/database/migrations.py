@@ -30,7 +30,7 @@ def include_object(
 ) -> bool:
     """Return whether Alembic should manage one metadata object."""
 
-    # The platform owns the shared users table; app migrations manage app-owned tables only.
+    # The platform owns shared organization users; app migrations manage app-owned tables only.
     if type_ == "table" and name == "users":
         return False
 

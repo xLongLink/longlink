@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 class User(SQLModel, table=True):
     """Represent a user account authenticated via OIDC."""
-    __tablename__ = 'users'
+    __tablename__: ClassVar[str] = 'users'
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)

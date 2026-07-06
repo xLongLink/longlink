@@ -15,7 +15,7 @@ from src.models.organizations import (OrganizationDetails,
                                       OrganizationInvitationResponse,
                                       OrganizationApplicationResponse)
 from src.database.models.users import User
-from src.adapters.database.shared import SharedUser
+from tenant.models import User as TenantUser
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
@@ -56,8 +56,8 @@ class OrganizationsService:
             return list(result.scalars().all())
 
 
-    async def database_users(self, organization_id: UUID) -> list[SharedUser]:
-        """Return active organization members for the shared users table."""
+    async def database_users(self, organization_id: UUID) -> list[TenantUser]:
+        """Return active organization members for shared user synchronization."""
 
         async with session_scope() as session:
             statement = (
@@ -74,7 +74,7 @@ class OrganizationsService:
             rows = result.all()
 
             return [
-                SharedUser(
+                TenantUser(
                     id=user.id,
                     name=user.name,
                     email=user.email,

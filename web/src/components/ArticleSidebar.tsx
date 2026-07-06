@@ -2,7 +2,8 @@ import { useState, type Dispatch, type MouseEvent, type SetStateAction } from 'r
 import { Link } from 'react-router';
 
 import { cn } from '@/lib/utils';
-import { DOC_GROUPS, type DocNavigationItem } from '@/pages/docs/catalog';
+import type { ArticleNavigationGroup, ArticleNavigationItem } from '@/pages/catalog';
+import { DOC_GROUPS } from '@/pages/docs/catalog';
 import {
     Sidebar,
     SidebarContent,
@@ -23,14 +24,15 @@ import { ChevronDownIcon } from 'lucide-react';
 
 import { Wordmark } from '@/components/Wordmark';
 
-export type DocsSidebarProps = {
+export type ArticleSidebarProps = {
     currentItemId?: string;
     currentPath: string;
+    groups?: ArticleNavigationGroup[];
 };
 
-/** Renders a nested docs navigation item. */
-function renderDocNavigationItem(
-    item: DocNavigationItem,
+/** Renders a nested article navigation item. */
+function renderArticleNavigationItem(
+    item: ArticleNavigationItem,
     currentItemId: string | undefined,
     currentPath: string,
     openItemIds: Record<string, boolean>,
@@ -38,10 +40,10 @@ function renderDocNavigationItem(
 ) {
     const isExactActive = currentItemId === item.id || currentPath === item.path;
     const hasActiveChild =
-        item.children?.some((child) => docNavigationItemIsActive(child, currentItemId, currentPath)) ?? false;
+        item.children?.some((child) => articleNavigationItemIsActive(child, currentItemId, currentPath)) ?? false;
     const isOpen = openItemIds[item.id] ?? hasActiveChild;
 
-    /** Toggles a docs sidebar section without following the parent page link. */
+    /** Toggles a sidebar section without following the parent page link. */
     function handleToggle(event: MouseEvent<HTMLButtonElement>): void {
         event.preventDefault();
         event.stopPropagation();
@@ -139,9 +141,9 @@ function renderDocNavigationItem(
     );
 }
 
-/** Returns whether a docs navigation item or descendant matches the current route. */
-function docNavigationItemIsActive(
-    item: DocNavigationItem,
+/** Returns whether an article navigation item or descendant matches the current route. */
+function articleNavigationItemIsActive(
+    item: ArticleNavigationItem,
     currentItemId: string | undefined,
     currentPath: string
 ): boolean {
@@ -149,11 +151,11 @@ function docNavigationItemIsActive(
         return true;
     }
 
-    return item.children?.some((child) => docNavigationItemIsActive(child, currentItemId, currentPath)) ?? false;
+    return item.children?.some((child) => articleNavigationItemIsActive(child, currentItemId, currentPath)) ?? false;
 }
 
-/** Renders the left navigation for the docs experience. */
-export function DocsSidebar({ currentItemId, currentPath }: DocsSidebarProps) {
+/** Renders the left navigation for article pages. */
+export function ArticleSidebar({ currentItemId, currentPath, groups = DOC_GROUPS }: ArticleSidebarProps) {
     const [openItemIds, setOpenItemIds] = useState<Record<string, boolean>>({});
 
     return (
@@ -170,7 +172,7 @@ export function DocsSidebar({ currentItemId, currentPath }: DocsSidebarProps) {
             <SidebarSeparator />
 
             <SidebarContent>
-                {DOC_GROUPS.map((group) => (
+                {groups.map((group) => (
                     <SidebarGroup key={group.title} className="px-2 py-1">
                         <SidebarGroupLabel className="h-6 px-2.5 text-[0.65rem] font-semibold uppercase tracking-normal text-muted-foreground">
                             {group.title}
@@ -178,7 +180,7 @@ export function DocsSidebar({ currentItemId, currentPath }: DocsSidebarProps) {
                         <SidebarGroupContent>
                             <SidebarMenu className="space-y-0.5">
                                 {group.items.map((item) =>
-                                    renderDocNavigationItem(
+                                    renderArticleNavigationItem(
                                         item,
                                         currentItemId,
                                         currentPath,

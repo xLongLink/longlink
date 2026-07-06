@@ -561,6 +561,7 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "sqlmodel" },
     { name = "starlette" },
+    { name = "tenant" },
     { name = "uvicorn" },
 ]
 
@@ -605,6 +606,7 @@ requires-dist = [
     { name = "sqlalchemy" },
     { name = "sqlmodel" },
     { name = "starlette" },
+    { name = "tenant", editable = "../org" },
     { name = "testcontainers", marker = "extra == 'dev'", specifier = "==4.13.2" },
     { name = "uvicorn", specifier = "<0.48.0" },
 ]
@@ -1110,6 +1112,31 @@ sdist = { url = "https://files.pythonhosted.org/packages/81/69/17425771797c36cde
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0b/c9/584bc9651441b4ba60cc4d557d8a547b5aff901af35bda3a4ee30c819b82/starlette-1.0.0-py3-none-any.whl", hash = "sha256:d3ec55e0bb321692d275455ddfd3df75fff145d009685eb40dc91fc66b03d38b", size = 72651, upload-time = "2026-03-22T18:29:45.111Z" },
 ]
+
+[[package]]
+name = "tenant"
+version = "0.0.0"
+source = { editable = "../org" }
+dependencies = [
+    { name = "alembic" },
+    { name = "pydantic" },
+    { name = "sqlalchemy" },
+    { name = "sqlmodel" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "alembic" },
+    { name = "isort", marker = "extra == 'dev'" },
+    { name = "pydantic" },
+    { name = "pyright", marker = "extra == 'dev'" },
+    { name = "pytest", marker = "extra == 'dev'" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'" },
+    { name = "pytest-cov", marker = "extra == 'dev'" },
+    { name = "sqlalchemy" },
+    { name = "sqlmodel" },
+]
+provides-extras = ["dev"]
 
 [[package]]
 name = "testcontainers"

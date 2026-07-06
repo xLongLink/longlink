@@ -94,14 +94,9 @@ export default function Settings({ organization, organizationDetails, applicatio
 
     const deleteTarget = applications.find((application) => application.id === deleteTargetId) ?? null;
     const selectedApplication = applications.find((application) => application.slug === settingsApplication) ?? null;
-    const selectedDatabaseKind =
-        settingsDatabaseResourceType === 'schemas'
-            ? 'schema'
-            : settingsDatabaseResourceType === 'tables'
-              ? 'shared_table'
-              : null;
+    const selectedDatabaseKind = settingsDatabaseResourceType === 'schemas' ? 'schema' : null;
     const isDatabaseDetailPage = settingsDatabaseResourceType.length > 0 || settingsDatabaseResource.length > 0;
-    const isDatabaseTablePage = settingsDatabaseTable.length > 0 || selectedDatabaseKind === 'shared_table';
+    const isDatabaseTablePage = settingsDatabaseTable.length > 0;
     const selectedDatabaseResource =
         databaseResources.find(
             (resource) =>
@@ -120,8 +115,7 @@ export default function Settings({ organization, organizationDetails, applicatio
         error: databaseResourceTablesError,
         isLoading: databaseResourceTablesIsLoading,
     } = useOrganizationDatabaseResourceTables(organizationDetails?.id ?? '', databaseTablesRequest);
-    const selectedDatabaseTableName =
-        selectedDatabaseKind === 'shared_table' ? settingsDatabaseResource : settingsDatabaseTable;
+    const selectedDatabaseTableName = settingsDatabaseTable;
     const selectedDatabaseTable =
         databaseResourceTables.find((table) => table.name === selectedDatabaseTableName) ?? null;
     const databaseTableDetailError =
@@ -394,7 +388,7 @@ export default function Settings({ organization, organizationDetails, applicatio
                         />
                         <div className="min-w-0 space-y-1">
                             <Link
-                                to={`/orgs/${organization}/settings/database/${row.original.kind === 'shared_table' ? 'tables' : 'schemas'}/${encodeURIComponent(row.original.name)}`}
+                                to={`/orgs/${organization}/settings/database/schemas/${encodeURIComponent(row.original.name)}`}
                                 className="block truncate font-medium text-foreground underline-offset-4 hover:underline"
                             >
                                 {row.original.name}
@@ -416,7 +410,7 @@ export default function Settings({ organization, organizationDetails, applicatio
             header: t('columns.application'),
             cell: ({ row }) => {
                 const application = row.original.application;
-                if (row.original.kind === 'shared_table') {
+                if (row.original.name === 'shared') {
                     return (
                         <div className="min-w-0 space-y-1">
                             <div className="font-medium text-foreground">

@@ -4,44 +4,18 @@ from fastapi import File, UploadFile, HTTPException
 from pathlib import PurePosixPath
 from longlink import Router, fs
 from fastapi.responses import Response
-from src.schemas.requests import (TeamMemberRead, PurchaseRequestRead,
-                                  PurchaseRequestCreate, RequestAttachmentRead,
-                                  PurchaseRequestStatusUpdate)
+from src.schemas.requests import (
+    PurchaseRequestCreate,
+    PurchaseRequestRead,
+    PurchaseRequestStatusUpdate,
+    RequestAttachmentRead,
+)
 from src.database.services import requests
 
 router = Router()
 
 ATTACHMENTS_DIRECTORY = "request-attachments"
 UPLOAD_CHUNK_SIZE = 1024 * 1024
-TEAM_MEMBERS = (
-    TeamMemberRead(
-        id="finance",
-        name="Mira Tanner",
-        role="Finance lead",
-        badge="Approver",
-        initials="MT",
-        avatar_url="https://api.dicebear.com/9.x/initials/svg?seed=Mira%20Tanner",
-        escalation="Owns requests above CHF 5,000.",
-    ),
-    TeamMemberRead(
-        id="operations",
-        name="Noah Keller",
-        role="Operations desk",
-        badge="Triage",
-        initials="NK",
-        avatar_url="https://api.dicebear.com/9.x/initials/svg?seed=Noah%20Keller",
-        escalation="Checks vendor and justification details.",
-    ),
-    TeamMemberRead(
-        id="owner",
-        name="Lina Rossi",
-        role="Business owner",
-        badge="Owner",
-        initials="LR",
-        avatar_url="https://api.dicebear.com/9.x/initials/svg?seed=Lina%20Rossi",
-        escalation="Decides policy exceptions and urgent requests.",
-    ),
-)
 
 
 @router.get("/requests", response_model=list[PurchaseRequestRead])
@@ -61,13 +35,6 @@ async def requests_post_endpoint(payload: PurchaseRequestCreate) -> PurchaseRequ
         vendor=payload.vendor,
         justification=payload.justification,
     )
-
-
-@router.get("/team", response_model=list[TeamMemberRead])
-async def team_get_endpoint() -> list[TeamMemberRead]:
-    """Return the sample approval team used by the XML team tab."""
-
-    return list(TEAM_MEMBERS)
 
 
 @router.get("/requests/{request_id}", response_model=PurchaseRequestRead)
@@ -138,7 +105,7 @@ async def request_attachments_post_endpoint(
         id=file_id,
         name=file_name,
         size=uploaded_size,
-        download_url=f"/requests/{request_id}/attachments/{file_id}",
+        download_url=f"/api/requests/{request_id}/attachments/{file_id}",
     )
 
 
@@ -223,7 +190,7 @@ def _attachment_from_entry(request_id: int, entry: dict[str, object]) -> Request
         id=file_id,
         name=_display_file_name(file_id),
         size=int(entry.get("size") or 0),
-        download_url=f"/requests/{request_id}/attachments/{file_id}",
+        download_url=f"/api/requests/{request_id}/attachments/{file_id}",
     )
 
 

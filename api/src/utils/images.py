@@ -1,5 +1,6 @@
 import json
 import httpx2
+import re
 import socket
 import asyncio
 import ipaddress
@@ -10,9 +11,20 @@ from src.logger import logger
 from src.environments import env
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
+IMAGE_REFERENCE_MAX_LENGTH = 255
+IMAGE_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
+IMAGE_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
+IMAGE_DIGEST_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9]*(?:[+._-][A-Za-z][A-Za-z0-9]*)*:[A-Za-z0-9=_+.-]+$")
+
 
 async def metadata(image: str) -> LongLinkMetadata | None:
     """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
+
+    try:
+        image = validate_image_reference(image)
+    except ValueError as exc:
+        logger.warning("Invalid image reference '%s': %s", image, exc)
+        return None
 
     registry, repository, reference = _parse_image_ref(image)
     registry_url = _registry_url(registry)
@@ -23,10 +35,11 @@ async def metadata(image: str) -> LongLinkMetadata | None:
             if verify_tls:
                 await _validate_public_host(_registry_hostname(registry))
 
-            manifest = await _fetch_manifest(client, registry_url, repository, reference)
-            if manifest is None:
+            manifest_result = await _fetch_manifest(client, registry_url, repository, reference)
+            if manifest_result is None:
                 return None
 
+            manifest, digest = manifest_result
             manifest_config = manifest.get("config", {})
             if not isinstance(manifest_config, dict):
                 return None
@@ -52,6 +65,7 @@ async def metadata(image: str) -> LongLinkMetadata | None:
             result = LongLinkMetadata(
                 sdk=labels.get("longlink.sdk"),
                 title=labels.get("longlink.name"),
+                digest=digest,
                 version=labels.get("longlink.version"),
                 description=labels.get("longlink.description"),
             )
@@ -71,6 +85,92 @@ async def metadata(image: str) -> LongLinkMetadata | None:
         except (httpx2.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
             logger.warning("Failed to inspect image metadata for '%s': %s", image, exc)
             return None
+
+
+def validate_image_reference(image: str) -> str:
+    """Return a normalized Docker/OCI image reference or raise a validation error."""
+
+    reference = image.strip()
+    if not reference:
+        raise ValueError("Image reference is required")
+
+    if len(reference) > IMAGE_REFERENCE_MAX_LENGTH:
+        raise ValueError("Image reference is too long")
+
+    if reference.startswith("//") or "://" in reference:
+        raise ValueError("Image reference must not be a URL")
+
+    if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in reference):
+        raise ValueError("Image reference contains invalid characters")
+
+    registry, repository, image_reference = _parse_image_ref(reference)
+    _validate_registry(registry)
+    _validate_repository(repository)
+    _validate_reference(image_reference)
+    return reference
+
+
+def pin_image_reference(image: str, digest: str) -> str:
+    """Return an image reference pinned to the resolved manifest digest."""
+
+    reference = validate_image_reference(image)
+    _validate_manifest_digest(digest)
+    digest_separator = reference.rfind("@")
+    if digest_separator != -1:
+        image_name = reference[:digest_separator]
+    else:
+        tag_separator = reference.rfind(":")
+        path_separator = reference.rfind("/")
+        image_name = reference[:tag_separator] if tag_separator > path_separator else reference
+
+    pinned_reference = f"{image_name}@{digest}"
+    return validate_image_reference(pinned_reference)
+
+
+def _validate_registry(registry: str) -> None:
+    """Validate the registry hostname syntax in one image reference."""
+
+    parsed_registry = urllib.parse.urlsplit(f"//{registry}")
+    if parsed_registry.hostname is None or parsed_registry.username or parsed_registry.password:
+        raise ValueError("Image registry is invalid")
+
+    try:
+        parsed_registry.port
+    except ValueError as exc:
+        raise ValueError("Image registry port is invalid") from exc
+
+    if parsed_registry.path not in {"", "/"}:
+        raise ValueError("Image registry must not contain a path")
+
+
+def _validate_repository(repository: str) -> None:
+    """Validate Docker repository path components."""
+
+    components = repository.split("/")
+    if not components or any(not IMAGE_NAME_COMPONENT_PATTERN.fullmatch(component) for component in components):
+        raise ValueError("Image repository is invalid")
+
+
+def _validate_reference(reference: str) -> None:
+    """Validate an image tag or digest reference."""
+
+    if not reference:
+        raise ValueError("Image reference tag or digest is required")
+
+    if ":" in reference:
+        if not IMAGE_DIGEST_PATTERN.fullmatch(reference):
+            raise ValueError("Image digest is invalid")
+        return
+
+    if not IMAGE_TAG_PATTERN.fullmatch(reference):
+        raise ValueError("Image tag is invalid")
+
+
+def _validate_manifest_digest(digest: str) -> None:
+    """Validate one OCI manifest digest value."""
+
+    if not IMAGE_DIGEST_PATTERN.fullmatch(digest):
+        raise ValueError("Image digest is invalid")
 
 
 def _parse_image_ref(image: str) -> tuple[str, str, str]:
@@ -157,6 +257,17 @@ def _response_json_object(resp: httpx2.Response) -> dict[str, Any] | None:
     return data
 
 
+def _response_manifest_digest(resp: httpx2.Response) -> str | None:
+    """Return a validated manifest digest from an OCI registry response."""
+
+    digest = resp.headers.get("Docker-Content-Digest")
+    if digest is None:
+        return None
+
+    _validate_manifest_digest(digest)
+    return digest
+
+
 async def _validate_public_host(hostname: str) -> None:
     """Reject localhost, private, and otherwise non-public registry hosts."""
 
@@ -178,11 +289,23 @@ async def _validate_public_host(hostname: str) -> None:
         raise ValueError("Image registry host must resolve to public addresses")
 
 
-async def _fetch_manifest(client: httpx2.AsyncClient, registry_url: str, repository: str, tag: str) -> dict[str, Any] | None:
+async def _fetch_manifest(
+    client: httpx2.AsyncClient,
+    registry_url: str,
+    repository: str,
+    tag: str,
+) -> tuple[dict[str, Any], str] | None:
     """Fetch an image manifest, resolving manifest lists to a single platform manifest."""
 
     url = f"{registry_url}/v2/{repository}/manifests/{tag}"
-    accept = "application/vnd.docker.distribution.manifest.v2+json, application/vnd.oci.image.manifest.v1+json, application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.list.v2+json"
+    accept = ", ".join(
+        (
+            "application/vnd.docker.distribution.manifest.v2+json",
+            "application/vnd.oci.image.manifest.v1+json",
+            "application/vnd.oci.image.index.v1+json",
+            "application/vnd.docker.distribution.manifest.list.v2+json",
+        )
+    )
 
     resp = await client.get(url, headers={"Accept": accept})
     token: str | None = None
@@ -197,6 +320,9 @@ async def _fetch_manifest(client: httpx2.AsyncClient, registry_url: str, reposit
     data = _response_json_object(resp)
     if data is None:
         return None
+    digest = _response_manifest_digest(resp) or (
+        tag if IMAGE_DIGEST_PATTERN.fullmatch(tag) else None
+    )
 
     # Resolve multi-arch manifest list to a single platform manifest.
     manifests = data.get("manifests")
@@ -215,17 +341,26 @@ async def _fetch_manifest(client: httpx2.AsyncClient, registry_url: str, reposit
         )
 
         manifest_digest = str(entry["digest"])
+        _validate_manifest_digest(manifest_digest)
         resp = await client.get(
             f"{registry_url}/v2/{repository}/manifests/{manifest_digest}",
-            headers={"Accept": str(entry["mediaType"]), **({"Authorization": f"Bearer {token}"} if token else {})},
+            headers={
+                "Accept": str(entry["mediaType"]),
+                **({"Authorization": f"Bearer {token}"} if token else {}),
+            },
         )
         if not resp.is_success:
             return None
         data = _response_json_object(resp)
         if data is None:
             return None
+        digest = _response_manifest_digest(resp) or manifest_digest
 
-    return data
+    if digest is None:
+        return None
+
+    _validate_manifest_digest(digest)
+    return data, digest
 
 
 async def _fetch_blob(client: httpx2.AsyncClient, registry_url: str, repository: str, digest: str) -> dict[str, Any] | None:

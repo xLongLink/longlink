@@ -16,7 +16,7 @@ from src.operations import provisioning
 from src.models.applications import ApplicationStatus
 from src.database.models.users import User
 from src.database.services.users import users
-from src.adapters.database.shared import SharedUser
+from tenant.models import User as TenantUser
 from src.database.services.compute import compute
 from src.database.services.storage import storage
 from src.database.services.database import database
@@ -263,7 +263,7 @@ async def test_create_app_returns_app_response(
     )
 
     async def fake_metadata(image: str) -> LongLinkMetadata:
-        return LongLinkMetadata(version="20250623_120000", sdk="0.1.0")
+        return LongLinkMetadata(version="20250623_120000", sdk="0.1.0", digest="sha256:manifest")
 
     monkeypatch.setattr("src.operations.provisioning.images.metadata", fake_metadata)
 
@@ -325,7 +325,7 @@ async def test_create_app_returns_app_response(
             return "postgresql://fake"
 
         async def sync_users(
-            self, organization: str, users: list[SharedUser]
+            self, organization: str, users: list[TenantUser]
         ) -> None:
             captured["sync_users"] = {
                 "organization": organization,
@@ -385,7 +385,8 @@ async def test_create_app_returns_app_response(
     assert payload["status"] == "creating"
     assert payload["description"] == "Dashboard app"
     assert payload["version"] == "20250623_120000"
-    assert payload["sdk_version"] == "0.1.0"
+    assert payload["sdk"] == "0.1.0"
+    assert payload["digest"] == "sha256:manifest"
     assert captured["namespace"] == "acme"
     assert captured["proxy_secret"]
     assert captured["schema"] == {"organization": "acme", "application": "dashboard"}
@@ -395,13 +396,14 @@ async def test_create_app_returns_app_response(
     assert isinstance(sync_payload, dict)
     synced_users = sync_payload["users"]
     assert isinstance(synced_users, list)
-    assert all(isinstance(synced_user, SharedUser) for synced_user in synced_users)
+    assert all(isinstance(synced_user, TenantUser) for synced_user in synced_users)
     assert sync_payload["organization"] == "acme"
     assert synced_users[0].email == user.email
     application_payload = captured["application"]
     assert isinstance(application_payload, dict)
     assert application_payload["organization"] == "acme"
     assert application_payload["application"] == "dashboard"
+    assert application_payload["image"] == "ghcr.io/longlink/dashboard@sha256:manifest"
     application_secrets = application_payload["secrets"]
     assert isinstance(application_secrets, dict)
     assert application_secrets["API_KEY"] == "secret-value"
@@ -525,6 +527,7 @@ async def test_create_app_requires_storage_registry_for_required_storage_envs(
         return LongLinkMetadata(
             version="20250623_120000",
             sdk="0.1.0",
+            digest="sha256:manifest",
             environments=[
                 EnvironmentMetadata(name="LONGLINK_STORAGE_URL", type="str", required=True),
             ],

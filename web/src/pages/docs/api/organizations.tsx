@@ -69,7 +69,7 @@ export const content = (
         </P>
         <P>
             During creation, LongLink initializes the organization infrastructure when configured backends are
-            available. This includes a compute namespace, an organization database with a shared users table, and a
+            available. This includes a compute namespace, an organization database with a shared schema, and a
             shared storage bucket.
         </P>
         <Heading id="roles" level="h2">
@@ -125,7 +125,7 @@ export const content = (
         <P>Organization pages expose the runtime resources LongLink manages for the workspace:</P>
         <Ul>
             <Li>Applications registered in the organization, including the caller's application role when present.</Li>
-            <Li>The shared users table and application database schemas, with availability and usage information.</Li>
+            <Li>The shared schema and application database schemas, with availability and usage information.</Li>
             <Li>Preview rows for shared and application tables. System schemas are blocked.</Li>
             <Li>Shared and application storage buckets, with availability information.</Li>
         </Ul>

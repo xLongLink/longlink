@@ -1,3 +1,4 @@
+from typing import ClassVar
 from longlink import db
 from sqlmodel import Field
 
@@ -5,7 +6,7 @@ from sqlmodel import Field
 class PurchaseRequest(db.Table, table=True):
     """Purchase request table owned by this application schema."""
 
-    __tablename__ = "purchase_requests"
+    __tablename__: ClassVar[str] = "purchase_requests"
 
     id: int | None = Field(default=None, primary_key=True)
     title: str = Field(max_length=255)

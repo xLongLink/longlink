@@ -1,6 +1,7 @@
 from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from src.auth import authadmin, authsupport
+from src.logger import logger
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.models.computes import (PodResponse, NamespaceResponse,
                                  ComputeRegistryCreate,
@@ -75,7 +76,12 @@ async def get_compute_resources(registry_id: UUID, _: User = Depends(authsupport
         raise NotFoundError("Compute registry", registry_id)
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    data = await k8s.resources()
+    try:
+        data = await k8s.resources()
+    except Exception as exc:
+        logger.exception("Failed to inspect compute resources for registry '%s'", registry_id)
+        raise UnavailableError("Compute resources unavailable") from exc
+
     return ComputeResourcesResponse.model_validate(data)
 
 
@@ -88,7 +94,12 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
         raise NotFoundError("Compute registry", registry_id)
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    names = await k8s.namespaces()
+    try:
+        names = await k8s.namespaces()
+    except Exception as exc:
+        logger.exception("Failed to inspect compute namespaces for registry '%s'", registry_id)
+        raise UnavailableError("Compute namespaces unavailable") from exc
+
     return [NamespaceResponse(name=n) for n in names]
 
 
@@ -101,5 +112,10 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
         raise NotFoundError("Compute registry", registry_id)
 
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-    pods = await k8s.pods(namespace)
+    try:
+        pods = await k8s.pods(namespace)
+    except Exception as exc:
+        logger.exception("Failed to inspect pods in namespace '%s' for registry '%s'", namespace, registry_id)
+        raise UnavailableError("Compute pods unavailable") from exc
+
     return [PodResponse.model_validate(p) for p in pods]

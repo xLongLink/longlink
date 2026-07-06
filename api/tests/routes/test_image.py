@@ -12,6 +12,7 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
             description="Demo app",
             version="20250623_120000",
             sdk="0.1.0",
+            digest="sha256:manifest",
             environments=[
                 {
                     "name": "API_KEY",
@@ -44,6 +45,7 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
         "title": "dashboard",
         "version": "20250623_120000",
         "description": "Demo app",
+        "digest": "sha256:manifest",
         "environments": [
             {
                 "name": "API_KEY",
@@ -81,6 +83,7 @@ def test_inspect_image_returns_empty_metadata_when_labels_missing(clients, monke
         "title": None,
         "version": None,
         "description": None,
+        "digest": None,
         "environments": [],
     }
 
@@ -128,7 +131,7 @@ async def test_metadata_allows_configured_development_local_registry(monkeypatch
 
         raise AssertionError(f"Unexpected public host validation for {hostname}")
 
-    async def fake_fetch_manifest(client: object, registry_url: str, repository: str, tag: str) -> dict[str, object]:
+    async def fake_fetch_manifest(client: object, registry_url: str, repository: str, tag: str) -> tuple[dict[str, object], str]:
         """Capture the manifest request and return a minimal OCI manifest."""
 
         captured["manifest"] = {
@@ -136,7 +139,7 @@ async def test_metadata_allows_configured_development_local_registry(monkeypatch
             "repository": repository,
             "tag": tag,
         }
-        return {"config": {"digest": "sha256:config"}}
+        return {"config": {"digest": "sha256:config"}}, "sha256:manifest"
 
     async def fake_fetch_blob(client: object, registry_url: str, repository: str, digest: str) -> dict[str, object]:
         """Capture the blob request and return LongLink labels."""
@@ -171,6 +174,7 @@ async def test_metadata_allows_configured_development_local_registry(monkeypatch
         title="dashboard",
         version="dev",
         description="Demo app",
+        digest="sha256:manifest",
     ).model_dump(mode="json")
     assert captured["manifest"] == {
         "registry_url": "http://localhost:15000",
@@ -195,7 +199,7 @@ async def test_metadata_fetches_digest_image_references(monkeypatch) -> None:
 
         captured["hostname"] = hostname
 
-    async def fake_fetch_manifest(client: object, registry_url: str, repository: str, tag: str) -> dict[str, object]:
+    async def fake_fetch_manifest(client: object, registry_url: str, repository: str, tag: str) -> tuple[dict[str, object], str]:
         """Capture the manifest reference and return a minimal OCI manifest."""
 
         captured["manifest"] = {
@@ -203,7 +207,7 @@ async def test_metadata_fetches_digest_image_references(monkeypatch) -> None:
             "repository": repository,
             "tag": tag,
         }
-        return {"config": {"digest": "sha256:config"}}
+        return {"config": {"digest": "sha256:config"}}, "sha256:deadbeef"
 
     async def fake_fetch_blob(client: object, registry_url: str, repository: str, digest: str) -> dict[str, object]:
         """Return LongLink labels for the digest-pinned image config."""
@@ -229,6 +233,7 @@ async def test_metadata_fetches_digest_image_references(monkeypatch) -> None:
     # Assert
     assert image_metadata is not None
     assert image_metadata.version == "sha256-deadbeef"
+    assert image_metadata.digest == "sha256:deadbeef"
     assert captured["hostname"] == "ghcr.io"
     assert captured["manifest"] == {
         "registry_url": "https://ghcr.io",

@@ -1,4 +1,7 @@
+import re
+import urllib.parse
 from uuid import UUID
+from pathlib import PurePosixPath
 from fastapi import Depends, Request, Response, APIRouter
 from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authadmin, organization_access
@@ -33,12 +36,13 @@ HOP_BY_HOP_HEADERS = {
 }
 FORWARDED_REQUEST_BLOCKLIST = HOP_BY_HOP_HEADERS | {"authorization", "content-length", "cookie"}
 FORWARDED_REQUEST_BLOCKLIST |= {"if-modified-since", "if-none-match"}
-FORWARDED_REQUEST_BLOCKLIST |= {"x-user-id"}
+FORWARDED_REQUEST_BLOCKLIST |= {"forwarded", "x-real-ip", "x-user-id"}
 FORWARDED_RESPONSE_BLOCKLIST = HOP_BY_HOP_HEADERS | {"content-length", "set-cookie"}
 APPLICATION_DELETE_DELAY_DAYS = 0
 APPLICATION_ACCESS_ORGANIZATION_ROLES = {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}
 APPLICATION_LOG_ROLES = {ApplicationRoles.admin, ApplicationRoles.maintain}
 APPLICATION_MANAGEMENT_ROLES = {ApplicationRoles.admin, ApplicationRoles.maintain}
+INVALID_PERCENT_ESCAPE_PATTERN = re.compile(r"%(?![0-9A-Fa-f]{2})")
 
 router = APIRouter()
 
@@ -67,6 +71,42 @@ def _can_view_application_logs(organization_role: OrganizationRoles | None, appl
     """Return whether a user may view application logs."""
 
     return application_role in APPLICATION_LOG_ROLES or organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES
+
+
+def _forward_request_header_allowed(header_name: str) -> bool:
+    """Return whether a request header may be forwarded to an application."""
+
+    normalized_name = header_name.lower()
+    return normalized_name not in FORWARDED_REQUEST_BLOCKLIST and not normalized_name.startswith("x-forwarded-")
+
+
+def _proxy_upstream_path(path: str) -> str:
+    """Return a safe Kubernetes service-proxy path for a non-root application request."""
+
+    upstream_path = path.lstrip("/")
+    if upstream_path == "":
+        raise NotFoundError("Proxy root path", "/")
+
+    if INVALID_PERCENT_ESCAPE_PATTERN.search(upstream_path):
+        raise NotFoundError("Proxy path", path)
+
+    try:
+        decoded_path = urllib.parse.unquote(upstream_path, errors="strict")
+    except UnicodeDecodeError as exc:
+        raise NotFoundError("Proxy path", path) from exc
+
+    parsed_path = PurePosixPath(decoded_path)
+    if parsed_path.is_absolute() or "\\" in decoded_path:
+        raise NotFoundError("Proxy path", path)
+
+    if any(ord(character) < 32 or ord(character) == 127 for character in decoded_path):
+        raise NotFoundError("Proxy path", path)
+
+    path_segments = decoded_path.split("/")
+    if any(segment in {".", ".."} for segment in path_segments):
+        raise NotFoundError("Proxy path", path)
+
+    return upstream_path
 
 
 @router.get("/api/applications", response_model=list[ApplicationResponse])
@@ -225,9 +265,7 @@ async def proxy_application_request(
     if registry is None:
         raise UnavailableError(f"No compute cluster configured for location '{organization.location_id}'")
 
-    upstream_path = path.lstrip("/")
-    if upstream_path == "":
-        raise NotFoundError("Proxy root path", "/")
+    upstream_path = _proxy_upstream_path(path)
 
     names.knames(organization.slug, "Organization")
     names.knames(application.slug, "Application name")
@@ -235,7 +273,7 @@ async def proxy_application_request(
     forward_headers = {
         key: value
         for key, value in request.headers.items()
-        if key.lower() not in FORWARDED_REQUEST_BLOCKLIST
+        if _forward_request_header_allowed(key)
     }
     forward_headers["x-user-id"] = str(user.id)
     k8s = K8s(registry.kubeconfig, registry.proxy_secret)

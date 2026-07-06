@@ -3,24 +3,22 @@ import functools
 import hashlib
 import secrets
 from uuid import UUID
+from tenant.models import User
+from tenant.database import SHARED_SCHEMA, migrate_database, users as tenant_users
 from .base import Database
 from .types import (DatabaseCellValue, DatabaseTableData, DatabaseTableUsage,
                     DatabaseSchemaUsage, DatabaseTableColumn)
 from decimal import Decimal
-from .shared import SharedUser
 from datetime import date, datetime
-from sqlalchemy import Table, String, func, text, update, inspect
+from sqlalchemy import String, text, inspect
 from collections.abc import AsyncIterator
 from src.environments import env
 from sqlalchemy.engine import URL
-from sqlalchemy.schema import CreateTable, CreateSchema
+from sqlalchemy.schema import CreateSchema
 from src.utils.namespace import dbname
 from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncConnection,
                                     create_async_engine)
 from sqlalchemy.sql.elements import quoted_name
-from sqlalchemy.dialects.postgresql import insert as postgres_insert
-
-shared_users_table: Table = getattr(SharedUser, "__table__")
 
 
 class Postgres(Database):
@@ -156,57 +154,21 @@ class Postgres(Database):
             return result.scalar_one_or_none() is not None
 
 
-    async def _ensure_shared_users_table(self, conn: AsyncConnection) -> None:
-        """Create the shared organization users table when it is missing."""
+    async def _migrate_shared_schema(self, database_name: str) -> None:
+        """Apply organization-owned shared schema migrations."""
 
-        await conn.execute(CreateTable(shared_users_table, if_not_exists=True))
+        await migrate_database(self._url(database_name))
 
 
-    async def _restrict_shared_tables(self, conn: AsyncConnection) -> None:
-        """Restrict default write access to organization shared tables."""
+    async def _restrict_shared_schema(self, conn: AsyncConnection) -> None:
+        """Restrict default write access to organization shared schema tables."""
 
+        preparer = conn.engine.sync_engine.dialect.identifier_preparer
+        shared_schema = preparer.quote(SHARED_SCHEMA)
         await conn.execute(text("REVOKE CREATE ON SCHEMA public FROM PUBLIC"))
+        await conn.exec_driver_sql(f"REVOKE CREATE ON SCHEMA {shared_schema} FROM PUBLIC")
         await conn.execute(text("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC"))
-
-
-    async def _sync_shared_users_table(self, conn: AsyncConnection, users: list[SharedUser]) -> None:
-        """Upsert active organization users and soft-delete stale rows."""
-
-        if users:
-            rows = [user.model_dump() for user in users]
-            insert_statement = postgres_insert(shared_users_table)
-            excluded = insert_statement.excluded
-            await conn.execute(
-                insert_statement.on_conflict_do_update(
-                    index_elements=[shared_users_table.c.id],
-                    set_={
-                        "name": excluded.name,
-                        "email": excluded.email,
-                        "avatar": excluded.avatar,
-                        "role_name": excluded.role_name,
-                        "created_at": excluded.created_at,
-                        "updated_at": excluded.updated_at,
-                        "deleted_at": None,
-                    },
-                ),
-                rows,
-            )
-
-            active_user_ids = [user.id for user in users]
-            await self._soft_delete_stale_users(conn, active_user_ids)
-            return
-
-        await self._soft_delete_stale_users(conn)
-
-
-    async def _soft_delete_stale_users(self, conn: AsyncConnection, active_user_ids: list[UUID] | None = None) -> None:
-        """Soft-delete shared users that are no longer active."""
-
-        statement = update(shared_users_table).where(shared_users_table.c.deleted_at.is_(None))
-        if active_user_ids is not None:
-            statement = statement.where(~shared_users_table.c.id.in_(active_user_ids))
-
-        await conn.execute(statement.values(deleted_at=func.now(), updated_at=func.now()))
+        await conn.exec_driver_sql(f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA {shared_schema} FROM PUBLIC")
 
 
     async def _ensure_application_role(self, conn: AsyncConnection, role_name: str, password: str) -> None:
@@ -238,41 +200,42 @@ class Postgres(Database):
         preparer = conn.engine.sync_engine.dialect.identifier_preparer
         database = preparer.quote(database_name)
         schema = preparer.quote(application)
+        shared_schema = preparer.quote(SHARED_SCHEMA)
         role = preparer.quote(role_name)
 
         await conn.exec_driver_sql(f"GRANT CONNECT ON DATABASE {database} TO {role}")
         await conn.exec_driver_sql(f"GRANT USAGE, CREATE ON SCHEMA {schema} TO {role}")
         await conn.exec_driver_sql(f"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA {schema} TO {role}")
         await conn.exec_driver_sql(f"GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA {schema} TO {role}")
-        await conn.exec_driver_sql(f"GRANT USAGE ON SCHEMA public TO {role}")
-        await conn.exec_driver_sql(f"REVOKE CREATE ON SCHEMA public FROM {role}")
-        await conn.exec_driver_sql(f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM {role}")
-        await conn.exec_driver_sql(f"GRANT SELECT, REFERENCES ON ALL TABLES IN SCHEMA public TO {role}")
-        await conn.exec_driver_sql(f"ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, REFERENCES ON TABLES TO {role}")
-        await conn.exec_driver_sql(f"ALTER ROLE {role} IN DATABASE {database} SET search_path = {schema}, public")
+        await conn.exec_driver_sql(f"GRANT USAGE ON SCHEMA {shared_schema} TO {role}")
+        await conn.exec_driver_sql(f"REVOKE CREATE ON SCHEMA {shared_schema} FROM {role}")
+        await conn.exec_driver_sql(f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA {shared_schema} FROM {role}")
+        await conn.exec_driver_sql(f"GRANT SELECT, REFERENCES ON ALL TABLES IN SCHEMA {shared_schema} TO {role}")
+        await conn.exec_driver_sql(f"ALTER DEFAULT PRIVILEGES IN SCHEMA {shared_schema} GRANT SELECT, REFERENCES ON TABLES TO {role}")
+        await conn.exec_driver_sql(f"ALTER ROLE {role} IN DATABASE {database} SET search_path = {schema}, {shared_schema}")
 
 
     async def database(self, organization: str) -> str:
         """Create the organization database if it does not exist and return a connection DSN."""
         await self._ensure_organization_database(organization)
         database_name = dbname(organization)
+        await self._migrate_shared_schema(database_name)
 
         async with self._connection(database_name) as conn:
-            await self._ensure_shared_users_table(conn)
-            await self._restrict_shared_tables(conn)
+            await self._restrict_shared_schema(conn)
 
         return self._url(database_name).render_as_string(hide_password=False)
 
 
-    async def sync_users(self, organization: str, users: list[SharedUser]) -> None:
-        """Synchronize the shared organization users table for one organization."""
+    async def sync_users(self, organization: str, users: list[User]) -> None:
+        """Synchronize shared organization users for one organization."""
         await self._ensure_organization_database(organization)
         database_name = dbname(organization)
+        await self._migrate_shared_schema(database_name)
 
         async with self._connection(database_name) as conn:
-            await self._ensure_shared_users_table(conn)
-            await self._sync_shared_users_table(conn, users)
-            await self._restrict_shared_tables(conn)
+            await tenant_users.sync(conn, users)
+            await self._restrict_shared_schema(conn)
 
 
     async def schema(self, organization: str, application: str) -> str:
@@ -281,11 +244,11 @@ class Postgres(Database):
         database_name = dbname(organization)
         role_name = self._application_role(organization, application)
         role_password = secrets.token_urlsafe(24)
+        await self._migrate_shared_schema(database_name)
 
         async with self._connection(database_name) as conn:
             await conn.execute(CreateSchema(quoted_name(application, True), if_not_exists=True))
-            await self._ensure_shared_users_table(conn)
-            await self._restrict_shared_tables(conn)
+            await self._restrict_shared_schema(conn)
             await self._ensure_application_role(conn, role_name, role_password)
             await self._grant_application_permissions(conn, database_name, application, role_name)
 

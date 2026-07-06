@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum, Column
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class DatabaseRegistry(SQLModel, table=True):
     """Represent a registered database backend."""
 
-    __tablename__ = "database_registries"
+    __tablename__: ClassVar[str] = "database_registries"
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)

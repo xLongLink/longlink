@@ -2,17 +2,19 @@ from uuid import UUID
 from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel
-from sqlalchemy import TIMESTAMP, Uuid, Column, String, MetaData
+from sqlalchemy import TIMESTAMP, Uuid, Column, String, MetaData, Table
 
-shared_users_metadata = MetaData()
+from tenant.database.constants import SHARED_SCHEMA, SHARED_USERS_TABLE
+
+shared_metadata = MetaData()
 
 
 class SharedUser(SQLModel, table=True):
-    """Represent one user in an organization's shared application database table."""
+    """Represent one user in a tenant's shared database schema."""
 
-    __tablename__: ClassVar[str] = "users"
-    __table_args__ = {"schema": "public"}
-    metadata = shared_users_metadata
+    __tablename__: ClassVar[str] = SHARED_USERS_TABLE
+    __table_args__ = {"schema": SHARED_SCHEMA}
+    metadata = shared_metadata
 
     # Identifier
     id: UUID = Field(sa_column=Column(Uuid(as_uuid=True), primary_key=True))
@@ -27,3 +29,5 @@ class SharedUser(SQLModel, table=True):
     created_at: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), nullable=False))
     updated_at: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), nullable=False))
     deleted_at: datetime | None = Field(default=None, sa_column=Column(TIMESTAMP(timezone=True)))
+
+shared_users_table: Table = getattr(SharedUser, "__table__")

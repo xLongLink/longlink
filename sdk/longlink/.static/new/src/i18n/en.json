@@ -31,13 +31,13 @@
         "description": "Track office purchase requests, review policy, and keep the approval queue visible.",
         "openRequests": "Open requests",
         "policy": {
-            "description": "The sample keeps the rules simple: amount decides who reviews and how quickly the team should respond.",
+            "description": "The sample keeps the rules simple: amount decides who reviews and how quickly reviewers should respond.",
             "table": {
                 "amount": "Amount",
                 "approver": "Approver",
                 "finance": "Finance",
                 "fiveDays": "5 days",
-                "footer": "Escalate overdue requests in the Team tab.",
+                "footer": "Escalate overdue requests from the request detail page.",
                 "large": "Above CHF 5,000",
                 "manager": "Manager",
                 "medium": "CHF 1,000 to 5,000",
@@ -86,7 +86,7 @@
             "submit": "Submit request",
             "title": "Create purchase request"
         },
-        "description": "Create purchase requests, route them through a simple approval state, and keep supporting files together.",
+        "description": "Track purchase requests and supporting files.",
         "detail": {
             "approvedNote": "This request is approved and ready for procurement.",
             "back": "Back to requests",
@@ -115,16 +115,26 @@
     },
     "settings": {
         "application": {
+            "bold": "Finance owns budget checks. ",
+            "code": "PATCH /requests/{id}/status",
             "costCenter": "Cost center",
             "description": "Edit the sample application's local owner, cost-center, and reviewer note fields.",
             "legend": "Application profile",
             "lookup": "Lookup",
             "note": "Approval note",
             "noteHelp": "Visible to reviewers",
+            "outdated": "Old email approvals are retired.",
             "owner": "Workflow owner",
-            "ownerHelp": "This is local state bound directly from XML."
+            "ownerHelp": "This is local state bound directly from XML.",
+            "payload": "{\n  \"status\": \"approved\"\n}",
+            "profileTip": "Use a subsection when one settings area needs a secondary view.",
+            "reviewer": "Default reviewer",
+            "runbook": "Reviewer note",
+            "sub": " local",
+            "sup": " v1",
+            "underlined": "Attach evidence before approval. "
         },
-        "description": "Showcase application settings with a hero, side menu, and local XML state controls.",
+        "description": "Showcase application settings with a side menu, local XML state, and form controls.",
         "links": {
             "actions": "Links",
             "add": "Add",
@@ -147,6 +157,7 @@
         "sections": {
             "application": "Application",
             "links": "Links",
+            "profile": "Profile",
             "preferences": "Preferences",
             "workflow": "Workflow"
         },
@@ -165,42 +176,5 @@
             "riskPlaceholder": "Select risk",
             "tags": "Review tags"
         }
-    },
-    "team": {
-        "description": "A compact directory and handoff runbook for the people who review and fulfill requests.",
-        "docs": "SDK docs",
-        "flow": {
-            "approval": "Approval",
-            "budget": "Budget check",
-            "budgetDescription": "Finance confirms budget owner and policy fit.",
-            "decision": "Decision",
-            "decisionDescription": "Approve, reject, or reopen from the request detail page.",
-            "intake": "Intake",
-            "title": "Review flow",
-            "triage": "Triage",
-            "triageDescription": "The desk verifies amount, vendor, and justification."
-        },
-        "member": "Team member",
-        "refresh": "Refresh team",
-        "runbook": {
-            "bold": "Finance owns budget checks. ",
-            "code": "PATCH /requests/{id}/status",
-            "example": "Example payload",
-            "handoff": "Handoff notes",
-            "outdated": "Old email approvals are retired.",
-            "payload": "{\n  \"status\": \"approved\"\n}",
-            "response": "Response rule",
-            "sub": " local",
-            "sup": " v1",
-            "title": "Runbook",
-            "underlined": "Attach evidence before approval. "
-        },
-        "table": {
-            "badge": "Badge",
-            "escalation": "Escalation",
-            "name": "Name",
-            "role": "Role"
-        },
-        "title": "Approval team"
     }
 }

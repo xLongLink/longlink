@@ -26,10 +26,9 @@ export default function Database({ organization, organizationDetails, isLoading 
         error: databaseResourcesError,
         isLoading: databaseResourcesIsLoading,
     } = useOrganizationDatabaseResources(organizationDetails?.id ?? '');
-    const selectedKind =
-        databaseResourceType === 'schemas' ? 'schema' : databaseResourceType === 'tables' ? 'shared_table' : null;
+    const selectedKind = databaseResourceType === 'schemas' ? 'schema' : null;
     const isDetailPage = databaseResourceType.length > 0 || databaseResource.length > 0;
-    const isTablePage = databaseTable.length > 0 || selectedKind === 'shared_table';
+    const isTablePage = databaseTable.length > 0;
 
     // Subpages are path-selected; the root page intentionally stays as a list-only view.
     const selectedResource =
@@ -47,7 +46,7 @@ export default function Database({ organization, organizationDetails, isLoading 
         error: databaseResourceTablesError,
         isLoading: databaseResourceTablesIsLoading,
     } = useOrganizationDatabaseResourceTables(organizationDetails?.id ?? '', databaseResourceTablesRequest);
-    const selectedTableName = selectedKind === 'shared_table' ? databaseResource : databaseTable;
+    const selectedTableName = databaseTable;
     const selectedTable = databaseResourceTables.find((table) => table.name === selectedTableName) ?? null;
     const tableDetailError =
         detailError ??
@@ -137,7 +136,7 @@ export default function Database({ organization, organizationDetails, isLoading 
                 return (
                     <div className="min-w-0 space-y-1">
                         <Link
-                            to={`/orgs/${organization}/database/${databaseResource.kind === 'shared_table' ? 'tables' : 'schemas'}/${encodeURIComponent(databaseResource.name)}`}
+                            to={`/orgs/${organization}/database/schemas/${encodeURIComponent(databaseResource.name)}`}
                             className="block truncate font-medium text-primary underline-offset-4 hover:underline"
                         >
                             {databaseResource.name}
@@ -155,7 +154,7 @@ export default function Database({ organization, organizationDetails, isLoading 
                 const databaseResource = row.original;
                 const application = databaseResource.application;
 
-                if (databaseResource.kind === 'shared_table') {
+                if (databaseResource.name === 'shared') {
                     return (
                         <div className="min-w-0 space-y-1">
                             <div className="font-medium text-foreground">{t('resources.allApplications')}</div>

@@ -2,6 +2,7 @@ from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authsupport, organization_access
+from tenant.database import SHARED_SCHEMA
 from src.errors import (ConflictError, NotFoundError, ForbiddenError,
                         UnavailableError)
 from src.logger import logger
@@ -65,7 +66,7 @@ async def list_organization_database_resources(
     organization_id: UUID,
     user: User = Depends(authuser),
 ) -> list[OrganizationDatabaseResourceResponse]:
-    """Return database schemas and shared tables for one organization."""
+    """Return database schemas for one organization."""
 
     organization = await organization_access(organization_id, user)
     registry = await provisioning.organization_database_registry(organization)
@@ -117,16 +118,6 @@ async def list_organization_database_resource_tables(
     database_name = dbname(organization.slug)
 
     try:
-        if resource_kind == OrganizationDatabaseResourceKind.shared_table:
-            if resource_name != "users":
-                raise NotFoundError("Database resource", resource_name)
-
-            table = await postgres.table(database_name, "public", "users", limit=TABLE_PREVIEW_LIMIT)
-            if table is None:
-                raise NotFoundError("Database resource", resource_name)
-
-            return [OrganizationDatabaseTableResponse.model_validate(table)]
-
         if resource_name in {"information_schema", "pg_catalog", "pg_toast", "public"} or resource_name.startswith("pg_"):
             raise NotFoundError("Database resource", resource_name)
 
@@ -228,29 +219,29 @@ async def _database_resource_rows(
     try:
         postgres = Postgres(registry.host, registry.port, registry.username, registry.password)
         schema_usage = await postgres.schema_usage(database_name)
-        users_usage = await postgres.table_usage(database_name, "public", "users")
     except Exception as exc:
         logger.exception("Failed to inspect database resources for organization '%s'", organization.slug)
         raise UnavailableError("Database resources unavailable") from exc
 
     rows: list[OrganizationDatabaseResourceResponse] = []
 
-    if users_usage is not None:
+    usage_by_schema = {item["name"]: item for item in schema_usage}
+    shared_usage = usage_by_schema.get(SHARED_SCHEMA)
+    if shared_usage is not None:
         rows.append(
             OrganizationDatabaseResourceResponse(
-                kind=OrganizationDatabaseResourceKind.shared_table,
-                name="users",
+                kind=OrganizationDatabaseResourceKind.schema,
+                name=SHARED_SCHEMA,
                 database_name=database_name,
                 database_registry_id=registry.id,
                 database_registry_name=registry.name,
                 application=None,
-                space_used=users_usage["space_used"],
-                table_count=1,
-                row_estimate=users_usage["row_estimate"],
+                space_used=shared_usage["space_used"],
+                table_count=shared_usage["table_count"],
+                row_estimate=shared_usage["row_estimate"],
             )
         )
 
-    usage_by_schema = {item["name"]: item for item in schema_usage}
     for application in sorted(active_applications, key=lambda item: item.name):
         usage = usage_by_schema.get(application.slug)
         if usage is None:
@@ -278,7 +269,7 @@ async def _database_resource_rows(
         )
 
     for usage in sorted(schema_usage, key=lambda item: item["name"]):
-        if usage["name"] in application_by_schema:
+        if usage["name"] in application_by_schema or usage["name"] == SHARED_SCHEMA:
             continue
 
         rows.append(

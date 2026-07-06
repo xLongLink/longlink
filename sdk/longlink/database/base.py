@@ -1,9 +1,11 @@
 from uuid import UUID
-from typing import Any, ClassVar, TypedDict
-from datetime import UTC, datetime
+from typing import Any, ClassVar
+from datetime import datetime
 from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel, select
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, Uuid, Column, String
+from tenant.utils import utcnow
+from tenant.models import User as TenantUser
 from sqlalchemy.orm import relationship, declared_attr
 from sqlalchemy.ext.asyncio import (AsyncEngine, async_sessionmaker,
                                     create_async_engine)
@@ -15,12 +17,6 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 UTC_DATETIME_TYPE: Any = DateTime(timezone=True)
 
 
-def utcnow() -> datetime:
-    """Return the current UTC timestamp."""
-
-    return datetime.now(UTC)
-
-
 class Base(SQLModel):
     """Base SQLModel for DB tables."""
 
@@ -28,78 +24,61 @@ class Base(SQLModel):
 
 
 class User(Base, table=True):
-    """Shared organization user table (read-only, public schema)."""
+    """Shared organization user table."""
 
     __tablename__: ClassVar[Any] = "users"
 
-    id: UUID | None = Field(default=None, primary_key=True)
-    name: str = Field(max_length=255)
-    email: str = Field(max_length=254)
-    avatar: str = Field(default="", max_length=2048)
-    role_name: str = Field(default="read", max_length=32)
-    created_at: datetime | None = Field(
-        default_factory=utcnow,
-        nullable=True,
-        sa_type=UTC_DATETIME_TYPE,
-    )
-    updated_at: datetime | None = Field(
-        default_factory=utcnow,
-        nullable=True,
-        sa_type=UTC_DATETIME_TYPE,
-    )
-    deleted_at: datetime | None = Field(
-        default=None,
-        nullable=True,
-        sa_type=UTC_DATETIME_TYPE,
-    )
+    # Identifier
+    id: UUID = Field(sa_column=Column(Uuid(as_uuid=True), primary_key=True))
+
+    # Metadata
+    name: str = Field(sa_column=Column(String(255), nullable=False))
+    email: str = Field(sa_column=Column(String(254), nullable=False))
+    avatar: str = Field(default="", sa_column=Column(String(2048), nullable=False, server_default=""))
+    role_name: str = Field(default="read", sa_column=Column(String(32), nullable=False))
+
+    # Audit
+    created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTC_DATETIME_TYPE)
+    updated_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTC_DATETIME_TYPE)
+    deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTC_DATETIME_TYPE)
 
 
-class LocalUser(TypedDict):
-    """Describe a deterministic local development user."""
-
-    id: UUID
-    name: str
-    email: str
-    avatar: str
-    role_name: str
-
-
-LOCAL_USERS: tuple[LocalUser, ...] = (
-    {
-        "id": UUID("00000000-0000-0000-0000-000000000001"),
-        "name": "Read User",
-        "email": "read@local.longlink.dev",
-        "avatar": "",
-        "role_name": "read",
-    },
-    {
-        "id": UUID("00000000-0000-0000-0000-000000000002"),
-        "name": "Write User",
-        "email": "write@local.longlink.dev",
-        "avatar": "",
-        "role_name": "write",
-    },
-    {
-        "id": UUID("00000000-0000-0000-0000-000000000003"),
-        "name": "Maintain User",
-        "email": "maintain@local.longlink.dev",
-        "avatar": "",
-        "role_name": "maintain",
-    },
-    {
-        "id": UUID("00000000-0000-0000-0000-000000000004"),
-        "name": "Admin User",
-        "email": "admin@local.longlink.dev",
-        "avatar": "",
-        "role_name": "admin",
-    },
-    {
-        "id": UUID("00000000-0000-0000-0000-000000000005"),
-        "name": "Owner User",
-        "email": "owner@local.longlink.dev",
-        "avatar": "",
-        "role_name": "owner",
-    },
+LOCAL_USERS: tuple[TenantUser, ...] = (
+    TenantUser(
+        id=UUID("00000000-0000-0000-0000-000000000001"),
+        name="Read User",
+        email="read@local.longlink.dev",
+        avatar="",
+        role_name="read",
+    ),
+    TenantUser(
+        id=UUID("00000000-0000-0000-0000-000000000002"),
+        name="Write User",
+        email="write@local.longlink.dev",
+        avatar="",
+        role_name="write",
+    ),
+    TenantUser(
+        id=UUID("00000000-0000-0000-0000-000000000003"),
+        name="Maintain User",
+        email="maintain@local.longlink.dev",
+        avatar="",
+        role_name="maintain",
+    ),
+    TenantUser(
+        id=UUID("00000000-0000-0000-0000-000000000004"),
+        name="Admin User",
+        email="admin@local.longlink.dev",
+        avatar="",
+        role_name="admin",
+    ),
+    TenantUser(
+        id=UUID("00000000-0000-0000-0000-000000000005"),
+        name="Owner User",
+        email="owner@local.longlink.dev",
+        avatar="",
+        role_name="owner",
+    ),
 )
 
 
@@ -126,21 +105,21 @@ async def seed_local_users(session_maker: async_sessionmaker[AsyncSession]) -> N
 
     async with session_maker() as session:
         user_id_column = getattr(User, "id")
-        result = await session.exec(select(User).where(user_id_column.in_([user["id"] for user in LOCAL_USERS])))
+        result = await session.exec(select(User).where(user_id_column.in_([user.id for user in LOCAL_USERS])))
         existing_users = {user.id: user for user in result.all()}
 
         # Keep seeded users deterministic if the SDK scaffold is restarted with existing data.
         for payload in LOCAL_USERS:
-            user = existing_users.get(payload["id"])
+            user = existing_users.get(payload.id)
 
             if user is None:
-                session.add(User(**payload))
+                session.add(User(**payload.model_dump()))
                 continue
 
-            user.name = payload["name"]
-            user.email = payload["email"]
-            user.avatar = payload["avatar"]
-            user.role_name = payload["role_name"]
+            user.name = payload.name
+            user.email = payload.email
+            user.avatar = payload.avatar
+            user.role_name = payload.role_name
 
         await session.commit()
 
@@ -220,10 +199,10 @@ def create_engine(env: Envs) -> AsyncEngine:
 
     if env.DATABASE_SCHEMA and dburl.startswith("postgresql+asyncpg"):
         # PostgreSQL production apps write unqualified tables to their app schema
-        # while still resolving the shared organization users table from public.
+        # while still resolving the shared organization users table from shared.
         engine_kwargs["connect_args"] = {
             "server_settings": {
-                "search_path": f"{env.DATABASE_SCHEMA},public",
+                "search_path": f"{env.DATABASE_SCHEMA},shared",
             },
         }
 

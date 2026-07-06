@@ -41,6 +41,9 @@ export type ApiOrganizationApplication = {
     name: string;
     slug: string;
     image: string;
+    version: string | null;
+    sdk: string | null;
+    digest: string | null;
     status: 'creating' | 'running' | 'failed';
     role: ApplicationRole | null;
     description: string | null;
@@ -82,6 +85,7 @@ export type ApiImageMetadata = {
     description: string | null;
     version: string | null;
     sdk: string | null;
+    digest: string | null;
     environments: ApiEnvironmentMetadata[];
 };
 
@@ -147,7 +151,7 @@ export type ApiOrganizationDatabaseApplication = {
 
 export type ApiOrganizationDatabaseResource = {
     name: string;
-    kind: 'schema' | 'shared_table';
+    kind: 'schema';
     database_name: string;
     space_used: number | null;
     table_count: number | null;
@@ -292,6 +296,9 @@ export type ApiApplicationResponse = {
     name: string;
     slug: string;
     image: string;
+    version: string | null;
+    sdk: string | null;
+    digest: string | null;
     status: 'creating' | 'running' | 'failed';
     role: ApplicationRole | null;
     description: string | null;

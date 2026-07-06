@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tenant"
+version = "0.0.0"
+description = "LongLink tenant-scoped shared resources"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "alembic",
+    "pydantic",
+    "sqlalchemy",
+    "sqlmodel",
+]
+
+[project.optional-dependencies]
+dev = [
+    "isort",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "pyright",
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["tenant*"]
+
+[tool.setuptools.data-files]
+"tenant/alembic" = [
+    "alembic/env.py",
+    "alembic/script.py.mako",
+]
+"tenant/alembic/versions" = [
+    "alembic/versions/20260706_0001_shared_users.py",
+]
+
+[tool.ruff]
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["UP", "D300"]
+
+[tool.isort]
+from_first = false
+no_sections = true
+lines_between_types = 0
+length_sort = true
+
+[tool.pyright]
+typeCheckingMode = "basic"
+pythonVersion = "3.14"
+venvPath = "."
+venv = ".venv"
+include = ["tenant", "alembic", "tests"]
+exclude = [".venv", "build", "dist", "**/__pycache__"]
+extraPaths = ["."]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

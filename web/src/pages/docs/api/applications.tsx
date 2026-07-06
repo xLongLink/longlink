@@ -26,6 +26,7 @@ export const content = (
         <P>
             Applications are added from container images built with <Code>longlink build</Code>. The image must include
             LongLink metadata labels such as the app name, version, title, description, and environment requirements.
+            LongLink records the resolved manifest digest and deploys that immutable digest instead of the mutable tag.
         </P>
         <P>
             Production deployments use public image registries. Local and private image registries are rejected unless
@@ -40,7 +41,7 @@ export const content = (
         </P>
         <P>When an application is created, LongLink:</P>
         <Ul>
-            <Li>inspects the image metadata and validates supported icons and managed resource names.</Li>
+            <Li>inspects the image metadata, resolves the image digest, and validates supported icons and managed resource names.</Li>
             <Li>requires image-declared environment values unless the platform manages them.</Li>
             <Li>selects active compute, database, and storage registries for the organization's location.</Li>
             <Li>provisions Kubernetes, PostgreSQL, and storage resources for the application.</Li>
