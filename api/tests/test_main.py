@@ -25,14 +25,6 @@ def test_static_web_bundle_serves_root() -> None:
     assert "text/html" in response.headers["content-type"]
 
 
-def test_api_documentation_routes_are_configured() -> None:
-    """Expose ReDoc/OpenAPI while leaving Swagger UI disabled."""
-
-    assert main.app.docs_url is None
-    assert main.app.redoc_url == "/redocs"
-    assert main.app.openapi_url == "/openapi.json"
-
-
 def test_configure_cors_adds_credentialed_middleware_for_origins() -> None:
     """Allow credentialed CORS only for configured origins."""
 

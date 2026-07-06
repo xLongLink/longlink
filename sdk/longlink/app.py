@@ -35,7 +35,15 @@ def normalize_mount_path(path: str) -> str:
 def default_source_directory(route_path: str) -> Path:
     """Return the default source directory for one SDK-managed route path."""
 
-    return Path.cwd() / "src" / route_path.strip("/")
+    source_directory = (Path.cwd() / "src").resolve()
+    route_directory = (source_directory / normalize_mount_path(route_path).strip("/")).resolve()
+
+    try:
+        route_directory.relative_to(source_directory)
+    except ValueError as exc:
+        raise ValueError("Mount path must stay inside the src directory") from exc
+
+    return route_directory
 
 
 def user_api_path(path: str) -> str:

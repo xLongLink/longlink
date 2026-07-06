@@ -67,6 +67,8 @@ export default function Settings({ organization, organizationDetails, applicatio
     const { role: platformRole, organizations: userOrganizations } = useUserProfile();
     const queryClient = useQueryClient();
     const { deleteApplication, isDeletingApplication } = useOrganizationActions(organization);
+    const organizationName = organizationDetails?.name ?? organization;
+    const organizationAvatar = organizationDetails?.avatar ?? '';
     const {
         items: databaseResources,
         error: databaseResourcesError,
@@ -407,17 +409,19 @@ export default function Settings({ organization, organizationDetails, applicatio
         },
         {
             id: 'application',
-            header: t('columns.application'),
+            header: t('columns.owner'),
             cell: ({ row }) => {
                 const application = row.original.application;
                 if (row.original.name === 'shared') {
                     return (
-                        <div className="min-w-0 space-y-1">
-                            <div className="font-medium text-foreground">
-                                {t('organizationSettings.allApplications')}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                                {t('organizationSettings.sharedOrganizationUsers')}
+                        <div className="flex items-start gap-3">
+                            <Avatar shape="squircle" className="size-9 shrink-0">
+                                <AvatarImage src={organizationAvatar} alt={organizationName} />
+                                <AvatarFallback>{getInitials(organizationName)}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 space-y-1">
+                                <div className="font-medium text-foreground">{organizationName}</div>
+                                <div className="text-xs text-muted-foreground">{t('columns.organization')}</div>
                             </div>
                         </div>
                     );
@@ -462,26 +466,6 @@ export default function Settings({ organization, organizationDetails, applicatio
                         : t('resources.objectCount', { count: formatNumber(object_count) })
                 }`;
 
-                if (row.original.kind === 'shared_bucket') {
-                    return (
-                        <div className="flex items-center gap-3">
-                            <S3
-                                aria-hidden={true}
-                                className="size-10 shrink-0 rounded-md border border-border bg-background object-contain p-1"
-                            />
-                            <div className="min-w-0 space-y-1">
-                                <Link
-                                    to={`/orgs/${organization}/settings/storage/${encodeURIComponent(row.original.bucket_name)}`}
-                                    className="block truncate font-medium text-foreground underline-offset-4 hover:underline"
-                                >
-                                    {t('resources.shared')}
-                                </Link>
-                                <div className="truncate text-xs text-muted-foreground">{usageSummary}</div>
-                            </div>
-                        </div>
-                    );
-                }
-
                 return (
                     <div className="flex items-center gap-3">
                         <S3
@@ -491,9 +475,9 @@ export default function Settings({ organization, organizationDetails, applicatio
                         <div className="min-w-0 space-y-1">
                             <Link
                                 to={`/orgs/${organization}/settings/storage/${encodeURIComponent(row.original.bucket_name)}`}
-                                className="font-medium text-foreground underline-offset-4 hover:underline"
+                                className="block truncate font-medium text-foreground underline-offset-4 hover:underline"
                             >
-                                {row.original.name}
+                                {row.original.kind === 'shared_bucket' ? t('resources.shared') : row.original.name}
                             </Link>
                             <div className="truncate text-xs text-muted-foreground">{usageSummary}</div>
                         </div>
@@ -504,12 +488,23 @@ export default function Settings({ organization, organizationDetails, applicatio
         },
         {
             id: 'application',
-            header: t('columns.application'),
+            header: t('columns.owner'),
             cell: ({ row }) => {
                 const application = row.original.application;
 
                 if (row.original.kind === 'shared_bucket') {
-                    return <span className="text-muted-foreground">{t('organizationSettings.allApplications')}</span>;
+                    return (
+                        <div className="flex items-start gap-3">
+                            <Avatar shape="squircle" className="size-9 shrink-0">
+                                <AvatarImage src={organizationAvatar} alt={organizationName} />
+                                <AvatarFallback>{getInitials(organizationName)}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 space-y-1">
+                                <div className="font-medium text-foreground">{organizationName}</div>
+                                <div className="text-xs text-muted-foreground">{t('columns.organization')}</div>
+                            </div>
+                        </div>
+                    );
                 }
 
                 if (application === null) {
@@ -610,18 +605,11 @@ export default function Settings({ organization, organizationDetails, applicatio
                         </div>
                         <div className="flex items-center gap-3">
                             <Avatar shape="squircle" className="size-8 shrink-0">
-                                <AvatarImage
-                                    src={organizationDetails?.avatar ?? ''}
-                                    alt={organizationDetails?.name ?? organization}
-                                />
-                                <AvatarFallback>
-                                    {getInitials(organizationDetails?.name ?? organization)}
-                                </AvatarFallback>
+                                <AvatarImage src={organizationAvatar} alt={organizationName} />
+                                <AvatarFallback>{getInitials(organizationName)}</AvatarFallback>
                             </Avatar>
                             <div className="min-w-0">
-                                <div className="truncate font-medium text-foreground">
-                                    {organizationDetails?.name ?? organization}
-                                </div>
+                                <div className="truncate font-medium text-foreground">{organizationName}</div>
                                 <div className="truncate text-sm text-muted-foreground">
                                     {organizationDetails?.location.country} · {organizationDetails?.location.name}
                                 </div>

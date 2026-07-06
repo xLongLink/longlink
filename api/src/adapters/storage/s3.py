@@ -1,15 +1,18 @@
 from __future__ import annotations
 
-import asyncio
+import os
 import boto3
-import contextlib
+import asyncio
 import secrets
-from .base import (Storage, StorageBucketUsage, StorageObjectData,
+import contextlib
+from .base import (Storage, StorageObjectData, StorageBucketUsage,
                    StorageRuntimeCredentials)
 from typing import TYPE_CHECKING
 from datetime import datetime
+from tenant.storage import (bucket_name, shared_bucket_name,
+                            organization_bucket_prefix)
+from src.environments import env
 from botocore.exceptions import ClientError
-from src.utils.namespace import s3name
 
 if TYPE_CHECKING:
     from mypy_boto3_s3.type_defs import ObjectIdentifierTypeDef
@@ -102,8 +105,8 @@ class S3(Storage):
     ) -> None:
         """Verify runtime credentials are scoped to one app and the shared bucket."""
 
-        application_bucket = s3name(f"{organization}-{application}")
-        shared_bucket = s3name(f"{organization}-shared")
+        application_bucket = bucket_name(organization, application)
+        shared_bucket = shared_bucket_name(organization)
         runtime_client = self._client_for_credentials(
             credentials["access_key_id"],
             credentials["secret_access_key"],
@@ -143,13 +146,13 @@ class S3(Storage):
             raise ValueError("Storage runtime credentials must not write to the shared bucket")
 
         # Reject credentials that can access another app bucket already visible in this organization.
-        bucket_prefix = f"longlink-{organization}-"
-        for bucket_name in self.list():
-            if bucket_name in {application_bucket, shared_bucket} or not bucket_name.startswith(bucket_prefix):
+        bucket_prefix = organization_bucket_prefix(organization)
+        for listed_bucket_name in self.list():
+            if listed_bucket_name in {application_bucket, shared_bucket} or not listed_bucket_name.startswith(bucket_prefix):
                 continue
 
             try:
-                runtime_client.list_objects_v2(Bucket=bucket_name, MaxKeys=1)
+                runtime_client.list_objects_v2(Bucket=listed_bucket_name, MaxKeys=1)
             except ClientError as exc:
                 if not self._is_access_denied(exc):
                     raise ValueError("Storage cross-application read check failed") from exc
@@ -157,12 +160,12 @@ class S3(Storage):
                 raise ValueError("Storage runtime credentials must not read other application buckets")
 
             try:
-                runtime_client.put_object(Bucket=bucket_name, Key=check_key, Body=b"")
+                runtime_client.put_object(Bucket=listed_bucket_name, Key=check_key, Body=b"")
             except ClientError as exc:
                 if not self._is_access_denied(exc):
                     raise ValueError("Storage cross-application write check failed") from exc
             else:
-                runtime_client.delete_object(Bucket=bucket_name, Key=check_key)
+                runtime_client.delete_object(Bucket=listed_bucket_name, Key=check_key)
                 raise ValueError("Storage runtime credentials must not write other application buckets")
 
 
@@ -197,6 +200,10 @@ class S3(Storage):
             "access_key_id": self._access_key_id,
             "secret_access_key": self._secret_access_key,
         }
+        # Local MinIO uses one admin key for provisioning and runtime during seed/dev flows.
+        if env.DEVELOPMENT and os.getenv("ENVIRONMENT", "").strip().lower() != "testing":
+            return credentials
+
         await asyncio.to_thread(self._validate_application_credentials, organization, application, credentials)
         return credentials
 
@@ -263,20 +270,12 @@ class S3(Storage):
         return organization
 
 
-    async def shared_bucket(self, organization: str) -> str:
-        """Create the shared organization bucket and return its name."""
+    async def bucket(self, organization: str, bucket_slug: str) -> str:
+        """Create one managed organization bucket and return its name."""
 
-        bucket_name = s3name(f"{organization}-shared")
-        await asyncio.to_thread(self._create_bucket, bucket_name)
-        return bucket_name
-
-
-    async def bucket(self, organization: str, application: str) -> str:
-        """Create the application bucket and return its name."""
-
-        bucket_name = s3name(f"{organization}-{application}")
-        await asyncio.to_thread(self._create_bucket, bucket_name)
-        return bucket_name
+        managed_bucket_name = bucket_name(organization, bucket_slug)
+        await asyncio.to_thread(self._create_bucket, managed_bucket_name)
+        return managed_bucket_name
 
 
     async def setup(self) -> None:

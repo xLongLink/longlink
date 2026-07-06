@@ -17,7 +17,6 @@ export type ArticleBreadcrumb = {
 export type ArticleItem = {
     title: string;
     path: string;
-    id: string;
     icon: LucideIcon;
     breadcrumbs: ArticleBreadcrumb[];
 };

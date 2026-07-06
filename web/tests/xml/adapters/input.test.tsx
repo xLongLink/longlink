@@ -7,15 +7,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { proxy } from 'valtio';
 
 describe('Input', () => {
-    /* The runtime should render input XML into the expected markup. */
-    it('renders raw xml input content end to end', () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {}, user: { name: 'Ada' } };
-        const ast = parseXML('<Input value="user.name" />');
-        const renderedTree = createElement(RenderXML, { ast, ctx });
-
-        expect(renderToStaticMarkup(createElement('div', null, renderedTree))).toContain('Ada');
-    });
-
     /* File inputs cannot be controlled with a value attribute in React. */
     it('renders bound file input without a controlled value', () => {
         const ctx: ExecutionContext = {

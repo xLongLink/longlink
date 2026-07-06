@@ -7,8 +7,9 @@ import type {
     ApiOrganizationDatabaseTable,
     ApiOrganizationDetails,
 } from '@/lib/types';
-import { formatBytes, formatNumber } from '@/lib/utils';
+import { formatBytes, formatNumber, getInitials } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
+import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Link, useParams } from 'react-router';
 
 type DatabaseProps = {
@@ -26,6 +27,8 @@ export default function Database({ organization, organizationDetails, isLoading 
         error: databaseResourcesError,
         isLoading: databaseResourcesIsLoading,
     } = useOrganizationDatabaseResources(organizationDetails?.id ?? '');
+    const organizationName = organizationDetails?.name ?? organization;
+    const organizationAvatar = organizationDetails?.avatar ?? '';
     const selectedKind = databaseResourceType === 'schemas' ? 'schema' : null;
     const isDetailPage = databaseResourceType.length > 0 || databaseResource.length > 0;
     const isTablePage = databaseTable.length > 0;
@@ -149,17 +152,21 @@ export default function Database({ organization, organizationDetails, isLoading 
         },
         {
             id: 'application',
-            header: t('columns.application'),
+            header: t('columns.owner'),
             cell: ({ row }) => {
                 const databaseResource = row.original;
                 const application = databaseResource.application;
 
                 if (databaseResource.name === 'shared') {
                     return (
-                        <div className="min-w-0 space-y-1">
-                            <div className="font-medium text-foreground">{t('resources.allApplications')}</div>
-                            <div className="text-xs text-muted-foreground">
-                                {t('resources.sharedOrganizationUsers')}
+                        <div className="flex items-start gap-3">
+                            <Avatar shape="squircle" className="size-9 shrink-0">
+                                <AvatarImage src={organizationAvatar} alt={organizationName} />
+                                <AvatarFallback>{getInitials(organizationName)}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 space-y-1">
+                                <div className="font-medium text-foreground">{organizationName}</div>
+                                <div className="text-xs text-muted-foreground">{t('columns.organization')}</div>
                             </div>
                         </div>
                     );

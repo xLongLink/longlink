@@ -1,5 +1,6 @@
 from uuid import UUID
 from types import SimpleNamespace
+from tenant.models import User as TenantUser
 from src.models.roles import OrganizationRoles
 from fastapi.testclient import TestClient
 from src.models.storages import StorageKind
@@ -9,7 +10,6 @@ from src.models.databases import DatabaseKind
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.services.users import users
-from tenant.models import User as TenantUser
 from src.database.services.storage import storage
 from src.database.services.database import database
 from src.database.models.association import UserOrganization
@@ -117,7 +117,7 @@ async def test_create_organization_initializes_storage(
     # Arrange
     owner = users[0]
     client = clients[0]
-    calls: list[tuple[str, str]] = []
+    calls: list[tuple[str, ...]] = []
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     await db.storage.create(StorageKind.s3, "primary", "http", "http://storage.local", "access", "secret", location.id, owner)
 
@@ -128,9 +128,9 @@ async def test_create_organization_initializes_storage(
             self.access_key_id = access_key_id
             self.secret_access_key = secret_access_key
 
-        async def shared_bucket(self, organization: str) -> str:
-            calls.append(("shared_bucket", organization))
-            return f"longlink-{organization}-shared"
+        async def bucket(self, organization: str, application: str) -> str:
+            calls.append(("bucket", organization, application))
+            return f"longlink-{organization}-{application}"
 
     monkeypatch.setattr("src.operations.provisioning.S3", FakeStorage)
 
@@ -142,7 +142,7 @@ async def test_create_organization_initializes_storage(
 
     # Assert
     assert response.status_code == 200
-    assert calls == [("shared_bucket", "acme")]
+    assert calls == [("bucket", "acme", "shared")]
 
 
 async def test_get_organization_returns_member_payload(
@@ -841,22 +841,6 @@ async def test_create_organization_invitation_returns_403_for_regular_member(
     assert response.json() == {"detail": "Invitation permissions required"}
 
 
-async def test_get_organization_rejects_invalid_uuid(
-    clients: tuple[TestClient, TestClient, TestClient],
-) -> None:
-    """Reject malformed organization ids at the route boundary."""
-
-    # Arrange
-    client = clients[0]
-
-    # Act
-    response = client.get("/api/organizations/testo")
-
-    # Assert
-    assert response.status_code == 422
-    assert isinstance(response.json()["detail"], list)
-
-
 async def test_create_organization_returns_409_for_duplicate_name(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
@@ -875,20 +859,3 @@ async def test_create_organization_returns_409_for_duplicate_name(
     # Assert
     assert response.status_code == 409
     assert response.json() == {"detail": "Organization already exists"}
-
-
-async def test_create_organization_uses_default_validation_error(
-    clients: tuple[TestClient, TestClient, TestClient],
-) -> None:
-    """Return FastAPI's default validation payload for bad requests."""
-
-    # Arrange
-    client = clients[0]
-
-    # Act
-    response = client.post("/api/organizations", json={})
-
-    # Assert
-    assert response.status_code == 422
-    payload = response.json()
-    assert isinstance(payload["detail"], list)

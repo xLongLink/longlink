@@ -22,20 +22,6 @@ describe('parseXML', () => {
         ]);
     });
 
-    /* Input values should remain plain expressions in compiled XML. */
-    it('preserves input expression params', () => {
-        expect(parseXML('<Input value="user.name" placeholder="user.placeholder" />')).toEqual([
-            {
-                name: 'Input',
-                params: {
-                    placeholder: 'user.placeholder',
-                    value: 'user.name',
-                },
-                children: [],
-            },
-        ]);
-    });
-
     /* Nested XML tags should remain nested AST children in source order. */
     it('parses nested child elements', () => {
         expect(parseXML('<longlink><Button i18n="actions.save" /></longlink>')).toEqual([

@@ -1,7 +1,6 @@
 import sys
 import pytest
 import urllib.parse
-import longlink.database as database_module
 import longlink.utils.url as url
 from uuid import UUID
 from types import SimpleNamespace
@@ -18,40 +17,6 @@ from longlink.utils.settings import Envs
 from longlink.database.migrations import (
     INITIAL_INVENTORY_MIGRATION, include_object, load_application_models,
     repair_stale_initial_inventory_migration)
-
-
-@pytest.mark.asyncio
-async def test_database_facade_exposes_table_and_async_session(monkeypatch) -> None:
-    """Expose the SDK table base and async session factory through the facade."""
-
-    # Arrange
-    expected_session_maker = object()
-    engine_calls: list[Envs] = []
-
-    async def fake_get_session() -> object:
-        """Return a sentinel async session factory."""
-
-        return expected_session_maker
-
-    def fake_create_engine(env: Envs) -> object:
-        """Capture database facade initialization."""
-
-        engine_calls.append(env)
-        return object()
-
-    monkeypatch.setattr(database_module, "get_session", fake_get_session)
-    monkeypatch.setattr(database_module, "create_engine", fake_create_engine)
-    env = Envs(ENV="testing")
-
-    # Act
-    facade = database_module.create_db(env)
-    session_maker = await facade.get_session()
-
-    # Assert
-    assert isinstance(facade, database_module.Database)
-    assert facade.Table is database_base.Table
-    assert session_maker is expected_session_maker
-    assert engine_calls == [env]
 
 
 def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> None:

@@ -1,11 +1,10 @@
 import { useTranslation } from '@/lib/i18n';
-import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 
 import { ArticleSidebar } from '@/components/ArticleSidebar';
 import { cn, formatDate } from '@/lib/utils';
-import type { ArticleBreadcrumb, ArticleItem, ArticleMetadata, ArticleNavigationGroup } from '@/pages/catalog';
-import { DOC_GROUPS, DOC_PAGES } from '@/pages/docs/catalog';
+import type { ArticleNavigationGroup, ArticlePage } from '@/pages/catalog';
 import { A } from '@ui/a';
 import {
     BreadcrumbItem,
@@ -19,49 +18,25 @@ import { ScrollArea } from '@ui/scroll-area';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@ui/sidebar';
 
 type ArticleLayoutProps = {
-    content: ReactNode;
-    metadata: ArticleMetadata;
-    breadcrumbs?: ArticleBreadcrumb[];
-    navigationGroups?: ArticleNavigationGroup[];
-    navigationPages?: ArticleItem[];
+    page: ArticlePage;
+    navigationGroups: ArticleNavigationGroup[];
 };
 
-type ArticleContentProps = Pick<ArticleLayoutProps, 'content' | 'metadata'>;
+type ArticleContentProps = Pick<ArticlePage, 'content' | 'metadata'>;
 
 type PageTocItem = {
     href: string;
     label: string;
 };
 
-/** Renders an article page using the shared documentation shell. */
-export default function ArticleLayout({
-    content,
-    metadata,
-    breadcrumbs,
-    navigationGroups = DOC_GROUPS,
-    navigationPages = DOC_PAGES,
-}: ArticleLayoutProps) {
+/** Renders an article page using the shared article shell. */
+export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutProps) {
     const { t } = useTranslation();
     const location = useLocation();
     const contentRef = useRef<HTMLDivElement>(null);
     const [activeTocHref, setActiveTocHref] = useState('');
     const [pageToc, setPageToc] = useState<PageTocItem[]>([]);
-
-    // Prefer the longest matching path so nested pages do not resolve to their section overview.
-    const currentItem = navigationPages.reduce<ArticleItem | undefined>((match, item) => {
-        const isPathMatch = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
-
-        if (!isPathMatch) {
-            return match;
-        }
-
-        if (!match || item.path.length > match.path.length) {
-            return item;
-        }
-
-        return match;
-    }, undefined);
-    const currentBreadcrumbs = breadcrumbs ?? currentItem?.breadcrumbs ?? [];
+    const { content, metadata } = page;
 
     useEffect(() => {
         const contentElement = contentRef.current;
@@ -153,7 +128,7 @@ export default function ArticleLayout({
 
     return (
         <SidebarProvider defaultOpen>
-            <ArticleSidebar currentItemId={currentItem?.id} currentPath={location.pathname} groups={navigationGroups} />
+            <ArticleSidebar currentPath={location.pathname} groups={navigationGroups} />
 
             <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
                 <div className="flex h-full w-full flex-col shadow-sm">
@@ -166,8 +141,8 @@ export default function ArticleLayout({
                                     <div className="mx-auto w-full max-w-3xl">
                                         <UIBreadcrumb>
                                             <BreadcrumbList>
-                                                {currentBreadcrumbs.map((item, index) => {
-                                                    const isLast = index === currentBreadcrumbs.length - 1;
+                                                {page.breadcrumbs.map((item, index) => {
+                                                    const isLast = index === page.breadcrumbs.length - 1;
 
                                                     return (
                                                         <Fragment key={item.path}>
@@ -266,6 +241,7 @@ export default function ArticleLayout({
         </SidebarProvider>
     );
 }
+
 
 function ArticleContent({ content, metadata }: ArticleContentProps) {
     const { t } = useTranslation();

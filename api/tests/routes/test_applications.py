@@ -2,6 +2,8 @@ import json
 import pytest
 from types import SimpleNamespace
 from datetime import UTC, datetime
+from tenant.models import User as TenantUser
+from src.operations import provisioning
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from fastapi.testclient import TestClient
 from src.models.computes import ComputeKind
@@ -12,11 +14,9 @@ from src.models.countries import Country
 from src.models.databases import DatabaseKind
 from src.models.operations import OperationKind
 from kubernetes.client.rest import ApiException
-from src.operations import provisioning
 from src.models.applications import ApplicationStatus
 from src.database.models.users import User
 from src.database.services.users import users
-from tenant.models import User as TenantUser
 from src.database.services.compute import compute
 from src.database.services.storage import storage
 from src.database.services.database import database
@@ -343,11 +343,11 @@ async def test_create_app_returns_app_response(
                 "secret_access_key": secret_access_key,
             }
 
-        async def shared_bucket(self, organization: str) -> str:
-            captured_buckets.append(("shared", organization))
-            return f"longlink-{organization}-shared"
-
         async def bucket(self, organization: str, application: str) -> str:
+            if application == "shared":
+                captured_buckets.append(("shared", organization))
+                return f"longlink-{organization}-shared"
+
             captured_buckets.append(("application", organization, application))
             return f"longlink-{organization}-{application}"
 

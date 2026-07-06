@@ -5,10 +5,9 @@ Revises:
 Create Date: 2026-07-06
 
 """
-from typing import Sequence, Union
-
-from alembic import op
 import sqlalchemy as sa
+from typing import Union, Sequence
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "20260706_0001"
@@ -35,31 +34,8 @@ def upgrade() -> None:
         schema="shared",
     )
 
-    # Preserve existing organization users from the legacy public.users table when present.
-    op.execute(
-        """
-        DO $$
-        BEGIN
-            IF to_regclass('public.users') IS NOT NULL THEN
-                INSERT INTO shared.users (id, name, email, avatar, role_name, created_at, updated_at, deleted_at)
-                SELECT id, name, email, avatar, role_name, created_at, updated_at, deleted_at
-                FROM public.users
-                ON CONFLICT (id) DO UPDATE SET
-                    name = EXCLUDED.name,
-                    email = EXCLUDED.email,
-                    avatar = EXCLUDED.avatar,
-                    role_name = EXCLUDED.role_name,
-                    created_at = EXCLUDED.created_at,
-                    updated_at = EXCLUDED.updated_at,
-                    deleted_at = EXCLUDED.deleted_at;
-            END IF;
-        END $$;
-        """
-    )
-
 
 def downgrade() -> None:
-    """Drop the tenant shared schema."""
+    """Drop the tenant shared users table."""
 
     op.drop_table("users", schema="shared")
-    op.execute("DROP SCHEMA IF EXISTS shared")

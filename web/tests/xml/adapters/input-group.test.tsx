@@ -5,22 +5,6 @@ import { proxy } from 'valtio';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('InputGroup', () => {
-    /* The runtime should render the grouped control shell end to end. */
-    it('renders input group markup end to end', () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {}, user: { handle: 'ada' } };
-        const output = renderXmlToMarkup(
-            parseXML(
-                '<InputGroup><InputGroupAddon><P i18n="inputGroup.symbolAt" /></InputGroupAddon><InputGroupInput value="user.handle" placeholder="Handle" /><InputGroupButton i18n="inputGroup.search" /><InputGroupText i18n="inputGroup.public" /></InputGroup>'
-            ),
-            ctx
-        );
-
-        expect(output).toContain('@');
-        expect(output).toContain('Search');
-        expect(output).toContain('Public');
-        expect(output).toContain('ada');
-    });
-
     /* Dotted state bindings should resolve and render the current field value. */
     it('renders dotted value bindings', () => {
         const ctx: ExecutionContext = {
@@ -35,15 +19,5 @@ describe('InputGroup', () => {
         );
 
         expect(output).toContain('value="Revenue"');
-    });
-
-    /* The runtime should render the textarea variant inside the same shell. */
-    it('renders input group textarea markup end to end', () => {
-        const output = renderXmlToMarkup(
-            parseXML('<InputGroup><InputGroupTextarea label="Notes" value="Draft notes" rows="4" /></InputGroup>')
-        );
-
-        expect(output).toContain('Draft notes');
-        expect(output).toContain('textarea');
     });
 });

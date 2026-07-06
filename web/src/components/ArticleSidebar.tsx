@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 
 import { cn } from '@/lib/utils';
 import type { ArticleNavigationGroup, ArticleNavigationItem } from '@/pages/catalog';
-import { DOC_GROUPS } from '@/pages/docs/catalog';
 import {
     Sidebar,
     SidebarContent,
@@ -25,42 +24,39 @@ import { ChevronDownIcon } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
 
 export type ArticleSidebarProps = {
-    currentItemId?: string;
     currentPath: string;
-    groups?: ArticleNavigationGroup[];
+    groups: ArticleNavigationGroup[];
 };
 
 /** Renders a nested article navigation item. */
 function renderArticleNavigationItem(
     item: ArticleNavigationItem,
-    currentItemId: string | undefined,
     currentPath: string,
-    openItemIds: Record<string, boolean>,
-    setOpenItemIds: Dispatch<SetStateAction<Record<string, boolean>>>
+    openItemPaths: Record<string, boolean>,
+    setOpenItemPaths: Dispatch<SetStateAction<Record<string, boolean>>>
 ) {
-    const isExactActive = currentItemId === item.id || currentPath === item.path;
-    const hasActiveChild =
-        item.children?.some((child) => articleNavigationItemIsActive(child, currentItemId, currentPath)) ?? false;
-    const isOpen = openItemIds[item.id] ?? hasActiveChild;
+    const isExactActive = currentPath === item.path;
+    const hasActiveChild = item.children?.some((child) => articleNavigationItemIsActive(child, currentPath)) ?? false;
+    const isOpen = openItemPaths[item.path] ?? hasActiveChild;
 
     /** Toggles a sidebar section without following the parent page link. */
     function handleToggle(event: MouseEvent<HTMLButtonElement>): void {
         event.preventDefault();
         event.stopPropagation();
 
-        setOpenItemIds((current) => {
-            const currentIsOpen = current[item.id] ?? hasActiveChild;
+        setOpenItemPaths((current) => {
+            const currentIsOpen = current[item.path] ?? hasActiveChild;
 
             return {
                 ...current,
-                [item.id]: !currentIsOpen,
+                [item.path]: !currentIsOpen,
             };
         });
     }
 
     return (
         <SidebarMenuItem
-            key={item.id}
+            key={item.path}
             className={cn(
                 isExactActive &&
                     'before:absolute before:top-1 before:bottom-1 before:left-0 before:z-10 before:w-0.5 before:rounded-full before:bg-foreground'
@@ -102,11 +98,11 @@ function renderArticleNavigationItem(
             {item.children?.length && isOpen ? (
                 <SidebarMenuSub className="mx-3 gap-0.5 border-border/80 py-0 pr-0.5 pl-2">
                     {item.children.map((child) => {
-                        const isChildActive = currentItemId === child.id || currentPath === child.path;
+                        const isChildActive = currentPath === child.path;
 
                         return (
                             <SidebarMenuSubItem
-                                key={child.id}
+                                key={child.path}
                                 className={cn(
                                     isChildActive &&
                                         'before:absolute before:top-1 before:bottom-1 before:-left-[0.7rem] before:z-10 before:w-0.5 before:rounded-full before:bg-foreground'
@@ -141,22 +137,23 @@ function renderArticleNavigationItem(
     );
 }
 
+
 /** Returns whether an article navigation item or descendant matches the current route. */
 function articleNavigationItemIsActive(
     item: ArticleNavigationItem,
-    currentItemId: string | undefined,
     currentPath: string
 ): boolean {
-    if (currentItemId === item.id || currentPath === item.path) {
+    if (currentPath === item.path) {
         return true;
     }
 
-    return item.children?.some((child) => articleNavigationItemIsActive(child, currentItemId, currentPath)) ?? false;
+    return item.children?.some((child) => articleNavigationItemIsActive(child, currentPath)) ?? false;
 }
 
+
 /** Renders the left navigation for article pages. */
-export function ArticleSidebar({ currentItemId, currentPath, groups = DOC_GROUPS }: ArticleSidebarProps) {
-    const [openItemIds, setOpenItemIds] = useState<Record<string, boolean>>({});
+export function ArticleSidebar({ currentPath, groups }: ArticleSidebarProps) {
+    const [openItemPaths, setOpenItemPaths] = useState<Record<string, boolean>>({});
 
     return (
         <Sidebar side="left" variant="sidebar" collapsible="offcanvas" className="group-data-[side=left]:border-r-0">
@@ -182,10 +179,9 @@ export function ArticleSidebar({ currentItemId, currentPath, groups = DOC_GROUPS
                                 {group.items.map((item) =>
                                     renderArticleNavigationItem(
                                         item,
-                                        currentItemId,
                                         currentPath,
-                                        openItemIds,
-                                        setOpenItemIds
+                                        openItemPaths,
+                                        setOpenItemPaths
                                     )
                                 )}
                             </SidebarMenu>

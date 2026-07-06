@@ -1,6 +1,7 @@
 import pytest
 from datetime import UTC, datetime
 from unittest.mock import ANY, Mock
+from tenant.storage import shared_buckets
 from botocore.exceptions import ClientError
 from src.adapters.storage.s3 import S3
 
@@ -40,36 +41,6 @@ def storage(storage_client: Mock) -> S3:
     )
 
 
-async def test_storage_buckets_returns_bucket_names(storage: S3, storage_client: Mock) -> None:
-    """List bucket names from the S3 client response through the async adapter API."""
-
-    storage_client.list_buckets.return_value = {"Buckets": [{"Name": "alpha"}, {"Name": "beta"}]}
-
-    assert await storage.buckets() == ["alpha", "beta"]
-    storage_client.list_buckets.assert_called_once_with()
-
-
-@pytest.mark.parametrize(
-    ("method_name", "arguments", "bucket_name"),
-    [
-        ("shared_bucket", ("acme",), "longlink-acme-shared"),
-        ("bucket", ("acme", "dashboard"), "longlink-acme-dashboard"),
-    ],
-)
-async def test_storage_creates_managed_buckets(
-    storage: S3,
-    storage_client: Mock,
-    method_name: str,
-    arguments: tuple[str, ...],
-    bucket_name: str,
-) -> None:
-    """Create managed buckets with the expected naming convention."""
-
-    method = getattr(storage, method_name)
-    assert await method(*arguments) == bucket_name
-    storage_client.create_bucket.assert_called_once_with(Bucket=bucket_name)
-
-
 async def test_storage_bucket_reuses_existing_accessible_bucket(
     storage: S3,
     storage_client: Mock,
@@ -81,7 +52,7 @@ async def test_storage_bucket_reuses_existing_accessible_bucket(
         "CreateBucket",
     )
 
-    assert await storage.shared_bucket("acme") == "longlink-acme-shared"
+    assert await shared_buckets.ensure(storage, "acme") == "longlink-acme-shared"
     storage_client.create_bucket.assert_called_once_with(Bucket="longlink-acme-shared")
     storage_client.head_bucket.assert_called_once_with(Bucket="longlink-acme-shared")
 

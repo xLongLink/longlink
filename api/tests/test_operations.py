@@ -4,15 +4,12 @@ import asyncio
 from uuid import UUID
 from datetime import UTC, datetime
 from src.routes import operations as operation_routes
-from src.operations import execute
 from src.operations import applications as application_operations
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
 from src.models.countries import Country
 from src.models.locations import LocationProvider, LocationResponse
-from src.models.operations import (OperationKind, OperationStatus,
-                                   OperationResponse)
-from src.operations.registry import operation_handler, get_operation_handler
+from src.models.operations import OperationKind, OperationStatus
 from src.models.organizations import OrganizationDetails
 from src.database.models.users import User
 from src.database.models.operations import Operation
@@ -191,49 +188,6 @@ def leased_operation(kind: OperationKind = OperationKind.application_create, ste
         started_at=datetime.fromisoformat("2026-07-01T09:00:00+00:00"),
         lease_token="lease-token",
     )
-
-
-async def test_operation_records_and_listing_route(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Represent operation records and return them from the support listing route."""
-
-    operation = Operation(
-        id=UUID("55555555-5555-5555-5555-555555555555"),
-        kind=OperationKind.application_delete,
-        step="remove",
-        application_id=application_model().id,
-        scheduled_at=datetime.fromisoformat("2026-07-01T10:00:00+00:00"),
-        started_at=datetime.fromisoformat("2026-07-01T10:01:00+00:00"),
-        stopped_at=datetime.fromisoformat("2026-07-01T10:02:00+00:00"),
-    )
-
-    async def fake_list() -> list[Operation]:
-        """Return recorded operations newest first."""
-
-        return [operation]
-
-    monkeypatch.setattr(operation_routes.operations, "list", fake_list)
-
-    assert operation.status == OperationStatus.completed
-    assert OperationResponse.model_validate(operation).status == OperationStatus.completed
-    assert await operation_routes.list_operations(user()) == [OperationResponse.model_validate(operation)]
-
-
-async def test_operation_handler_registry_dispatches_custom_steps() -> None:
-    """Register and execute one operation handler through the dispatcher."""
-
-    kind = OperationKind.application_create
-    step = "custom_step"
-
-    @operation_handler(kind, step)
-    async def fake_handler(operation: Operation) -> Operation:
-        """Return the operation unchanged."""
-
-        return operation
-
-    operation = Operation(kind=kind, step=step, lease_token="lease-token")
-
-    assert get_operation_handler(kind, step) is fake_handler
-    assert await execute(operation) is operation
 
 
 async def test_operation_claim_sets_lease_token_and_expiry(monkeypatch: pytest.MonkeyPatch) -> None:

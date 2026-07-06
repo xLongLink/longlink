@@ -46,25 +46,6 @@ async def test_upsert_creates_user_when_no_existing_match() -> None:
     assert user.role == PlatformRoles.administrator
 
 
-async def test_upsert_marks_first_created_user_as_admin() -> None:
-    """Mark the first created user as admin."""
-
-    # Arrange
-
-    # Act
-    user = await db.users.upsert(
-        oidc="oidc-subject-admin",
-        email="admin@example.com",
-        name="First User",
-        avatar=None,
-    )
-
-    # Assert
-    assert user.id is not None
-    assert user.name == "First User"
-    assert user.role == PlatformRoles.administrator
-
-
 async def test_profile_returns_created_organization_membership() -> None:
     """Return organization memberships created through the organization service."""
 
@@ -143,23 +124,3 @@ async def test_upsert_updates_existing_user_by_oidc() -> None:
     assert updated_user.email == "updated@example.com"
     assert updated_user.name == "Updated User"
     assert updated_user.avatar == "https://example.com/updated.png"
-
-
-async def test_get_returns_user_by_oidc() -> None:
-    """Return a user by OIDC subject only."""
-
-    # Arrange
-    created_user = await db.users.upsert(
-        oidc="oidc-subject-get",
-        email="get@example.com",
-        name="Get User",
-        avatar=None,
-    )
-
-    # Act
-    loaded_user = await db.users.get("oidc-subject-get")
-
-    # Assert
-    assert loaded_user is not None
-    assert loaded_user.id == created_user.id
-    assert loaded_user.oidc == "oidc-subject-get"

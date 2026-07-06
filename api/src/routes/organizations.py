@@ -2,21 +2,24 @@ from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authsupport, organization_access
-from tenant.database import SHARED_SCHEMA
 from src.errors import (ConflictError, NotFoundError, ForbiddenError,
                         UnavailableError)
 from src.logger import logger
 from src.operations import provisioning
+from tenant.storage import (bucket_name, shared_bucket_name,
+                            organization_bucket_prefix)
+from tenant.database import SHARED_SCHEMA
+from src.models.icons import parse_icon
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import (OrganizationStorageResourceKind,
-                                  OrganizationStorageResourceResponse,
-                                  OrganizationStorageApplicationResponse)
-from src.utils.namespace import dbname, s3name
+                                 OrganizationStorageResourceResponse,
+                                 OrganizationStorageApplicationResponse)
+from src.utils.namespace import dbname
 from src.adapters.storage import S3
 from src.models.databases import (OrganizationDatabaseResourceKind,
-                                   OrganizationDatabaseTableResponse,
-                                   OrganizationDatabaseResourceResponse,
-                                   OrganizationDatabaseApplicationResponse)
+                                  OrganizationDatabaseTableResponse,
+                                  OrganizationDatabaseResourceResponse,
+                                  OrganizationDatabaseApplicationResponse)
 from src.adapters.database import Postgres
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationResponse
@@ -143,6 +146,8 @@ async def create_organization_invitation(
     membership_role = await organizations.membership_role(organization_id, user.id)
     if membership_role not in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
         raise ForbiddenError("Invitation permissions required")
+    if payload.role == OrganizationRoles.owner and membership_role != OrganizationRoles.owner:
+        raise ForbiddenError("Owner invitation permissions required")
 
     try:
         await invitations.create(organization_id, payload.email, payload.role, user)
@@ -165,8 +170,14 @@ async def update_organization_member(
     membership_role = await organizations.membership_role(organization_id, user.id)
     if membership_role not in {OrganizationRoles.admin, OrganizationRoles.owner}:
         raise ForbiddenError("Member management permissions required")
+    if payload.role == OrganizationRoles.owner and membership_role != OrganizationRoles.owner:
+        raise ForbiddenError("Owner management permissions required")
 
-    updated = await organizations.update_member_role(organization_id, member_id, payload.role, user)
+    try:
+        updated = await organizations.update_member_role(organization_id, member_id, payload.role, user)
+    except ValueError as exc:
+        raise ConflictError(str(exc)) from exc
+
     if not updated:
         raise NotFoundError("Organization member", member_id)
 
@@ -258,7 +269,7 @@ async def _database_resource_rows(
                     id=application.id,
                     name=application.name,
                     slug=application.slug,
-                    icon=application.icon,
+                    icon=parse_icon(application.icon),
                     description=application.description,
                     status=application.status,
                 ),
@@ -300,17 +311,17 @@ async def _storage_resource_rows(
         storage_client = S3(registry.protocol, registry.endpoint_url, registry.access_key_id, registry.secret_access_key)
         bucket_names = set(await storage_client.buckets())
         expected_bucket_names: set[str] = set()
-        shared_bucket_name = s3name(f"{organization.slug}-shared")
-        expected_bucket_names.add(shared_bucket_name)
+        managed_shared_bucket_name = shared_bucket_name(organization.slug)
+        expected_bucket_names.add(managed_shared_bucket_name)
         rows: list[OrganizationStorageResourceResponse] = []
 
-        if shared_bucket_name in bucket_names:
-            usage = await storage_client.bucket_usage(shared_bucket_name)
+        if managed_shared_bucket_name in bucket_names:
+            usage = await storage_client.bucket_usage(managed_shared_bucket_name)
             rows.append(
                 OrganizationStorageResourceResponse(
                     kind=OrganizationStorageResourceKind.shared_bucket,
                     name="shared",
-                    bucket_name=shared_bucket_name,
+                    bucket_name=managed_shared_bucket_name,
                     application=None,
                     storage_registry_id=registry.id,
                     storage_registry_name=registry.name,
@@ -321,22 +332,22 @@ async def _storage_resource_rows(
 
         # Compare expected app buckets against the backend listing so only existing resources are visible.
         for application in sorted(active_applications, key=lambda item: item.name):
-            bucket_name = s3name(f"{organization.slug}-{application.slug}")
-            expected_bucket_names.add(bucket_name)
-            if bucket_name not in bucket_names:
+            managed_bucket_name = bucket_name(organization.slug, application.slug)
+            expected_bucket_names.add(managed_bucket_name)
+            if managed_bucket_name not in bucket_names:
                 continue
 
-            usage = await storage_client.bucket_usage(bucket_name)
+            usage = await storage_client.bucket_usage(managed_bucket_name)
             rows.append(
                 OrganizationStorageResourceResponse(
                     kind=OrganizationStorageResourceKind.application_bucket,
                     name=application.slug,
-                    bucket_name=bucket_name,
+                    bucket_name=managed_bucket_name,
                     application=OrganizationStorageApplicationResponse(
                         id=application.id,
                         name=application.name,
                         slug=application.slug,
-                        icon=application.icon,
+                        icon=parse_icon(application.icon),
                         description=application.description,
                         status=application.status,
                     ),
@@ -348,17 +359,17 @@ async def _storage_resource_rows(
             )
 
         # Keep stale managed buckets visible as orphaned resources.
-        organization_bucket_prefix = f"longlink-{organization.slug}-"
-        for bucket_name in sorted(bucket_names):
-            if bucket_name in expected_bucket_names or not bucket_name.startswith(organization_bucket_prefix):
+        managed_bucket_prefix = organization_bucket_prefix(organization.slug)
+        for listed_bucket_name in sorted(bucket_names):
+            if listed_bucket_name in expected_bucket_names or not listed_bucket_name.startswith(managed_bucket_prefix):
                 continue
 
-            usage = await storage_client.bucket_usage(bucket_name)
+            usage = await storage_client.bucket_usage(listed_bucket_name)
             rows.append(
                 OrganizationStorageResourceResponse(
                     kind=OrganizationStorageResourceKind.application_bucket,
-                    name=bucket_name.removeprefix(organization_bucket_prefix),
-                    bucket_name=bucket_name,
+                    name=listed_bucket_name.removeprefix(managed_bucket_prefix),
+                    bucket_name=listed_bucket_name,
                     application=None,
                     storage_registry_id=registry.id,
                     storage_registry_name=registry.name,

@@ -1,5 +1,5 @@
 import { createContext as createReactContext, useContext as useReactContext, type ReactNode } from 'react';
-import { evaluate, isText } from '../expressions';
+import { evaluate, isSafePropertyName, isText } from '../expressions';
 import type { ASTNode, ExecutionContext } from '../types';
 import { query } from './query';
 import { state } from './state';
@@ -133,6 +133,15 @@ function validateSetupNode(node: ASTNode): void {
     if (node.name === 'State') {
         if (!node.params?.id) throw new Error('State requires a string id');
         if (!isText(node.params.id)) throw new Error('State id must be literal text');
+        if (!node.params.id.trim() || !isSafePropertyName(node.params.id.trim())) {
+            throw new Error('State id must be a safe property name');
+        }
+
+        const unsafeAttributes = Object.keys(node.params).filter((name) => name !== 'id' && !isSafePropertyName(name));
+        if (unsafeAttributes.length) {
+            throw new Error(`State attributes must be safe property names: ${unsafeAttributes.join(', ')}`);
+        }
+
         if ((node.children ?? []).length > 0) throw new Error('State cannot have children');
     }
 
@@ -141,5 +150,8 @@ function validateSetupNode(node: ASTNode): void {
         if (!node.params?.path) throw new Error('Query requires a string path');
         if ((node.children ?? []).length > 0) throw new Error('Query cannot have children');
         if (!isText(node.params.id)) throw new Error('Query id must be literal text');
+        if (!node.params.id.trim() || !isSafePropertyName(node.params.id.trim())) {
+            throw new Error('Query id must be a safe property name');
+        }
     }
 }

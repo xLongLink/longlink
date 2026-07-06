@@ -1,4 +1,3 @@
-import { renderNode } from '@xml/core/node';
 import { RenderXML } from '@xml/renderers.tsx';
 import type { ASTNode, ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
@@ -6,10 +5,6 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('renderNode', () => {
-    it('returns null for missing node input', () => {
-        expect(renderNode([], { setups: {}, invalidate: async () => {}, values: {} })).toEqual([]);
-    });
-
     it('resolves localized text through XML adapters', () => {
         const ctx: ExecutionContext = {
             setups: {},

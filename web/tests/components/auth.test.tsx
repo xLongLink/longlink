@@ -24,6 +24,7 @@ mock.module('@/layout/Layout', () => ({
 mock.module('@/hooks/use-user', () => ({
     UserProvider: ({ children }: { children: ReactNode }) => children,
     useUser: () => mockedUserState,
+    useUserProfile: () => mockedUserState,
 }));
 
 const { Auth } = await import('@/components/Auth');

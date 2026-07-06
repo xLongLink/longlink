@@ -6,35 +6,38 @@ import { FileText, Landmark, ShieldCheck } from 'lucide-react';
 
 const homeBreadcrumb = { title: 'Home', path: '/' };
 
-const termsPage: ArticlePage = {
+/** Builds a legal page with its standard Home breadcrumb. */
+function legalPage(page: Omit<ArticlePage, 'breadcrumbs'>): ArticlePage {
+    return {
+        ...page,
+        breadcrumbs: [homeBreadcrumb, { title: page.title, path: page.path }],
+    };
+}
+
+
+const termsPage = legalPage({
     title: 'Terms of Service',
     path: '/terms',
-    id: 'terms-of-service',
     icon: FileText,
-    breadcrumbs: [homeBreadcrumb, { title: 'Terms of Service', path: '/terms' }],
     content: termsContent,
     metadata: termsMetadata,
-};
+});
 
-const impressumPage: ArticlePage = {
+const impressumPage = legalPage({
     title: 'Impressum',
     path: '/impressum',
-    id: 'impressum',
     icon: Landmark,
-    breadcrumbs: [homeBreadcrumb, { title: 'Impressum', path: '/impressum' }],
     content: impressumContent,
     metadata: impressumMetadata,
-};
+});
 
-const privacyPage: ArticlePage = {
+const privacyPage = legalPage({
     title: 'Privacy',
     path: '/privacy',
-    id: 'privacy-policy',
     icon: ShieldCheck,
-    breadcrumbs: [homeBreadcrumb, { title: 'Privacy', path: '/privacy' }],
     content: privacyContent,
     metadata: privacyMetadata,
-};
+});
 
 export const LEGAL_PAGES: ArticlePage[] = [termsPage, impressumPage, privacyPage];
 
@@ -44,7 +47,6 @@ export const LEGAL_GROUPS: ArticleNavigationGroup[] = [
         items: LEGAL_PAGES.map((page) => ({
             title: page.title,
             path: page.path,
-            id: page.id,
             icon: page.icon,
         })),
     },

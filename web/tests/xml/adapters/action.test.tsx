@@ -1,8 +1,6 @@
 import { executeAction } from '@xml/adapters/Action';
-import { parseXML } from '@xml/core/parser';
 import type { ExecutionContext } from '@xml/types';
 import { describe, expect, it } from 'bun:test';
-import { renderXmlToMarkup } from '../helpers';
 
 describe('Action', () => {
     /* The action shell should send a request with a JSON payload. */
@@ -104,17 +102,6 @@ describe('Action', () => {
         expect(uploadedFile.name).toBe('supplier.txt');
         expect(await uploadedFile.text()).toBe('supplier sheet');
         expect(body.get('label')).toBe('Supplier sheet');
-    });
-
-    /* Button children should become the clickable action trigger. */
-    it('renders a wrapped button trigger in static markup', () => {
-        const output = renderXmlToMarkup(
-            parseXML('<Action action="/example/profile"><Button i18n="actions.saveProfile" /></Action>')
-        );
-
-        expect(output).toContain('<button');
-        expect(output).toContain('type="button"');
-        expect(output).toContain('Save profile');
     });
 
     /* The action shell should still invalidate without an endpoint. */

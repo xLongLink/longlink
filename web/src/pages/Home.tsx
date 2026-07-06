@@ -2,7 +2,7 @@ import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { useTranslation } from '@/lib/i18n';
 import { buttonVariants } from '@ui/button';
-import { ArrowRight, Braces, CheckCircle2, Code2, Fingerprint, Github, Mail, Rocket, Wrench } from 'lucide-react';
+import { ArrowRight, Braces, CheckCircle2, Code2, Fingerprint, Mail, Rocket, Wrench } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { Link } from 'react-router';
 
@@ -131,11 +131,12 @@ export default function Home() {
                             <span className="block whitespace-nowrap text-center">{t('home.heroLineOne')}</span>
                             <span className="mt-1 block whitespace-nowrap text-center">{t('home.heroLineTwo')}</span>
                         </h1>
-                        <p className="mx-auto text-sm leading-6 text-muted-foreground sm:text-base">
+                        <p className="mx-auto text-sm leading-6 text-muted-foreground sm:text-lg">
                             <span className="mx-auto block">{t('home.heroIntroOne')}</span>
                             <span className="mx-auto block">{t('home.heroIntroTwo')}</span>
                             <span className="mx-auto block">{t('home.heroIntroThree')}</span>
                             <span className="mx-auto block">{t('home.heroIntroFour')}</span>
+                            <span className="mx-auto block">{t('home.heroIntroFive')}</span>
                         </p>
                     </div>
                 </section>
@@ -198,21 +199,6 @@ export default function Home() {
                         <Link to="/docs/sdk" className={buttonVariants({ size: 'lg', className: 'px-4' })}>
                             {t('actions.getStarted')}
                             <ArrowRight className="size-4" aria-hidden="true" />
-                        </Link>
-                        <a
-                            href="https://github.com/xLongLink/longlink"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={buttonVariants({ variant: 'outline', size: 'lg', className: 'px-4' })}
-                        >
-                            <Github className="size-4" aria-hidden="true" />
-                            {t('common.github')}
-                        </a>
-                        <Link
-                            to="/pricing"
-                            className={buttonVariants({ variant: 'outline', size: 'lg', className: 'px-4' })}
-                        >
-                            {t('home.ctaPricing')}
                         </Link>
                         <a
                             href="mailto:info@longlink.ch"

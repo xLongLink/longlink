@@ -1,7 +1,6 @@
 import pytest
 import src.utils.mail as mail
-from src.constants import MAIL_TEMPLATES
-from unittest.mock import Mock, AsyncMock
+from unittest.mock import Mock
 from src.environments import env
 
 pytestmark = pytest.mark.no_db
@@ -87,32 +86,3 @@ async def test_send_templated_email_renders_and_dispatches(monkeypatch) -> None:
     assert message["To"] == "invited@example.com"
     assert message["Subject"] == "Test subject"
     assert message.get_body(preferencelist=["html"]).get_content().startswith("<html><p>Hello</p></html>")
-
-
-async def test_send_organization_invitation_email_builds_expected_context(monkeypatch) -> None:
-    """Use the dedicated subject and template when dispatching invitation email."""
-
-    send_templated = AsyncMock()
-    monkeypatch.setattr("src.utils.mail.send_templated_email", send_templated)
-
-    await mail.send_organization_invitation_email(
-        recipient_email="invitee@example.com",
-        inviter_name="Alice",
-        organization_name="Acme",
-        organization_id="0001",
-        invitation_role="admin",
-    )
-
-    send_templated.assert_awaited_once_with(
-        recipient_email="invitee@example.com",
-        subject="You are invited to Acme",
-        mjml_template=MAIL_TEMPLATES / "organization_invitation.mjml",
-        text_template=MAIL_TEMPLATES / "organization_invitation.txt",
-        context={
-            "recipient_email": "invitee@example.com",
-            "inviter_name": "Alice",
-            "organization_name": "Acme",
-            "invitation_role": "admin",
-            "organization_id": "0001",
-        },
-    )

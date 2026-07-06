@@ -13,7 +13,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 os.environ.setdefault("SESSION_KEY", "test-session-key-that-is-long-enough")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./dev.db")
 os.environ.setdefault("DATABASE_SSLMODE", "disable")
-os.environ.setdefault("DEVELOPMENT", "false")
+# Keep TestClient session cookies non-secure while letting adapters detect tests.
+os.environ["DEVELOPMENT"] = "true"
+os.environ["ENVIRONMENT"] = "testing"
 os.environ.setdefault("OIDC_CLIENT_ID", "longlink-api")
 os.environ.setdefault("OIDC_CLIENT_SECRET", "longlink-secret")
 os.environ.setdefault("OIDC_ISSUER", "https://identity.example/realms/dev")

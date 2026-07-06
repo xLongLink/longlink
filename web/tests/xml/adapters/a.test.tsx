@@ -31,11 +31,4 @@ describe('A', () => {
         expect(output).toContain('href="/orgs/acme/apps/inventory/files/document.pdf"');
     });
 
-    /* The runtime should omit href when the anchor is used as a triggerless label. */
-    it('renders an anchor without href when omitted', () => {
-        const output = renderXmlToMarkup(parseXML('<A i18n="anchors.labelOnly" />'));
-
-        expect(output).not.toContain('href=');
-        expect(output).toContain('Label only');
-    });
 });

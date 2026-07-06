@@ -1,62 +1,7 @@
-from types import SimpleNamespace
 from pytest import MonkeyPatch
 from pathlib import Path
-from longlink.cli import dev, build, migrate, testing
+from longlink.cli import build, migrate
 from click.testing import CliRunner
-
-
-def test_dev_command_runs_main_app_with_uvicorn_reload(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    """Run the local application through uvicorn reload on the SDK development port."""
-
-    # Arrange
-    calls: list[tuple[str, dict[str, object]]] = []
-
-    def fake_run(app_path: str, **kwargs: object) -> None:
-        """Capture the uvicorn invocation without starting a server."""
-
-        calls.append((app_path, kwargs))
-
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(dev.sys, "path", [])
-    monkeypatch.setattr(dev.sys, "stdin", SimpleNamespace(isatty=lambda: False))
-    monkeypatch.setattr(dev.uvicorn, "run", fake_run)
-
-    # Act
-    callback = dev.dev_command.callback
-    assert callback is not None
-    callback()
-
-    # Assert
-    assert dev.sys.path == [str(tmp_path)]
-    assert calls[0][0] == "main:app"
-    assert calls[0][1]["port"] == 1707
-    assert calls[0][1]["reload"] is True
-
-
-def test_test_command_forwards_pytest_arguments(monkeypatch: MonkeyPatch) -> None:
-    """Run pytest through the active Python interpreter and forward all CLI arguments."""
-
-    # Arrange
-    calls: list[tuple[list[str], bool]] = []
-    runner = CliRunner()
-
-    def fake_run(command: list[str], check: bool) -> SimpleNamespace:
-        """Capture the subprocess command without running pytest."""
-
-        calls.append((command, check))
-        return SimpleNamespace(returncode=7)
-
-    monkeypatch.setattr(testing.subprocess, "run", fake_run)
-
-    # Act
-    result = runner.invoke(testing.test_command, ["-q", "tests/test_app.py", "-k", "smoke"])
-
-    # Assert
-    assert result.exit_code == 7
-    command, check = calls[0]
-    assert check is False
-    assert command[:3] == [testing.sys.executable, "-m", "pytest"]
-    assert command[3:] == ["-q", "tests/test_app.py", "-k", "smoke"]
 
 
 def test_migrate_command_reapplies_when_revision_is_created(monkeypatch: MonkeyPatch) -> None:

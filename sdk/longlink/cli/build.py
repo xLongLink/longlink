@@ -1,8 +1,8 @@
 import os
+import re
 import ast
 import json
 import click
-import re
 import shutil
 import tomllib
 import tempfile
@@ -247,26 +247,42 @@ def render_longlink_labels(metadata: dict[str, object], env_spec: dict[str, list
 def resolve_docker_paths(root: Path) -> tuple[Path, str]:
     """Resolve Docker build context and in-container working directory."""
 
-    # Read local uv source paths so Docker context includes editable dependencies.
-    pyproject_data = read_pyproject(root)
-    tool_data = pyproject_data.get("tool", {})
-    if not isinstance(tool_data, dict):
-        tool_data = {}
-
-    uv_data = tool_data.get("uv", {})
-    if not isinstance(uv_data, dict):
-        uv_data = {}
-
-    uv_sources = uv_data.get("sources", {})
-    if not isinstance(uv_sources, dict):
-        uv_sources = {}
-
+    read_pyproject(root)
     source_paths: list[Path] = [root]
-    for source_config in uv_sources.values():
-        if isinstance(source_config, dict):
-            source_path = source_config.get("path")
-            if isinstance(source_path, str):
-                source_paths.append((root / source_path).resolve())
+    pending_paths: list[Path] = [root]
+    seen_paths: set[Path] = set()
+
+    # Read transitive local uv source paths so editable dependencies keep their relative paths in Docker.
+    while pending_paths:
+        source_root = pending_paths.pop()
+        if source_root in seen_paths:
+            continue
+
+        seen_paths.add(source_root)
+        pyproject_path = source_root / "pyproject.toml"
+        if not pyproject_path.is_file():
+            continue
+
+        pyproject_data = read_pyproject(source_root)
+        tool_data = pyproject_data.get("tool", {})
+        if not isinstance(tool_data, dict):
+            tool_data = {}
+
+        uv_data = tool_data.get("uv", {})
+        if not isinstance(uv_data, dict):
+            uv_data = {}
+
+        uv_sources = uv_data.get("sources", {})
+        if not isinstance(uv_sources, dict):
+            uv_sources = {}
+
+        for source_config in uv_sources.values():
+            if isinstance(source_config, dict):
+                source_path = source_config.get("path")
+                if isinstance(source_path, str):
+                    resolved_source_path = (source_root / source_path).resolve()
+                    source_paths.append(resolved_source_path)
+                    pending_paths.append(resolved_source_path)
 
     # Use a shared build context so relative source paths remain valid in container.
     common_root = Path(os.path.commonpath(source_paths))

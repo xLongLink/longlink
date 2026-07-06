@@ -1,8 +1,18 @@
 from uuid import UUID
+from typing import Any, Protocol, cast
 from datetime import UTC, datetime
-from sqlalchemy.dialects import postgresql
 from tenant.models import User
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.ext.asyncio import AsyncConnection
 from tenant.database.services.users import users
+
+
+class CompilableStatement(Protocol):
+    """Represent the SQLAlchemy statements inspected by these tests."""
+
+    def compile(self, *args: Any, **kwargs: Any) -> object:
+        """Compile the statement for one SQL dialect."""
+        ...
 
 
 class FakeConnection:
@@ -11,16 +21,16 @@ class FakeConnection:
     def __init__(self) -> None:
         """Initialize an empty statement log."""
 
-        self.calls: list[tuple[object, object | None]] = []
+        self.calls: list[tuple[CompilableStatement, object | None]] = []
 
 
-    async def execute(self, statement: object, params: object | None = None) -> None:
+    async def execute(self, statement: CompilableStatement, params: object | None = None) -> None:
         """Record SQLAlchemy statements and parameters."""
 
         self.calls.append((statement, params))
 
 
-def compiled_sql(statement: object) -> str:
+def compiled_sql(statement: CompilableStatement) -> str:
     """Compile a SQLAlchemy statement using the PostgreSQL dialect."""
 
     return str(statement.compile(dialect=postgresql.dialect()))
@@ -44,7 +54,7 @@ async def test_sync_upserts_active_users_and_soft_deletes_stale_rows() -> None:
     )
 
     # Act
-    await users.sync(connection, [active_user])
+    await users.sync(cast(AsyncConnection, connection), [active_user])
 
     # Assert
     assert len(connection.calls) == 2
@@ -64,7 +74,7 @@ async def test_sync_soft_deletes_all_users_when_no_active_users_remain() -> None
     connection = FakeConnection()
 
     # Act
-    await users.sync(connection, [])
+    await users.sync(cast(AsyncConnection, connection), [])
 
     # Assert
     assert len(connection.calls) == 1

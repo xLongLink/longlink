@@ -2,9 +2,10 @@ import { DataTable } from '@/components/DataTable';
 import { useOrganizationStorageResources } from '@/hooks/use-organization-storage-resources';
 import { useTranslation } from '@/lib/i18n';
 import type { ApiOrganizationDetails, ApiOrganizationStorageResource } from '@/lib/types';
-import { formatBytes, formatNumber } from '@/lib/utils';
+import { formatBytes, formatNumber, getInitials } from '@/lib/utils';
 import { S3 } from '@/svg/S3';
 import { type ColumnDef } from '@tanstack/react-table';
+import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Link, useParams } from 'react-router';
 
 type StorageProps = {
@@ -23,6 +24,8 @@ export default function Storage({ organization, organizationDetails, isLoading }
         isLoading: storageResourcesIsLoading,
     } = useOrganizationStorageResources(organizationDetails?.id ?? '');
     const isDetailPage = bucket.length > 0;
+    const organizationName = organizationDetails?.name ?? organization;
+    const organizationAvatar = organizationDetails?.avatar ?? '';
 
     // Subpages are bucket-selected; the root page intentionally stays as a list-only view.
     const selectedResource = storageResources.find((resource) => resource.bucket_name === bucket) ?? null;
@@ -100,10 +103,10 @@ export default function Storage({ organization, organizationDetails, isLoading }
             header: t('columns.resource'),
             cell: ({ row }) => {
                 const storageResource = row.original;
-                const label =
-                    storageResource.kind === 'shared_bucket'
-                        ? t('resources.shared')
-                        : (storageResource.application?.name ?? storageResource.name);
+                const isShared = storageResource.kind === 'shared_bucket';
+                const label = isShared
+                    ? t('resources.shared')
+                    : (storageResource.application?.name ?? storageResource.name);
 
                 return (
                     <div className="flex items-center gap-3">
@@ -127,12 +130,23 @@ export default function Storage({ organization, organizationDetails, isLoading }
         },
         {
             id: 'application',
-            header: t('columns.application'),
+            header: t('columns.owner'),
             cell: ({ row }) => {
                 const application = row.original.application;
 
                 if (row.original.kind === 'shared_bucket') {
-                    return <span className="text-muted-foreground">{t('resources.allApplications')}</span>;
+                    return (
+                        <div className="flex items-start gap-3">
+                            <Avatar shape="squircle" className="size-9 shrink-0">
+                                <AvatarImage src={organizationAvatar} alt={organizationName} />
+                                <AvatarFallback>{getInitials(organizationName)}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 space-y-1">
+                                <div className="font-medium text-foreground">{organizationName}</div>
+                                <div className="text-xs text-muted-foreground">{t('columns.organization')}</div>
+                            </div>
+                        </div>
+                    );
                 }
 
                 if (application === null) {

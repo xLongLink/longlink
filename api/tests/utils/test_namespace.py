@@ -1,5 +1,5 @@
 import pytest
-from src.utils.namespace import dbname, k8name, s3name
+from src.utils.namespace import dbname, k8name
 
 
 def test_dbname_returns_managed_database_name() -> None:
@@ -39,30 +39,3 @@ def test_k8name_rejects_overlong_name() -> None:
 
     with pytest.raises(ValueError, match="Kubernetes name must be at most 63 characters"):
         k8name("a" * 55)
-
-
-def test_s3name_returns_managed_bucket_name() -> None:
-    """Prefix storage source names for managed S3 buckets."""
-
-    assert s3name("acme-team-shared") == "longlink-acme-team-shared"
-
-
-def test_s3name_allows_maximum_length_bucket_name() -> None:
-    """Allow final S3 bucket names exactly at the backend limit."""
-
-    assert s3name("a" * 54) == f"longlink-{'a' * 54}"
-
-
-def test_s3name_rejects_overlong_bucket_name() -> None:
-    """Reject S3 bucket names longer than 63 characters."""
-
-    with pytest.raises(ValueError, match="S3 bucket name must be at most 63 characters"):
-        s3name("a" * 55)
-
-
-@pytest.mark.parametrize("value", ["Acme", "acme_team", "acme-"])
-def test_s3name_rejects_invalid_bucket_name(value: str) -> None:
-    """Reject bucket names that are not lowercase hyphenated names."""
-
-    with pytest.raises(ValueError, match="S3 bucket name must contain only lowercase letters"):
-        s3name(value)

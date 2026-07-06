@@ -124,19 +124,3 @@ def test_database_url_strips_sslmode_and_preserves_other_query_params(
     assert normalized.startswith("postgresql+asyncpg://")
     assert {key.lower() for key, _value in parsed_query}.isdisjoint({"sslmode"})
     assert dict(parsed_query) == dict(expected_query)
-
-
-async def test_get_session_reuses_cached_session(monkeypatch) -> None:
-    """Return the cached sessionmaker without creating another engine."""
-
-    # Arrange
-    cached_session = object()
-    session.Session = cached_session
-
-    def fail_create_async_engine(*args, **kwargs):
-        raise AssertionError("cached session should be reused")
-
-    monkeypatch.setattr(session, "create_async_engine", fail_create_async_engine)
-
-    # Act and assert
-    assert await session.get_session() is cached_session

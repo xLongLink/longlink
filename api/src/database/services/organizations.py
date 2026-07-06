@@ -3,11 +3,13 @@ from typing import Any
 from datetime import UTC, datetime
 from src.utils import names
 from sqlalchemy import select
+from tenant.models import User as TenantUser
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
+from tenant.storage import shared_bucket_name
 from src.models.roles import OrganizationRoles
 from src.models.users import UserSummary
-from src.utils.namespace import dbname, k8name, s3name
+from src.utils.namespace import dbname, k8name
 from src.database.session import session_scope
 from src.models.locations import LocationResponse
 from src.models.organizations import (OrganizationDetails,
@@ -15,7 +17,6 @@ from src.models.organizations import (OrganizationDetails,
                                       OrganizationInvitationResponse,
                                       OrganizationApplicationResponse)
 from src.database.models.users import User
-from tenant.models import User as TenantUser
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
@@ -239,6 +240,20 @@ class OrganizationsService:
             if membership is None:
                 return False
 
+            if membership.role_name == OrganizationRoles.owner and role != OrganizationRoles.owner:
+                owner_statement = (
+                    select(UserOrganization)
+                    .where(
+                        UserOrganization.organization_id == organization_id,
+                        UserOrganization.role_name == OrganizationRoles.owner,
+                        UserOrganization.deleted_at.is_(None),
+                    )
+                    .with_for_update()
+                )
+                owner_result = await session.execute(owner_statement)
+                if len(owner_result.scalars().all()) <= 1:
+                    raise ValueError("Organization must have at least one owner")
+
             membership.updated_at = datetime.now(UTC)
             membership.updated_id = user.id
             membership.role_name = role
@@ -252,7 +267,7 @@ class OrganizationsService:
             slug = names.slugify(name, "Organization")
             k8name(slug)
             dbname(slug)
-            s3name(f"{slug}-shared")
+            shared_bucket_name(slug)
             organization = Organization(name=name, slug=slug, avatar=avatar or "", location_id=location_id)
             # Attach the creator as the initial owner for every organization.
             organization.created_id = user.id

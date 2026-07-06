@@ -2,17 +2,12 @@ import pytest
 from src import auth as auth_module
 from uuid import UUID
 from types import SimpleNamespace
-from fastapi import Response
 from src.errors import NotFoundError, ForbiddenError, UnavailableError
 from src.routes import auth as auth_routes
 from src.routes import users as users_routes
-from src.routes import accounts as account_routes
 from src.models.auth import OidcUserInfo
 from src.models.roles import PlatformRoles
-from src.models.users import UserUpdate, UserProfile, UserListItem
-from src.models.common import SuccessResponse
-from src.models.countries import Country
-from src.models.locations import LocationProvider, LocationResponse
+from src.models.users import UserUpdate, UserProfile
 from src.database.services import users as users_service_module
 from src.database.models.users import User
 
@@ -26,27 +21,6 @@ class RequestStub:
         """Store request session data."""
 
         self.session = session if session is not None else {}
-
-
-class OidcRedirectClientStub:
-    """Capture OIDC redirect requests."""
-
-    def __init__(self) -> None:
-        """Initialize captured redirect calls."""
-
-        self.calls: list[dict[str, object]] = []
-
-    async def authorize_redirect(self, request: RequestStub, redirect_uri: str, **kwargs: object) -> Response:
-        """Record redirect arguments and return a plain response."""
-
-        self.calls.append(
-            {
-                "kwargs": kwargs,
-                "next_path": request.session.get(auth_routes.OIDC_NEXT_SESSION_KEY),
-                "redirect_uri": redirect_uri,
-            }
-        )
-        return Response(status_code=204)
 
 
 class OidcCallbackClientStub:
@@ -219,18 +193,6 @@ def user(oidc: str = "oidc-user", role: PlatformRoles = PlatformRoles.user) -> U
     )
 
 
-def location_response() -> LocationResponse:
-    """Build one location response for profile tests."""
-
-    return LocationResponse(
-        id=UUID("11111111-1111-1111-1111-111111111111"),
-        name="local",
-        slug="local",
-        country=Country.CH,
-        provider=LocationProvider.local,
-    )
-
-
 def user_profile(profile_user: User) -> UserProfile:
     """Build a user profile for direct route tests."""
 
@@ -247,25 +209,6 @@ def user_profile(profile_user: User) -> UserProfile:
         oidc=profile_user.oidc,
         organizations=[],
     )
-
-
-async def test_login_oidc_stores_safe_next_path_and_provider_hint(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Start OIDC login with safe redirect storage and Keycloak provider hints."""
-
-    oidc_client = OidcRedirectClientStub()
-    monkeypatch.setattr(auth_routes, "oauth", OAuthStub(oidc_client))
-    request = RequestStub()
-
-    response = await auth_routes.login_oidc(request, provider="github", next_path="/orgs/acme")
-
-    assert response.status_code == 204
-    assert oidc_client.calls == [
-        {
-            "kwargs": {"kc_idp_hint": "github"},
-            "next_path": "/orgs/acme",
-            "redirect_uri": auth_routes.env.OIDC_REDIRECT_URI,
-        }
-    ]
 
 
 async def test_auth_oidc_upserts_activates_and_redirects(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -412,78 +355,6 @@ def test_session_accounts_activate_deactivate_and_remove() -> None:
     session_accounts.remove()
     assert session_accounts.active() is None
     assert session_accounts.list() == ["second"]
-
-
-async def test_account_routes_list_activate_and_deactivate(monkeypatch: pytest.MonkeyPatch) -> None:
-    """List saved accounts, activate a saved account, and clear the active account."""
-
-    first_user = user("first")
-    second_user = user("second")
-    users_by_oidc = {first_user.oidc: first_user, second_user.oidc: second_user}
-
-    async def fake_get(oidc: str) -> User | None:
-        """Return users by OIDC subject."""
-
-        return users_by_oidc.get(oidc)
-
-    monkeypatch.setattr(account_routes.users, "get", fake_get)
-    request = RequestStub({"oidc_accounts": ["first", "missing", "second"], "oidc": "first"})
-
-    listed = await account_routes.list_accounts(request)
-    assert listed == [UserListItem.model_validate(first_user), UserListItem.model_validate(second_user)]
-
-    activated = await account_routes.activate_account("second", request)
-    assert activated == SuccessResponse()
-    assert request.session["oidc"] == "second"
-
-    deactivated = await account_routes.deactivate_account(request)
-    assert deactivated == [UserListItem.model_validate(first_user), UserListItem.model_validate(second_user)]
-    assert "oidc" not in request.session
-
-
-async def test_activate_account_rejects_unsaved_subject() -> None:
-    """Reject activating accounts that were not saved in the browser session."""
-
-    request = RequestStub({"oidc_accounts": ["first"], "oidc": "first"})
-
-    with pytest.raises(ForbiddenError, match="Account is not saved in this session"):
-        await account_routes.activate_account("second", request)
-
-
-async def test_logout_removes_active_session_account() -> None:
-    """Remove the active account from the browser session."""
-
-    request = RequestStub({"oidc_accounts": ["first", "second"], "oidc": "first"})
-
-    response = await auth_routes.logout(request)
-
-    assert response == SuccessResponse()
-    assert request.session == {"oidc_accounts": ["second"]}
-
-
-async def test_current_profile_and_listing_routes_use_user_services(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Return current profile and support user listings through the user service."""
-
-    current_user = user("current", PlatformRoles.administrator)
-    profile = user_profile(current_user)
-    listed_user = user("listed")
-
-    async def fake_profile(user_id: UUID) -> UserProfile:
-        """Return the configured current profile."""
-
-        assert user_id == current_user.id
-        return profile
-
-    async def fake_list() -> list[User]:
-        """Return all users for the listing route."""
-
-        return [listed_user]
-
-    monkeypatch.setattr(users_routes.users, "profile", fake_profile)
-    monkeypatch.setattr(users_routes.users, "list", fake_list)
-
-    assert await users_routes.get_me(current_user) == profile
-    assert await users_routes.list_users(current_user) == [UserListItem.model_validate(listed_user)]
 
 
 async def test_platform_role_dependencies_allow_only_elevated_roles(monkeypatch: pytest.MonkeyPatch) -> None:

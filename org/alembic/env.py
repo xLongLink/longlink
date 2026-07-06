@@ -1,16 +1,17 @@
 import asyncio
+from typing import Any
 from alembic import context
-from sqlalchemy import pool, engine_from_config
+from sqlalchemy import pool, text, engine_from_config
 from sqlalchemy.engine import Connection, make_url
-from tenant.database.models import shared_metadata
-from tenant.database.constants import ALEMBIC_VERSION_TABLE
 from sqlalchemy.ext.asyncio import create_async_engine
+from tenant.database.models import shared_metadata
+from tenant.database.constants import SHARED_SCHEMA, ALEMBIC_VERSION_TABLE
 
 config = context.config
 target_metadata = shared_metadata
 
 
-def context_options() -> dict[str, object]:
+def context_options() -> dict[str, Any]:
     """Return shared Alembic context options for tenant database migrations."""
 
     return {
@@ -18,7 +19,7 @@ def context_options() -> dict[str, object]:
         "include_schemas": True,
         "compare_type": True,
         "version_table": ALEMBIC_VERSION_TABLE,
-        "version_table_schema": "public",
+        "version_table_schema": SHARED_SCHEMA,
     }
 
 
@@ -34,12 +35,16 @@ def run_migrations_offline() -> None:
     )
 
     with context.begin_transaction():
+        context.execute(f"CREATE SCHEMA IF NOT EXISTS {SHARED_SCHEMA}")
         context.run_migrations()
 
 
 def do_run_migrations(connection: Connection) -> None:
     """Run tenant database migrations on one synchronous connection."""
 
+    connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {SHARED_SCHEMA}"))
+    # Alembic creates its version table before running revisions, so the schema bootstrap must be committed first.
+    connection.commit()
     context.configure(connection=connection, **context_options())
 
     with context.begin_transaction():

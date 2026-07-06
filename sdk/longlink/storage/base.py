@@ -35,6 +35,9 @@ def _create_scoped_fs(env: Envs, bucket: str | None) -> AbstractFileSystem:
         return filesystem
 
     storage_url = urllib.parse.urlsplit(env.STORAGE_URL)
+    if storage_url.scheme in {"", "file"}:
+        raise ValueError("Production storage requires a non-local storage URL")
+
     protocol_parts = storage_url.scheme.split("+", 1)
     if len(protocol_parts) == 1:
         filesystem = fsspec.filesystem(protocol_parts[0])

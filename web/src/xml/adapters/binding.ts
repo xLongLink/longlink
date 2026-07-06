@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getVersion, proxy, ref, useSnapshot } from 'valtio';
-import { isReference, resolvePath } from '../expressions';
+import { isReference, isSafePropertyName, resolvePath } from '../expressions';
 import type { ASTProps, ExecutionContext, XmlBindableValue } from '../types';
 import { resolveXmlValue } from './props';
 
@@ -85,6 +85,9 @@ function resolveBindableTarget(
     const parts = rawValue.trim().slice(1).split('.').filter(Boolean);
 
     if (parts.length === 0) return undefined;
+    if (!parts.every(isSafePropertyName)) {
+        throw new Error('XML binding path must use safe property names');
+    }
 
     if (parts.length === 1) {
         const state = resolvePath(ctx, parts);

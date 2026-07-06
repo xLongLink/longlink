@@ -3,7 +3,14 @@ import { useXmlContext } from '@xml/core/context';
 import { resolveTranslation } from '@xml/core/i18n';
 import { renderNode } from '@xml/core/node';
 import type { Props } from '@xml/types';
-import { requireXmlString, resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
+import { useBindableValue } from './binding';
+import {
+    requireXmlString,
+    resolveXmlBoolean,
+    resolveXmlString,
+    resolveXmlValue,
+    useXmlValueSnapshot,
+} from './props';
 
 /** Props accepted by the XML RadioGroup component. */
 
@@ -18,9 +25,8 @@ export function RadioGroup({ props, nodes }: Props) {
     const name = resolveXmlString(props, 'name', ctx);
     const readOnly = resolveXmlBoolean(props, 'readOnly', ctx);
     const required = resolveXmlBoolean(props, 'required', ctx);
-    const value = resolveXmlValue(props, 'value', ctx);
+    const binding = useBindableValue(props, 'value', ctx);
     const { state: defaultValueState, snapshot: defaultValueSnapshot } = useXmlValueSnapshot(defaultValue);
-    const { state: valueState, snapshot: valueSnapshot } = useXmlValueSnapshot(value);
 
     // Normalize literal values and reactive state slots into the Base UI value contract.
     const defaultCurrentValue = defaultValueState
@@ -28,13 +34,8 @@ export function RadioGroup({ props, nodes }: Props) {
             ? defaultValueSnapshot.value
             : defaultValueSnapshot
         : defaultValue;
-    const currentValue = valueState
-        ? valueSnapshot && typeof valueSnapshot === 'object' && 'value' in valueSnapshot
-            ? valueSnapshot.value
-            : valueSnapshot
-        : value;
     const resolvedDefaultValue = defaultCurrentValue != null ? String(defaultCurrentValue) : undefined;
-    const resolvedValue = currentValue != null ? String(currentValue) : undefined;
+    const resolvedValue = binding.bound ? binding.currentValue || undefined : binding.initialValue || undefined;
 
     return (
         <UIRadioGroup
@@ -45,6 +46,13 @@ export function RadioGroup({ props, nodes }: Props) {
             readOnly={readOnly}
             required={required}
             value={resolvedValue}
+            onValueChange={
+                binding.bound
+                    ? (nextValue) => {
+                          binding.setValue(nextValue ?? '');
+                      }
+                    : undefined
+            }
         >
             {renderNode(nodes, ctx)}
         </UIRadioGroup>

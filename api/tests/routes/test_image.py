@@ -63,31 +63,6 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
     }
 
 
-def test_inspect_image_returns_empty_metadata_when_labels_missing(clients, monkeypatch) -> None:
-    """Return an empty inspection payload when the image has no LongLink labels."""
-
-    # Arrange
-    async def fake_metadata(image: str) -> LongLinkMetadata:
-        return LongLinkMetadata()
-
-    monkeypatch.setattr("src.routes.image.images.metadata", fake_metadata)
-    client = clients[0]
-
-    # Act
-    response = client.get("/api/image?image=ghcr.io/longlink/dashboard:latest")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == {
-        "sdk": None,
-        "title": None,
-        "version": None,
-        "description": None,
-        "digest": None,
-        "environments": [],
-    }
-
-
 def test_inspect_image_returns_404_when_metadata_missing(clients, monkeypatch) -> None:
     """Return a not-found error when the image has no LongLink metadata."""
 

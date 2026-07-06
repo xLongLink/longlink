@@ -2,6 +2,7 @@ import { Auth } from '@/components/Auth';
 import { useOrganization } from '@/hooks/use-organization';
 import { useSdkUser } from '@/hooks/use-sdk-user';
 import { useUserProfile } from '@/hooks/use-user';
+import ArticleLayout from '@/layout/ArticleLayout';
 import { canAccessApplication, canViewApplicationLogs } from '@/lib/roles';
 import Admin from '@/pages/Admin';
 import AdminApplications from '@/pages/admin/Applications';
@@ -18,11 +19,9 @@ import AdminStorage from '@/pages/admin/Storage';
 import StorageBuckets from '@/pages/admin/StorageBuckets';
 import StorageObjects from '@/pages/admin/StorageObjects';
 import AdminUsers from '@/pages/admin/Users';
-import { DOC_PAGES } from '@/pages/docs/catalog';
-import DocsPageRoute from '@/pages/docs/DocsPageRoute';
+import { DOC_GROUPS, DOC_PAGES } from '@/pages/docs/catalog';
 import Home from '@/pages/Home';
-import { LEGAL_PAGES } from '@/pages/legal/catalog';
-import LegalPageRoute from '@/pages/legal/LegalPageRoute';
+import { LEGAL_GROUPS, LEGAL_PAGES } from '@/pages/legal/catalog';
 import NotFound from '@/pages/NotFound';
 import Organization from '@/pages/Organization';
 import Organizations from '@/pages/Organizations';
@@ -54,11 +53,11 @@ export function getRoutes(mode = import.meta.env.MODE) {
         { path: '/', element: <Home /> },
         ...DOC_PAGES.map((page) => ({
             path: page.path.replace(/^\//, ''),
-            element: <DocsPageRoute page={page} />,
+            element: <ArticleLayout page={page} navigationGroups={DOC_GROUPS} />,
         })),
         ...LEGAL_PAGES.map((page) => ({
             path: page.path.replace(/^\//, ''),
-            element: <LegalPageRoute page={page} />,
+            element: <ArticleLayout page={page} navigationGroups={LEGAL_GROUPS} />,
         })),
         {
             path: 'pricing',

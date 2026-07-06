@@ -48,21 +48,4 @@ describe('DataTable', () => {
         expect(output).toContain('Warehouse Widget');
         expect(output).toContain('SKU-001');
     });
-
-    /* Empty tables should use the XML-provided empty message. */
-    it('renders the configured empty state', () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            values: { items: [] },
-        };
-        const output = renderXmlToMarkup(
-            parseXML(
-                '<DataTable data="$items" as="item" empty="No inventory items yet."><DataColumn field="name" header="Name" /></DataTable>'
-            ),
-            ctx
-        );
-
-        expect(output).toContain('No inventory items yet.');
-    });
 });

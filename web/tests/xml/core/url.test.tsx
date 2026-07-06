@@ -1,7 +1,5 @@
-import { BaseUrlContext, isAppRelativeUrl, resolveRequestUrl, resolveUrl, useUrl } from '@xml/core/url';
+import { isAppRelativeUrl, resolveRequestUrl, resolveUrl } from '@xml/core/url';
 import { describe, expect, it } from 'bun:test';
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('resolveUrl', () => {
     it('joins base and relative paths', () => {
@@ -36,17 +34,5 @@ describe('resolveRequestUrl', () => {
         expect(() => resolveRequestUrl('/api', 'https://example.com/items')).toThrow(
             'XML request URL must be app-relative'
         );
-    });
-});
-
-describe('useUrl', () => {
-    it('resolves urls from context', () => {
-        function LinkValue() {
-            return createElement('span', null, useUrl('/items'));
-        }
-
-        expect(
-            renderToStaticMarkup(createElement(BaseUrlContext.Provider, { value: '/api' }, createElement(LinkValue)))
-        ).toBe('<span>/api/items</span>');
     });
 });

@@ -2,6 +2,7 @@ import { createContext as createReactContext, useContext as useReactContext } fr
 
 export const BaseUrlContext = createReactContext<string>('');
 const ABSOLUTE_URL_PATTERN = /^[A-Za-z][A-Za-z0-9+.-]*:/;
+const SAFE_ANCHOR_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
 const URL_VALIDATION_BASE = 'http://longlink.local';
 
 /** Resolves a request URL against a base URL string. */
@@ -60,9 +61,37 @@ export function resolveRequestUrl(baseUrl: string, path: string): string {
     return resolveUrl(baseUrl, value);
 }
 
+/** Resolves an XML anchor URL while blocking unsafe browser protocols. */
+export function resolveAnchorUrl(baseUrl: string, path: string): string {
+    const value = path.trim();
+
+    if (!value || value.startsWith('//')) return '';
+
+    if (ABSOLUTE_URL_PATTERN.test(value)) {
+        try {
+            const url = new URL(value);
+
+            return SAFE_ANCHOR_PROTOCOLS.has(url.protocol) ? value : '';
+        } catch {
+            return '';
+        }
+    }
+
+    if (!isAppRelativeUrl(value)) return '';
+
+    return resolveUrl(baseUrl, value);
+}
+
 /** Resolves a request URL against the active base URL. */
 export function useUrl(path: string): string {
     const baseUrl = useReactContext(BaseUrlContext);
 
     return resolveUrl(baseUrl, path);
+}
+
+/** Resolves an anchor URL against the active base URL. */
+export function useAnchorUrl(path: string): string {
+    const baseUrl = useReactContext(BaseUrlContext);
+
+    return resolveAnchorUrl(baseUrl, path);
 }

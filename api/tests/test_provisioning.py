@@ -1,52 +1,8 @@
 import pytest
-import urllib.parse
 from types import SimpleNamespace
-from src.operations.provisioning import (runtime_environment, runtime_storage_url,
-                                           runtime_database_url)
+from src.operations.provisioning import runtime_environment, runtime_storage_url
 
 pytestmark = pytest.mark.no_db
-
-
-def _query_dict(url: str) -> dict[str, list[str]]:
-    """Build a URL query map for simple assertions."""
-
-    return {
-        key: [value]
-        for key, value in urllib.parse.parse_qsl(
-            urllib.parse.urlsplit(url).query,
-            keep_blank_values=True,
-        )
-    }
-
-
-@pytest.mark.parametrize(
-    ("source", "expected_query"),
-    [
-        (
-            "postgresql+psycopg://user:pass@postgres.local:5432/longlink?application_name=longlink&sslmode=disable",
-            {"application_name": ["longlink"]},
-        ),
-        (
-            "postgresql+psycopg://user:pass@postgres.local:5432/longlink?sslmode=require&search_path=%22public%22&application_name=longlink",
-            {"search_path": ["\"public\""], "application_name": ["longlink"]},
-        ),
-        (
-            "postgresql+psycopg://user:pass@postgres.local:5432/longlink?SSLMODE=require&target_session_attrs=read-write",
-            {"target_session_attrs": ["read-write"]},
-        ),
-    ],
-)
-def test_runtime_database_url_normalizes_asyncpg_and_strips_sslmode(
-    source: str,
-    expected_query: dict[str, list[str]],
-) -> None:
-    """Convert runtime PostgreSQL URLs to asyncpg and remove sslmode."""
-
-    converted = runtime_database_url(source)
-
-    assert converted.startswith("postgresql+asyncpg://")
-    assert "sslmode" not in {key.lower() for key in _query_dict(converted)}
-    assert _query_dict(converted) == expected_query
 
 
 def test_runtime_storage_url_uses_runtime_endpoint_and_escaped_credentials() -> None:

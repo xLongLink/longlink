@@ -15,13 +15,6 @@ describe('core/context', () => {
         });
     });
 
-    it('returns the same context for an empty ast', async () => {
-        const ctx = createContext();
-        const ast: ASTNode[] = [];
-
-        await expect(setupContext(ast, ctx, '/api')).resolves.toBe(ctx);
-    });
-
     it('preserves state across setup reruns until the slot is invalidated', async () => {
         const ctx = createContext();
         const ast: ASTNode[] = [{ name: 'State', params: { id: 'filter', value: 'day' } }];

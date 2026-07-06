@@ -4,17 +4,18 @@ from datetime import UTC, datetime
 from src.utils import names, images
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
-from src.models.metadata import LongLinkMetadata
 from src.utils.url import database as normalize_database_url
+from tenant.storage import bucket_name, shared_buckets, shared_bucket_name
+from src.models.metadata import LongLinkMetadata
 from src.models.statuses import ApplicationStatus
-from src.utils.namespace import dbname, k8name, s3name
+from src.utils.namespace import dbname, k8name
 from src.adapters.storage import S3
-from src.adapters.storage.base import StorageRuntimeCredentials
 from src.adapters.database import Postgres
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
 from src.adapters.compute.k8s import K8s
 from src.models.organizations import OrganizationDetails, OrganizationSummary
+from src.adapters.storage.base import StorageRuntimeCredentials
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -229,7 +230,7 @@ async def remove_application_runtime(
     names.knames(application.slug, "Application name")
     k8name(organization.slug)
     dbname(organization.slug)
-    s3name(f"{organization.slug}-{application.slug}")
+    bucket_name(organization.slug, application.slug)
 
     compute_registry = await application_compute_registry(application, organization.location_id)
     if compute_registry is not None:
@@ -255,7 +256,7 @@ async def remove_application_runtime(
             storage_registry.access_key_id,
             storage_registry.secret_access_key,
         )
-        await storage_client.delete_bucket(s3name(f"{organization.slug}-{application.slug}"))
+        await storage_client.delete_bucket(bucket_name(organization.slug, application.slug))
 
 
 async def remove_organization_runtime(
@@ -266,7 +267,7 @@ async def remove_organization_runtime(
     names.knames(organization.slug, "Organization")
     k8name(organization.slug)
     dbname(organization.slug)
-    s3name(f"{organization.slug}-shared")
+    shared_bucket_name(organization.slug)
 
     organization_applications = await applications.list_by_organization(organization.id, include_deleted=True)
     for application in organization_applications:
@@ -304,7 +305,7 @@ async def remove_organization_runtime(
             storage_registry.access_key_id,
             storage_registry.secret_access_key,
         )
-        await storage_client.delete_bucket(s3name(f"{organization.slug}-shared"))
+        await shared_buckets.delete(storage_client, organization.slug)
 
 
 def runtime_database_url(database_url: str) -> str:
@@ -352,8 +353,8 @@ def runtime_environment(
         environment.update(
             {
                 "LONGLINK_STORAGE_URL": runtime_storage_url(storage_registry, storage_credentials),
-                "LONGLINK_STORAGE_BUCKET": s3name(f"{organization_slug}-{application_slug}"),
-                "LONGLINK_STORAGE_SHARED_BUCKET": s3name(f"{organization_slug}-shared"),
+                "LONGLINK_STORAGE_BUCKET": bucket_name(organization_slug, application_slug),
+                "LONGLINK_STORAGE_SHARED_BUCKET": shared_bucket_name(organization_slug),
             }
         )
 
@@ -399,8 +400,8 @@ async def create_application_runtime(
     names.knames(application_slug, "Application name")
     k8name(organization.slug)
     dbname(organization.slug)
-    s3name(f"{organization.slug}-shared")
-    s3name(f"{organization.slug}-{application_slug}")
+    shared_bucket_name(organization.slug)
+    bucket_name(organization.slug, application_slug)
     logger.info("Provisioning application %s/%s", organization.slug, application_slug)
 
     image_metadata = await application_image_metadata(payload)
@@ -469,7 +470,7 @@ async def create_application_runtime(
                 storage_registry.access_key_id,
                 storage_registry.secret_access_key,
             )
-            await storage_client.shared_bucket(organization.slug)
+            await shared_buckets.ensure(storage_client, organization.slug)
             await storage_client.bucket(organization.slug, application_slug)
             storage_credentials = await storage_client.application_credentials(
                 organization.slug,
@@ -534,8 +535,8 @@ async def sync_application_runtime(
     names.knames(application.slug, "Application name")
     k8name(organization.slug)
     dbname(organization.slug)
-    s3name(f"{organization.slug}-shared")
-    s3name(f"{organization.slug}-{application.slug}")
+    shared_bucket_name(organization.slug)
+    bucket_name(organization.slug, application.slug)
     image_metadata = await application_image_metadata(payload)
     digest = image_metadata.digest
     assert digest is not None
@@ -606,7 +607,7 @@ async def sync_application_runtime(
                 storage_registry.access_key_id,
                 storage_registry.secret_access_key,
             )
-            await storage_client.shared_bucket(organization.slug)
+            await shared_buckets.ensure(storage_client, organization.slug)
             await storage_client.bucket(organization.slug, application.slug)
             storage_credentials = await storage_client.application_credentials(
                 organization.slug,
@@ -696,12 +697,13 @@ async def create_organization_storage(
         return
 
     try:
-        await S3(
+        storage_client = S3(
             registry.protocol,
             registry.endpoint_url,
             registry.access_key_id,
             registry.secret_access_key,
-        ).shared_bucket(organization.slug)
+        )
+        await shared_buckets.ensure(storage_client, organization.slug)
     except Exception:
         logger.exception(
             "Failed to create storage for organization '%s'", organization.slug

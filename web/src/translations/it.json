@@ -155,6 +155,7 @@
         "object": "Oggetto",
         "operation": "Operazione",
         "organization": "Organizzazione",
+        "owner": "Proprietario",
         "pod": "Pod",
         "previewRows": "Righe anteprima",
         "registry": "Registro",
@@ -264,14 +265,13 @@
         "ctaContact": "Contattaci",
         "ctaDescription": "Esplora la piattaforma, crea la tua prima applicazione o parlaci di come eseguire LongLink per il tuo team.",
         "ctaEyebrow": "Prossimo passo",
-        "ctaPricing": "Vedi prezzi",
         "ctaTitle": "Inizia a costruire su LongLink",
         "heroIntroFour": "Cambia in modo pulito.",
-        "heroIntroOne": "Modella dati, regole, schermate e azioni nel codice.",
-        "heroIntroThree": "Mantieni le app portabili.",
-        "heroIntroTwo": "LongLink gestisce auth, storage e runtime.",
-        "heroLineOne": "Crea app di workflow",
-        "heroLineTwo": "senza colla."
+        "heroIntroOne": "Modella dati, validazione, stati workflow, schermate e azioni nel codice.",
+        "heroIntroThree": "Mantieni le app portabili tra ambienti.",
+        "heroIntroTwo": "LongLink gestisce auth, storage, deployment e runtime.",
+        "heroLineOne": "Just another dashboard",
+        "heroLineTwo": "Nothing to see here"
     },
     "labels": {
         "accentColor": "Colore accento",

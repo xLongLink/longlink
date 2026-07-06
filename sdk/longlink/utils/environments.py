@@ -9,7 +9,7 @@ class Environments(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=(".env", ".env.sample"),
+        env_file=(".env.sample", ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )

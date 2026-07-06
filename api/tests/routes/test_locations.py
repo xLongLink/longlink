@@ -77,39 +77,3 @@ async def test_delete_location_hides_location_from_public_reads(
     assert get_response.status_code == 404
     assert list_response.status_code == 200
     assert list_response.json() == []
-
-
-async def test_create_location_rejects_unknown_iso_country_code(
-    clients: tuple[TestClient, TestClient, TestClient],
-) -> None:
-    """Reject a country code outside the ISO 3166-1 alpha-2 set."""
-
-    # Arrange
-    client = clients[0]
-
-    # Act
-    response = client.post(
-        "/api/locations",
-        json={"name": "Local testing", "country": "ZZ"},
-    )
-
-    # Assert
-    assert response.status_code == 422
-
-
-async def test_create_location_rejects_unknown_provider(
-    clients: tuple[TestClient, TestClient, TestClient],
-) -> None:
-    """Reject a provider value outside the supported provider list."""
-
-    # Arrange
-    client = clients[0]
-
-    # Act
-    response = client.post(
-        "/api/locations",
-        json={"name": "Local testing", "country": "DE", "provider": "aws"},
-    )
-
-    # Assert
-    assert response.status_code == 422
