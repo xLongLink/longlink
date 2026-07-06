@@ -1,7 +1,7 @@
 import { useXmlContext } from '@/xml/core/context';
 import { resolveTranslation } from '@/xml/core/i18n';
 import { renderNode } from '@/xml/core/node';
-import { resolveAnchorUrl, useAnchorUrl } from '@/xml/core/url';
+import { isAppRelativeUrl, resolveUrl, useAnchorUrl } from '@/xml/core/url';
 import type { Props } from '@/xml/types';
 import { Link } from 'react-router';
 import { resolveXmlString } from './props';
@@ -15,7 +15,7 @@ export function A({ props, nodes }: Props) {
     const href = resolveXmlString(props, 'href', ctx, '');
     const to = resolveXmlString(props, 'to', ctx, '');
     const resolvedHref = useAnchorUrl(href);
-    const resolvedTo = to ? resolveAnchorUrl(String(ctx.navigationBaseUrl ?? ''), to) : '';
+    const resolvedTo = to && isAppRelativeUrl(to) ? resolveUrl(String(ctx.navigationBaseUrl ?? ''), to) : '';
 
     if (to && resolvedTo) {
         return (

@@ -22,11 +22,6 @@ type UserUpdate = Partial<Pick<User, 'name' | 'email' | 'avatar' | 'theme' | 'ac
 
 type UserPreferences = Pick<User, 'theme' | 'accent' | 'radius' | 'language'>;
 
-type LoginCredentials = {
-    username: string;
-    password: string;
-};
-
 type UserQueryResult = UseQueryResult<User | null, Error>;
 
 type AccountsState = {
@@ -179,21 +174,6 @@ export function useUser() {
         }
     };
 
-    /** Signs in with username and password and refreshes the current session. */
-    const loginWithCredentials = async ({ username, password }: LoginCredentials) => {
-        await fetchApiVoid('/auth/login/password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                username,
-                password,
-            }),
-        });
-
-        await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/me') });
-        await queryClient.invalidateQueries({ queryKey: accountsQueryKey() });
-    };
-
     /** Activates one saved account and refreshes the current user session. */
     const activateAccount = async (oidc: string) => {
         await fetchApiJson<{ ok: boolean }>(`/auth/accounts/${encodeURIComponent(oidc)}/activate`, {
@@ -223,7 +203,6 @@ export function useUser() {
         ...profile,
         accounts,
         signOut,
-        loginWithCredentials,
         activateAccount,
         switchAccount,
     };

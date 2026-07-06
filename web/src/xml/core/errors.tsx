@@ -31,7 +31,6 @@ export class XmlErrorBoundary extends Component<XmlErrorBoundaryProps, XmlErrorB
             return (
                 <div>
                     <div>{this.state.error.message || 'XML rendering failed'}</div>
-                    {this.state.error.stack ? <pre>{this.state.error.stack}</pre> : null}
                 </div>
             );
         }

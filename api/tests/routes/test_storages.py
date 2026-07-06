@@ -95,7 +95,7 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
             self.secret_access_key = secret_access_key
 
         async def buckets(self) -> list[str]:
-            return ["alpha", "beta"]
+            return ["alpha", "longlink-acme-shared", "longlink-acme-dashboard"]
 
     monkeypatch.setattr(
         "src.routes.storages.adapters.storage",
@@ -112,7 +112,7 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
 
     # Assert
     assert response.status_code == 200
-    assert [bucket["name"] for bucket in response.json()] == ["alpha", "beta"]
+    assert [bucket["name"] for bucket in response.json()] == ["longlink-acme-shared", "longlink-acme-dashboard"]
 
 
 async def test_storage_object_endpoint_returns_bucket_objects(
@@ -155,7 +155,7 @@ async def test_storage_object_endpoint_returns_bucket_objects(
             self.secret_access_key = secret_access_key
 
         async def objects(self, bucket_name: str, *, limit: int = 1000) -> list[dict[str, object]]:
-            assert bucket_name == "alpha"
+            assert bucket_name == "longlink-acme-dashboard"
             assert limit == 1000
             return [
                 {
@@ -177,7 +177,7 @@ async def test_storage_object_endpoint_returns_bucket_objects(
     )
 
     # Act
-    response = client.get(f"/api/storages/{registry_id}/buckets/alpha/objects")
+    response = client.get(f"/api/storages/{registry_id}/buckets/longlink-acme-dashboard/objects")
 
     # Assert
     assert response.status_code == 200

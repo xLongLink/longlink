@@ -57,6 +57,17 @@ APPLICATION_ACCESS_ORGANIZATION_ROLES = {
     OrganizationRoles.maintain,
     OrganizationRoles.owner,
 }
+ORGANIZATION_APPLICATION_ROLE_RANKS = {
+    OrganizationRoles.maintain: 3,
+    OrganizationRoles.admin: 4,
+    OrganizationRoles.owner: 4,
+}
+APPLICATION_ROLE_RANKS = {
+    ApplicationRoles.read: 1,
+    ApplicationRoles.write: 2,
+    ApplicationRoles.maintain: 3,
+    ApplicationRoles.admin: 4,
+}
 APPLICATION_LOG_ROLES = {ApplicationRoles.admin, ApplicationRoles.maintain}
 APPLICATION_MANAGEMENT_ROLES = {ApplicationRoles.admin, ApplicationRoles.maintain}
 INVALID_PERCENT_ESCAPE_PATTERN = re.compile(r"%(?![0-9A-Fa-f]{2})")
@@ -103,6 +114,28 @@ def _can_view_application_logs(
     """Return whether a user may view application logs."""
 
     return application_role in APPLICATION_LOG_ROLES or organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES
+
+
+def _application_role_rank(role: ApplicationRoles | None) -> int:
+    """Return the comparable privilege rank for an application role."""
+
+    if role is None:
+        return 0
+
+    return APPLICATION_ROLE_RANKS[role]
+
+
+def _application_manager_role_rank(
+    organization_role: OrganizationRoles | None,
+    application_role: ApplicationRoles | None,
+) -> int:
+    """Return the strongest application role rank the caller may manage."""
+
+    organization_role_rank = 0
+    if organization_role is not None and organization_role in ORGANIZATION_APPLICATION_ROLE_RANKS:
+        organization_role_rank = ORGANIZATION_APPLICATION_ROLE_RANKS[organization_role]
+
+    return max(_application_role_rank(application_role), organization_role_rank)
 
 
 def _forward_request_header_allowed(header_name: str) -> bool:
@@ -277,6 +310,13 @@ async def update_application_member(
     organization_role, application_role = await _application_access_roles(application, user)
     if not _can_manage_application(organization_role, application_role):
         raise ForbiddenError("Application member management permissions required")
+
+    caller_role_rank = _application_manager_role_rank(organization_role, application_role)
+    member_application_role = await applications.membership_role(application.id, member_id)
+    if _application_role_rank(member_application_role) > caller_role_rank:
+        raise ForbiddenError("Application role management permissions required")
+    if _application_role_rank(payload.role) > caller_role_rank:
+        raise ForbiddenError("Application role management permissions required")
 
     updated = await applications.set_member_role(
         application.id,

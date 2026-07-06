@@ -15,6 +15,11 @@ IMAGE_REFERENCE_MAX_LENGTH = 255
 IMAGE_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
 IMAGE_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
 IMAGE_DIGEST_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9]*(?:[+._-][A-Za-z][A-Za-z0-9]*)*:[A-Za-z0-9=_+.-]+$")
+REGISTRY_TOKEN_REALM_HOSTS = {
+    "docker.io": {"auth.docker.io"},
+    "index.docker.io": {"auth.docker.io"},
+    "registry-1.docker.io": {"auth.docker.io"},
+}
 
 
 async def metadata(image: str) -> LongLinkMetadata | None:
@@ -219,6 +224,25 @@ def _registry_hostname(registry: str) -> str:
     return hostname
 
 
+def _registry_url_hostname(registry_url: str) -> str:
+    """Return the hostname portion of an OCI registry URL."""
+
+    hostname = urllib.parse.urlparse(registry_url).hostname
+    if hostname is None:
+        raise ValueError("Image registry host is invalid")
+
+    return hostname
+
+
+def _token_realm_allowed(registry_hostname: str, realm_hostname: str) -> bool:
+    """Return whether a registry bearer-token realm belongs to the registry."""
+
+    if realm_hostname == registry_hostname:
+        return True
+
+    return realm_hostname in REGISTRY_TOKEN_REALM_HOSTS.get(registry_hostname, set())
+
+
 def _normalize_registry(registry: str) -> str:
     """Return a comparable registry host without URL syntax."""
 
@@ -330,7 +354,7 @@ async def _fetch_manifest(
     resp = await client.get(url, headers={"Accept": accept})
     token: str | None = None
     if not resp.is_success:
-        token = await _resolve_bearer_token(client, repository, resp)
+        token = await _resolve_bearer_token(client, repository, resp, _registry_url_hostname(registry_url))
         if token is None:
             return None
         resp = await client.get(url, headers={"Accept": accept, "Authorization": f"Bearer {token}"})
@@ -392,7 +416,7 @@ async def _fetch_blob(
     if resp.is_success:
         return _response_json_object(resp)
 
-    token = await _resolve_bearer_token(client, repository, resp)
+    token = await _resolve_bearer_token(client, repository, resp, _registry_url_hostname(registry_url))
     if token is not None:
         resp = await client.get(url, headers={"Authorization": f"Bearer {token}"})
         if resp.is_success:
@@ -401,7 +425,9 @@ async def _fetch_blob(
     return None
 
 
-async def _resolve_bearer_token(client: httpx2.AsyncClient, repository: str, resp: httpx2.Response) -> str | None:
+async def _resolve_bearer_token(
+    client: httpx2.AsyncClient, repository: str, resp: httpx2.Response, registry_hostname: str
+) -> str | None:
     """Resolve a bearer token from a 401 Www-Authenticate response."""
 
     auth_header = resp.headers.get("www-authenticate", "")
@@ -416,6 +442,9 @@ async def _resolve_bearer_token(client: httpx2.AsyncClient, repository: str, res
 
     parsed_realm = urllib.parse.urlparse(realm)
     if parsed_realm.scheme != "https" or parsed_realm.hostname is None:
+        return None
+
+    if not _token_realm_allowed(registry_hostname, parsed_realm.hostname):
         return None
 
     token_params: dict[str, str] = {}

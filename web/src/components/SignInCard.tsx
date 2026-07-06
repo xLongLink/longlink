@@ -1,10 +1,7 @@
 import { useTranslation } from '@/lib/i18n';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { useState, type SyntheticEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
@@ -16,36 +13,12 @@ import { getInitials } from '@/lib/utils';
 
 type SocialLoginProvider = 'github' | 'google';
 
-/** Renders the shared username and password sign-in card. */
+/** Renders the shared OIDC redirect sign-in card. */
 export function SignInCard({ redirectTo }: { redirectTo: string }) {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [showEmailForm, setShowEmailForm] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const { accounts, activateAccount, loginWithCredentials } = useUser();
+    const { accounts, activateAccount } = useUser();
     const safeRedirectTo = sanitizeRedirectPath(redirectTo);
-
-    /** Submits credentials, refreshes the session cache, and redirects. */
-    async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
-        event.preventDefault();
-        setIsSubmitting(true);
-
-        try {
-            await loginWithCredentials({ username, password });
-            navigate(safeRedirectTo, { replace: true });
-        } catch (loginError) {
-            toast.error(loginError instanceof Error ? loginError.message : t('errors.loginFailed'));
-        } finally {
-            setIsSubmitting(false);
-        }
-    }
-
-    /** Shows a lightweight helper message for password recovery. */
-    function handleForgotPasswordClick() {
-        toast.info(t('auth.passwordResetInfo'));
-    }
 
     /** Activates one saved account and returns to the requested page. */
     async function handleAccountSelect(oidc: string) {
@@ -57,9 +30,13 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
         }
     }
 
-    /** Redirects the browser to the OIDC login endpoint with the provider hint and target path. */
-    function handleProviderSignIn(provider: SocialLoginProvider) {
-        const redirectParameters = new URLSearchParams({ provider, next: safeRedirectTo });
+    /** Redirects the browser to the OIDC login endpoint with the optional provider hint and target path. */
+    function handleProviderSignIn(provider?: SocialLoginProvider) {
+        const redirectParameters = new URLSearchParams({ next: safeRedirectTo });
+
+        if (provider !== undefined) {
+            redirectParameters.set('provider', provider);
+        }
 
         window.location.assign(apiUrl(`/auth/login/oidc?${redirectParameters.toString()}`));
     }
@@ -81,89 +58,36 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
 
                     <Separator className="my-2 h-px w-full border-t border-border/60" />
 
-                    {showEmailForm ? (
-                        <form className="space-y-4" onSubmit={handleSubmit}>
-                            <div className="space-y-2">
-                                <Label htmlFor="signin-email">{t('labels.email')}</Label>
-                                <Input
-                                    id="signin-email"
-                                    value={username}
-                                    onChange={(event) => setUsername(event.target.value)}
-                                    autoComplete="email"
-                                    disabled={isSubmitting}
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="signin-password">{t('labels.password')}</Label>
-                                <Input
-                                    id="signin-password"
-                                    type="password"
-                                    value={password}
-                                    onChange={(event) => setPassword(event.target.value)}
-                                    autoComplete="current-password"
-                                    disabled={isSubmitting}
-                                />
-                            </div>
-
-                            <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={isSubmitting || username.length === 0 || password.length === 0}
-                            >
-                                {isSubmitting ? t('actions.signIn') : t('actions.continueWithCredentials')}
-                            </Button>
-
-                            <div className="flex items-center justify-between text-sm">
-                                <button
-                                    type="button"
-                                    className="text-sm font-medium text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
-                                    onClick={() => setShowEmailForm(false)}
-                                >
-                                    {t('actions.back')}
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className="text-sm font-medium text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
-                                    onClick={handleForgotPasswordClick}
-                                >
-                                    {t('auth.forgotPassword')}
-                                </button>
-                            </div>
-                        </form>
-                    ) : (
-                        <div className="space-y-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full"
-                                onClick={() => setShowEmailForm(true)}
-                            >
-                                {t('actions.continueWithCredentials')}
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full"
-                                onClick={() => handleProviderSignIn('github')}
-                            >
-                                {t('actions.continueWithGithub')}
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="w-full"
-                                onClick={() => handleProviderSignIn('google')}
-                            >
-                                {t('actions.continueWithGoogle')}
-                            </Button>
-                        </div>
-                    )}
+                    <div className="space-y-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => handleProviderSignIn()}
+                        >
+                            {t('actions.login')}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => handleProviderSignIn('github')}
+                        >
+                            {t('actions.continueWithGithub')}
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => handleProviderSignIn('google')}
+                        >
+                            {t('actions.continueWithGoogle')}
+                        </Button>
+                    </div>
 
                     <Separator className="my-2 h-px w-full border-t border-border/60" />
 
-                    {hasSavedAccounts && !showEmailForm ? (
+                    {hasSavedAccounts ? (
                         <>
                             <div className="space-y-2">
                                 {accounts.items.map((account) => (

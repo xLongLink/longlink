@@ -123,6 +123,15 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
 
     compute_adapter = adapters.compute(registry)
     try:
+        managed_namespaces = set(await compute_adapter.namespaces())
+    except Exception as exc:
+        logger.exception("Failed to inspect compute namespaces for registry '%s'", registry_id)
+        raise UnavailableError("Compute namespaces unavailable") from exc
+
+    if namespace not in managed_namespaces:
+        raise NotFoundError("Compute namespace", namespace)
+
+    try:
         pods = await compute_adapter.pods(namespace)
     except Exception as exc:
         logger.exception(

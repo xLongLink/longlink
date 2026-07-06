@@ -130,39 +130,6 @@ def _parse_query(location: str) -> dict[str, str]:
 
 
 @pytest.mark.integration
-def test_login_password_authenticates_via_real_keycloak_and_creates_session(keycloak_client: TestClient) -> None:
-    """Log in through the Keycloak password grant and confirm a real user session."""
-
-    response = keycloak_client.post(
-        "/auth/login/password",
-        json={"username": "admin", "password": "admin"},
-    )
-
-    assert response.status_code == 204
-
-    me_response = keycloak_client.get("/api/me")
-    assert me_response.status_code == 200
-    profile = me_response.json()
-    assert profile["email"] == "example@longlink.dev"
-    assert profile["name"]
-    assert profile["role"] == "administrator"
-
-
-@pytest.mark.integration
-def test_login_password_rejects_invalid_credentials_against_real_keycloak(keycloak_client: TestClient) -> None:
-    """Reject invalid password credentials from the live Keycloak container."""
-
-    response = keycloak_client.post(
-        "/auth/login/password",
-        json={"username": "admin", "password": "bad-password"},
-    )
-
-    assert response.status_code == 401
-    assert response.json() == {"detail": "Invalid username or password"}
-    assert keycloak_client.get("/api/me").status_code == 401
-
-
-@pytest.mark.integration
 def test_login_oidc_redirects_to_keycloak_and_authenticates_session(keycloak_client: TestClient, keycloak_issuer: str) -> None:
     """Run the full OIDC login flow using the running Keycloak container."""
 

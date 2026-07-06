@@ -15,6 +15,13 @@ from src.database.models.users import User
 from src.database.services import database
 
 router = APIRouter()
+MANAGED_DATABASE_PREFIX = "longlink_"
+
+
+def _managed_database_name(database_name: str) -> bool:
+    """Return whether a database name follows the LongLink managed database convention."""
+
+    return database_name.startswith(MANAGED_DATABASE_PREFIX)
 
 
 @router.get("/api/databases", response_model=list[DatabaseRegistryResponse])
@@ -80,7 +87,7 @@ async def list_database_databases(registry_id: UUID, _: User = Depends(authsuppo
 
     database_adapter = adapters.database(registry)
     try:
-        names = await database_adapter.databases()
+        names = [name for name in await database_adapter.databases() if _managed_database_name(name)]
     except Exception as exc:
         logger.exception("Failed to inspect databases for registry '%s'", registry_id)
         raise UnavailableError("Database resources unavailable") from exc
@@ -102,6 +109,9 @@ async def list_database_schemas(
     registry = await database.get(registry_id)
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
+
+    if not _managed_database_name(database_name):
+        raise NotFoundError("Database", database_name)
 
     database_adapter = adapters.database(registry)
     try:

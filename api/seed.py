@@ -1,6 +1,10 @@
 import asyncio
-from uuid import UUID
+import html
+import re
+import urllib.parse
 from pathlib import Path
+from uuid import UUID
+import httpx2
 from src.operations import provisioning
 from src.environments import env
 from fastapi.testclient import TestClient
@@ -11,6 +15,9 @@ from src.database.services import organizations as organization_service
 
 LOCAL_ORG = "test"
 LOCAL_ORG_AVATAR = "https://example.com/organizations/test.png"
+LOCAL_ADMIN_USERNAME = "admin"
+LOCAL_ADMIN_PASSWORD = "admin"
+OIDC_LOGIN_TIMEOUT_SECONDS = 20.0
 
 LOCAL_APP = {
     "name": "sample",
@@ -20,6 +27,90 @@ LOCAL_APP = {
     "envs": {"REQUIRED": "local-development"},
 }
 KUBECONFIG = Path(__file__).with_name("kubeconfig.yaml")
+
+
+def parse_first_query_values(location: str) -> dict[str, str]:
+    """Return first-value query parameters from a URL."""
+
+    parsed_location = urllib.parse.urlsplit(location)
+    return {key: values[0] for key, values in urllib.parse.parse_qs(parsed_location.query).items()}
+
+
+def extract_keycloak_login_action(login_html: str) -> str:
+    """Return the same-origin Keycloak login action URL from the login page."""
+
+    form_match = re.search(
+        r'<form[^>]+id="kc-form-login"[^>]*action="([^"]+)"[^>]*>',
+        login_html,
+        re.S,
+    )
+    if form_match is None:
+        raise RuntimeError("Could not locate Keycloak login form")
+
+    login_action = urllib.parse.urljoin(
+        f"{env.OIDC_ISSUER.rstrip('/')}/",
+        html.unescape(form_match.group(1)),
+    )
+    action_parts = urllib.parse.urlsplit(login_action)
+    issuer_parts = urllib.parse.urlsplit(env.OIDC_ISSUER)
+
+    # The local seed password must only be submitted back to the configured Keycloak issuer.
+    if action_parts.scheme != issuer_parts.scheme or action_parts.netloc != issuer_parts.netloc:
+        raise RuntimeError("Keycloak login form action does not match OIDC issuer")
+
+    if "/login-actions/authenticate" not in action_parts.path:
+        raise RuntimeError("Keycloak login form action is not an authentication endpoint")
+
+    return login_action
+
+
+def login_seed_administrator(client: TestClient) -> UUID:
+    """Authenticate the seed client through the local Keycloak redirect flow."""
+
+    authorize_response = client.get("/auth/login/oidc?next=/organizations", follow_redirects=False)
+    if authorize_response.status_code not in {302, 303, 307}:
+        raise RuntimeError(
+            f"OIDC login start failed (HTTP {authorize_response.status_code}): {authorize_response.text}"
+        )
+
+    authorize_url = authorize_response.headers.get("location")
+    if not authorize_url:
+        raise RuntimeError("OIDC login start did not return a redirect URL")
+
+    authorize_parts = urllib.parse.urlsplit(authorize_url)
+    issuer_parts = urllib.parse.urlsplit(env.OIDC_ISSUER)
+    if authorize_parts.scheme != issuer_parts.scheme or authorize_parts.netloc != issuer_parts.netloc:
+        raise RuntimeError("OIDC login start redirected outside the configured issuer")
+
+    with httpx2.Client(follow_redirects=False, timeout=OIDC_LOGIN_TIMEOUT_SECONDS) as identity_client:
+        login_page = identity_client.get(authorize_url)
+        login_page.raise_for_status()
+
+        login_response = identity_client.post(
+            extract_keycloak_login_action(login_page.text),
+            data={"username": LOCAL_ADMIN_USERNAME, "password": LOCAL_ADMIN_PASSWORD},
+        )
+
+    if login_response.status_code not in {302, 303, 307}:
+        raise RuntimeError(f"Keycloak login failed (HTTP {login_response.status_code}): {login_response.text}")
+
+    callback_location = login_response.headers.get("location")
+    if not callback_location or not callback_location.startswith(env.OIDC_REDIRECT_URI):
+        raise RuntimeError("Keycloak login did not redirect back to the configured callback")
+
+    callback_response = client.get(
+        "/auth/oidc",
+        params=parse_first_query_values(callback_location),
+        follow_redirects=False,
+    )
+    if callback_response.status_code not in {302, 303, 307}:
+        raise RuntimeError(
+            f"OIDC callback failed (HTTP {callback_response.status_code}): {callback_response.text}"
+        )
+
+    profile_response = client.get("/api/me")
+    profile_response.raise_for_status()
+    return UUID(profile_response.json()["id"])
 
 
 async def sync_local_application(application_id: UUID, organization_id: UUID, user_id: UUID) -> None:
@@ -45,13 +136,7 @@ def main() -> None:
 
     client = TestClient(app)
 
-    response = client.post("/auth/login/password", json={"username": "admin", "password": "admin"})
-    if response.status_code not in {200, 204}:
-        raise RuntimeError(f"Login failed (HTTP {response.status_code}): {response.text}")
-
-    profile_response = client.get("/api/me")
-    profile_response.raise_for_status()
-    user_id = UUID(profile_response.json()["id"])
+    user_id = login_seed_administrator(client)
 
     # ------------------------------------------------------------------
     # Location

@@ -37,7 +37,7 @@ describe('Action', () => {
                 invalidate: '${["profile"]}',
             },
             ctx,
-            '/example/profile',
+            '',
             fetchImpl,
             { success: () => {}, error: () => {} }
         );
@@ -88,7 +88,7 @@ describe('Action', () => {
                 form: '${{ file: document.file, label: document.label }}',
             },
             ctx,
-            '/files',
+            '',
             fetchImpl,
             { success: () => {}, error: () => {} }
         );
@@ -179,7 +179,7 @@ describe('Action', () => {
                 method: 'PUT',
             },
             ctx,
-            '/example/profile',
+            '',
             fetchImpl,
             { success: () => {}, error: (message) => (errorMessage = message) }
         );
@@ -207,7 +207,7 @@ describe('Action', () => {
                 action: 'https://example.com/profile',
             },
             ctx,
-            'https://example.com/profile',
+            '',
             fetchImpl,
             { success: () => {}, error: (message) => (errorMessage = message) }
         );
@@ -237,7 +237,7 @@ describe('Action', () => {
                 method: 'GET',
             },
             ctx,
-            '/profile',
+            '',
             fetchImpl,
             { success: () => {}, error: (message) => (errorMessage = message) }
         );
@@ -262,7 +262,7 @@ describe('Action', () => {
                 action: '/profile',
             },
             ctx,
-            '/profile',
+            '',
             fetchImpl,
             { success: () => {}, error: (message) => (errorMessage = message) }
         );

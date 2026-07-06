@@ -1,3 +1,4 @@
+import re
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
@@ -7,6 +8,11 @@ from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import Avatar, UserSummary
 from src.models.statuses import ApplicationStatus
 from src.models.organizations import OrganizationSummary
+
+APPLICATION_ENVIRONMENT_COUNT_MAX = 100
+APPLICATION_ENVIRONMENT_NAME_MAX_LENGTH = 253
+APPLICATION_ENVIRONMENT_VALUE_MAX_LENGTH = 32768
+APPLICATION_ENVIRONMENT_NAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 class ApplicationCreate(BaseModel):
@@ -34,6 +40,26 @@ class ApplicationCreate(BaseModel):
         """Validate the application container image reference."""
 
         return validate_image_reference(image)
+
+    @field_validator("envs")
+    @classmethod
+    def validate_environment_variables(cls, envs: dict[str, str]) -> dict[str, str]:
+        """Validate application environment names and bounded value sizes."""
+
+        if len(envs) > APPLICATION_ENVIRONMENT_COUNT_MAX:
+            raise ValueError(f"Application environment variables must be at most {APPLICATION_ENVIRONMENT_COUNT_MAX}")
+
+        for name, value in envs.items():
+            if len(name) > APPLICATION_ENVIRONMENT_NAME_MAX_LENGTH:
+                raise ValueError(f"Environment variable '{name}' is too long")
+
+            if not APPLICATION_ENVIRONMENT_NAME_PATTERN.fullmatch(name):
+                raise ValueError(f"Environment variable '{name}' is invalid")
+
+            if len(value) > APPLICATION_ENVIRONMENT_VALUE_MAX_LENGTH:
+                raise ValueError(f"Environment variable '{name}' value is too long")
+
+        return envs
 
 
 class ApplicationResponse(BaseModel):

@@ -9,7 +9,6 @@
         "changeRole": "Cambia ruolo",
         "connect": "Connetti",
         "connecting": "Connessione...",
-        "continueWithCredentials": "Continua con le credenziali",
         "continueWithGithub": "Continua con GitHub",
         "continueWithGoogle": "Continua con Google",
         "copy": "Copia",
@@ -29,7 +28,6 @@
         "saveChanges": "Salva modifiche",
         "saving": "Salvataggio...",
         "seeDocs": "Vedi la documentazione",
-        "signIn": "Accesso in corso...",
         "signOut": "Esci"
     },
     "admin": {
@@ -120,8 +118,6 @@
         "agreementLead": "Continuando accetti i nostri",
         "agreementMiddle": "e la",
         "back": "Indietro",
-        "forgotPassword": "Password dimenticata",
-        "passwordResetInfo": "Il ripristino password e gestito dal tuo provider d'identita.",
         "privacyPolicy": "Privacy Policy",
         "switchAccountFailed": "Impossibile cambiare account",
         "termsOfService": "Termini di servizio",

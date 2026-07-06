@@ -493,15 +493,11 @@ export default function Home() {
                             <span className="mt-1 block whitespace-nowrap text-center line-through">Nothing to see here</span>
                         </h1>
                         <p className="mx-auto text-sm leading-6 text-muted-foreground sm:text-lg">
-                            <span className="mx-auto block">
-                                Lorem ipsum dolor sit amet consectetur adipiscing elit sed do
-                            </span>
-                            <span className="mx-auto block">
-                                Eiusmod tempor incididunt ut labore et dolore magna
-                            </span>
-                            <span className="mx-auto block">Ut enim ad minim veniam quis nostrud</span>
-                            <span className="mx-auto block">Exercitation ullamco</span>
-                            <span className="mx-auto block">Nisi aliquip</span>
+                            <span className="mx-auto block">The narrative has changed, but you are still buying the old story</span>
+                            <span className="mx-auto block tracking-[-0.012em]">The economics have shifted; flexibility now lives in code</span>
+                            <span className="mx-auto block tracking-[0.018em]">Build the process, not the workaround</span>
+                            <span className="mx-auto block tracking-[0.026em]">Start from solid ground</span>
+                            <span className="mx-auto block">This is LongLink</span>
                         </p>
                     </div>
                 </section>

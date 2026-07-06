@@ -45,9 +45,6 @@ class FakeSeedClient:
     def get(self, path: str) -> FakeResponse:
         """Return fake list/detail responses for seed reads."""
 
-        if path == "/api/me":
-            return FakeResponse({"id": self.user_id})
-
         if path == "/api/locations":
             payload = [{"id": self.location_id, "slug": "local"}] if self.existing else []
             return FakeResponse(payload)
@@ -78,9 +75,6 @@ class FakeSeedClient:
         """Record fake write requests and return created resources."""
 
         self.posts.append((path, json))
-
-        if path == "/auth/login/password":
-            return FakeResponse(status_code=204)
 
         if path == "/api/locations":
             return FakeResponse({"id": self.location_id, "slug": json["slug"]})
@@ -115,6 +109,7 @@ def test_seed_main_creates_local_resources_with_runtime_endpoints(
 
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
     monkeypatch.setattr(seed, "TestClient", lambda app: client)
+    monkeypatch.setattr(seed, "login_seed_administrator", lambda seed_client: UUID(FakeSeedClient.user_id))
 
     seed.main()
 
@@ -161,6 +156,7 @@ def test_seed_main_refreshes_existing_application_runtime(
 
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
     monkeypatch.setattr(seed, "TestClient", lambda app: client)
+    monkeypatch.setattr(seed, "login_seed_administrator", lambda seed_client: UUID(FakeSeedClient.user_id))
     monkeypatch.setattr(seed, "sync_local_application", fake_sync_local_application)
 
     seed.main()

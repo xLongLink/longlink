@@ -1,6 +1,7 @@
 import { getStoredSdkUserId } from '@/lib/sdk-users';
 
 const DEFAULT_API_URL = '';
+const ABSOLUTE_API_PATH_PATTERN = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 
 type ApiErrorPayload = {
     detail?: string;
@@ -25,6 +26,10 @@ export function apiQueryKey(path: string): [string, string] {
 /** Resolves an API path against the configured API origin. */
 export function apiUrl(path: string): string {
     const baseUrl = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
+
+    if (ABSOLUTE_API_PATH_PATTERN.test(path) || path.startsWith('//') || path.includes('\\')) {
+        throw new Error('API path must be same-origin relative');
+    }
 
     if (!baseUrl) {
         return path;
@@ -64,8 +69,8 @@ export async function fetchApiResponse(
     }
 
     return fetchImpl(apiUrl(path), {
-        credentials: 'include',
         ...init,
+        credentials: 'include',
         headers,
     });
 }

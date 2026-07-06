@@ -54,69 +54,6 @@ class OAuthStub:
         return self.oidc_client
 
 
-class FakeHttpResponse:
-    """Minimal HTTP response returned by the password login client."""
-
-    def __init__(self, payload: dict[str, object], status_code: int = 200) -> None:
-        """Store response payload and status."""
-
-        self._payload = payload
-        self.status_code = status_code
-
-    def json(self) -> dict[str, object]:
-        """Return the configured JSON payload."""
-
-        return self._payload
-
-    def raise_for_status(self) -> None:
-        """Treat all configured fake responses as successful."""
-
-
-class PasswordLoginHttpClientStub:
-    """Fake async HTTP client for the password grant flow."""
-
-    posts: list[tuple[str, dict[str, object]]] = []
-    gets: list[tuple[str, dict[str, str] | None]] = []
-
-    async def __aenter__(self) -> PasswordLoginHttpClientStub:
-        """Enter the fake async client context."""
-
-        return self
-
-    async def __aexit__(self, exc_type, exc, tb) -> bool:
-        """Exit the fake async client context."""
-
-        return False
-
-    async def get(self, url: str, headers: dict[str, str] | None = None) -> FakeHttpResponse:
-        """Return metadata or userinfo responses based on URL."""
-
-        self.gets.append((url, headers))
-        if url.endswith("/.well-known/openid-configuration"):
-            return FakeHttpResponse(
-                {
-                    "token_endpoint": "https://identity.example/token",
-                    "userinfo_endpoint": "https://identity.example/userinfo",
-                }
-            )
-
-        assert url == "https://identity.example/userinfo"
-        assert headers == {"Authorization": "Bearer access-token"}
-        return FakeHttpResponse(
-            {
-                "sub": "password-subject",
-                "email": "password@example.com",
-                "name": "Password User",
-            }
-        )
-
-    async def post(self, url: str, data: dict[str, object]) -> FakeHttpResponse:
-        """Return an access token for the password grant."""
-
-        self.posts.append((url, data))
-        return FakeHttpResponse({"access_token": "access-token", "token_type": "Bearer"})
-
-
 class FakeSessionResult:
     """Minimal scalar result for fake database sessions."""
 
@@ -302,49 +239,6 @@ async def test_upsert_oidc_user_rejects_missing_identity_claims() -> None:
 
     with pytest.raises(UnavailableError, match="returned no display name"):
         await auth_routes.upsert_oidc_user(OidcUserInfo(sub="missing-name", email="missing@example.com"))
-
-
-async def test_login_password_uses_provider_password_grant(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Log in with the OIDC password grant, userinfo fetch, user sync, and session activation."""
-
-    PasswordLoginHttpClientStub.posts = []
-    PasswordLoginHttpClientStub.gets = []
-    upserts: list[OidcUserInfo] = []
-
-    async def fake_upsert_oidc_user(userinfo: OidcUserInfo) -> str:
-        """Record validated userinfo and return the session subject."""
-
-        upserts.append(userinfo)
-        return userinfo.sub
-
-    monkeypatch.setattr(auth_routes.httpx2, "AsyncClient", PasswordLoginHttpClientStub)
-    monkeypatch.setattr(auth_routes, "upsert_oidc_user", fake_upsert_oidc_user)
-    request = RequestStub()
-
-    response = await auth_routes.login_password(
-        request,
-        auth_routes.PasswordLoginRequest(username="admin", password="admin"),
-    )
-
-    assert response.status_code == 204
-    assert request.session["oidc"] == "password-subject"
-    assert request.session["oidc_accounts"] == ["password-subject"]
-    assert PasswordLoginHttpClientStub.posts == [
-        (
-            "https://identity.example/token",
-            {
-                "grant_type": "password",
-                "client_id": auth_routes.env.OIDC_CLIENT_ID,
-                "client_secret": auth_routes.env.OIDC_CLIENT_SECRET,
-                "username": "admin",
-                "password": "admin",
-                "scope": "openid profile email",
-            },
-        )
-    ]
-    assert [userinfo.sub for userinfo in upserts] == ["password-subject"]
 
 
 def test_session_accounts_activate_deactivate_and_remove() -> None:

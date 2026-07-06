@@ -169,7 +169,7 @@ async def test_bearer_token_resolution_parses_quoted_auth_params(monkeypatch) ->
     monkeypatch.setattr(images, "_validate_public_host", fake_validate_public_host)
 
     # Act
-    token = await images._resolve_bearer_token(FakeClient(), "team/app", FakeResponse())
+    token = await images._resolve_bearer_token(FakeClient(), "team/app", FakeResponse(), "auth.example")
 
     # Assert
     assert token == "registry-token"

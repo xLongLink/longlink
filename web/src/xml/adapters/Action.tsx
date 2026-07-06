@@ -1,7 +1,7 @@
 import { fetchApiResponse } from '@/lib/api';
 import { useXmlContext } from '@/xml/core/context';
 import { renderNode } from '@/xml/core/node';
-import { isAppRelativeUrl, useUrl } from '@/xml/core/url';
+import { resolveRequestUrl, useUrl } from '@/xml/core/url';
 import type { Props } from '@/xml/types';
 import { createContext, useContext } from 'react';
 import { toast } from 'sonner';
@@ -18,13 +18,12 @@ export function useActionHandler() {
 /** XML action adapter that sends a request when its child trigger is activated. */
 export function Action({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const action = resolveXmlString(props, 'action', ctx, '');
-    const requestUrl = useUrl(String(action ?? ''));
+    const baseUrl = useUrl('');
 
     /** Sends the configured request and shows a minimal toast result. */
     async function handleAction() {
         try {
-            await executeAction(props, ctx, requestUrl, fetch, toast);
+            await executeAction(props, ctx, baseUrl, fetch, toast);
         } catch (error: unknown) {
             toast.error(error instanceof Error ? error.message : 'Action failed');
         }
@@ -37,7 +36,7 @@ export function Action({ props, nodes }: Props) {
 export async function executeAction(
     props: Props['props'],
     ctx: ReturnType<typeof useXmlContext>['ctx'],
-    requestUrl: string,
+    baseUrl: string,
     fetchImpl: typeof fetch = fetch,
     toastApi: { success(message: string): void; error(message: string): void } = toast
 ): Promise<void> {
@@ -67,7 +66,11 @@ export async function executeAction(
             return;
         }
 
-        if (!isAppRelativeUrl(actionUrl)) {
+        let requestUrl: string;
+
+        try {
+            requestUrl = resolveRequestUrl(baseUrl, actionUrl);
+        } catch {
             toastApi.error('Action URL must be app-relative');
             return;
         }

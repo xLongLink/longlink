@@ -80,8 +80,8 @@ def test_application_pods_startup_state_ignores_stale_dead_pods() -> None:
     assert startup_state == ApplicationStartupState.pending
 
 
-def test_application_pods_startup_state_treats_image_pull_backoff_as_pending() -> None:
-    """Keep verification pending while a current pod has a transient image pull backoff."""
+def test_application_pods_startup_state_treats_image_pull_backoff_as_dead() -> None:
+    """Fail verification when a current pod cannot pull its configured image."""
 
     # Arrange
     operation_created_at = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
@@ -95,7 +95,7 @@ def test_application_pods_startup_state_treats_image_pull_backoff_as_pending() -
     startup_state = application_pods_startup_state([pod], operation_created_at)
 
     # Assert
-    assert startup_state == ApplicationStartupState.pending
+    assert startup_state == ApplicationStartupState.dead
 
 
 def test_application_pods_startup_state_marks_current_crashloop_dead() -> None:

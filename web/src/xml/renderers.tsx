@@ -35,6 +35,13 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
     runtimeCtx.hashNavigation = active;
     runtimeCtx.locale = runtimeLocale;
 
+    let setupValidationError: Error | null = null;
+    try {
+        validateSetupNodes(ast);
+    } catch (error: unknown) {
+        setupValidationError = error instanceof Error ? error : new Error('XML setup validation failed');
+    }
+
     useEffect(() => {
         let mounted = true;
         let unsubscribers: Array<() => void> = [];
@@ -130,13 +137,13 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
         };
     }, [ast, runtimeCtx, baseUrl, waitsForTranslations, runtimeLocale]);
 
-    validateSetupNodes(ast);
+    if (setupValidationError || setupError) {
+        const visibleError = setupValidationError ?? setupError;
 
-    if (setupError) {
         return (
             <XmlErrorBoundary resetKey={`${version}`}>
                 <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
-                    {setupError instanceof Error ? setupError.message : 'XML setup failed'}
+                    {visibleError instanceof Error ? visibleError.message : 'XML setup failed'}
                 </div>
             </XmlErrorBoundary>
         );

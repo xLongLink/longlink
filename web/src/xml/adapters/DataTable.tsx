@@ -4,7 +4,7 @@ import { ContextProvider, useXmlContext } from '@/xml/core/context';
 import { resolveTranslation } from '@/xml/core/i18n';
 import { renderNode } from '@/xml/core/node';
 import { BaseUrlContext, useUrl } from '@/xml/core/url';
-import { evaluate } from '@/xml/expressions';
+import { evaluate, readSafeProperty } from '@/xml/expressions';
 import type { ASTNode, ASTProps, ExecutionContext, Props } from '@/xml/types';
 import type { ReactNode } from 'react';
 import { readXmlProp, resolveXmlString, resolveXmlValue } from './props';
@@ -160,7 +160,7 @@ function resolveFieldValue(row: DataTableRow, field: string): unknown {
     return field.split('.').reduce<unknown>((current, segment) => {
         if (current == null || typeof current !== 'object') return undefined;
 
-        return (current as Record<string, unknown>)[segment];
+        return readSafeProperty(current, segment);
     }, row);
 }
 

@@ -49,6 +49,22 @@ from src.database.services import organizations
 router = APIRouter()
 TABLE_PREVIEW_LIMIT = 100
 ORGANIZATION_DELETE_DELAY_DAYS = 0
+ORGANIZATION_ROLE_RANKS = {
+    OrganizationRoles.read: 1,
+    OrganizationRoles.write: 2,
+    OrganizationRoles.maintain: 3,
+    OrganizationRoles.admin: 4,
+    OrganizationRoles.owner: 5,
+}
+
+
+def _organization_role_rank(role: OrganizationRoles | None) -> int:
+    """Return the comparable privilege rank for an organization role."""
+
+    if role is None:
+        return 0
+
+    return ORGANIZATION_ROLE_RANKS[role]
 
 
 @router.get("/api/organizations", response_model=list[OrganizationSummary])
@@ -186,8 +202,8 @@ async def create_organization_invitation(
         OrganizationRoles.owner,
     }:
         raise ForbiddenError("Invitation permissions required")
-    if payload.role == OrganizationRoles.owner and membership_role != OrganizationRoles.owner:
-        raise ForbiddenError("Owner invitation permissions required")
+    if _organization_role_rank(payload.role) > _organization_role_rank(membership_role):
+        raise ForbiddenError("Invitation role permissions required")
 
     try:
         await invitations.create(organization_id, payload.email, payload.role, user)
@@ -211,6 +227,10 @@ async def update_organization_member(
     if membership_role not in {OrganizationRoles.admin, OrganizationRoles.owner}:
         raise ForbiddenError("Member management permissions required")
     if payload.role == OrganizationRoles.owner and membership_role != OrganizationRoles.owner:
+        raise ForbiddenError("Owner management permissions required")
+
+    target_role = await organizations.membership_role(organization_id, member_id)
+    if target_role == OrganizationRoles.owner and membership_role != OrganizationRoles.owner:
         raise ForbiddenError("Owner management permissions required")
 
     try:

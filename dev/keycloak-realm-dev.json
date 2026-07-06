@@ -10,7 +10,7 @@
       "publicClient": false,
       "secret": "longlink-secret",
       "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": true,
+      "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
         "http://localhost:8000/auth/oidc",

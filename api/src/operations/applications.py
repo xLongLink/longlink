@@ -23,11 +23,25 @@ class ApplicationStartupState(str, Enum):
 
 
 POD_ROLLOUT_GRACE_SECONDS = 30
-CRASHED_CONTAINER_REASONS = {
+APPLICATION_VERIFICATION_TIMEOUT_SECONDS = 15 * 60
+FAILED_CONTAINER_WAITING_REASONS = {
     "CrashLoopBackOff",
     "CreateContainerConfigError",
+    "CreateContainerError",
+    "ErrImagePull",
+    "ImagePullBackOff",
+    "InvalidImageName",
     "RunContainerError",
 }
+
+
+def application_verification_timed_out(operation_created_at: datetime) -> bool:
+    """Return whether application startup verification has exceeded its retry window."""
+
+    if operation_created_at.tzinfo is None:
+        operation_created_at = operation_created_at.replace(tzinfo=UTC)
+
+    return datetime.now(UTC) - operation_created_at >= timedelta(seconds=APPLICATION_VERIFICATION_TIMEOUT_SECONDS)
 
 
 def application_pods_startup_state(pods: list[Any], operation_created_at: datetime) -> ApplicationStartupState:
@@ -85,7 +99,7 @@ def application_pods_startup_state(pods: list[Any], operation_created_at: dateti
             if state is None:
                 continue
 
-            if state.waiting is not None and state.waiting.reason in CRASHED_CONTAINER_REASONS:
+            if state.waiting is not None and state.waiting.reason in FAILED_CONTAINER_WAITING_REASONS:
                 pod_dead = True
 
             if state.terminated is not None and state.terminated.exit_code != 0:
@@ -163,6 +177,15 @@ async def execute_application_create(operation: Operation) -> Operation:
         failed = await operations.fail(operation.id, "Application crashed during startup", operation.lease_token)
         if failed is not None:
             logger.info("Failed application creation %s", operation.id)
+            return failed
+
+        return operation
+
+    if application_verification_timed_out(operation.created_at):
+        await applications.set_status(application.id, ApplicationStatus.failed)
+        failed = await operations.fail(operation.id, "Application startup verification timed out", operation.lease_token)
+        if failed is not None:
+            logger.info("Timed out application creation %s", operation.id)
             return failed
 
         return operation

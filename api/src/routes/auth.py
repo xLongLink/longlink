@@ -2,11 +2,11 @@ import httpx2
 import urllib.parse
 from typing import Any, Final, Literal
 from fastapi import Query, Request, Response, APIRouter
-from pydantic import Field, BaseModel, ValidationError
+from pydantic import ValidationError
 from src.auth import SessionAccountsService, oauth
-from src.errors import UnavailableError, UnauthorizedError
+from src.errors import UnavailableError
 from src.operations import provisioning
-from src.models.auth import OidcUserInfo, OidcTokenResponse
+from src.models.auth import OidcUserInfo
 from src.environments import env
 from fastapi.responses import RedirectResponse
 from src.models.common import SuccessResponse
@@ -35,13 +35,6 @@ def sanitize_post_login_redirect(next_path: object) -> str:
         return DEFAULT_POST_LOGIN_REDIRECT
 
     return next_path
-
-
-class PasswordLoginRequest(BaseModel):
-    """Payload for the password-based login flow."""
-
-    username: str = Field(min_length=1)
-    password: str = Field(min_length=1)
 
 
 async def upsert_oidc_user(userinfo: OidcUserInfo) -> str:
@@ -105,72 +98,6 @@ async def login_oidc(
         raise UnavailableError(
             "OIDC provider metadata is unavailable. Check OIDC_ISSUER and provider realm configuration."
         ) from exc
-
-
-@router.post("/auth/login/password", include_in_schema=False)
-async def login_password(request: Request, payload: PasswordLoginRequest) -> Response:
-    """Exchange username/password credentials for a session through Keycloak."""
-
-    # Fetch the provider metadata first so the token and userinfo URLs come from discovery.
-    metadata_url = f"{env.OIDC_ISSUER.rstrip('/')}/.well-known/openid-configuration"
-
-    async with httpx2.AsyncClient() as client:
-        try:
-            metadata_response = await client.get(metadata_url)
-            metadata_response.raise_for_status()
-        except (httpx2.HTTPStatusError, httpx2.RequestError) as exc:
-            raise UnavailableError("Authentication provider unavailable") from exc
-
-        metadata = metadata_response.json()
-
-        # Exchange the provided credentials for an access token.
-        token_response = await client.post(
-            metadata["token_endpoint"],
-            data={
-                "grant_type": "password",
-                "client_id": env.OIDC_CLIENT_ID,
-                "client_secret": env.OIDC_CLIENT_SECRET,
-                "username": payload.username,
-                "password": payload.password,
-                "scope": "openid profile email",
-            },
-        )
-
-    try:
-        token_response.raise_for_status()
-    except httpx2.HTTPStatusError as exc:
-        if exc.response.status_code in {400, 401}:
-            raise UnauthorizedError("Invalid username or password") from exc
-
-        raise UnavailableError("Authentication provider unavailable") from exc
-
-    try:
-        token = OidcTokenResponse.model_validate(token_response.json())
-    except ValidationError as exc:
-        raise UnavailableError("Authentication provider returned an invalid token payload") from exc
-
-    if not token.access_token:
-        raise UnavailableError("Authentication provider returned no access token")
-
-    # Use the access token to fetch the authenticated user's profile.
-    async with httpx2.AsyncClient() as client:
-        try:
-            userinfo_response = await client.get(
-                metadata["userinfo_endpoint"],
-                headers={"Authorization": f"Bearer {token.access_token}"},
-            )
-            userinfo_response.raise_for_status()
-        except (httpx2.HTTPStatusError, httpx2.RequestError) as exc:
-            raise UnavailableError("Failed to read authenticated user profile") from exc
-
-    try:
-        userinfo = OidcUserInfo.model_validate(userinfo_response.json())
-    except ValidationError as exc:
-        raise UnavailableError("Authentication provider returned an invalid user profile") from exc
-
-    subject = await upsert_oidc_user(userinfo)
-    SessionAccountsService(request).activate(subject)
-    return Response(status_code=204)
 
 
 @router.get("/auth/oidc", include_in_schema=False)

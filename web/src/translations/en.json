@@ -9,7 +9,6 @@
         "changeRole": "Change role",
         "connect": "Connect",
         "connecting": "Connecting...",
-        "continueWithCredentials": "Continue with Credentials",
         "continueWithGithub": "Continue with GitHub",
         "continueWithGoogle": "Continue with Google",
         "copy": "Copy",
@@ -29,7 +28,6 @@
         "saveChanges": "Save changes",
         "saving": "Saving...",
         "seeDocs": "See the Docs",
-        "signIn": "Signing in...",
         "signOut": "Sign out"
     },
     "admin": {
@@ -120,8 +118,6 @@
         "agreementLead": "By continuing, you agree to our",
         "agreementMiddle": "and",
         "back": "Back",
-        "forgotPassword": "Forgot Password",
-        "passwordResetInfo": "Password reset is handled through your identity provider.",
         "privacyPolicy": "Privacy Policy",
         "switchAccountFailed": "Failed to switch account",
         "termsOfService": "Terms of Service",

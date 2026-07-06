@@ -14,7 +14,14 @@ from src.database.models.users import User
 from src.database.services import storage
 
 router = APIRouter()
+MANAGED_STORAGE_BUCKET_PREFIX = "longlink-"
 STORAGE_OBJECT_LIST_LIMIT = 1000
+
+
+def _managed_storage_bucket(bucket_name: str) -> bool:
+    """Return whether a bucket name follows the LongLink managed bucket convention."""
+
+    return bucket_name.startswith(MANAGED_STORAGE_BUCKET_PREFIX)
 
 
 @router.get("/api/storages", response_model=list[StorageRegistryResponse])
@@ -77,7 +84,7 @@ async def list_storage_buckets(registry_id: UUID, _: User = Depends(authsupport)
 
     storage_adapter = adapters.storage(registry)
     try:
-        names = await storage_adapter.buckets()
+        names = [name for name in await storage_adapter.buckets() if _managed_storage_bucket(name)]
     except Exception as exc:
         logger.exception("Failed to inspect storage buckets for registry '%s'", registry_id)
         raise UnavailableError("Storage buckets unavailable") from exc
@@ -99,6 +106,9 @@ async def list_storage_bucket_objects(
     registry = await storage.get(registry_id)
     if registry is None:
         raise NotFoundError("Storage registry", registry_id)
+
+    if not _managed_storage_bucket(bucket_name):
+        raise NotFoundError("Storage bucket", bucket_name)
 
     storage_adapter = adapters.storage(registry)
     try:

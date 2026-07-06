@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import secrets
 from uuid import UUID
 from datetime import UTC, datetime, timedelta
@@ -9,6 +10,31 @@ from src.database.session import session_scope
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.operations import Operation
+
+OPERATION_ERROR_MAX_LENGTH = 2000
+OPERATION_ERROR_TRUNCATION_MARKER = "... [truncated]"
+URL_CREDENTIAL_PATTERN = re.compile(r"://([^\s/:@]+):([^\s/@]+)@")
+AUTHORIZATION_SECRET_PATTERN = re.compile(r"(?i)(authorization\s*[:=]\s*(?:bearer\s+)?)\S+")
+ASSIGNED_SECRET_PATTERN = re.compile(
+    r"(?i)\b(password|secret|token|access_key|secret_key|database_url|storage_url|dsn)(\s*[:=]\s*)\S+"
+)
+
+
+def sanitize_operation_error(error: str) -> str:
+    """Return redacted operation error text that fits the database column."""
+
+    # Operation errors are visible through the API, so redact common credential shapes before persisting.
+    redacted_error = URL_CREDENTIAL_PATTERN.sub("://<redacted>:<redacted>@", error)
+    redacted_error = AUTHORIZATION_SECRET_PATTERN.sub(r"\1<redacted>", redacted_error)
+    redacted_error = ASSIGNED_SECRET_PATTERN.sub(r"\1\2<redacted>", redacted_error)
+
+    if len(redacted_error) <= OPERATION_ERROR_MAX_LENGTH:
+        return redacted_error
+
+    return (
+        redacted_error[: OPERATION_ERROR_MAX_LENGTH - len(OPERATION_ERROR_TRUNCATION_MARKER)]
+        + OPERATION_ERROR_TRUNCATION_MARKER
+    )
 
 
 async def fetch_all() -> list[Operation]:
@@ -246,6 +272,7 @@ async def fail(operation_id: UUID, error: str, lease_token: str) -> Operation | 
     async with session_scope() as session:
         # Persist the failure exactly once so the row remains a reliable audit trail.
         now = datetime.now(UTC)
+        sanitized_error = sanitize_operation_error(error)
         statement = (
             update(Operation)
             .where(
@@ -256,7 +283,7 @@ async def fail(operation_id: UUID, error: str, lease_token: str) -> Operation | 
             )
             .values(
                 stopped_at=now,
-                error=error,
+                error=sanitized_error,
                 lease_token=None,
                 lease_expires_at=None,
                 updated_at=now,

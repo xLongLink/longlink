@@ -46,7 +46,6 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | OIDC login redirect        | Starts OIDC login, supports Keycloak provider hints for `github` and `google`, and stores safe same-origin `next` paths.                       |
 | OIDC callback user sync    | Exchanges the authorization code, validates userinfo, upserts the user, syncs organization shared users, activates the account, and redirects. |
-| Password login             | Logs in through the OIDC provider password grant, fetches userinfo, upserts the user, activates the account, and returns 204.                  |
 | Saved session accounts     | Lists saved accounts, activates a saved account, and deactivates the active account.                                                           |
 | Logout                     | Removes the active account from the session and returns `{ok:true}`.                                                                           |
 | Current user profile       | Returns identity, platform role, preferences, and organization memberships.                                                                    |
@@ -63,12 +62,12 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Locations                | Lists and gets locations for support/admin users; administrators can create and delete unused locations.                                                      |
 | Location providers       | Supports `local`, `infomaniak`, `ovh`, `scaleway`, `hetzner`, and `exoscale`.                                                                                 |
 | Compute registries       | Creates Kubernetes compute registries with kubeconfig and ingress host; lists, gets, and deletes unused registries for support/admin users.                   |
-| Compute inspection       | Inspects cluster resources, managed namespaces, pods, and pod usage when metrics are available.                                                               |
+| Compute inspection       | Inspects cluster resources, managed namespaces, managed-namespace pods, and pod usage when metrics are available.                                            |
 | Database registries      | Creates PostgreSQL registries with control-plane and optional runtime connection details; lists, gets, and deletes unused registries for support/admin users. |
-| Database inspection      | Inspects backend databases, schemas, and aggregate non-system database storage usage.                                                                         |
+| Database inspection      | Inspects managed organization databases, managed database schemas, and aggregate non-system database storage usage.                                           |
 | Storage registries       | Creates S3-compatible storage registries with control-plane and optional runtime endpoints; administrators can delete unused registries.                      |
 | Storage secret redaction | Exposes storage access key IDs without exposing secret access keys.                                                                                           |
-| Storage inspection       | Inspects buckets and up to 1000 object metadata rows per bucket.                                                                                              |
+| Storage inspection       | Inspects managed buckets and up to 1000 object metadata rows per managed bucket.                                                                              |
 
 ### Organizations
 
@@ -80,8 +79,8 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Organization details                  | Lets members fetch an organization with location, users, pending invitations, and applications.                                             |
 | Organization listing                  | Lets support/admin users list all organizations.                                                                                            |
 | Organization applications             | Lets members list active applications in an organization, including caller application role when present.                                   |
-| Organization invitations              | Lets maintainers/admins/owners create pending email invitations while rejecting duplicates and existing members.                            |
-| Member role update                    | Lets organization admins/owners update active member roles and resync shared users.                                                         |
+| Organization invitations              | Lets maintainers/admins/owners create pending email invitations up to their own role rank while rejecting duplicates and existing members.  |
+| Member role update                    | Lets organization admins/owners update active member roles, requires owner authority for owner changes, and resyncs shared users.           |
 | Organization database resources       | Shows existing shared/app database schemas with usage metrics and fails when the backend cannot be inspected.                               |
 | Organization table preview            | Previews columns and up to 100 rows for shared schema or app schema tables; system schemas are blocked.                                     |
 | Organization storage resources        | Shows existing shared/app buckets with usage metrics and fails when the backend cannot be inspected.                                        |
@@ -91,19 +90,19 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Feature                             | Supported behavior                                                                                                                      |
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | Image metadata inspection           | Reads LongLink OCI image labels plus the resolved manifest digest for app metadata and environment requirements.                         |
-| Image registry safety               | Rejects malformed image references, private/local/non-public registries, and registries outside the configured allowlist unless development mode allows the configured local registry. |
+| Image registry safety               | Rejects malformed image references, private/local/non-public registries, disallowed token realms, and registries outside the configured allowlist unless development mode allows the configured local registry. |
 | Icon catalog                        | Returns supported Lucide icon slugs and validates normalized app icons.                                                                 |
 | Application creation and deployment | Creates apps from images, records image/app/SDK versions, deploys the resolved image digest, selects registries, and queues verification. |
 | Application deletion                | Lets permitted users soft-delete applications and queue immediate runtime resource removal with delay-ready scheduling.                 |
-| Required application envs           | Requires image-declared envs unless they are platform-managed.                                                                          |
+| Required application envs           | Requires image-declared envs unless they are platform-managed and validates app env names, counts, and value sizes before deployment.    |
 | Platform env injection              | Strips user-supplied `LONGLINK_` envs and injects production database and validated storage runtime values.                              |
 | Application status model            | Supports `creating`, `running`, and `failed`.                                                                                           |
-| Application verification            | Marks apps running when rollout pods are ready and failed when current rollout pods crash.                                              |
+| Application verification            | Marks apps running when rollout pods are ready and failed when current rollout pods crash, hit terminal image/config wait reasons, or exceed the verification timeout. |
 | Global application listing          | Lets platform administrators list all active applications.                                                                              |
 | Application logs                    | Lets application maintainers/admins and elevated organization members fetch recent plain-text logs from the newest application pod.     |
 | Application proxy                   | Proxies `GET`, `POST`, `PATCH`, and `DELETE` non-root paths into running application services for users with application access and bounded body sizes. |
 | Application access roles            | Uses application membership roles for runtime access, with elevated organization roles allowed to manage application lifecycle actions. |
-| Application member management       | Lets organization members view application permission rows and lets permitted app/org managers set or remove app roles for org members. |
+| Application member management       | Lets organization members view application permission rows and lets permitted app/org managers set or remove app roles up to their own role rank for org members. |
 | Proxy header policy                 | Rejects unsafe proxy paths, strips unsafe/spoofable proxy headers, injects `x-user-id`, caps proxy bodies, and returns no-store 503 for unavailable apps. |
 | Registry selection                  | Uses newest active compute registries and keeps database/storage registries consistent for all apps in an organization.                 |
 | Managed resource naming             | Validates slugs and managed Kubernetes/PostgreSQL/S3 resource names before provisioning.                                                |
@@ -112,7 +111,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                                   | Supported behavior                                                                                                       |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Operation records                         | Stores operation kind, step, app/org references, scheduled time, timestamps, errors, lease metadata, and derived status. |
+| Operation records                         | Stores operation kind, step, app/org references, scheduled time, timestamps, redacted bounded errors, lease metadata, and derived status. |
 | Operation listing                         | Lets support/admin users list operations newest first.                                                                   |
 | Background operation scheduler            | Claims scheduled/expired operations, runs handlers, renews leases, and keeps polling without blocking requests.          |
 | Operation leases                          | Requires matching lease tokens for claim, complete, fail, defer, and renew operations.                                   |
@@ -246,18 +245,18 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Admin applications UI         | Lists all applications with organization, status, image, and location context.                                                                |
 | Admin organizations UI        | Lists organizations and lifecycle users.                                                                                                      |
 | Admin locations UI            | Lists locations and supports administrator-only location creation.                                                                            |
-| Admin database UI             | Manages database registries and browses usage, databases, and schemas.                                                                        |
-| Admin storage UI              | Manages storage registries and browses buckets and object metadata.                                                                           |
-| Admin compute UI              | Manages compute registries and browses resources, namespaces, pods, and pod usage.                                                            |
+| Admin database UI             | Manages database registries and browses usage, managed databases, and managed schemas.                                                         |
+| Admin storage UI              | Manages storage registries and browses managed buckets and object metadata.                                                                    |
+| Admin compute UI              | Manages compute registries and browses resources, managed namespaces, pods, and pod usage.                                                     |
 | Admin operations UI           | Lists scheduled, active, completed, and failed operations with timestamps, step, resource ids, and errors.                                    |
 
 ### Clients, Hooks, and Components
 
 | Feature                       | Supported behavior                                                                                                                                    |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fetch helpers                 | Normalize JSON/text/void fetches, headers, credentials, SDK user headers, URL prefixing, and API errors.                                              |
+| Fetch helpers                 | Normalize JSON/text/void fetches, same-origin API paths, fixed credentials, SDK user headers, URL prefixing, and API errors.                         |
 | Query hooks                   | Wrap React Query with collection fallbacks, 401 session clearing, 404 handling, and query keys.                                                       |
-| Auth hooks                    | Support current user fetching, password login, OIDC redirects, saved accounts, logout, profile menu, and theme application.                           |
+| Auth hooks                    | Support current user fetching, saved accounts, logout, profile menu, and theme application.                                                           |
 | Login redirect sanitization   | Normalizes login redirects to same-origin relative paths and rejects external or malformed values.                                                    |
 | API page localization         | Provides bundled English and lazy-loaded Italian translations for public/control-plane UI through the user language preference, with English fallback. |
 | SDK user hooks                | Provides deterministic SDK users for `read`, `write`, `maintain`, `admin`, and `owner`.                                                               |
@@ -282,9 +281,9 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | XML parser             | Parses XML into AST, preserves attributes, removes whitespace, ignores declarations/comments, and rejects visible literal text or malformed XML.                                                                                                                                                                |
 | XML component registry | Maps supported XML tag names explicitly to React adapters.                                                                                                                                                                                                                                                      |
-| XML renderer           | Initializes setup state/query nodes, loads translations, subscribes to Valtio state, scopes errors, and renders AST nodes.                                                                                                                                                                                      |
+| XML renderer           | Initializes setup state/query nodes, loads translations, subscribes to Valtio state, scopes render/setup errors without exposing stack traces, and renders AST nodes.                                                                                                                                           |
 | XML execution context  | Provides runtime scope, setup registration, query invalidation, locale, translations, and state preservation.                                                                                                                                                                                                   |
-| XML URL sandbox        | Allows safe links and requires Query/Action request URLs to be app-relative.                                                                                                                                                                                                                                    |
+| XML URL sandbox        | Allows safe `href` links, requires `to` navigation plus Query/Action request URLs to be app-relative, and validates avatar image URL schemes.                                                                                                                                                                   |
 | XML translations       | Resolves dotted keys, plural objects, `count`, and `{{placeholder}}` interpolation.                                                                                                                                                                                                                             |
 | XML expressions        | Supports refs, dotted paths, typed expressions, robust interpolation, literals, identifiers, safe member access, arithmetic, comparisons, logical operators, ternaries, nullish coalescing, optional chaining, `in`, arrays, objects, templates, and whitelisted helper calls while blocking unsafe properties. |
 | XML form bindings      | Binds form controls to reactive state and handles number/file input normalization.                                                                                                                                                                                                                              |
@@ -294,7 +293,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Feature             | Supported behavior                                                                                                            |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | XML root/setup tags | `longlink`, `State`, `Query`, and `For` provide metadata, local state, JSON setup fetches, and scoped iteration.              |
-| XML actions         | Sends app-relative `GET`, `POST`, `PATCH`, or `DELETE` requests with JSON or multipart form payloads and invalidates queries. |
+| XML actions         | Resolves click-time app-relative `GET`, `POST`, `PATCH`, or `DELETE` requests with JSON or multipart form payloads and invalidates queries. |
 | XML queries         | Fetches JSON from expression-aware app-relative paths during setup and exposes results under a query id.                      |
 | XML state           | Initializes local reactive state from literal `State` attributes.                                                             |
 | XML loop rendering  | Iterates array-like expression results and exposes each item under a local alias.                                             |
@@ -306,8 +305,8 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Text components        | Supports headings, paragraphs, app links, resource links, inline text styles, code/pre, lists, breaks, and separators.                |
 | Layout components      | Supports columns, grids, stacks, flex rows, cards, hero slots, tabs, dialogs, and menus.                                              |
 | Form components        | Supports buttons, fields, labels, inputs, textareas, input groups, checkboxes, switches, sliders, toggles, radio groups, and selects. |
-| Visual components      | Supports Lucide icons, badges, avatars, avatar images/fallbacks, and avatar badges.                                                   |
-| Table components       | Supports query-backed data tables with columns, headers, cell slots, row scope, and empty messages.                                    |
+| Visual components      | Supports Lucide icons, badges, avatars, safe avatar images/fallbacks, and avatar badges.                                           |
+| Table components       | Supports query-backed data tables with safe field access, columns, headers, cell slots, row scope, and empty messages.                  |
 | Registered render tags | Includes the currently registered XML render tags for text, layout, forms, tables, dialogs, menus, badges, avatars, and icons.        |
 | Special setup tags     | Handles `State`, `Query`, and `For` outside the render registry.                                                                      |
 
