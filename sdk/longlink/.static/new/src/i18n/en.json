@@ -1,6 +1,6 @@
 {
     "dashboard": {
-        "cards": {
+        "metrics": {
             "budget": {
                 "label": "Monthly budget"
             },
@@ -114,16 +114,28 @@
         "title": "Purchase requests"
     },
     "settings": {
-        "description": "Use local XML state to tune the sample workflow without adding backend settings.",
+        "application": {
+            "costCenter": "Cost center",
+            "description": "Edit the sample application's local owner, cost-center, and reviewer note fields.",
+            "legend": "Application profile",
+            "lookup": "Lookup",
+            "note": "Approval note",
+            "noteHelp": "Visible to reviewers",
+            "owner": "Workflow owner",
+            "ownerHelp": "This is local state bound directly from XML."
+        },
+        "description": "Showcase application settings with a hero, side menu, and local XML state controls.",
         "links": {
             "actions": "Links",
             "add": "Add",
+            "description": "Use actions, button groups, loops, and badges for small configurable collections.",
             "empty": "No quick links added yet.",
             "label": "Quick link label",
             "legend": "Local quick links",
             "reset": "Reset"
         },
         "preferences": {
+            "description": "Toggle notification controls and adjust a slider-backed approval threshold.",
             "email": "Email updates",
             "emailHelp": "Send a digest when request status changes.",
             "legend": "Preferences",
@@ -132,21 +144,15 @@
             "notificationsHelp": "Show reminders for stale requests.",
             "pin": "Pin policy"
         },
-        "profile": {
-            "costCenter": "Cost center",
-            "legend": "Operations profile",
-            "lookup": "Lookup",
-            "note": "Approval note",
-            "noteHelp": "Visible to reviewers",
-            "owner": "Workflow owner",
-            "ownerHelp": "This is local state bound directly from XML."
-        },
-        "tabs": {
-            "profile": "Profile",
+        "sections": {
+            "application": "Application",
+            "links": "Links",
+            "preferences": "Preferences",
             "workflow": "Workflow"
         },
-        "title": "Settings",
+        "title": "Application settings",
         "workflow": {
+            "description": "Combine radio groups, toggle groups, and selects to model workflow defaults.",
             "finance": "Finance",
             "high": "High",
             "low": "Low",

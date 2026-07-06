@@ -5,10 +5,12 @@ import { useParams } from 'react-router';
 import { DataTable } from '@/components/DataTable';
 import { useDatabaseSchemas } from '@/hooks/use-database-schemas';
 import { useDatabases } from '@/hooks/use-databases';
+import { useTranslation } from '@/lib/i18n';
 import type { ApiDatabaseSchema } from '@/lib/types';
 
 /** Renders schemas (namespaces) in a database on a database backend. */
 export default function DatabaseSchemas() {
+    const { t } = useTranslation();
     const { database = '', databaseName = '' } = useParams();
 
     const { items: registries, error: registriesError, isLoading: registriesIsLoading } = useDatabases();
@@ -18,7 +20,7 @@ export default function DatabaseSchemas() {
     const schemaColumns: Array<ColumnDef<ApiDatabaseSchema>> = [
         {
             accessorKey: 'name',
-            header: 'Schema',
+            header: t('columns.schema'),
             cell: ({ row }) => <div className="truncate font-medium text-foreground">{row.original.name}</div>,
             meta: { className: 'min-w-56' },
         },
@@ -31,17 +33,21 @@ export default function DatabaseSchemas() {
     } = useDatabaseSchemas(databaseRegistry?.id ?? '', databaseName);
     const error =
         registriesError ??
-        (!registriesIsLoading && !databaseRegistry ? new Error(`Database "${database}" not found`) : schemasError);
+        (!registriesIsLoading && !databaseRegistry
+            ? new Error(t('resources.databaseNotFound', { name: database }))
+            : schemasError);
 
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <Hero icon="layers">
                     <div>
-                        <HeroTitle>Schemas</HeroTitle>
+                        <HeroTitle>{t('resources.schemasTitle')}</HeroTitle>
                         <HeroDescription>
-                            Schemas in database <span className="font-medium text-foreground">{databaseName}</span> on
-                            database backend "{databaseRegistry?.name || database}".
+                            {t('resources.schemaDescription', {
+                                database: databaseName,
+                                name: databaseRegistry?.name || database,
+                            })}
                         </HeroDescription>
                     </div>
                 </Hero>

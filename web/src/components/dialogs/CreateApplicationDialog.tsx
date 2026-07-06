@@ -7,8 +7,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useApiQuery } from '@/hooks/use-api';
 import { useOrganizationActions } from '@/hooks/use-organization';
-import { useUser } from '@/hooks/use-user';
+import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
+import { useTranslation } from '@/lib/i18n';
 import type { ApiIconCatalog, ApiImageMetadata } from '@/lib/types';
 import { type SyntheticEvent, useState } from 'react';
 
@@ -27,7 +28,8 @@ const platformEnvironmentNames = new Set([
 
 /** Renders the create-application dialog for an organization. */
 export default function CreateApplicationDialog({ organization }: CreateApplicationDialogProps) {
-    const { role } = useUser();
+    const { t } = useTranslation();
+    const { role } = useUserProfile();
     const { createApplication, isCreatingApplication } = useOrganizationActions(organization);
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
@@ -75,7 +77,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
             setDescription(metadata.description ?? '');
             setStep('metadata');
         } catch (inspectError) {
-            setError(inspectError instanceof Error ? inspectError.message : 'Failed to inspect image');
+            setError(inspectError instanceof Error ? inspectError.message : t('dialogs.inspectImageFailed'));
         } finally {
             setIsInspecting(false);
         }
@@ -112,14 +114,14 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
             setOpen(false);
             resetDialogState();
         } catch (mutationError) {
-            setError(mutationError instanceof Error ? mutationError.message : 'Failed to create application');
+            setError(mutationError instanceof Error ? mutationError.message : t('dialogs.createApplicationFailed'));
         }
     }
 
     return (
         <>
             <Button type="button" onClick={() => setOpen(true)} disabled={organization.length === 0}>
-                Create
+                {t('actions.create')}
             </Button>
 
             <Dialog
@@ -136,22 +138,22 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                         <div className="space-y-1">
                             <DialogTitle>
                                 {step === 'image'
-                                    ? 'Inspect image'
+                                    ? t('dialogs.inspectImage')
                                     : step === 'metadata'
-                                      ? 'Review metadata'
-                                      : 'Review envs'}
+                                      ? t('dialogs.reviewMetadata')
+                                      : t('dialogs.reviewEnvs')}
                             </DialogTitle>
                             <DialogDescription>
                                 <span className={step === 'image' ? 'font-medium text-foreground' : undefined}>
-                                    1. Image
+                                    {t('dialogs.stepImage')}
                                 </span>
                                 <span className="text-muted-foreground"> / </span>
                                 <span className={step === 'metadata' ? 'font-medium text-foreground' : undefined}>
-                                    2. Metadata
+                                    {t('dialogs.stepMetadata')}
                                 </span>
                                 <span className="text-muted-foreground"> / </span>
                                 <span className={step === 'envs' ? 'font-medium text-foreground' : undefined}>
-                                    3. Envs
+                                    {t('dialogs.stepEnvs')}
                                 </span>
                             </DialogDescription>
                         </div>
@@ -159,7 +161,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                         {step === 'image' ? (
                             <form className="space-y-4" onSubmit={handleInspectImage}>
                                 <div className="space-y-2">
-                                    <Label htmlFor="application-image">Image</Label>
+                                    <Label htmlFor="application-image">{t('labels.image')}</Label>
                                     <Input
                                         id="application-image"
                                         value={image}
@@ -180,10 +182,10 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                             resetDialogState();
                                         }}
                                     >
-                                        Cancel
+                                        {t('actions.cancel')}
                                     </Button>
                                     <Button type="submit" disabled={isInspecting || image.trim().length === 0}>
-                                        {isInspecting ? 'Inspecting...' : 'Inspect image'}
+                                        {isInspecting ? t('dialogs.inspecting') : t('dialogs.inspectImage')}
                                     </Button>
                                 </div>
                             </form>
@@ -198,7 +200,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                 }}
                             >
                                 <div className="space-y-2">
-                                    <Label htmlFor="application-name">Name</Label>
+                                    <Label htmlFor="application-name">{t('labels.name')}</Label>
                                     <Input
                                         id="application-name"
                                         value={name}
@@ -209,7 +211,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="application-description">Description</Label>
+                                    <Label htmlFor="application-description">{t('labels.description')}</Label>
                                     <Input
                                         id="application-description"
                                         value={description}
@@ -220,7 +222,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="application-icon">Icon</Label>
+                                    <Label htmlFor="application-icon">{t('labels.icon')}</Label>
                                     <Select
                                         value={icon}
                                         onValueChange={(value) => setIcon(value === '__none__' ? '' : (value ?? ''))}
@@ -229,10 +231,10 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                             {icon ? (
                                                 <Icon name={icon} className="size-4 text-muted-foreground" />
                                             ) : null}
-                                            <SelectValue placeholder="Choose an icon" />
+                                            <SelectValue placeholder={t('dialogs.chooseIcon')} />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="__none__">None</SelectItem>
+                                            <SelectItem value="__none__">{t('dialogs.none')}</SelectItem>
                                             {visibleIconOptions.map((name) => (
                                                 <SelectItem key={name} value={name}>
                                                     {name}
@@ -253,7 +255,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                             setError(null);
                                         }}
                                     >
-                                        Back
+                                        {t('actions.back')}
                                     </Button>
                                     <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                                         <Button
@@ -264,14 +266,14 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                                 resetDialogState();
                                             }}
                                         >
-                                            Cancel
+                                            {t('actions.cancel')}
                                         </Button>
                                         <Button
                                             type="button"
                                             disabled={name.trim().length === 0 || image.trim().length === 0}
                                             onClick={() => setStep('envs')}
                                         >
-                                            Next
+                                            {t('actions.next')}
                                         </Button>
                                     </div>
                                 </div>
@@ -286,14 +288,21 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                                     <Label htmlFor={`env-${env.name}`}>
                                                         {env.name}{' '}
                                                         <span className="text-muted-foreground">
-                                                            {env.required ? '(required)' : '(optional)'}
+                                                            (
+                                                            {env.required
+                                                                ? t('dialogs.required')
+                                                                : t('dialogs.optional')}
+                                                            )
                                                         </span>
                                                     </Label>
                                                     <Input
                                                         id={`env-${env.name}`}
                                                         name={env.name}
                                                         required={env.required}
-                                                        placeholder={env.description ?? `Enter ${env.name}`}
+                                                        placeholder={
+                                                            env.description ??
+                                                            t('dialogs.enterEnvironment', { name: env.name })
+                                                        }
                                                         autoComplete="off"
                                                     />
                                                 </div>
@@ -313,7 +322,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                             setError(null);
                                         }}
                                     >
-                                        Back
+                                        {t('actions.back')}
                                     </Button>
                                     <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
                                         <Button
@@ -324,7 +333,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                                 resetDialogState();
                                             }}
                                         >
-                                            Cancel
+                                            {t('actions.cancel')}
                                         </Button>
                                         <Button
                                             type="submit"
@@ -334,7 +343,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                                 image.trim().length === 0
                                             }
                                         >
-                                            {isCreatingApplication ? 'Creating...' : 'Create'}
+                                            {isCreatingApplication ? t('actions.creating') : t('actions.create')}
                                         </Button>
                                     </div>
                                 </div>

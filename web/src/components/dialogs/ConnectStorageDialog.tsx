@@ -6,13 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLocations } from '@/hooks/use-locations';
-import { useUser } from '@/hooks/use-user';
+import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
+import { useTranslation } from '@/lib/i18n';
 import { storagesQueryKey } from '@/lib/query-keys';
 
 /** Renders the admin storage connect dialog. */
 export default function ConnectStorageDialog() {
-    const { role } = useUser();
+    const { t } = useTranslation();
+    const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [kind, setKind] = useState('s3');
@@ -75,13 +77,13 @@ export default function ConnectStorageDialog() {
 
     return (
         <RegistryDialogShell
-            title="Connect storage"
-            description="Register an object storage backend."
+            title={t('dialogs.connectStorageTitle')}
+            description={t('dialogs.connectStorageDescription')}
             open={open}
             error={error}
             canSubmit={canSubmit}
             isPending={connectStorage.isPending}
-            pendingLabel="Connecting..."
+            pendingLabel={t('actions.connecting')}
             onOpenChange={(nextOpen) => {
                 setOpen(nextOpen);
                 if (!nextOpen) setError(null);
@@ -91,15 +93,17 @@ export default function ConnectStorageDialog() {
                 try {
                     await connectStorage.mutateAsync();
                 } catch (mutationError) {
-                    setError(mutationError instanceof Error ? mutationError.message : 'Failed to connect storage');
+                    setError(
+                        mutationError instanceof Error ? mutationError.message : t('dialogs.failedConnectStorage')
+                    );
                 }
             }}
         >
             <div className="space-y-2">
-                <Label htmlFor="storage-kind">Kind</Label>
+                <Label htmlFor="storage-kind">{t('labels.kind')}</Label>
                 <Select value={kind} onValueChange={(value) => setKind(value ?? '')}>
                     <SelectTrigger id="storage-kind" className="w-full">
-                        <SelectValue placeholder="Choose a storage kind" />
+                        <SelectValue placeholder={t('dialogs.chooseStorageKind')} />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="s3">S3</SelectItem>
@@ -108,7 +112,7 @@ export default function ConnectStorageDialog() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="storage-name">Name</Label>
+                <Label htmlFor="storage-name">{t('labels.name')}</Label>
                 <Input
                     id="storage-name"
                     value={name}
@@ -119,7 +123,7 @@ export default function ConnectStorageDialog() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="storage-protocol">Endpoint protocol</Label>
+                <Label htmlFor="storage-protocol">{t('labels.endpointProtocol')}</Label>
                 <Input
                     id="storage-protocol"
                     value={protocol}
@@ -130,7 +134,7 @@ export default function ConnectStorageDialog() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="storage-endpoint">Endpoint URL</Label>
+                <Label htmlFor="storage-endpoint">{t('labels.endpointUrl')}</Label>
                 <Input
                     id="storage-endpoint"
                     value={endpointUrl}
@@ -141,7 +145,7 @@ export default function ConnectStorageDialog() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="storage-runtime-endpoint">Runtime endpoint URL</Label>
+                <Label htmlFor="storage-runtime-endpoint">{t('labels.runtimeEndpointUrl')}</Label>
                 <Input
                     id="storage-runtime-endpoint"
                     value={runtimeEndpointUrl}
@@ -152,7 +156,7 @@ export default function ConnectStorageDialog() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="storage-access-key">Access key ID</Label>
+                <Label htmlFor="storage-access-key">{t('labels.accessKeyId')}</Label>
                 <Input
                     id="storage-access-key"
                     value={accessKeyId}
@@ -163,7 +167,7 @@ export default function ConnectStorageDialog() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="storage-secret-key">Secret access key</Label>
+                <Label htmlFor="storage-secret-key">{t('labels.secretAccessKey')}</Label>
                 <Input
                     id="storage-secret-key"
                     type="password"

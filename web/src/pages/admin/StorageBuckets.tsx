@@ -5,10 +5,13 @@ import { Link, useParams } from 'react-router';
 import { DataTable } from '@/components/DataTable';
 import { useStorageBuckets } from '@/hooks/use-storage-buckets';
 import { useStorages } from '@/hooks/use-storages';
+import { useTranslation } from '@/lib/i18n';
 import type { ApiStorageBucket } from '@/lib/types';
+import { S3 } from '@/svg/S3';
 
 /** Renders buckets for a storage backend. */
 export default function StorageBuckets() {
+    const { t } = useTranslation();
     const { storage = '' } = useParams();
 
     const { items: registries, error: registriesError, isLoading: registriesIsLoading } = useStorages();
@@ -18,15 +21,14 @@ export default function StorageBuckets() {
     const bucketColumns: Array<ColumnDef<ApiStorageBucket>> = [
         {
             accessorKey: 'name',
-            header: 'Bucket',
+            header: t('columns.bucket'),
             cell: ({ row }) => (
                 <Link
                     to={`/admin/storage/${encodeURIComponent(storage)}/buckets/${encodeURIComponent(row.original.name)}`}
                     className="flex items-center gap-3"
                 >
-                    <img
-                        src="/images/S3.webp"
-                        alt="S3 object storage"
+                    <S3
+                        aria-hidden={true}
                         className="size-10 rounded-md border border-border bg-background object-contain p-1"
                     />
                     <div className="min-w-0">
@@ -47,16 +49,18 @@ export default function StorageBuckets() {
     } = useStorageBuckets(storageRegistry?.id ?? '');
     const error =
         registriesError ??
-        (!registriesIsLoading && !storageRegistry ? new Error(`Storage "${storage}" not found`) : bucketsError);
+        (!registriesIsLoading && !storageRegistry
+            ? new Error(t('resources.storageNotFound', { name: storage }))
+            : bucketsError);
 
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <Hero icon="hard-drive">
                     <div>
-                        <HeroTitle>Buckets</HeroTitle>
+                        <HeroTitle>{t('resources.bucketsTitle')}</HeroTitle>
                         <HeroDescription>
-                            Buckets managed by storage backend "{storageRegistry?.name || storage}".
+                            {t('resources.bucketsDescription', { name: storageRegistry?.name || storage })}
                         </HeroDescription>
                     </div>
                 </Hero>

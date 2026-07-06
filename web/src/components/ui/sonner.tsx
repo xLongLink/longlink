@@ -13,13 +13,13 @@ const Toaster = ({ ...props }: ToasterProps) => {
 
         // Keep the toaster aligned with the active document theme, including user-driven changes.
         const syncTheme = () => {
-            setTheme(root.classList.contains('dark') ? 'dark' : 'light');
+            setTheme(root.dataset.theme === 'dark' ? 'dark' : 'light');
         };
 
         syncTheme();
 
         const observer = new MutationObserver(syncTheme);
-        observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+        observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] });
 
         return () => observer.disconnect();
     }, []);

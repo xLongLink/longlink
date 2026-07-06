@@ -1,4 +1,4 @@
-import { useUser } from '@/hooks/use-user';
+import { useUserProfile } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
 import NotFound from '@/pages/NotFound';
 import type { ReactElement } from 'react';
@@ -14,7 +14,7 @@ type AuthProps = {
 
 /** Protects routes and optionally requires a platform role. */
 export function Auth({ children, requiredRole }: AuthProps) {
-    const { user, role, isLoading } = useUser();
+    const { user, role, isLoading } = useUserProfile();
     const location = useLocation();
 
     if (isLoading) {

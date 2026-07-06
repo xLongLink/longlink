@@ -1,8 +1,9 @@
 import { useOrganization } from '@/hooks/use-organization';
-import { useUser } from '@/hooks/use-user';
+import { useUserProfile } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
+import { useTranslation } from '@/lib/i18n';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
-import { Database, HardDrive, LayoutGrid, Settings2, Users } from 'lucide-react';
+import { LayoutGrid, Settings2, Users } from 'lucide-react';
 import { Navigate, useLocation, useParams } from 'react-router';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
@@ -19,9 +20,10 @@ type OrganizationProps = {
 
 /** Renders the organization page shell and tab-specific hero content. */
 export default function Organization({ sectionName }: OrganizationProps) {
+    const { t } = useTranslation();
     const { organization: routeOrganization = '' } = useParams();
     const { pathname } = useLocation();
-    const { organizations } = useUser();
+    const { organizations } = useUserProfile();
     const organization = routeOrganization || organizations[0]?.slug || '';
     const pathSection = pathname.split('/')[3] ?? '';
     const pathSectionIsOrganizationSection =
@@ -61,8 +63,8 @@ export default function Organization({ sectionName }: OrganizationProps) {
             <Hero icon="layout-grid" className="w-full">
                 <div className="flex w-full items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
-                        <HeroTitle>Applications</HeroTitle>
-                        <HeroDescription>Manage the applications attached to this organization.</HeroDescription>
+                        <HeroTitle>{t('organization.applicationsTitle')}</HeroTitle>
+                        <HeroDescription>{t('organization.applicationsDescription')}</HeroDescription>
                     </div>
                 </div>
             </Hero>
@@ -74,8 +76,8 @@ export default function Organization({ sectionName }: OrganizationProps) {
             <Hero icon="users" className="w-full">
                 <div className="flex w-full items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
-                        <HeroTitle>People</HeroTitle>
-                        <HeroDescription>See the members and collaborators in this workspace.</HeroDescription>
+                        <HeroTitle>{t('organization.peopleTitle')}</HeroTitle>
+                        <HeroDescription>{t('organization.peopleDescription')}</HeroDescription>
                     </div>
                 </div>
             </Hero>
@@ -85,8 +87,8 @@ export default function Organization({ sectionName }: OrganizationProps) {
             <Hero icon="settings-2" className="w-full">
                 <div className="flex w-full items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
-                        <HeroTitle>Settings</HeroTitle>
-                        <HeroDescription>Configure the organization and its runtime defaults.</HeroDescription>
+                        <HeroTitle>{t('organization.settingsTitle')}</HeroTitle>
+                        <HeroDescription>{t('organization.settingsDescription')}</HeroDescription>
                     </div>
                 </div>
             </Hero>
@@ -96,11 +98,9 @@ export default function Organization({ sectionName }: OrganizationProps) {
     return (
         <Layout
             tabs={{
-                Applications: { href: `/orgs/${organization}`, icon: LayoutGrid },
-                People: { href: `/orgs/${organization}/people`, icon: Users },
-                Database: { href: `/orgs/${organization}/database`, icon: Database },
-                Storage: { href: `/orgs/${organization}/storage`, icon: HardDrive },
-                Settings: { href: `/orgs/${organization}/settings`, icon: Settings2 },
+                [t('navigation.applications')]: { href: `/orgs/${organization}`, icon: LayoutGrid },
+                [t('navigation.people')]: { href: `/orgs/${organization}/people`, icon: Users },
+                [t('navigation.settings')]: { href: `/orgs/${organization}/settings`, icon: Settings2 },
             }}
         >
             <section className="mx-auto w-full max-w-[1000px] space-y-8">

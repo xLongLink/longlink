@@ -44,49 +44,45 @@
 
     <Columns>
         <Column width="45">
-            <Card>
-                <Stack>
-                    <H2 i18n="team.flow.title" />
-                    <Menu defaultValue="intake">
-                        <MenuSection value="intake" icon="inbox" i18n="team.flow.intake">
-                            <MenuSubSection value="triage" i18n="team.flow.triage">
-                                <P i18n="team.flow.triageDescription" />
-                            </MenuSubSection>
-                            <MenuSubSection value="budget" i18n="team.flow.budget">
-                                <P i18n="team.flow.budgetDescription" />
-                            </MenuSubSection>
-                        </MenuSection>
-                        <MenuSection value="approval" icon="shield-check" i18n="team.flow.approval">
-                            <MenuSubSection value="decision" i18n="team.flow.decision">
-                                <P i18n="team.flow.decisionDescription" />
-                            </MenuSubSection>
-                        </MenuSection>
-                    </Menu>
-                </Stack>
-            </Card>
+            <Stack>
+                <H2 i18n="team.flow.title" />
+                <Menu defaultValue="intake">
+                    <MenuSection value="intake" icon="inbox" i18n="team.flow.intake">
+                        <MenuSubSection value="triage" i18n="team.flow.triage">
+                            <P i18n="team.flow.triageDescription" />
+                        </MenuSubSection>
+                        <MenuSubSection value="budget" i18n="team.flow.budget">
+                            <P i18n="team.flow.budgetDescription" />
+                        </MenuSubSection>
+                    </MenuSection>
+                    <MenuSection value="approval" icon="shield-check" i18n="team.flow.approval">
+                        <MenuSubSection value="decision" i18n="team.flow.decision">
+                            <P i18n="team.flow.decisionDescription" />
+                        </MenuSubSection>
+                    </MenuSection>
+                </Menu>
+            </Stack>
         </Column>
 
         <Column width="55">
-            <Card>
-                <Stack>
-                    <H1 i18n="team.runbook.title" />
-                    <H2 i18n="team.runbook.handoff" />
-                    <P>
-                        <B i18n="team.runbook.bold" />
-                        <U i18n="team.runbook.underlined" />
-                        <S i18n="team.runbook.outdated" />
-                    </P>
-                    <P>
-                        <Code i18n="team.runbook.code" />
-                        <Sup i18n="team.runbook.sup" />
-                        <Sub i18n="team.runbook.sub" />
-                    </P>
-                    <Br />
-                    <H3 i18n="team.runbook.response" />
-                    <H4 i18n="team.runbook.example" />
-                    <Pre lang="json" i18n="team.runbook.payload" />
-                </Stack>
-            </Card>
+            <Stack>
+                <H1 i18n="team.runbook.title" />
+                <H2 i18n="team.runbook.handoff" />
+                <P>
+                    <B i18n="team.runbook.bold" />
+                    <U i18n="team.runbook.underlined" />
+                    <S i18n="team.runbook.outdated" />
+                </P>
+                <P>
+                    <Code i18n="team.runbook.code" />
+                    <Sup i18n="team.runbook.sup" />
+                    <Sub i18n="team.runbook.sub" />
+                </P>
+                <Br />
+                <H3 i18n="team.runbook.response" />
+                <H4 i18n="team.runbook.example" />
+                <Pre lang="json" i18n="team.runbook.payload" />
+            </Stack>
         </Column>
     </Columns>
 

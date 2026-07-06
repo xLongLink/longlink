@@ -2,6 +2,7 @@ import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { A } from '@/components/ui/a';
 import { Heading } from '@/components/ui/heading';
+import { useTranslation } from '@/lib/i18n';
 import { formatDate } from '@/lib/utils';
 import { type ReactNode } from 'react';
 
@@ -18,6 +19,7 @@ type LegalLayoutProps = {
 
 /** Renders the shared public legal layout. */
 export function LegalLayout({ title, content, metadata }: LegalLayoutProps) {
+    const { t } = useTranslation();
     const lastUpdated = metadata?.lastUpdated
         ? (() => {
               const parsedDate = new Date(metadata.lastUpdated);
@@ -42,10 +44,14 @@ export function LegalLayout({ title, content, metadata }: LegalLayoutProps) {
                         <article className="mx-auto w-full max-w-2xl space-y-6">{content}</article>
                         {metadata?.lastUpdated || metadata?.editUrl ? (
                             <footer className="mt-8 flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-                                {metadata.lastUpdated ? <span>Last updated: {lastUpdated}</span> : <span />}
+                                {metadata.lastUpdated ? (
+                                    <span>{t('common.lastUpdated', { date: lastUpdated })}</span>
+                                ) : (
+                                    <span />
+                                )}
                                 {metadata.editUrl ? (
                                     <A href={metadata.editUrl} target="_blank" rel="noopener noreferrer">
-                                        Edit this page in GitHub
+                                        {t('docs.editInGithub')}
                                     </A>
                                 ) : null}
                             </footer>

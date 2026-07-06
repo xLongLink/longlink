@@ -5,10 +5,13 @@ import { Link, useParams } from 'react-router';
 import { DataTable } from '@/components/DataTable';
 import { useDatabaseInstances } from '@/hooks/use-database-instances';
 import { useDatabases } from '@/hooks/use-databases';
+import { useTranslation } from '@/lib/i18n';
 import type { ApiDatabaseInstance } from '@/lib/types';
+import { PostgreSQL } from '@/svg/PostgreSQL';
 
 /** Renders databases for a database backend. */
 export default function DatabaseInstances() {
+    const { t } = useTranslation();
     const { database = '' } = useParams();
 
     const { items: registries, error: registriesError, isLoading: registriesIsLoading } = useDatabases();
@@ -18,15 +21,14 @@ export default function DatabaseInstances() {
     const databaseColumns: Array<ColumnDef<ApiDatabaseInstance>> = [
         {
             accessorKey: 'name',
-            header: 'Database',
+            header: t('columns.database'),
             cell: ({ row }) => (
                 <Link
                     to={`/admin/database/${encodeURIComponent(database)}/databases/${encodeURIComponent(row.original.name)}`}
                     className="flex items-center gap-3"
                 >
-                    <img
-                        src="/images/Postgresql.png"
-                        alt="PostgreSQL"
+                    <PostgreSQL
+                        aria-hidden={true}
                         className="size-10 rounded-md border border-border bg-background object-contain p-1"
                     />
                     <div className="min-w-0">
@@ -47,16 +49,18 @@ export default function DatabaseInstances() {
     } = useDatabaseInstances(databaseRegistry?.id ?? '');
     const error =
         registriesError ??
-        (!registriesIsLoading && !databaseRegistry ? new Error(`Database "${database}" not found`) : databasesError);
+        (!registriesIsLoading && !databaseRegistry
+            ? new Error(t('resources.databaseNotFound', { name: database }))
+            : databasesError);
 
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <Hero icon="database">
                     <div>
-                        <HeroTitle>Databases</HeroTitle>
+                        <HeroTitle>{t('resources.databasesTitle')}</HeroTitle>
                         <HeroDescription>
-                            Databases managed by database backend "{databaseRegistry?.name || database}".
+                            {t('resources.databasesDescription', { name: databaseRegistry?.name || database })}
                         </HeroDescription>
                     </div>
                 </Hero>

@@ -1,4 +1,5 @@
 from uuid import UUID
+from typing import Any
 from datetime import UTC, datetime
 from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
@@ -6,9 +7,10 @@ from sqlalchemy.orm import selectinload
 from src.models.roles import ApplicationRoles
 from src.models.statuses import ApplicationStatus
 from src.database.session import session_scope
-from src.models.applications import ApplicationResponse
+from src.models.applications import (ApplicationResponse,
+                                     ApplicationMemberResponse)
 from src.database.models.users import User
-from src.database.models.association import UserApplication
+from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
@@ -124,6 +126,109 @@ class ApplicationsService:
             )
             result = await session.execute(statement)
             return result.scalar_one_or_none()
+
+
+    async def list_members(self, application_id: UUID, organization_id: UUID) -> list[ApplicationMemberResponse]:
+        """Return organization members with their application roles."""
+
+        async with session_scope() as session:
+            # Start from organization memberships so users without app access are visible.
+            statement = (
+                select(User, UserOrganization.role_name, UserApplication.role_name)
+                .join(UserOrganization, UserOrganization.user_id == User.id)
+                .outerjoin(
+                    UserApplication,
+                    and_(
+                        UserApplication.organization_id == UserOrganization.organization_id,
+                        UserApplication.application_id == application_id,
+                        UserApplication.user_id == User.id,
+                        UserApplication.deleted_at.is_(None),
+                    ),
+                )
+                .where(
+                    UserOrganization.organization_id == organization_id,
+                    UserOrganization.deleted_at.is_(None),
+                    User.deleted_at.is_(None),
+                )
+                .order_by(User.name, User.email)
+            )
+            result = await session.execute(statement)
+            return [
+                ApplicationMemberResponse(
+                    id=member.id,
+                    name=member.name,
+                    email=member.email,
+                    avatar=member.avatar or "",
+                    application_role=application_role,
+                    organization_role=organization_role,
+                )
+                for member, organization_role, application_role in result.all()
+            ]
+
+
+    async def set_member_role(
+        self,
+        application_id: UUID,
+        organization_id: UUID,
+        member_id: UUID,
+        role: ApplicationRoles | None,
+        user: User,
+    ) -> bool:
+        """Set or remove one organization member's application role."""
+
+        async with session_scope() as session:
+            membership_result = await session.execute(
+                select(UserOrganization)
+                .join(User, User.id == UserOrganization.user_id)
+                .where(
+                    UserOrganization.organization_id == organization_id,
+                    UserOrganization.user_id == member_id,
+                    UserOrganization.deleted_at.is_(None),
+                    User.deleted_at.is_(None),
+                )
+            )
+            organization_membership = membership_result.scalar_one_or_none()
+            if organization_membership is None:
+                return False
+
+            application_membership = await session.get(
+                UserApplication,
+                {
+                    "application_id": application_id,
+                    "organization_id": organization_id,
+                    "user_id": member_id,
+                },
+            )
+            now = datetime.now(UTC)
+
+            if role is None:
+                if application_membership is not None and application_membership.deleted_at is None:
+                    application_membership.deleted_at = now
+                    application_membership.deleted_id = user.id
+                    application_membership.updated_at = now
+                    application_membership.updated_id = user.id
+                await session.commit()
+                return True
+
+            if application_membership is None:
+                application_membership = UserApplication(
+                    application_id=application_id,
+                    organization_id=organization_id,
+                    user_id=member_id,
+                    role_name=role,
+                    created_id=user.id,
+                    updated_id=user.id,
+                )
+                session.add(application_membership)
+            else:
+                application_membership.deleted_at = None
+                application_membership.deleted_id = None
+                application_membership.updated_at = now
+                application_membership.updated_id = user.id
+                application_membership.role_name = role
+
+            await session.commit()
+            return True
 
 
     async def create(

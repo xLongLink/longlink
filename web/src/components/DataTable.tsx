@@ -1,3 +1,4 @@
+import { useTranslation } from '@/lib/i18n';
 import { type ColumnDef, type RowData, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -20,15 +21,17 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
     columns,
     data,
-    emptyMessage = 'No results.',
+    emptyMessage,
     error = null,
     isLoading = false,
 }: DataTableProps<TData, TValue>) {
+    const { t } = useTranslation();
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
     });
+    const resolvedEmptyMessage = emptyMessage ?? t('common.noResults');
 
     if (isLoading && data.length === 0) {
         return null;
@@ -71,7 +74,7 @@ export function DataTable<TData, TValue>({
                     ) : (
                         <TableRow>
                             <TableCell colSpan={columns.length} className="h-24 text-center">
-                                {emptyMessage}
+                                {resolvedEmptyMessage}
                             </TableCell>
                         </TableRow>
                     )}

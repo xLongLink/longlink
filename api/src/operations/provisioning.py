@@ -9,6 +9,7 @@ from src.models.metadata import LongLinkMetadata
 from src.models.statuses import ApplicationStatus
 from src.utils.namespace import dbname, k8name, s3name
 from src.adapters.storage import S3
+from src.adapters.storage.base import StorageRuntimeCredentials
 from src.adapters.database import Postgres
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
@@ -320,7 +321,7 @@ def runtime_database_url(database_url: str) -> str:
     return url.render_as_string(hide_password=False)
 
 
-def runtime_storage_url(storage_registry: StorageRegistry) -> str:
+def runtime_storage_url(storage_registry: StorageRegistry, credentials: StorageRuntimeCredentials) -> str:
     """Return a storage URL compatible with the SDK runtime."""
 
     endpoint_url = storage_registry.runtime_endpoint_url or storage_registry.endpoint_url
@@ -328,9 +329,9 @@ def runtime_storage_url(storage_registry: StorageRegistry) -> str:
     if not endpoint.scheme or not endpoint.netloc:
         raise ValueError(f"Invalid storage runtime endpoint URL: {endpoint_url}")
 
-    # Store credentials in the runtime URL while preserving the endpoint URL shape for fsspec.
-    access_key_id = urllib.parse.quote(storage_registry.access_key_id, safe="")
-    secret_access_key = urllib.parse.quote(storage_registry.secret_access_key, safe="")
+    # Store scoped runtime credentials in the URL while preserving the endpoint shape for fsspec.
+    access_key_id = urllib.parse.quote(credentials["access_key_id"], safe="")
+    secret_access_key = urllib.parse.quote(credentials["secret_access_key"], safe="")
     netloc = f"{access_key_id}:{secret_access_key}@{endpoint.netloc}"
     return urllib.parse.urlunsplit(
         (f"s3+{endpoint.scheme}", netloc, endpoint.path, endpoint.query, endpoint.fragment)
@@ -342,6 +343,7 @@ def runtime_environment(
     application_slug: str,
     database_url: str,
     storage_registry: StorageRegistry | None,
+    storage_credentials: StorageRuntimeCredentials | None = None,
 ) -> dict[str, str]:
     """Build platform-managed environment variables for an application runtime."""
 
@@ -352,9 +354,12 @@ def runtime_environment(
     }
 
     if storage_registry is not None:
+        if storage_credentials is None:
+            raise ValueError("Storage runtime credentials are required when storage is configured")
+
         environment.update(
             {
-                "LONGLINK_STORAGE_URL": runtime_storage_url(storage_registry),
+                "LONGLINK_STORAGE_URL": runtime_storage_url(storage_registry, storage_credentials),
                 "LONGLINK_STORAGE_BUCKET": s3name(f"{organization_slug}-{application_slug}"),
                 "LONGLINK_STORAGE_SHARED_BUCKET": s3name(f"{organization_slug}-shared"),
             }
@@ -420,7 +425,7 @@ async def create_application_runtime(
             f"No database configured for location '{organization.location_id}'"
         )
 
-    storage_registry = await latest_storage_registry(organization.location_id)
+    storage_registry = await organization_storage_registry(organization)
     validate_storage_environment_requirements(
         image_metadata, storage_registry, organization.location_id
     )
@@ -459,6 +464,7 @@ async def create_application_runtime(
         await db_client.sync_users(
             organization.slug, await organizations.database_users(organization.id)
         )
+        storage_credentials: StorageRuntimeCredentials | None = None
         if storage_registry is not None:
             # Ensure object storage exists before the workload receives backend credentials.
             storage_client = S3(
@@ -469,10 +475,14 @@ async def create_application_runtime(
             )
             await storage_client.shared_bucket(organization.slug)
             await storage_client.bucket(organization.slug, application_slug)
+            storage_credentials = await storage_client.application_credentials(
+                organization.slug,
+                application_slug,
+            )
 
         database_url = await db_client.schema(organization.slug, application_slug)
         runtime_envs = runtime_environment(
-            organization.slug, application_slug, database_url, storage_registry
+            organization.slug, application_slug, database_url, storage_registry, storage_credentials
         )
         await k8s.application(
             organization.slug,
@@ -483,7 +493,7 @@ async def create_application_runtime(
         )
     except Exception as exc:
         await applications.set_status(application.id, ApplicationStatus.failed)
-        raise RuntimeError("Failed to initialize the application") from exc
+        raise RuntimeError(f"Failed to initialize the application: {exc}") from exc
 
     try:
         operation = await operations.create(
@@ -548,7 +558,7 @@ async def sync_application_runtime(
 
     storage_registry = await application_storage_registry(application)
     if storage_registry is None:
-        storage_registry = await latest_storage_registry(organization.location_id)
+        storage_registry = await organization_storage_registry(organization)
     validate_storage_environment_requirements(
         image_metadata, storage_registry, organization.location_id
     )
@@ -587,6 +597,7 @@ async def sync_application_runtime(
         await db_client.sync_users(
             organization.slug, await organizations.database_users(organization.id)
         )
+        storage_credentials: StorageRuntimeCredentials | None = None
         if storage_registry is not None:
             # Ensure object storage exists before the workload receives backend credentials.
             storage_client = S3(
@@ -597,10 +608,14 @@ async def sync_application_runtime(
             )
             await storage_client.shared_bucket(organization.slug)
             await storage_client.bucket(organization.slug, application.slug)
+            storage_credentials = await storage_client.application_credentials(
+                organization.slug,
+                application.slug,
+            )
 
         database_url = await db_client.schema(organization.slug, application.slug)
         runtime_envs = runtime_environment(
-            organization.slug, application.slug, database_url, storage_registry
+            organization.slug, application.slug, database_url, storage_registry, storage_credentials
         )
         await k8s.application(
             organization.slug,
@@ -612,7 +627,7 @@ async def sync_application_runtime(
         )
     except Exception as exc:
         await applications.set_status(application.id, ApplicationStatus.failed)
-        raise RuntimeError("Failed to refresh the application runtime") from exc
+        raise RuntimeError(f"Failed to refresh the application runtime: {exc}") from exc
 
     operation = await operations.create(
         OperationKind.application_create,

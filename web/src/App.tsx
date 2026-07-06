@@ -1,7 +1,7 @@
 import { Auth } from '@/components/Auth';
 import { useOrganization } from '@/hooks/use-organization';
 import { useSdkUser } from '@/hooks/use-sdk-user';
-import { useUser } from '@/hooks/use-user';
+import { useUserProfile } from '@/hooks/use-user';
 import { LegalLayout } from '@/layout/LegalLayout';
 import { canAccessApplication, canViewApplicationLogs } from '@/lib/roles';
 import Admin from '@/pages/Admin';
@@ -225,6 +225,62 @@ export function getRoutes(mode = import.meta.env.MODE) {
             ),
         },
         {
+            path: 'orgs/:organization/settings/applications',
+            element: (
+                <Auth requiredRole="user">
+                    <Organization sectionName="settings" />
+                </Auth>
+            ),
+        },
+        {
+            path: 'orgs/:organization/settings/applications/:settingsApplication',
+            element: (
+                <Auth requiredRole="user">
+                    <Organization sectionName="settings" />
+                </Auth>
+            ),
+        },
+        {
+            path: 'orgs/:organization/settings/database',
+            element: (
+                <Auth requiredRole="user">
+                    <Organization sectionName="settings" />
+                </Auth>
+            ),
+        },
+        {
+            path: 'orgs/:organization/settings/database/:settingsDatabaseResourceType/:settingsDatabaseResource',
+            element: (
+                <Auth requiredRole="user">
+                    <Organization sectionName="settings" />
+                </Auth>
+            ),
+        },
+        {
+            path: 'orgs/:organization/settings/database/:settingsDatabaseResourceType/:settingsDatabaseResource/tables/:settingsDatabaseTable',
+            element: (
+                <Auth requiredRole="user">
+                    <Organization sectionName="settings" />
+                </Auth>
+            ),
+        },
+        {
+            path: 'orgs/:organization/settings/storage',
+            element: (
+                <Auth requiredRole="user">
+                    <Organization sectionName="settings" />
+                </Auth>
+            ),
+        },
+        {
+            path: 'orgs/:organization/settings/storage/:settingsBucket',
+            element: (
+                <Auth requiredRole="user">
+                    <Organization sectionName="settings" />
+                </Auth>
+            ),
+        },
+        {
             path: 'orgs/:organization/apps/:application/*',
             element: (
                 <Auth requiredRole="user">
@@ -253,7 +309,7 @@ function SdkApplicationView() {
 function OrganizationApplicationView() {
     const { organization = '', application = '' } = useParams();
     const { organization: organizationDetails, isLoading, error } = useOrganization(organization);
-    const { role: platformRole, organizations: userOrganizations } = useUser();
+    const { role: platformRole, organizations: userOrganizations, language } = useUserProfile();
     const organizationApplication = organizationDetails?.applications.find((item) => item.slug === application);
     const organizationMembership = userOrganizations.find((item) => item.slug === organization);
     const organizationRole = organizationMembership?.role ?? null;
@@ -277,6 +333,7 @@ function OrganizationApplicationView() {
             canViewLogs={canViewLogs}
             applicationStatus={organizationApplication.status}
             metadata={`/api/applications/${organizationApplication.id}/proxy/metadata.json`}
+            locale={language}
         />
     );
 }

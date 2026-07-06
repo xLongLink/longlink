@@ -17,6 +17,17 @@ describe('getRoutes', () => {
         expect(routePaths).toContain('/');
         expect(routePaths).toContain('organizations');
         expect(routePaths).toContain('orgs/:organization');
+        expect(routePaths).toContain('orgs/:organization/settings/applications');
+        expect(routePaths).toContain('orgs/:organization/settings/applications/:settingsApplication');
+        expect(routePaths).toContain('orgs/:organization/settings/database');
+        expect(routePaths).toContain(
+            'orgs/:organization/settings/database/:settingsDatabaseResourceType/:settingsDatabaseResource'
+        );
+        expect(routePaths).toContain(
+            'orgs/:organization/settings/database/:settingsDatabaseResourceType/:settingsDatabaseResource/tables/:settingsDatabaseTable'
+        );
+        expect(routePaths).toContain('orgs/:organization/settings/storage');
+        expect(routePaths).toContain('orgs/:organization/settings/storage/:settingsBucket');
         expect(routePaths).toContain('orgs/:organization/apps/:application/*');
         expect(routePaths).toContain('*');
         expect(adminRoute?.children?.length).toBeGreaterThan(0);

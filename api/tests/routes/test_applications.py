@@ -12,6 +12,7 @@ from src.models.countries import Country
 from src.models.databases import DatabaseKind
 from src.models.operations import OperationKind
 from kubernetes.client.rest import ApiException
+from src.operations import provisioning
 from src.models.applications import ApplicationStatus
 from src.database.models.users import User
 from src.database.services.users import users
@@ -350,6 +351,13 @@ async def test_create_app_returns_app_response(
             captured_buckets.append(("application", organization, application))
             return f"longlink-{organization}-{application}"
 
+        async def application_credentials(self, organization: str, application: str) -> dict[str, str]:
+            captured["storage_credentials"] = {
+                "organization": organization,
+                "application": application,
+            }
+            return {"access_key_id": "app-access", "secret_access_key": "app-secret"}
+
     monkeypatch.setattr("src.operations.provisioning.K8s", FakeCompute)
     monkeypatch.setattr("src.operations.provisioning.Postgres", FakeDatabase)
     monkeypatch.setattr("src.operations.provisioning.S3", FakeStorage)
@@ -382,6 +390,7 @@ async def test_create_app_returns_app_response(
     assert captured["proxy_secret"]
     assert captured["schema"] == {"organization": "acme", "application": "dashboard"}
     assert captured_buckets == [("shared", "acme"), ("application", "acme", "dashboard")]
+    assert captured["storage_credentials"] == {"organization": "acme", "application": "dashboard"}
     sync_payload = captured["sync_users"]
     assert isinstance(sync_payload, dict)
     synced_users = sync_payload["users"]
@@ -398,8 +407,54 @@ async def test_create_app_returns_app_response(
     assert application_secrets["API_KEY"] == "secret-value"
     assert application_secrets["LONGLINK_ENV"] == "production"
     assert application_secrets["LONGLINK_DATABASE_URL"] == "postgresql+asyncpg://fake"
-    assert application_secrets["LONGLINK_STORAGE_URL"].startswith("s3+http://")
+    assert application_secrets["LONGLINK_STORAGE_URL"].startswith("s3+http://app-access:app-secret@")
     assert "LONGLINK_INTERNAL" not in application_secrets
+
+
+async def test_organization_storage_registry_reuses_existing_app_registry(
+    users: tuple[User, User, User],
+) -> None:
+    """Keep organization storage on the first registry already used by its apps."""
+
+    # Arrange
+    owner = users[0]
+    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    organization = await db.organizations.create("acme", location.id, owner)
+    primary = await db.storage.create(
+        kind=StorageKind.s3,
+        name="primary",
+        protocol="http",
+        endpoint_url="http://storage-primary.local",
+        access_key_id="primary-access",
+        secret_access_key="primary-secret",
+        location_id=location.id,
+        user=owner,
+    )
+    await db.applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        storage_registry_id=primary.id,
+        user=owner,
+    )
+    await db.storage.create(
+        kind=StorageKind.s3,
+        name="secondary",
+        protocol="http",
+        endpoint_url="http://storage-secondary.local",
+        access_key_id="secondary-access",
+        secret_access_key="secondary-secret",
+        location_id=location.id,
+        user=owner,
+    )
+
+    # Act
+    selected = await provisioning.organization_storage_registry(organization)
+
+    # Assert
+    assert selected is not None
+    assert selected.id == primary.id
 
 
 async def test_create_app_returns_409_when_image_metadata_is_missing(

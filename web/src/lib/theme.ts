@@ -149,7 +149,7 @@ export function applyTheme(root: HTMLElement, config: ThemeConfig) {
     const accent = ACCENT_TOKENS[config.accent];
 
     root.classList.remove('light', 'dark');
-    root.classList.add(resolvedTheme);
+    root.dataset.theme = resolvedTheme;
     root.style.setProperty('--background', config.background);
     root.style.setProperty('--border', config.border);
     root.style.setProperty('--card', config.card);

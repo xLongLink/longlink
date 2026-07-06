@@ -1,22 +1,25 @@
 import { Auth } from '@/components/Auth';
 import Layout from '@/layout/Layout';
+import { useTranslation } from '@/lib/i18n';
 import { Activity, Boxes, Building2, Cpu, Database, HardDrive, MapPin, Users } from 'lucide-react';
 import { Outlet } from 'react-router';
 
 /** Renders the admin shell with tabbed navigation. */
 export default function Admin() {
+    const { t } = useTranslation();
+
     return (
         <Auth requiredRole="support">
             <Layout
                 tabs={{
-                    Users: { href: '/admin/users', icon: Users },
-                    Applications: { href: '/admin/applications', icon: Boxes },
-                    Organizations: { href: '/admin/organizations', icon: Building2 },
-                    Locations: { href: '/admin/locations', icon: MapPin },
-                    Database: { href: '/admin/database', icon: Database },
-                    Storage: { href: '/admin/storage', icon: HardDrive },
-                    Compute: { href: '/admin/compute', icon: Cpu },
-                    Operations: { href: '/admin/operations', icon: Activity },
+                    [t('admin.tabs.users')]: { href: '/admin/users', icon: Users },
+                    [t('admin.tabs.applications')]: { href: '/admin/applications', icon: Boxes },
+                    [t('admin.tabs.organizations')]: { href: '/admin/organizations', icon: Building2 },
+                    [t('admin.tabs.locations')]: { href: '/admin/locations', icon: MapPin },
+                    [t('admin.tabs.database')]: { href: '/admin/database', icon: Database },
+                    [t('admin.tabs.storage')]: { href: '/admin/storage', icon: HardDrive },
+                    [t('admin.tabs.compute')]: { href: '/admin/compute', icon: Cpu },
+                    [t('admin.tabs.operations')]: { href: '/admin/operations', icon: Activity },
                 }}
             >
                 <section className="mx-auto w-full max-w-[1000px] space-y-8">

@@ -1,3 +1,4 @@
+import type { UserLanguage } from '@/lib/languages';
 import type { ApplicationRole, PlatformRole, Role } from '@/lib/roles';
 import type { Accent, Radius, Theme } from '@/lib/theme';
 import type { IconName } from 'lucide-react/dynamic';
@@ -31,7 +32,7 @@ export type ApiUserProfile = ApiUserSummary & {
     theme: Theme;
     accent: Accent;
     radius: Radius;
-    language: string;
+    language: UserLanguage;
     organizations: ApiUserOrganizationMembership[];
 };
 
@@ -50,6 +51,15 @@ export type ApiOrganizationApplication = {
     updated_by: ApiUserSummary | null;
     deleted_at: string | null;
     deleted_by: ApiUserSummary | null;
+};
+
+export type ApiApplicationMember = {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string;
+    application_role: ApplicationRole | null;
+    organization_role: Role;
 };
 
 export type ApiOrganizationMemberSummary = {
@@ -130,13 +140,14 @@ export type ApiOrganizationDatabaseApplication = {
     id: string;
     name: string;
     slug: string;
+    icon: string | null;
+    description: string | null;
     status: 'creating' | 'running' | 'failed';
 };
 
 export type ApiOrganizationDatabaseResource = {
     name: string;
     kind: 'schema' | 'shared_table';
-    status: 'available' | 'missing' | 'orphaned' | 'unavailable';
     database_name: string;
     space_used: number | null;
     table_count: number | null;
@@ -164,6 +175,8 @@ export type ApiOrganizationStorageApplication = {
     id: string;
     name: string;
     slug: string;
+    icon: string | null;
+    description: string | null;
     status: 'creating' | 'running' | 'failed';
 };
 
@@ -174,7 +187,8 @@ export type ApiOrganizationStorageResource = {
     application: ApiOrganizationStorageApplication | null;
     storage_registry_id: string;
     storage_registry_name: string;
-    status: 'available' | 'missing' | 'orphaned' | 'unavailable';
+    space_used: number | null;
+    object_count: number | null;
 };
 
 export type ApiDatabaseUsage = {

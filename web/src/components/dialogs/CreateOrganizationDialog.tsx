@@ -1,3 +1,4 @@
+import { useTranslation } from '@/lib/i18n';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -7,11 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { useLocations } from '@/hooks/use-locations';
 import { useCreateOrganization } from '@/hooks/use-organization';
-import { useUser } from '@/hooks/use-user';
+import { useUserProfile } from '@/hooks/use-user';
 
 /** Renders the create-organization dialog. */
 export default function CreateOrganizationDialog() {
-    const { role } = useUser();
+    const { t } = useTranslation();
+    const { role } = useUserProfile();
     const createOrganization = useCreateOrganization();
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
@@ -30,7 +32,7 @@ export default function CreateOrganizationDialog() {
     return (
         <>
             <Button type="button" onClick={() => setOpen(true)}>
-                Create Organization
+                {t('actions.createOrganization')}
             </Button>
 
             <Dialog
@@ -46,8 +48,8 @@ export default function CreateOrganizationDialog() {
                 <DialogContent>
                     <div className="space-y-4">
                         <div className="space-y-1">
-                            <DialogTitle>New organization</DialogTitle>
-                            <DialogDescription>Create a new workspace for your account.</DialogDescription>
+                            <DialogTitle>{t('createOrganization.title')}</DialogTitle>
+                            <DialogDescription>{t('createOrganization.description')}</DialogDescription>
                         </div>
 
                         <form
@@ -71,39 +73,39 @@ export default function CreateOrganizationDialog() {
                                     setError(
                                         mutationError instanceof Error
                                             ? mutationError.message
-                                            : 'Failed to create organization'
+                                            : t('createOrganization.error')
                                     );
                                 }
                             }}
                         >
                             <div className="space-y-2">
-                                <Label htmlFor="organization-name">Name</Label>
+                                <Label htmlFor="organization-name">{t('createOrganization.nameLabel')}</Label>
                                 <Input
                                     id="organization-name"
                                     value={name}
                                     onChange={(event) => setName(event.target.value)}
-                                    placeholder="Example LongLink"
+                                    placeholder={t('createOrganization.namePlaceholder')}
                                     autoComplete="off"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="organization-avatar">Avatar URL</Label>
+                                <Label htmlFor="organization-avatar">{t('createOrganization.avatarLabel')}</Label>
                                 <Input
                                     id="organization-avatar"
                                     type="url"
                                     value={avatar}
                                     onChange={(event) => setAvatar(event.target.value)}
-                                    placeholder="https://example.com/org.png"
+                                    placeholder={t('createOrganization.avatarPlaceholder')}
                                     autoComplete="off"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="org-location">Location</Label>
+                                <Label htmlFor="org-location">{t('createOrganization.locationLabel')}</Label>
                                 <Select value={locationId} onValueChange={(value) => setLocationId(value ?? '')}>
                                     <SelectTrigger id="org-location" className="w-full">
-                                        {selectedLocationName ?? 'Choose a location'}
+                                        {selectedLocationName ?? t('createOrganization.locationPlaceholder')}
                                     </SelectTrigger>
                                     <SelectContent>
                                         {locations.map((location) => (
@@ -126,13 +128,13 @@ export default function CreateOrganizationDialog() {
                                         setError(null);
                                     }}
                                 >
-                                    Cancel
+                                    {t('actions.cancel')}
                                 </Button>
                                 <Button
                                     type="submit"
                                     disabled={createOrganization.isPending || name.trim().length === 0 || !locationId}
                                 >
-                                    {createOrganization.isPending ? 'Creating...' : 'Create'}
+                                    {createOrganization.isPending ? t('actions.creating') : t('actions.create')}
                                 </Button>
                             </div>
                         </form>

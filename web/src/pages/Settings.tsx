@@ -2,8 +2,10 @@ import { DataTable } from '@/components/DataTable';
 import CreateOrganizationDialog from '@/components/dialogs/CreateOrganizationDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { useDeleteOrganization } from '@/hooks/use-organization';
-import { useUpdateUser, useUser } from '@/hooks/use-user';
+import { useUpdateUser, useUserProfile } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
+import { useTranslation } from '@/lib/i18n';
+import { LANGUAGE_OPTIONS, resolveSupportedLanguage, type Language } from '@/lib/languages';
 import { ACCENT_OPTIONS, RADIUS_OPTIONS, THEME_OPTIONS, type Accent, type Radius, type Theme } from '@/lib/theme';
 import { getInitials, useDeleteDialog } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -20,14 +22,18 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 
+type AccountField = 'name' | 'email';
+
 /** Renders the authenticated settings page. */
 export default function Settings() {
-    const { user, organizations, theme, accent, radius, isLoading } = useUser();
+    const { t } = useTranslation();
+    const { user, organizations, theme, accent, radius, language, isLoading } = useUserProfile();
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
     const deleteOrganization = useDeleteOrganization();
     const [name, setName] = useState(() => user?.name ?? '');
     const [email, setEmail] = useState(() => user?.email ?? '');
     const [accountError, setAccountError] = useState<string | null>(null);
+    const [focusedAccountField, setFocusedAccountField] = useState<AccountField | null>(null);
 
     // Keep the editable fields aligned with the authenticated user record.
     useEffect(() => {
@@ -35,79 +41,133 @@ export default function Settings() {
             return;
         }
 
-        setName(user.name);
-        setEmail(user.email);
-    }, [user]);
+        if (focusedAccountField !== 'name') {
+            setName(user.name);
+        }
+
+        if (focusedAccountField !== 'email') {
+            setEmail(user.email);
+        }
+    }, [user, focusedAccountField]);
 
     const accountName = name.trim();
     const accountEmail = email.trim();
-    const hasAccountChanges =
-        !!user &&
-        (accountName !== user.name || accountEmail !== user.email) &&
-        accountName.length > 0 &&
-        accountEmail.length > 0;
+    const selectedLanguageValue = resolveSupportedLanguage(language);
+    const selectedLanguage =
+        LANGUAGE_OPTIONS.find((option) => option.value === selectedLanguageValue) ?? LANGUAGE_OPTIONS[0];
+
+    /** Saves one edited account field when focus leaves its input. */
+    const saveAccountField = async (field: AccountField, isValid = true) => {
+        setAccountError(null);
+
+        if (!user) {
+            return;
+        }
+
+        if (field === 'name') {
+            if (!accountName) {
+                setAccountError(t('settings.usernameRequired'));
+                return;
+            }
+
+            if (accountName === user.name) {
+                return;
+            }
+
+            try {
+                await updateUser({ name: accountName });
+                toast.success(t('settings.usernameSaved'));
+            } catch (error) {
+                setAccountError(error instanceof Error ? error.message : t('settings.failedUpdateUsername'));
+            }
+        }
+
+        if (field === 'email') {
+            if (!accountEmail) {
+                setAccountError(t('settings.emailRequired'));
+                return;
+            }
+
+            if (!isValid) {
+                setAccountError(t('settings.validEmail'));
+                return;
+            }
+
+            if (accountEmail === user.email) {
+                return;
+            }
+
+            try {
+                await updateUser({ email: accountEmail });
+                toast.success(t('settings.emailSaved'));
+            } catch (error) {
+                setAccountError(error instanceof Error ? error.message : t('settings.failedUpdateEmail'));
+            }
+        }
+    };
+
     const deleteDialog = useDeleteDialog({
-        title: 'Delete organization',
+        title: t('deleteDialog.deleteOrganizationTitle'),
         mutation: deleteOrganization,
         items: organizations,
         getId: (organization) => organization.id,
-        description: (organization) => `Delete ${organization.name} from your account?`,
-        errorMessage: 'Failed to delete organization',
-        fallbackDescription: 'Delete this organization?',
+        description: (organization) => t('deleteDialog.deleteOrganizationDescription', { name: organization.name }),
+        errorMessage: t('deleteDialog.failedDeleteOrganization'),
+        fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
     });
 
     const organizationColumns: Array<ColumnDef<(typeof organizations)[number]>> = [
         {
             accessorKey: 'name',
-            header: 'Name',
+            header: t('columns.name'),
             cell: ({ row, getValue }) => (
                 <div className="flex items-center gap-3">
-                    <Avatar shape="squircle" className="size-8">
+                    <Avatar shape="squircle" className="size-8 shrink-0">
                         <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
                         <AvatarFallback>{getInitials(row.original.name)}</AvatarFallback>
                     </Avatar>
-                    <span className="font-medium text-foreground">{getValue<string>()}</span>
+                    <div className="min-w-0">
+                        <Link to={`/orgs/${row.original.slug}`} className="font-medium text-foreground hover:underline">
+                            {getValue<string>()}
+                        </Link>
+                        <div className="truncate text-sm text-muted-foreground">
+                            {row.original.location.country} · {row.original.location.name}
+                        </div>
+                    </div>
                 </div>
             ),
         },
         {
             accessorKey: 'role',
-            header: 'Role',
+            header: t('columns.role'),
             meta: { className: 'w-32' },
         },
         {
             id: 'actions',
-            header: 'Actions',
+            header: t('columns.actions'),
             meta: { className: 'w-44 text-right' },
-            cell: ({ row }) => (
-                <div className="flex justify-end">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger
-                            render={
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon-sm"
-                                    className="cursor-pointer"
-                                    aria-label={`Open actions for ${row.original.name}`}
-                                />
-                            }
-                        >
-                            <MoreVertical className="size-4" />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-44">
-                            <DropdownMenuItem
+            cell: ({ row }) => {
+                if (row.original.role !== 'owner') {
+                    return null;
+                }
+
+                return (
+                    <div className="flex justify-end">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger
                                 render={
-                                    <Link
-                                        to={`/orgs/${row.original.slug}`}
-                                        className="flex w-full items-center text-inherit"
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon-sm"
+                                        className="cursor-pointer"
+                                        aria-label={t('common.openActionsFor', { name: row.original.name })}
                                     />
                                 }
-                                className="cursor-pointer"
                             >
-                                Manage
-                            </DropdownMenuItem>
-                            {row.original.role === 'owner' ? (
+                                <MoreVertical className="size-4" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
                                 <DropdownMenuItem
                                     className="cursor-pointer"
                                     variant="destructive"
@@ -115,13 +175,13 @@ export default function Settings() {
                                         deleteDialog.openFor(row.original);
                                     }}
                                 >
-                                    Delete
+                                    {t('actions.delete')}
                                 </DropdownMenuItem>
-                            ) : null}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            ),
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                );
+            },
         },
     ];
 
@@ -129,108 +189,103 @@ export default function Settings() {
         <Layout
             brandOnly
             tabs={{
-                Organizations: { href: '/organizations', icon: Building2 },
-                Settings: { href: '/settings', icon: Settings2 },
+                [t('navigation.organizations')]: { href: '/organizations', icon: Building2 },
+                [t('navigation.settings')]: { href: '/settings', icon: Settings2 },
             }}
         >
             <section className="mx-auto w-full max-w-[1000px] space-y-8">
                 <Hero icon="settings-2">
                     <div>
-                        <HeroTitle>Settings</HeroTitle>
-                        <HeroDescription>Manage your account, preferences, and workspace access.</HeroDescription>
+                        <HeroTitle>{t('settings.title')}</HeroTitle>
+                        <HeroDescription>{t('settings.description')}</HeroDescription>
                     </div>
                 </Hero>
 
                 <Menu defaultValue="account" hashNavigation className="items-start">
-                    <MenuSection value="account" label="Account" icon={UserRound}>
+                    <MenuSection value="account" label={t('settings.accountTitle')} icon={UserRound}>
                         <div className="space-y-4">
                             <div>
-                                <h2 className="text-lg font-medium text-foreground">Account</h2>
-                                <p className="text-sm text-muted-foreground">Update your username and email address.</p>
+                                <h2 className="text-lg font-medium text-foreground">{t('settings.accountTitle')}</h2>
+                                <p className="text-sm text-muted-foreground">{t('settings.accountDescription')}</p>
                             </div>
 
-                            <form
-                                className="space-y-4"
-                                onSubmit={async (event) => {
-                                    event.preventDefault();
-                                    setAccountError(null);
-
-                                    if (!user) {
-                                        return;
-                                    }
-
-                                    const payload: { name?: string; email?: string } = {};
-
-                                    if (accountName !== user.name) {
-                                        payload.name = accountName;
-                                    }
-
-                                    if (accountEmail !== user.email) {
-                                        payload.email = accountEmail;
-                                    }
-
-                                    if (!Object.keys(payload).length) {
-                                        return;
-                                    }
-
-                                    try {
-                                        await updateUser(payload);
-                                        toast.success('Account settings saved');
-                                    } catch (error) {
-                                        setAccountError(
-                                            error instanceof Error ? error.message : 'Failed to update account'
-                                        );
-                                    }
-                                }}
-                            >
-                                <div className="grid gap-4 sm:grid-cols-2">
+                            <div className="space-y-4">
+                                <div className="grid gap-4 md:grid-cols-[2fr_2fr_1fr]">
                                     <div className="space-y-2">
-                                        <Label htmlFor="settings-name">Username</Label>
+                                        <Label htmlFor="settings-name">{t('labels.username')}</Label>
                                         <Input
                                             id="settings-name"
+                                            required
                                             value={name}
                                             onChange={(event) => setName(event.target.value)}
+                                            onFocus={() => setFocusedAccountField('name')}
+                                            onBlur={() => {
+                                                setFocusedAccountField(null);
+                                                void saveAccountField('name');
+                                            }}
                                             autoComplete="nickname"
-                                            disabled={isLoading || isPending || !user}
+                                            disabled={isLoading || !user}
                                         />
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="settings-email">Email</Label>
+                                        <Label htmlFor="settings-email">{t('labels.email')}</Label>
                                         <Input
                                             id="settings-email"
                                             type="email"
+                                            required
                                             value={email}
                                             onChange={(event) => setEmail(event.target.value)}
+                                            onFocus={() => setFocusedAccountField('email')}
+                                            onBlur={(event) => {
+                                                setFocusedAccountField(null);
+                                                void saveAccountField('email', event.currentTarget.validity.valid);
+                                            }}
                                             autoComplete="email"
-                                            disabled={isLoading || isPending || !user}
+                                            disabled={isLoading || !user}
                                         />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="settings-language">{t('labels.language')}</Label>
+                                        <Select
+                                            value={selectedLanguageValue}
+                                            disabled={isLoading || isPending || !user}
+                                            onValueChange={(value) => {
+                                                void updateUser({ language: value as Language });
+                                            }}
+                                        >
+                                            <SelectTrigger id="settings-language" className="w-full">
+                                                <SelectValue placeholder={t('settings.placeholders.language')}>
+                                                    {selectedLanguage.nativeLabel}
+                                                </SelectValue>
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {LANGUAGE_OPTIONS.map((option) => (
+                                                    <SelectItem key={option.value} value={option.value}>
+                                                        {option.nativeLabel}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                 </div>
 
                                 {accountError ? <p className="text-sm text-destructive">{accountError}</p> : null}
-
-                                <div className="flex items-center justify-end gap-3">
-                                    <Button type="submit" disabled={!hasAccountChanges || isLoading || isPending}>
-                                        {isPending ? 'Saving...' : 'Save changes'}
-                                    </Button>
-                                </div>
-                            </form>
+                            </div>
                         </div>
                     </MenuSection>
 
-                    <MenuSection value="appearance" label="Appearance" icon={Paintbrush}>
+                    <MenuSection value="appearance" label={t('settings.appearanceTitle')} icon={Paintbrush}>
                         <div className="space-y-4">
                             <div>
-                                <h2 className="text-lg font-medium text-foreground">Appearance</h2>
-                                <p className="text-sm text-muted-foreground">
-                                    Customize the theme, accent color, and radius for the interface.
-                                </p>
+                                <h2 className="text-lg font-medium text-foreground">{t('settings.appearanceTitle')}</h2>
+                                <p className="text-sm text-muted-foreground">{t('settings.appearanceDescription')}</p>
                             </div>
 
                             <div className="grid gap-4 md:grid-cols-3">
                                 <div className="space-y-2">
-                                    <p className="text-sm font-medium text-foreground">Theme</p>
+                                    <p className="text-sm font-medium text-foreground">{t('labels.theme')}</p>
                                     <Select
                                         value={theme}
                                         disabled={isPending}
@@ -239,7 +294,7 @@ export default function Settings() {
                                         }}
                                     >
                                         <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Choose a theme" />
+                                            <SelectValue placeholder={t('settings.placeholders.theme')} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {THEME_OPTIONS.map((option) => (
@@ -252,7 +307,7 @@ export default function Settings() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <p className="text-sm font-medium text-foreground">Accent color</p>
+                                    <p className="text-sm font-medium text-foreground">{t('labels.accentColor')}</p>
                                     <Select
                                         value={accent}
                                         disabled={isPending}
@@ -261,7 +316,7 @@ export default function Settings() {
                                         }}
                                     >
                                         <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Choose a color" />
+                                            <SelectValue placeholder={t('settings.placeholders.color')} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {ACCENT_OPTIONS.map((option) => (
@@ -280,7 +335,7 @@ export default function Settings() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <p className="text-sm font-medium text-foreground">Radius</p>
+                                    <p className="text-sm font-medium text-foreground">{t('labels.radius')}</p>
                                     <Select
                                         value={radius}
                                         disabled={isPending}
@@ -289,7 +344,7 @@ export default function Settings() {
                                         }}
                                     >
                                         <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Choose a radius" />
+                                            <SelectValue placeholder={t('settings.placeholders.radius')} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {RADIUS_OPTIONS.map((option) => (
@@ -304,13 +359,15 @@ export default function Settings() {
                         </div>
                     </MenuSection>
 
-                    <MenuSection value="organizations" label="Organizations" icon={Building2}>
+                    <MenuSection value="organizations" label={t('settings.organizationsTitle')} icon={Building2}>
                         <div className="space-y-4">
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
-                                    <h2 className="text-lg font-medium text-foreground">Organizations</h2>
+                                    <h2 className="text-lg font-medium text-foreground">
+                                        {t('settings.organizationsTitle')}
+                                    </h2>
                                     <p className="text-sm text-muted-foreground">
-                                        Review the organizations connected to your personal account.
+                                        {t('settings.organizationDescription')}
                                     </p>
                                 </div>
 

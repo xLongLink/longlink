@@ -23,7 +23,11 @@ export const content = (
             every element: state, queries, loops, conditions, translations, expressions, bindings, and invalidation.
         </P>
         <P>
-            Element references live in the SDK pages section:{' '}
+            XML page references live in the SDK pages section:{' '}
+            <Link className="text-foreground underline underline-offset-4" to="/docs/sdk/pages/expressions">
+                expressions
+            </Link>
+            ,{' '}
             <Link className="text-foreground underline underline-offset-4" to="/docs/sdk/pages/layout">
                 layout elements
             </Link>{' '}
@@ -222,7 +226,7 @@ app = LongLink(
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<H1 i18n="orders.title" />
-<P i18n="orders.summary" count="orders.items.length" />
+<P i18n="orders.summary" count="\${orders.items.length}" />
 <Badge variant="outline" i18n="orders.pendingReview" />`}</CodeBlock>
         </Stack>
         <Stack className="gap-3">
@@ -246,8 +250,8 @@ app = LongLink(
             </Stack>
             <CodeBlock language="xml">{`<Query id="orders" path="/api/orders" />
 
-<For each="orders.items" as="order">
-  <P i18n="orders.row" number="order.number" status="order.status" />
+<For each="$orders.items" as="order">
+  <P i18n="orders.row" number="$order.number" status="$order.status" />
 </For>`}</CodeBlock>
         </Stack>
         <Stack className="gap-3">
@@ -266,10 +270,10 @@ app = LongLink(
                     <Li>if: optional global condition for rendering the loop.</Li>
                 </Ul>
             </Stack>
-            <CodeBlock language="xml">{`<For each="orders.items" as="order">
+            <CodeBlock language="xml">{`<For each="$orders.items" as="order">
   <Card>
-    <H3 i18n="orders.cardTitle" index="index + 1" number="order.number" />
-    <Badge i18n="orders.status" status="order.status" />
+    <H3 i18n="orders.cardTitle" index="\${index + 1}" number="$order.number" />
+    <Badge i18n="orders.status" status="$order.status" />
   </Card>
 </For>`}</CodeBlock>
         </Stack>
@@ -287,7 +291,7 @@ app = LongLink(
                     <Li>if: expression evaluated in the current XML runtime scope.</Li>
                 </Ul>
             </Stack>
-            <CodeBlock language="xml">{`<Badge if="order.blocked" variant="destructive" i18n="orders.blocked" />`}</CodeBlock>
+            <CodeBlock language="xml">{`<Badge if="$order.blocked" variant="destructive" i18n="orders.blocked" />`}</CodeBlock>
         </Stack>
         <Stack className="gap-3">
             <Heading id="i18n" level="h2">
@@ -306,30 +310,27 @@ app = LongLink(
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<H1 i18n="orders.title" />
-<P i18n="orders.count" count="orders.items.length" />
-<Button i18n="orders.assign" user="assignee.name" />`}</CodeBlock>
+<P i18n="orders.count" count="\${orders.items.length}" />
+<Button i18n="orders.assign" user="$assignee.name" />`}</CodeBlock>
         </Stack>
         <Stack className="gap-3">
             <Heading id="expressions" level="h2">
                 Expressions
             </Heading>
             <P>
-                {
-                    'Most XML parameters are expression-aware. Use plain dotted paths, explicit $ bindings, or ${...} interpolation when mixing text and values.'
-                }
+                Expressions have a dedicated reference covering <Code>$</Code> bindings, <Code>{'${...}'}</Code> typed
+                values, interpolation, supported operators, safe calls, and XML escaping.
             </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>path.to.value reads from the runtime context.</Li>
-                    <Li>$state.field creates a writable binding for controls that support it.</Li>
-                    <Li>params.name reads dynamic browser route parameters from files like [name].xml.</Li>
-                    <Li>{'${...} interpolates expression output inside a string parameter or text node.'}</Li>
-                </Ul>
-            </Stack>
+            <P>
+                Read the{' '}
+                <Link className="text-foreground underline underline-offset-4" to="/docs/sdk/pages/expressions">
+                    expressions reference
+                </Link>{' '}
+                before writing complex conditions or action payloads.
+            </P>
             <CodeBlock language="xml">{`<Input value="$form.name" />
-<P i18n="orders.summary" name="form.name" count="orders.items.length" />
-<Button disabled="form.saving" i18n="actions.save" />`}</CodeBlock>
+<P i18n="orders.summary" name="$form.name" count="\${orders.items.length}" />
+<Button disabled="\${form.saving || !form.name}" i18n="actions.save" />`}</CodeBlock>
         </Stack>
         <Stack className="gap-3">
             <Heading id="invalidation" level="h2">

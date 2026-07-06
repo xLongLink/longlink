@@ -1,3 +1,4 @@
+import { useTranslation } from '@/lib/i18n';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router';
 
@@ -50,6 +51,7 @@ function findDocNavigationItem(items: DocNavigationItem[], itemId?: string): Doc
 
 /** Renders a docs page using the shared docs layout. */
 export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
+    const { t } = useTranslation();
     const location = useLocation();
     const contentRef = useRef<HTMLDivElement>(null);
     const [activeTocHref, setActiveTocHref] = useState('');
@@ -70,7 +72,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
         return match;
     }, undefined);
     const currentGroup = DOC_GROUPS.find((group) => findDocNavigationItem(group.items, currentItem?.id));
-    const pageLabel = currentItem?.title ?? 'Overview';
+    const pageLabel = currentItem?.title ?? t('common.overview');
     const pagePath = currentItem?.path ?? '/docs';
     const isRootDocsPage = pagePath === '/docs';
     const isSectionOverviewPage = !isRootDocsPage && currentItem?.id === currentGroup?.items[0]?.id;
@@ -190,7 +192,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
                                                                 to="/docs"
                                                                 className="transition-colors hover:text-foreground"
                                                             >
-                                                                Documentation
+                                                                {t('common.documentation')}
                                                             </Link>
                                                         )}
                                                     />
@@ -206,7 +208,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
                                                                         to={currentGroup?.items[0]?.path ?? '/docs'}
                                                                         className="transition-colors hover:text-foreground"
                                                                     >
-                                                                        {currentGroup?.title ?? 'Overview'}
+                                                                        {currentGroup?.title ?? t('common.overview')}
                                                                     </Link>
                                                                 )}
                                                             />
@@ -244,7 +246,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
                                     'absolute top-0 bottom-0 right-4 z-10 my-auto h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 lg:right-6'
                                 )}
                             >
-                                Login
+                                {t('actions.login')}
                             </Link>
                         </div>
                     </div>
@@ -272,7 +274,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
                             <div className="pointer-events-none absolute top-0 bottom-0 left-4 w-px bg-border" />
                             <div className="flex min-h-0 flex-1 flex-col gap-4">
                                 <div className="shrink-0 pl-4 text-[0.68rem] font-semibold uppercase tracking-normal text-foreground">
-                                    On this page
+                                    {t('common.onThisPage')}
                                 </div>
                                 <ScrollArea className="-mr-3 min-h-0 flex-1 pr-3">
                                     <nav aria-label="On this page">
@@ -308,6 +310,7 @@ export default function DocsLayout({ content, metadata }: DocsLayoutProps) {
 }
 
 function DocArticle({ content, metadata }: DocsLayoutProps) {
+    const { t } = useTranslation();
     const lastUpdated = metadata.lastUpdated
         ? (() => {
               const parsedDate = new Date(metadata.lastUpdated);
@@ -321,10 +324,10 @@ function DocArticle({ content, metadata }: DocsLayoutProps) {
             {content}
             {metadata.lastUpdated || metadata.editUrl ? (
                 <footer className="mt-8 flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-                    {metadata.lastUpdated ? <span>Last updated: {lastUpdated}</span> : <span />}
+                    {metadata.lastUpdated ? <span>{t('common.lastUpdated', { date: lastUpdated })}</span> : <span />}
                     {metadata.editUrl ? (
                         <A href={metadata.editUrl} target="_blank" rel="noopener noreferrer">
-                            Edit this page in GitHub
+                            {t('docs.editInGithub')}
                         </A>
                     ) : null}
                 </footer>

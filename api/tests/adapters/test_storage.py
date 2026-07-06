@@ -1,6 +1,6 @@
 import pytest
 from datetime import UTC, datetime
-from unittest.mock import Mock
+from unittest.mock import ANY, Mock
 from botocore.exceptions import ClientError
 from src.adapters.storage.s3 import S3
 
@@ -84,6 +84,71 @@ async def test_storage_bucket_reuses_existing_accessible_bucket(
     assert await storage.shared_bucket("acme") == "longlink-acme-shared"
     storage_client.create_bucket.assert_called_once_with(Bucket="longlink-acme-shared")
     storage_client.head_bucket.assert_called_once_with(Bucket="longlink-acme-shared")
+
+
+async def test_storage_application_credentials_validate_runtime_access(
+    storage: S3,
+    storage_client: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Accept credentials that can write the app bucket and only read shared storage."""
+
+    runtime_client = Mock()
+    runtime_client.put_object.side_effect = [None, ClientError({"Error": {"Code": "AccessDenied"}}, "PutObject"), ClientError({"Error": {"Code": "AccessDenied"}}, "PutObject")]
+    runtime_client.list_objects_v2.side_effect = [None, ClientError({"Error": {"Code": "AccessDenied"}}, "ListObjectsV2")]
+    storage_client.list_buckets.return_value = {
+        "Buckets": [
+            {"Name": "longlink-acme-shared"},
+            {"Name": "longlink-acme-dashboard"},
+            {"Name": "longlink-acme-reports"},
+        ]
+    }
+    monkeypatch.setattr(storage, "_client_for_credentials", Mock(return_value=runtime_client))
+
+    credentials = await storage.application_credentials("acme", "dashboard")
+
+    assert credentials == {"access_key_id": "access-key", "secret_access_key": "secret-key"}
+    runtime_client.put_object.assert_any_call(Bucket="longlink-acme-dashboard", Key=ANY, Body=b"")
+    runtime_client.list_objects_v2.assert_any_call(Bucket="longlink-acme-shared", MaxKeys=1)
+    runtime_client.put_object.assert_any_call(Bucket="longlink-acme-shared", Key=ANY, Body=b"")
+    runtime_client.list_objects_v2.assert_any_call(Bucket="longlink-acme-reports", MaxKeys=1)
+
+
+async def test_storage_application_credentials_reject_shared_write_access(
+    storage: S3,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject credentials that can write organization-shared storage."""
+
+    runtime_client = Mock()
+    monkeypatch.setattr(storage, "_client_for_credentials", Mock(return_value=runtime_client))
+
+    with pytest.raises(ValueError, match="shared bucket"):
+        await storage.application_credentials("acme", "dashboard")
+
+    runtime_client.delete_object.assert_any_call(Bucket="longlink-acme-shared", Key=ANY)
+
+
+async def test_storage_application_credentials_reject_other_app_bucket_access(
+    storage: S3,
+    storage_client: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reject credentials that can read another app bucket in the organization."""
+
+    runtime_client = Mock()
+    runtime_client.put_object.side_effect = [None, ClientError({"Error": {"Code": "AccessDenied"}}, "PutObject")]
+    storage_client.list_buckets.return_value = {
+        "Buckets": [
+            {"Name": "longlink-acme-shared"},
+            {"Name": "longlink-acme-dashboard"},
+            {"Name": "longlink-acme-reports"},
+        ]
+    }
+    monkeypatch.setattr(storage, "_client_for_credentials", Mock(return_value=runtime_client))
+
+    with pytest.raises(ValueError, match="other application buckets"):
+        await storage.application_credentials("acme", "dashboard")
 
 
 async def test_storage_objects_returns_bucket_object_metadata(

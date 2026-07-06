@@ -1,3 +1,4 @@
+import { useTranslation } from '@/lib/i18n';
 import type { DeleteConfirmationDialogProps } from '@/lib/utils';
 import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
@@ -12,6 +13,8 @@ export function DeleteConfirmationDialog({
     onConfirm,
     onOpenChange,
 }: DeleteConfirmationDialogProps) {
+    const { t } = useTranslation();
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
@@ -31,10 +34,10 @@ export function DeleteConfirmationDialog({
                                 onOpenChange(false);
                             }}
                         >
-                            Cancel
+                            {t('actions.cancel')}
                         </Button>
                         <Button type="button" variant="destructive" disabled={isPending} onClick={onConfirm}>
-                            {isPending ? 'Deleting...' : 'Delete'}
+                            {isPending ? t('actions.deleting') : t('actions.delete')}
                         </Button>
                     </div>
                 </div>

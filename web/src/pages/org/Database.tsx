@@ -1,6 +1,7 @@
 import { DataTable } from '@/components/DataTable';
 import { useOrganizationDatabaseResourceTables } from '@/hooks/use-organization-database-resource-tables';
 import { useOrganizationDatabaseResources } from '@/hooks/use-organization-database-resources';
+import { useTranslation } from '@/lib/i18n';
 import type {
     ApiOrganizationDatabaseResource,
     ApiOrganizationDatabaseTable,
@@ -8,7 +9,6 @@ import type {
 } from '@/lib/types';
 import { formatBytes, formatNumber } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Badge } from '@ui/badge';
 import { Link, useParams } from 'react-router';
 
 type DatabaseProps = {
@@ -19,6 +19,7 @@ type DatabaseProps = {
 
 /** Renders organization database resources and full-page table previews. */
 export default function Database({ organization, organizationDetails, isLoading }: DatabaseProps) {
+    const { t } = useTranslation();
     const { databaseResource = '', databaseResourceType = '', databaseTable = '' } = useParams();
     const {
         items: databaseResources,
@@ -33,16 +34,12 @@ export default function Database({ organization, organizationDetails, isLoading 
     // Subpages are path-selected; the root page intentionally stays as a list-only view.
     const selectedResource =
         databaseResources.find(
-            (resource) =>
-                selectedKind !== null &&
-                resource.kind === selectedKind &&
-                resource.name === databaseResource &&
-                (resource.status === 'available' || resource.status === 'orphaned')
+            (resource) => selectedKind !== null && resource.kind === selectedKind && resource.name === databaseResource
         ) ?? null;
     const detailError =
         databaseResourcesError ??
         (!isLoading && !databaseResourcesIsLoading && isDetailPage && !selectedResource
-            ? new Error(`Database resource "${databaseResource}" not found`)
+            ? new Error(t('resources.databaseResourceNotFound', { name: databaseResource }))
             : null);
     const databaseResourceTablesRequest = selectedResource && isDetailPage ? selectedResource : null;
     const {
@@ -55,14 +52,14 @@ export default function Database({ organization, organizationDetails, isLoading 
     const tableDetailError =
         detailError ??
         (!databaseResourceTablesIsLoading && isTablePage && !selectedTable
-            ? new Error(`Database table "${selectedTableName}" not found`)
+            ? new Error(t('resources.databaseTableNotFound', { name: selectedTableName }))
             : null);
 
     if (isDetailPage) {
         const databaseTableColumns: Array<ColumnDef<ApiOrganizationDatabaseTable>> = [
             {
                 accessorKey: 'name',
-                header: 'Table',
+                header: t('columns.table'),
                 cell: ({ row, getValue }) => (
                     <Link
                         to={`/orgs/${organization}/database/${databaseResourceType}/${encodeURIComponent(databaseResource)}/tables/${encodeURIComponent(row.original.name)}`}
@@ -75,18 +72,18 @@ export default function Database({ organization, organizationDetails, isLoading 
             },
             {
                 accessorKey: 'schema_name',
-                header: 'Schema',
+                header: t('columns.schema'),
                 meta: { className: 'min-w-44' },
             },
             {
                 id: 'columns',
-                header: 'Columns',
+                header: t('columns.columns'),
                 cell: ({ row }) => formatNumber(row.original.columns.length),
                 meta: { className: 'w-32' },
             },
             {
                 id: 'rows',
-                header: 'Preview rows',
+                header: t('columns.previewRows'),
                 cell: ({ row }) => formatNumber(row.original.rows.length),
                 meta: { className: 'w-36' },
             },
@@ -102,7 +99,9 @@ export default function Database({ organization, organizationDetails, isLoading 
                     }
                     className="inline-flex text-sm font-medium text-foreground hover:underline"
                 >
-                    {isTablePage && selectedKind === 'schema' ? 'Back to schema' : 'Back to database'}
+                    {isTablePage && selectedKind === 'schema'
+                        ? t('resources.backToSchema')
+                        : t('resources.backToDatabase')}
                 </Link>
 
                 {isLoading || databaseResourcesIsLoading ? null : detailError ? (
@@ -121,7 +120,7 @@ export default function Database({ organization, organizationDetails, isLoading 
                     <DataTable columns={databaseTableColumns} data={databaseResourceTables} />
                 ) : (
                     <div className="rounded-md border p-4 text-sm text-muted-foreground">
-                        No tables found in this schema.
+                        {t('resources.noTablesInSchema')}
                     </div>
                 )}
             </div>
@@ -131,25 +130,18 @@ export default function Database({ organization, organizationDetails, isLoading 
     const databaseResourceColumns: Array<ColumnDef<ApiOrganizationDatabaseResource>> = [
         {
             id: 'resource',
-            header: 'Resource',
+            header: t('columns.resource'),
             cell: ({ row }) => {
                 const databaseResource = row.original;
-                const isBrowsable = databaseResource.status === 'available' || databaseResource.status === 'orphaned';
 
                 return (
                     <div className="min-w-0 space-y-1">
-                        {isBrowsable ? (
-                            <Link
-                                to={`/orgs/${organization}/database/${databaseResource.kind === 'shared_table' ? 'tables' : 'schemas'}/${encodeURIComponent(databaseResource.name)}`}
-                                className="block truncate font-medium text-primary underline-offset-4 hover:underline"
-                            >
-                                {databaseResource.name}
-                            </Link>
-                        ) : (
-                            <span className="block truncate font-medium text-muted-foreground">
-                                {databaseResource.name}
-                            </span>
-                        )}
+                        <Link
+                            to={`/orgs/${organization}/database/${databaseResource.kind === 'shared_table' ? 'tables' : 'schemas'}/${encodeURIComponent(databaseResource.name)}`}
+                            className="block truncate font-medium text-primary underline-offset-4 hover:underline"
+                        >
+                            {databaseResource.name}
+                        </Link>
                         <div className="truncate text-xs text-muted-foreground">{databaseResource.database_name}</div>
                     </div>
                 );
@@ -158,7 +150,7 @@ export default function Database({ organization, organizationDetails, isLoading 
         },
         {
             id: 'application',
-            header: 'Application',
+            header: t('columns.application'),
             cell: ({ row }) => {
                 const databaseResource = row.original;
                 const application = databaseResource.application;
@@ -166,14 +158,16 @@ export default function Database({ organization, organizationDetails, isLoading 
                 if (databaseResource.kind === 'shared_table') {
                     return (
                         <div className="min-w-0 space-y-1">
-                            <div className="font-medium text-foreground">All applications</div>
-                            <div className="text-xs text-muted-foreground">Shared organization users</div>
+                            <div className="font-medium text-foreground">{t('resources.allApplications')}</div>
+                            <div className="text-xs text-muted-foreground">
+                                {t('resources.sharedOrganizationUsers')}
+                            </div>
                         </div>
                     );
                 }
 
                 if (application === null) {
-                    return <span className="text-muted-foreground">No active app</span>;
+                    return <span className="text-muted-foreground">{t('resources.noActiveApp')}</span>;
                 }
 
                 return (
@@ -191,30 +185,24 @@ export default function Database({ organization, organizationDetails, isLoading 
             meta: { className: 'min-w-52' },
         },
         {
-            accessorKey: 'status',
-            header: 'Status',
-            cell: ({ getValue }) => {
-                const status = getValue<ApiOrganizationDatabaseResource['status']>();
-                const variant = status === 'available' ? 'default' : status === 'orphaned' ? 'outline' : 'destructive';
-
-                return <Badge variant={variant}>{status}</Badge>;
-            },
-            meta: { className: 'w-32' },
-        },
-        {
             id: 'usage',
-            header: 'Usage',
+            header: t('columns.usage'),
             cell: ({ row }) => {
                 const { row_estimate, space_used, table_count } = row.original;
 
                 return (
                     <div className="min-w-0 space-y-1">
                         <div className="font-medium text-foreground">
-                            {space_used === null ? 'Unknown' : formatBytes(space_used)}
+                            {space_used === null ? t('common.unknown') : formatBytes(space_used)}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                            {table_count === null ? 'Unknown tables' : `${formatNumber(table_count)} tables`} ·{' '}
-                            {row_estimate === null ? 'unknown rows' : `${formatNumber(row_estimate)} rows`}
+                            {table_count === null
+                                ? t('resources.unknownTables')
+                                : t('resources.tableCount', { count: formatNumber(table_count) })}{' '}
+                            ·{' '}
+                            {row_estimate === null
+                                ? t('resources.unknownRows')
+                                : t('resources.rowCount', { count: formatNumber(row_estimate) })}
                         </div>
                     </div>
                 );
@@ -243,6 +231,7 @@ type DatabaseTableRow = Record<string, string | number | boolean | null>;
 
 /** Renders preview rows for one database table with dynamic columns. */
 function DatabaseTableRows({ table }: DatabaseTableRowsProps) {
+    const { t } = useTranslation();
     const databaseRowColumns: Array<ColumnDef<DatabaseTableRow>> = table.columns.length
         ? table.columns.map((column) => ({
               id: column.name,
@@ -261,10 +250,10 @@ function DatabaseTableRows({ table }: DatabaseTableRowsProps) {
         : [
               {
                   id: 'empty',
-                  header: 'No columns',
-                  cell: () => <span className="text-muted-foreground">No columns</span>,
+                  header: t('resources.noColumns'),
+                  cell: () => <span className="text-muted-foreground">{t('resources.noColumns')}</span>,
               },
           ];
 
-    return <DataTable columns={databaseRowColumns} data={table.rows} emptyMessage="No rows found." />;
+    return <DataTable columns={databaseRowColumns} data={table.rows} emptyMessage={t('resources.noRows')} />;
 }

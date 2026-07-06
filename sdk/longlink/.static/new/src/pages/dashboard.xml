@@ -17,17 +17,17 @@
         <Card>
             <Stack>
                 <Flex space="between">
-                    <P i18n="dashboard.cards.requests.label" />
+                    <P i18n="dashboard.metrics.requests.label" />
                     <Icon name="clipboard-list" />
                 </Flex>
-                <P i18n="dashboard.cards.requests.count" count="${requests.length}" />
+                <P i18n="dashboard.metrics.requests.count" count="${requests.length}" />
             </Stack>
         </Card>
 
         <Card>
             <Stack>
                 <Flex space="between">
-                    <P i18n="dashboard.cards.budget.label" />
+                    <P i18n="dashboard.metrics.budget.label" />
                     <Icon name="banknote" />
                 </Flex>
                 <P value="${`CHF ${limits.monthlyBudget}`}" />
@@ -37,7 +37,7 @@
         <Card>
             <Stack>
                 <Flex space="between">
-                    <P i18n="dashboard.cards.target.label" />
+                    <P i18n="dashboard.metrics.target.label" />
                     <Icon name="timer" />
                 </Flex>
                 <P value="${`${limits.approvalTarget} days`}" />
@@ -47,88 +47,84 @@
 
     <Columns>
         <Column width="65">
-            <Card>
-                <Tabs defaultValue="recent">
-                    <Tab value="recent" icon="list-check" i18n="dashboard.tabs.recent">
-                        <Stack>
-                            <H2 i18n="dashboard.recent.title" />
-                            <P if="${requests.length in [0]}" i18n="dashboard.recent.empty" />
-                            <For each="$requests" as="request">
-                                <Card size="sm">
-                                    <Flex space="between">
-                                        <Stack>
-                                            <A to="/requests/${request.id}" i18n="dashboard.recent.open">
-                                                <Icon name="arrow-right" />
-                                            </A>
-                                            <P value="${`${request.vendor} - CHF ${request.amount}`}" />
-                                        </Stack>
-                                        <Badge variant="outline" value="$request.status" />
-                                    </Flex>
-                                </Card>
-                            </For>
-                        </Stack>
-                    </Tab>
+            <Tabs defaultValue="recent">
+                <Tab value="recent" icon="list-check" i18n="dashboard.tabs.recent">
+                    <Stack>
+                        <H2 i18n="dashboard.recent.title" />
+                        <P if="${requests.length in [0]}" i18n="dashboard.recent.empty" />
+                        <For each="$requests" as="request">
+                            <Card size="sm">
+                                <Flex space="between">
+                                    <Stack>
+                                        <A to="/requests/${request.id}" i18n="dashboard.recent.open">
+                                            <Icon name="arrow-right" />
+                                        </A>
+                                        <P value="${`${request.vendor} - CHF ${request.amount}`}" />
+                                    </Stack>
+                                    <Badge variant="outline" value="$request.status" />
+                                </Flex>
+                            </Card>
+                        </For>
+                    </Stack>
+                </Tab>
 
-                    <Tab value="policy" icon="shield-check" i18n="dashboard.tabs.policy">
-                        <Stack>
-                            <H2 i18n="dashboard.policy.title" />
-                            <P i18n="dashboard.policy.description" />
-                            <Table>
-                                <Thead>
-                                    <Tr>
-                                        <Th i18n="dashboard.policy.table.amount" />
-                                        <Th i18n="dashboard.policy.table.approver" />
-                                        <Th i18n="dashboard.policy.table.sla" />
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
-                                    <Tr>
-                                        <Td i18n="dashboard.policy.table.small" />
-                                        <Td i18n="dashboard.policy.table.manager" />
-                                        <Td i18n="dashboard.policy.table.oneDay" />
-                                    </Tr>
-                                    <Tr>
-                                        <Td i18n="dashboard.policy.table.medium" />
-                                        <Td i18n="dashboard.policy.table.finance" />
-                                        <Td i18n="dashboard.policy.table.twoDays" />
-                                    </Tr>
-                                    <Tr>
-                                        <Td i18n="dashboard.policy.table.large" />
-                                        <Td i18n="dashboard.policy.table.owner" />
-                                        <Td i18n="dashboard.policy.table.fiveDays" />
-                                    </Tr>
-                                </Tbody>
-                                <Tfoot>
-                                    <Tr>
-                                        <Td i18n="dashboard.policy.table.footer" />
-                                        <Td></Td>
-                                        <Td></Td>
-                                    </Tr>
-                                </Tfoot>
-                            </Table>
-                        </Stack>
-                    </Tab>
-                </Tabs>
-            </Card>
+                <Tab value="policy" icon="shield-check" i18n="dashboard.tabs.policy">
+                    <Stack>
+                        <H2 i18n="dashboard.policy.title" />
+                        <P i18n="dashboard.policy.description" />
+                        <Table>
+                            <Thead>
+                                <Tr>
+                                    <Th i18n="dashboard.policy.table.amount" />
+                                    <Th i18n="dashboard.policy.table.approver" />
+                                    <Th i18n="dashboard.policy.table.sla" />
+                                </Tr>
+                            </Thead>
+                            <Tbody>
+                                <Tr>
+                                    <Td i18n="dashboard.policy.table.small" />
+                                    <Td i18n="dashboard.policy.table.manager" />
+                                    <Td i18n="dashboard.policy.table.oneDay" />
+                                </Tr>
+                                <Tr>
+                                    <Td i18n="dashboard.policy.table.medium" />
+                                    <Td i18n="dashboard.policy.table.finance" />
+                                    <Td i18n="dashboard.policy.table.twoDays" />
+                                </Tr>
+                                <Tr>
+                                    <Td i18n="dashboard.policy.table.large" />
+                                    <Td i18n="dashboard.policy.table.owner" />
+                                    <Td i18n="dashboard.policy.table.fiveDays" />
+                                </Tr>
+                            </Tbody>
+                            <Tfoot>
+                                <Tr>
+                                    <Td i18n="dashboard.policy.table.footer" />
+                                    <Td></Td>
+                                    <Td></Td>
+                                </Tr>
+                            </Tfoot>
+                        </Table>
+                    </Stack>
+                </Tab>
+            </Tabs>
         </Column>
 
         <Column width="35">
-            <Card>
-                <Stack>
-                    <H3 i18n="dashboard.checklist.title" />
-                    <Ul>
-                        <Li i18n="dashboard.checklist.items.context" />
-                        <Li i18n="dashboard.checklist.items.budget" />
-                        <Li i18n="dashboard.checklist.items.attachment" />
-                    </Ul>
-                    <Hr />
-                    <Ol>
-                        <Li i18n="dashboard.checklist.steps.create" />
-                        <Li i18n="dashboard.checklist.steps.review" />
-                        <Li i18n="dashboard.checklist.steps.archive" />
-                    </Ol>
-                </Stack>
-            </Card>
+            <Stack>
+                <H3 i18n="dashboard.checklist.title" />
+                <Ul>
+                    <Li i18n="dashboard.checklist.items.context" />
+                    <Li i18n="dashboard.checklist.items.budget" />
+                    <Li i18n="dashboard.checklist.items.attachment" />
+                </Ul>
+                <Hr />
+                <Ol>
+                    <Li i18n="dashboard.checklist.steps.create" />
+                    <Li i18n="dashboard.checklist.steps.review" />
+                    <Li i18n="dashboard.checklist.steps.archive" />
+                </Ol>
+            </Stack>
         </Column>
     </Columns>
 </longlink>

@@ -25,6 +25,10 @@ import {
     content as docsSdkEnvironmentsContent,
     metadata as docsSdkEnvironmentsMetadata,
 } from '@/pages/docs/sdk/environments';
+import {
+    content as docsSdkExpressionsContent,
+    metadata as docsSdkExpressionsMetadata,
+} from '@/pages/docs/sdk/expressions';
 import { content as docsSdkIndexContent, metadata as docsSdkIndexMetadata } from '@/pages/docs/sdk/index';
 import { content as docsSdkLayoutContent, metadata as docsSdkLayoutMetadata } from '@/pages/docs/sdk/layout';
 import { content as docsSdkPagesContent, metadata as docsSdkPagesMetadata } from '@/pages/docs/sdk/pages';
@@ -225,6 +229,16 @@ const xmlComponentsPage: GroupedDocPage = {
     metadata: docsSdkComponentsMetadata,
 };
 
+const xmlExpressionsPage: GroupedDocPage = {
+    group: 'Application SDK',
+    title: 'Expressions',
+    path: '/docs/sdk/pages/expressions',
+    id: 'expressions',
+    icon: FileCode2,
+    content: docsSdkExpressionsContent,
+    metadata: docsSdkExpressionsMetadata,
+};
+
 const sdkPagesPage: GroupedDocPage = {
     group: 'Application SDK',
     title: 'Pages',
@@ -249,6 +263,7 @@ export const DOC_PAGES: GroupedDocPage[] = [
     sdkDatabasePage,
     sdkTestingPage,
     sdkBuildingPage,
+    xmlExpressionsPage,
     xmlLayoutPage,
     xmlComponentsPage,
     sdkPagesPage,
@@ -290,7 +305,11 @@ export const DOC_GROUPS: Array<{ title: DocGroupTitle; items: DocNavigationItem[
             navigationItem(sdkDatabasePage),
             navigationItem(sdkTestingPage),
             navigationItem(sdkBuildingPage),
-            navigationItem(sdkPagesPage, [navigationItem(xmlLayoutPage), navigationItem(xmlComponentsPage)]),
+            navigationItem(sdkPagesPage, [
+                navigationItem(xmlExpressionsPage),
+                navigationItem(xmlLayoutPage),
+                navigationItem(xmlComponentsPage),
+            ]),
         ],
     },
 ];

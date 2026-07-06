@@ -1,3 +1,4 @@
+import { useTranslation } from '@/lib/i18n';
 import { CheckIcon, ClipboardCopyIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -15,6 +16,7 @@ type CodeBlockProps = {
 
 /** Renders a syntax-highlighted code block for docs and examples. */
 export function CodeBlock({ children, className, language = 'text' }: CodeBlockProps) {
+    const { t } = useTranslation();
     const [isCopied, setIsCopied] = useState(false);
     const resetCopyTimer = useRef<number | null>(null);
 
@@ -35,7 +37,7 @@ export function CodeBlock({ children, className, language = 'text' }: CodeBlockP
     const handleCopy = async () => {
         try {
             await navigator.clipboard.writeText(code);
-            toast.success('Copied to clipboard');
+            toast.success(t('toasts.copiedToClipboard'));
             setIsCopied(true);
 
             if (resetCopyTimer.current != null) {
@@ -60,8 +62,8 @@ export function CodeBlock({ children, className, language = 'text' }: CodeBlockP
                     type="button"
                     variant="ghost"
                     size="icon-xs"
-                    aria-label={isCopied ? 'Copied code' : 'Copy code'}
-                    title={isCopied ? 'Copied' : 'Copy'}
+                    aria-label={isCopied ? t('actions.copiedCode') : t('actions.copyCode')}
+                    title={isCopied ? t('actions.copied') : t('actions.copy')}
                     onClick={handleCopy}
                     className={cn(
                         'absolute right-2 z-10 cursor-pointer bg-transparent text-muted-foreground shadow-none hover:bg-transparent hover:text-foreground',

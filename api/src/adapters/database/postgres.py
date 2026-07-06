@@ -162,10 +162,11 @@ class Postgres(Database):
         await conn.execute(CreateTable(shared_users_table, if_not_exists=True))
 
 
-    async def _restrict_shared_users_table(self, conn: AsyncConnection) -> None:
-        """Restrict default write access to the shared organization users table."""
+    async def _restrict_shared_tables(self, conn: AsyncConnection) -> None:
+        """Restrict default write access to organization shared tables."""
 
-        await conn.execute(text("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM PUBLIC"))
+        await conn.execute(text("REVOKE CREATE ON SCHEMA public FROM PUBLIC"))
+        await conn.execute(text("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC"))
 
 
     async def _sync_shared_users_table(self, conn: AsyncConnection, users: list[SharedUser]) -> None:
@@ -232,7 +233,7 @@ class Postgres(Database):
         application: str,
         role_name: str,
     ) -> None:
-        """Grant one application role write access to its schema and read access to public users."""
+        """Grant one application role write access to its schema and read-only shared access."""
 
         preparer = conn.engine.sync_engine.dialect.identifier_preparer
         database = preparer.quote(database_name)
@@ -244,8 +245,11 @@ class Postgres(Database):
         await conn.exec_driver_sql(f"GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA {schema} TO {role}")
         await conn.exec_driver_sql(f"GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA {schema} TO {role}")
         await conn.exec_driver_sql(f"GRANT USAGE ON SCHEMA public TO {role}")
-        await conn.exec_driver_sql(f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM {role}")
-        await conn.exec_driver_sql(f"GRANT SELECT, REFERENCES ON TABLE public.users TO {role}")
+        await conn.exec_driver_sql(f"REVOKE CREATE ON SCHEMA public FROM {role}")
+        await conn.exec_driver_sql(f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM {role}")
+        await conn.exec_driver_sql(f"GRANT SELECT, REFERENCES ON ALL TABLES IN SCHEMA public TO {role}")
+        await conn.exec_driver_sql(f"ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, REFERENCES ON TABLES TO {role}")
+        await conn.exec_driver_sql(f"ALTER ROLE {role} IN DATABASE {database} SET search_path = {schema}, public")
 
 
     async def database(self, organization: str) -> str:
@@ -255,7 +259,7 @@ class Postgres(Database):
 
         async with self._connection(database_name) as conn:
             await self._ensure_shared_users_table(conn)
-            await self._restrict_shared_users_table(conn)
+            await self._restrict_shared_tables(conn)
 
         return self._url(database_name).render_as_string(hide_password=False)
 
@@ -268,7 +272,7 @@ class Postgres(Database):
         async with self._connection(database_name) as conn:
             await self._ensure_shared_users_table(conn)
             await self._sync_shared_users_table(conn, users)
-            await self._restrict_shared_users_table(conn)
+            await self._restrict_shared_tables(conn)
 
 
     async def schema(self, organization: str, application: str) -> str:
@@ -281,7 +285,7 @@ class Postgres(Database):
         async with self._connection(database_name) as conn:
             await conn.execute(CreateSchema(quoted_name(application, True), if_not_exists=True))
             await self._ensure_shared_users_table(conn)
-            await self._restrict_shared_users_table(conn)
+            await self._restrict_shared_tables(conn)
             await self._ensure_application_role(conn, role_name, role_password)
             await self._grant_application_permissions(conn, database_name, application, role_name)
 

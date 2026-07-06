@@ -148,6 +148,7 @@ export default defineConfig(({ mode }) => {
             proxy: {
                 '/api': 'http://localhost:8000',
                 '/auth': 'http://localhost:8000',
+                '/logo.svg': 'http://localhost:8000',
             },
         },
     };

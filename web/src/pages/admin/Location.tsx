@@ -1,7 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { useTranslation } from '@/lib/i18n';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
+import type { TFunction } from 'i18next';
 import { toast } from 'sonner';
 
 import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
@@ -9,26 +11,30 @@ import { DataTable } from '@/components/DataTable';
 import CreateLocationDialog from '@/components/dialogs/CreateLocationDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { useLocations } from '@/hooks/use-locations';
-import { useUser } from '@/hooks/use-user';
+import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiVoid } from '@/lib/api';
 import { locationsQueryKey } from '@/lib/query-keys';
 import type { ApiLocation } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 
-const locationColumnsBase: Array<ColumnDef<ApiLocation>> = [
-    {
-        id: 'location',
-        header: 'Location',
-        cell: ({ row }) => {
-            return <AdminLocationBadge location={row.original} />;
+/** Returns localized admin location table columns. */
+function createLocationColumnsBase(t: TFunction): Array<ColumnDef<ApiLocation>> {
+    return [
+        {
+            id: 'location',
+            header: t('columns.location'),
+            cell: ({ row }) => {
+                return <AdminLocationBadge location={row.original} />;
+            },
+            meta: { className: 'min-w-56' },
         },
-        meta: { className: 'min-w-56' },
-    },
-];
+    ];
+}
 
 /** Renders the admin location page. */
 export default function AdminLocation() {
-    const { role } = useUser();
+    const { t } = useTranslation();
+    const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
 
@@ -40,26 +46,27 @@ export default function AdminLocation() {
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: locationsQueryKey() });
-            toast.success('Location deleted');
+            toast.success(t('admin.locationDeleted'));
         },
     });
 
     const { items: locationRows, error, isLoading } = useLocations();
     const deleteDialog = useDeleteDialog({
-        title: 'Delete location',
+        title: t('admin.deleteLocationTitle'),
         mutation: deleteLocation,
         items: locationRows,
         getId: (location) => String(location.id),
-        description: (location) => `Delete ${location.name}?`,
-        errorMessage: 'Failed to delete location',
-        fallbackDescription: 'Delete this location?',
+        description: (location) => t('admin.deleteLocationDescription', { name: location.name }),
+        errorMessage: t('admin.failedDeleteLocation'),
+        fallbackDescription: t('admin.deleteLocationFallback'),
     });
+    const locationColumnsBase = createLocationColumnsBase(t);
     const locationColumns = canManage
         ? ([
               ...locationColumnsBase,
               {
                   id: 'actions',
-                  header: 'Action',
+                  header: t('columns.action'),
                   meta: { className: 'w-24 text-right' },
                   cell: ({ row }) => {
                       const location = row.original;
@@ -67,8 +74,8 @@ export default function AdminLocation() {
 
                       return (
                           <AdminActionMenu
-                              label={`location ${location.name}`}
-                              copyLabel="Location ID"
+                              label={t('admin.locationLabel', { name: location.name })}
+                              copyLabel={t('admin.locationId')}
                               copyValue={locationId}
                               onDelete={() => deleteDialog.openFor(location)}
                           />
@@ -83,10 +90,8 @@ export default function AdminLocation() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <Hero icon="map-pin">
                     <div>
-                        <HeroTitle>Locations</HeroTitle>
-                        <HeroDescription>
-                            Manage datacenter and cloud region locations for infrastructure deployments.
-                        </HeroDescription>
+                        <HeroTitle>{t('admin.locationsTitle')}</HeroTitle>
+                        <HeroDescription>{t('admin.locationsDescription')}</HeroDescription>
                     </div>
                 </Hero>
                 {canManage ? <CreateLocationDialog /> : null}

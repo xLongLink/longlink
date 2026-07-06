@@ -2,6 +2,7 @@ import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 
 import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
+import type { TFunction } from 'i18next';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 
@@ -11,71 +12,81 @@ import ConnectDatabaseDialog from '@/components/dialogs/ConnectDatabaseDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { useDatabases } from '@/hooks/use-databases';
 import { useLocations } from '@/hooks/use-locations';
-import { useUser } from '@/hooks/use-user';
+import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { useTranslation } from '@/lib/i18n';
 import { databaseUsageQueryKey, databasesQueryKey } from '@/lib/query-keys';
 import type { ApiDatabaseRegistry, ApiDatabaseUsage, ApiLocation } from '@/lib/types';
 import { formatBytes, useDeleteDialog } from '@/lib/utils';
+import { PostgreSQL } from '@/svg/PostgreSQL';
 
-const databaseColumnsBase: Array<
-    ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation; usage?: ApiDatabaseUsage }>
-> = [
-    {
-        id: 'database',
-        header: 'Database',
-        meta: { className: 'min-w-64' },
-        cell: ({ row }) => {
-            const database = row.original;
-            const managementAddress = `${database.host}:${database.port}`;
-            const runtimeAddress = `${database.runtime_host}:${database.runtime_port}`;
+/** Returns localized admin database table columns. */
+function createDatabaseColumnsBase(
+    t: TFunction
+): Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation; usage?: ApiDatabaseUsage }>> {
+    return [
+        {
+            id: 'database',
+            header: t('columns.database'),
+            meta: { className: 'min-w-64' },
+            cell: ({ row }) => {
+                const database = row.original;
+                const managementAddress = `${database.host}:${database.port}`;
+                const runtimeAddress = `${database.runtime_host}:${database.runtime_port}`;
 
-            return (
-                <Link to={`/admin/database/${encodeURIComponent(database.slug)}`} className="flex items-center gap-3">
-                    <img
-                        src="/images/Postgresql.png"
-                        alt="PostgreSQL"
-                        className="size-10 rounded-md border border-border bg-background object-contain p-1"
-                    />
+                return (
+                    <Link
+                        to={`/admin/database/${encodeURIComponent(database.slug)}`}
+                        className="flex items-center gap-3"
+                    >
+                        <PostgreSQL
+                            aria-hidden={true}
+                            className="size-10 rounded-md border border-border bg-background object-contain p-1"
+                        />
+                        <div className="min-w-0">
+                            <div className="truncate font-medium text-foreground">{database.username}</div>
+                            <div className="truncate text-xs text-muted-foreground">{managementAddress}</div>
+                            {runtimeAddress !== managementAddress ? (
+                                <div className="truncate text-xs text-muted-foreground">
+                                    {t('common.runtime')} {runtimeAddress}
+                                </div>
+                            ) : null}
+                        </div>
+                    </Link>
+                );
+            },
+        },
+        {
+            id: 'location',
+            header: t('columns.location'),
+            cell: ({ row }) => {
+                return <AdminLocationBadge fallbackId={row.original.location_id} location={row.original.location} />;
+            },
+            meta: { className: 'min-w-56' },
+        },
+        {
+            id: 'usage',
+            header: t('columns.usage'),
+            cell: ({ row }) => {
+                const usage = row.original.usage;
+                if (!usage) return <span className="text-muted-foreground">—</span>;
+
+                return (
                     <div className="min-w-0">
-                        <div className="truncate font-medium text-foreground">{database.username}</div>
-                        <div className="truncate text-xs text-muted-foreground">{managementAddress}</div>
-                        {runtimeAddress !== managementAddress ? (
-                            <div className="truncate text-xs text-muted-foreground">Runtime {runtimeAddress}</div>
-                        ) : null}
+                        <div className="truncate font-medium text-foreground">{formatBytes(usage.space_used)}</div>
+                        <div className="text-xs text-muted-foreground">{t('common.used')}</div>
                     </div>
-                </Link>
-            );
+                );
+            },
+            meta: { className: 'w-48' },
         },
-    },
-    {
-        id: 'location',
-        header: 'Location',
-        cell: ({ row }) => {
-            return <AdminLocationBadge fallbackId={row.original.location_id} location={row.original.location} />;
-        },
-        meta: { className: 'min-w-56' },
-    },
-    {
-        id: 'usage',
-        header: 'Usage',
-        cell: ({ row }) => {
-            const usage = row.original.usage;
-            if (!usage) return <span className="text-muted-foreground">—</span>;
-
-            return (
-                <div className="min-w-0">
-                    <div className="truncate font-medium text-foreground">{formatBytes(usage.space_used)}</div>
-                    <div className="text-xs text-muted-foreground">Used</div>
-                </div>
-            );
-        },
-        meta: { className: 'w-48' },
-    },
-];
+    ];
+}
 
 /** Renders the admin database page. */
 export default function AdminDatabase() {
-    const { role } = useUser();
+    const { t } = useTranslation();
+    const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
 
@@ -87,7 +98,7 @@ export default function AdminDatabase() {
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
-            toast.success('Database deleted');
+            toast.success(t('admin.databaseDeleted'));
         },
     });
 
@@ -115,20 +126,21 @@ export default function AdminDatabase() {
             usage: usageById.get(row.id),
         }));
     const deleteDialog = useDeleteDialog({
-        title: 'Delete database',
+        title: t('admin.deleteDatabaseTitle'),
         mutation: deleteDatabase,
         items: databaseTableRows,
         getId: (database) => database.id,
-        description: (database) => `Delete database ${database.slug}?`,
-        errorMessage: 'Failed to delete database',
-        fallbackDescription: 'Delete this database?',
+        description: (database) => t('admin.deleteDatabaseDescription', { slug: database.slug }),
+        errorMessage: t('admin.failedDeleteDatabase'),
+        fallbackDescription: t('admin.deleteDatabaseFallback'),
     });
+    const databaseColumnsBase = createDatabaseColumnsBase(t);
     const databaseColumns = canManage
         ? ([
               ...databaseColumnsBase,
               {
                   id: 'actions',
-                  header: 'Action',
+                  header: t('columns.action'),
                   meta: { className: 'w-24 text-right' },
                   cell: ({ row }) => {
                       const database = row.original;
@@ -136,7 +148,7 @@ export default function AdminDatabase() {
                       return (
                           <AdminActionMenu
                               label={database.name}
-                              copyLabel="Database slug"
+                              copyLabel={t('admin.copyDatabaseSlug')}
                               copyValue={database.slug}
                               onDelete={() => deleteDialog.openFor(database)}
                           />
@@ -151,10 +163,8 @@ export default function AdminDatabase() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <Hero icon="database">
                     <div>
-                        <HeroTitle>Database</HeroTitle>
-                        <HeroDescription>
-                            Monitor control-plane data, schema health, and persistence state.
-                        </HeroDescription>
+                        <HeroTitle>{t('admin.databaseTitle')}</HeroTitle>
+                        <HeroDescription>{t('admin.databaseDescription')}</HeroDescription>
                     </div>
                 </Hero>
                 {canManage ? <ConnectDatabaseDialog /> : null}

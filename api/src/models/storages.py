@@ -1,8 +1,9 @@
 from enum import Enum
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from src.models.users import UserSummary
+from src.models.icons import Icon, parse_icon
 from src.models.statuses import ApplicationStatus
 
 
@@ -19,15 +20,6 @@ class OrganizationStorageResourceKind(str, Enum):
     application_bucket = "application_bucket"
 
 
-class OrganizationStorageResourceStatus(str, Enum):
-    """Supported organization storage resource statuses."""
-
-    available = "available"
-    missing = "missing"
-    orphaned = "orphaned"
-    unavailable = "unavailable"
-
-
 class OrganizationStorageApplicationResponse(BaseModel):
     """Represent an application associated with a storage resource."""
 
@@ -37,9 +29,18 @@ class OrganizationStorageApplicationResponse(BaseModel):
     # Metadata
     name: str
     slug: str
+    icon: Icon | None = None
+    description: str | None = None
 
     # State
     status: ApplicationStatus
+
+    @field_validator("icon", mode="before")
+    @classmethod
+    def validate_icon(cls, icon: str | Icon | None) -> Icon | None:
+        """Normalize and validate persisted application icon slugs."""
+
+        return parse_icon(icon)
 
 
 class StorageRegistryCreate(BaseModel):
@@ -80,8 +81,9 @@ class OrganizationStorageResourceResponse(BaseModel):
     storage_registry_id: UUID
     storage_registry_name: str
 
-    # State
-    status: OrganizationStorageResourceStatus
+    # Usage
+    space_used: int | None = None
+    object_count: int | None = None
 
 
 class StorageObjectResponse(BaseModel):

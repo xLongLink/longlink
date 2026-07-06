@@ -2,6 +2,7 @@ import { createLucideIconComponent } from '@/components/ui/icon';
 import { useMetadata, type MetadataPage } from '@/hooks/use-metadata';
 import XML from '@/layout/XmlLayout';
 import { ApiError, fetchApiText } from '@/lib/api';
+import { useTranslation } from '@/lib/i18n';
 import type { ApiOrganizationApplication } from '@/lib/types';
 import {
     createContext as createXmlContext,
@@ -24,6 +25,7 @@ type ViewProps = {
     applicationStatus?: ApiOrganizationApplication['status'] | 'loading';
     canViewLogs?: boolean;
     metadata: string;
+    locale?: string;
     runtimeContext?: ExecutionContext;
     runtimeKey?: string;
 };
@@ -279,10 +281,12 @@ export default function View({
     applicationName,
     applicationStatus,
     canViewLogs = false,
+    locale,
     metadata,
     runtimeContext,
     runtimeKey,
 }: ViewProps) {
+    const { t } = useTranslation();
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -464,7 +468,7 @@ export default function View({
         } catch (urlError: unknown) {
             const errorPageState = {
                 ...loadingPageState,
-                error: urlError instanceof Error ? urlError.message : 'Invalid page URL',
+                error: urlError instanceof Error ? urlError.message : t('appView.invalidPageUrl'),
                 loading: false,
             };
 
@@ -547,7 +551,7 @@ export default function View({
                         ...current,
                         [activePageStateKey]: {
                             ...currentPageState,
-                            error: fetchError instanceof Error ? fetchError.message : 'Failed to load page',
+                            error: fetchError instanceof Error ? fetchError.message : t('appView.loadPageFailed'),
                             loading: false,
                             status: fetchError instanceof ApiError ? fetchError.status : null,
                         },
@@ -603,7 +607,7 @@ export default function View({
 
                 setLogsState({
                     ...emptyLogsState,
-                    error: fetchError instanceof Error ? fetchError.message : 'Failed to load logs',
+                    error: fetchError instanceof Error ? fetchError.message : t('appView.loadLogsFailed'),
                 });
             });
 
@@ -642,9 +646,9 @@ export default function View({
                 <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
                     <ErrorState
                         actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                        actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
-                        message={error.message || 'The application definition could not be loaded.'}
-                        title="Unable to load this application"
+                        actionLabel={organization ? t('actions.backToOrganization') : t('actions.backToOrganizations')}
+                        message={error.message || t('appView.loadApplicationFailed')}
+                        title={t('appView.unableToLoadApplication')}
                     />
                 </section>
             </XML>
@@ -670,6 +674,7 @@ export default function View({
                     ast={pageState.ast}
                     baseUrl={resolvedMetadataBaseUrl}
                     ctx={pageState.runtimeContext}
+                    locale={locale}
                 />
             </section>
         );
@@ -681,9 +686,9 @@ export default function View({
         activeFallback = (
             <ErrorState
                 actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
-                message="The application did not expose any pages to render."
-                title="Unexpected application response"
+                actionLabel={organization ? t('actions.backToOrganization') : t('actions.backToOrganizations')}
+                message={t('appView.emptyApplication')}
+                title={t('appView.unexpectedApplicationResponse')}
             />
         );
     } else if (activePageStateIsCurrent && activePageState.error && activePageState.status === 503) {
@@ -692,18 +697,18 @@ export default function View({
         activeFallback = (
             <ErrorState
                 actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
-                message={activePageState.error || 'This page could not be loaded.'}
-                title="Unable to load this page"
+                actionLabel={organization ? t('actions.backToOrganization') : t('actions.backToOrganizations')}
+                message={activePageState.error || t('appView.loadPageFailed')}
+                title={t('appView.unableToLoadPage')}
             />
         );
     } else if (activePageStateIsCurrent && activePageState.parseError) {
         activeFallback = (
             <ErrorState
                 actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
+                actionLabel={organization ? t('actions.backToOrganization') : t('actions.backToOrganizations')}
                 message={activePageState.parseError}
-                title="Unable to load this page"
+                title={t('appView.unableToLoadPage')}
             />
         );
     } else if (isLoading || !activePageStateIsCurrent || activePageState.loading) {
@@ -712,9 +717,9 @@ export default function View({
         activeFallback = (
             <ErrorState
                 actionHref={organization ? `/orgs/${organization}` : '/organizations'}
-                actionLabel={organization ? 'Back to organization' : 'Back to organizations'}
-                message="The application returned an empty response."
-                title="Unexpected application response"
+                actionLabel={organization ? t('actions.backToOrganization') : t('actions.backToOrganizations')}
+                message={t('appView.emptyResponse')}
+                title={t('appView.unexpectedApplicationResponse')}
             />
         );
     }
@@ -733,13 +738,17 @@ export default function View({
 
 /** Renders the in-shell loading page for an application that is not ready yet. */
 function LoadingState({ status }: LoadingStateProps) {
+    const { t } = useTranslation();
+
     if (status === 'loading') return null;
 
     return (
         <div className="w-full max-w-xl rounded-2xl border border-border bg-card/80 px-6 py-8 text-center shadow-sm">
             <div className="space-y-3">
-                <h1 className="text-2xl font-semibold text-foreground">Application is {status}</h1>
-                <p className="text-sm leading-6 text-muted-foreground">Please try again in a moment.</p>
+                <h1 className="text-2xl font-semibold text-foreground">
+                    {t('appView.applicationIsStatus', { status })}
+                </h1>
+                <p className="text-sm leading-6 text-muted-foreground">{t('appView.retryLater')}</p>
             </div>
         </div>
     );
@@ -752,11 +761,15 @@ function LogsState({
     logsError,
     logsLoading,
 }: LogsStateProps & { logsContent: string; logsError: string | null; logsLoading: boolean }) {
+    const { t } = useTranslation();
+
     return (
         <div className="space-y-4">
             <div className="space-y-1">
-                <h1 className="text-2xl font-semibold text-foreground">Application logs</h1>
-                <p className="text-sm leading-6 text-muted-foreground">Recent logs for {applicationName}.</p>
+                <h1 className="text-2xl font-semibold text-foreground">{t('appView.applicationLogs')}</h1>
+                <p className="text-sm leading-6 text-muted-foreground">
+                    {t('appView.logsDescription', { applicationName })}
+                </p>
             </div>
 
             {!logsLoading &&
@@ -767,7 +780,7 @@ function LogsState({
                 ) : (
                     <ScrollArea className="h-[60vh] overflow-hidden rounded-md border bg-muted/30">
                         <pre className="p-3 text-xs leading-5 whitespace-pre-wrap text-foreground">
-                            {logsContent || 'No logs available.'}
+                            {logsContent || t('appView.emptyLogs')}
                         </pre>
                     </ScrollArea>
                 ))}

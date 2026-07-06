@@ -6,8 +6,8 @@ from fastapi import FastAPI
 from pathlib import Path
 from src.errors import register_error_handlers
 from src.logger import logger
-from src.routes import (auth, icons, image, users, health, accounts, computes,
-                        storages, databases, locations)
+from src.routes import (auth, icons, image, users, health, accounts, branding,
+                        computes, storages, databases, locations)
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
 from alembic.config import Config
@@ -132,6 +132,7 @@ cors_origins = configure_cors(app, resolve_cors_origins(env.DEVELOPMENT, env.COR
 app.include_router(auth.router)
 app.include_router(accounts.router)
 app.include_router(applications.router)
+app.include_router(branding.router)
 app.include_router(computes.router)
 app.include_router(databases.router)
 app.include_router(health.router)

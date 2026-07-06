@@ -4,7 +4,8 @@ import type { ReactNode } from 'react';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
 import { Wordmark } from '@/components/Wordmark';
-import { useUser } from '@/hooks/use-user';
+import { useUserProfile } from '@/hooks/use-user';
+import { useTranslation } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router';
 
@@ -24,10 +25,11 @@ type LayoutProps = {
 
 /** Renders the shared page shell with either breadcrumbs or brand-only header chrome. */
 export default function Layout({ tabs, brandOnly = false, brandHref = '/organizations', children }: LayoutProps) {
+    const { t } = useTranslation();
     const location = useLocation();
     const tabEntries = Object.entries(tabs ?? {});
     const currentPath = `${location.pathname}${location.search}`;
-    const { user } = useUser();
+    const { user } = useUserProfile();
 
     const header = (
         <>
@@ -35,7 +37,11 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         {brandOnly ? (
-                            <Link to={brandHref} aria-label="LongLink home" className="inline-flex items-center">
+                            <Link
+                                to={brandHref}
+                                aria-label={t('common.longlinkHome')}
+                                className="inline-flex items-center"
+                            >
                                 <Wordmark />
                             </Link>
                         ) : (
@@ -50,7 +56,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                             to="/docs"
                             className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                         >
-                            Documentation
+                            {t('common.documentation')}
                         </Link>
                     )}
                 </div>

@@ -5,12 +5,22 @@ import { useApiQuery } from '@/hooks/use-api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { accountsQueryKey } from '@/lib/query-keys';
-import { applyTheme, THEME_PRESETS, type Accent, type Radius, type Theme, type ThemeConfig } from '@/lib/theme';
+import {
+    applyTheme,
+    resolveTheme,
+    THEME_PRESETS,
+    type Accent,
+    type Radius,
+    type Theme,
+    type ThemeConfig,
+} from '@/lib/theme';
 import type { ApiUserProfile, ApiUserSummary } from '@/lib/types';
 
 export type User = ApiUserProfile;
 
 type UserUpdate = Partial<Pick<User, 'name' | 'email' | 'avatar' | 'theme' | 'accent' | 'radius' | 'language'>>;
+
+type UserPreferences = Pick<User, 'theme' | 'accent' | 'radius' | 'language'>;
 
 type LoginCredentials = {
     username: string;
@@ -25,29 +35,40 @@ type AccountsState = {
     error: Error | null;
 };
 
+type UserProfileState = {
+    user: User | null;
+    organizations: User['organizations'];
+    role: User['role'];
+    theme: User['theme'];
+    accent: User['accent'];
+    radius: User['radius'];
+    language: User['language'];
+    isLoading: boolean;
+    error: Error | null;
+};
+
 const UserContext = createContext<UserQueryResult | undefined>(undefined);
 
 const DEFAULT_USER_PREFERENCES = {
-    theme: 'dark' as Exclude<Theme, 'system'>,
+    theme: 'dark' as Theme,
     accent: 'neutral' as Accent,
     radius: 'medium' as Radius,
     language: 'en',
-} as const;
+} as const satisfies UserPreferences;
 
 /** Applies user preferences to the document root. */
-function applyUserPreferences(user: User) {
+function applyUserPreferences(preferences: UserPreferences) {
     const root = window.document.documentElement;
-    const theme = user.theme === 'system' ? DEFAULT_USER_PREFERENCES.theme : user.theme;
+    const resolvedTheme = resolveTheme(preferences.theme);
 
     const config: ThemeConfig = {
-        theme,
-        ...THEME_PRESETS[theme],
-        accent: user.accent,
-        radius: user.radius,
+        theme: preferences.theme,
+        ...THEME_PRESETS[resolvedTheme],
+        accent: preferences.accent,
+        radius: preferences.radius,
     };
 
     applyTheme(root, config);
-    root.lang = user.language;
 }
 
 /** Hook that fetches the current user. */
@@ -65,30 +86,80 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const user = useUserQuery();
 
     useEffect(() => {
-        if (user.isLoading || !user.data) {
+        if (user.isLoading) {
             return;
         }
 
-        applyUserPreferences(user.data);
+        const preferences = user.data ?? DEFAULT_USER_PREFERENCES;
+
+        applyUserPreferences(preferences);
+
+        if (preferences.theme !== 'system') {
+            return;
+        }
+
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+        /** Re-applies user preferences when the operating system theme changes. */
+        const handleSystemThemeChange = () => {
+            applyUserPreferences(preferences);
+        };
+
+        systemTheme.addEventListener('change', handleSystemThemeChange);
+
+        return () => {
+            systemTheme.removeEventListener('change', handleSystemThemeChange);
+        };
     }, [user.data, user.isLoading]);
 
     return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
 }
 
-/** Reads the normalized authenticated user state. */
-export function useUser() {
+/** Reads the current user profile without loading saved account switcher state. */
+export function useUserProfile(): UserProfileState {
     const context = useContext(UserContext);
+
+    if (context === undefined) {
+        throw new Error('useUserProfile must be used within a UserProvider');
+    }
+
+    const { data: user, error, isFetching, isLoading } = context;
+
+    if (!user) {
+        return {
+            user: null,
+            organizations: [],
+            role: 'user',
+            theme: DEFAULT_USER_PREFERENCES.theme,
+            accent: DEFAULT_USER_PREFERENCES.accent,
+            radius: DEFAULT_USER_PREFERENCES.radius,
+            language: DEFAULT_USER_PREFERENCES.language,
+            isLoading: isLoading || isFetching,
+            error: error ?? null,
+        };
+    }
+
+    return {
+        user,
+        organizations: user.organizations,
+        role: user.role,
+        theme: user.theme,
+        accent: user.accent,
+        radius: user.radius,
+        language: user.language,
+        isLoading: isLoading || isFetching,
+        error: error ?? null,
+    };
+}
+
+/** Reads the normalized authenticated user state with saved account switcher state. */
+export function useUser() {
+    const profile = useUserProfile();
     const queryClient = useQueryClient();
     const accountsQuery = useCollectionQuery<ApiUserSummary>('/auth/accounts', {
         refetchOnMount: 'always',
         retry: false,
     });
-
-    if (context === undefined) {
-        throw new Error('useUser must be used within a UserProvider');
-    }
-
-    const { data: user, error, isFetching, isLoading } = context;
     const accounts: AccountsState = {
         items: accountsQuery.items,
         isLoading: accountsQuery.isLoading || accountsQuery.isFetching,
@@ -138,36 +209,9 @@ export function useUser() {
         queryClient.setQueryData(apiQueryKey('/api/me'), null);
     };
 
-    if (!user) {
-        return {
-            user: null,
-            accounts,
-            organizations: [],
-            role: 'user',
-            theme: DEFAULT_USER_PREFERENCES.theme,
-            accent: DEFAULT_USER_PREFERENCES.accent,
-            radius: DEFAULT_USER_PREFERENCES.radius,
-            language: DEFAULT_USER_PREFERENCES.language,
-            isLoading: isLoading || isFetching,
-            error: error ?? null,
-            signOut,
-            loginWithCredentials,
-            activateAccount,
-            switchAccount,
-        };
-    }
-
     return {
-        user,
+        ...profile,
         accounts,
-        organizations: user.organizations,
-        role: user.role,
-        theme: user.theme === 'system' ? DEFAULT_USER_PREFERENCES.theme : user.theme,
-        accent: user.accent,
-        radius: user.radius,
-        language: user.language,
-        isLoading: isLoading || isFetching,
-        error: error ?? null,
         signOut,
         loginWithCredentials,
         activateAccount,

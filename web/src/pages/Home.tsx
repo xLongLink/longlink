@@ -1,39 +1,74 @@
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
+import { useTranslation } from '@/lib/i18n';
 import { buttonVariants } from '@ui/button';
-import { Blocks, Code2, Rocket, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Braces, CheckCircle2, Code2, Fingerprint, Github, Mail, Rocket, Wrench } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { Link } from 'react-router';
 
-const bentoItems = [
+const homepageCards = [
     {
-        title: 'Runtime Pages',
-        description: 'Ship structured interfaces from metadata and XML without rebuilding the surrounding app shell.',
+        titleKey: 'home.cards.realTitle',
+        descriptionKey: 'home.cards.realDescription',
+        conceptKeys: ['home.cards.realConceptOne', 'home.cards.realConceptTwo', 'home.cards.realConceptThree'],
         icon: Code2,
-        className: 'md:col-span-2',
     },
     {
-        title: 'Access',
-        description: 'Keep organization routes and authenticated workspaces behind the same control plane.',
-        icon: ShieldCheck,
-        className: '',
+        titleKey: 'home.cards.foundationTitle',
+        descriptionKey: 'home.cards.foundationDescription',
+        conceptKeys: [
+            'home.cards.foundationConceptOne',
+            'home.cards.foundationConceptTwo',
+            'home.cards.foundationConceptThree',
+            'home.cards.foundationConceptFour',
+        ],
+        icon: Fingerprint,
     },
     {
-        title: 'Components',
-        description: 'Use a shared renderer, theme tokens, and UI primitives across public and app-facing views.',
-        icon: Blocks,
-        className: '',
+        titleKey: 'home.cards.pythonTitle',
+        descriptionKey: 'home.cards.pythonDescription',
+        conceptKeys: [
+            'home.cards.pythonConceptOne',
+            'home.cards.pythonConceptTwo',
+            'home.cards.pythonConceptThree',
+            'home.cards.pythonConceptFour',
+        ],
+        icon: Braces,
     },
     {
-        title: 'Deploy',
-        description: 'Package the web runtime into the API bundle while keeping SDK builds available for app delivery.',
+        titleKey: 'home.cards.localTitle',
+        descriptionKey: 'home.cards.localDescription',
+        conceptKeys: [
+            'home.cards.localConceptOne',
+            'home.cards.localConceptTwo',
+            'home.cards.localConceptThree',
+            'home.cards.localConceptFour',
+        ],
         icon: Rocket,
-        className: 'md:col-span-2',
     },
-];
+    {
+        titleKey: 'home.cards.costTitle',
+        descriptionKey: 'home.cards.costDescription',
+        conceptKeys: [
+            'home.cards.costConceptOne',
+            'home.cards.costConceptTwo',
+            'home.cards.costConceptThree',
+            'home.cards.costConceptFour',
+        ],
+        icon: CheckCircle2,
+    },
+    {
+        titleKey: 'home.cards.evolveTitle',
+        descriptionKey: 'home.cards.evolveDescription',
+        conceptKeys: ['home.cards.evolveConceptOne', 'home.cards.evolveConceptTwo', 'home.cards.evolveConceptThree'],
+        icon: Wrench,
+    },
+] as const;
 
 /** Renders the public home page. */
 export default function Home() {
+    const { t } = useTranslation();
+
     return (
         <div className="min-h-screen overflow-hidden bg-background text-foreground">
             <Navbar />
@@ -90,46 +125,29 @@ export default function Home() {
                         }
                     />
                 </div>
-                <section className="relative z-10 mx-auto flex w-full max-w-3xl -translate-y-20 flex-col items-center text-center sm:-translate-y-28">
+                <section className="relative z-10 mx-auto flex w-full max-w-5xl -translate-y-16 flex-col items-center text-center sm:-translate-y-24">
                     <div className="space-y-5">
-                        <h1 className="mx-auto flex max-w-2xl flex-col items-center text-center text-[1.65rem] font-medium leading-[1.08] text-foreground min-[380px]:text-3xl sm:text-6xl lg:text-7xl">
-                            <span className="block whitespace-nowrap text-center">Build workflow apps</span>
-                            <span className="block whitespace-nowrap text-center">not platform glue</span>
+                        <h1 className="mx-auto flex max-w-4xl flex-col items-center text-center text-[1.875rem] font-medium leading-[1.02] text-foreground min-[420px]:text-[2.25rem] sm:text-6xl lg:text-7xl">
+                            <span className="block whitespace-nowrap text-center">{t('home.heroLineOne')}</span>
+                            <span className="mt-1 block whitespace-nowrap text-center">{t('home.heroLineTwo')}</span>
                         </h1>
-                        <p className="mx-auto max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
-                            LongLink gives technical teams a Python SDK for modeling data, validation, permissions, and
-                            XML interfaces locally, then runs them with shared authentication, storage, routing, and
-                            deployment.
+                        <p className="mx-auto text-sm leading-6 text-muted-foreground sm:text-base">
+                            <span className="mx-auto block">{t('home.heroIntroOne')}</span>
+                            <span className="mx-auto block">{t('home.heroIntroTwo')}</span>
+                            <span className="mx-auto block">{t('home.heroIntroThree')}</span>
+                            <span className="mx-auto block">{t('home.heroIntroFour')}</span>
                         </p>
                     </div>
-
-                    <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                        <Link
-                            to="/organizations"
-                            className={buttonVariants({
-                                size: 'lg',
-                            })}
-                        >
-                            Get Started
-                        </Link>
-                        <Link
-                            to="/docs"
-                            className="inline-flex h-9 items-center justify-center rounded-md px-4 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                            Read docs
-                        </Link>
-                    </div>
-
                 </section>
 
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-24 bg-gradient-to-t from-background to-transparent" />
             </main>
-            <section className="relative z-10 bg-background px-6 pb-12">
-                <div className="mx-auto grid w-full max-w-[1000px] auto-rows-[minmax(180px,auto)] grid-cols-1 gap-3 md:grid-cols-3">
-                    {bentoItems.map(({ title, description, icon: Icon, className }) => (
+            <section className="relative z-10 bg-background px-6 py-10">
+                <div className="mx-auto grid w-full max-w-[1000px] auto-rows-[minmax(190px,auto)] grid-cols-1 gap-3 md:grid-cols-3">
+                    {homepageCards.map(({ titleKey, descriptionKey, conceptKeys, icon: Icon }) => (
                         <article
-                            key={title}
-                            className={`group relative overflow-hidden rounded-lg border border-border bg-card/80 p-5 text-card-foreground shadow-[0_24px_80px_rgba(0,0,0,0.12)] backdrop-blur-md transition-colors hover:border-accent/50 ${className}`}
+                            key={titleKey}
+                            className="group relative overflow-hidden rounded-lg border border-border bg-card/80 p-5 text-card-foreground shadow-[0_24px_80px_rgba(0,0,0,0.12)] backdrop-blur-md transition-colors hover:border-accent/50"
                         >
                             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/70 to-transparent opacity-60" />
                             <div className="absolute -right-16 -top-20 size-44 rounded-full bg-accent/10 blur-3xl transition-opacity group-hover:opacity-80" />
@@ -139,13 +157,71 @@ export default function Home() {
                                     <Icon className="size-4" aria-hidden="true" />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <h2 className="text-lg font-medium text-card-foreground">{title}</h2>
-                                    <p className="max-w-md text-sm leading-6 text-muted-foreground">{description}</p>
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <h3 className="text-lg font-medium text-card-foreground">{t(titleKey)}</h3>
+                                        <p className="max-w-md text-sm leading-6 text-muted-foreground">
+                                            {t(descriptionKey)}
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {conceptKeys.map((conceptKey) => (
+                                            <span
+                                                key={conceptKey}
+                                                className="rounded-full border border-border bg-background/70 px-2 py-1 text-[11px] font-medium text-muted-foreground"
+                                            >
+                                                {t(conceptKey)}
+                                            </span>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </article>
                     ))}
+                </div>
+            </section>
+            <section className="relative z-10 bg-background px-6 py-16 text-center">
+                <div className="mx-auto flex max-w-2xl flex-col items-center gap-6">
+                    <div className="space-y-3">
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent">
+                            {t('home.ctaEyebrow')}
+                        </p>
+                        <h2 className="text-2xl font-medium tracking-tight text-foreground sm:text-4xl">
+                            {t('home.ctaTitle')}
+                        </h2>
+                        <p className="text-sm leading-6 text-muted-foreground sm:text-base">
+                            {t('home.ctaDescription')}
+                        </p>
+                    </div>
+
+                    <div className="flex flex-wrap justify-center gap-3">
+                        <Link to="/docs/sdk" className={buttonVariants({ size: 'lg', className: 'px-4' })}>
+                            {t('actions.getStarted')}
+                            <ArrowRight className="size-4" aria-hidden="true" />
+                        </Link>
+                        <a
+                            href="https://github.com/xLongLink/longlink"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={buttonVariants({ variant: 'outline', size: 'lg', className: 'px-4' })}
+                        >
+                            <Github className="size-4" aria-hidden="true" />
+                            {t('common.github')}
+                        </a>
+                        <Link
+                            to="/pricing"
+                            className={buttonVariants({ variant: 'outline', size: 'lg', className: 'px-4' })}
+                        >
+                            {t('home.ctaPricing')}
+                        </Link>
+                        <a
+                            href="mailto:info@longlink.ch"
+                            className={buttonVariants({ variant: 'outline', size: 'lg', className: 'px-4' })}
+                        >
+                            <Mail className="size-4" aria-hidden="true" />
+                            {t('home.ctaContact')}
+                        </a>
+                    </div>
                 </div>
             </section>
             <div className="relative z-10 bg-background">

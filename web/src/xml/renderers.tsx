@@ -12,13 +12,15 @@ type RenderXMLProps = {
     active?: boolean;
     ctx?: ExecutionContext;
     baseUrl?: string;
+    locale?: string;
 };
 
 /**
  * Renders a parsed XML tree with loading state while context initializes.
  */
-export function RenderXML({ ast, active = true, ctx, baseUrl = '' }: RenderXMLProps): ReactNode {
+export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: RenderXMLProps): ReactNode {
     const [runtimeCtx] = useState<ExecutionContext>(() => ctx ?? createContext());
+    const runtimeLocale = locale ?? ctx?.locale ?? runtimeCtx.locale ?? 'en';
     const requiresSetup = hasSetupNodes(ast);
     const requiresTranslations = hasTranslationNodes(ast);
     const waitsForTranslations = typeof document !== 'undefined' && requiresTranslations;
@@ -26,7 +28,12 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '' }: RenderXMLPr
     const [setupError, setSetupError] = useState<unknown>(null);
     const [version, setVersion] = useState(0);
 
+    if (runtimeCtx.locale !== undefined && runtimeCtx.locale !== runtimeLocale) {
+        runtimeCtx.translations = undefined;
+    }
+
     runtimeCtx.hashNavigation = active;
+    runtimeCtx.locale = runtimeLocale;
 
     useEffect(() => {
         let mounted = true;
@@ -62,6 +69,16 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '' }: RenderXMLPr
             void fetchApiJson<Record<string, unknown>>(resolveUrl(baseUrl, `/i18n/${locale}.json`), {
                 cache: 'no-cache',
             })
+                .catch((error: unknown) => {
+                    if (locale === 'en') {
+                        throw error;
+                    }
+
+                    // Keep localized apps usable when a selected account language has no catalog yet.
+                    return fetchApiJson<Record<string, unknown>>(resolveUrl(baseUrl, '/i18n/en.json'), {
+                        cache: 'no-cache',
+                    });
+                })
                 .then((translations) => {
                     if (!mounted) return;
 
@@ -111,7 +128,7 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '' }: RenderXMLPr
                 unsubscribe();
             }
         };
-    }, [ast, runtimeCtx, baseUrl, waitsForTranslations]);
+    }, [ast, runtimeCtx, baseUrl, waitsForTranslations, runtimeLocale]);
 
     validateSetupNodes(ast);
 

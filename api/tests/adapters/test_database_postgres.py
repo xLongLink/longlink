@@ -203,8 +203,12 @@ async def test_schema_creates_database_and_schema_with_managed_connection(monkey
     assert any(entry == ("driver_sql", 'CREATE DATABASE "longlink_acme"') for entry in log)
     assert any("CREATE ROLE \"longlink_acme_dashboard\" LOGIN PASSWORD 'runtime-secret'" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
     assert any("GRANT USAGE, CREATE ON SCHEMA \"dashboard\" TO \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
-    assert any("GRANT SELECT, REFERENCES ON TABLE public.users TO \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
-    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
+    assert any("REVOKE CREATE ON SCHEMA public FROM \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
+    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
+    assert any("GRANT SELECT, REFERENCES ON ALL TABLES IN SCHEMA public TO \"longlink_acme_dashboard\"" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
+    assert any("ALTER ROLE \"longlink_acme_dashboard\" IN DATABASE \"longlink_acme\" SET search_path = \"dashboard\", public" in str(entry[1]) for entry in log if entry[0] == "driver_sql")
+    assert any("REVOKE CREATE ON SCHEMA public FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
+    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
 
 
 async def test_application_role_uses_dialect_password_literal() -> None:
@@ -251,7 +255,8 @@ async def test_database_creates_shared_users_table_with_write_restrictions(monke
     assert connection == "postgresql+psycopg://longlink:secret@db.longlink.internal:5432/longlink_acme?sslmode=disable"
     assert any(entry == ("driver_sql", 'CREATE DATABASE "longlink_acme"') for entry in log)
     assert any(isinstance(entry[1], CreateTable) for entry in log if entry[0] == "execute")
-    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
+    assert any("REVOKE CREATE ON SCHEMA public FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
+    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
 
 
 async def test_sync_users_upserts_active_users_and_soft_deletes_stale_rows(monkeypatch) -> None:
@@ -309,7 +314,7 @@ async def test_sync_users_upserts_active_users_and_soft_deletes_stale_rows(monke
     ]
     update_calls = [entry for entry in log if entry[0] == "execute" and str(entry[1]).startswith("UPDATE public.users")]
     assert len(update_calls) == 1
-    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON TABLE public.users FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
+    assert any("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC" in str(entry[1]) for entry in log if entry[0] == "execute")
 
 
 async def test_sync_users_soft_deletes_every_active_user_when_input_is_empty(monkeypatch) -> None:

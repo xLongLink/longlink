@@ -6,8 +6,9 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useUser } from '@/hooks/use-user';
+import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
+import { useTranslation } from '@/lib/i18n';
 import { locationsQueryKey } from '@/lib/query-keys';
 import type { ApiLocation } from '@/lib/types';
 
@@ -23,7 +24,8 @@ const COUNTRY_OPTIONS = [
 
 /** Renders the admin create location dialog. */
 export default function CreateLocationDialog() {
-    const { role } = useUser();
+    const { t } = useTranslation();
+    const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [name, setName] = useState('');
@@ -58,7 +60,7 @@ export default function CreateLocationDialog() {
     return (
         <>
             <Button type="button" onClick={() => setOpen(true)}>
-                Create
+                {t('actions.create')}
             </Button>
 
             <Dialog
@@ -73,8 +75,8 @@ export default function CreateLocationDialog() {
                 <DialogContent>
                     <div className="space-y-4">
                         <div className="space-y-1">
-                            <DialogTitle>Create location</DialogTitle>
-                            <DialogDescription>Add a new datacenter or cloud region.</DialogDescription>
+                            <DialogTitle>{t('dialogs.createLocationTitle')}</DialogTitle>
+                            <DialogDescription>{t('dialogs.createLocationDescription')}</DialogDescription>
                         </div>
 
                         <form
@@ -89,13 +91,13 @@ export default function CreateLocationDialog() {
                                     setError(
                                         mutationError instanceof Error
                                             ? mutationError.message
-                                            : 'Failed to create location'
+                                            : t('dialogs.createLocationFailed')
                                     );
                                 }
                             }}
                         >
                             <div className="space-y-2">
-                                <Label htmlFor="location-name">Name</Label>
+                                <Label htmlFor="location-name">{t('labels.name')}</Label>
                                 <Input
                                     id="location-name"
                                     value={name}
@@ -106,10 +108,10 @@ export default function CreateLocationDialog() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="location-country">Country</Label>
+                                <Label htmlFor="location-country">{t('labels.country')}</Label>
                                 <Select value={country} onValueChange={(value) => setCountry(value ?? 'CH')}>
                                     <SelectTrigger id="location-country" className="w-full">
-                                        <SelectValue placeholder="Choose a country" />
+                                        <SelectValue placeholder={t('dialogs.chooseCountry')} />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {COUNTRY_OPTIONS.map((countryOption) => (
@@ -132,10 +134,10 @@ export default function CreateLocationDialog() {
                                         setError(null);
                                     }}
                                 >
-                                    Cancel
+                                    {t('actions.cancel')}
                                 </Button>
                                 <Button type="submit" disabled={createLocation.isPending || name.trim().length === 0}>
-                                    {createLocation.isPending ? 'Creating...' : 'Create'}
+                                    {createLocation.isPending ? t('actions.creating') : t('actions.create')}
                                 </Button>
                             </div>
                         </form>

@@ -26,6 +26,10 @@ export const content = (
             and <Code>LONGLINK_STORAGE_SHARED_BUCKET</Code> for the backend connection, app bucket, and organization
             shared bucket.
         </P>
+        <P>
+            Runtime storage credentials are scoped before deployment: apps can read and write their own bucket, and can
+            read the organization shared bucket without writing to it.
+        </P>
         <Heading id="usage" level="h2">
             Usage
         </Heading>

@@ -7,14 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useLocations } from '@/hooks/use-locations';
-import { useUser } from '@/hooks/use-user';
+import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
+import { useTranslation } from '@/lib/i18n';
 import { computesQueryKey } from '@/lib/query-keys';
 import type { ApiComputeRegistry } from '@/lib/types';
 
 /** Renders the admin compute connect dialog. */
 export default function ConnectComputeDialog() {
-    const { role } = useUser();
+    const { t } = useTranslation();
+    const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [kind, setKind] = useState('kubernetes');
@@ -62,13 +64,13 @@ export default function ConnectComputeDialog() {
 
     return (
         <RegistryDialogShell
-            title="Connect compute"
-            description="Register a compute backend for orchestration."
+            title={t('dialogs.connectComputeTitle')}
+            description={t('dialogs.connectComputeDescription')}
             open={open}
             error={error}
             canSubmit={canSubmit}
             isPending={connectCompute.isPending}
-            pendingLabel="Connecting..."
+            pendingLabel={t('actions.connecting')}
             onOpenChange={(nextOpen) => {
                 setOpen(nextOpen);
                 if (!nextOpen) setError(null);
@@ -78,15 +80,17 @@ export default function ConnectComputeDialog() {
                 try {
                     await connectCompute.mutateAsync();
                 } catch (mutationError) {
-                    setError(mutationError instanceof Error ? mutationError.message : 'Failed to connect compute');
+                    setError(
+                        mutationError instanceof Error ? mutationError.message : t('dialogs.failedConnectCompute')
+                    );
                 }
             }}
         >
             <div className="space-y-2">
-                <Label htmlFor="compute-kind">Kind</Label>
+                <Label htmlFor="compute-kind">{t('labels.kind')}</Label>
                 <Select value={kind} onValueChange={(value) => setKind(value ?? '')}>
                     <SelectTrigger id="compute-kind" className="w-full">
-                        <SelectValue placeholder="Choose a compute kind" />
+                        <SelectValue placeholder={t('dialogs.chooseComputeKind')} />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="kubernetes">Kubernetes</SelectItem>
@@ -95,7 +99,7 @@ export default function ConnectComputeDialog() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="compute-kubeconfig">Kubeconfig</Label>
+                <Label htmlFor="compute-kubeconfig">{t('labels.kubeconfig')}</Label>
                 <Textarea
                     id="compute-kubeconfig"
                     value={kubeconfig}
@@ -106,7 +110,7 @@ export default function ConnectComputeDialog() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="compute-ingress-host">Ingress host</Label>
+                <Label htmlFor="compute-ingress-host">{t('labels.ingressHost')}</Label>
                 <Input
                     id="compute-ingress-host"
                     value={ingressHost}

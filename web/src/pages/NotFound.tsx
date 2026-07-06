@@ -1,4 +1,5 @@
 import Layout from '@/layout/Layout';
+import { useTranslation } from '@/lib/i18n';
 import { buttonVariants } from '@ui/button';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@ui/empty';
 import { Compass } from 'lucide-react';
@@ -8,6 +9,7 @@ import { Link, useLocation } from 'react-router';
  * Renders the shared 404 page for unknown or unavailable routes.
  */
 export default function NotFound() {
+    const { t } = useTranslation();
     const location = useLocation();
 
     return (
@@ -18,18 +20,15 @@ export default function NotFound() {
                         <EmptyMedia variant="icon">
                             <Compass />
                         </EmptyMedia>
-                        <EmptyTitle>We can&apos;t find that page</EmptyTitle>
-                        <EmptyDescription>
-                            The page <span className="font-medium text-foreground">{location.pathname}</span>{' '}
-                            doesn&apos;t exist or isn&apos;t available.
-                        </EmptyDescription>
+                        <EmptyTitle>{t('notFound.title')}</EmptyTitle>
+                        <EmptyDescription>{t('notFound.description', { path: location.pathname })}</EmptyDescription>
                     </EmptyHeader>
                     <EmptyContent>
                         <Link to="/" className={buttonVariants()}>
-                            Back to Home
+                            {t('actions.backToHome')}
                         </Link>
                         <Link to="/docs" className={buttonVariants({ variant: 'outline' })}>
-                            See the Docs
+                            {t('actions.seeDocs')}
                         </Link>
                     </EmptyContent>
                 </Empty>

@@ -5,51 +5,52 @@ import { useParams } from 'react-router';
 import { DataTable } from '@/components/DataTable';
 import { useStorageObjects } from '@/hooks/use-storage-objects';
 import { useStorages } from '@/hooks/use-storages';
+import { useTranslation } from '@/lib/i18n';
 import type { ApiStorageObject } from '@/lib/types';
 import { formatBytes, formatDateTime } from '@/lib/utils';
 
-const objectColumns: Array<ColumnDef<ApiStorageObject>> = [
-    {
-        accessorKey: 'key',
-        header: 'Object',
-        cell: ({ getValue }) => <div className="truncate font-medium text-foreground">{getValue<string>()}</div>,
-        meta: { className: 'min-w-64' },
-    },
-    {
-        accessorKey: 'size',
-        header: 'Size',
-        cell: ({ getValue }) => formatBytes(getValue<number>()),
-        meta: { className: 'w-32' },
-    },
-    {
-        accessorKey: 'etag',
-        header: 'ETag',
-        cell: ({ getValue }) => {
-            const etag = getValue<string | null>();
-
-            return etag ? (
-                <span className="font-mono text-xs">{etag}</span>
-            ) : (
-                <span className="text-muted-foreground">—</span>
-            );
-        },
-        meta: { className: 'min-w-40' },
-    },
-    {
-        accessorKey: 'last_modified',
-        header: 'Modified',
-        cell: ({ getValue }) => {
-            const value = getValue<string | null>();
-
-            return value ? formatDateTime(value) : <span className="text-muted-foreground">—</span>;
-        },
-        meta: { className: 'w-52' },
-    },
-];
-
 /** Renders object metadata for one storage bucket. */
 export default function StorageObjects() {
+    const { t } = useTranslation();
     const { storage = '', bucket = '' } = useParams();
+    const objectColumns: Array<ColumnDef<ApiStorageObject>> = [
+        {
+            accessorKey: 'key',
+            header: t('columns.object'),
+            cell: ({ getValue }) => <div className="truncate font-medium text-foreground">{getValue<string>()}</div>,
+            meta: { className: 'min-w-64' },
+        },
+        {
+            accessorKey: 'size',
+            header: t('columns.size'),
+            cell: ({ getValue }) => formatBytes(getValue<number>()),
+            meta: { className: 'w-32' },
+        },
+        {
+            accessorKey: 'etag',
+            header: t('columns.etag'),
+            cell: ({ getValue }) => {
+                const etag = getValue<string | null>();
+
+                return etag ? (
+                    <span className="font-mono text-xs">{etag}</span>
+                ) : (
+                    <span className="text-muted-foreground">—</span>
+                );
+            },
+            meta: { className: 'min-w-40' },
+        },
+        {
+            accessorKey: 'last_modified',
+            header: t('columns.modified'),
+            cell: ({ getValue }) => {
+                const value = getValue<string | null>();
+
+                return value ? formatDateTime(value) : <span className="text-muted-foreground">—</span>;
+            },
+            meta: { className: 'w-52' },
+        },
+    ];
 
     const { items: registries, error: registriesError, isLoading: registriesIsLoading } = useStorages();
 
@@ -62,17 +63,18 @@ export default function StorageObjects() {
     } = useStorageObjects(storageRegistry?.id ?? '', bucket);
     const error =
         registriesError ??
-        (!registriesIsLoading && !storageRegistry ? new Error(`Storage "${storage}" not found`) : objectsError);
+        (!registriesIsLoading && !storageRegistry
+            ? new Error(t('resources.storageNotFound', { name: storage }))
+            : objectsError);
 
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <Hero icon="hard-drive">
                     <div>
-                        <HeroTitle>Objects</HeroTitle>
+                        <HeroTitle>{t('resources.objectsTitle')}</HeroTitle>
                         <HeroDescription>
-                            Objects in bucket <span className="font-medium text-foreground">{bucket}</span> on storage
-                            backend "{storageRegistry?.name || storage}".
+                            {t('resources.objectsDescription', { bucket, name: storageRegistry?.name || storage })}
                         </HeroDescription>
                     </div>
                 </Hero>

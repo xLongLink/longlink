@@ -222,7 +222,7 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
-    """Return application schema usage, missing schemas, orphan schemas, and shared users."""
+    """Return existing application schema usage, orphan schemas, and shared users."""
 
     # Arrange
     owner = users[0]
@@ -236,6 +236,8 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         database_registry_id=registry.id,
+        description="Dashboard app",
+        icon="layout-dashboard",
         user=owner,
     )
     reports = await db.applications.create(
@@ -275,16 +277,17 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     # Assert
     assert response.status_code == 200
     payload = response.json()
-    assert [(item["kind"], item["name"], item["status"]) for item in payload] == [
-        ("shared_table", "users", "available"),
-        ("schema", "dashboard", "available"),
-        ("schema", "reports", "missing"),
-        ("schema", "stale", "orphaned"),
+    assert [(item["kind"], item["name"]) for item in payload] == [
+        ("shared_table", "users"),
+        ("schema", "dashboard"),
+        ("schema", "stale"),
     ]
     assert payload[1]["application"]["id"] == str(dashboard.id)
+    assert payload[1]["application"]["icon"] == "layout-dashboard"
+    assert payload[1]["application"]["description"] == "Dashboard app"
     assert payload[1]["space_used"] == 2048
-    assert payload[2]["application"]["id"] == str(reports.id)
-    assert payload[3]["space_used"] == 512
+    assert reports.slug not in [item["name"] for item in payload]
+    assert payload[2]["space_used"] == 512
 
 
 async def test_organization_database_endpoint_returns_unavailable_rows_when_backend_fails(
@@ -292,7 +295,7 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
-    """Return unavailable database rows when the database backend cannot be inspected."""
+    """Return an error when the database backend cannot be inspected."""
 
     # Arrange
     owner = users[0]
@@ -300,7 +303,7 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.organizations.create("acme", location.id, owner)
     registry = await db.database.create(DatabaseKind.postgresql, "primary", "db.longlink.internal", 5432, "longlink", "secret", location.id, owner)
-    application = await db.applications.create(
+    await db.applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -325,13 +328,8 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     response = client.get(f"/api/organizations/{organization.id}/database")
 
     # Assert
-    assert response.status_code == 200
-    payload = response.json()
-    assert [(item["kind"], item["name"], item["status"]) for item in payload] == [
-        ("shared_table", "users", "unavailable"),
-        ("schema", "dashboard", "unavailable"),
-    ]
-    assert payload[1]["application"]["id"] == str(application.id)
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Database resources unavailable"}
 
 
 async def test_organization_storage_endpoint_returns_managed_buckets(
@@ -339,7 +337,7 @@ async def test_organization_storage_endpoint_returns_managed_buckets(
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
-    """Return shared, application, missing, and orphaned storage buckets for one organization."""
+    """Return existing shared, application, and orphaned storage buckets for one organization."""
 
     # Arrange
     owner = users[0]
@@ -353,6 +351,8 @@ async def test_organization_storage_endpoint_returns_managed_buckets(
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         storage_registry_id=registry.id,
+        description="Dashboard app",
+        icon="layout-dashboard",
         user=owner,
     )
     reports = await db.applications.create(
@@ -379,6 +379,10 @@ async def test_organization_storage_endpoint_returns_managed_buckets(
                 "longlink-other-shared",
             ]
 
+        async def bucket_usage(self, bucket_name: str) -> dict[str, int]:
+            assert bucket_name.startswith("longlink-acme-")
+            return {"space_used": len(bucket_name), "object_count": 2}
+
     monkeypatch.setattr("src.routes.organizations.S3", FakeStorage)
 
     # Act
@@ -387,14 +391,17 @@ async def test_organization_storage_endpoint_returns_managed_buckets(
     # Assert
     assert response.status_code == 200
     payload = response.json()
-    assert [(item["kind"], item["name"], item["status"]) for item in payload] == [
-        ("shared_bucket", "shared", "available"),
-        ("application_bucket", "dashboard", "available"),
-        ("application_bucket", "reports", "missing"),
-        ("application_bucket", "stale", "orphaned"),
+    assert [(item["kind"], item["name"]) for item in payload] == [
+        ("shared_bucket", "shared"),
+        ("application_bucket", "dashboard"),
+        ("application_bucket", "stale"),
     ]
     assert payload[1]["application"]["id"] == str(dashboard.id)
-    assert payload[2]["application"]["id"] == str(reports.id)
+    assert payload[1]["application"]["icon"] == "layout-dashboard"
+    assert payload[1]["application"]["description"] == "Dashboard app"
+    assert reports.slug not in [item["name"] for item in payload]
+    assert payload[0]["space_used"] == len("longlink-acme-shared")
+    assert payload[0]["object_count"] == 2
 
 
 async def test_organization_storage_endpoint_returns_unavailable_rows_when_backend_fails(
@@ -402,7 +409,7 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
-    """Return unavailable storage rows when the storage backend cannot be inspected."""
+    """Return an error when the storage backend cannot be inspected."""
 
     # Arrange
     owner = users[0]
@@ -410,7 +417,7 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.organizations.create("acme", location.id, owner)
     registry = await db.storage.create(StorageKind.s3, "primary", "http", "http://storage.local", "access", "secret", location.id, owner)
-    application = await db.applications.create(
+    await db.applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -435,13 +442,8 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     response = client.get(f"/api/organizations/{organization.id}/storage")
 
     # Assert
-    assert response.status_code == 200
-    payload = response.json()
-    assert [(item["kind"], item["name"], item["status"]) for item in payload] == [
-        ("shared_bucket", "shared", "unavailable"),
-        ("application_bucket", "dashboard", "unavailable"),
-    ]
-    assert payload[1]["application"]["id"] == str(application.id)
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Storage resources unavailable"}
 
 
 async def test_organization_database_resource_tables_endpoint_returns_table_previews(

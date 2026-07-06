@@ -1,3 +1,4 @@
+import { useTranslation } from '@/lib/i18n';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Button } from '@ui/button';
 import { Input } from '@ui/input';
@@ -21,6 +22,7 @@ type SocialLoginProvider = 'github' | 'google';
 
 /** Renders the shared username and password sign-in card. */
 export function SignInCard({ redirectTo }: SignInCardProps) {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -38,7 +40,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
             await loginWithCredentials({ username, password });
             navigate(safeRedirectTo, { replace: true });
         } catch (loginError) {
-            toast.error(loginError instanceof Error ? loginError.message : 'Login failed');
+            toast.error(loginError instanceof Error ? loginError.message : t('errors.loginFailed'));
         } finally {
             setIsSubmitting(false);
         }
@@ -46,7 +48,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
 
     /** Shows a lightweight helper message for password recovery. */
     function handleForgotPasswordClick() {
-        toast.info('Password reset is handled through your identity provider.');
+        toast.info(t('auth.passwordResetInfo'));
     }
 
     /** Activates one saved account and returns to the requested page. */
@@ -55,7 +57,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
             await activateAccount(oidc);
             navigate(safeRedirectTo, { replace: true });
         } catch (accountError) {
-            toast.error(accountError instanceof Error ? accountError.message : 'Failed to open account');
+            toast.error(accountError instanceof Error ? accountError.message : t('auth.accountOpenFailed'));
         }
     }
 
@@ -75,7 +77,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                     <div className="space-y-2 text-center">
                         <div className="space-y-2">
                             <h1 className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1 text-2xl font-medium">
-                                <span>Welcome to</span>
+                                <span>{t('auth.welcomeTo')}</span>
                                 <Wordmark className="text-2xl align-baseline" />
                             </h1>
                         </div>
@@ -86,7 +88,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                     {showEmailForm ? (
                         <form className="space-y-4" onSubmit={handleSubmit}>
                             <div className="space-y-2">
-                                <Label htmlFor="signin-email">Email</Label>
+                                <Label htmlFor="signin-email">{t('labels.email')}</Label>
                                 <Input
                                     id="signin-email"
                                     value={username}
@@ -97,7 +99,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="signin-password">Password</Label>
+                                <Label htmlFor="signin-password">{t('labels.password')}</Label>
                                 <Input
                                     id="signin-password"
                                     type="password"
@@ -113,7 +115,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                                 className="w-full"
                                 disabled={isSubmitting || username.length === 0 || password.length === 0}
                             >
-                                {isSubmitting ? 'Signing in...' : 'Continue with Email'}
+                                {isSubmitting ? t('actions.signIn') : t('actions.continueWithCredentials')}
                             </Button>
 
                             <div className="flex items-center justify-between text-sm">
@@ -122,7 +124,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                                     className="text-sm font-medium text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
                                     onClick={() => setShowEmailForm(false)}
                                 >
-                                    Back
+                                    {t('actions.back')}
                                 </button>
 
                                 <button
@@ -130,7 +132,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                                     className="text-sm font-medium text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
                                     onClick={handleForgotPasswordClick}
                                 >
-                                    Forgot Password
+                                    {t('auth.forgotPassword')}
                                 </button>
                             </div>
                         </form>
@@ -142,7 +144,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                                 className="w-full"
                                 onClick={() => setShowEmailForm(true)}
                             >
-                                Continue with Email
+                                {t('actions.continueWithCredentials')}
                             </Button>
                             <Button
                                 type="button"
@@ -150,7 +152,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                                 className="w-full"
                                 onClick={() => handleProviderSignIn('github')}
                             >
-                                Continue with GitHub
+                                {t('actions.continueWithGithub')}
                             </Button>
                             <Button
                                 type="button"
@@ -158,7 +160,7 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
                                 className="w-full"
                                 onClick={() => handleProviderSignIn('google')}
                             >
-                                Continue with Google
+                                {t('actions.continueWithGoogle')}
                             </Button>
                         </div>
                     )}
@@ -196,14 +198,14 @@ export function SignInCard({ redirectTo }: SignInCardProps) {
             </div>
 
             <p className="mx-auto max-w-sm text-center text-xs text-muted-foreground">
-                <span>By continuing, you agree to our</span>
+                <span>{t('auth.agreementLead')}</span>
                 <br />
                 <Link className="underline underline-offset-4 hover:text-foreground" to="/terms">
-                    Terms of Service
+                    {t('auth.termsOfService')}
                 </Link>{' '}
-                and{' '}
+                {t('auth.agreementMiddle')}{' '}
                 <Link className="underline underline-offset-4 hover:text-foreground" to="/privacy">
-                    Privacy Policy
+                    {t('auth.privacyPolicy')}
                 </Link>
                 .
             </p>

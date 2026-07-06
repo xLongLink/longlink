@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { useApiQuery } from '@/hooks/use-api';
-import { useUser } from '@/hooks/use-user';
+import { useUserProfile } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { applicationsQueryKey, organizationsQueryKey } from '@/lib/query-keys';
 import type { Role } from '@/lib/roles';
@@ -55,7 +55,7 @@ export function resolveOrganizationId(
 
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string): UseOrganizationResult {
-    const { organizations, isLoading: isUserLoading } = useUser();
+    const { organizations, isLoading: isUserLoading } = useUserProfile();
     const organizationId = useMemo(
         () => resolveOrganizationId(organizationSlug, organizations),
         [organizationSlug, organizations]
@@ -87,7 +87,7 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
 /** Returns organization-scoped mutation helpers. */
 export function useOrganizationActions(organizationSlug: string): UseOrganizationActionsResult {
     const queryClient = useQueryClient();
-    const { organizations } = useUser();
+    const { organizations } = useUserProfile();
     const organizationId = useMemo(
         () => resolveOrganizationId(organizationSlug, organizations),
         [organizationSlug, organizations]

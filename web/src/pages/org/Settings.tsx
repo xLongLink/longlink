@@ -2,19 +2,35 @@ import { DataTable } from '@/components/DataTable';
 import CreateApplicationDialog from '@/components/dialogs/CreateApplicationDialog';
 import LogsDialog from '@/components/dialogs/LogsDialog';
 import { Icon } from '@/components/ui/icon';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import { useApiQuery } from '@/hooks/use-api';
 import { useOrganizationActions } from '@/hooks/use-organization';
+import { useOrganizationDatabaseResourceTables } from '@/hooks/use-organization-database-resource-tables';
 import { useOrganizationDatabaseResources } from '@/hooks/use-organization-database-resources';
 import { useOrganizationStorageResources } from '@/hooks/use-organization-storage-resources';
-import { useUser } from '@/hooks/use-user';
-import { canAccessApplication, canManageApplication, canViewApplicationLogs } from '@/lib/roles';
+import { useStorageObjects } from '@/hooks/use-storage-objects';
+import { useUserProfile } from '@/hooks/use-user';
+import { apiQueryKey, fetchApiVoid } from '@/lib/api';
+import { useTranslation } from '@/lib/i18n';
+import {
+    APPLICATION_ROLE_NAMES,
+    canManageApplication,
+    canViewApplicationLogs,
+    type ApplicationRole,
+} from '@/lib/roles';
 import type {
+    ApiApplicationMember,
     ApiOrganizationApplication,
     ApiOrganizationDatabaseResource,
+    ApiOrganizationDatabaseTable,
     ApiOrganizationDetails,
     ApiOrganizationStorageResource,
+    ApiStorageObject,
 } from '@/lib/types';
-import { formatBytes, formatNumber, getInitials } from '@/lib/utils';
+import { formatBytes, formatDateTime, formatNumber, getInitials } from '@/lib/utils';
+import { PostgreSQL } from '@/svg/PostgreSQL';
+import { S3 } from '@/svg/S3';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { Badge } from '@ui/badge';
@@ -22,49 +38,9 @@ import { Button } from '@ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Menu, MenuSection } from '@ui/menu';
-import {
-    BookOpen,
-    Boxes,
-    Building2,
-    Crown,
-    Database,
-    GitPullRequest,
-    HardDrive,
-    MoreVertical,
-    PenLine,
-    Settings2,
-    ShieldCheck,
-} from 'lucide-react';
+import { Boxes, Building2, Database, HardDrive, MoreVertical } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router';
-
-const permissionRoles = [
-    {
-        name: 'read',
-        description: 'View organization data and access assigned resources.',
-        icon: BookOpen,
-    },
-    {
-        name: 'write',
-        description: 'Read access plus create and update organization resources.',
-        icon: GitPullRequest,
-    },
-    {
-        name: 'maintain',
-        description: 'Write access plus manage settings for supported resources.',
-        icon: PenLine,
-    },
-    {
-        name: 'admin',
-        description: 'Full access to the organization and its resources.',
-        icon: Settings2,
-    },
-    {
-        name: 'owner',
-        description: 'Highest access. Can manage ownership and all organization settings.',
-        icon: Crown,
-    },
-] as const;
+import { Link, useLocation, useNavigate, useParams } from 'react-router';
 
 type SettingsProps = {
     organization: string;
@@ -74,9 +50,22 @@ type SettingsProps = {
     error: Error | null;
 };
 
+type SettingsSection = 'organization' | 'applications' | 'database' | 'storage';
+
 /** Renders the organization settings page body. */
 export default function Settings({ organization, organizationDetails, applications, isLoading, error }: SettingsProps) {
-    const { role: platformRole, organizations: userOrganizations } = useUser();
+    const { t } = useTranslation();
+    const navigate = useNavigate();
+    const { pathname } = useLocation();
+    const {
+        settingsApplication = '',
+        settingsBucket = '',
+        settingsDatabaseResource = '',
+        settingsDatabaseResourceType = '',
+        settingsDatabaseTable = '',
+    } = useParams();
+    const { role: platformRole, organizations: userOrganizations } = useUserProfile();
+    const queryClient = useQueryClient();
     const { deleteApplication, isDeletingApplication } = useOrganizationActions(organization);
     const {
         items: databaseResources,
@@ -86,6 +75,7 @@ export default function Settings({ organization, organizationDetails, applicatio
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication | null>(null);
+    const [applicationRoleError, setApplicationRoleError] = useState<string | null>(null);
     const {
         items: storageResources,
         error: storageResourcesError,
@@ -94,16 +84,121 @@ export default function Settings({ organization, organizationDetails, applicatio
 
     const organizationMembership = userOrganizations.find((item) => item.slug === organization);
     const organizationRole = organizationMembership?.role ?? null;
+    const routeSettingsSection = pathname.split('/')[4] ?? '';
+    const settingsSection: SettingsSection =
+        routeSettingsSection === 'applications' ||
+        routeSettingsSection === 'database' ||
+        routeSettingsSection === 'storage'
+            ? routeSettingsSection
+            : 'organization';
 
     const deleteTarget = applications.find((application) => application.id === deleteTargetId) ?? null;
+    const selectedApplication = applications.find((application) => application.slug === settingsApplication) ?? null;
+    const selectedDatabaseKind =
+        settingsDatabaseResourceType === 'schemas'
+            ? 'schema'
+            : settingsDatabaseResourceType === 'tables'
+              ? 'shared_table'
+              : null;
+    const isDatabaseDetailPage = settingsDatabaseResourceType.length > 0 || settingsDatabaseResource.length > 0;
+    const isDatabaseTablePage = settingsDatabaseTable.length > 0 || selectedDatabaseKind === 'shared_table';
+    const selectedDatabaseResource =
+        databaseResources.find(
+            (resource) =>
+                selectedDatabaseKind !== null &&
+                resource.kind === selectedDatabaseKind &&
+                resource.name === settingsDatabaseResource
+        ) ?? null;
+    const databaseDetailError =
+        databaseResourcesError ??
+        (!isLoading && databaseResourcesIsLoading === false && isDatabaseDetailPage && selectedDatabaseResource === null
+            ? new Error(t('resources.databaseResourceNotFound', { name: settingsDatabaseResource }))
+            : null);
+    const databaseTablesRequest = selectedDatabaseResource && isDatabaseDetailPage ? selectedDatabaseResource : null;
+    const {
+        items: databaseResourceTables,
+        error: databaseResourceTablesError,
+        isLoading: databaseResourceTablesIsLoading,
+    } = useOrganizationDatabaseResourceTables(organizationDetails?.id ?? '', databaseTablesRequest);
+    const selectedDatabaseTableName =
+        selectedDatabaseKind === 'shared_table' ? settingsDatabaseResource : settingsDatabaseTable;
+    const selectedDatabaseTable =
+        databaseResourceTables.find((table) => table.name === selectedDatabaseTableName) ?? null;
+    const databaseTableDetailError =
+        databaseDetailError ??
+        (!databaseResourceTablesIsLoading && isDatabaseTablePage && selectedDatabaseTable === null
+            ? new Error(t('resources.databaseTableNotFound', { name: selectedDatabaseTableName }))
+            : null);
+    const isStorageDetailPage = settingsBucket.length > 0;
+    const selectedStorageResource =
+        storageResources.find((resource) => resource.bucket_name === settingsBucket) ?? null;
+    const storageDetailError =
+        storageResourcesError ??
+        (!isLoading && storageResourcesIsLoading === false && isStorageDetailPage && selectedStorageResource === null
+            ? new Error(t('resources.storageBucketNotFound', { name: settingsBucket }))
+            : null);
+    const {
+        items: storageObjects,
+        error: storageObjectsError,
+        isLoading: storageObjectsIsLoading,
+    } = useStorageObjects(
+        selectedStorageResource?.storage_registry_id ?? '',
+        selectedStorageResource?.bucket_name ?? ''
+    );
+    const applicationMembersPath = selectedApplication ? `/api/applications/${selectedApplication.id}/members` : null;
+    const organizationDetailsPath = organizationDetails ? `/api/organizations/${organizationDetails.id}` : null;
+    const applicationMembersQuery = useApiQuery<ApiApplicationMember[]>(applicationMembersPath, { retry: false });
+    const canManageSelectedApplication = selectedApplication
+        ? canManageApplication(organizationRole, selectedApplication.role)
+        : false;
+
+    const changeApplicationMemberRole = useMutation({
+        mutationFn: async ({
+            applicationId,
+            memberId,
+            role,
+        }: {
+            applicationId: string;
+            memberId: string;
+            role: ApplicationRole | null;
+        }) => {
+            await fetchApiVoid(`/api/applications/${applicationId}/members/${memberId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role }),
+            });
+        },
+        onSuccess: async (_data, variables) => {
+            await queryClient.invalidateQueries({
+                queryKey: apiQueryKey(`/api/applications/${variables.applicationId}/members`),
+            });
+
+            if (organizationDetailsPath !== null) {
+                await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationDetailsPath) });
+            }
+        },
+    });
+
+    /** Navigates settings menu selections through real organization settings routes. */
+    function handleSettingsSectionChange(nextSection: string): void {
+        setApplicationRoleError(null);
+
+        if (nextSection === 'organization') {
+            navigate(`/orgs/${organization}/settings`);
+            return;
+        }
+
+        if (nextSection === 'applications' || nextSection === 'database' || nextSection === 'storage') {
+            navigate(`/orgs/${organization}/settings/${nextSection}`);
+        }
+    }
 
     const appColumns: Array<ColumnDef<ApiOrganizationApplication>> = [
         {
             accessorKey: 'name',
-            header: 'Application',
+            header: t('columns.application'),
             cell: ({ row, getValue }) => {
                 const application = row.original;
-                const canOpen = canAccessApplication(organizationRole, application.role);
 
                 return (
                     <div className="flex items-start gap-3">
@@ -111,16 +206,13 @@ export default function Settings({ organization, organizationDetails, applicatio
                             <Icon name={application.icon ?? 'box'} className="size-4" />
                         </div>
                         <div className="min-w-0 space-y-1">
-                            {canOpen ? (
-                                <Link
-                                    to={`/orgs/${organization}/apps/${application.slug}`}
-                                    className="font-medium text-foreground hover:underline"
-                                >
-                                    {getValue<string>()}
-                                </Link>
-                            ) : (
-                                <span className="font-medium text-foreground">{getValue<string>()}</span>
-                            )}
+                            <Link
+                                to={`/orgs/${organization}/settings/applications/${application.slug}`}
+                                className="text-left font-medium text-foreground hover:underline"
+                                onClick={() => setApplicationRoleError(null)}
+                            >
+                                {getValue<string>()}
+                            </Link>
                             {application.description ? (
                                 <p className="text-sm text-muted-foreground">{application.description}</p>
                             ) : null}
@@ -131,13 +223,16 @@ export default function Settings({ organization, organizationDetails, applicatio
         },
         {
             accessorKey: 'role',
-            header: 'App role',
-            cell: ({ row }) => row.original.role ?? <span className="text-muted-foreground">Not assigned</span>,
+            header: t('columns.appRole'),
+            cell: ({ row }) =>
+                row.original.role ?? (
+                    <span className="text-muted-foreground">{t('organizationSettings.notAssigned')}</span>
+                ),
             meta: { className: 'w-32' },
         },
         {
             id: 'action',
-            header: 'Action',
+            header: t('columns.action'),
             meta: { className: 'w-44 text-right' },
             cell: ({ row }) => {
                 const application = row.original;
@@ -159,7 +254,7 @@ export default function Settings({ organization, organizationDetails, applicatio
                                         variant="ghost"
                                         size="icon-sm"
                                         className="cursor-pointer"
-                                        aria-label={`Open actions for ${application.name}`}
+                                        aria-label={t('common.openActionsFor', { name: application.name })}
                                     />
                                 }
                             >
@@ -173,7 +268,7 @@ export default function Settings({ organization, organizationDetails, applicatio
                                             setLogsTarget(application);
                                         }}
                                     >
-                                        Logs
+                                        {t('organizationSettings.logs')}
                                     </DropdownMenuItem>
                                 ) : null}
                                 {canDelete ? (
@@ -186,7 +281,7 @@ export default function Settings({ organization, organizationDetails, applicatio
                                             setDeleteError(null);
                                         }}
                                     >
-                                        Delete
+                                        {t('actions.delete')}
                                     </DropdownMenuItem>
                                 ) : null}
                             </DropdownMenuContent>
@@ -197,175 +292,327 @@ export default function Settings({ organization, organizationDetails, applicatio
         },
     ];
 
-    const databaseResourceColumns: Array<ColumnDef<ApiOrganizationDatabaseResource>> = [
+    const applicationMemberColumns: Array<ColumnDef<ApiApplicationMember>> = [
         {
-            id: 'resource',
-            header: 'Resource',
+            id: 'member',
+            header: t('columns.user'),
             cell: ({ row }) => {
-                const isBrowsable = row.original.status === 'available' || row.original.status === 'orphaned';
+                const member = row.original;
 
                 return (
-                    <div className="min-w-0 space-y-1">
-                        {isBrowsable ? (
-                            <Link
-                                to={`/orgs/${organization}/database/${row.original.kind === 'shared_table' ? 'tables' : 'schemas'}/${encodeURIComponent(row.original.name)}`}
-                                className="block truncate font-medium text-primary underline-offset-4 hover:underline"
-                            >
-                                {row.original.name}
-                            </Link>
-                        ) : (
-                            <span className="block truncate font-medium text-muted-foreground">
-                                {row.original.name}
-                            </span>
-                        )}
-                        <div className="truncate text-xs text-muted-foreground">{row.original.database_name}</div>
+                    <div className="flex items-center gap-3">
+                        <Avatar className="size-8">
+                            <AvatarImage src={member.avatar} alt={`${member.name} avatar`} />
+                            <AvatarFallback>{getInitials(member.name)}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 space-y-0.5">
+                            <div className="truncate text-sm font-medium text-foreground">{member.name}</div>
+                            <p className="truncate text-xs text-muted-foreground">{member.email}</p>
+                        </div>
                     </div>
                 );
             },
-            meta: { className: 'min-w-44' },
+            meta: { className: 'min-w-56' },
         },
         {
-            id: 'application',
-            header: 'Application',
+            accessorKey: 'organization_role',
+            header: t('organizationSettings.organizationPermission'),
+            cell: ({ getValue }) => <Badge variant="outline">{getValue<string>()}</Badge>,
+            meta: { className: 'w-52' },
+        },
+        {
+            id: 'application_role',
+            header: t('organizationSettings.applicationPermission'),
             cell: ({ row }) => {
-                const application = row.original.application;
-                if (row.original.kind === 'shared_table') {
-                    return (
-                        <div className="min-w-0 space-y-1">
-                            <div className="font-medium text-foreground">All applications</div>
-                            <div className="text-xs text-muted-foreground">Shared organization users</div>
-                        </div>
-                    );
-                }
-
-                if (application === null) {
-                    return <span className="text-muted-foreground">No active app</span>;
-                }
+                const member = row.original;
+                const value = member.application_role ?? 'none';
 
                 return (
-                    <div className="min-w-0 space-y-1">
-                        <Link
-                            to={`/orgs/${organization}/apps/${application.slug}`}
-                            className="font-medium text-foreground underline-offset-4 hover:underline"
+                    <Select
+                        value={value}
+                        onValueChange={async (nextValue) => {
+                            if (selectedApplication === null) {
+                                return;
+                            }
+
+                            const nextRole =
+                                nextValue === 'none' || nextValue === null ? null : (nextValue as ApplicationRole);
+                            if (nextRole === member.application_role) {
+                                return;
+                            }
+
+                            setApplicationRoleError(null);
+
+                            try {
+                                await changeApplicationMemberRole.mutateAsync({
+                                    applicationId: selectedApplication.id,
+                                    memberId: member.id,
+                                    role: nextRole,
+                                });
+                            } catch (mutationError) {
+                                setApplicationRoleError(
+                                    mutationError instanceof Error
+                                        ? mutationError.message
+                                        : t('organizationSettings.failedChangeApplicationPermission')
+                                );
+                            }
+                        }}
+                    >
+                        <SelectTrigger
+                            className="w-44"
+                            disabled={!canManageSelectedApplication || changeApplicationMemberRole.isPending}
                         >
-                            {application.name}
-                        </Link>
-                        <div className="text-xs text-muted-foreground">{application.status}</div>
+                            {value === 'none' ? t('organizationSettings.noAppAccess') : value}
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">{t('organizationSettings.noAppAccess')}</SelectItem>
+                            {APPLICATION_ROLE_NAMES.map((role) => (
+                                <SelectItem key={role} value={role}>
+                                    {role}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                );
+            },
+            meta: { className: 'w-52' },
+        },
+    ];
+
+    const databaseResourceColumns: Array<ColumnDef<ApiOrganizationDatabaseResource>> = [
+        {
+            id: 'resource',
+            header: t('columns.resource'),
+            cell: ({ row }) => {
+                const { space_used, table_count } = row.original;
+
+                return (
+                    <div className="flex items-center gap-3">
+                        <PostgreSQL
+                            aria-hidden={true}
+                            className="size-10 shrink-0 rounded-md border border-border bg-background object-contain p-1"
+                        />
+                        <div className="min-w-0 space-y-1">
+                            <Link
+                                to={`/orgs/${organization}/settings/database/${row.original.kind === 'shared_table' ? 'tables' : 'schemas'}/${encodeURIComponent(row.original.name)}`}
+                                className="block truncate font-medium text-foreground underline-offset-4 hover:underline"
+                            >
+                                {row.original.name}
+                            </Link>
+                            <div className="truncate text-xs text-muted-foreground">
+                                {space_used === null ? t('common.unknown') : formatBytes(space_used)} ·{' '}
+                                {table_count === null
+                                    ? t('resources.unknownTables')
+                                    : t('resources.tableCount', { count: formatNumber(table_count) })}
+                            </div>
+                        </div>
                     </div>
                 );
             },
             meta: { className: 'min-w-52' },
         },
         {
-            accessorKey: 'status',
-            header: 'Status',
-            cell: ({ getValue }) => {
-                const status = getValue<ApiOrganizationDatabaseResource['status']>();
-                const variant = status === 'available' ? 'default' : status === 'orphaned' ? 'outline' : 'destructive';
-
-                return <Badge variant={variant}>{status}</Badge>;
-            },
-            meta: { className: 'w-32' },
-        },
-        {
-            id: 'usage',
-            header: 'Usage',
+            id: 'application',
+            header: t('columns.application'),
             cell: ({ row }) => {
-                const { row_estimate, space_used, table_count } = row.original;
+                const application = row.original.application;
+                if (row.original.kind === 'shared_table') {
+                    return (
+                        <div className="min-w-0 space-y-1">
+                            <div className="font-medium text-foreground">
+                                {t('organizationSettings.allApplications')}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                                {t('organizationSettings.sharedOrganizationUsers')}
+                            </div>
+                        </div>
+                    );
+                }
+
+                if (application === null) {
+                    return <span className="text-muted-foreground">{t('organizationSettings.noActiveApp')}</span>;
+                }
 
                 return (
-                    <div className="min-w-0 space-y-1">
-                        <div className="font-medium text-foreground">
-                            {space_used === null ? 'Unknown' : formatBytes(space_used)}
+                    <div className="flex items-start gap-3">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
+                            <Icon name={application.icon ?? 'box'} className="size-4" />
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                            {table_count === null ? 'Unknown tables' : `${formatNumber(table_count)} tables`} ·{' '}
-                            {row_estimate === null ? 'unknown rows' : `${formatNumber(row_estimate)} rows`}
+                        <div className="min-w-0 space-y-1">
+                            <Link
+                                to={`/orgs/${organization}/apps/${application.slug}`}
+                                className="font-medium text-foreground underline-offset-4 hover:underline"
+                            >
+                                {application.name}
+                            </Link>
+                            {application.description ? (
+                                <p className="text-sm text-muted-foreground">{application.description}</p>
+                            ) : null}
                         </div>
                     </div>
                 );
             },
-            meta: { className: 'min-w-44' },
+            meta: { className: 'min-w-52' },
         },
     ];
 
     const storageResourceColumns: Array<ColumnDef<ApiOrganizationStorageResource>> = [
         {
             id: 'resource',
-            header: 'Name',
+            header: t('columns.resource'),
             cell: ({ row }) => {
-                const application = row.original.application;
+                const { object_count, space_used } = row.original;
+                const usageSummary = `${space_used === null ? t('common.unknown') : formatBytes(space_used)} · ${
+                    object_count === null
+                        ? t('resources.unknownObjects')
+                        : t('resources.objectCount', { count: formatNumber(object_count) })
+                }`;
 
                 if (row.original.kind === 'shared_bucket') {
                     return (
-                        <div className="min-w-0 space-y-1">
-                            <Link
-                                to={`/orgs/${organization}/storage/buckets/${encodeURIComponent(row.original.bucket_name)}`}
-                                className="block truncate font-medium text-primary underline-offset-4 hover:underline"
-                            >
-                                shared
-                            </Link>
-                            <div className="truncate text-xs text-muted-foreground">
-                                All applications · {row.original.bucket_name}
+                        <div className="flex items-center gap-3">
+                            <S3
+                                aria-hidden={true}
+                                className="size-10 shrink-0 rounded-md border border-border bg-background object-contain p-1"
+                            />
+                            <div className="min-w-0 space-y-1">
+                                <Link
+                                    to={`/orgs/${organization}/settings/storage/${encodeURIComponent(row.original.bucket_name)}`}
+                                    className="block truncate font-medium text-foreground underline-offset-4 hover:underline"
+                                >
+                                    {t('resources.shared')}
+                                </Link>
+                                <div className="truncate text-xs text-muted-foreground">{usageSummary}</div>
                             </div>
                         </div>
                     );
                 }
 
                 return (
-                    <div className="min-w-0 space-y-1">
-                        {application ? (
+                    <div className="flex items-center gap-3">
+                        <S3
+                            aria-hidden={true}
+                            className="size-10 shrink-0 rounded-md border border-border bg-background object-contain p-1"
+                        />
+                        <div className="min-w-0 space-y-1">
                             <Link
-                                to={`/orgs/${organization}/storage/buckets/${encodeURIComponent(row.original.bucket_name)}`}
-                                className="font-medium text-primary underline-offset-4 hover:underline"
-                            >
-                                {application.name}
-                            </Link>
-                        ) : (
-                            <Link
-                                to={`/orgs/${organization}/storage/buckets/${encodeURIComponent(row.original.bucket_name)}`}
-                                className="font-medium text-primary underline-offset-4 hover:underline"
+                                to={`/orgs/${organization}/settings/storage/${encodeURIComponent(row.original.bucket_name)}`}
+                                className="font-medium text-foreground underline-offset-4 hover:underline"
                             >
                                 {row.original.name}
                             </Link>
-                        )}
-                        <div className="truncate text-xs text-muted-foreground">{row.original.bucket_name}</div>
+                            <div className="truncate text-xs text-muted-foreground">{usageSummary}</div>
+                        </div>
                     </div>
                 );
             },
             meta: { className: 'min-w-52' },
         },
         {
-            accessorKey: 'kind',
-            header: 'Type',
-            cell: ({ getValue }) => {
-                const kind = getValue<ApiOrganizationStorageResource['kind']>();
+            id: 'application',
+            header: t('columns.application'),
+            cell: ({ row }) => {
+                const application = row.original.application;
 
-                return kind === 'shared_bucket' ? 'Shared bucket' : 'Application bucket';
+                if (row.original.kind === 'shared_bucket') {
+                    return <span className="text-muted-foreground">{t('organizationSettings.allApplications')}</span>;
+                }
+
+                if (application === null) {
+                    return <span className="text-muted-foreground">{t('organizationSettings.noActiveApp')}</span>;
+                }
+
+                return (
+                    <div className="flex items-start gap-3">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
+                            <Icon name={application.icon ?? 'box'} className="size-4" />
+                        </div>
+                        <div className="min-w-0 space-y-1">
+                            <Link
+                                to={`/orgs/${organization}/apps/${application.slug}`}
+                                className="font-medium text-foreground underline-offset-4 hover:underline"
+                            >
+                                {application.name}
+                            </Link>
+                            {application.description ? (
+                                <p className="text-sm text-muted-foreground">{application.description}</p>
+                            ) : null}
+                        </div>
+                    </div>
+                );
             },
-            meta: { className: 'w-44' },
+            meta: { className: 'min-w-52' },
+        },
+    ];
+
+    const databaseTableColumns: Array<ColumnDef<ApiOrganizationDatabaseTable>> = [
+        {
+            accessorKey: 'name',
+            header: t('columns.table'),
+            cell: ({ row, getValue }) => (
+                <Link
+                    to={`/orgs/${organization}/settings/database/${settingsDatabaseResourceType}/${encodeURIComponent(settingsDatabaseResource)}/tables/${encodeURIComponent(row.original.name)}`}
+                    className="font-medium text-foreground underline-offset-4 hover:underline"
+                >
+                    {getValue<string>()}
+                </Link>
+            ),
+            meta: { className: 'min-w-52' },
         },
         {
-            accessorKey: 'status',
-            header: 'Status',
-            cell: ({ getValue }) => {
-                const status = getValue<ApiOrganizationStorageResource['status']>();
-                const variant = status === 'available' ? 'default' : status === 'orphaned' ? 'outline' : 'destructive';
-
-                return <Badge variant={variant}>{status}</Badge>;
-            },
+            accessorKey: 'schema_name',
+            header: t('columns.schema'),
+            meta: { className: 'min-w-44' },
+        },
+        {
+            id: 'columns',
+            header: t('columns.columns'),
+            cell: ({ row }) => formatNumber(row.original.columns.length),
             meta: { className: 'w-32' },
+        },
+        {
+            id: 'rows',
+            header: t('columns.previewRows'),
+            cell: ({ row }) => formatNumber(row.original.rows.length),
+            meta: { className: 'w-36' },
+        },
+    ];
+
+    const storageObjectColumns: Array<ColumnDef<ApiStorageObject>> = [
+        {
+            accessorKey: 'key',
+            header: t('columns.object'),
+            cell: ({ getValue }) => <div className="truncate font-medium text-foreground">{getValue<string>()}</div>,
+            meta: { className: 'min-w-64' },
+        },
+        {
+            accessorKey: 'size',
+            header: t('columns.size'),
+            cell: ({ getValue }) => formatBytes(getValue<number>()),
+            meta: { className: 'w-32' },
+        },
+        {
+            accessorKey: 'last_modified',
+            header: t('columns.modified'),
+            cell: ({ getValue }) => {
+                const value = getValue<string | null>();
+
+                return value ? formatDateTime(value) : <span className="text-muted-foreground">-</span>;
+            },
+            meta: { className: 'w-52' },
         },
     ];
 
     return (
         <>
-            <Menu defaultValue="organization" hashNavigation className="items-start">
-                <MenuSection value="organization" label="Organization" icon={Building2}>
+            <Menu value={settingsSection} onValueChange={handleSettingsSectionChange} className="items-start">
+                <MenuSection value="organization" label={t('columns.organization')} icon={Building2}>
                     <div className="space-y-4">
                         <div className="space-y-1">
-                            <h2 className="text-lg font-medium text-foreground">Organization</h2>
-                            <p className="text-sm text-muted-foreground">View and manage organization details.</p>
+                            <h2 className="text-lg font-medium text-foreground">{t('columns.organization')}</h2>
+                            <p className="text-sm text-muted-foreground">
+                                {t('organizationSettings.organizationDescription')}
+                            </p>
                         </div>
                         <div className="flex items-center gap-3">
                             <Avatar shape="squircle" className="size-8 shrink-0">
@@ -389,103 +636,174 @@ export default function Settings({ organization, organizationDetails, applicatio
                     </div>
                 </MenuSection>
 
-                <MenuSection value="permissions" label="Permissions" icon={ShieldCheck}>
-                    <div className="space-y-4">
-                        <div className="space-y-1">
-                            <h2 className="text-lg font-medium text-foreground">Permissions</h2>
-                            <p className="text-sm text-muted-foreground">
-                                Predefined roles for member access and repository permissions.
-                            </p>
-                        </div>
-                        <div className="overflow-hidden rounded-md border">
-                            <Table>
-                                <TableHeader className="bg-muted/50">
-                                    <TableRow>
-                                        <TableHead className="bg-muted/50">Permission</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {permissionRoles.map((role) => (
-                                        <TableRow key={role.name}>
-                                            <TableCell>
-                                                <div className="flex items-start gap-3">
-                                                    <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
-                                                        <role.icon aria-hidden={true} className="size-4" />
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <div className="font-medium text-foreground">{role.name}</div>
-                                                        <div className="text-sm text-muted-foreground">
-                                                            {role.description}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </div>
-                </MenuSection>
-
-                <MenuSection value="applications" label="Applications" icon={Boxes}>
+                <MenuSection value="applications" label={t('navigation.applications')} icon={Boxes}>
                     <div className="space-y-4">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <div className="space-y-1">
-                                <h2 className="text-lg font-medium text-foreground">Applications</h2>
-                                <p className="text-sm text-muted-foreground">
-                                    Review applications connected to this organization.
-                                </p>
+                                {selectedApplication ? (
+                                    <Link
+                                        to={`/orgs/${organization}/settings/applications`}
+                                        className="inline-flex text-sm font-medium text-foreground hover:underline"
+                                        onClick={() => setApplicationRoleError(null)}
+                                    >
+                                        {t('organizationSettings.back')}
+                                    </Link>
+                                ) : null}
+                                <h2 className="text-lg font-medium text-foreground">
+                                    {selectedApplication
+                                        ? t('organizationSettings.applicationPermissionsTitle', {
+                                              name: selectedApplication.name,
+                                          })
+                                        : t('navigation.applications')}
+                                </h2>
+                                {!selectedApplication ? (
+                                    <p className="text-sm text-muted-foreground">
+                                        {t('organizationSettings.reviewApplications')}
+                                    </p>
+                                ) : !canManageSelectedApplication ? (
+                                    <p className="text-sm text-muted-foreground">
+                                        {t('organizationSettings.cannotChangePermissions')}
+                                    </p>
+                                ) : null}
                             </div>
 
-                            <CreateApplicationDialog organization={organization} />
+                            {!selectedApplication ? <CreateApplicationDialog organization={organization} /> : null}
                         </div>
-                        {isLoading ? null : error ? (
+
+                        {selectedApplication ? (
+                            <>
+                                {applicationRoleError ? (
+                                    <p className="text-sm text-destructive">{applicationRoleError}</p>
+                                ) : null}
+
+                                <DataTable
+                                    columns={applicationMemberColumns}
+                                    data={applicationMembersQuery.data ?? []}
+                                    emptyMessage={t('resources.noOrganizationMembers')}
+                                    error={applicationMembersQuery.error}
+                                    isLoading={applicationMembersQuery.isLoading}
+                                />
+                            </>
+                        ) : isLoading ? null : error ? (
                             <div className="rounded-md border p-4 text-sm text-destructive">
-                                Failed to load applications.
+                                {t('organizationSettings.loadApplicationsFailed')}
                             </div>
                         ) : applications.length ? (
                             <DataTable columns={appColumns} data={applications} />
                         ) : (
                             <div className="rounded-md border p-4 text-sm text-muted-foreground">
-                                No applications found.
+                                {t('organizationSettings.noApplications')}
                             </div>
                         )}
                     </div>
                 </MenuSection>
 
-                <MenuSection value="database" label="Database" icon={Database}>
+                <MenuSection value="database" label={t('navigation.database')} icon={Database}>
                     <div className="space-y-4">
-                        <div className="space-y-1">
-                            <h2 className="text-lg font-medium text-foreground">Database</h2>
-                            <p className="text-sm text-muted-foreground">
-                                Review application schemas and the shared organization users table.
-                            </p>
-                        </div>
-                        <DataTable
-                            columns={databaseResourceColumns}
-                            data={databaseResources}
-                            error={databaseResourcesError}
-                            isLoading={isLoading || databaseResourcesIsLoading}
-                        />
+                        {isDatabaseDetailPage ? (
+                            <>
+                                <div className="space-y-1">
+                                    <Link
+                                        to={
+                                            isDatabaseTablePage && selectedDatabaseKind === 'schema'
+                                                ? `/orgs/${organization}/settings/database/${settingsDatabaseResourceType}/${encodeURIComponent(settingsDatabaseResource)}`
+                                                : `/orgs/${organization}/settings/database`
+                                        }
+                                        className="inline-flex text-sm font-medium text-foreground hover:underline"
+                                    >
+                                        {isDatabaseTablePage && selectedDatabaseKind === 'schema'
+                                            ? t('resources.backToSchema')
+                                            : t('resources.backToDatabase')}
+                                    </Link>
+                                </div>
+
+                                {isLoading || databaseResourcesIsLoading ? null : databaseDetailError ? (
+                                    <div className="rounded-md border p-4 text-sm text-destructive">
+                                        {databaseDetailError.message}
+                                    </div>
+                                ) : databaseResourceTablesIsLoading ? null : databaseResourceTablesError ? (
+                                    <div className="rounded-md border p-4 text-sm text-destructive">
+                                        {databaseResourceTablesError.message}
+                                    </div>
+                                ) : isDatabaseTablePage ? (
+                                    databaseTableDetailError ? (
+                                        <div className="rounded-md border p-4 text-sm text-destructive">
+                                            {databaseTableDetailError.message}
+                                        </div>
+                                    ) : selectedDatabaseTable ? (
+                                        <SettingsDatabaseTableRows table={selectedDatabaseTable} />
+                                    ) : null
+                                ) : databaseResourceTables.length ? (
+                                    <DataTable columns={databaseTableColumns} data={databaseResourceTables} />
+                                ) : (
+                                    <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                                        {t('resources.noTablesInResource')}
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <div className="space-y-1">
+                                    <h2 className="text-lg font-medium text-foreground">{t('navigation.database')}</h2>
+                                    <p className="text-sm text-muted-foreground">
+                                        {t('organizationSettings.reviewDatabase')}
+                                    </p>
+                                </div>
+                                <DataTable
+                                    columns={databaseResourceColumns}
+                                    data={databaseResources}
+                                    error={databaseResourcesError}
+                                    isLoading={isLoading || databaseResourcesIsLoading}
+                                />
+                            </>
+                        )}
                     </div>
                 </MenuSection>
 
-                <MenuSection value="storage" label="Storage" icon={HardDrive}>
+                <MenuSection value="storage" label={t('navigation.storage')} icon={HardDrive}>
                     <div className="space-y-4">
-                        <div className="space-y-1">
-                            <h2 className="text-lg font-medium text-foreground">Storage</h2>
-                            <p className="text-sm text-muted-foreground">
-                                Manage files, buckets, and persisted assets.
-                            </p>
-                        </div>
-                        <DataTable
-                            columns={storageResourceColumns}
-                            data={storageResources}
-                            emptyMessage="No storage resources found."
-                            error={storageResourcesError}
-                            isLoading={isLoading || storageResourcesIsLoading}
-                        />
+                        {isStorageDetailPage ? (
+                            <>
+                                <div className="space-y-1">
+                                    <Link
+                                        to={`/orgs/${organization}/settings/storage`}
+                                        className="inline-flex text-sm font-medium text-foreground hover:underline"
+                                    >
+                                        {t('resources.backToStorage')}
+                                    </Link>
+                                </div>
+
+                                {isLoading || storageResourcesIsLoading ? null : storageDetailError ? (
+                                    <div className="rounded-md border p-4 text-sm text-destructive">
+                                        {storageDetailError.message}
+                                    </div>
+                                ) : (
+                                    <DataTable
+                                        columns={storageObjectColumns}
+                                        data={storageObjects}
+                                        emptyMessage={t('resources.noObjects')}
+                                        error={storageObjectsError}
+                                        isLoading={storageObjectsIsLoading}
+                                    />
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <div className="space-y-1">
+                                    <h2 className="text-lg font-medium text-foreground">{t('navigation.storage')}</h2>
+                                    <p className="text-sm text-muted-foreground">
+                                        {t('organizationSettings.reviewStorage')}
+                                    </p>
+                                </div>
+                                <DataTable
+                                    columns={storageResourceColumns}
+                                    data={storageResources}
+                                    emptyMessage={t('resources.noStorageResources')}
+                                    error={storageResourcesError}
+                                    isLoading={isLoading || storageResourcesIsLoading}
+                                />
+                            </>
+                        )}
                     </div>
                 </MenuSection>
             </Menu>
@@ -516,11 +834,13 @@ export default function Settings({ organization, organizationDetails, applicatio
                 <DialogContent>
                     <div className="space-y-4">
                         <div className="space-y-1">
-                            <DialogTitle>Delete application</DialogTitle>
+                            <DialogTitle>{t('organizationSettings.deleteApplicationTitle')}</DialogTitle>
                             <DialogDescription>
                                 {deleteTarget
-                                    ? `Delete ${deleteTarget.name} from this organization?`
-                                    : 'Delete this application?'}
+                                    ? t('organizationSettings.deleteApplicationDescription', {
+                                          name: deleteTarget.name,
+                                      })
+                                    : t('organizationSettings.deleteApplicationFallback')}
                             </DialogDescription>
                         </div>
 
@@ -535,7 +855,7 @@ export default function Settings({ organization, organizationDetails, applicatio
                                     setDeleteError(null);
                                 }}
                             >
-                                Cancel
+                                {t('actions.cancel')}
                             </Button>
                             <Button
                                 type="button"
@@ -550,18 +870,22 @@ export default function Settings({ organization, organizationDetails, applicatio
 
                                     try {
                                         await deleteApplication(id);
+                                        if (selectedApplication?.id === id) {
+                                            setApplicationRoleError(null);
+                                            navigate(`/orgs/${organization}/settings/applications`);
+                                        }
                                         setDeleteTargetId(null);
                                         setDeleteError(null);
                                     } catch (mutationError) {
                                         setDeleteError(
                                             mutationError instanceof Error
                                                 ? mutationError.message
-                                                : 'Failed to delete application'
+                                                : t('organizationSettings.failedDeleteApplication')
                                         );
                                     }
                                 }}
                             >
-                                {isDeletingApplication ? 'Deleting...' : 'Delete'}
+                                {isDeletingApplication ? t('actions.deleting') : t('actions.delete')}
                             </Button>
                         </div>
                     </div>
@@ -569,4 +893,39 @@ export default function Settings({ organization, organizationDetails, applicatio
             </Dialog>
         </>
     );
+}
+
+type DatabaseTableRow = Record<string, string | number | boolean | null>;
+
+type SettingsDatabaseTableRowsProps = {
+    table: ApiOrganizationDatabaseTable;
+};
+
+/** Renders preview rows for one database table inside organization settings. */
+function SettingsDatabaseTableRows({ table }: SettingsDatabaseTableRowsProps) {
+    const { t } = useTranslation();
+    const databaseRowColumns: Array<ColumnDef<DatabaseTableRow>> = table.columns.length
+        ? table.columns.map((column) => ({
+              id: column.name,
+              header: column.name,
+              cell: ({ row }) => {
+                  const value = row.original[column.name];
+
+                  return value === null || value === undefined ? (
+                      <span className="text-muted-foreground">NULL</span>
+                  ) : (
+                      <span className="font-mono text-xs">{String(value)}</span>
+                  );
+              },
+              meta: { className: 'max-w-72 truncate' },
+          }))
+        : [
+              {
+                  id: 'empty',
+                  header: t('resources.noColumns'),
+                  cell: () => <span className="text-muted-foreground">{t('resources.noColumns')}</span>,
+              },
+          ];
+
+    return <DataTable columns={databaseRowColumns} data={table.rows} emptyMessage={t('resources.noRows')} />;
 }

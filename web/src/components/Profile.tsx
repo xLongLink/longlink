@@ -1,4 +1,5 @@
 import { useUser } from '@/hooks/use-user';
+import { useTranslation } from '@/lib/i18n';
 import { getInitials } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import {
@@ -38,6 +39,7 @@ const profileDropdownMenuDestructiveItemClassName =
 
 /** Renders a user profile dropdown with authentication actions. */
 export function UserProfile() {
+    const { t } = useTranslation();
     const { user, signOut, switchAccount } = useUser();
 
     if (!user) {
@@ -56,7 +58,7 @@ export function UserProfile() {
         try {
             await signOut();
         } catch {
-            toast.error('Failed to sign out');
+            toast.error(t('profile.signOutFailed'));
         }
     };
 
@@ -65,7 +67,7 @@ export function UserProfile() {
         try {
             await switchAccount();
         } catch {
-            toast.error('Failed to switch account');
+            toast.error(t('auth.switchAccountFailed'));
         }
     };
 
@@ -101,14 +103,14 @@ export function UserProfile() {
                         className={profileDropdownMenuItemClassName}
                     >
                         <Building2 className="h-4 w-4" />
-                        Organizations
+                        {t('profile.organizations')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         render={<Link to="/settings" className="flex w-full items-center gap-2 text-inherit" />}
                         className={profileDropdownMenuItemClassName}
                     >
                         <Settings2 className="h-4 w-4" />
-                        Settings
+                        {t('profile.settings')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         render={
@@ -122,7 +124,7 @@ export function UserProfile() {
                         className={profileDropdownMenuItemClassName}
                     >
                         <BookOpen className="h-4 w-4" />
-                        Documentation
+                        {t('common.documentation')}
                         <ExternalLink className="ml-auto size-3.5 shrink-0" aria-hidden="true" />
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
@@ -137,7 +139,7 @@ export function UserProfile() {
                                 className={profileDropdownMenuItemClassName}
                             >
                                 <Users className="h-4 w-4" />
-                                Users
+                                {t('profile.users')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 render={
@@ -149,7 +151,7 @@ export function UserProfile() {
                                 className={profileDropdownMenuItemClassName}
                             >
                                 <Boxes className="h-4 w-4" />
-                                Applications
+                                {t('profile.applications')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 render={
@@ -161,7 +163,7 @@ export function UserProfile() {
                                 className={profileDropdownMenuItemClassName}
                             >
                                 <Building2 className="h-4 w-4" />
-                                Organizations
+                                {t('profile.organizations')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 render={
@@ -173,7 +175,7 @@ export function UserProfile() {
                                 className={profileDropdownMenuItemClassName}
                             >
                                 <MapPin className="h-4 w-4" />
-                                Locations
+                                {t('profile.locations')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 render={
@@ -185,7 +187,7 @@ export function UserProfile() {
                                 className={profileDropdownMenuItemClassName}
                             >
                                 <Database className="h-4 w-4" />
-                                Database
+                                {t('profile.database')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 render={
@@ -194,7 +196,7 @@ export function UserProfile() {
                                 className={profileDropdownMenuItemClassName}
                             >
                                 <HardDrive className="h-4 w-4" />
-                                Storage
+                                {t('profile.storage')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 render={
@@ -203,7 +205,7 @@ export function UserProfile() {
                                 className={profileDropdownMenuItemClassName}
                             >
                                 <Cpu className="h-4 w-4" />
-                                Compute
+                                {t('profile.compute')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 render={
@@ -215,7 +217,7 @@ export function UserProfile() {
                                 className={profileDropdownMenuItemClassName}
                             >
                                 <Activity className="h-4 w-4" />
-                                Operations
+                                {t('profile.operations')}
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                     </>
@@ -223,7 +225,7 @@ export function UserProfile() {
                 {isPrivileged ? <DropdownMenuSeparator className="my-2" /> : null}
                 <DropdownMenuItem className={profileDropdownMenuDestructiveItemClassName} onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
+                    {t('actions.signOut')}
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>

@@ -8,16 +8,14 @@ from src.logger import logger
 from src.operations import provisioning
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import (OrganizationStorageResourceKind,
-                                 OrganizationStorageResourceStatus,
-                                 OrganizationStorageResourceResponse,
-                                 OrganizationStorageApplicationResponse)
+                                  OrganizationStorageResourceResponse,
+                                  OrganizationStorageApplicationResponse)
 from src.utils.namespace import dbname, s3name
 from src.adapters.storage import S3
 from src.models.databases import (OrganizationDatabaseResourceKind,
-                                  OrganizationDatabaseTableResponse,
-                                  OrganizationDatabaseResourceStatus,
-                                  OrganizationDatabaseResourceResponse,
-                                  OrganizationDatabaseApplicationResponse)
+                                   OrganizationDatabaseTableResponse,
+                                   OrganizationDatabaseResourceResponse,
+                                   OrganizationDatabaseApplicationResponse)
 from src.adapters.database import Postgres
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationResponse
@@ -231,28 +229,33 @@ async def _database_resource_rows(
         postgres = Postgres(registry.host, registry.port, registry.username, registry.password)
         schema_usage = await postgres.schema_usage(database_name)
         users_usage = await postgres.table_usage(database_name, "public", "users")
-    except Exception:
+    except Exception as exc:
         logger.exception("Failed to inspect database resources for organization '%s'", organization.slug)
-        return _unavailable_database_resource_rows(database_name, registry, active_applications)
+        raise UnavailableError("Database resources unavailable") from exc
 
-    rows = [
-        OrganizationDatabaseResourceResponse(
-            kind=OrganizationDatabaseResourceKind.shared_table,
-            name="users",
-            database_name=database_name,
-            database_registry_id=registry.id,
-            database_registry_name=registry.name,
-            application=None,
-            status=OrganizationDatabaseResourceStatus.available if users_usage is not None else OrganizationDatabaseResourceStatus.missing,
-            space_used=users_usage["space_used"] if users_usage is not None else None,
-            table_count=1 if users_usage is not None else None,
-            row_estimate=users_usage["row_estimate"] if users_usage is not None else None,
+    rows: list[OrganizationDatabaseResourceResponse] = []
+
+    if users_usage is not None:
+        rows.append(
+            OrganizationDatabaseResourceResponse(
+                kind=OrganizationDatabaseResourceKind.shared_table,
+                name="users",
+                database_name=database_name,
+                database_registry_id=registry.id,
+                database_registry_name=registry.name,
+                application=None,
+                space_used=users_usage["space_used"],
+                table_count=1,
+                row_estimate=users_usage["row_estimate"],
+            )
         )
-    ]
 
     usage_by_schema = {item["name"]: item for item in schema_usage}
     for application in sorted(active_applications, key=lambda item: item.name):
         usage = usage_by_schema.get(application.slug)
+        if usage is None:
+            continue
+
         rows.append(
             OrganizationDatabaseResourceResponse(
                 kind=OrganizationDatabaseResourceKind.schema,
@@ -264,12 +267,13 @@ async def _database_resource_rows(
                     id=application.id,
                     name=application.name,
                     slug=application.slug,
+                    icon=application.icon,
+                    description=application.description,
                     status=application.status,
                 ),
-                status=OrganizationDatabaseResourceStatus.available if usage is not None else OrganizationDatabaseResourceStatus.missing,
-                space_used=usage["space_used"] if usage is not None else None,
-                table_count=usage["table_count"] if usage is not None else None,
-                row_estimate=usage["row_estimate"] if usage is not None else None,
+                space_used=usage["space_used"],
+                table_count=usage["table_count"],
+                row_estimate=usage["row_estimate"],
             )
         )
 
@@ -285,50 +289,9 @@ async def _database_resource_rows(
                 database_registry_id=registry.id,
                 database_registry_name=registry.name,
                 application=None,
-                status=OrganizationDatabaseResourceStatus.orphaned,
                 space_used=usage["space_used"],
                 table_count=usage["table_count"],
                 row_estimate=usage["row_estimate"],
-            )
-        )
-
-    return rows
-
-
-def _unavailable_database_resource_rows(
-    database_name: str,
-    registry: DatabaseRegistry,
-    active_applications: list[Application],
-) -> list[OrganizationDatabaseResourceResponse]:
-    """Return unavailable rows when a database backend cannot be inspected."""
-
-    rows = [
-        OrganizationDatabaseResourceResponse(
-            kind=OrganizationDatabaseResourceKind.shared_table,
-            name="users",
-            database_name=database_name,
-            database_registry_id=registry.id,
-            database_registry_name=registry.name,
-            application=None,
-            status=OrganizationDatabaseResourceStatus.unavailable,
-        )
-    ]
-
-    for application in sorted(active_applications, key=lambda item: item.name):
-        rows.append(
-            OrganizationDatabaseResourceResponse(
-                kind=OrganizationDatabaseResourceKind.schema,
-                name=application.slug,
-                database_name=database_name,
-                database_registry_id=registry.id,
-                database_registry_name=registry.name,
-                application=OrganizationDatabaseApplicationResponse(
-                    id=application.id,
-                    name=application.name,
-                    slug=application.slug,
-                    status=application.status,
-                ),
-                status=OrganizationDatabaseResourceStatus.unavailable,
             )
         )
 
@@ -345,6 +308,75 @@ async def _storage_resource_rows(
     try:
         storage_client = S3(registry.protocol, registry.endpoint_url, registry.access_key_id, registry.secret_access_key)
         bucket_names = set(await storage_client.buckets())
+        expected_bucket_names: set[str] = set()
+        shared_bucket_name = s3name(f"{organization.slug}-shared")
+        expected_bucket_names.add(shared_bucket_name)
+        rows: list[OrganizationStorageResourceResponse] = []
+
+        if shared_bucket_name in bucket_names:
+            usage = await storage_client.bucket_usage(shared_bucket_name)
+            rows.append(
+                OrganizationStorageResourceResponse(
+                    kind=OrganizationStorageResourceKind.shared_bucket,
+                    name="shared",
+                    bucket_name=shared_bucket_name,
+                    application=None,
+                    storage_registry_id=registry.id,
+                    storage_registry_name=registry.name,
+                    space_used=usage["space_used"],
+                    object_count=usage["object_count"],
+                )
+            )
+
+        # Compare expected app buckets against the backend listing so only existing resources are visible.
+        for application in sorted(active_applications, key=lambda item: item.name):
+            bucket_name = s3name(f"{organization.slug}-{application.slug}")
+            expected_bucket_names.add(bucket_name)
+            if bucket_name not in bucket_names:
+                continue
+
+            usage = await storage_client.bucket_usage(bucket_name)
+            rows.append(
+                OrganizationStorageResourceResponse(
+                    kind=OrganizationStorageResourceKind.application_bucket,
+                    name=application.slug,
+                    bucket_name=bucket_name,
+                    application=OrganizationStorageApplicationResponse(
+                        id=application.id,
+                        name=application.name,
+                        slug=application.slug,
+                        icon=application.icon,
+                        description=application.description,
+                        status=application.status,
+                    ),
+                    storage_registry_id=registry.id,
+                    storage_registry_name=registry.name,
+                    space_used=usage["space_used"],
+                    object_count=usage["object_count"],
+                )
+            )
+
+        # Keep stale managed buckets visible as orphaned resources.
+        organization_bucket_prefix = f"longlink-{organization.slug}-"
+        for bucket_name in sorted(bucket_names):
+            if bucket_name in expected_bucket_names or not bucket_name.startswith(organization_bucket_prefix):
+                continue
+
+            usage = await storage_client.bucket_usage(bucket_name)
+            rows.append(
+                OrganizationStorageResourceResponse(
+                    kind=OrganizationStorageResourceKind.application_bucket,
+                    name=bucket_name.removeprefix(organization_bucket_prefix),
+                    bucket_name=bucket_name,
+                    application=None,
+                    storage_registry_id=registry.id,
+                    storage_registry_name=registry.name,
+                    space_used=usage["space_used"],
+                    object_count=usage["object_count"],
+                )
+            )
+
+        return rows
     except Exception as exc:
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",
@@ -352,107 +384,7 @@ async def _storage_resource_rows(
             registry.name,
             exc,
         )
-        return _unavailable_storage_resource_rows(organization, registry, active_applications)
-
-    expected_bucket_names: set[str] = set()
-    shared_bucket_name = s3name(f"{organization.slug}-shared")
-    expected_bucket_names.add(shared_bucket_name)
-    rows = [
-        OrganizationStorageResourceResponse(
-            kind=OrganizationStorageResourceKind.shared_bucket,
-            name="shared",
-            bucket_name=shared_bucket_name,
-            application=None,
-            storage_registry_id=registry.id,
-            storage_registry_name=registry.name,
-            status=OrganizationStorageResourceStatus.available
-            if shared_bucket_name in bucket_names
-            else OrganizationStorageResourceStatus.missing,
-        )
-    ]
-
-    # Compare expected app buckets against the backend listing so missing resources are visible.
-    for application in sorted(active_applications, key=lambda item: item.name):
-        bucket_name = s3name(f"{organization.slug}-{application.slug}")
-        expected_bucket_names.add(bucket_name)
-        rows.append(
-            OrganizationStorageResourceResponse(
-                kind=OrganizationStorageResourceKind.application_bucket,
-                name=application.slug,
-                bucket_name=bucket_name,
-                application=OrganizationStorageApplicationResponse(
-                    id=application.id,
-                    name=application.name,
-                    slug=application.slug,
-                    status=application.status,
-                ),
-                storage_registry_id=registry.id,
-                storage_registry_name=registry.name,
-                status=OrganizationStorageResourceStatus.available
-                if bucket_name in bucket_names
-                else OrganizationStorageResourceStatus.missing,
-            )
-        )
-
-    # Keep stale managed buckets visible as orphaned resources.
-    organization_bucket_prefix = f"longlink-{organization.slug}-"
-    for bucket_name in sorted(bucket_names):
-        if bucket_name in expected_bucket_names or not bucket_name.startswith(organization_bucket_prefix):
-            continue
-
-        rows.append(
-            OrganizationStorageResourceResponse(
-                kind=OrganizationStorageResourceKind.application_bucket,
-                name=bucket_name.removeprefix(organization_bucket_prefix),
-                bucket_name=bucket_name,
-                application=None,
-                storage_registry_id=registry.id,
-                storage_registry_name=registry.name,
-                status=OrganizationStorageResourceStatus.orphaned,
-            )
-        )
-
-    return rows
-
-
-def _unavailable_storage_resource_rows(
-    organization: OrganizationDetails,
-    registry: StorageRegistry,
-    active_applications: list[Application],
-) -> list[OrganizationStorageResourceResponse]:
-    """Return unavailable rows when a storage backend cannot be inspected."""
-
-    rows = [
-        OrganizationStorageResourceResponse(
-            kind=OrganizationStorageResourceKind.shared_bucket,
-            name="shared",
-            bucket_name=s3name(f"{organization.slug}-shared"),
-            application=None,
-            storage_registry_id=registry.id,
-            storage_registry_name=registry.name,
-            status=OrganizationStorageResourceStatus.unavailable,
-        )
-    ]
-
-    for application in sorted(active_applications, key=lambda item: item.name):
-        rows.append(
-            OrganizationStorageResourceResponse(
-                kind=OrganizationStorageResourceKind.application_bucket,
-                name=application.slug,
-                bucket_name=s3name(f"{organization.slug}-{application.slug}"),
-                application=OrganizationStorageApplicationResponse(
-                    id=application.id,
-                    name=application.name,
-                    slug=application.slug,
-                    status=application.status,
-                ),
-                storage_registry_id=registry.id,
-                storage_registry_name=registry.name,
-                status=OrganizationStorageResourceStatus.unavailable,
-            )
-        )
-
-    return rows
+        raise UnavailableError("Storage resources unavailable") from exc
 
 
 @router.post("/api/organizations", response_model=OrganizationSummary)

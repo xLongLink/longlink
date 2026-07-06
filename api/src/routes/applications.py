@@ -9,7 +9,9 @@ from src.operations import provisioning
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
 from src.models.operations import OperationKind
-from src.models.applications import ApplicationCreate, ApplicationResponse
+from src.models.applications import (ApplicationCreate, ApplicationResponse,
+                                     ApplicationMemberUpdate,
+                                     ApplicationMemberResponse)
 from src.adapters.compute.k8s import K8s
 from src.database.models.users import User
 from kubernetes.client.exceptions import ApiException as KubernetesApiException
@@ -121,6 +123,49 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
         raise UnavailableError(str(exc)) from exc
 
     return Response(content=logs, media_type="text/plain")
+
+
+@router.get("/api/applications/{application_id}/members", response_model=list[ApplicationMemberResponse])
+async def list_application_members(application_id: UUID, user: User = Depends(authuser)) -> list[ApplicationMemberResponse]:
+    """Return organization members and their application-specific roles."""
+
+    application = await applications.get_by_id(application_id)
+    if application is None:
+        raise NotFoundError("Application", application_id)
+
+    await organization_access(application.organization_id, user)
+    return await applications.list_members(application.id, application.organization_id)
+
+
+@router.patch("/api/applications/{application_id}/members/{member_id}", status_code=204)
+async def update_application_member(
+    application_id: UUID,
+    member_id: UUID,
+    payload: ApplicationMemberUpdate,
+    user: User = Depends(authuser),
+) -> Response:
+    """Update one member's application-specific role."""
+
+    application = await applications.get_by_id(application_id)
+    if application is None:
+        raise NotFoundError("Application", application_id)
+
+    await organization_access(application.organization_id, user)
+    organization_role, application_role = await _application_access_roles(application, user)
+    if not _can_manage_application(organization_role, application_role):
+        raise ForbiddenError("Application member management permissions required")
+
+    updated = await applications.set_member_role(
+        application.id,
+        application.organization_id,
+        member_id,
+        payload.role,
+        user,
+    )
+    if not updated:
+        raise NotFoundError("Organization member", member_id)
+
+    return Response(status_code=204)
 
 
 @router.delete("/api/applications/{application_id}", status_code=204)

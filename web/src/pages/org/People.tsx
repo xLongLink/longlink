@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { useOrganizationActions } from '@/hooks/use-organization';
+import { useTranslation } from '@/lib/i18n';
 import type { Role } from '@/lib/roles';
 import { ROLE_NAMES } from '@/lib/roles';
 import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
@@ -23,7 +24,17 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
 import { Menu, MenuSection } from '@ui/menu';
-import { Mail, MoreVertical, Users } from 'lucide-react';
+import {
+    BookOpen,
+    Crown,
+    GitPullRequest,
+    Mail,
+    MoreVertical,
+    PenLine,
+    Settings2,
+    Users,
+    type LucideIcon,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -43,27 +54,17 @@ const ORGANIZATION_ROLE_LABELS: Record<Role, string> = {
     owner: 'owner',
 };
 
-const invitationColumns: Array<ColumnDef<ApiInvitation>> = [
-    {
-        accessorKey: 'email',
-        header: 'Email',
-        cell: ({ getValue }) => <span className="font-medium text-foreground">{getValue<string>()}</span>,
-    },
-    {
-        accessorKey: 'role',
-        header: 'Role',
-        meta: { className: 'w-24' },
-    },
-    {
-        accessorKey: 'created_at',
-        header: 'Created',
-        cell: ({ getValue }) => formatDate(getValue<string>()),
-        meta: { className: 'w-32' },
-    },
-];
+const ORGANIZATION_ROLE_ICONS: Record<Role, LucideIcon> = {
+    read: BookOpen,
+    write: GitPullRequest,
+    maintain: PenLine,
+    admin: Settings2,
+    owner: Crown,
+};
 
 /** Renders the organization people menu and member tables. */
 export default function People({ organization, people, invitations, isLoading, error }: PeopleProps) {
+    const { t } = useTranslation();
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] = useState<Role>('write');
@@ -80,7 +81,7 @@ export default function People({ organization, people, invitations, isLoading, e
     const peopleColumns: Array<ColumnDef<ApiOrganizationMemberSummary>> = [
         {
             id: 'member',
-            header: 'User',
+            header: t('columns.user'),
             cell: ({ row }) => {
                 const user = row.original;
 
@@ -117,7 +118,7 @@ export default function People({ organization, people, invitations, isLoading, e
         },
         {
             id: 'actions',
-            header: 'Action',
+            header: t('columns.action'),
             meta: { className: 'w-px pl-1 whitespace-nowrap text-right' },
             cell: ({ row }) => {
                 const user = row.original;
@@ -133,25 +134,36 @@ export default function People({ organization, people, invitations, isLoading, e
                                         size="icon-sm"
                                         className="cursor-pointer"
                                         disabled={!canManageMembers}
-                                        aria-label={`Open actions for ${user.name}`}
+                                        aria-label={t('common.openActionsFor', { name: user.name })}
                                     />
                                 }
                             >
                                 <MoreVertical className="size-4" />
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
-                                {ROLE_NAMES.filter((role) => role !== user.role).map((role) => (
-                                    <DropdownMenuItem
-                                        key={role}
-                                        className="cursor-pointer"
-                                        onClick={() => {
-                                            setRoleChangeTarget({ user, role });
-                                            setRoleChangeError(null);
-                                        }}
-                                    >
-                                        Grant {ORGANIZATION_ROLE_LABELS[role]} permission
-                                    </DropdownMenuItem>
-                                ))}
+                            <DropdownMenuContent align="end" className="w-64">
+                                {ROLE_NAMES.filter((role) => role !== user.role).map((role) => {
+                                    const RoleIcon = ORGANIZATION_ROLE_ICONS[role];
+
+                                    return (
+                                        <DropdownMenuItem
+                                            key={role}
+                                            className="cursor-pointer gap-3"
+                                            onClick={() => {
+                                                setRoleChangeTarget({ user, role });
+                                                setRoleChangeError(null);
+                                            }}
+                                        >
+                                            <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
+                                                <RoleIcon aria-hidden={true} className="size-4" />
+                                            </span>
+                                            <span>
+                                                {t('people.grantPermission', {
+                                                    role: ORGANIZATION_ROLE_LABELS[role],
+                                                })}
+                                            </span>
+                                        </DropdownMenuItem>
+                                    );
+                                })}
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -160,37 +172,58 @@ export default function People({ organization, people, invitations, isLoading, e
         },
     ];
 
+    const localizedInvitationColumns: Array<ColumnDef<ApiInvitation>> = [
+        {
+            accessorKey: 'email',
+            header: t('columns.email'),
+            cell: ({ getValue }) => <span className="font-medium text-foreground">{getValue<string>()}</span>,
+        },
+        {
+            accessorKey: 'role',
+            header: t('columns.role'),
+            meta: { className: 'w-24' },
+        },
+        {
+            accessorKey: 'created_at',
+            header: t('columns.created'),
+            cell: ({ getValue }) => formatDate(getValue<string>()),
+            meta: { className: 'w-32' },
+        },
+    ];
+
     return (
         <>
-            <Menu defaultValue="members" hashNavigation className="items-start" ariaLabel="People menu">
-                <MenuSection value="members" label="Members" icon={Users}>
+            <Menu defaultValue="members" hashNavigation className="items-start" ariaLabel={t('people.menuAria')}>
+                <MenuSection value="members" label={t('people.membersTitle')} icon={Users}>
                     <div className="space-y-4">
                         <div className="space-y-1">
-                            <h2 className="text-lg font-medium text-foreground">Members</h2>
-                            <p className="text-sm text-muted-foreground">Users who have access to this organization.</p>
+                            <h2 className="text-lg font-medium text-foreground">{t('people.membersTitle')}</h2>
+                            <p className="text-sm text-muted-foreground">{t('people.membersDescription')}</p>
                         </div>
                         <hr className="border-border" />
                         {isLoading ? null : error ? (
-                            <div className="rounded-md border p-4 text-sm text-destructive">Failed to load people.</div>
+                            <div className="rounded-md border p-4 text-sm text-destructive">
+                                {t('errors.loadPeople')}
+                            </div>
                         ) : people.length ? (
                             <DataTable columns={peopleColumns} data={people} />
                         ) : (
-                            <div className="rounded-md border p-4 text-sm text-muted-foreground">No people found.</div>
+                            <div className="rounded-md border p-4 text-sm text-muted-foreground">
+                                {t('people.noPeople')}
+                            </div>
                         )}
                     </div>
                 </MenuSection>
 
-                <MenuSection value="invitations" label="Invitations" icon={Mail}>
+                <MenuSection value="invitations" label={t('people.invitationsTitle')} icon={Mail}>
                     <div className="space-y-4">
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <div className="space-y-1">
-                                <h2 className="text-lg font-medium text-foreground">Invitations</h2>
-                                <p className="text-sm text-muted-foreground">
-                                    Pending invitations to join this organization.
-                                </p>
+                                <h2 className="text-lg font-medium text-foreground">{t('people.invitationsTitle')}</h2>
+                                <p className="text-sm text-muted-foreground">{t('people.invitationsDescription')}</p>
                                 {canInviteMembers ? null : (
                                     <p className="text-sm text-muted-foreground">
-                                        Only maintainers, admins, and owners can send invitations.
+                                        {t('people.invitationsPermissionHint')}
                                     </p>
                                 )}
                             </div>
@@ -199,19 +232,19 @@ export default function People({ organization, people, invitations, isLoading, e
                                 onClick={() => setInviteOpen(true)}
                                 disabled={organization.length === 0}
                             >
-                                Invite
+                                {t('actions.invite')}
                             </Button>
                         </div>
                         <hr className="border-border" />
                         {isLoading ? null : error ? (
                             <div className="rounded-md border p-4 text-sm text-destructive">
-                                Failed to load invitations.
+                                {t('errors.loadInvitations')}
                             </div>
                         ) : invitations.length ? (
-                            <DataTable columns={invitationColumns} data={invitations} />
+                            <DataTable columns={localizedInvitationColumns} data={invitations} />
                         ) : (
                             <div className="rounded-md border p-4 text-sm text-muted-foreground">
-                                No invitations yet.
+                                {t('people.noInvitations')}
                             </div>
                         )}
                     </div>
@@ -229,11 +262,14 @@ export default function People({ organization, people, invitations, isLoading, e
             >
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Change member role</AlertDialogTitle>
+                        <AlertDialogTitle>{t('people.changeRoleTitle')}</AlertDialogTitle>
                         <AlertDialogDescription>
                             {roleChangeTarget
-                                ? `Grant ${roleChangeTargetLabel} permission to ${roleChangeTarget.user.name} in this organization?`
-                                : 'Change this member role?'}
+                                ? t('people.changeRoleDescription', {
+                                      name: roleChangeTarget.user.name,
+                                      role: roleChangeTargetLabel,
+                                  })
+                                : t('people.changeRoleFallback')}
                         </AlertDialogDescription>
                         {roleChangeError ? <p className="text-sm text-destructive">{roleChangeError}</p> : null}
                     </AlertDialogHeader>
@@ -244,7 +280,7 @@ export default function People({ organization, people, invitations, isLoading, e
                                 setRoleChangeError(null);
                             }}
                         >
-                            Cancel
+                            {t('actions.cancel')}
                         </AlertDialogCancel>
                         <AlertDialogAction
                             type="button"
@@ -260,7 +296,10 @@ export default function People({ organization, people, invitations, isLoading, e
                                         role: roleChangeTarget.role,
                                     });
                                     toast.success(
-                                        `${roleChangeTarget.user.name} now has ${roleChangeTargetLabel} permission`
+                                        t('people.roleChanged', {
+                                            name: roleChangeTarget.user.name,
+                                            role: roleChangeTargetLabel,
+                                        })
                                     );
                                     setRoleChangeTarget(null);
                                     setRoleChangeError(null);
@@ -268,12 +307,12 @@ export default function People({ organization, people, invitations, isLoading, e
                                     setRoleChangeError(
                                         mutationError instanceof Error
                                             ? mutationError.message
-                                            : 'Failed to change member role'
+                                            : t('people.failedChangeMemberRole')
                                     );
                                 }
                             }}
                         >
-                            {isChangingMemberRole ? 'Saving...' : 'Change role'}
+                            {isChangingMemberRole ? t('actions.saving') : t('actions.changeRole')}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
@@ -291,12 +330,10 @@ export default function People({ organization, people, invitations, isLoading, e
                 <DialogContent>
                     <div className="space-y-4">
                         <div className="space-y-1">
-                            <DialogTitle>Invite user</DialogTitle>
-                            <DialogDescription>Send an invitation to join this organization.</DialogDescription>
+                            <DialogTitle>{t('people.inviteTitle')}</DialogTitle>
+                            <DialogDescription>{t('people.inviteDescription')}</DialogDescription>
                             {canInviteMembers ? null : (
-                                <p className="text-sm text-muted-foreground">
-                                    You need maintainer, admin, or owner access to invite members.
-                                </p>
+                                <p className="text-sm text-muted-foreground">{t('people.invitePermissionHint')}</p>
                             )}
                         </div>
 
@@ -316,13 +353,15 @@ export default function People({ organization, people, invitations, isLoading, e
                                     setInviteRole('write');
                                 } catch (mutationError) {
                                     setInviteError(
-                                        mutationError instanceof Error ? mutationError.message : 'Failed to invite user'
+                                        mutationError instanceof Error
+                                            ? mutationError.message
+                                            : t('people.failedInviteUser')
                                     );
                                 }
                             }}
                         >
                             <div className="space-y-2">
-                                <Label htmlFor="invite-email">Email</Label>
+                                <Label htmlFor="invite-email">{t('labels.email')}</Label>
                                 <Input
                                     id="invite-email"
                                     type="email"
@@ -334,7 +373,7 @@ export default function People({ organization, people, invitations, isLoading, e
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="invite-role">Role</Label>
+                                <Label htmlFor="invite-role">{t('columns.role')}</Label>
                                 <Select value={inviteRole} onValueChange={(value) => setInviteRole(value as Role)}>
                                     <SelectTrigger id="invite-role" className="w-full">
                                         {inviteRole}
@@ -360,13 +399,13 @@ export default function People({ organization, people, invitations, isLoading, e
                                         setInviteError(null);
                                     }}
                                 >
-                                    Cancel
+                                    {t('actions.cancel')}
                                 </Button>
                                 <Button
                                     type="submit"
                                     disabled={isInviting || inviteEmail.trim().length === 0 || !canInviteMembers}
                                 >
-                                    {isInviting ? 'Inviting...' : 'Invite'}
+                                    {isInviting ? t('actions.inviting') : t('actions.invite')}
                                 </Button>
                             </div>
                         </form>

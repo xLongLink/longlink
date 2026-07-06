@@ -6,13 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLocations } from '@/hooks/use-locations';
-import { useUser } from '@/hooks/use-user';
+import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
+import { useTranslation } from '@/lib/i18n';
 import { databasesQueryKey } from '@/lib/query-keys';
 
 /** Renders the admin database connect dialog. */
 export default function ConnectDatabaseDialog() {
-    const { role } = useUser();
+    const { t } = useTranslation();
+    const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
     const [kind, setKind] = useState('postgresql');
@@ -77,13 +79,13 @@ export default function ConnectDatabaseDialog() {
 
     return (
         <RegistryDialogShell
-            title="Connect database"
-            description="Register a database backend for the control plane."
+            title={t('dialogs.connectDatabaseTitle')}
+            description={t('dialogs.connectDatabaseDescription')}
             open={open}
             error={error}
             canSubmit={canSubmit}
             isPending={connectDatabase.isPending}
-            pendingLabel="Connecting..."
+            pendingLabel={t('actions.connecting')}
             onOpenChange={(nextOpen) => {
                 setOpen(nextOpen);
                 if (!nextOpen) setError(null);
@@ -93,15 +95,17 @@ export default function ConnectDatabaseDialog() {
                 try {
                     await connectDatabase.mutateAsync();
                 } catch (mutationError) {
-                    setError(mutationError instanceof Error ? mutationError.message : 'Failed to connect database');
+                    setError(
+                        mutationError instanceof Error ? mutationError.message : t('dialogs.failedConnectDatabase')
+                    );
                 }
             }}
         >
             <div className="space-y-2">
-                <Label htmlFor="database-kind">Kind</Label>
+                <Label htmlFor="database-kind">{t('labels.kind')}</Label>
                 <Select value={kind} onValueChange={(value) => setKind(value ?? '')}>
                     <SelectTrigger id="database-kind" className="w-full">
-                        <SelectValue placeholder="Choose a database kind" />
+                        <SelectValue placeholder={t('dialogs.chooseDatabaseKind')} />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="postgresql">PostgreSQL</SelectItem>
@@ -110,7 +114,7 @@ export default function ConnectDatabaseDialog() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="database-name">Name</Label>
+                <Label htmlFor="database-name">{t('labels.name')}</Label>
                 <Input
                     id="database-name"
                     value={name}
@@ -121,7 +125,7 @@ export default function ConnectDatabaseDialog() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="database-host">Host</Label>
+                <Label htmlFor="database-host">{t('labels.host')}</Label>
                 <Input
                     id="database-host"
                     value={host}
@@ -133,7 +137,7 @@ export default function ConnectDatabaseDialog() {
 
             <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                    <Label htmlFor="database-port">Port</Label>
+                    <Label htmlFor="database-port">{t('labels.port')}</Label>
                     <Input
                         id="database-port"
                         type="number"
@@ -143,7 +147,7 @@ export default function ConnectDatabaseDialog() {
                     />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="database-username">Username</Label>
+                    <Label htmlFor="database-username">{t('labels.username')}</Label>
                     <Input
                         id="database-username"
                         value={username}
@@ -155,7 +159,7 @@ export default function ConnectDatabaseDialog() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="database-password">Password</Label>
+                <Label htmlFor="database-password">{t('labels.password')}</Label>
                 <Input
                     id="database-password"
                     type="password"
@@ -167,7 +171,7 @@ export default function ConnectDatabaseDialog() {
 
             <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                    <Label htmlFor="database-runtime-host">Runtime host</Label>
+                    <Label htmlFor="database-runtime-host">{t('labels.runtimeHost')}</Label>
                     <Input
                         id="database-runtime-host"
                         value={runtimeHost}
@@ -177,7 +181,7 @@ export default function ConnectDatabaseDialog() {
                     />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="database-runtime-port">Runtime port</Label>
+                    <Label htmlFor="database-runtime-port">{t('labels.runtimePort')}</Label>
                     <Input
                         id="database-runtime-port"
                         type="number"

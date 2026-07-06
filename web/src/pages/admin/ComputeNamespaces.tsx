@@ -5,10 +5,12 @@ import { Link, useParams } from 'react-router';
 import { DataTable } from '@/components/DataTable';
 import { useComputeNamespaces } from '@/hooks/use-compute-namespaces';
 import { useComputes } from '@/hooks/use-computes';
+import { useTranslation } from '@/lib/i18n';
 import type { ApiComputeNamespace } from '@/lib/types';
 
 /** Renders namespaces for a compute backend. */
 export default function ComputeNamespaces() {
+    const { t } = useTranslation();
     const { compute = '' } = useParams();
 
     const { items: computes, error: computeError, isLoading: computesIsLoading } = useComputes();
@@ -18,7 +20,7 @@ export default function ComputeNamespaces() {
     const namespaceColumns: Array<ColumnDef<ApiComputeNamespace>> = [
         {
             accessorKey: 'name',
-            header: 'Namespace',
+            header: t('columns.namespace'),
             cell: ({ row }) => (
                 <Link
                     to={`/admin/compute/${encodeURIComponent(compute)}/namespace/${encodeURIComponent(row.original.name)}`}
@@ -38,16 +40,18 @@ export default function ComputeNamespaces() {
     } = useComputeNamespaces(computeRegistry?.id ?? '');
     const error =
         computeError ??
-        (!computesIsLoading && !computeRegistry ? new Error(`Compute "${compute}" not found`) : namespacesError);
+        (!computesIsLoading && !computeRegistry
+            ? new Error(t('resources.computeNotFound', { name: compute }))
+            : namespacesError);
 
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <Hero icon="layers">
                     <div>
-                        <HeroTitle>Namespaces</HeroTitle>
+                        <HeroTitle>{t('resources.namespacesTitle')}</HeroTitle>
                         <HeroDescription>
-                            Namespaces managed by compute backend {computeRegistry?.slug || compute}.
+                            {t('resources.namespacesDescription', { name: computeRegistry?.slug || compute })}
                         </HeroDescription>
                     </div>
                 </Hero>

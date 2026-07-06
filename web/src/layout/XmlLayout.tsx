@@ -4,6 +4,7 @@ import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
 import { SdkUserSelector } from '@/components/SdkUserSelector';
 import { Wordmark } from '@/components/Wordmark';
+import { useTranslation } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { ExternalLink, type LucideIcon } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
@@ -25,6 +26,7 @@ type LayoutProps = {
 
 /** Renders the XML build shell with SDK-specific header chrome. */
 export default function Layout({ tabs, brandOnly = false, brandHref = '/organizations', children }: LayoutProps) {
+    const { t } = useTranslation();
     const location = useLocation();
     const tabEntries = Object.entries(tabs ?? {});
     const currentPath = `${location.pathname}${location.search}`;
@@ -40,13 +42,17 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                                 href="https://longlink.dev"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                aria-label="LongLink home"
+                                aria-label={t('common.longlinkHome')}
                                 className="inline-flex items-center"
                             >
                                 <Wordmark />
                             </a>
                         ) : brandOnly ? (
-                            <Link to={brandHref} aria-label="LongLink home" className="inline-flex items-center">
+                            <Link
+                                to={brandHref}
+                                aria-label={t('common.longlinkHome')}
+                                className="inline-flex items-center"
+                            >
                                 <Wordmark />
                             </Link>
                         ) : (
@@ -61,7 +67,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
                             >
-                                Documentation
+                                {t('common.documentation')}
                                 <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
                             </a>
                             <SdkUserSelector />

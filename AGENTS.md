@@ -157,6 +157,7 @@ Keep both web build modes working. API mode builds the authenticated control-pla
 - Keep changes small and clear
 - Reduce complexity and remove dead code
 - Enforce project conventions, normalize naming, improve readability
+- Use cards only when the content needs a distinct visual container; do not wrap broad sections, routine forms, or whole pages in cards by default.
 - Include two blank lines between function definitions
 - Do not add new helper functions unless they are explicitly needed.
 - Python functions must have docstrings, and non-trivial logic blocks must have preceding `# ...` comments.

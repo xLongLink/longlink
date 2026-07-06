@@ -17,6 +17,19 @@ type MemberExpressionNode = {
     object: ExpressionNode;
     property: ExpressionNode;
     computed: boolean;
+    optional?: boolean;
+};
+
+type ChainExpressionNode = {
+    type: 'ChainExpression';
+    expression: ExpressionNode;
+};
+
+type CallExpressionNode = {
+    type: 'CallExpression';
+    callee: ExpressionNode;
+    arguments: ExpressionNode[];
+    optional?: boolean;
 };
 
 type ObjectExpressionNode = {
@@ -40,9 +53,29 @@ type TemplateLiteralNode = {
 
 type BinaryExpressionNode = {
     type: 'BinaryExpression';
-    operator: '+' | '-' | '*' | '/' | 'in';
+    operator: '+' | '-' | '*' | '/' | '%' | '**' | 'in' | '===' | '!==' | '==' | '!=' | '<' | '<=' | '>' | '>=';
     left: ExpressionNode;
     right: ExpressionNode;
+};
+
+type LogicalExpressionNode = {
+    type: 'LogicalExpression';
+    operator: '&&' | '||' | '??';
+    left: ExpressionNode;
+    right: ExpressionNode;
+};
+
+type UnaryExpressionNode = {
+    type: 'UnaryExpression';
+    operator: '!' | '+' | '-';
+    argument: ExpressionNode;
+};
+
+type ConditionalExpressionNode = {
+    type: 'ConditionalExpression';
+    test: ExpressionNode;
+    consequent: ExpressionNode;
+    alternate: ExpressionNode;
 };
 
 type ArrayExpressionNode = {
@@ -54,7 +87,12 @@ export type ExpressionNode =
     | LiteralNode
     | IdentifierNode
     | MemberExpressionNode
+    | ChainExpressionNode
+    | CallExpressionNode
     | BinaryExpressionNode
+    | LogicalExpressionNode
+    | UnaryExpressionNode
+    | ConditionalExpressionNode
     | ArrayExpressionNode
     | ObjectExpressionNode
     | TemplateLiteralNode;

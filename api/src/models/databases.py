@@ -1,8 +1,9 @@
 from enum import Enum
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from src.models.users import UserSummary
+from src.models.icons import Icon, parse_icon
 from src.models.statuses import ApplicationStatus
 
 
@@ -17,15 +18,6 @@ class OrganizationDatabaseResourceKind(str, Enum):
 
     schema = "schema"
     shared_table = "shared_table"
-
-
-class OrganizationDatabaseResourceStatus(str, Enum):
-    """Organization database resource inspection states."""
-
-    missing = "missing"
-    orphaned = "orphaned"
-    available = "available"
-    unavailable = "unavailable"
 
 
 class DatabaseRegistryCreate(BaseModel):
@@ -77,9 +69,18 @@ class OrganizationDatabaseApplicationResponse(BaseModel):
     # Metadata
     name: str
     slug: str
+    icon: Icon | None = None
+    description: str | None = None
 
     # State
     status: ApplicationStatus
+
+    @field_validator("icon", mode="before")
+    @classmethod
+    def validate_icon(cls, icon: str | Icon | None) -> Icon | None:
+        """Normalize and validate persisted application icon slugs."""
+
+        return parse_icon(icon)
 
 
 class OrganizationDatabaseResourceResponse(BaseModel):
@@ -96,9 +97,6 @@ class OrganizationDatabaseResourceResponse(BaseModel):
 
     # Relationships
     application: OrganizationDatabaseApplicationResponse | None = None
-
-    # State
-    status: OrganizationDatabaseResourceStatus
 
     # Usage
     space_used: int | None = None

@@ -32,6 +32,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Built web serving           | Serves the API-mode web bundle from `api/src/.static/web` when that directory exists.                                                                                          |
 | Browser sessions            | Uses the `longlink_session` cookie and session-backed active account state.                                                                                                    |
 | CORS policy                 | Allows credentialed CORS for configured origins, with localhost defaults in development.                                                                                       |
+| Logo SVG endpoint           | `GET /logo.svg` returns a no-store randomized LongLink wordmark SVG with an accent color and `theme=system`, `theme=light`, or `theme=dark` text color.                        |
 | Health endpoint             | `GET /api/healthz` returns `{"status":"ok"}`.                                                                                                                                  |
 | Domain error responses      | Maps domain errors to JSON `detail` responses with appropriate HTTP status codes.                                                                                              |
 | Control database sessions   | Provides cached async SQLAlchemy sessions, connection verification, and database URL normalization.                                                                            |
@@ -81,9 +82,9 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Organization applications             | Lets members list active applications in an organization, including caller application role when present.                                   |
 | Organization invitations              | Lets maintainers/admins/owners create pending email invitations while rejecting duplicates and existing members.                            |
 | Member role update                    | Lets organization admins/owners update active member roles and resync shared users.                                                         |
-| Organization database resources       | Shows expected shared/app database resources with availability status and usage metrics.                                                    |
+| Organization database resources       | Shows existing shared/app database resources with usage metrics and fails when the backend cannot be inspected.                             |
 | Organization table preview            | Previews columns and up to 100 rows for shared users or app schema tables; system schemas are blocked.                                      |
-| Organization storage resources        | Shows expected shared/app buckets with availability status.                                                                                 |
+| Organization storage resources        | Shows existing shared/app buckets with usage metrics and fails when the backend cannot be inspected.                                        |
 
 ### Applications
 
@@ -95,15 +96,16 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Application creation and deployment | Creates apps from images, selects location registries, provisions resources, and queues verification.                                   |
 | Application deletion                | Lets permitted users soft-delete applications and queue immediate runtime resource removal with delay-ready scheduling.                 |
 | Required application envs           | Requires image-declared envs unless they are platform-managed.                                                                          |
-| Platform env injection              | Strips user-supplied `LONGLINK_` envs and injects production database/storage runtime values.                                           |
+| Platform env injection              | Strips user-supplied `LONGLINK_` envs and injects production database and validated storage runtime values.                              |
 | Application status model            | Supports `creating`, `running`, and `failed`.                                                                                           |
 | Application verification            | Marks apps running when rollout pods are ready and failed when current rollout pods crash.                                              |
 | Global application listing          | Lets platform administrators list all active applications.                                                                              |
 | Application logs                    | Lets application maintainers/admins and elevated organization members fetch recent plain-text logs from the newest application pod.     |
 | Application proxy                   | Proxies `GET`, `POST`, `PATCH`, and `DELETE` non-root paths into running application services for users with application access.        |
 | Application access roles            | Uses application membership roles for runtime access, with elevated organization roles allowed to manage application lifecycle actions. |
+| Application member management       | Lets organization members view application permission rows and lets permitted app/org managers set or remove app roles for org members. |
 | Proxy header policy                 | Strips unsafe request/response headers, injects `x-user-id`, and returns no-store 503 for unavailable apps.                             |
-| Registry selection                  | Uses the newest active compute/storage registry for the organization location and stores runtime registry references.                   |
+| Registry selection                  | Uses newest active compute registries and keeps database/storage registries consistent for all apps in an organization.                 |
 | Managed resource naming             | Validates slugs and managed Kubernetes/PostgreSQL/S3 resource names before provisioning.                                                |
 
 ### Operations and Adapters
@@ -119,9 +121,9 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Organization delete cleanup operation     | Supports `organization.delete` step `remove` for deleting managed organization runtime resources.                        |
 | Kubernetes provisioning                   | Creates managed namespaces plus one Secret, Deployment, and ClusterIP Service per app.                                   |
 | Kubernetes service proxy                  | Proxies requests through the Kubernetes service proxy API.                                                               |
-| PostgreSQL provisioning                   | Creates organization databases, shared users table, app schemas, runtime login roles, and grants.                        |
+| PostgreSQL provisioning                   | Creates organization databases, shared tables, app schemas, runtime login roles, and read/write app plus read-only shared grants. |
 | PostgreSQL resource inspection            | Inspects databases, schemas, usage, tables, and preview rows.                                                            |
-| S3-compatible provisioning                | Creates or reuses shared and app buckets from managed slugs.                                                             |
+| S3-compatible provisioning                | Creates or reuses shared and app buckets, and validates runtime credentials before injecting storage access.              |
 | S3-compatible resource inspection         | Lists buckets and object metadata for storage browsers.                                                                  |
 | Invitation email utility                  | Provides MJML/SMTP invitation email helpers when email settings are complete.                                            |
 
@@ -149,20 +151,20 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 ### CLI and Packaging
 
-| Feature                        | Supported behavior                                                                                      |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------- |
-| CLI command group              | Exposes `build`, `dev`, `docs`, `init`, `migrate`, `test`, and `translations`.                          |
-| App scaffold creation          | Creates a new app scaffold and rejects non-empty targets.                                               |
-| Scaffold GitHub CI             | Adds GitHub Actions test and release workflows; GitHub is the only supported CI provider.               |
-| Local dev server               | Runs `main:app` with uvicorn reload on `0.0.0.0:1707` and interactive shortcuts when available.         |
-| App test command               | Runs application tests with pytest and forwards pytest arguments.                                       |
-| App migration command          | Applies pending migrations, autogenerates a revision if schema changes exist, then reapplies.           |
-| Docker image build             | Builds a Docker image in a temporary context, optionally tags, pushes, and reports image details.       |
-| Generated Docker runtime       | Runs app migrations before starting `uvicorn main:app` on port 80.                                      |
-| Image metadata labels          | Writes LongLink app metadata and environment metadata into image labels.                                |
-| Environment metadata labels    | Reads annotated `src/envs.py` fields and emits typed required/optional environment definitions.         |
-| Build context filtering        | Excludes local secrets, local databases, caches, generated directories, and `node_modules`.             |
-| XML component docs CLI         | Renders component docs from XSD.                                                                        |
+| Feature                        | Supported behavior                                                                                                                     |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| CLI command group              | Exposes `build`, `dev`, `docs`, `init`, `migrate`, `test`, and `translations`.                                                         |
+| App scaffold creation          | Creates a new app scaffold and rejects non-empty targets.                                                                              |
+| Scaffold GitHub CI             | Adds GitHub Actions test and release workflows; GitHub is the only supported CI provider.                                              |
+| Local dev server               | Runs `main:app` with uvicorn reload on `0.0.0.0:1707` and interactive shortcuts when available.                                        |
+| App test command               | Runs application tests with pytest and forwards pytest arguments.                                                                      |
+| App migration command          | Applies pending migrations, autogenerates a revision if schema changes exist, then reapplies.                                          |
+| Docker image build             | Builds a Docker image in a temporary context, optionally tags, pushes, and reports image details.                                      |
+| Generated Docker runtime       | Runs app migrations before starting `uvicorn main:app` on port 80.                                                                     |
+| Image metadata labels          | Writes LongLink app metadata and environment metadata into image labels.                                                               |
+| Environment metadata labels    | Reads annotated `src/envs.py` fields and emits typed required/optional environment definitions.                                        |
+| Build context filtering        | Excludes local secrets, local databases, caches, generated directories, and `node_modules`.                                            |
+| XML component docs CLI         | Renders component docs from XSD.                                                                                                       |
 | Translation catalog generation | Scans strict dotted XML `i18n` keys, preserves existing/plural translations, rejects invalid keys and collisions, and writes catalogs. |
 
 ### Database, Audit, and Storage
@@ -187,56 +189,56 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 ### XML Utilities and Scaffold
 
-| Feature                      | Supported behavior                                                                                                     |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| XML element validation       | Validates XML from file or memory against XSD with unsafe XML parser features disabled.                                |
-| XML metadata parse           | Parses `<longlink>` XML metadata for page metadata extraction.                                                         |
-| XML schema root              | Defines the XSD entrypoint for root/app, state/query/loop/action, text, layout, input, table, tabs, and menu adapters. |
-| Schema-backed component docs | Uses XSD adapter files to generate XML component docs.                                                                 |
-| Scaffold app entrypoint      | New apps include `main.py` with LongLink app setup and the office-operations router.                                    |
-| Scaffold env sample          | New apps include required and optional environment examples.                                                           |
-| Scaffold request API         | New apps include purchase-request table, schemas, service, list/get/create/status routes, attachment file routes, and a typed team route. |
+| Feature                      | Supported behavior                                                                                                                                                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| XML element validation       | Validates XML from file or memory against XSD with unsafe XML parser features disabled.                                                                                                                                         |
+| XML metadata parse           | Parses `<longlink>` XML metadata for page metadata extraction.                                                                                                                                                                  |
+| XML schema root              | Defines the XSD entrypoint for root/app, state/query/loop/action, text, layout, input, table, tabs, and menu adapters.                                                                                                          |
+| Schema-backed component docs | Uses XSD adapter files to generate XML component docs.                                                                                                                                                                          |
+| Scaffold app entrypoint      | New apps include `main.py` with LongLink app setup and the office-operations router.                                                                                                                                            |
+| Scaffold env sample          | New apps include required and optional environment examples.                                                                                                                                                                    |
+| Scaffold request API         | New apps include purchase-request table, schemas, service, list/get/create/status routes, attachment file routes, and a typed team route.                                                                                       |
 | Scaffold XML app             | New apps include dashboard, purchase-request list/detail, team, and settings XML pages covering navigation tabs, actions, queries, translations, local state, form controls, tables, menus, dialogs, files, and dynamic routes. |
-| Scaffold initial migration   | New apps include an initial purchase-request Alembic migration.                                                        |
-| Scaffold testing mode        | New app tests use `LONGLINK_ENV=testing`, in-memory database settings, and a smoke test.                               |
+| Scaffold initial migration   | New apps include an initial purchase-request Alembic migration.                                                                                                                                                                 |
+| Scaffold testing mode        | New app tests use `LONGLINK_ENV=testing`, in-memory database settings, and a smoke test.                                                                                                                                        |
 
 ## Web Frontend
 
 ### Build Modes and Routing
 
-| Feature               | Supported behavior                                                                                                                   |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| API web build mode    | Builds the public/docs/control-plane bundle into `api/src/.static/web`.                                                              |
-| SDK web build mode    | Builds the embedded SDK runtime bundle into `sdk/longlink/.static/web`.                                                              |
-| API URL resolution    | Supports `VITE_API_URL` API prefixing and credentialed requests.                                                                     |
-| SDK user header       | Adds `x-user-id` from local storage in SDK mode unless already supplied.                                                             |
-| Lucide icon assets    | Serves and emits `/lucide-icons/*.svg` for icon loading by slug.                                                                     |
-| API route tree        | Exposes public, docs, legal, organization, settings, admin, resource, and proxied app routes.                                        |
-| SDK wildcard route    | Routes every SDK-mode path to the SDK application view.                                                                              |
-| Auth guard            | Shows sign-in for anonymous users, enforces platform role hierarchy, and renders 404 for insufficient access.                        |
-| Organization app view | Resolves org/app slugs, enforces app access roles, fetches proxied metadata, renders static/dynamic XML pages, and exposes logs.    |
-| Top layout shell      | Provides shared header, brand, breadcrumbs, and active tabs.                                                                         |
-| XML app layout shell  | Provides app tab navigation, tab icons, SDK docs link, and SDK user selector.                                                        |
-| Docs layout           | Provides docs sidebar, breadcrumbs, table of contents, active scroll tracking, metadata, and edit links.                             |
-| Legal layout          | Provides shared public legal page layout.                                                                                            |
-| Not found page        | Renders a shared 404 with current path and navigation links.                                                                         |
+| Feature               | Supported behavior                                                                                                               |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| API web build mode    | Builds the public/docs/control-plane bundle into `api/src/.static/web`.                                                          |
+| SDK web build mode    | Builds the embedded SDK runtime bundle into `sdk/longlink/.static/web`.                                                          |
+| API URL resolution    | Supports `VITE_API_URL` API prefixing and credentialed requests.                                                                 |
+| SDK user header       | Adds `x-user-id` from local storage in SDK mode unless already supplied.                                                         |
+| Lucide icon assets    | Serves and emits `/lucide-icons/*.svg` for icon loading by slug.                                                                 |
+| API route tree        | Exposes public, docs, legal, organization, settings, admin, resource, and proxied app routes.                                    |
+| SDK wildcard route    | Routes every SDK-mode path to the SDK application view.                                                                          |
+| Auth guard            | Shows sign-in for anonymous users, enforces platform role hierarchy, and renders 404 for insufficient access.                    |
+| Organization app view | Resolves org/app slugs, enforces app access roles, fetches proxied metadata, renders static/dynamic XML pages, and exposes logs. |
+| Top layout shell      | Provides shared header, brand, breadcrumbs, and active tabs.                                                                     |
+| XML app layout shell  | Provides app tab navigation, tab icons, SDK docs link, and SDK user selector.                                                    |
+| Docs layout           | Provides docs sidebar, breadcrumbs, table of contents, active scroll tracking, metadata, and edit links.                         |
+| Legal layout          | Provides shared public legal page layout.                                                                                        |
+| Not found page        | Renders a shared 404 with current path and navigation links.                                                                     |
 
 ### Pages and Workspaces
 
 | Feature                       | Supported behavior                                                                                                                            |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public home page              | Renders the marketing landing page with navbar, hero CTA, and feature cards.                                                                  |
+| Public home page              | Renders the marketing landing page with navbar, hero CTA, compact feature cards, and centered post-card CTAs.                                 |
 | Pricing page                  | Exposes `/pricing` with Starter, Team, and Platform pricing options.                                                                          |
 | Legal pages                   | Exposes impressum, privacy, and terms pages with minimal legal content.                                                                       |
 | Documentation catalog         | Exposes docs pages for API, self-hosting, SDK, environments, routes, storage, database, testing, building, XML pages, layout, and components. |
 | XML docs reference            | Documents XML state, query, loops, conditions, i18n, expressions, invalidation, layout tags, and component tags.                              |
 | Docs heading anchors          | Auto-slugs headings and renders hover anchor links.                                                                                           |
 | Organizations page            | Shows sign-in for anonymous users; authenticated users list memberships and create organizations.                                             |
-| User settings page            | Lets users edit name/email, theme/accent/radius preferences, list organizations, and create organizations.                                    |
+| User settings page            | Lets users edit name/email/language, theme/accent/radius preferences, list organizations, and create organizations.                            |
 | Organization shell            | Resolves organization slug and renders applications, people, database, storage, and settings sections.                                        |
 | Organization applications UI  | Lists organization applications and links to proxied app views.                                                                               |
 | Organization people UI        | Shows members/invitations, supports invitations, and supports member role changes for allowed roles.                                          |
-| Organization settings UI      | Shows organization details, permission role docs, apps, resources, logs, and app creation.                                                    |
+| Organization settings UI      | Shows organization details, apps, app permission management, resources, logs, and app creation.                                               |
 | Organization database browser | Lists database resources, browses schemas/shared tables, and previews table rows.                                                             |
 | Organization storage browser  | Lists storage resources and bucket details.                                                                                                   |
 | Admin shell                   | Provides support/admin tabs for users, apps, organizations, locations, database, storage, compute, and operations.                            |
@@ -257,6 +259,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Query hooks                   | Wrap React Query with collection fallbacks, 401 session clearing, 404 handling, and query keys.                                                       |
 | Auth hooks                    | Support current user fetching, password login, OIDC redirects, saved accounts, logout, profile menu, and theme application.                           |
 | Login redirect sanitization   | Normalizes login redirects to same-origin relative paths and rejects external or malformed values.                                                    |
+| API page localization         | Provides bundled English and lazy-loaded Italian translations for public/control-plane UI through the user language preference, with English fallback. |
 | SDK user hooks                | Provides deterministic SDK users for `read`, `write`, `maintain`, `admin`, and `owner`.                                                               |
 | Resource hooks                | Provides typed hooks for users, orgs, apps, locations, databases, storages, computes, operations, metadata, and mobile breakpoint detection.          |
 | Organization mutation helpers | Supports create organization, invite member, change member role, and create application flows.                                                        |
@@ -275,16 +278,16 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 ### Core
 
-| Feature                | Supported behavior                                                                                                                                                                      |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| XML parser             | Parses XML into AST, preserves attributes, removes whitespace, ignores declarations/comments, and rejects visible literal text or malformed XML.                                        |
-| XML component registry | Maps supported XML tag names explicitly to React adapters.                                                                                                                              |
-| XML renderer           | Initializes setup state/query nodes, loads translations, subscribes to Valtio state, scopes errors, and renders AST nodes.                                                              |
-| XML execution context  | Provides runtime scope, setup registration, query invalidation, locale, translations, and state preservation.                                                                           |
-| XML URL sandbox        | Allows safe links and requires Query/Action request URLs to be app-relative.                                                                                                            |
-| XML translations       | Resolves dotted keys, plural objects, `count`, and `{{placeholder}}` interpolation.                                                                                                     |
-| XML expressions        | Supports refs, dotted paths, typed expressions, interpolation, literals, identifiers, member access, arithmetic, `in`, arrays, objects, and templates while blocking unsafe properties. |
-| XML form bindings      | Binds form controls to reactive state and handles number/file input normalization.                                                                                                      |
+| Feature                | Supported behavior                                                                                                                                                                                                                                                                                              |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| XML parser             | Parses XML into AST, preserves attributes, removes whitespace, ignores declarations/comments, and rejects visible literal text or malformed XML.                                                                                                                                                                |
+| XML component registry | Maps supported XML tag names explicitly to React adapters.                                                                                                                                                                                                                                                      |
+| XML renderer           | Initializes setup state/query nodes, loads translations, subscribes to Valtio state, scopes errors, and renders AST nodes.                                                                                                                                                                                      |
+| XML execution context  | Provides runtime scope, setup registration, query invalidation, locale, translations, and state preservation.                                                                                                                                                                                                   |
+| XML URL sandbox        | Allows safe links and requires Query/Action request URLs to be app-relative.                                                                                                                                                                                                                                    |
+| XML translations       | Resolves dotted keys, plural objects, `count`, and `{{placeholder}}` interpolation.                                                                                                                                                                                                                             |
+| XML expressions        | Supports refs, dotted paths, typed expressions, robust interpolation, literals, identifiers, safe member access, arithmetic, comparisons, logical operators, ternaries, nullish coalescing, optional chaining, `in`, arrays, objects, templates, and whitelisted helper calls while blocking unsafe properties. |
+| XML form bindings      | Binds form controls to reactive state and handles number/file input normalization.                                                                                                                                                                                                                              |
 
 ### Setup, Actions, and Data
 

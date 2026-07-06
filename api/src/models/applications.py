@@ -2,8 +2,8 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.icons import Icon, parse_icon
-from src.models.roles import ApplicationRoles
-from src.models.users import UserSummary
+from src.models.roles import ApplicationRoles, OrganizationRoles
+from src.models.users import Avatar, UserSummary
 from src.models.statuses import ApplicationStatus
 from src.models.organizations import OrganizationSummary
 
@@ -65,3 +65,26 @@ class ApplicationResponse(BaseModel):
         """Normalize and validate persisted application icon slugs."""
 
         return parse_icon(icon)
+
+
+class ApplicationMemberUpdate(BaseModel):
+    """Validate application member role updates."""
+
+    # State
+    role: ApplicationRoles | None = None
+
+
+class ApplicationMemberResponse(BaseModel):
+    """Represent one organization member's application access."""
+
+    # Identifier
+    id: UUID
+
+    # Metadata
+    name: str
+    email: str
+    avatar: Avatar = ""
+
+    # State
+    application_role: ApplicationRoles | None = None
+    organization_role: OrganizationRoles

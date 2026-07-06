@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { fetchApiText } from '@/lib/api';
+import { useTranslation } from '@/lib/i18n';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 
@@ -15,6 +16,7 @@ type LogsDialogProps = {
 
 /** Renders the application logs dialog for an organization. */
 export default function LogsDialog({ applicationId, applicationName, open, onOpenChange, trigger }: LogsDialogProps) {
+    const { t } = useTranslation();
     const [internalOpen, setInternalOpen] = useState(false);
     const [logsContent, setLogsContent] = useState('');
     const [logsError, setLogsError] = useState<string | null>(null);
@@ -57,7 +59,7 @@ export default function LogsDialog({ applicationId, applicationName, open, onOpe
                 }
             } catch (mutationError) {
                 if (!cancelled) {
-                    setLogsError(mutationError instanceof Error ? mutationError.message : 'Failed to load logs');
+                    setLogsError(mutationError instanceof Error ? mutationError.message : t('appView.loadLogsFailed'));
                 }
             } finally {
                 if (!cancelled) {
@@ -77,7 +79,7 @@ export default function LogsDialog({ applicationId, applicationName, open, onOpe
                 ? null
                 : (trigger ?? (
                       <Button type="button" variant="outline" size="sm" onClick={() => handleOpenChange(true)}>
-                          Logs
+                          {t('dialogs.logs')}
                       </Button>
                   ))}
 
@@ -85,8 +87,8 @@ export default function LogsDialog({ applicationId, applicationName, open, onOpe
                 <DialogContent className="sm:max-w-3xl">
                     <div className="space-y-4">
                         <div className="space-y-1">
-                            <DialogTitle>Pod logs</DialogTitle>
-                            <DialogDescription>Recent logs for {applicationName}</DialogDescription>
+                            <DialogTitle>{t('dialogs.podLogsTitle')}</DialogTitle>
+                            <DialogDescription>{t('appView.logsDescription', { applicationName })}</DialogDescription>
                         </div>
 
                         {!logsLoading &&
@@ -97,7 +99,7 @@ export default function LogsDialog({ applicationId, applicationName, open, onOpe
                             ) : (
                                 <ScrollArea className="h-[60vh] overflow-hidden rounded-md border bg-muted/30">
                                     <pre className="p-3 text-xs leading-5 whitespace-pre-wrap text-foreground">
-                                        {logsContent || 'No logs available.'}
+                                        {logsContent || t('appView.emptyLogs')}
                                     </pre>
                                 </ScrollArea>
                             ))}
