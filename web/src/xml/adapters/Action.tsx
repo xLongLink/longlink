@@ -1,8 +1,8 @@
 import { fetchApiResponse } from '@/lib/api';
-import { useXmlContext } from '@xml/core/context';
-import { renderNode } from '@xml/core/node';
-import { isAppRelativeUrl, useUrl } from '@xml/core/url';
-import type { Props } from '@xml/types';
+import { useXmlContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
+import { isAppRelativeUrl, useUrl } from '@/xml/core/url';
+import type { Props } from '@/xml/types';
 import { createContext, useContext } from 'react';
 import { toast } from 'sonner';
 import { resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from './props';

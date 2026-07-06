@@ -3,10 +3,10 @@ import {
     ButtonGroupSeparator as UIButtonGroupSeparator,
     ButtonGroupText as UIButtonGroupText,
 } from '@/components/ui/button-group';
-import { useXmlContext } from '@xml/core/context';
-import { resolveTranslation } from '@xml/core/i18n';
-import { renderNode } from '@xml/core/node';
-import type { Props } from '@xml/types';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { resolveXmlString } from './props';
 
 /** Renders a grouped action shell for buttons and inputs. */

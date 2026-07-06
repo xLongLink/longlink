@@ -128,7 +128,10 @@ async def test_database_usage_endpoint_returns_backend_capacity(
         async def usage(self) -> dict[str, int]:
             return {"space_used": 987654321}
 
-    monkeypatch.setattr("src.routes.databases.Postgres", FakePostgres)
+    monkeypatch.setattr(
+        "src.routes.databases.database_registry_adapter",
+        lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
+    )
 
     # Act
     response = client.get(f"/api/databases/{registry_id}/usage")
@@ -216,7 +219,15 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
         async def buckets(self) -> list[str]:
             return ["alpha", "beta"]
 
-    monkeypatch.setattr("src.routes.storages.S3", FakeS3)
+    monkeypatch.setattr(
+        "src.routes.storages.storage_registry_adapter",
+        lambda registry: FakeS3(
+            registry.protocol,
+            registry.endpoint_url,
+            registry.access_key_id,
+            registry.secret_access_key,
+        ),
+    )
 
     # Act
     response = client.get(f"/api/storages/{registry_id}/buckets")
@@ -271,7 +282,15 @@ async def test_storage_object_endpoint_returns_bucket_objects(
                 }
             ]
 
-    monkeypatch.setattr("src.routes.storages.S3", FakeS3)
+    monkeypatch.setattr(
+        "src.routes.storages.storage_registry_adapter",
+        lambda registry: FakeS3(
+            registry.protocol,
+            registry.endpoint_url,
+            registry.access_key_id,
+            registry.secret_access_key,
+        ),
+    )
 
     # Act
     response = client.get(f"/api/storages/{registry_id}/buckets/alpha/objects")
@@ -304,7 +323,10 @@ async def test_compute_registry_endpoint_supports_create_and_list(
         async def setup(self) -> None:
             captured["setup_calls"] = int(captured.get("setup_calls", 0)) + 1
 
-    monkeypatch.setattr("src.routes.computes.K8s", FakeCompute)
+    monkeypatch.setattr(
+        "src.routes.computes.compute_registry_adapter",
+        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret),
+    )
 
     # Act
     create_response = client.post(

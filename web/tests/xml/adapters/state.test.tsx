@@ -1,8 +1,8 @@
-import { ContextProvider, setupContext } from '@xml/core/context';
-import { renderNode } from '@xml/core/node';
-import { parseXML } from '@xml/core/parser';
-import { RenderXML } from '@xml/renderers.tsx';
-import type { ExecutionContext } from '@xml/types';
+import { ContextProvider, setupContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
+import { parseXML } from '@/xml/core/parser';
+import { RenderXML } from '@/xml/renderers.tsx';
+import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';

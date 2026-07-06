@@ -1,5 +1,5 @@
-import { query } from '@xml/core/query';
-import type { ExecutionContext } from '@xml/types';
+import { query } from '@/xml/core/query';
+import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 
 describe('query', () => {

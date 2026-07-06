@@ -160,8 +160,7 @@ class UsersService:
         """Retrieve a user by OIDC subject."""
 
         async with session_scope() as session:
-            # Load memberships so the returned user can be used outside the session.
-            statement = select(User).options(selectinload(User.organizations).selectinload(Organization.location)).where(User.oidc == oidc)
+            statement = select(User).where(User.oidc == oidc)
             result = await session.execute(statement)
             return result.scalars().first()
 

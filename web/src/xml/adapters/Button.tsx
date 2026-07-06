@@ -1,9 +1,9 @@
-import { Button as UIButton } from '@ui/button';
-import { useXmlContext } from '@xml/core/context';
-import { resolveTranslation } from '@xml/core/i18n';
-import { renderNode } from '@xml/core/node';
-import { resolvePath } from '@xml/expressions';
-import type { Props } from '@xml/types';
+import { Button as UIButton } from '@/components/ui/button';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
+import { resolvePath } from '@/xml/expressions';
+import type { Props } from '@/xml/types';
 import { useActionHandler } from './Action';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 

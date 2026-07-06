@@ -1,17 +1,14 @@
 import sys
 import httpx2
 from uuid import UUID
-from typing import Any
 from fastapi import Request
-from sqlmodel import select
 from src.errors import NotFoundError, ForbiddenError, UnauthorizedError
 from src.environments import env
 from src.models.roles import PlatformRoles
-from src.database.session import session_scope
 from src.models.organizations import OrganizationDetails
 from src.database.models.users import User
 from src.database.services.users import users
-from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 from src.database.services.organizations import organizations
 
 # Authlib imports the HTTP client as `httpx`; use the configured `httpx2` package instead.
@@ -124,21 +121,19 @@ async def authsupport(request: Request) -> User:
 async def organization_access(organization_id: UUID, user: User) -> OrganizationDetails:
     """Return one organization after verifying the user belongs to it."""
 
+    await organization_member_access(organization_id, user)
     organization = await organizations.get(organization_id, application_user_id=user.id)
     if organization is None:
         raise NotFoundError("Organization", organization_id)
 
-    async with session_scope() as session:
-        membership_result = await session.execute(
-            select(UserOrganization).where(
-                UserOrganization.user_id == user.id,
-                UserOrganization.organization_id == organization_id,
-                UserOrganization.deleted_at == None,
-            )
-        )
-        membership = membership_result.scalar_one_or_none()
+    return organization
 
-    if membership is None:
+
+async def organization_member_access(organization_id: UUID, user: User) -> Organization:
+    """Return one lightweight organization after verifying membership."""
+
+    organization = await organizations.get_member(organization_id, user.id)
+    if organization is None:
         raise NotFoundError("Organization", organization_id)
 
     return organization

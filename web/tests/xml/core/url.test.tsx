@@ -1,4 +1,4 @@
-import { isAppRelativeUrl, resolveRequestUrl, resolveUrl } from '@xml/core/url';
+import { isAppRelativeUrl, resolveRequestUrl, resolveUrl } from '@/xml/core/url';
 import { describe, expect, it } from 'bun:test';
 
 describe('resolveUrl', () => {

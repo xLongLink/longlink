@@ -1,7 +1,7 @@
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { useTranslation } from '@/lib/i18n';
-import { Button } from '@ui/button';
+import { Button } from '@/components/ui/button';
 
 const pricingOptions = [
     {

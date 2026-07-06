@@ -1,5 +1,5 @@
-import { executeAction } from '@xml/adapters/Action';
-import type { ExecutionContext } from '@xml/types';
+import { executeAction } from '@/xml/adapters/Action';
+import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 
 describe('Action', () => {

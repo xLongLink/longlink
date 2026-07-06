@@ -1,7 +1,7 @@
 import { Toggle as UIToggle } from '@/components/ui/toggle';
-import { useXmlContext } from '@xml/core/context';
-import { renderNode } from '@xml/core/node';
-import type { Props } from '@xml/types';
+import { useXmlContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
 
 /** Props accepted by the XML Toggle component. */

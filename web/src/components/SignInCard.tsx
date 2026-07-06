@@ -1,9 +1,9 @@
 import { useTranslation } from '@/lib/i18n';
-import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
-import { Button } from '@ui/button';
-import { Input } from '@ui/input';
-import { Label } from '@ui/label';
-import { Separator } from '@ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { useState, type SyntheticEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';

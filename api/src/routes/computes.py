@@ -7,7 +7,7 @@ from src.models.computes import (PodResponse, NamespaceResponse,
                                  ComputeRegistryCreate,
                                  ComputeRegistryResponse,
                                  ComputeResourcesResponse)
-from src.adapters.compute import K8s
+from src.adapters.compute import compute_registry_adapter
 from src.database.models.users import User
 from src.database.services.compute import compute
 
@@ -59,8 +59,8 @@ async def create_compute_registry(payload: ComputeRegistryCreate, user: User = D
 
     # Initialize the cluster immediately so unavailable backends fail fast.
     try:
-        k8s = K8s(registry.kubeconfig, registry.proxy_secret)
-        await k8s.setup()
+        compute_adapter = compute_registry_adapter(registry)
+        await compute_adapter.setup()
     except Exception as exc:
         raise UnavailableError("Failed to initialize the compute cluster") from exc
 
@@ -75,9 +75,9 @@ async def get_compute_resources(registry_id: UUID, _: User = Depends(authsupport
     if registry is None:
         raise NotFoundError("Compute registry", registry_id)
 
-    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+    compute_adapter = compute_registry_adapter(registry)
     try:
-        data = await k8s.resources()
+        data = await compute_adapter.resources()
     except Exception as exc:
         logger.exception("Failed to inspect compute resources for registry '%s'", registry_id)
         raise UnavailableError("Compute resources unavailable") from exc
@@ -93,9 +93,9 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
     if registry is None:
         raise NotFoundError("Compute registry", registry_id)
 
-    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+    compute_adapter = compute_registry_adapter(registry)
     try:
-        names = await k8s.namespaces()
+        names = await compute_adapter.namespaces()
     except Exception as exc:
         logger.exception("Failed to inspect compute namespaces for registry '%s'", registry_id)
         raise UnavailableError("Compute namespaces unavailable") from exc
@@ -111,9 +111,9 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
     if registry is None:
         raise NotFoundError("Compute registry", registry_id)
 
-    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+    compute_adapter = compute_registry_adapter(registry)
     try:
-        pods = await k8s.pods(namespace)
+        pods = await compute_adapter.pods(namespace)
     except Exception as exc:
         logger.exception("Failed to inspect pods in namespace '%s' for registry '%s'", namespace, registry_id)
         raise UnavailableError("Compute pods unavailable") from exc

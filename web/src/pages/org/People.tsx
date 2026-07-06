@@ -21,9 +21,9 @@ import { ROLE_NAMES } from '@/lib/roles';
 import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
 import { formatDate, getInitials } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
-import { Menu, MenuSection } from '@ui/menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Menu, MenuSection } from '@/components/ui/menu';
 import {
     BookOpen,
     Crown,

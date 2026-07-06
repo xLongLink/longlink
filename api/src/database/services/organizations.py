@@ -57,6 +57,25 @@ class OrganizationsService:
             return list(result.scalars().all())
 
 
+    async def get_member(self, organization_id: UUID, user_id: UUID) -> Organization | None:
+        """Return one active organization for an active member without details."""
+
+        async with session_scope() as session:
+            # Join membership in the access check so non-members and missing organizations look identical.
+            statement = (
+                select(Organization)
+                .join(UserOrganization, UserOrganization.organization_id == Organization.id)
+                .where(
+                    Organization.id == organization_id,
+                    Organization.deleted_at.is_(None),
+                    UserOrganization.user_id == user_id,
+                    UserOrganization.deleted_at.is_(None),
+                )
+            )
+            result = await session.execute(statement)
+            return result.scalar_one_or_none()
+
+
     async def database_users(self, organization_id: UUID) -> list[TenantUser]:
         """Return active organization members for shared user synchronization."""
 

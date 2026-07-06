@@ -1,7 +1,7 @@
 import Layout from '@/layout/Layout';
 import { useTranslation } from '@/lib/i18n';
-import { buttonVariants } from '@ui/button';
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@ui/empty';
+import { buttonVariants } from '@/components/ui/button';
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Compass } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 

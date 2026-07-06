@@ -6,9 +6,9 @@ import { useTranslation } from '@/lib/i18n';
 import type { ApiApplicationResponse, ApiLocation } from '@/lib/types';
 import { formatDateTime, getInitials } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
-import { Badge } from '@ui/badge';
-import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import type { TFunction } from 'i18next';
 import { Link } from 'react-router';
 

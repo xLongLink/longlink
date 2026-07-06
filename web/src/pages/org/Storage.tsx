@@ -5,7 +5,7 @@ import type { ApiOrganizationDetails, ApiOrganizationStorageResource } from '@/l
 import { formatBytes, formatNumber, getInitials } from '@/lib/utils';
 import { S3 } from '@/svg/S3';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link, useParams } from 'react-router';
 
 type StorageProps = {

@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from datetime import UTC, datetime, timedelta
-from src.auth import authuser, authsupport, organization_access
+from src.auth import authuser, authsupport, organization_access, organization_member_access
 from src.errors import (ConflictError, NotFoundError, ForbiddenError,
                         UnavailableError)
 from src.logger import logger
@@ -15,12 +15,12 @@ from src.models.storages import (OrganizationStorageResourceKind,
                                  OrganizationStorageResourceResponse,
                                  OrganizationStorageApplicationResponse)
 from src.utils.namespace import dbname
-from src.adapters.storage import S3
+from src.adapters.storage import storage_registry_adapter
 from src.models.databases import (OrganizationDatabaseResourceKind,
-                                  OrganizationDatabaseTableResponse,
-                                  OrganizationDatabaseResourceResponse,
-                                  OrganizationDatabaseApplicationResponse)
-from src.adapters.database import Postgres
+                                   OrganizationDatabaseTableResponse,
+                                   OrganizationDatabaseResourceResponse,
+                                   OrganizationDatabaseApplicationResponse)
+from src.adapters.database import database_registry_adapter
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationResponse
 from src.models.organizations import (OrganizationCreate, OrganizationDetails,
@@ -31,6 +31,7 @@ from src.database.models.users import User
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 from src.database.services.operations import operations
 from src.database.services.invitations import invitations
 from src.database.services.applications import applications
@@ -60,7 +61,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
 async def list_organization_applications(organization_id: UUID, user: User = Depends(authuser)) -> list[ApplicationResponse]:
     """Return the applications for one organization."""
 
-    await organization_access(organization_id, user)
+    await organization_member_access(organization_id, user)
     return await applications.list_responses(organization_id, user.id, user)
 
 
@@ -71,7 +72,7 @@ async def list_organization_database_resources(
 ) -> list[OrganizationDatabaseResourceResponse]:
     """Return database schemas for one organization."""
 
-    organization = await organization_access(organization_id, user)
+    organization = await organization_member_access(organization_id, user)
     registry = await provisioning.organization_database_registry(organization)
     if registry is None:
         return []
@@ -87,7 +88,7 @@ async def list_organization_storage_resources(
 ) -> list[OrganizationStorageResourceResponse]:
     """Return storage buckets for one organization."""
 
-    organization = await organization_access(organization_id, user)
+    organization = await organization_member_access(organization_id, user)
     registry = await provisioning.organization_storage_registry(organization)
     if registry is None:
         return []
@@ -108,7 +109,7 @@ async def list_organization_database_resource_tables(
 ) -> list[OrganizationDatabaseTableResponse]:
     """Return tables, columns, and preview rows for one organization database resource."""
 
-    organization = await organization_access(organization_id, user)
+    organization = await organization_member_access(organization_id, user)
     membership_role = await organizations.membership_role(organization_id, user.id)
     if membership_role not in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
         raise ForbiddenError("Database resource inspection permissions required")
@@ -117,14 +118,14 @@ async def list_organization_database_resource_tables(
     if registry is None:
         raise NotFoundError("Database resource", resource_name)
 
-    postgres = Postgres(registry.host, registry.port, registry.username, registry.password)
+    database_adapter = database_registry_adapter(registry)
     database_name = dbname(organization.slug)
 
     try:
         if resource_name in {"information_schema", "pg_catalog", "pg_toast", "public"} or resource_name.startswith("pg_"):
             raise NotFoundError("Database resource", resource_name)
 
-        tables = await postgres.tables(database_name, resource_name, limit=TABLE_PREVIEW_LIMIT)
+        tables = await database_adapter.tables(database_name, resource_name, limit=TABLE_PREVIEW_LIMIT)
     except NotFoundError:
         raise
     except Exception as exc:
@@ -142,7 +143,7 @@ async def create_organization_invitation(
 ) -> Response:
     """Create one invitation for an organization member."""
 
-    await organization_access(organization_id, user)
+    await organization_member_access(organization_id, user)
     membership_role = await organizations.membership_role(organization_id, user.id)
     if membership_role not in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
         raise ForbiddenError("Invitation permissions required")
@@ -166,7 +167,7 @@ async def update_organization_member(
 ) -> Response:
     """Update one organization member role."""
 
-    organization = await organization_access(organization_id, user)
+    organization = await organization_member_access(organization_id, user)
     membership_role = await organizations.membership_role(organization_id, user.id)
     if membership_role not in {OrganizationRoles.admin, OrganizationRoles.owner}:
         raise ForbiddenError("Member management permissions required")
@@ -198,7 +199,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
         if organization is None:
             raise NotFoundError("Organization", organization_id)
     else:
-        await organization_access(organization_id, user)
+        await organization_member_access(organization_id, user)
         membership_role = await organizations.membership_role(organization_id, user.id)
         if membership_role != OrganizationRoles.owner:
             raise ForbiddenError("Organization deletion permissions required")
@@ -218,7 +219,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
 
 
 async def _database_resource_rows(
-    organization: OrganizationDetails,
+    organization: Organization | OrganizationDetails,
     registry: DatabaseRegistry,
     active_applications: list[Application],
 ) -> list[OrganizationDatabaseResourceResponse]:
@@ -228,8 +229,8 @@ async def _database_resource_rows(
     application_by_schema = {application.slug: application for application in active_applications}
 
     try:
-        postgres = Postgres(registry.host, registry.port, registry.username, registry.password)
-        schema_usage = await postgres.schema_usage(database_name)
+        database_adapter = database_registry_adapter(registry)
+        schema_usage = await database_adapter.schema_usage(database_name)
     except Exception as exc:
         logger.exception("Failed to inspect database resources for organization '%s'", organization.slug)
         raise UnavailableError("Database resources unavailable") from exc
@@ -301,14 +302,14 @@ async def _database_resource_rows(
 
 
 async def _storage_resource_rows(
-    organization: OrganizationDetails,
+    organization: Organization | OrganizationDetails,
     registry: StorageRegistry,
     active_applications: list[Application],
 ) -> list[OrganizationStorageResourceResponse]:
     """Inspect one storage backend and return managed organization bucket rows."""
 
     try:
-        storage_client = S3(registry.protocol, registry.endpoint_url, registry.access_key_id, registry.secret_access_key)
+        storage_client = storage_registry_adapter(registry)
         bucket_names = set(await storage_client.buckets())
         expected_bucket_names: set[str] = set()
         managed_shared_bucket_name = shared_bucket_name(organization.slug)

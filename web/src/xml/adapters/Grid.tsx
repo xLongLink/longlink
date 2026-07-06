@@ -1,7 +1,7 @@
-import { Grid as GridShell } from '@ui/grid';
-import { useXmlContext } from '@xml/core/context';
-import { renderNode } from '@xml/core/node';
-import type { Props } from '@xml/types';
+import { Grid as GridShell } from '@/components/ui/grid';
+import { useXmlContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { resolveXmlString } from './props';
 
 /** Props accepted by the XML Grid component. */

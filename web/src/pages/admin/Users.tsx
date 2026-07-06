@@ -1,8 +1,8 @@
 import { useTranslation } from '@/lib/i18n';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Button } from '@ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@ui/dropdown-menu';
-import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import type { TFunction } from 'i18next';
 import { MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';

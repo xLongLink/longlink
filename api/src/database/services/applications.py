@@ -115,6 +115,19 @@ class ApplicationsService:
             return result.scalar_one_or_none()
 
 
+    async def get_reference(self, application_id: UUID, include_deleted: bool = False) -> Application | None:
+        """Return a registered application by id without eager-loaded relationships."""
+
+        async with session_scope() as session:
+            conditions = [Application.id == application_id]
+            if not include_deleted:
+                conditions.append(Application.deleted_at.is_(None))
+
+            statement = select(Application).where(*conditions)
+            result = await session.execute(statement)
+            return result.scalar_one_or_none()
+
+
     async def membership_role(self, application_id: UUID, user_id: UUID) -> ApplicationRoles | None:
         """Return one application membership role for one user."""
 

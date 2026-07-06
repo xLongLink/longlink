@@ -1,5 +1,5 @@
 import { type ColumnDef } from '@tanstack/react-table';
-import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';

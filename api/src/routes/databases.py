@@ -4,11 +4,11 @@ from src.auth import authadmin, authsupport
 from src.logger import logger
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.models.databases import (DatabaseUsageResponse,
-                                  DatabaseRegistryCreate,
-                                  DatabaseSchemaResponse,
-                                  DatabaseDatabaseResponse,
-                                  DatabaseRegistryResponse)
-from src.adapters.database import Postgres
+                                   DatabaseRegistryCreate,
+                                   DatabaseSchemaResponse,
+                                   DatabaseDatabaseResponse,
+                                   DatabaseRegistryResponse)
+from src.adapters.database import database_registry_adapter
 from src.database.models.users import User
 from src.database.services.database import database
 
@@ -51,7 +51,7 @@ async def delete_database_registry(registry_id: UUID, user: User = Depends(autha
 
 @router.post("/api/databases", response_model=DatabaseRegistryResponse)
 async def create_database_registry(payload: DatabaseRegistryCreate, user: User = Depends(authadmin)) -> DatabaseRegistryResponse:
-    """Create or update one database backend registration."""
+    """Create one database backend registration."""
 
     try:
         registry = await database.create(**payload.model_dump(), user=user)
@@ -69,9 +69,9 @@ async def list_database_databases(registry_id: UUID, _: User = Depends(authsuppo
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 
-    postgres = Postgres(registry.host, registry.port, registry.username, registry.password)
+    database_adapter = database_registry_adapter(registry)
     try:
-        names = await postgres.databases()
+        names = await database_adapter.databases()
     except Exception as exc:
         logger.exception("Failed to inspect databases for registry '%s'", registry_id)
         raise UnavailableError("Database resources unavailable") from exc
@@ -91,9 +91,9 @@ async def list_database_schemas(
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 
-    postgres = Postgres(registry.host, registry.port, registry.username, registry.password)
+    database_adapter = database_registry_adapter(registry)
     try:
-        names = await postgres.schemas(database_name)
+        names = await database_adapter.schemas(database_name)
     except Exception as exc:
         logger.exception("Failed to inspect schemas for database '%s' in registry '%s'", database_name, registry_id)
         raise UnavailableError("Database schemas unavailable") from exc
@@ -109,9 +109,9 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 
-    postgres = Postgres(registry.host, registry.port, registry.username, registry.password)
+    database_adapter = database_registry_adapter(registry)
     try:
-        data = await postgres.usage()
+        data = await database_adapter.usage()
     except Exception as exc:
         logger.exception("Failed to inspect database usage for registry '%s'", registry_id)
         raise UnavailableError("Database usage unavailable") from exc

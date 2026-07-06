@@ -1,6 +1,6 @@
-import { Input as UIInput } from '@ui/input';
-import { useXmlContext } from '@xml/core/context';
-import type { Props } from '@xml/types';
+import { Input as UIInput } from '@/components/ui/input';
+import { useXmlContext } from '@/xml/core/context';
+import type { Props } from '@/xml/types';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 import { readBindableFileInputValue, useBindableValue } from './binding';

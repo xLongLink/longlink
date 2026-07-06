@@ -1,8 +1,8 @@
-import { useXmlContext } from '@xml/core/context';
-import { resolveTranslation } from '@xml/core/i18n';
-import { renderNode } from '@xml/core/node';
-import { resolveAnchorUrl, useAnchorUrl } from '@xml/core/url';
-import type { Props } from '@xml/types';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
+import { resolveAnchorUrl, useAnchorUrl } from '@/xml/core/url';
+import type { Props } from '@/xml/types';
 import { Link } from 'react-router';
 import { resolveXmlString } from './props';
 

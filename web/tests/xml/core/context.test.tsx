@@ -1,5 +1,5 @@
-import { createContext, setupContext } from '@xml/core/context';
-import type { ASTNode } from '@xml/types';
+import { createContext, setupContext } from '@/xml/core/context';
+import type { ASTNode } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 
 describe('core/context', () => {

@@ -3,11 +3,7 @@
     "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
     "compilerOptions": {
         "paths": {
-            "@/*": ["./src/*"],
-            "@ui": ["./src/components/ui"],
-            "@ui/*": ["./src/components/ui/*"],
-            "@xml": ["./src/xml"],
-            "@xml/*": ["./src/xml/*"]
+            "@/*": ["./src/*"]
         },
         "types": ["bun", "bun-types"]
     }

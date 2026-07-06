@@ -3,11 +3,11 @@ import {
     AvatarBadge as UIAvatarBadge,
     AvatarFallback as UIAvatarFallback,
     AvatarImage as UIAvatarImage,
-} from '@ui/avatar';
-import { useXmlContext } from '@xml/core/context';
-import { resolveTranslation } from '@xml/core/i18n';
-import { renderNode } from '@xml/core/node';
-import type { Props } from '@xml/types';
+} from '@/components/ui/avatar';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { resolveXmlString } from './props';
 
 /** Props accepted by the XML Avatar component. */

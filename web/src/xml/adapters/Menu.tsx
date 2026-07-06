@@ -1,10 +1,10 @@
 import { createLucideIconComponent } from '@/components/ui/icon';
-import { Menu as UIMenu, MenuSection as UIMenuSection, MenuSubSection as UIMenuSubSection } from '@ui/menu';
-import { useXmlContext } from '@xml/core/context';
-import { resolveTranslation } from '@xml/core/i18n';
-import { renderNode } from '@xml/core/node';
-import { evaluate } from '@xml/expressions';
-import type { ASTNode, ASTProps, ExecutionContext, Props } from '@xml/types';
+import { Menu as UIMenu, MenuSection as UIMenuSection, MenuSubSection as UIMenuSubSection } from '@/components/ui/menu';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
+import { evaluate } from '@/xml/expressions';
+import type { ASTNode, ASTProps, ExecutionContext, Props } from '@/xml/types';
 import type { LucideIcon } from 'lucide-react';
 import { Fragment, type ReactNode, useEffect, useState } from 'react';
 import { requireXmlString, resolveXmlBoolean, resolveXmlString } from './props';

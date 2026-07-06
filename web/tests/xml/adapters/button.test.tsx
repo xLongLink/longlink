@@ -1,5 +1,5 @@
-import { appendButtonItem } from '@xml/adapters/Button';
-import type { ExecutionContext } from '@xml/types';
+import { appendButtonItem } from '@/xml/adapters/Button';
+import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { proxy } from 'valtio';
 

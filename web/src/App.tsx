@@ -29,7 +29,7 @@ import Pricing from '@/pages/Pricing';
 import Settings from '@/pages/Settings';
 import View from '@/pages/View';
 import { createContext as createXmlContext } from '@/xml';
-import { Toaster } from '@ui/sonner';
+import { Toaster } from '@/components/ui/sonner';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 
 type AppRouter = ReturnType<typeof createBrowserRouter>;

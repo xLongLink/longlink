@@ -8,10 +8,10 @@ import {
     SelectTrigger as UISelectTrigger,
     SelectValue as UISelectValue,
 } from '@/components/ui/select';
-import { useXmlContext } from '@xml/core/context';
-import { resolveTranslation } from '@xml/core/i18n';
-import { renderNode } from '@xml/core/node';
-import type { Props } from '@xml/types';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { useBindableValue } from './binding';
 import { requireXmlString, resolveXmlBoolean, resolveXmlString } from './props';
 

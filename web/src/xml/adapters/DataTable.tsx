@@ -1,11 +1,11 @@
 import { DataTable as UIDataTable } from '@/components/DataTable';
 import type { CellContext, ColumnDef } from '@tanstack/react-table';
-import { ContextProvider, useXmlContext } from '@xml/core/context';
-import { resolveTranslation } from '@xml/core/i18n';
-import { renderNode } from '@xml/core/node';
-import { BaseUrlContext, useUrl } from '@xml/core/url';
-import { evaluate } from '@xml/expressions';
-import type { ASTNode, ASTProps, ExecutionContext, Props } from '@xml/types';
+import { ContextProvider, useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
+import { BaseUrlContext, useUrl } from '@/xml/core/url';
+import { evaluate } from '@/xml/expressions';
+import type { ASTNode, ASTProps, ExecutionContext, Props } from '@/xml/types';
 import type { ReactNode } from 'react';
 import { readXmlProp, resolveXmlString, resolveXmlValue } from './props';
 

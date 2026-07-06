@@ -6,11 +6,11 @@ import {
     DialogTitle as UIDialogTitle,
     DialogTrigger as UIDialogTrigger,
 } from '@/components/ui/dialog';
-import { useXmlContext } from '@xml/core/context';
-import { resolveTranslation } from '@xml/core/i18n';
-import { renderNode } from '@xml/core/node';
-import { evaluate } from '@xml/expressions';
-import type { Props } from '@xml/types';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
+import { evaluate } from '@/xml/expressions';
+import type { Props } from '@/xml/types';
 import { resolveXmlBoolean, resolveXmlString } from './props';
 
 /** Renders a dialog root that groups trigger and content slots. */

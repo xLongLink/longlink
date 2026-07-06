@@ -1,6 +1,6 @@
-import { parseXML } from '@xml/core/parser';
-import { RenderXML } from '@xml/renderers.tsx';
-import type { ExecutionContext } from '@xml/types';
+import { parseXML } from '@/xml/core/parser';
+import { RenderXML } from '@/xml/renderers.tsx';
+import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';

@@ -1,7 +1,7 @@
 import { useUser } from '@/hooks/use-user';
 import { useTranslation } from '@/lib/i18n';
 import { getInitials } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -9,7 +9,7 @@ import {
     DropdownMenuItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from '@ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 import {
     Activity,
     ArrowRightLeft,

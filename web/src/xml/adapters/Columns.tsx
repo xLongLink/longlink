@@ -1,7 +1,7 @@
-import { Column as ColumnShell, Columns as ColumnsShell } from '@ui/columns';
-import { useXmlContext } from '@xml/core/context';
-import { renderNode } from '@xml/core/node';
-import type { Props } from '@xml/types';
+import { Column as ColumnShell, Columns as ColumnsShell } from '@/components/ui/columns';
+import { useXmlContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { resolveXmlString } from './props';
 
 /** Renders a full-width columns row. */

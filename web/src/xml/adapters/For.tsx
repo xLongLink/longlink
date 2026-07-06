@@ -1,7 +1,7 @@
-import { ContextProvider, useXmlContext } from '@xml/core/context';
-import { renderNode } from '@xml/core/node';
-import { BaseUrlContext, useUrl } from '@xml/core/url';
-import type { Props } from '@xml/types';
+import { ContextProvider, useXmlContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
+import { BaseUrlContext, useUrl } from '@/xml/core/url';
+import type { Props } from '@/xml/types';
 import { Fragment } from 'react';
 import { resolveXmlString, resolveXmlValue } from './props';
 

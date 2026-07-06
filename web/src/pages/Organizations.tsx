@@ -7,8 +7,8 @@ import { useTranslation } from '@/lib/i18n';
 import { sanitizeRedirectPath } from '@/lib/redirects';
 import { getInitials } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
-import { Hero, HeroAction, HeroDescription, HeroTitle } from '@ui/hero';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Hero, HeroAction, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { Building2, Settings2 } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 

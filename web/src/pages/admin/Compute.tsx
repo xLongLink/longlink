@@ -1,6 +1,6 @@
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import type { TFunction } from 'i18next';
 import { Link } from 'react-router';
 import { toast } from 'sonner';

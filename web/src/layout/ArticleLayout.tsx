@@ -5,17 +5,17 @@ import { Link, useLocation } from 'react-router';
 import { ArticleSidebar } from '@/components/ArticleSidebar';
 import { cn, formatDate } from '@/lib/utils';
 import type { ArticleNavigationGroup, ArticlePage } from '@/pages/catalog';
-import { A } from '@ui/a';
+import { A } from '@/components/ui/a';
 import {
     BreadcrumbItem,
     BreadcrumbLink,
     BreadcrumbList,
     BreadcrumbSeparator,
     Breadcrumb as UIBreadcrumb,
-} from '@ui/breadcrumb';
-import { buttonVariants } from '@ui/button';
-import { ScrollArea } from '@ui/scroll-area';
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@ui/sidebar';
+} from '@/components/ui/breadcrumb';
+import { buttonVariants } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
 type ArticleLayoutProps = {
     page: ArticlePage;

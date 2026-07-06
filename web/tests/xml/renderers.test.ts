@@ -1,5 +1,5 @@
-import { RenderXML } from '@xml/renderers.tsx';
-import type { ASTNode, ExecutionContext } from '@xml/types';
+import { RenderXML } from '@/xml/renderers.tsx';
+import type { ASTNode, ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';

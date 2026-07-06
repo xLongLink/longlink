@@ -6,10 +6,10 @@ import {
     InputGroupText as UIInputGroupText,
     InputGroupTextarea as UIInputGroupTextarea,
 } from '@/components/ui/input-group';
-import { useXmlContext } from '@xml/core/context';
-import { resolveTranslation } from '@xml/core/i18n';
-import { renderNode } from '@xml/core/node';
-import type { Props } from '@xml/types';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { resolveXmlBoolean, resolveXmlNumber, resolveXmlString, resolveXmlValue } from './props';
 
 import { readBindableFileInputValue, useBindableValue } from './binding';

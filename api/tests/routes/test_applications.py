@@ -689,7 +689,10 @@ async def test_get_app_logs_returns_pod_logs(
             }
             return "line 1\nline 2"
 
-    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
+    monkeypatch.setattr(
+        "src.routes.applications.compute_registry_adapter",
+        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret),
+    )
     client = clients[0]
 
     # Act
@@ -878,7 +881,10 @@ async def test_proxy_app_forwards_request_to_internal_service(
                 {"content-type": "text/plain", "set-cookie": "tenant=owned"},
             )
 
-    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
+    monkeypatch.setattr(
+        "src.routes.applications.compute_registry_adapter",
+        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret),
+    )
 
     # Act
     response = client.post(
@@ -1022,7 +1028,10 @@ async def test_proxy_app_strips_conditional_headers_before_forwarding(
             captured["headers"] = headers
             return b"proxied", 200, {"content-type": "text/plain"}
 
-    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
+    monkeypatch.setattr(
+        "src.routes.applications.compute_registry_adapter",
+        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret),
+    )
 
     # Act
     response = client.get(
@@ -1119,7 +1128,10 @@ async def test_proxy_app_returns_not_modified_from_upstream(
             exception.headers = {"Etag": '"etag-123"', "set-cookie": "tenant=owned"}
             raise exception
 
-    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
+    monkeypatch.setattr(
+        "src.routes.applications.compute_registry_adapter",
+        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret),
+    )
 
     # Act
     response = client.get(f"/api/applications/{app.id}/proxy/i18n/en.json")
@@ -1198,7 +1210,10 @@ async def test_proxy_app_returns_upstream_error_body(
             exception.headers = {"Etag": '"etag-500"', "set-cookie": "tenant=owned"}
             raise exception
 
-    monkeypatch.setattr("src.routes.applications.K8s", FakeCompute)
+    monkeypatch.setattr(
+        "src.routes.applications.compute_registry_adapter",
+        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret),
+    )
 
     # Act
     response = client.get(f"/api/applications/{app.id}/proxy/i18n/en.json")

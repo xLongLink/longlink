@@ -4,7 +4,7 @@ from uuid import UUID
 from pathlib import PurePosixPath
 from fastapi import Depends, Request, Response, APIRouter
 from datetime import UTC, datetime, timedelta
-from src.auth import authuser, authadmin, organization_access
+from src.auth import authuser, authadmin, organization_member_access
 from src.utils import names
 from src.errors import (ConflictError, NotFoundError, ForbiddenError,
                         UnavailableError)
@@ -15,7 +15,7 @@ from src.models.operations import OperationKind
 from src.models.applications import (ApplicationCreate, ApplicationResponse,
                                      ApplicationMemberUpdate,
                                      ApplicationMemberResponse)
-from src.adapters.compute.k8s import K8s
+from src.adapters.compute import compute_registry_adapter
 from src.database.models.users import User
 from kubernetes.client.exceptions import ApiException as KubernetesApiException
 from src.database.models.applications import Application
@@ -120,7 +120,7 @@ async def list_applications(user: User = Depends(authadmin)) -> list[Application
 async def create_application(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)) -> ApplicationResponse:
     """Register a new application in the database and deploy it on the compute cluster."""
 
-    organization_record = await organization_access(organization_id, user)
+    organization_record = await organization_member_access(organization_id, user)
     # Application creation provisions runtime resources, so it requires elevated organization permissions.
     membership_role = await organizations.membership_role(organization_id, user.id)
     if membership_role not in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
@@ -141,11 +141,11 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     """Return recent pod logs for one managed application."""
 
     # Validate the application and organization before connecting to the active cluster.
-    application = await applications.get_by_id(application_id)
+    application = await applications.get_reference(application_id)
     if application is None:
         raise NotFoundError("Application", application_id)
 
-    organization_record = await organization_access(application.organization_id, user)
+    organization_record = await organization_member_access(application.organization_id, user)
     organization_role, application_role = await _application_access_roles(application, user)
     if not _can_view_application_logs(organization_role, application_role):
         raise ForbiddenError("Application log permissions required")
@@ -154,7 +154,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     if registry is None:
         raise UnavailableError(f"No compute cluster configured for location '{organization_record.location_id}'")
 
-    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+    k8s = compute_registry_adapter(registry)
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
@@ -169,11 +169,11 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 async def list_application_members(application_id: UUID, user: User = Depends(authuser)) -> list[ApplicationMemberResponse]:
     """Return organization members and their application-specific roles."""
 
-    application = await applications.get_by_id(application_id)
+    application = await applications.get_reference(application_id)
     if application is None:
         raise NotFoundError("Application", application_id)
 
-    await organization_access(application.organization_id, user)
+    await organization_member_access(application.organization_id, user)
     return await applications.list_members(application.id, application.organization_id)
 
 
@@ -186,11 +186,11 @@ async def update_application_member(
 ) -> Response:
     """Update one member's application-specific role."""
 
-    application = await applications.get_by_id(application_id)
+    application = await applications.get_reference(application_id)
     if application is None:
         raise NotFoundError("Application", application_id)
 
-    await organization_access(application.organization_id, user)
+    await organization_member_access(application.organization_id, user)
     organization_role, application_role = await _application_access_roles(application, user)
     if not _can_manage_application(organization_role, application_role):
         raise ForbiddenError("Application member management permissions required")
@@ -212,11 +212,11 @@ async def update_application_member(
 async def delete_application(application_id: UUID, user: User = Depends(authuser)) -> Response:
     """Soft-delete one application and queue runtime resource removal."""
 
-    application = await applications.get_by_id(application_id)
+    application = await applications.get_reference(application_id)
     if application is None:
         raise NotFoundError("Application", application_id)
 
-    await organization_access(application.organization_id, user)
+    await organization_member_access(application.organization_id, user)
     organization_role, application_role = await _application_access_roles(application, user)
     if not _can_manage_application(organization_role, application_role):
         raise ForbiddenError("Application deletion permissions required")
@@ -249,11 +249,11 @@ async def proxy_application_request(
     """Proxy one supported non-root request into the deployed application service."""
 
     # Load the application and organization from the path-scoped identifier.
-    application = await applications.get_by_id(application_id)
+    application = await applications.get_reference(application_id)
     if application is None:
         raise NotFoundError("Application", application_id)
 
-    organization = await organization_access(application.organization_id, user)
+    organization = await organization_member_access(application.organization_id, user)
     organization_role, application_role = await _application_access_roles(application, user)
     if not _can_access_application(organization_role, application_role):
         raise ForbiddenError("Application access required")
@@ -276,7 +276,7 @@ async def proxy_application_request(
         if _forward_request_header_allowed(key)
     }
     forward_headers["x-user-id"] = str(user.id)
-    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+    k8s = compute_registry_adapter(registry)
 
     # Forward the request body and response stream directly through the Kubernetes API client.
     try:

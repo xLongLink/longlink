@@ -3,12 +3,12 @@ import {
     TabsContent as UITabsContent,
     TabsList as UITabsList,
     TabsTrigger as UITabsTrigger,
-} from '@ui/tabs';
-import { useXmlContext } from '@xml/core/context';
-import { resolveTranslation } from '@xml/core/i18n';
-import { renderNode } from '@xml/core/node';
-import { evaluate } from '@xml/expressions';
-import type { ASTNode, Props } from '@xml/types';
+} from '@/components/ui/tabs';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
+import { evaluate } from '@/xml/expressions';
+import type { ASTNode, Props } from '@/xml/types';
 import { Fragment } from 'react';
 import { Icon } from './Icon';
 import { requireXmlString, resolveXmlString } from './props';

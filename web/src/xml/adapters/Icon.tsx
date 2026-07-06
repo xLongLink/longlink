@@ -1,6 +1,6 @@
 import { Icon as UIIcon } from '@/components/ui/icon';
-import { useXmlContext } from '@xml/core/context';
-import type { Props } from '@xml/types';
+import { useXmlContext } from '@/xml/core/context';
+import type { Props } from '@/xml/types';
 import { useActionHandler } from './Action';
 import { resolveXmlString } from './props';
 

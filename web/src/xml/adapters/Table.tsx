@@ -6,11 +6,11 @@ import {
     TableHead as UITableHead,
     TableHeader as UITableHeader,
     TableRow as UITableRow,
-} from '@ui/table';
-import { useXmlContext } from '@xml/core/context';
-import { resolveTranslation } from '@xml/core/i18n';
-import { renderNode } from '@xml/core/node';
-import type { Props } from '@xml/types';
+} from '@/components/ui/table';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { resolveXmlValue } from './props';
 
 /** Renders the shadcn-backed table shell. */

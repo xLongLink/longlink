@@ -264,7 +264,10 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
                 {"name": "stale", "space_used": 512, "table_count": 1, "row_estimate": 3},
             ]
 
-    monkeypatch.setattr("src.routes.organizations.Postgres", FakePostgres)
+    monkeypatch.setattr(
+        "src.routes.organizations.database_registry_adapter",
+        lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
+    )
 
     # Act
     response = client.get(f"/api/organizations/{organization.id}/database")
@@ -317,7 +320,10 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
         async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
             raise RuntimeError("database offline")
 
-    monkeypatch.setattr("src.routes.organizations.Postgres", FakePostgres)
+    monkeypatch.setattr(
+        "src.routes.organizations.database_registry_adapter",
+        lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
+    )
 
     # Act
     response = client.get(f"/api/organizations/{organization.id}/database")
@@ -378,7 +384,15 @@ async def test_organization_storage_endpoint_returns_managed_buckets(
             assert bucket_name.startswith("longlink-acme-")
             return {"space_used": len(bucket_name), "object_count": 2}
 
-    monkeypatch.setattr("src.routes.organizations.S3", FakeStorage)
+    monkeypatch.setattr(
+        "src.routes.organizations.storage_registry_adapter",
+        lambda registry: FakeStorage(
+            registry.protocol,
+            registry.endpoint_url,
+            registry.access_key_id,
+            registry.secret_access_key,
+        ),
+    )
 
     # Act
     response = client.get(f"/api/organizations/{organization.id}/storage")
@@ -431,7 +445,15 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
         async def buckets(self) -> list[str]:
             raise RuntimeError("storage offline")
 
-    monkeypatch.setattr("src.routes.organizations.S3", FakeStorage)
+    monkeypatch.setattr(
+        "src.routes.organizations.storage_registry_adapter",
+        lambda registry: FakeStorage(
+            registry.protocol,
+            registry.endpoint_url,
+            registry.access_key_id,
+            registry.secret_access_key,
+        ),
+    )
 
     # Act
     response = client.get(f"/api/organizations/{organization.id}/storage")
@@ -499,7 +521,10 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
                 }
             ]
 
-    monkeypatch.setattr("src.routes.organizations.Postgres", FakePostgres)
+    monkeypatch.setattr(
+        "src.routes.organizations.database_registry_adapter",
+        lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
+    )
 
     # Act
     users_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/shared/tables")

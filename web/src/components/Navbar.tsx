@@ -1,27 +1,24 @@
-import { useTranslation } from '@/lib/i18n';
 import { ExternalLink } from 'lucide-react';
 import { Link } from 'react-router';
 
-import { buttonVariants } from '@ui/button';
+import { buttonVariants } from '@/components/ui/button';
 
 import { Wordmark } from '@/components/Wordmark';
 import { cn } from '@/lib/utils';
 
 /** Renders the public landing page navigation. */
 export function Navbar() {
-    const { t } = useTranslation();
-
     return (
         <header className="relative z-20 px-4 py-5">
             <div className="mx-auto max-w-[620px] rounded-lg border border-border bg-card/80 text-card-foreground shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-md dark:shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_18px_60px_rgba(0,0,0,0.35)]">
                 <nav
                     className="flex h-11 w-full items-center justify-between gap-4 px-2.5"
-                    aria-label={t('common.mainNavigation')}
+                    aria-label="Main navigation"
                 >
                     <Link
                         to="/"
                         className="flex items-center gap-2 text-sm font-semibold text-card-foreground"
-                        aria-label={t('common.longlinkHome')}
+                        aria-label="LongLink home"
                     >
                         <Wordmark />
                     </Link>
@@ -32,7 +29,7 @@ export function Navbar() {
                                 to="/docs"
                                 className="whitespace-nowrap text-card-foreground/70 transition-colors hover:text-card-foreground"
                             >
-                                {t('common.documentation')}
+                                Documentation
                             </Link>
                         </li>
                         <li className="font-medium transition-colors hover:text-accent">
@@ -40,7 +37,7 @@ export function Navbar() {
                                 to="/pricing"
                                 className="whitespace-nowrap text-card-foreground/70 transition-colors hover:text-card-foreground"
                             >
-                                {t('common.pricing')}
+                                Pricing
                             </Link>
                         </li>
                         <li className="font-medium transition-colors hover:text-accent">
@@ -63,7 +60,7 @@ export function Navbar() {
                             'h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90'
                         )}
                     >
-                        {t('actions.login')}
+                        Login
                     </Link>
                 </nav>
             </div>

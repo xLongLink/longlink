@@ -389,7 +389,7 @@ async def sync_user_organizations(user: User) -> None:
 
 
 async def create_application_runtime(
-    organization: OrganizationDetails,
+    organization: Organization | OrganizationDetails | OrganizationSummary,
     payload: ApplicationCreate,
     user: User,
 ) -> Application:

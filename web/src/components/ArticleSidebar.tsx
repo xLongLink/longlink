@@ -18,7 +18,7 @@ import {
     SidebarMenuSubButton,
     SidebarMenuSubItem,
     SidebarSeparator,
-} from '@ui/sidebar';
+} from '@/components/ui/sidebar';
 import { ChevronDownIcon } from 'lucide-react';
 
 import { Wordmark } from '@/components/Wordmark';

@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ContextProvider } from '@xml/core/context';
-import { parseXML } from '@xml/core/parser';
-import { RenderXML } from '@xml/renderers.tsx';
-import type { ExecutionContext } from '@xml/types';
+import { ContextProvider } from '@/xml/core/context';
+import { parseXML } from '@/xml/core/parser';
+import { RenderXML } from '@/xml/renderers.tsx';
+import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';

@@ -1,4 +1,4 @@
-import { parseXML } from '@xml/core/parser';
+import { parseXML } from '@/xml/core/parser';
 import { describe, expect, it } from 'bun:test';
 
 describe('parseXML', () => {

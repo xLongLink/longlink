@@ -2,7 +2,7 @@ import { useOrganization } from '@/hooks/use-organization';
 import { useUserProfile } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
 import { useTranslation } from '@/lib/i18n';
-import { Hero, HeroDescription, HeroTitle } from '@ui/hero';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { LayoutGrid, Settings2, Users } from 'lucide-react';
 import { Navigate, useLocation, useParams } from 'react-router';
 import NotFound from './NotFound';

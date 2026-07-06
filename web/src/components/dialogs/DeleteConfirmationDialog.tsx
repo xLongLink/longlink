@@ -1,7 +1,7 @@
 import { useTranslation } from '@/lib/i18n';
 import type { DeleteConfirmationDialogProps } from '@/lib/utils';
-import { Button } from '@ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
 /** Renders a shared destructive confirmation dialog. */
 export function DeleteConfirmationDialog({

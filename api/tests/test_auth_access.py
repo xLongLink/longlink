@@ -425,19 +425,13 @@ async def test_organization_access_hides_missing_memberships(monkeypatch: pytest
     organization_id = UUID("22222222-2222-2222-2222-222222222222")
     current_user = user("member-check")
 
-    async def fake_get(organization_id: UUID, application_user_id: UUID):
-        """Return an organization visible before the membership privacy check."""
+    async def fake_get_member(organization_id: UUID, user_id: UUID):
+        """Return no organization for a missing active membership."""
 
-        return SimpleNamespace(id=organization_id, slug="acme")
+        assert user_id == current_user.id
+        return None
 
-    class FakeMembershipSession:
-        async def execute(self, statement) -> FakeSessionResult:
-            """Return no active membership."""
-
-            return FakeSessionResult(None)
-
-    monkeypatch.setattr(auth_module.organizations, "get", fake_get)
-    monkeypatch.setattr(auth_module, "session_scope", lambda: FakeSessionScope(FakeMembershipSession()))
+    monkeypatch.setattr(auth_module.organizations, "get_member", fake_get_member)
 
     with pytest.raises(NotFoundError, match=f"Organization '{organization_id}' not found"):
         await auth_module.organization_access(organization_id, current_user)

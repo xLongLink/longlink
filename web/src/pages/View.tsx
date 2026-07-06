@@ -12,8 +12,8 @@ import {
     type ASTNode,
     type ExecutionContext,
 } from '@/xml';
-import { buttonVariants } from '@ui/button';
-import { ScrollArea } from '@ui/scroll-area';
+import { buttonVariants } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import startCase from 'lodash/startCase';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';

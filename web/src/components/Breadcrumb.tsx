@@ -4,7 +4,7 @@ import {
     BreadcrumbList,
     BreadcrumbSeparator,
     Breadcrumb as UIBreadcrumb,
-} from '@ui/breadcrumb';
+} from '@/components/ui/breadcrumb';
 import startCase from 'lodash/startCase';
 import { Fragment } from 'react';
 import { Link, useLocation } from 'react-router';

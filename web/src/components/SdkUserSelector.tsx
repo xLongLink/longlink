@@ -1,6 +1,6 @@
 import { useSdkUser } from '@/hooks/use-sdk-user';
 import { getInitials } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -9,7 +9,7 @@ import {
     DropdownMenuRadioItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from '@ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu';
 
 const sdkUserDropdownItemClassName =
     'cursor-pointer items-center gap-3 p-2 text-muted-foreground transition-colors data-highlighted:bg-accent data-highlighted:text-accent-foreground data-highlighted:[&_p]:text-accent-foreground';
