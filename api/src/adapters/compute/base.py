@@ -45,6 +45,23 @@ class Compute(ABC):
         """Return recent logs for one managed application."""
 
     @abstractmethod
+    def application_pods(self, organization: str, application: str) -> list[object]:
+        """Return pods for one managed application."""
+
+    @abstractmethod
+    def proxy(
+        self,
+        organization: str,
+        application: str,
+        path: str,
+        method: str,
+        query_params: list[tuple[str, str]],
+        headers: dict[str, str],
+        body: bytes,
+    ) -> tuple[bytes, int, dict[str, str]]:
+        """Proxy one request to an application service."""
+
+    @abstractmethod
     async def namespaces(self) -> list[str]:
         """List all managed namespaces."""
 

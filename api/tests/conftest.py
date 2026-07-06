@@ -50,7 +50,7 @@ async def reset_db(
         return
 
     db_url = f"sqlite+aiosqlite:///{tmp_path / 'test.db'}"
-    monkeypatch.setattr(env, 'DATABASE_URL', db_url)
+    monkeypatch.setattr(env, "DATABASE_URL", db_url)
 
     # Clear any cached session engine before binding the test database.
     session.Session = None
@@ -78,9 +78,7 @@ def session_cookie(oidc: str, accounts: list[str] | None = None) -> dict[str, st
     if oidc not in saved_accounts:
         saved_accounts.append(oidc)
 
-    payload = base64.b64encode(
-        json.dumps({"oidc": oidc, "oidc_accounts": saved_accounts}).encode("utf-8")
-    )
+    payload = base64.b64encode(json.dumps({"oidc": oidc, "oidc_accounts": saved_accounts}).encode("utf-8"))
     signed = TimestampSigner(str(env.SESSION_KEY)).sign(payload).decode("utf-8")
     return {SESSION_COOKIE: signed}
 
@@ -92,13 +90,13 @@ async def users() -> tuple[User, User, User]:
     Session = await session.get_session()
     async with Session() as db_session:
         user1 = User(
-            name='user1',
-            email='user1@example.com',
-            oidc='oidc-user-1',
+            name="user1",
+            email="user1@example.com",
+            oidc="oidc-user-1",
             role=PlatformRoles.administrator,
         )
-        user2 = User(name='user2', email='user2@example.com', oidc='oidc-user-2')
-        user3 = User(name='user3', email='user3@example.com', oidc='oidc-user-3')
+        user2 = User(name="user2", email="user2@example.com", oidc="oidc-user-2")
+        user3 = User(name="user3", email="user3@example.com", oidc="oidc-user-3")
 
         db_session.add_all([user1, user2, user3])
         await db_session.commit()

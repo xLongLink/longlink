@@ -1,8 +1,13 @@
 {
   "python.defaultInterpreterPath": "${workspaceFolder}/api/.venv/bin/python",
   "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.ignore": [
+    "api/src/database/models",
+    "api/src/database/services"
+  ],
   "python.analysis.extraPaths": [
     "${workspaceFolder}/api/src",
+    "${workspaceFolder}/org",
     "${workspaceFolder}/sdk",
     "${workspaceFolder}/api/.venv/lib/python3.14/site-packages",
     "${workspaceFolder}/sdk/.venv/lib/python3.14/site-packages",

@@ -5,11 +5,9 @@ from src.operations import provisioning
 from src.environments import env
 from fastapi.testclient import TestClient
 from src.models.applications import ApplicationCreate
-from src.database.services.users import users
-from src.database.services.applications import \
-    applications as application_service
-from src.database.services.organizations import \
-    organizations as organization_service
+from src.database.services import users
+from src.database.services import applications as application_service
+from src.database.services import organizations as organization_service
 
 LOCAL_ORG = "test"
 LOCAL_ORG_AVATAR = "https://example.com/organizations/test.png"
@@ -61,7 +59,15 @@ def main() -> None:
     locations = client.get("/api/locations").json()
     location = next((loc for loc in locations if loc["slug"] == "local"), None)
     if location is None:
-        r = client.post("/api/locations", json={"name": "local", "slug": "local", "country": "CH", "provider": "local"})
+        r = client.post(
+            "/api/locations",
+            json={
+                "name": "local",
+                "slug": "local",
+                "country": "CH",
+                "provider": "local",
+            },
+        )
         if r.status_code == 409:
             locations = client.get("/api/locations").json()
             location = next(loc for loc in locations if loc["slug"] == "local")
@@ -135,7 +141,10 @@ def main() -> None:
     # Organization
     # ------------------------------------------------------------------
     organizations = client.get("/api/organizations").json()
-    organization = next((organization for organization in organizations if organization["name"] == LOCAL_ORG), None)
+    organization = next(
+        (organization for organization in organizations if organization["name"] == LOCAL_ORG),
+        None,
+    )
     if organization is None:
         r = client.post(
             "/api/organizations",
@@ -156,7 +165,10 @@ def main() -> None:
     # Application
     # ------------------------------------------------------------------
     applications = client.get(f"/api/organizations/{organization['id']}/applications").json()
-    application = next((application for application in applications if application["name"] == LOCAL_APP["name"]), None)
+    application = next(
+        (application for application in applications if application["name"] == LOCAL_APP["name"]),
+        None,
+    )
     if application is None:
         r = client.post(
             f"/api/organizations/{organization['id']}/applications",

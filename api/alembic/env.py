@@ -6,17 +6,37 @@ from sqlalchemy import pool, engine_from_config
 from src.environments import env
 from sqlalchemy.engine import Connection, make_url
 import src.utils.url as url
-from src.database.models import (users, computes, storages, databases,
-                                 locations, operations, association,
-                                 invitations, applications, organizations)
+from src.database.models import (
+    users,
+    computes,
+    storages,
+    databases,
+    locations,
+    operations,
+    association,
+    invitations,
+    applications,
+    organizations,
+)
 from sqlalchemy.ext.asyncio import create_async_engine
 
-_model_modules = (users, computes, storages, locations, databases, operations, invitations, applications, association, organizations)
+_model_modules = (
+    users,
+    computes,
+    storages,
+    locations,
+    databases,
+    operations,
+    invitations,
+    applications,
+    association,
+    organizations,
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-config.set_main_option('sqlalchemy.url', env.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", env.DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -47,12 +67,12 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option('sqlalchemy.url')
+    url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
-        dialect_opts={'paramstyle': 'named'},
+        dialect_opts={"paramstyle": "named"},
     )
 
     with context.begin_transaction():
@@ -66,14 +86,14 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    configured_url = config.get_main_option('sqlalchemy.url')
+    configured_url = config.get_main_option("sqlalchemy.url")
     if configured_url is None:
-        raise RuntimeError('Alembic sqlalchemy.url is not configured')
+        raise RuntimeError("Alembic sqlalchemy.url is not configured")
 
     database_url = make_url(url.database(configured_url))
 
     # Async drivers need Alembic's async engine path, while sync drivers can use the classic runner.
-    if database_url.drivername.endswith(('aiosqlite', 'aiomysql', 'asyncpg')):
+    if database_url.drivername.endswith(("aiosqlite", "aiomysql", "asyncpg")):
 
         async def run_async_migrations() -> None:
             """Run Alembic migrations through an async SQLAlchemy engine."""
@@ -99,7 +119,7 @@ def run_migrations_online() -> None:
 
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
-        prefix='sqlalchemy.',
+        prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
 

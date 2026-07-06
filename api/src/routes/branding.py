@@ -33,8 +33,7 @@ THEME_STYLES = {
     "light": ".logo-theme { fill: #171717; }",
     "dark": ".logo-theme { fill: #fafafa; }",
     "system": (
-        ".logo-theme { fill: #171717; }\n"
-        "        @media (prefers-color-scheme: dark) { .logo-theme { fill: #fafafa; } }"
+        ".logo-theme { fill: #171717; }\n        @media (prefers-color-scheme: dark) { .logo-theme { fill: #fafafa; } }"
     ),
 }
 

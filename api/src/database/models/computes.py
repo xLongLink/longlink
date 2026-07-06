@@ -19,7 +19,9 @@ class ComputeRegistry(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 
     # State
-    kind: ComputeKind = Field(sa_column=Column(Enum(ComputeKind, name="compute_kind_enum", native_enum=False), nullable=False))
+    kind: ComputeKind = Field(
+        sa_column=Column(Enum(ComputeKind, name="compute_kind_enum", native_enum=False), nullable=False)
+    )
 
     # Metadata
     name: str = Field(unique=True, max_length=128)
@@ -31,19 +33,21 @@ class ComputeRegistry(SQLModel, table=True):
 
     # Audit
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    created_by: Optional["User"] = Relationship(sa_relationship_kwargs={'foreign_keys': 'ComputeRegistry.created_id'})
-    created_id: UUID | None = Field(default=None, foreign_key='users.id')
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
-    updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={'foreign_keys': 'ComputeRegistry.updated_id'})
-    updated_id: UUID | None = Field(default=None, foreign_key='users.id')
+    created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "ComputeRegistry.created_id"})
+    created_id: UUID | None = Field(default=None, foreign_key="users.id")
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC), sa_column_kwargs={"onupdate": lambda: datetime.now(UTC)}
+    )
+    updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "ComputeRegistry.updated_id"})
+    updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None)
 
     # Location
-    location_id: UUID = Field(foreign_key='locations.id')
+    location_id: UUID = Field(foreign_key="locations.id")
 
     # User
-    deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={'foreign_keys': 'ComputeRegistry.deleted_id'})
-    deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
+    deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "ComputeRegistry.deleted_id"})
+    deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 
     # Relationships
     location: "Location" = Relationship()

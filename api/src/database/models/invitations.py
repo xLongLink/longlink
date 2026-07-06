@@ -32,11 +32,19 @@ class OrganizationInvitation(SQLModel, table=True):
 
     # Audit
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "OrganizationInvitation.created_id"})
+    created_by: Optional["User"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "OrganizationInvitation.created_id"}
+    )
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={"onupdate": lambda: datetime.now(UTC)})
-    updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "OrganizationInvitation.updated_id"})
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC), sa_column_kwargs={"onupdate": lambda: datetime.now(UTC)}
+    )
+    updated_by: Optional["User"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "OrganizationInvitation.updated_id"}
+    )
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None)
-    deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "OrganizationInvitation.deleted_id"})
+    deleted_by: Optional["User"] = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "OrganizationInvitation.deleted_id"}
+    )
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")

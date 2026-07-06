@@ -6,8 +6,7 @@ from uuid import UUID
 from tenant.models import User
 from tenant.database import SHARED_SCHEMA, migrate_database, users as tenant_users
 from .base import Database
-from .types import (DatabaseCellValue, DatabaseTableData, DatabaseTableUsage,
-                    DatabaseSchemaUsage, DatabaseTableColumn)
+from .types import DatabaseCellValue, DatabaseTableData, DatabaseTableUsage, DatabaseSchemaUsage, DatabaseTableColumn
 from decimal import Decimal
 from datetime import date, datetime
 from sqlalchemy import String, text, inspect
@@ -16,8 +15,7 @@ from src.environments import env
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
 from src.utils.namespace import dbname
-from sqlalchemy.ext.asyncio import (AsyncEngine, AsyncConnection,
-                                    create_async_engine)
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
 from sqlalchemy.sql.elements import quoted_name
 
 
@@ -66,7 +64,6 @@ class Postgres(Database):
         )
         return url.update_query_dict({"sslmode": self._sslmode})
 
-
     def _runtime_url(self, database: str, username: str, password: str) -> URL:
         """Build one SQLAlchemy URL for an application runtime role."""
 
@@ -80,7 +77,6 @@ class Postgres(Database):
         )
         return url.update_query_dict({"sslmode": self._sslmode})
 
-
     def _application_role(self, organization: str, application: str) -> str:
         """Return the PostgreSQL login role for one application runtime."""
 
@@ -90,7 +86,6 @@ class Postgres(Database):
 
         digest = hashlib.sha1(role.encode("utf-8")).hexdigest()[:12]
         return f"{role[:50]}_{digest}"
-
 
     def _cell_value(self, value: object) -> DatabaseCellValue:
         """Convert database values into JSON-safe preview cell values."""
@@ -105,7 +100,6 @@ class Postgres(Database):
             return str(value)
 
         return str(value)
-
 
     @contextlib.asynccontextmanager
     async def _connection(self, database: str, *, autocommit: bool = False) -> AsyncIterator[AsyncConnection]:
@@ -129,18 +123,18 @@ class Postgres(Database):
         finally:
             await engine.dispose()
 
-
     async def _ensure_organization_database(self, organization: str) -> None:
         """Create the organization database when it is missing."""
 
         database_name_value = dbname(organization)
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
-            result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :organization"), {"organization": database_name_value})
+            result = await conn.execute(
+                text("SELECT 1 FROM pg_database WHERE datname = :organization"), {"organization": database_name_value}
+            )
             if result.scalar_one_or_none() is None:
                 # CREATE DATABASE needs a quoted identifier, so compile it with SQLAlchemy's dialect preparer.
                 database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(database_name_value)
                 await conn.exec_driver_sql(f"CREATE DATABASE {database_name}")
-
 
     async def _organization_database_exists(self, organization: str) -> bool:
         """Return whether an organization database currently exists."""
@@ -153,12 +147,10 @@ class Postgres(Database):
             )
             return result.scalar_one_or_none() is not None
 
-
     async def _migrate_shared_schema(self, database_name: str) -> None:
         """Apply organization-owned shared schema migrations."""
 
         await migrate_database(self._url(database_name))
-
 
     async def _restrict_shared_schema(self, conn: AsyncConnection) -> None:
         """Restrict default write access to organization shared schema tables."""
@@ -168,8 +160,9 @@ class Postgres(Database):
         await conn.execute(text("REVOKE CREATE ON SCHEMA public FROM PUBLIC"))
         await conn.exec_driver_sql(f"REVOKE CREATE ON SCHEMA {shared_schema} FROM PUBLIC")
         await conn.execute(text("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC"))
-        await conn.exec_driver_sql(f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA {shared_schema} FROM PUBLIC")
-
+        await conn.exec_driver_sql(
+            f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA {shared_schema} FROM PUBLIC"
+        )
 
     async def _ensure_application_role(self, conn: AsyncConnection, role_name: str, password: str) -> None:
         """Create or update the runtime login role for one application."""
@@ -186,7 +179,6 @@ class Postgres(Database):
             return
 
         await conn.exec_driver_sql(f"ALTER ROLE {role} LOGIN PASSWORD {password_literal}")
-
 
     async def _grant_application_permissions(
         self,
@@ -209,11 +201,16 @@ class Postgres(Database):
         await conn.exec_driver_sql(f"GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA {schema} TO {role}")
         await conn.exec_driver_sql(f"GRANT USAGE ON SCHEMA {shared_schema} TO {role}")
         await conn.exec_driver_sql(f"REVOKE CREATE ON SCHEMA {shared_schema} FROM {role}")
-        await conn.exec_driver_sql(f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA {shared_schema} FROM {role}")
+        await conn.exec_driver_sql(
+            f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA {shared_schema} FROM {role}"
+        )
         await conn.exec_driver_sql(f"GRANT SELECT, REFERENCES ON ALL TABLES IN SCHEMA {shared_schema} TO {role}")
-        await conn.exec_driver_sql(f"ALTER DEFAULT PRIVILEGES IN SCHEMA {shared_schema} GRANT SELECT, REFERENCES ON TABLES TO {role}")
-        await conn.exec_driver_sql(f"ALTER ROLE {role} IN DATABASE {database} SET search_path = {schema}, {shared_schema}")
-
+        await conn.exec_driver_sql(
+            f"ALTER DEFAULT PRIVILEGES IN SCHEMA {shared_schema} GRANT SELECT, REFERENCES ON TABLES TO {role}"
+        )
+        await conn.exec_driver_sql(
+            f"ALTER ROLE {role} IN DATABASE {database} SET search_path = {schema}, {shared_schema}"
+        )
 
     async def database(self, organization: str) -> str:
         """Create the organization database if it does not exist and return a connection DSN."""
@@ -226,7 +223,6 @@ class Postgres(Database):
 
         return self._url(database_name).render_as_string(hide_password=False)
 
-
     async def sync_users(self, organization: str, users: list[User]) -> None:
         """Synchronize shared organization users for one organization."""
         await self._ensure_organization_database(organization)
@@ -236,7 +232,6 @@ class Postgres(Database):
         async with self._connection(database_name) as conn:
             await tenant_users.sync(conn, users)
             await self._restrict_shared_schema(conn)
-
 
     async def schema(self, organization: str, application: str) -> str:
         """Create or replace the schema for one application and return a connection DSN."""
@@ -253,7 +248,6 @@ class Postgres(Database):
             await self._grant_application_permissions(conn, database_name, application, role_name)
 
         return self._runtime_url(database_name, role_name, role_password).render_as_string(hide_password=False)
-
 
     async def delete_schema(self, organization: str, application: str) -> None:
         """Delete an application schema and its runtime role when present."""
@@ -277,7 +271,6 @@ class Postgres(Database):
             role = conn.engine.sync_engine.dialect.identifier_preparer.quote(role_name)
             await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
 
-
     async def delete_database(self, organization: str) -> None:
         """Delete one organization database and tolerate missing databases."""
 
@@ -297,23 +290,22 @@ class Postgres(Database):
             )
             await conn.exec_driver_sql(f"DROP DATABASE IF EXISTS {database_name}")
 
-
     async def databases(self) -> list[str]:
         """List all databases on the server, excluding system databases."""
 
         async with self._connection(self._maintenance_database) as conn:
             result = await conn.execute(
-                text("SELECT datname FROM pg_database WHERE datname NOT IN ('postgres', 'template0', 'template1') ORDER BY datname")
+                text(
+                    "SELECT datname FROM pg_database WHERE datname NOT IN ('postgres', 'template0', 'template1') ORDER BY datname"
+                )
             )
             return [row[0] for row in result.fetchall()]
-
 
     async def schemas(self, database_name: str) -> list[str]:
         """List all schemas in a database, excluding system schemas."""
 
         async with self._connection(database_name) as conn:
             return await conn.run_sync(self._inspected_schema_names)
-
 
     def _inspected_schema_names(self, sync_conn: object) -> list[str]:
         """Return user-visible schema names through SQLAlchemy inspection."""
@@ -322,7 +314,6 @@ class Postgres(Database):
         inspector = inspect(sync_conn)
         assert inspector is not None
         return sorted(name for name in inspector.get_schema_names() if name not in system_schemas)
-
 
     async def schema_usage(self, database_name: str) -> list[DatabaseSchemaUsage]:
         """Return usage details for application schemas in a database."""
@@ -355,7 +346,6 @@ class Postgres(Database):
                 for row in result.mappings().all()
             ]
 
-
     async def table_usage(self, database_name: str, schema_name: str, table_name: str) -> DatabaseTableUsage | None:
         """Return usage details for one table in a database."""
 
@@ -386,12 +376,10 @@ class Postgres(Database):
                 "row_estimate": int(row["row_estimate"]),
             }
 
-
     async def _table_names(self, conn: AsyncConnection, schema_name: str) -> list[str]:
         """Return queryable table names for one schema."""
 
         return await conn.run_sync(functools.partial(self._inspected_table_names, schema_name=schema_name))
-
 
     def _inspected_table_names(self, sync_conn: object, *, schema_name: str) -> list[str]:
         """Return queryable table and materialized view names through SQLAlchemy inspection."""
@@ -401,7 +389,6 @@ class Postgres(Database):
         names = set(inspector.get_table_names(schema=schema_name))
         names.update(inspector.get_materialized_view_names(schema=schema_name))
         return sorted(names)
-
 
     def _inspected_table_columns(
         self,
@@ -424,7 +411,6 @@ class Postgres(Database):
             for position, column in enumerate(inspector.get_columns(table_name, schema=schema_name), start=1)
         ]
 
-
     async def _table_data(
         self,
         conn: AsyncConnection,
@@ -442,10 +428,7 @@ class Postgres(Database):
         schema = preparer.quote(schema_name)
         table = preparer.quote(table_name)
         rows_result = await conn.execute(text(f"SELECT * FROM {schema}.{table} LIMIT :limit"), {"limit": limit})
-        rows = [
-            {key: self._cell_value(value) for key, value in row.items()}
-            for row in rows_result.mappings().all()
-        ]
+        rows = [{key: self._cell_value(value) for key, value in row.items()} for row in rows_result.mappings().all()]
 
         return {
             "name": table_name,
@@ -454,7 +437,6 @@ class Postgres(Database):
             "rows": rows,
         }
 
-
     async def tables(self, database_name: str, schema_name: str, *, limit: int = 100) -> list[DatabaseTableData]:
         """Return tables, columns, and preview rows for one schema."""
 
@@ -462,8 +444,9 @@ class Postgres(Database):
             names = await self._table_names(conn, schema_name)
             return [await self._table_data(conn, schema_name, name, limit) for name in names]
 
-
-    async def table(self, database_name: str, schema_name: str, table_name: str, *, limit: int = 100) -> DatabaseTableData | None:
+    async def table(
+        self, database_name: str, schema_name: str, table_name: str, *, limit: int = 100
+    ) -> DatabaseTableData | None:
         """Return columns and preview rows for one table."""
 
         async with self._connection(database_name) as conn:
@@ -471,7 +454,6 @@ class Postgres(Database):
                 return None
 
             return await self._table_data(conn, schema_name, table_name, limit)
-
 
     async def usage(self) -> dict[str, int]:
         """Return the total non-system database size in bytes."""
@@ -488,7 +470,6 @@ class Postgres(Database):
             )
             database_size = result.scalar_one()
             return {"space_used": int(database_size)}
-
 
     async def setup(self) -> None:
         """Initialize the PostgreSQL backend used by the control plane."""

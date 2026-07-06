@@ -5,12 +5,10 @@ import boto3
 import asyncio
 import secrets
 import contextlib
-from .base import (Storage, StorageObjectData, StorageBucketUsage,
-                   StorageRuntimeCredentials)
+from .base import Storage, StorageObjectData, StorageBucketUsage, StorageRuntimeCredentials
 from typing import TYPE_CHECKING
 from datetime import datetime
-from tenant.storage import (bucket_name, shared_bucket_name,
-                            organization_bucket_prefix)
+from tenant.storage import bucket_name, shared_bucket_name, organization_bucket_prefix
 from src.environments import env
 from botocore.exceptions import ClientError
 
@@ -48,7 +46,6 @@ class S3(Storage):
             aws_secret_access_key=secret_access_key,
         )
 
-
     def _is_access_denied(self, exc: ClientError) -> bool:
         """Return whether an S3 client error represents denied access."""
 
@@ -59,7 +56,6 @@ class S3(Storage):
         """List storage buckets."""
         response = self._client.list_buckets()
         return [name for bucket in response.get("Buckets", []) if (name := bucket.get("Name")) is not None]
-
 
     def _create_bucket(self, bucket_name: str) -> None:
         """Create a bucket and tolerate existing accessible buckets."""
@@ -73,7 +69,6 @@ class S3(Storage):
                 raise
 
             self._client.head_bucket(Bucket=bucket_name)
-
 
     def _delete_bucket(self, bucket_name: str) -> None:
         """Delete all objects in a bucket, then delete the bucket itself."""
@@ -95,7 +90,6 @@ class S3(Storage):
                 self._client.delete_objects(Bucket=bucket_name, Delete={"Objects": objects})
 
         self._client.delete_bucket(Bucket=bucket_name)
-
 
     def _validate_application_credentials(
         self,
@@ -148,7 +142,9 @@ class S3(Storage):
         # Reject credentials that can access another app bucket already visible in this organization.
         bucket_prefix = organization_bucket_prefix(organization)
         for listed_bucket_name in self.list():
-            if listed_bucket_name in {application_bucket, shared_bucket} or not listed_bucket_name.startswith(bucket_prefix):
+            if listed_bucket_name in {application_bucket, shared_bucket} or not listed_bucket_name.startswith(
+                bucket_prefix
+            ):
                 continue
 
             try:
@@ -168,30 +164,25 @@ class S3(Storage):
                 runtime_client.delete_object(Bucket=listed_bucket_name, Key=check_key)
                 raise ValueError("Storage runtime credentials must not write other application buckets")
 
-
     async def buckets(self) -> list[str]:
         """List storage buckets."""
 
         return await asyncio.to_thread(self.list)
-
 
     async def objects(self, bucket_name: str, *, limit: int = 1000) -> list[StorageObjectData]:
         """List object metadata for one bucket."""
 
         return await asyncio.to_thread(self._objects, bucket_name, limit=limit)
 
-
     async def bucket_usage(self, bucket_name: str) -> StorageBucketUsage:
         """Return aggregate usage details for one S3 bucket."""
 
         return await asyncio.to_thread(self._bucket_usage, bucket_name)
 
-
     async def delete_bucket(self, bucket_name: str) -> None:
         """Delete one S3 bucket and all listed objects."""
 
         await asyncio.to_thread(self._delete_bucket, bucket_name)
-
 
     async def application_credentials(self, organization: str, application: str) -> StorageRuntimeCredentials:
         """Return validated runtime credentials for one application."""
@@ -206,7 +197,6 @@ class S3(Storage):
 
         await asyncio.to_thread(self._validate_application_credentials, organization, application, credentials)
         return credentials
-
 
     def _objects(self, bucket_name: str, *, limit: int = 1000) -> list[StorageObjectData]:
         """List object metadata for one bucket through the synchronous S3 client."""
@@ -247,7 +237,6 @@ class S3(Storage):
 
         return objects
 
-
     def _bucket_usage(self, bucket_name: str) -> StorageBucketUsage:
         """Return aggregate object count and size for one bucket."""
 
@@ -263,20 +252,12 @@ class S3(Storage):
 
         return {"object_count": object_count, "space_used": space_used}
 
-
-    async def tenant(self, organization: str) -> str:
-        """Return the storage tenant identifier for one organization."""
-
-        return organization
-
-
     async def bucket(self, organization: str, bucket_slug: str) -> str:
         """Create one managed organization bucket and return its name."""
 
         managed_bucket_name = bucket_name(organization, bucket_slug)
         await asyncio.to_thread(self._create_bucket, managed_bucket_name)
         return managed_bucket_name
-
 
     async def setup(self) -> None:
         """Initialize the S3 backend used by the control plane."""

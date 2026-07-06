@@ -164,9 +164,5 @@ class OrganizationDetails(BaseModel):
 
     # Relationships
     users: list[OrganizationMemberSummary]
-    invitations: list[OrganizationInvitationResponse] = Field(
-        default_factory=list
-    )
-    applications: list[OrganizationApplicationResponse] = Field(
-        default_factory=list
-    )
+    invitations: list[OrganizationInvitationResponse] = Field(default_factory=list)
+    applications: list[OrganizationApplicationResponse] = Field(default_factory=list)

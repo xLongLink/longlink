@@ -7,7 +7,7 @@ from src.environments import env
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
 from src.database.models.users import User
-from src.database.services.users import users as users_service
+from src.database.services import users as users_service
 
 
 class OidcClientStub:
@@ -46,7 +46,9 @@ class OAuthStub:
         return self.oidc_client
 
 
-def test_login_oidc_forwards_social_provider_hint(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_login_oidc_forwards_social_provider_hint(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Pass the selected social provider to Keycloak as an identity-provider hint."""
 
     # Arrange

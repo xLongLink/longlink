@@ -4,7 +4,7 @@ from src.errors import NotFoundError, UnavailableError
 from src.operations import provisioning
 from src.models.users import UserUpdate, UserProfile, UserListItem
 from src.database.models.users import User
-from src.database.services.users import users
+from src.database.services import users
 
 router = APIRouter()
 
@@ -24,7 +24,7 @@ async def get_me(user: User = Depends(authuser)) -> UserProfile:
 async def list_users(_: User = Depends(authsupport)) -> list[UserListItem]:
     """Return all user summaries for support and administrator views."""
 
-    records = await users.list()
+    records = await users.fetch_all()
     return [UserListItem.model_validate(record) for record in records]
 
 

@@ -22,11 +22,13 @@ class UserOrganization(SQLModel, table=True):
 
     # Audit
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    created_id: UUID | None = Field(default=None, foreign_key='users.id')
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
-    updated_id: UUID | None = Field(default=None, foreign_key='users.id')
+    created_id: UUID | None = Field(default=None, foreign_key="users.id")
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC), sa_column_kwargs={"onupdate": lambda: datetime.now(UTC)}
+    )
+    updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None)
-    deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
+    deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 
 
 class UserApplication(SQLModel, table=True):
@@ -46,12 +48,18 @@ class UserApplication(SQLModel, table=True):
 
     # Audit
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    created_id: UUID | None = Field(default=None, foreign_key='users.id')
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
-    updated_id: UUID | None = Field(default=None, foreign_key='users.id')
+    created_id: UUID | None = Field(default=None, foreign_key="users.id")
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC), sa_column_kwargs={"onupdate": lambda: datetime.now(UTC)}
+    )
+    updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None)
-    deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
+    deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 
     __table_args__ = (
-        ForeignKeyConstraint(["organization_id", "application_id"], ["applications.organization_id", "applications.id"], ondelete="CASCADE"),
+        ForeignKeyConstraint(
+            ["organization_id", "application_id"],
+            ["applications.organization_id", "applications.id"],
+            ondelete="CASCADE",
+        ),
     )

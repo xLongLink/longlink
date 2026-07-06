@@ -16,15 +16,15 @@ from src.models.operations import OperationKind
 from kubernetes.client.rest import ApiException
 from src.models.applications import ApplicationStatus
 from src.database.models.users import User
-from src.database.services.users import users
-from src.database.services.compute import compute
-from src.database.services.storage import storage
-from src.database.services.database import database
+from src.database.services import users
+from src.database.services import compute
+from src.database.services import storage
+from src.database.services import database
 from src.database.models.association import UserApplication, UserOrganization
-from src.database.services.locations import locations
-from src.database.services.operations import operations
-from src.database.services.applications import applications
-from src.database.services.organizations import organizations
+from src.database.services import locations
+from src.database.services import operations
+from src.database.services import applications
+from src.database.services import organizations
 
 db = SimpleNamespace(
     applications=applications,
@@ -149,7 +149,10 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
     # Assert
     assert response.status_code == 200
-    assert {item["id"] for item in response.json()} == {str(dashboard.id), str(console.id)}
+    assert {item["id"] for item in response.json()} == {
+        str(dashboard.id),
+        str(console.id),
+    }
 
 
 async def test_list_apps_without_organization_requires_admin(
@@ -205,12 +208,8 @@ async def test_create_app_returns_app_response(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create(
-        "local", "Local testing", user, Country.CH
-    )
-    remote_location = await db.locations.create(
-        "remote", "Remote testing", user, Country.CH
-    )
+    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
+    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
     organization = await db.organizations.create("acme", remote_location.id, user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
@@ -324,9 +323,7 @@ async def test_create_app_returns_app_response(
             }
             return "postgresql://fake"
 
-        async def sync_users(
-            self, organization: str, users: list[TenantUser]
-        ) -> None:
+        async def sync_users(self, organization: str, users: list[TenantUser]) -> None:
             captured["sync_users"] = {
                 "organization": organization,
                 "users": users,
@@ -335,7 +332,13 @@ async def test_create_app_returns_app_response(
     class FakeStorage:
         """Fake storage adapter for app creation tests."""
 
-        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+        def __init__(
+            self,
+            protocol: str,
+            endpoint_url: str,
+            access_key_id: str,
+            secret_access_key: str,
+        ) -> None:
             captured["storage"] = {
                 "protocol": protocol,
                 "endpoint_url": endpoint_url,
@@ -358,9 +361,30 @@ async def test_create_app_returns_app_response(
             }
             return {"access_key_id": "app-access", "secret_access_key": "app-secret"}
 
-    monkeypatch.setattr("src.operations.provisioning.K8s", FakeCompute)
-    monkeypatch.setattr("src.operations.provisioning.Postgres", FakeDatabase)
-    monkeypatch.setattr("src.operations.provisioning.S3", FakeStorage)
+    monkeypatch.setattr(
+        "src.operations.provisioning.adapters.compute",
+        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret),
+    )
+    monkeypatch.setattr(
+        "src.operations.provisioning.adapters.database",
+        lambda registry: FakeDatabase(
+            registry.host,
+            registry.port,
+            registry.username,
+            registry.password,
+            runtime_host=registry.runtime_host,
+            runtime_port=registry.runtime_port,
+        ),
+    )
+    monkeypatch.setattr(
+        "src.operations.provisioning.adapters.storage",
+        lambda registry: FakeStorage(
+            registry.protocol,
+            registry.endpoint_url,
+            registry.access_key_id,
+            registry.secret_access_key,
+        ),
+    )
     client = clients[0]
 
     # Act
@@ -390,8 +414,14 @@ async def test_create_app_returns_app_response(
     assert captured["namespace"] == "acme"
     assert captured["proxy_secret"]
     assert captured["schema"] == {"organization": "acme", "application": "dashboard"}
-    assert captured_buckets == [("shared", "acme"), ("application", "acme", "dashboard")]
-    assert captured["storage_credentials"] == {"organization": "acme", "application": "dashboard"}
+    assert captured_buckets == [
+        ("shared", "acme"),
+        ("application", "acme", "dashboard"),
+    ]
+    assert captured["storage_credentials"] == {
+        "organization": "acme",
+        "application": "dashboard",
+    }
     sync_payload = captured["sync_users"]
     assert isinstance(sync_payload, dict)
     synced_users = sync_payload["users"]
@@ -552,9 +582,7 @@ async def test_create_app_requires_storage_registry_for_required_storage_envs(
         f"No storage configured for location '{organization.location_id}' "
         "required by image environment variables: LONGLINK_STORAGE_URL"
     )
-    assert response.json() == {
-        "detail": expected_detail
-    }
+    assert response.json() == {"detail": expected_detail}
     assert await db.applications.list_by_organization(organization.id) == []
 
 
@@ -611,7 +639,10 @@ async def test_create_app_returns_403_for_regular_member(
 
         raise AssertionError("Regular organization members must not start provisioning")
 
-    monkeypatch.setattr("src.routes.applications.provisioning.create_application_runtime", fail_create_application_runtime)
+    monkeypatch.setattr(
+        "src.routes.applications.provisioning.create_application_runtime",
+        fail_create_application_runtime,
+    )
     client = clients[1]
 
     # Act
@@ -679,9 +710,7 @@ async def test_get_app_logs_returns_pod_logs(
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
 
-        async def logs(
-            self, organization: str, application: str, lines: int = 200
-        ) -> str:
+        async def logs(self, organization: str, application: str, lines: int = 200) -> str:
             captured["logs"] = {
                 "organization": organization,
                 "application": application,
@@ -690,7 +719,7 @@ async def test_get_app_logs_returns_pod_logs(
             return "line 1\nline 2"
 
     monkeypatch.setattr(
-        "src.routes.applications.compute_registry_adapter",
+        "src.routes.applications.adapters.compute",
         lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret),
     )
     client = clients[0]
@@ -737,7 +766,7 @@ async def test_delete_application_soft_deletes_and_queues_removal(
     deleted = await db.applications.get_by_id(app.id, include_deleted=True)
     assert deleted is not None
     assert deleted.deleted_id == user.id
-    recorded_operations = await db.operations.list()
+    recorded_operations = await db.operations.fetch_all()
     assert len(recorded_operations) == 1
     assert recorded_operations[0].kind == OperationKind.application_delete
     assert recorded_operations[0].step == "remove"
@@ -754,12 +783,8 @@ async def test_proxy_app_forwards_request_to_internal_service(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create(
-        "local", "Local testing", user, Country.CH
-    )
-    remote_location = await db.locations.create(
-        "remote", "Remote testing", user, Country.CH
-    )
+    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
+    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
     organization = await db.organizations.create("acme", remote_location.id, user)
     app = await db.applications.create(
         organization.id,
@@ -882,7 +907,7 @@ async def test_proxy_app_forwards_request_to_internal_service(
             )
 
     monkeypatch.setattr(
-        "src.routes.applications.compute_registry_adapter",
+        "src.routes.applications.adapters.compute",
         lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret),
     )
 
@@ -966,12 +991,8 @@ async def test_proxy_app_strips_conditional_headers_before_forwarding(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create(
-        "local", "Local testing", user, Country.CH
-    )
-    remote_location = await db.locations.create(
-        "remote", "Remote testing", user, Country.CH
-    )
+    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
+    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
     organization = await db.organizations.create("acme", remote_location.id, user)
     app = await db.applications.create(
         organization.id,
@@ -1029,7 +1050,7 @@ async def test_proxy_app_strips_conditional_headers_before_forwarding(
             return b"proxied", 200, {"content-type": "text/plain"}
 
     monkeypatch.setattr(
-        "src.routes.applications.compute_registry_adapter",
+        "src.routes.applications.adapters.compute",
         lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret),
     )
 
@@ -1066,12 +1087,8 @@ async def test_proxy_app_returns_not_modified_from_upstream(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create(
-        "local", "Local testing", user, Country.CH
-    )
-    remote_location = await db.locations.create(
-        "remote", "Remote testing", user, Country.CH
-    )
+    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
+    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
     organization = await db.organizations.create("acme", remote_location.id, user)
     app = await db.applications.create(
         organization.id,
@@ -1129,7 +1146,7 @@ async def test_proxy_app_returns_not_modified_from_upstream(
             raise exception
 
     monkeypatch.setattr(
-        "src.routes.applications.compute_registry_adapter",
+        "src.routes.applications.adapters.compute",
         lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret),
     )
 
@@ -1211,7 +1228,7 @@ async def test_proxy_app_returns_upstream_error_body(
             raise exception
 
     monkeypatch.setattr(
-        "src.routes.applications.compute_registry_adapter",
+        "src.routes.applications.adapters.compute",
         lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret),
     )
 

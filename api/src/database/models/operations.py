@@ -15,7 +15,18 @@ class Operation(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 
     # State
-    kind: OperationKind = Field(sa_column=Column(Enum(OperationKind, name="operation_kind_enum", native_enum=False, values_callable=lambda items: [item.value for item in items], create_constraint=True), nullable=False))
+    kind: OperationKind = Field(
+        sa_column=Column(
+            Enum(
+                OperationKind,
+                name="operation_kind_enum",
+                native_enum=False,
+                values_callable=lambda items: [item.value for item in items],
+                create_constraint=True,
+            ),
+            nullable=False,
+        )
+    )
 
     # Reference
     application_id: UUID | None = Field(default=None, foreign_key="applications.id")
@@ -31,10 +42,12 @@ class Operation(SQLModel, table=True):
 
     # Timestamps
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    created_id: UUID | None = Field(default=None, foreign_key='users.id')
+    created_id: UUID | None = Field(default=None, foreign_key="users.id")
     scheduled_at: datetime | None = None
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
-    updated_id: UUID | None = Field(default=None, foreign_key='users.id')
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC), sa_column_kwargs={"onupdate": lambda: datetime.now(UTC)}
+    )
+    updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     started_at: datetime | None = None
     stopped_at: datetime | None = None
 

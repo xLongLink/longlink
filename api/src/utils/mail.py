@@ -31,11 +31,7 @@ class MailDeliveryError(RuntimeError):
 def is_email_enabled() -> bool:
     """Return true when email settings are complete enough to send mail."""
 
-    return bool(
-        env.EMAIL_ENABLED
-        and env.EMAIL_SMTP_HOST
-        and env.EMAIL_FROM_ADDRESS
-    )
+    return bool(env.EMAIL_ENABLED and env.EMAIL_SMTP_HOST and env.EMAIL_FROM_ADDRESS)
 
 
 def _render_template(template_path: str | Path, context: Mapping[str, object] | None = None) -> str:
@@ -221,7 +217,9 @@ async def send_organization_invitation_email(
 ) -> None:
     """Send a ready-to-use organization invitation message."""
 
-    context = _build_invitation_context(recipient_email, inviter_name, organization_name, invitation_role, organization_id)
+    context = _build_invitation_context(
+        recipient_email, inviter_name, organization_name, invitation_role, organization_id
+    )
     await send_templated_email(
         recipient_email=recipient_email,
         subject=f"You are invited to {organization_name}",

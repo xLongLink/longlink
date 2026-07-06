@@ -1,9 +1,17 @@
+from __future__ import annotations
+
 from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 from src.models.roles import PlatformRoles
-from src.models.users import (Theme, Accent, Radius, Language, UserProfile,
-                              UserOrganizationMembership)
+from src.models.users import (
+    Theme,
+    Accent,
+    Radius,
+    Language,
+    UserProfile,
+    UserOrganizationMembership,
+)
 from src.database.session import session_scope
 from src.models.locations import LocationResponse
 from src.database.models.users import User
@@ -11,158 +19,156 @@ from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
 
 
-class UsersService:
-    async def list(self) -> list[User]:
-        """Return all users in the database."""
+async def fetch_all() -> list[User]:
+    """Return all users in the database."""
 
-        async with session_scope() as session:
-            result = await session.execute(select(User))
-            return result.scalars().all()
+    async with session_scope() as session:
+        result = await session.execute(select(User))
+        return result.scalars().all()
 
 
-    async def get_by_id(self, user_id: UUID) -> User | None:
-        """Return one user by id."""
+async def get_by_id(user_id: UUID) -> User | None:
+    """Return one user by id."""
 
-        async with session_scope() as session:
-            statement = select(User).where(User.id == user_id)
-            result = await session.execute(statement)
-            return result.scalar_one_or_none()
+    async with session_scope() as session:
+        statement = select(User).where(User.id == user_id)
+        result = await session.execute(statement)
+        return result.scalar_one_or_none()
 
-    async def profile(self, user_id: UUID) -> UserProfile | None:
-        """Return one user profile with membership roles included."""
 
-        async with session_scope() as session:
-            # Preload the organization locations so response serialization does not trigger lazy IO.
-            user_result = await session.execute(select(User).where(User.id == user_id))
-            user = user_result.scalars().first()
-            if user is None:
-                return None
+async def profile(user_id: UUID) -> UserProfile | None:
+    """Return one user profile with membership roles included."""
 
-            # Load organization memberships and their locations without lazy IO.
-            organization_result = await session.execute(
-                select(Organization, UserOrganization.role_name)
-                .join(UserOrganization, Organization.id == UserOrganization.organization_id)
-                .options(
-                    selectinload(Organization.location),
-                )
-                .where(
-                    UserOrganization.user_id == user.id,
-                    UserOrganization.deleted_at.is_(None),
-                    Organization.deleted_at.is_(None),
-                )
+    async with session_scope() as session:
+        # Preload the organization locations so response serialization does not trigger lazy IO.
+        user_result = await session.execute(select(User).where(User.id == user_id))
+        user = user_result.scalars().first()
+        if user is None:
+            return None
+
+        # Load organization memberships and their locations without lazy IO.
+        organization_result = await session.execute(
+            select(Organization, UserOrganization.role_name)
+            .join(UserOrganization, Organization.id == UserOrganization.organization_id)
+            .options(
+                selectinload(Organization.location),
             )
+            .where(
+                UserOrganization.user_id == user.id,
+                UserOrganization.deleted_at.is_(None),
+                Organization.deleted_at.is_(None),
+            )
+        )
 
-            return UserProfile(
-                id=user.id,
-                name=user.name,
-                email=user.email,
-                avatar=user.avatar,
-                role=user.role,
-                theme=user.theme,
-                accent=user.accent,
-                radius=user.radius,
-                language=user.language,
-                oidc=user.oidc,
-                organizations=[
-                    UserOrganizationMembership(
-                        id=organization.id,
-                        name=organization.name,
-                        slug=organization.slug,
-                        avatar=organization.avatar,
-                        location=LocationResponse.model_validate(organization.location),
-                        role=role_name,
-                    )
+        return UserProfile(
+            id=user.id,
+            name=user.name,
+            email=user.email,
+            avatar=user.avatar,
+            role=user.role,
+            theme=user.theme,
+            accent=user.accent,
+            radius=user.radius,
+            language=user.language,
+            oidc=user.oidc,
+            organizations=[
+                UserOrganizationMembership(
+                    id=organization.id,
+                    name=organization.name,
+                    slug=organization.slug,
+                    avatar=organization.avatar,
+                    location=LocationResponse.model_validate(organization.location),
+                    role=role_name,
+                )
                 for organization, role_name in organization_result.all()
-                ],
-            )
+            ],
+        )
 
-    async def upsert(
-        self,
-        *,
-        oidc: str,
-        email: str | None = None,
-        name: str | None = None,
-        avatar: str | None = None,
-        role: PlatformRoles | None = None,
-        theme: Theme | None = None,
-        accent: Accent | None = None,
-        radius: Radius | None = None,
-        language: Language | None = None,
-    ) -> User:
-        """Create a new OIDC user or update an existing one."""
 
-        existing_user = await self.get(oidc)
+async def upsert(
+    *,
+    oidc: str,
+    email: str | None = None,
+    name: str | None = None,
+    avatar: str | None = None,
+    role: PlatformRoles | None = None,
+    theme: Theme | None = None,
+    accent: Accent | None = None,
+    radius: Radius | None = None,
+    language: Language | None = None,
+) -> User:
+    """Create a new OIDC user or update an existing one."""
 
-        # Patch the current record in place when the subject already exists.
-        if existing_user is not None:
-            if email is not None:
-                existing_user.email = email
-            if name is not None:
-                existing_user.name = name
-            if avatar is not None:
-                existing_user.avatar = avatar or ""
-            if role is not None:
-                existing_user.role = role
-            if theme is not None:
-                existing_user.theme = theme
-            if accent is not None:
-                existing_user.accent = accent
-            if radius is not None:
-                existing_user.radius = radius
-            if language is not None:
-                existing_user.language = language
+    existing_user = await get(oidc)
 
-            existing_user.oidc = oidc
+    # Patch the current record in place when the subject already exists.
+    if existing_user is not None:
+        if email is not None:
+            existing_user.email = email
+        if name is not None:
+            existing_user.name = name
+        if avatar is not None:
+            existing_user.avatar = avatar or ""
+        if role is not None:
+            existing_user.role = role
+        if theme is not None:
+            existing_user.theme = theme
+        if accent is not None:
+            existing_user.accent = accent
+        if radius is not None:
+            existing_user.radius = radius
+        if language is not None:
+            existing_user.language = language
 
-            async with session_scope() as session:
-                session.add(existing_user)
-                await session.commit()
-                await session.refresh(existing_user)
-
-            return existing_user
+        existing_user.oidc = oidc
 
         async with session_scope() as session:
-            # Bootstrap the very first user as admin so the instance starts with one owner.
-            user_result = await session.execute(select(func.count()).select_from(User))
-            is_admin = user_result.scalar_one() == 0
-
-            # New users need the identity fields that come from the auth provider.
-            if name is None or email is None:
-                raise ValueError("Missing user fields")
-
-            # Resolve the platform role from explicit input or the bootstrap default.
-            if role is not None:
-                resolved_role = role
-            elif is_admin:
-                resolved_role = PlatformRoles.administrator
-            else:
-                resolved_role = PlatformRoles.user
-
-            user = User(
-                name=name,
-                email=email,
-                avatar=avatar or "",
-                oidc=oidc,
-                role=resolved_role,
-                theme=theme if theme is not None else Theme.dark,
-                accent=accent if accent is not None else Accent.neutral,
-                radius=radius if radius is not None else Radius.medium,
-                language=language if language is not None else Language.en,
-            )
-
-            session.add(user)
+            session.add(existing_user)
             await session.commit()
-            await session.refresh(user)
+            await session.refresh(existing_user)
 
-            return user
+        return existing_user
 
-    async def get(self, oidc: str) -> User | None:
-        """Retrieve a user by OIDC subject."""
+    async with session_scope() as session:
+        # Bootstrap the very first user as admin so the instance starts with one owner.
+        user_result = await session.execute(select(func.count()).select_from(User))
+        is_admin = user_result.scalar_one() == 0
 
-        async with session_scope() as session:
-            statement = select(User).where(User.oidc == oidc)
-            result = await session.execute(statement)
-            return result.scalars().first()
+        # New users need the identity fields that come from the auth provider.
+        if name is None or email is None:
+            raise ValueError("Missing user fields")
+
+        # Resolve the platform role from explicit input or the bootstrap default.
+        if role is not None:
+            resolved_role = role
+        elif is_admin:
+            resolved_role = PlatformRoles.administrator
+        else:
+            resolved_role = PlatformRoles.user
+
+        user = User(
+            name=name,
+            email=email,
+            avatar=avatar or "",
+            oidc=oidc,
+            role=resolved_role,
+            theme=theme if theme is not None else Theme.dark,
+            accent=accent if accent is not None else Accent.neutral,
+            radius=radius if radius is not None else Radius.medium,
+            language=language if language is not None else Language.en,
+        )
+
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+
+        return user
 
 
-users = UsersService()
+async def get(oidc: str) -> User | None:
+    """Retrieve a user by OIDC subject."""
+
+    async with session_scope() as session:
+        statement = select(User).where(User.oidc == oidc)
+        result = await session.execute(statement)
+        return result.scalars().first()

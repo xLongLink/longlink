@@ -1,24 +1,29 @@
 from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from src.auth import authadmin, authsupport
+from src import adapters
 from src.logger import logger
 from src.errors import ConflictError, NotFoundError, UnavailableError
-from src.models.computes import (PodResponse, NamespaceResponse,
-                                 ComputeRegistryCreate,
-                                 ComputeRegistryResponse,
-                                 ComputeResourcesResponse)
-from src.adapters.compute import compute_registry_adapter
+from src.models.computes import (
+    PodResponse,
+    NamespaceResponse,
+    ComputeRegistryCreate,
+    ComputeRegistryResponse,
+    ComputeResourcesResponse,
+)
 from src.database.models.users import User
-from src.database.services.compute import compute
+from src.database.services import compute
 
 router = APIRouter()
 
 
 @router.get("/api/computes", response_model=list[ComputeRegistryResponse])
-async def list_compute_registries(_user: User = Depends(authsupport)) -> list[ComputeRegistryResponse]:
+async def list_compute_registries(
+    _user: User = Depends(authsupport),
+) -> list[ComputeRegistryResponse]:
     """Return all registered compute backends."""
 
-    registries = await compute.list()
+    registries = await compute.fetch_all()
     return [ComputeRegistryResponse.model_validate(registry) for registry in registries]
 
 
@@ -49,7 +54,9 @@ async def delete_compute_registry(registry_id: UUID, user: User = Depends(authad
 
 
 @router.post("/api/computes", response_model=ComputeRegistryResponse)
-async def create_compute_registry(payload: ComputeRegistryCreate, user: User = Depends(authadmin)) -> ComputeRegistryResponse:
+async def create_compute_registry(
+    payload: ComputeRegistryCreate, user: User = Depends(authadmin)
+) -> ComputeRegistryResponse:
     """Create one compute backend registration."""
 
     try:
@@ -59,7 +66,7 @@ async def create_compute_registry(payload: ComputeRegistryCreate, user: User = D
 
     # Initialize the cluster immediately so unavailable backends fail fast.
     try:
-        compute_adapter = compute_registry_adapter(registry)
+        compute_adapter = adapters.compute(registry)
         await compute_adapter.setup()
     except Exception as exc:
         raise UnavailableError("Failed to initialize the compute cluster") from exc
@@ -75,7 +82,7 @@ async def get_compute_resources(registry_id: UUID, _: User = Depends(authsupport
     if registry is None:
         raise NotFoundError("Compute registry", registry_id)
 
-    compute_adapter = compute_registry_adapter(registry)
+    compute_adapter = adapters.compute(registry)
     try:
         data = await compute_adapter.resources()
     except Exception as exc:
@@ -93,7 +100,7 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
     if registry is None:
         raise NotFoundError("Compute registry", registry_id)
 
-    compute_adapter = compute_registry_adapter(registry)
+    compute_adapter = adapters.compute(registry)
     try:
         names = await compute_adapter.namespaces()
     except Exception as exc:
@@ -103,7 +110,10 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
     return [NamespaceResponse(name=n) for n in names]
 
 
-@router.get("/api/computes/{registry_id}/namespaces/{namespace}/pods", response_model=list[PodResponse])
+@router.get(
+    "/api/computes/{registry_id}/namespaces/{namespace}/pods",
+    response_model=list[PodResponse],
+)
 async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depends(authsupport)) -> list[PodResponse]:
     """List all pods in a namespace on a compute backend."""
 
@@ -111,11 +121,15 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
     if registry is None:
         raise NotFoundError("Compute registry", registry_id)
 
-    compute_adapter = compute_registry_adapter(registry)
+    compute_adapter = adapters.compute(registry)
     try:
         pods = await compute_adapter.pods(namespace)
     except Exception as exc:
-        logger.exception("Failed to inspect pods in namespace '%s' for registry '%s'", namespace, registry_id)
+        logger.exception(
+            "Failed to inspect pods in namespace '%s' for registry '%s'",
+            namespace,
+            registry_id,
+        )
         raise UnavailableError("Compute pods unavailable") from exc
 
     return [PodResponse.model_validate(p) for p in pods]

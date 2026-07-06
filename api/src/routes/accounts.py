@@ -3,12 +3,16 @@ from src.auth import SessionAccountsService
 from src.errors import NotFoundError, ForbiddenError
 from src.models.users import UserListItem
 from src.models.common import SuccessResponse
-from src.database.services.users import users
+from src.database.services import users
 
 router = APIRouter()
 
 
-@router.post("/auth/accounts/{oidc}/activate", response_model=SuccessResponse, include_in_schema=False)
+@router.post(
+    "/auth/accounts/{oidc}/activate",
+    response_model=SuccessResponse,
+    include_in_schema=False,
+)
 async def activate_account(oidc: str, request: Request) -> SuccessResponse:
     """Switch the active account within the current browser session."""
 
@@ -23,7 +27,11 @@ async def activate_account(oidc: str, request: Request) -> SuccessResponse:
     return SuccessResponse()
 
 
-@router.post("/auth/accounts/deactivate", response_model=list[UserListItem], include_in_schema=False)
+@router.post(
+    "/auth/accounts/deactivate",
+    response_model=list[UserListItem],
+    include_in_schema=False,
+)
 async def deactivate_account(request: Request) -> list[UserListItem]:
     """Clear the active account without removing saved accounts."""
 

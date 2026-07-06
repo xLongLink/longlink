@@ -40,7 +40,6 @@ def upgrade() -> None:
         batch_op.alter_column("runtime_port", existing_type=sa.Integer(), nullable=False)
 
 
-
 def downgrade() -> None:
     """Remove application runtime database addresses."""
 

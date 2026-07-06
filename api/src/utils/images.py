@@ -181,14 +181,14 @@ def _parse_image_ref(image: str) -> tuple[str, str, str]:
 
     # Digest references include a colon that must not be treated as a tag separator.
     if digest_separator != -1:
-        reference = image[digest_separator + 1:]
+        reference = image[digest_separator + 1 :]
         image = image[:digest_separator]
     else:
         tag_separator = image.rfind(":")
         path_separator = image.rfind("/")
 
         if tag_separator > path_separator:
-            reference = image[tag_separator + 1:]
+            reference = image[tag_separator + 1 :]
             image = image[:tag_separator]
 
     if "/" in image:
@@ -320,9 +320,7 @@ async def _fetch_manifest(
     data = _response_json_object(resp)
     if data is None:
         return None
-    digest = _response_manifest_digest(resp) or (
-        tag if IMAGE_DIGEST_PATTERN.fullmatch(tag) else None
-    )
+    digest = _response_manifest_digest(resp) or (tag if IMAGE_DIGEST_PATTERN.fullmatch(tag) else None)
 
     # Resolve multi-arch manifest list to a single platform manifest.
     manifests = data.get("manifests")
@@ -363,7 +361,9 @@ async def _fetch_manifest(
     return data, digest
 
 
-async def _fetch_blob(client: httpx2.AsyncClient, registry_url: str, repository: str, digest: str) -> dict[str, Any] | None:
+async def _fetch_blob(
+    client: httpx2.AsyncClient, registry_url: str, repository: str, digest: str
+) -> dict[str, Any] | None:
     """Fetch an image config blob from the OCI Distribution API."""
 
     url = f"{registry_url}/v2/{repository}/blobs/{digest}"
@@ -388,9 +388,7 @@ async def _resolve_bearer_token(client: httpx2.AsyncClient, repository: str, res
     if not auth_header.startswith("Bearer "):
         return None
 
-    params = urllib.request.parse_keqv_list(
-        urllib.request.parse_http_list(auth_header.removeprefix("Bearer "))
-    )
+    params = urllib.request.parse_keqv_list(urllib.request.parse_http_list(auth_header.removeprefix("Bearer ")))
 
     realm = params.get("realm")
     if realm is None:

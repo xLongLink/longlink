@@ -72,7 +72,6 @@ class K8s(Compute):
 
             create_call(namespace, body)
 
-
     def _pods(self, organization: str, application: str) -> list[client.V1Pod]:
         """Return pods for one managed application."""
 
@@ -80,12 +79,10 @@ class K8s(Compute):
         name = names.knames(application, "Application name")
         return self._core_api.list_namespaced_pod(namespace, label_selector=f"app={name}").items
 
-
     def application_pods(self, organization: str, application: str) -> list[client.V1Pod]:
         """Return pods for one managed application."""
 
         return self._pods(organization, application)
-
 
     def proxy(
         self,
@@ -103,11 +100,7 @@ class K8s(Compute):
         name = names.knames(application, "Application name")
         resource_path = f"/api/v1/namespaces/{namespace}/services/{name}/proxy/{path}"
         # Let the HTTP client calculate the length after any body normalization.
-        proxy_headers = {
-            key: value
-            for key, value in headers.items()
-            if key.lower() != "content-length"
-        }
+        proxy_headers = {key: value for key, value in headers.items() if key.lower() != "content-length"}
         content_type = next(
             (value for key, value in proxy_headers.items() if key.lower() == "content-type"),
             None,
@@ -115,11 +108,7 @@ class K8s(Compute):
 
         # The Kubernetes client checks this header case-sensitively before choosing its encoder.
         if content_type is not None:
-            proxy_headers = {
-                key: value
-                for key, value in proxy_headers.items()
-                if key.lower() != "content-type"
-            }
+            proxy_headers = {key: value for key, value in proxy_headers.items() if key.lower() != "content-type"}
             proxy_headers["Content-Type"] = content_type
 
         proxy_body: object | None = body or None
@@ -143,7 +132,6 @@ class K8s(Compute):
         )
 
         return response_body.data, status_code, response_headers
-
 
     async def namespace(self, organization: str) -> None:
         """Create the namespace for an organization if it does not exist."""
@@ -205,7 +193,9 @@ class K8s(Compute):
             port=port,
             rollout_token=rollout_token,
         )
-        application_manifests = application_manifests if isinstance(application_manifests, list) else [application_manifests]
+        application_manifests = (
+            application_manifests if isinstance(application_manifests, list) else [application_manifests]
+        )
 
         # Apply each manifest by kind so deployments and services use the right Kubernetes client.
         for manifest in application_manifests:
@@ -230,7 +220,6 @@ class K8s(Compute):
 
         return f"/{namespace}/{name}/"
 
-
     async def delete_application(self, organization: str, application: str) -> None:
         """Delete one managed application workload and tolerate missing resources."""
 
@@ -249,7 +238,6 @@ class K8s(Compute):
                 if exc.status != 404:
                     raise ValueError(f"Failed deleting {kind} '{namespace}/{name}'") from exc
 
-
     async def delete_namespace(self, organization: str) -> None:
         """Delete one managed organization namespace and tolerate missing namespaces."""
 
@@ -259,7 +247,6 @@ class K8s(Compute):
         except ApiException as exc:
             if exc.status != 404:
                 raise ValueError(f"Failed deleting namespace '{namespace}'") from exc
-
 
     async def logs(self, organization: str, application: str, lines: int = 200) -> str:
         """Return recent logs for one managed application."""
@@ -299,15 +286,10 @@ class K8s(Compute):
         except ApiException as exc:
             raise ValueError(f"Failed reading logs for '{namespace}/{name}'") from exc
 
-
     async def namespaces(self) -> list[str]:
         """List all namespaces managed by the control plane."""
 
-        return [
-            ns.metadata.name
-            for ns in self._core_api.list_namespace(label_selector="managed-by=longlink").items
-        ]
-
+        return [ns.metadata.name for ns in self._core_api.list_namespace(label_selector="managed-by=longlink").items]
 
     async def resources(self) -> dict[str, int | float]:
         """Return total and allocatable cluster resources."""
@@ -333,7 +315,6 @@ class K8s(Compute):
             "cpu_free": allocatable_cpu,
         }
 
-
     async def pods(self, namespace: str) -> list[dict[str, object]]:
         """List all pods in a namespace."""
 
@@ -341,9 +322,7 @@ class K8s(Compute):
         metrics_by_pod: dict[str, dict[str, int | float]] = {}
         try:
             custom_api = client.CustomObjectsApi(self._api_client)
-            pod_metrics = custom_api.list_namespaced_custom_object(
-                "metrics.k8s.io", "v1beta1", namespace, "pods"
-            )
+            pod_metrics = custom_api.list_namespaced_custom_object("metrics.k8s.io", "v1beta1", namespace, "pods")
             for item in pod_metrics.get("items", []):
                 cpu_usage = 0.0
                 ram_usage = 0
@@ -381,8 +360,7 @@ class K8s(Compute):
                 "status": pod.status.phase,
                 "node": pod.spec.node_name,
                 "created_at": (
-                    pod.metadata.creation_timestamp.isoformat()
-                    if pod.metadata.creation_timestamp else None
+                    pod.metadata.creation_timestamp.isoformat() if pod.metadata.creation_timestamp else None
                 ),
                 "resources": _pod_resources(pod),
             }

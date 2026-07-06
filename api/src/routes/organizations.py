@@ -1,41 +1,50 @@
 from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from datetime import UTC, datetime, timedelta
-from src.auth import authuser, authsupport, organization_access, organization_member_access
-from src.errors import (ConflictError, NotFoundError, ForbiddenError,
-                        UnavailableError)
+from src import adapters
+from src.auth import (
+    authuser,
+    authsupport,
+    organization_access,
+    organization_member_access,
+)
+from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.logger import logger
 from src.operations import provisioning
-from tenant.storage import (bucket_name, shared_bucket_name,
-                            organization_bucket_prefix)
+from tenant.storage import bucket_name, shared_bucket_name, organization_bucket_prefix
 from tenant.database import SHARED_SCHEMA
 from src.models.icons import parse_icon
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.storages import (OrganizationStorageResourceKind,
-                                 OrganizationStorageResourceResponse,
-                                 OrganizationStorageApplicationResponse)
+from src.models.storages import (
+    OrganizationStorageResourceKind,
+    OrganizationStorageResourceResponse,
+    OrganizationStorageApplicationResponse,
+)
 from src.utils.namespace import dbname
-from src.adapters.storage import storage_registry_adapter
-from src.models.databases import (OrganizationDatabaseResourceKind,
-                                   OrganizationDatabaseTableResponse,
-                                   OrganizationDatabaseResourceResponse,
-                                   OrganizationDatabaseApplicationResponse)
-from src.adapters.database import database_registry_adapter
+from src.models.databases import (
+    OrganizationDatabaseResourceKind,
+    OrganizationDatabaseTableResponse,
+    OrganizationDatabaseResourceResponse,
+    OrganizationDatabaseApplicationResponse,
+)
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationResponse
-from src.models.organizations import (OrganizationCreate, OrganizationDetails,
-                                      OrganizationSummary,
-                                      OrganizationMemberUpdate,
-                                      OrganizationInvitationCreate)
+from src.models.organizations import (
+    OrganizationCreate,
+    OrganizationDetails,
+    OrganizationSummary,
+    OrganizationMemberUpdate,
+    OrganizationInvitationCreate,
+)
 from src.database.models.users import User
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
-from src.database.services.operations import operations
-from src.database.services.invitations import invitations
-from src.database.services.applications import applications
-from src.database.services.organizations import organizations
+from src.database.services import operations
+from src.database.services import invitations
+from src.database.services import applications
+from src.database.services import organizations
 
 router = APIRouter()
 TABLE_PREVIEW_LIMIT = 100
@@ -43,10 +52,12 @@ ORGANIZATION_DELETE_DELAY_DAYS = 0
 
 
 @router.get("/api/organizations", response_model=list[OrganizationSummary])
-async def list_organizations(_user: User = Depends(authsupport)) -> list[OrganizationSummary]:
+async def list_organizations(
+    _user: User = Depends(authsupport),
+) -> list[OrganizationSummary]:
     """Return all organizations for support and administrator views."""
 
-    records = await organizations.list()
+    records = await organizations.fetch_all()
     return [OrganizationSummary.model_validate(record) for record in records]
 
 
@@ -57,15 +68,23 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     return await organization_access(organization_id, user)
 
 
-@router.get("/api/organizations/{organization_id}/applications", response_model=list[ApplicationResponse])
-async def list_organization_applications(organization_id: UUID, user: User = Depends(authuser)) -> list[ApplicationResponse]:
+@router.get(
+    "/api/organizations/{organization_id}/applications",
+    response_model=list[ApplicationResponse],
+)
+async def list_organization_applications(
+    organization_id: UUID, user: User = Depends(authuser)
+) -> list[ApplicationResponse]:
     """Return the applications for one organization."""
 
     await organization_member_access(organization_id, user)
     return await applications.list_responses(organization_id, user.id, user)
 
 
-@router.get("/api/organizations/{organization_id}/database", response_model=list[OrganizationDatabaseResourceResponse])
+@router.get(
+    "/api/organizations/{organization_id}/database",
+    response_model=list[OrganizationDatabaseResourceResponse],
+)
 async def list_organization_database_resources(
     organization_id: UUID,
     user: User = Depends(authuser),
@@ -81,7 +100,10 @@ async def list_organization_database_resources(
     return await _database_resource_rows(organization, registry, active_applications)
 
 
-@router.get("/api/organizations/{organization_id}/storage", response_model=list[OrganizationStorageResourceResponse])
+@router.get(
+    "/api/organizations/{organization_id}/storage",
+    response_model=list[OrganizationStorageResourceResponse],
+)
 async def list_organization_storage_resources(
     organization_id: UUID,
     user: User = Depends(authuser),
@@ -111,25 +133,38 @@ async def list_organization_database_resource_tables(
 
     organization = await organization_member_access(organization_id, user)
     membership_role = await organizations.membership_role(organization_id, user.id)
-    if membership_role not in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
+    if membership_role not in {
+        OrganizationRoles.admin,
+        OrganizationRoles.maintain,
+        OrganizationRoles.owner,
+    }:
         raise ForbiddenError("Database resource inspection permissions required")
 
     registry = await provisioning.organization_database_registry(organization)
     if registry is None:
         raise NotFoundError("Database resource", resource_name)
 
-    database_adapter = database_registry_adapter(registry)
+    database_adapter = adapters.database(registry)
     database_name = dbname(organization.slug)
 
     try:
-        if resource_name in {"information_schema", "pg_catalog", "pg_toast", "public"} or resource_name.startswith("pg_"):
+        if resource_name in {
+            "information_schema",
+            "pg_catalog",
+            "pg_toast",
+            "public",
+        } or resource_name.startswith("pg_"):
             raise NotFoundError("Database resource", resource_name)
 
         tables = await database_adapter.tables(database_name, resource_name, limit=TABLE_PREVIEW_LIMIT)
     except NotFoundError:
         raise
     except Exception as exc:
-        logger.exception("Failed to inspect database resource '%s' for organization '%s'", resource_name, organization.slug)
+        logger.exception(
+            "Failed to inspect database resource '%s' for organization '%s'",
+            resource_name,
+            organization.slug,
+        )
         raise UnavailableError("Database resource unavailable") from exc
 
     return [OrganizationDatabaseTableResponse.model_validate(table) for table in tables]
@@ -145,7 +180,11 @@ async def create_organization_invitation(
 
     await organization_member_access(organization_id, user)
     membership_role = await organizations.membership_role(organization_id, user.id)
-    if membership_role not in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
+    if membership_role not in {
+        OrganizationRoles.admin,
+        OrganizationRoles.maintain,
+        OrganizationRoles.owner,
+    }:
         raise ForbiddenError("Invitation permissions required")
     if payload.role == OrganizationRoles.owner and membership_role != OrganizationRoles.owner:
         raise ForbiddenError("Owner invitation permissions required")
@@ -229,10 +268,13 @@ async def _database_resource_rows(
     application_by_schema = {application.slug: application for application in active_applications}
 
     try:
-        database_adapter = database_registry_adapter(registry)
+        database_adapter = adapters.database(registry)
         schema_usage = await database_adapter.schema_usage(database_name)
     except Exception as exc:
-        logger.exception("Failed to inspect database resources for organization '%s'", organization.slug)
+        logger.exception(
+            "Failed to inspect database resources for organization '%s'",
+            organization.slug,
+        )
         raise UnavailableError("Database resources unavailable") from exc
 
     rows: list[OrganizationDatabaseResourceResponse] = []
@@ -309,7 +351,7 @@ async def _storage_resource_rows(
     """Inspect one storage backend and return managed organization bucket rows."""
 
     try:
-        storage_client = storage_registry_adapter(registry)
+        storage_client = adapters.storage(registry)
         bucket_names = set(await storage_client.buckets())
         expected_bucket_names: set[str] = set()
         managed_shared_bucket_name = shared_bucket_name(organization.slug)

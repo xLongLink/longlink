@@ -29,18 +29,13 @@ class StorageRuntimeCredentials(TypedDict):
 class Storage(ABC):
     """Storage adapter root.
 
-    Storage Cluster               # Managed by the control plane
-    └── Tenant                    # One per organization
-        ├── Shared Bucket         # Optional organization-level shared objects
-        ├── App A Bucket          # Isolated storage for App A
-        └── App B Bucket          # Isolated storage for App B
+    Storage Backend                     # Managed by the control plane
+    ├── longlink-{organization}-shared  # Optional organization-level shared objects
+    ├── longlink-{organization}-app-a   # Isolated storage for App A
+    └── longlink-{organization}-app-b   # Isolated storage for App B
 
     Each application has read/write access to its own bucket, and read-only access to shared bucket.
     """
-
-    @abstractmethod
-    async def tenant(self, organization: str) -> str:
-        """Create the storage tenant for an organization if it does not exist and return a tenant identifier."""
 
     @abstractmethod
     async def bucket(self, organization: str, bucket_slug: str) -> str:

@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class Location(SQLModel, table=True):
     """Represent a physical or cloud location where infrastructure runs."""
 
-    __tablename__: ClassVar[str] = 'locations'
+    __tablename__: ClassVar[str] = "locations"
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)
@@ -22,7 +22,9 @@ class Location(SQLModel, table=True):
     # Metadata
     name: str = Field(max_length=255)
     slug: str = Field(unique=True, max_length=128)
-    country: Country = Field(default=Country.CH, sa_column=Column(String(2), server_default=text("'CH'"), nullable=False))
+    country: Country = Field(
+        default=Country.CH, sa_column=Column(String(2), server_default=text("'CH'"), nullable=False)
+    )
     provider: LocationProvider = Field(
         default=LocationProvider.local,
         sa_column=Column(
@@ -34,11 +36,13 @@ class Location(SQLModel, table=True):
 
     # Audit
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    created_by: Optional["User"] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Location.created_id'})
-    created_id: UUID | None = Field(default=None, foreign_key='users.id')
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC), sa_column_kwargs={'onupdate': lambda: datetime.now(UTC)})
-    updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Location.updated_id'})
-    updated_id: UUID | None = Field(default=None, foreign_key='users.id')
+    created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Location.created_id"})
+    created_id: UUID | None = Field(default=None, foreign_key="users.id")
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(UTC), sa_column_kwargs={"onupdate": lambda: datetime.now(UTC)}
+    )
+    updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Location.updated_id"})
+    updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None)
-    deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={'foreign_keys': 'Location.deleted_id'})
-    deleted_id: UUID | None = Field(default=None, foreign_key='users.id')
+    deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Location.deleted_id"})
+    deleted_id: UUID | None = Field(default=None, foreign_key="users.id")

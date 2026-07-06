@@ -10,7 +10,7 @@ from src.models.auth import OidcUserInfo, OidcTokenResponse
 from src.environments import env
 from fastapi.responses import RedirectResponse
 from src.models.common import SuccessResponse
-from src.database.services.users import users
+from src.database.services import users
 
 router = APIRouter()
 DEFAULT_POST_LOGIN_REDIRECT: Final[str] = "/organizations"

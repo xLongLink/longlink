@@ -719,7 +719,9 @@ class ISICClassName(str, Enum):
     C2670 = "Manufacture of optical instruments and photographic equipment"
     C2680 = "Manufacture of magnetic and optical media"
 
-    C2710 = "Manufacture of electric motors, generators, transformers and electricity distribution and control apparatus"
+    C2710 = (
+        "Manufacture of electric motors, generators, transformers and electricity distribution and control apparatus"
+    )
     C2720 = "Manufacture of batteries and accumulators"
     C2731 = "Manufacture of fibre optic cables"
     C2732 = "Manufacture of other electronic and electric wires and cables"
@@ -857,7 +859,9 @@ class ISICClassName(str, Enum):
 
     G4730 = "Retail sale of automotive fuel in specialized stores"
 
-    G4741 = "Retail sale of computers, peripheral units, software and telecommunications equipment in specialized stores"
+    G4741 = (
+        "Retail sale of computers, peripheral units, software and telecommunications equipment in specialized stores"
+    )
     G4742 = "Retail sale of audio and video equipment in specialized stores"
 
     G4751 = "Retail sale of textiles in specialized stores"

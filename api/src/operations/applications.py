@@ -1,17 +1,17 @@
 from enum import Enum
 from typing import Any
 from datetime import UTC, datetime, timedelta
+from src import adapters
 from src.logger import logger
 from src.operations import provisioning
 from src.models.statuses import ApplicationStatus
-from src.adapters.compute import K8s
 from src.models.operations import OperationKind
 from src.operations.registry import operation_handler
 from kubernetes.client.exceptions import ApiException as KubernetesApiException
 from src.database.models.operations import Operation
-from src.database.services.operations import operations
-from src.database.services.applications import applications
-from src.database.services.organizations import organizations
+from src.database.services import operations
+from src.database.services import applications
+from src.database.services import organizations
 
 
 class ApplicationStartupState(str, Enum):
@@ -62,7 +62,11 @@ def application_pods_startup_state(pods: list[Any], operation_created_at: dateti
             continue
 
         container_statuses = getattr(status, "container_statuses", None) or []
-        if status.phase == "Running" and container_statuses and all(container.ready for container in container_statuses):
+        if (
+            status.phase == "Running"
+            and container_statuses
+            and all(container.ready for container in container_statuses)
+        ):
             return ApplicationStartupState.ready
 
     dead_pods = 0
@@ -115,11 +119,11 @@ async def inspect_application_startup(operation: Operation) -> ApplicationStartu
     if registry is None:
         return ApplicationStartupState.pending
 
-    k8s = K8s(registry.kubeconfig, registry.proxy_secret)
+    compute_adapter = adapters.compute(registry)
 
     # Inspect pods once so ready and terminal states use the same runtime snapshot.
     try:
-        pods = k8s.application_pods(organization.slug, application.slug)
+        pods = compute_adapter.application_pods(organization.slug, application.slug)
     except KubernetesApiException:
         return ApplicationStartupState.pending
 

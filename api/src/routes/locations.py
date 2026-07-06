@@ -5,7 +5,7 @@ from src.utils import names
 from src.errors import ConflictError, NotFoundError
 from src.models.locations import LocationCreate, LocationResponse
 from src.database.models.users import User
-from src.database.services.locations import locations
+from src.database.services import locations
 
 router = APIRouter()
 
@@ -14,7 +14,7 @@ router = APIRouter()
 async def list_locations(_: User = Depends(authsupport)) -> list[LocationResponse]:
     """Return all registered locations."""
 
-    return [LocationResponse.model_validate(location) for location in await locations.list()]
+    return [LocationResponse.model_validate(location) for location in await locations.fetch_all()]
 
 
 @router.get("/api/locations/{location_id}", response_model=LocationResponse)
@@ -49,7 +49,13 @@ async def create_location(payload: LocationCreate, user: User = Depends(authadmi
 
     # Surface validation errors as a conflict so the API stays consistent with other create flows.
     try:
-        location = await locations.create(names.slugify(payload.name), payload.name, user, payload.country, payload.provider)
+        location = await locations.create(
+            names.slugify(payload.name),
+            payload.name,
+            user,
+            payload.country,
+            payload.provider,
+        )
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
 

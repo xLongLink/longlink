@@ -9,15 +9,15 @@ from src.models.countries import Country
 from src.models.databases import DatabaseKind
 from src.models.operations import OperationKind
 from src.database.models.users import User
-from src.database.services.users import users
-from src.database.services.storage import storage
-from src.database.services.database import database
+from src.database.services import users
+from src.database.services import storage
+from src.database.services import database
 from src.database.models.association import UserOrganization
-from src.database.services.locations import locations
-from src.database.services.operations import operations
-from src.database.services.invitations import invitations
-from src.database.services.applications import applications
-from src.database.services.organizations import organizations
+from src.database.services import locations
+from src.database.services import operations
+from src.database.services import invitations
+from src.database.services import applications
+from src.database.services import organizations
 
 db = SimpleNamespace(
     applications=applications,
@@ -72,7 +72,16 @@ async def test_create_organization_initializes_database(
     client = clients[0]
     calls: list[tuple[str, str, list[TenantUser] | None]] = []
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    await db.database.create(DatabaseKind.postgresql, "primary", "db.longlink.internal", 5432, "longlink", "secret", location.id, owner)
+    await db.database.create(
+        DatabaseKind.postgresql,
+        "primary",
+        "db.longlink.internal",
+        5432,
+        "longlink",
+        "secret",
+        location.id,
+        owner,
+    )
 
     class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str) -> None:
@@ -88,7 +97,10 @@ async def test_create_organization_initializes_database(
         async def sync_users(self, organization: str, users: list[TenantUser]) -> None:
             calls.append(("sync_users", organization, users))
 
-    monkeypatch.setattr("src.operations.provisioning.Postgres", FakePostgres)
+    monkeypatch.setattr(
+        "src.operations.provisioning.adapters.database",
+        lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
+    )
 
     # Act
     response = client.post(
@@ -119,10 +131,25 @@ async def test_create_organization_initializes_storage(
     client = clients[0]
     calls: list[tuple[str, ...]] = []
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    await db.storage.create(StorageKind.s3, "primary", "http", "http://storage.local", "access", "secret", location.id, owner)
+    await db.storage.create(
+        StorageKind.s3,
+        "primary",
+        "http",
+        "http://storage.local",
+        "access",
+        "secret",
+        location.id,
+        owner,
+    )
 
     class FakeStorage:
-        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+        def __init__(
+            self,
+            protocol: str,
+            endpoint_url: str,
+            access_key_id: str,
+            secret_access_key: str,
+        ) -> None:
             self.protocol = protocol
             self.endpoint_url = endpoint_url
             self.access_key_id = access_key_id
@@ -132,7 +159,15 @@ async def test_create_organization_initializes_storage(
             calls.append(("bucket", organization, application))
             return f"longlink-{organization}-{application}"
 
-    monkeypatch.setattr("src.operations.provisioning.S3", FakeStorage)
+    monkeypatch.setattr(
+        "src.operations.provisioning.adapters.storage",
+        lambda registry: FakeStorage(
+            registry.protocol,
+            registry.endpoint_url,
+            registry.access_key_id,
+            registry.secret_access_key,
+        ),
+    )
 
     # Act
     response = client.post(
@@ -154,7 +189,9 @@ async def test_get_organization_returns_member_payload(
     # Arrange
     owner = users[0]
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner, avatar="https://example.com/organizations/acme.png")
+    organization = await db.organizations.create(
+        "acme", location.id, owner, avatar="https://example.com/organizations/acme.png"
+    )
     application = await db.applications.create(
         organization.id,
         "dashboard",
@@ -209,7 +246,7 @@ async def test_delete_organization_soft_deletes_and_queues_removal(
     assert deleted is not None
     assert deleted.deleted_at is not None
     assert await db.applications.list_by_organization(organization.id) == []
-    recorded_operations = await db.operations.list()
+    recorded_operations = await db.operations.fetch_all()
     assert len(recorded_operations) == 1
     assert recorded_operations[0].kind == OperationKind.organization_delete
     assert recorded_operations[0].step == "remove"
@@ -229,7 +266,16 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     client = clients[0]
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.organizations.create("acme", location.id, owner)
-    registry = await db.database.create(DatabaseKind.postgresql, "primary", "db.longlink.internal", 5432, "longlink", "secret", location.id, owner)
+    registry = await db.database.create(
+        DatabaseKind.postgresql,
+        "primary",
+        "db.longlink.internal",
+        5432,
+        "longlink",
+        "secret",
+        location.id,
+        owner,
+    )
     dashboard = await db.applications.create(
         organization.id,
         "dashboard",
@@ -259,13 +305,28 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
         async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
             assert database_name == "longlink_acme"
             return [
-                {"name": "shared", "space_used": 1024, "table_count": 1, "row_estimate": 5},
-                {"name": "dashboard", "space_used": 2048, "table_count": 2, "row_estimate": 42},
-                {"name": "stale", "space_used": 512, "table_count": 1, "row_estimate": 3},
+                {
+                    "name": "shared",
+                    "space_used": 1024,
+                    "table_count": 1,
+                    "row_estimate": 5,
+                },
+                {
+                    "name": "dashboard",
+                    "space_used": 2048,
+                    "table_count": 2,
+                    "row_estimate": 42,
+                },
+                {
+                    "name": "stale",
+                    "space_used": 512,
+                    "table_count": 1,
+                    "row_estimate": 3,
+                },
             ]
 
     monkeypatch.setattr(
-        "src.routes.organizations.database_registry_adapter",
+        "src.routes.organizations.adapters.database",
         lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
     )
 
@@ -300,7 +361,16 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     client = clients[0]
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.organizations.create("acme", location.id, owner)
-    registry = await db.database.create(DatabaseKind.postgresql, "primary", "db.longlink.internal", 5432, "longlink", "secret", location.id, owner)
+    registry = await db.database.create(
+        DatabaseKind.postgresql,
+        "primary",
+        "db.longlink.internal",
+        5432,
+        "longlink",
+        "secret",
+        location.id,
+        owner,
+    )
     await db.applications.create(
         organization.id,
         "dashboard",
@@ -321,7 +391,7 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
             raise RuntimeError("database offline")
 
     monkeypatch.setattr(
-        "src.routes.organizations.database_registry_adapter",
+        "src.routes.organizations.adapters.database",
         lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
     )
 
@@ -345,7 +415,16 @@ async def test_organization_storage_endpoint_returns_managed_buckets(
     client = clients[0]
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.organizations.create("acme", location.id, owner)
-    registry = await db.storage.create(StorageKind.s3, "primary", "http", "http://storage.local", "access", "secret", location.id, owner)
+    registry = await db.storage.create(
+        StorageKind.s3,
+        "primary",
+        "http",
+        "http://storage.local",
+        "access",
+        "secret",
+        location.id,
+        owner,
+    )
     dashboard = await db.applications.create(
         organization.id,
         "dashboard",
@@ -366,7 +445,13 @@ async def test_organization_storage_endpoint_returns_managed_buckets(
     )
 
     class FakeStorage:
-        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+        def __init__(
+            self,
+            protocol: str,
+            endpoint_url: str,
+            access_key_id: str,
+            secret_access_key: str,
+        ) -> None:
             self.protocol = protocol
             self.endpoint_url = endpoint_url
             self.access_key_id = access_key_id
@@ -385,7 +470,7 @@ async def test_organization_storage_endpoint_returns_managed_buckets(
             return {"space_used": len(bucket_name), "object_count": 2}
 
     monkeypatch.setattr(
-        "src.routes.organizations.storage_registry_adapter",
+        "src.routes.organizations.adapters.storage",
         lambda registry: FakeStorage(
             registry.protocol,
             registry.endpoint_url,
@@ -425,7 +510,16 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     client = clients[0]
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.organizations.create("acme", location.id, owner)
-    registry = await db.storage.create(StorageKind.s3, "primary", "http", "http://storage.local", "access", "secret", location.id, owner)
+    registry = await db.storage.create(
+        StorageKind.s3,
+        "primary",
+        "http",
+        "http://storage.local",
+        "access",
+        "secret",
+        location.id,
+        owner,
+    )
     await db.applications.create(
         organization.id,
         "dashboard",
@@ -436,7 +530,13 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     )
 
     class FakeStorage:
-        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+        def __init__(
+            self,
+            protocol: str,
+            endpoint_url: str,
+            access_key_id: str,
+            secret_access_key: str,
+        ) -> None:
             self.protocol = protocol
             self.endpoint_url = endpoint_url
             self.access_key_id = access_key_id
@@ -446,7 +546,7 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
             raise RuntimeError("storage offline")
 
     monkeypatch.setattr(
-        "src.routes.organizations.storage_registry_adapter",
+        "src.routes.organizations.adapters.storage",
         lambda registry: FakeStorage(
             registry.protocol,
             registry.endpoint_url,
@@ -475,7 +575,16 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
     client = clients[0]
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.organizations.create("acme", location.id, owner)
-    registry = await db.database.create(DatabaseKind.postgresql, "primary", "db.longlink.internal", 5432, "longlink", "secret", location.id, owner)
+    registry = await db.database.create(
+        DatabaseKind.postgresql,
+        "primary",
+        "db.longlink.internal",
+        5432,
+        "longlink",
+        "secret",
+        location.id,
+        owner,
+    )
     await db.applications.create(
         organization.id,
         "dashboard",
@@ -501,8 +610,18 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
                         "name": "users",
                         "schema_name": "shared",
                         "columns": [
-                            {"name": "id", "type": "uuid", "nullable": False, "position": 1},
-                            {"name": "email", "type": "character varying", "nullable": False, "position": 2},
+                            {
+                                "name": "id",
+                                "type": "uuid",
+                                "nullable": False,
+                                "position": 1,
+                            },
+                            {
+                                "name": "email",
+                                "type": "character varying",
+                                "nullable": False,
+                                "position": 2,
+                            },
                         ],
                         "rows": [{"id": str(owner.id), "email": "owner@example.com"}],
                     }
@@ -514,15 +633,25 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
                     "name": "orders",
                     "schema_name": "dashboard",
                     "columns": [
-                        {"name": "id", "type": "integer", "nullable": False, "position": 1},
-                        {"name": "total", "type": "numeric", "nullable": True, "position": 2},
+                        {
+                            "name": "id",
+                            "type": "integer",
+                            "nullable": False,
+                            "position": 1,
+                        },
+                        {
+                            "name": "total",
+                            "type": "numeric",
+                            "nullable": True,
+                            "position": 2,
+                        },
                     ],
                     "rows": [{"id": 100, "total": 42.5}],
                 }
             ]
 
     monkeypatch.setattr(
-        "src.routes.organizations.database_registry_adapter",
+        "src.routes.organizations.adapters.database",
         lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
     )
 

@@ -1,0 +1,15 @@
+from src.models.icons import Icon
+from src.models.applications import ApplicationCreate
+
+
+def test_icon_enum_exposes_typed_members() -> None:
+    """Expose icon slugs as a typed enum for API models and OpenAPI schemas."""
+
+    payload = ApplicationCreate(
+        name="dashboard",
+        icon="LayoutGrid",
+        image="ghcr.io/longlink/dashboard:latest",
+    )
+
+    assert Icon.LAYOUT_GRID.value == "layout-grid"
+    assert payload.icon is Icon.LAYOUT_GRID

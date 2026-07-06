@@ -7,9 +7,9 @@ from src.environments import env
 from src.models.roles import PlatformRoles
 from src.models.organizations import OrganizationDetails
 from src.database.models.users import User
-from src.database.services.users import users
+from src.database.services import users
 from src.database.models.organizations import Organization
-from src.database.services.organizations import organizations
+from src.database.services import organizations
 
 # Authlib imports the HTTP client as `httpx`; use the configured `httpx2` package instead.
 sys.modules.setdefault("httpx", httpx2)
@@ -48,7 +48,6 @@ class SessionAccountsService:
         accounts = self.request.session.get("oidc_accounts", [])
         return accounts if isinstance(accounts, list) else []
 
-
     def activate(self, oidc: str) -> None:
         """Store an OIDC subject and make it the active account."""
 
@@ -62,7 +61,6 @@ class SessionAccountsService:
         self.request.session["oidc_accounts"] = accounts
         self.request.session["oidc"] = oidc
 
-
     def remove(self) -> None:
         """Remove the active account from the session and saved accounts."""
 
@@ -74,7 +72,6 @@ class SessionAccountsService:
             self.request.session["oidc_accounts"] = accounts
 
         self.request.session.pop("oidc", None)
-
 
     def deactivate(self) -> None:
         """Clear the active account while keeping the saved account list."""

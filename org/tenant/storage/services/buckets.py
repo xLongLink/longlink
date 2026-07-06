@@ -8,7 +8,7 @@ from tenant.storage.constants import (SHARED_BUCKET_SLUG,
 
 
 class StorageBucketCreator(Protocol):
-    """Create managed tenant storage buckets."""
+    """Create managed organization storage buckets."""
 
     async def bucket(self, organization: str, bucket_slug: str, /) -> str:
         """Create or return one managed bucket."""
@@ -16,7 +16,7 @@ class StorageBucketCreator(Protocol):
 
 
 class StorageBucketDeleter(Protocol):
-    """Delete managed tenant storage buckets."""
+    """Delete managed organization storage buckets."""
 
     async def delete_bucket(self, bucket_name: str, /) -> None:
         """Delete one managed bucket."""
@@ -24,7 +24,7 @@ class StorageBucketDeleter(Protocol):
 
 
 def bucket_name(organization_slug: str, bucket_slug: str) -> str:
-    """Return the managed storage bucket name for one tenant bucket."""
+    """Return the managed storage bucket name for one organization bucket."""
 
     managed_bucket_name = f"{STORAGE_BUCKET_PREFIX}-{organization_slug}-{bucket_slug}"
     if len(managed_bucket_name) > STORAGE_BUCKET_MAX_LENGTH:
@@ -37,20 +37,20 @@ def bucket_name(organization_slug: str, bucket_slug: str) -> str:
 
 
 def shared_bucket_name(organization_slug: str) -> str:
-    """Return the managed shared bucket name for one tenant."""
+    """Return the managed shared bucket name for one organization."""
 
     return bucket_name(organization_slug, SHARED_BUCKET_SLUG)
 
 
 def organization_bucket_prefix(organization_slug: str) -> str:
-    """Return the managed bucket prefix for one tenant."""
+    """Return the managed bucket prefix for one organization."""
 
     shared_bucket_name(organization_slug)
     return f"{STORAGE_BUCKET_PREFIX}-{organization_slug}-"
 
 
 class SharedBucketsService:
-    """Manage tenant shared storage buckets."""
+    """Manage organization shared storage buckets."""
 
     async def ensure(self, storage: StorageBucketCreator, organization_slug: str) -> str:
         """Create the shared bucket if needed and return its managed name."""
@@ -60,7 +60,7 @@ class SharedBucketsService:
 
 
     async def delete(self, storage: StorageBucketDeleter, organization_slug: str) -> None:
-        """Delete the shared bucket for one tenant."""
+        """Delete the shared bucket for one organization."""
 
         await storage.delete_bucket(shared_bucket_name(organization_slug))
 

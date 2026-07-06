@@ -117,14 +117,13 @@ Database Server                 # Managed through the database adapter
     └── App B Schema             # Tables owned by App B
 ```
 
-File storage uses one tenant per organization and isolated buckets per application:
+File storage uses organization-scoped bucket names and isolated buckets per application:
 
 ```bash
-Storage Backend                 # Managed through the storage adapter
-└── Tenant                       # One per organization
-    ├── Shared Bucket            # Optional organization-level objects
-    ├── App A Bucket             # Files owned by App A
-    └── App B Bucket             # Files owned by App B
+Storage Backend                         # Managed through the storage adapter
+├── longlink-{organization}-shared      # Optional organization-level objects
+├── longlink-{organization}-app-a       # Files owned by App A
+└── longlink-{organization}-app-b       # Files owned by App B
 ```
 
 ### Applications
@@ -188,5 +187,6 @@ Keep both web build modes working. API mode builds the authenticated control-pla
 - Use long domain names in code and filenames instead of abbreviations.
 - Keep related model module names plural and consistent across the API and database layers.
 - Prefer single word naming for python filenames, and prefer not renaming imports
+- Prefer namespaced module APIs for related factories and facades instead of long function names imported directly. For example, use `from src import adapters` with `adapters.compute(registry)`, `adapters.database(registry)`, and `adapters.storage(registry)` rather than importing provider-specific constructors or verbose factory names into callers.
 - Do NOT add any new test case unless the user specifically instruct you to do so.
-- When asked to make a list of improvements, always returns a numeric for easy reference 
+- When asked to make a list of improvements, always returns a numeric for easy reference

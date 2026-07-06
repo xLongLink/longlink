@@ -1,16 +1,31 @@
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
+import { Wordmark } from '@/components/Wordmark';
 import { buttonVariants } from '@/components/ui/button';
 import {
+    Activity,
     ArrowRight,
+    Bot,
     Braces,
-    CheckCircle2,
-    Code2,
+    Building2,
+    ChevronDown,
     Database,
-    Fingerprint,
+    FileCode,
+    HardDrive,
+    KeyRound,
+    Languages,
+    Logs,
     Mail,
+    PackageCheck,
+    Palette,
+    PanelTop,
+    Play,
+    Plug,
     Rocket,
-    Server,
+    Route,
+    ShieldCheck,
+    Terminal,
+    Users,
     Wrench,
 } from 'lucide-react';
 import type { CSSProperties, SVGProps } from 'react';
@@ -77,107 +92,338 @@ const Pydantic = (props: SVGProps<SVGSVGElement>) => (
 
 const homepageCards = [
     {
-        title: 'Real applications',
-        description: 'Build proper backend services with explicit data, APIs, validation, actions, and pages.',
-        concepts: ['Business logic', 'Structured UI', 'Workflow states'],
-        icon: Code2,
-        variant: null,
+        title: 'Users, agents, and developers meet',
+        description: 'One operating layer for work.',
+        layoutClassName: 'md:col-span-3',
+        variant: 'work',
     },
     {
         title: 'Shared foundation',
-        description: 'Move common platform concerns into LongLink instead of rebuilding them per app.',
-        concepts: ['Auth', 'Organizations', 'Permissions', 'App shell'],
-        icon: Fingerprint,
-        variant: null,
+        description: 'Common platform work, handled once.',
+        layoutClassName: 'md:col-span-3',
+        variant: 'foundation',
+    },
+    {
+        title: 'XML screens',
+        description: 'XML turns into usable screens.',
+        layoutClassName: 'md:col-span-2',
+        variant: 'xml',
     },
     {
         title: 'Powered by Python',
-        description: 'Use the Python ecosystem for specific rules, integrations, automation, and data work.',
-        concepts: ['FastAPI', 'SQLAlchemy', 'Pydantic', 'Alembic'],
-        icon: Braces,
+        description: 'Use the Python ecosystem.',
+        layoutClassName: 'md:col-span-2',
         variant: 'python',
     },
     {
-        title: 'Local to production',
-        description: 'Develop locally, package as an image, and run through a managed production control plane.',
-        concepts: ['Scaffold', 'Test', 'Build', 'Deploy'],
-        icon: Rocket,
-        variant: null,
-    },
-    {
-        title: 'Lower long-term cost',
-        description: 'Centralize repeated engineering work so teams spend more time on the product itself.',
-        concepts: ['Runtime', 'Storage', 'Databases', 'Operations'],
-        icon: CheckCircle2,
-        variant: null,
-    },
-    {
-        title: 'Built to evolve',
-        description: 'Keep workflows maintainable as business requirements, integrations, and users change.',
-        concepts: ['Specific logic', 'Maintenance', 'Extensions'],
-        icon: Wrench,
-        variant: null,
+        title: 'CLI workflow',
+        description: 'Init, dev, migrate, build.',
+        layoutClassName: 'md:col-span-2',
+        variant: 'cli',
     },
 ] as const;
 
-const pythonVisualBackplates = [
-    'left-[18%] top-0 size-14 opacity-45',
-    'left-[6%] top-[54%] size-14 opacity-55',
-    'left-[19%] bottom-0 size-14 opacity-45',
-    'right-[27%] top-0 size-14 opacity-45',
-    'right-[7%] bottom-0 size-14 opacity-55',
-] as const;
+/** Renders the XML-to-UI showcase card visual. */
+function XmlShowcaseVisual() {
+    return (
+        <div aria-hidden="true" className="relative h-44 overflow-hidden">
+            <div className="absolute inset-0 rounded-md p-3 transition-all duration-500 ease-out group-hover:-translate-y-4 group-hover:scale-[0.97] group-hover:opacity-0">
+                <div className="mb-2 flex gap-1.5">
+                    <span className="size-1.5 rounded-full bg-[#d99c64]/80" />
+                    <span className="size-1.5 rounded-full bg-[#84e2d1]/70" />
+                    <span className="size-1.5 rounded-full bg-muted-foreground/40" />
+                </div>
+                <pre className="whitespace-pre-wrap break-words font-mono text-[10px] leading-4 text-muted-foreground">
+                    <code>{`<longlink name="Access">
+  <Form title="Access request">
+    <Input label="Email" />
+    <Select label="Role" />
+    <Button>Submit</Button>
+  </Form>
+</longlink>`}</code>
+                </pre>
+            </div>
 
-const pythonVisualTiles = [
+            <div className="absolute inset-0 translate-y-6 scale-[0.96] rounded-md p-3 opacity-0 transition-all duration-500 ease-out group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100">
+                <div className="mb-3 text-sm font-medium text-foreground">Access request</div>
+                <div className="space-y-2">
+                    <div className="space-y-1">
+                        <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                            Email
+                        </div>
+                        <div className="rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-card-foreground">
+                            alex@company.com
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                            Role
+                        </div>
+                        <div className="flex items-center justify-between rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-card-foreground">
+                            Reviewer
+                            <ChevronDown className="size-3 text-muted-foreground" strokeWidth={1.8} />
+                        </div>
+                    </div>
+                    <div className="inline-flex rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-foreground">
+                        Submit
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const pythonOrbitLibraries = [
     {
-        key: 'pydantic',
-        icon: Pydantic,
-        className: 'left-[16%] top-[40%] size-14',
-    },
-    {
-        key: 'fastapi',
+        key: 'FastAPI',
         icon: FastAPI,
-        className: 'left-[39%] top-[18%] size-14',
+        className: 'left-[70%] top-[18%]',
     },
     {
-        key: 'python',
-        icon: Python,
-        className: 'left-[40%] top-[64%] size-14',
+        key: 'Pydantic',
+        icon: Pydantic,
+        className: 'left-[22%] top-[66%]',
     },
     {
-        key: 'data',
+        key: 'SQLAlchemy',
         icon: Database,
-        className: 'left-[60%] top-[54%] size-14',
+        className: 'left-[78%] top-[62%]',
     },
     {
-        key: 'runtime',
-        icon: Server,
-        className: 'right-[8%] top-[22%] size-14',
+        key: 'Alembic',
+        icon: Wrench,
+        className: 'left-[25%] top-[22%]',
     },
 ] as const;
+
+const foundationVisualColumns = [
+    [
+        { key: 'authentication', icon: KeyRound },
+        { key: 'theming', icon: Palette },
+        { key: 'routing', icon: Route },
+    ],
+    [
+        { key: 'organizations', icon: Building2 },
+        { key: 'app-shell', icon: PanelTop },
+        { key: 'deployment', icon: Rocket },
+    ],
+    [
+        { key: 'permissions', icon: ShieldCheck },
+        { key: 'databases', icon: Database },
+        { key: 'logs', icon: Logs },
+    ],
+    [
+        { key: 'languages', icon: Languages },
+        { key: 'storage', icon: HardDrive },
+        { key: 'status', icon: Activity },
+    ],
+] as const;
+
+const cliWorkflowSteps = [
+    {
+        command: 'init',
+        result: 'scaffold',
+        icon: Terminal,
+        className: 'left-1/2 top-[8%] -translate-x-1/2',
+    },
+    {
+        command: 'dev',
+        result: 'local',
+        icon: Play,
+        className: 'right-[3%] top-1/2 -translate-y-1/2',
+    },
+    {
+        command: 'migrate',
+        result: 'schema',
+        icon: Database,
+        className: 'bottom-[8%] left-1/2 -translate-x-1/2',
+    },
+    {
+        command: 'build',
+        result: 'image',
+        icon: PackageCheck,
+        className: 'left-[3%] top-1/2 -translate-y-1/2',
+    },
+] as const;
+
+const workNetworkNodes = [
+    {
+        label: 'Users',
+        icon: Users,
+        className: 'left-[4%] top-[5%]',
+    },
+    {
+        label: 'Agents',
+        icon: Bot,
+        className: 'left-[4%] top-1/2 -translate-y-1/2',
+    },
+    {
+        label: 'Developers',
+        icon: FileCode,
+        className: 'bottom-[5%] left-[4%]',
+    },
+    {
+        label: 'Integrations',
+        icon: Plug,
+        className: 'right-[4%] top-[5%]',
+    },
+    {
+        label: 'Data',
+        icon: Database,
+        className: 'right-[4%] top-1/2 -translate-y-1/2',
+    },
+    {
+        label: 'APIs',
+        icon: Braces,
+        className: 'bottom-[5%] right-[4%]',
+    },
+] as const;
+
+/** Renders the dedicated visual for the shared platform foundation card. */
+function FoundationCardVisual() {
+    return (
+        <div aria-hidden="true" className="relative h-40 overflow-hidden">
+            <div className="absolute left-1/2 top-1/2 size-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#4cc7b1]/8 blur-2xl" />
+            <div className="relative z-10 grid h-full grid-cols-4 px-7 py-3">
+                {foundationVisualColumns.map((tiles, columnIndex) => (
+                    <div
+                        key={tiles.map(({ key }) => key).join('-')}
+                        className={`flex flex-col items-center justify-center gap-2 ${
+                            columnIndex % 2 === 0 ? '-translate-y-[18px]' : 'translate-y-[18px]'
+                        }`}
+                    >
+                        {tiles.map(({ key, icon: TileIcon }) => (
+                            <div
+                                key={key}
+                                className="relative flex size-9 items-center justify-center rounded-md border border-[#29534d] bg-[#14211f]/92 text-[#84e2d1] shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_10px_30px_rgba(0,0,0,0.35),0_0_26px_rgba(70,190,170,0.16)]"
+                            >
+                                <TileIcon
+                                    className="size-4 transition-transform duration-300 group-hover:scale-110"
+                                    strokeWidth={1.8}
+                                />
+                                <span className="absolute inset-0 rounded-md bg-gradient-to-br from-white/10 to-transparent" />
+                            </div>
+                        ))}
+                    </div>
+                ))}
+            </div>
+
+            {['left-[22%] top-[25%]', 'left-[47%] top-[30%]', 'right-[18%] top-[23%]', 'left-[54%] bottom-[22%]'].map(
+                (className) => (
+                    <div
+                        key={className}
+                        className={`absolute size-9 rounded-md bg-black/12 shadow-inner ${className}`}
+                    />
+                )
+            )}
+        </div>
+    );
+}
+
+/** Renders the dedicated visual for the LongLink CLI workflow card. */
+function CliCardVisual() {
+    return (
+        <div aria-hidden="true" className="relative h-40 overflow-hidden">
+            <div className="absolute left-1/2 top-1/2 size-32 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-[#d9b469]/30 transition-transform duration-700 group-hover:rotate-45" />
+            <div className="absolute left-1/2 top-1/2 size-24 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#8d713d]/28 bg-[#d9b469]/6" />
+            <div className="absolute left-1/2 top-1/2 size-32 -translate-x-1/2 -translate-y-1/2 group-hover:animate-[spin_4s_linear_infinite]">
+                <span className="absolute left-1/2 top-0 size-2 -translate-x-1/2 rounded-full bg-[#f4c878] shadow-[0_0_18px_rgba(244,200,120,0.65)]" />
+            </div>
+
+            <div className="absolute left-1/2 top-1/2 z-20 flex size-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-[#6a5430] bg-[#2a2114]/95 text-[#f4c878] shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_16px_36px_rgba(0,0,0,0.38),0_0_28px_rgba(215,171,89,0.18)]">
+                <Terminal
+                    className="size-4 transition-transform duration-300 group-hover:scale-110"
+                    strokeWidth={1.8}
+                />
+                <span className="mt-1 font-mono text-[9px] leading-none text-[#f1d79b]">longlink</span>
+                <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/10 to-transparent" />
+            </div>
+
+            {cliWorkflowSteps.map(({ command, result, icon: StepIcon, className }) => (
+                <div
+                    key={command}
+                    className={`absolute z-20 flex min-w-[76px] items-center gap-1.5 rounded-full border border-[#4b3d25] bg-[#18130d]/95 px-2.5 py-1.5 shadow-[0_10px_28px_rgba(0,0,0,0.32),0_0_20px_rgba(215,171,89,0.12)] ${className}`}
+                >
+                    <StepIcon
+                        className="size-3.5 shrink-0 text-[#f4c878] transition-transform duration-300 group-hover:scale-110"
+                        strokeWidth={1.8}
+                    />
+                    <div className="min-w-0">
+                        <div className="font-mono text-[10px] leading-3 text-[#f1d79b]">{command}</div>
+                        <div className="text-[9px] leading-3 text-muted-foreground">{result}</div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+/** Renders the dedicated visual for the LongLink work network card. */
+function WorkNetworkVisual() {
+    return (
+        <div aria-hidden="true" className="relative h-40 overflow-hidden">
+            <svg className="absolute inset-0 h-full w-full" viewBox="0 0 320 160">
+                <path
+                    d="M78 24 C108 28 120 58 132 80 M78 80 H132 M78 136 C108 132 120 102 132 80 M242 24 C212 28 200 58 188 80 M242 80 H188 M242 136 C212 132 200 102 188 80"
+                    fill="none"
+                    stroke="#e49aaa"
+                    strokeLinecap="round"
+                    strokeWidth="1.2"
+                    strokeDasharray="4 6"
+                    className="opacity-40 transition-opacity duration-300 group-hover:opacity-80"
+                />
+            </svg>
+
+            <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-md border border-[#6a3e49] bg-[#181013]/95 px-5 py-3 shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_16px_36px_rgba(0,0,0,0.38),0_0_30px_rgba(224,151,166,0.2)]">
+                <Wordmark className="text-sm" />
+                <span className="pointer-events-none absolute inset-0 rounded-md bg-gradient-to-br from-white/10 to-transparent" />
+            </div>
+
+            {workNetworkNodes.map(({ label, icon: NodeIcon, className }) => (
+                <div
+                    key={label}
+                    className={`absolute z-20 flex min-w-[84px] items-center gap-1.5 rounded-full border border-[#56333d] bg-[#181013]/95 px-2.5 py-1.5 shadow-[0_10px_28px_rgba(0,0,0,0.32),0_0_20px_rgba(224,151,166,0.12)] ${className}`}
+                >
+                    <NodeIcon
+                        className="size-3.5 shrink-0 text-[#f0a6b6] transition-transform duration-300 group-hover:scale-110"
+                        strokeWidth={1.8}
+                    />
+                    <span className="text-[10px] font-medium leading-3 text-[#f6c0ca]">{label}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
 
 /** Renders the dedicated visual for the Python ecosystem landing card. */
 function PythonCardVisual() {
     return (
-        <div aria-hidden="true" className="relative h-40 overflow-hidden bg-[#140d09]">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(174,115,65,0.22),transparent_36%),radial-gradient(circle_at_50%_100%,rgba(240,166,93,0.12),transparent_40%),linear-gradient(180deg,rgba(255,255,255,0.04),transparent_58%)]" />
-            <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#140d09] to-transparent" />
+        <div aria-hidden="true" className="relative h-40 overflow-hidden">
+            <div className="absolute left-1/2 top-1/2 size-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#6d472c]/35 bg-[#8f5424]/10" />
+            <div className="absolute left-1/2 top-1/2 size-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#8a5a35]/45 bg-[#b16a2e]/10" />
+            <div className="absolute left-1/2 top-1/2 size-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#a8683a]/55 bg-[#c77735]/12" />
+            <div className="absolute left-1/2 top-1/2 h-px w-40 -translate-x-1/2 bg-[#8a5a35]/35" />
+            <div className="absolute left-1/2 top-1/2 h-40 w-px -translate-y-1/2 bg-[#8a5a35]/35" />
+            <div className="absolute left-1/2 top-1/2 h-px w-40 -translate-x-1/2 rotate-45 bg-[#8a5a35]/25" />
+            <div className="absolute left-1/2 top-1/2 h-px w-40 -translate-x-1/2 -rotate-45 bg-[#8a5a35]/25" />
 
-            {pythonVisualBackplates.map((className) => (
-                <div key={className} className={`absolute rounded-md bg-black/20 shadow-inner ${className}`} />
-            ))}
+            <div className="absolute left-1/2 top-1/2 z-20 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#6a4a33] bg-[#4f3523]/95 text-[#f5c18b] shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_12px_32px_rgba(0,0,0,0.38),0_0_34px_rgba(226,147,78,0.26)]">
+                <Python className="size-6 transition-transform duration-300 group-hover:scale-110" />
+                <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/12 to-transparent" />
+            </div>
 
-            {pythonVisualTiles.map(({ key, icon: TileIcon, className }) => (
+            {pythonOrbitLibraries.map(({ key, icon: LibraryIcon, className }) => (
                 <div
                     key={key}
-                    className={`absolute flex items-center justify-center rounded-md border border-[#5c4030] bg-[#2a1d15]/92 text-[#f5c18b] shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_10px_30px_rgba(0,0,0,0.35),0_0_26px_rgba(226,147,78,0.22)] ${className}`}
+                    className={`absolute z-20 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#5c4030] bg-[#2a1d15]/90 text-[#f5c18b] shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_10px_28px_rgba(0,0,0,0.35),0_0_24px_rgba(226,147,78,0.18)] ${className}`}
                 >
-                    <TileIcon className="size-4" strokeWidth={1.8} />
-                    <span className="absolute inset-0 rounded-md bg-gradient-to-br from-white/10 to-transparent" />
+                    <LibraryIcon
+                        className="size-4 transition-transform duration-300 group-hover:scale-110"
+                        strokeWidth={1.8}
+                    />
+                    <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/10 to-transparent" />
                 </div>
             ))}
-
-            <div className="absolute inset-x-12 bottom-5 h-px bg-gradient-to-r from-transparent via-[#c88754]/55 to-transparent" />
         </div>
     );
 }
@@ -263,37 +509,63 @@ export default function Home() {
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-24 bg-gradient-to-t from-background to-transparent" />
             </main>
             <section className="relative z-10 bg-background px-6 py-10">
-                <div className="mx-auto grid w-full max-w-[1000px] auto-rows-[minmax(190px,auto)] grid-cols-1 gap-3 md:grid-cols-3">
-                    {homepageCards.map(({ title, description, concepts, icon: Icon, variant }) => {
+                <div className="mx-auto grid w-full max-w-[1000px] auto-rows-[minmax(190px,auto)] grid-cols-1 gap-3 md:grid-cols-6">
+                    {homepageCards.map(({ title, description, layoutClassName, variant }) => {
+                        const isXmlCard = variant === 'xml';
+                        const isCliCard = variant === 'cli';
+                        const isWorkCard = variant === 'work';
                         const isPythonCard = variant === 'python';
+                        const isFoundationCard = variant === 'foundation';
 
                         return (
                             <article
                                 key={title}
-                                className={`group relative overflow-hidden rounded-lg border p-5 text-card-foreground shadow-[0_24px_80px_rgba(0,0,0,0.12)] backdrop-blur-md transition-colors ${
-                                    isPythonCard
-                                        ? 'border-[#35241a] bg-[#140d09] hover:border-[#7a543a]'
-                                        : 'border-border bg-card/80 hover:border-accent/50'
+                                className={`group relative overflow-hidden rounded-lg border p-5 text-card-foreground shadow-[0_24px_80px_rgba(0,0,0,0.12)] backdrop-blur-md ${layoutClassName} ${
+                                    isFoundationCard
+                                        ? 'border-[#294943] bg-[#0d1214]'
+                                        : isPythonCard
+                                          ? 'border-[#35241a] bg-[#140d09]'
+                                          : isXmlCard
+                                            ? 'border-[#30343b] bg-[#101214]'
+                                            : isCliCard
+                                              ? 'border-[#3d3321] bg-[#12100b]'
+                                              : isWorkCard
+                                                ? 'border-[#3b2c32] bg-[#120d10]'
+                                                : 'border-border bg-card/80'
                                 }`}
                             >
                                 <div
                                     className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent opacity-60 ${
-                                        isPythonCard ? 'via-[#d99c64]' : 'via-accent/70'
+                                        isFoundationCard
+                                            ? 'via-[#84e2d1]'
+                                            : isPythonCard
+                                              ? 'via-[#d99c64]'
+                                              : isXmlCard
+                                                ? 'via-[#9aa4b2]'
+                                                : isCliCard
+                                                  ? 'via-[#d9b469]'
+                                                  : isWorkCard
+                                                    ? 'via-[#e49aaa]'
+                                                    : 'via-accent/70'
                                     } to-transparent`}
                                 />
                                 <div
-                                    className={`absolute -right-16 -top-20 size-44 rounded-full blur-3xl transition-opacity group-hover:opacity-80 ${
-                                        isPythonCard ? 'bg-[#d9945c]/12' : 'bg-accent/10'
+                                    className={`absolute -right-16 -top-20 size-44 rounded-full blur-3xl ${
+                                        isFoundationCard
+                                            ? 'bg-[#4cc7b1]/12'
+                                            : isPythonCard
+                                              ? 'bg-[#d9945c]/12'
+                                              : isXmlCard
+                                                ? 'bg-[#9aa4b2]/10'
+                                                : isCliCard
+                                                  ? 'bg-[#d9b469]/10'
+                                                  : isWorkCard
+                                                    ? 'bg-[#e49aaa]/10'
+                                                    : 'bg-accent/10'
                                     }`}
                                 />
 
                                 <div className="relative flex h-full flex-col justify-between gap-6">
-                                    {isPythonCard ? null : (
-                                        <div className="flex size-9 items-center justify-center rounded-md border border-border bg-background/70 text-accent">
-                                            <Icon className="size-4" aria-hidden="true" />
-                                        </div>
-                                    )}
-
                                     <div className="space-y-4">
                                         <div className="space-y-2">
                                             <h3 className="text-lg font-medium text-card-foreground">{title}</h3>
@@ -301,20 +573,17 @@ export default function Home() {
                                                 {description}
                                             </p>
                                         </div>
-                                        {isPythonCard ? (
+                                        {isXmlCard ? (
+                                            <XmlShowcaseVisual />
+                                        ) : isCliCard ? (
+                                            <CliCardVisual />
+                                        ) : isWorkCard ? (
+                                            <WorkNetworkVisual />
+                                        ) : isFoundationCard ? (
+                                            <FoundationCardVisual />
+                                        ) : isPythonCard ? (
                                             <PythonCardVisual />
-                                        ) : (
-                                            <div className="flex flex-wrap gap-1.5">
-                                                {concepts.map((concept) => (
-                                                    <span
-                                                        key={concept}
-                                                        className="rounded-full border border-border bg-background/70 px-2 py-1 text-[11px] font-medium text-muted-foreground"
-                                                    >
-                                                        {concept}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        )}
+                                        ) : null}
                                     </div>
                                 </div>
                             </article>
@@ -330,8 +599,7 @@ export default function Home() {
                             Start building on LongLink
                         </h2>
                         <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-                            Explore the platform, build your first application, or talk to us about running LongLink for
-                            your team.
+                            Explore LongLink, build an app, or talk to us.
                         </p>
                     </div>
 

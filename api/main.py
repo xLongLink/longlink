@@ -6,20 +6,30 @@ from fastapi import FastAPI
 from pathlib import Path
 from src.errors import register_error_handlers
 from src.logger import logger
-from src.routes import (auth, icons, image, users, health, accounts, branding,
-                        computes, storages, databases, locations)
+from src.routes import (
+    auth,
+    icons,
+    image,
+    users,
+    health,
+    accounts,
+    branding,
+    computes,
+    storages,
+    databases,
+    locations,
+)
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
 from alembic.config import Config
 from src.operations import execute
 from collections.abc import AsyncIterator
-from src.environments import (env, resolve_cors_origins,
-                              validate_production_settings)
+from src.environments import env, resolve_cors_origins, validate_production_settings
 import src.utils.url as url
 from sqlalchemy.engine import make_url
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-from src.database.services.operations import operations
+from src.database.services import operations
 
 
 async def renew_operation_lease(operation_id: UUID, lease_token: str) -> None:

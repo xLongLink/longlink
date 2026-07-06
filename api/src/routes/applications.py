@@ -4,24 +4,26 @@ from uuid import UUID
 from pathlib import PurePosixPath
 from fastapi import Depends, Request, Response, APIRouter
 from datetime import UTC, datetime, timedelta
+from src import adapters
 from src.auth import authuser, authadmin, organization_member_access
 from src.utils import names
-from src.errors import (ConflictError, NotFoundError, ForbiddenError,
-                        UnavailableError)
+from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.operations import provisioning
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
 from src.models.operations import OperationKind
-from src.models.applications import (ApplicationCreate, ApplicationResponse,
-                                     ApplicationMemberUpdate,
-                                     ApplicationMemberResponse)
-from src.adapters.compute import compute_registry_adapter
+from src.models.applications import (
+    ApplicationCreate,
+    ApplicationResponse,
+    ApplicationMemberUpdate,
+    ApplicationMemberResponse,
+)
 from src.database.models.users import User
 from kubernetes.client.exceptions import ApiException as KubernetesApiException
 from src.database.models.applications import Application
-from src.database.services.operations import operations
-from src.database.services.applications import applications
-from src.database.services.organizations import organizations
+from src.database.services import operations
+from src.database.services import applications
+from src.database.services import organizations
 
 HOP_BY_HOP_HEADERS = {
     "connection",
@@ -34,12 +36,20 @@ HOP_BY_HOP_HEADERS = {
     "transfer-encoding",
     "upgrade",
 }
-FORWARDED_REQUEST_BLOCKLIST = HOP_BY_HOP_HEADERS | {"authorization", "content-length", "cookie"}
+FORWARDED_REQUEST_BLOCKLIST = HOP_BY_HOP_HEADERS | {
+    "authorization",
+    "content-length",
+    "cookie",
+}
 FORWARDED_REQUEST_BLOCKLIST |= {"if-modified-since", "if-none-match"}
 FORWARDED_REQUEST_BLOCKLIST |= {"forwarded", "x-real-ip", "x-user-id"}
 FORWARDED_RESPONSE_BLOCKLIST = HOP_BY_HOP_HEADERS | {"content-length", "set-cookie"}
 APPLICATION_DELETE_DELAY_DAYS = 0
-APPLICATION_ACCESS_ORGANIZATION_ROLES = {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}
+APPLICATION_ACCESS_ORGANIZATION_ROLES = {
+    OrganizationRoles.admin,
+    OrganizationRoles.maintain,
+    OrganizationRoles.owner,
+}
 APPLICATION_LOG_ROLES = {ApplicationRoles.admin, ApplicationRoles.maintain}
 APPLICATION_MANAGEMENT_ROLES = {ApplicationRoles.admin, ApplicationRoles.maintain}
 INVALID_PERCENT_ESCAPE_PATTERN = re.compile(r"%(?![0-9A-Fa-f]{2})")
@@ -47,7 +57,9 @@ INVALID_PERCENT_ESCAPE_PATTERN = re.compile(r"%(?![0-9A-Fa-f]{2})")
 router = APIRouter()
 
 
-async def _application_access_roles(application: Application, user: User) -> tuple[OrganizationRoles | None, ApplicationRoles | None]:
+async def _application_access_roles(
+    application: Application, user: User
+) -> tuple[OrganizationRoles | None, ApplicationRoles | None]:
     """Return organization and application roles for one user/application pair."""
 
     organization_role = await organizations.membership_role(application.organization_id, user.id)
@@ -55,19 +67,30 @@ async def _application_access_roles(application: Application, user: User) -> tup
     return organization_role, application_role
 
 
-def _can_access_application(organization_role: OrganizationRoles | None, application_role: ApplicationRoles | None) -> bool:
+def _can_access_application(
+    organization_role: OrganizationRoles | None,
+    application_role: ApplicationRoles | None,
+) -> bool:
     """Return whether a user may access an application runtime."""
 
     return application_role is not None or organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES
 
 
-def _can_manage_application(organization_role: OrganizationRoles | None, application_role: ApplicationRoles | None) -> bool:
+def _can_manage_application(
+    organization_role: OrganizationRoles | None,
+    application_role: ApplicationRoles | None,
+) -> bool:
     """Return whether a user may perform application management actions."""
 
-    return application_role in APPLICATION_MANAGEMENT_ROLES or organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES
+    return (
+        application_role in APPLICATION_MANAGEMENT_ROLES or organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES
+    )
 
 
-def _can_view_application_logs(organization_role: OrganizationRoles | None, application_role: ApplicationRoles | None) -> bool:
+def _can_view_application_logs(
+    organization_role: OrganizationRoles | None,
+    application_role: ApplicationRoles | None,
+) -> bool:
     """Return whether a user may view application logs."""
 
     return application_role in APPLICATION_LOG_ROLES or organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES
@@ -110,20 +133,31 @@ def _proxy_upstream_path(path: str) -> str:
 
 
 @router.get("/api/applications", response_model=list[ApplicationResponse])
-async def list_applications(user: User = Depends(authadmin)) -> list[ApplicationResponse]:
+async def list_applications(
+    user: User = Depends(authadmin),
+) -> list[ApplicationResponse]:
     """Return all applications for administrator views."""
 
-    return await applications.list_all_responses(user)
+    return await applications.fetch_all_responses(user)
 
 
-@router.post("/api/organizations/{organization_id}/applications", response_model=ApplicationResponse)
-async def create_application(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)) -> ApplicationResponse:
+@router.post(
+    "/api/organizations/{organization_id}/applications",
+    response_model=ApplicationResponse,
+)
+async def create_application(
+    organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)
+) -> ApplicationResponse:
     """Register a new application in the database and deploy it on the compute cluster."""
 
     organization_record = await organization_member_access(organization_id, user)
     # Application creation provisions runtime resources, so it requires elevated organization permissions.
     membership_role = await organizations.membership_role(organization_id, user.id)
-    if membership_role not in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
+    if membership_role not in {
+        OrganizationRoles.admin,
+        OrganizationRoles.maintain,
+        OrganizationRoles.owner,
+    }:
         raise ForbiddenError("Application creation permissions required")
 
     try:
@@ -154,7 +188,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     if registry is None:
         raise UnavailableError(f"No compute cluster configured for location '{organization_record.location_id}'")
 
-    k8s = compute_registry_adapter(registry)
+    k8s = adapters.compute(registry)
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
@@ -165,8 +199,13 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     return Response(content=logs, media_type="text/plain")
 
 
-@router.get("/api/applications/{application_id}/members", response_model=list[ApplicationMemberResponse])
-async def list_application_members(application_id: UUID, user: User = Depends(authuser)) -> list[ApplicationMemberResponse]:
+@router.get(
+    "/api/applications/{application_id}/members",
+    response_model=list[ApplicationMemberResponse],
+)
+async def list_application_members(
+    application_id: UUID, user: User = Depends(authuser)
+) -> list[ApplicationMemberResponse]:
     """Return organization members and their application-specific roles."""
 
     application = await applications.get_reference(application_id)
@@ -270,13 +309,9 @@ async def proxy_application_request(
     names.knames(organization.slug, "Organization")
     names.knames(application.slug, "Application name")
     # Strip hop-by-hop headers before forwarding the request upstream.
-    forward_headers = {
-        key: value
-        for key, value in request.headers.items()
-        if _forward_request_header_allowed(key)
-    }
+    forward_headers = {key: value for key, value in request.headers.items() if _forward_request_header_allowed(key)}
     forward_headers["x-user-id"] = str(user.id)
-    k8s = compute_registry_adapter(registry)
+    k8s = adapters.compute(registry)
 
     # Forward the request body and response stream directly through the Kubernetes API client.
     try:
@@ -319,9 +354,7 @@ async def proxy_application_request(
             content=body,
             status_code=status_code,
             headers={
-                key: value
-                for key, value in response_headers.items()
-                if key.lower() not in FORWARDED_RESPONSE_BLOCKLIST
+                key: value for key, value in response_headers.items() if key.lower() not in FORWARDED_RESPONSE_BLOCKLIST
             },
         )
 
@@ -330,8 +363,6 @@ async def proxy_application_request(
         content=body,
         status_code=status_code,
         headers={
-            key: value
-            for key, value in upstream_headers.items()
-            if key.lower() not in FORWARDED_RESPONSE_BLOCKLIST
+            key: value for key, value in upstream_headers.items() if key.lower() not in FORWARDED_RESPONSE_BLOCKLIST
         },
     )
