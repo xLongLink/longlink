@@ -158,7 +158,7 @@ describe('Action', () => {
         expect(errorMessage).toBe('invalidate must evaluate to an array');
     });
 
-    /* The runtime only exposes the initial supported HTTP method set. */
+    /* The runtime should still reject methods outside the supported action set. */
     it('rejects unsupported methods', async () => {
         const ctx: ExecutionContext = {
             setups: {},
@@ -176,7 +176,7 @@ describe('Action', () => {
         await executeAction(
             {
                 action: '/example/profile',
-                method: 'PUT',
+                method: 'TRACE',
             },
             ctx,
             '',
@@ -185,7 +185,7 @@ describe('Action', () => {
         );
 
         expect(fetchCalls).toBe(0);
-        expect(errorMessage).toBe('Unsupported action method PUT');
+        expect(errorMessage).toBe('Unsupported action method TRACE');
     });
 
     it('rejects external action URLs before fetching', async () => {

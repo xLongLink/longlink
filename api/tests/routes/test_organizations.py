@@ -697,9 +697,15 @@ async def test_organization_database_resource_tables_endpoint_requires_elevated_
     client = clients[1]
 
     # Act
+    database_response = client.get(f"/api/organizations/{organization.id}/database")
+    storage_response = client.get(f"/api/organizations/{organization.id}/storage")
     response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/dashboard/tables")
 
     # Assert
+    assert database_response.status_code == 403
+    assert database_response.json() == {"detail": "Database resource inspection permissions required"}
+    assert storage_response.status_code == 403
+    assert storage_response.json() == {"detail": "Storage resource inspection permissions required"}
     assert response.status_code == 403
     assert response.json() == {"detail": "Database resource inspection permissions required"}
 
@@ -711,21 +717,37 @@ async def test_get_organization_returns_invitations(
     """Return pending invitations with the organization payload."""
 
     # Arrange
-    owner, invitee = users[0], users[1]
+    owner, invitee, regular_member = users
     location = await db.locations.create("local", "Local testing", owner, Country.CH)
     organization = await db.organizations.create("acme", location.id, owner)
     invitation = await db.invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
+
+    Session = await get_session()
+    async with Session() as session:
+        session.add(
+            UserOrganization(
+                user_id=regular_member.id,
+                organization_id=organization.id,
+                role_name=OrganizationRoles.write,
+            )
+        )
+        await session.commit()
+
     client = clients[0]
+    regular_member_client = clients[2]
 
     # Act
     response = client.get(f"/api/organizations/{organization.id}")
+    regular_member_response = regular_member_client.get(f"/api/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 200
+    assert regular_member_response.status_code == 200
     invitation_payload = response.json()["invitations"][0]
     assert invitation_payload["id"] == str(invitation.id)
     assert invitation_payload["email"] == invitee.email
     assert invitation_payload["role"] == "write"
+    assert regular_member_response.json()["invitations"] == []
 
 
 async def test_list_organizations_returns_null_deleted_by_for_active_org(

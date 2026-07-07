@@ -36,7 +36,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Health endpoint             | `GET /api/healthz` returns `{"status":"ok"}`.                                                                                                                                  |
 | Domain error responses      | Maps domain errors to JSON `detail` responses with appropriate HTTP status codes.                                                                                              |
 | Control database sessions   | Provides cached async SQLAlchemy sessions, connection verification, and database URL normalization.                                                                            |
-| Control database migrations | Migrates users, organizations, applications, registries, memberships, invitations, and operations, and applies pending migrations on local SQLite development starts.          |
+| Control database migrations | Migrates users, organizations, applications, registries, memberships, invitations, and operations, supports percent-encoded database URLs, and applies pending migrations on local SQLite development starts. |
 | Local seed script           | Seeds local location, registries, organization, app metadata, and runtime data through public API routes.                                                                      |
 | Local runtime endpoints     | Separates host-facing endpoints from pod-facing runtime endpoints for PostgreSQL and S3-compatible storage.                                                                    |
 
@@ -45,11 +45,11 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Feature                    | Supported behavior                                                                                                                             |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | OIDC login redirect        | Starts OIDC login, supports Keycloak provider hints for `github` and `google`, and stores safe same-origin `next` paths.                       |
-| OIDC callback user sync    | Exchanges the authorization code, validates userinfo, upserts the user, syncs organization shared users, activates the account, and redirects. |
+| OIDC callback user sync    | Exchanges the authorization code, validates verified-email userinfo, upserts the user, syncs organization shared users, activates the account, and redirects. |
 | Saved session accounts     | Lists saved accounts, activates a saved account, and deactivates the active account.                                                           |
-| Logout                     | Removes the active account from the session and returns `{ok:true}`.                                                                           |
+| Logout                     | Removes the active account from the session through `POST /auth/logout` and returns `{ok:true}`.                                               |
 | Current user profile       | Returns identity, platform role, preferences, and organization memberships.                                                                    |
-| Profile preferences update | Updates mutable profile fields and preferences, then resyncs organization database users.                                                      |
+| Profile preferences update | Updates mutable profile fields and preferences while keeping email provider-owned, then resyncs organization database users.                    |
 | User listing               | Allows support and administrator users to list all platform users.                                                                             |
 | Role model                 | Supports platform roles, organization roles, and application roles.                                                                            |
 | Membership privacy         | Returns not-found style failures for organization non-members instead of disclosing membership state.                                          |
@@ -73,17 +73,17 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                               | Supported behavior                                                                                                                          |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Organization creation                 | Lets authenticated users create organizations and become owner.                                                                             |
+| Organization creation                 | Lets authenticated users create organizations in active locations and become owner.                                                         |
 | Organization deletion                 | Lets owners and platform administrators soft-delete organizations and queue immediate runtime resource removal with delay-ready scheduling. |
 | Organization infrastructure bootstrap | Best-effort initializes compute namespace, organization database shared schema, and shared storage bucket.                                  |
-| Organization details                  | Lets members fetch an organization with location, users, pending invitations, and applications.                                             |
+| Organization details                  | Lets members fetch an organization with location, users, and applications; pending invitations are shown only to maintainers/admins/owners. |
 | Organization listing                  | Lets support/admin users list all organizations.                                                                                            |
 | Organization applications             | Lets members list active applications in an organization, including caller application role when present.                                   |
 | Organization invitations              | Lets maintainers/admins/owners create pending email invitations up to their own role rank while rejecting duplicates and existing members.  |
 | Member role update                    | Lets organization admins/owners update active member roles, requires owner authority for owner changes, and resyncs shared users.           |
-| Organization database resources       | Shows existing shared/app database schemas with usage metrics and fails when the backend cannot be inspected.                               |
+| Organization database resources       | Shows existing shared/app database schemas with usage metrics to maintainers/admins/owners and fails when the backend cannot be inspected.  |
 | Organization table preview            | Previews columns and up to 100 rows for shared schema or app schema tables; system schemas are blocked.                                     |
-| Organization storage resources        | Shows existing shared/app buckets with usage metrics and fails when the backend cannot be inspected.                                        |
+| Organization storage resources        | Shows existing shared/app buckets with usage metrics to maintainers/admins/owners and fails when the backend cannot be inspected.           |
 
 ### Applications
 
@@ -91,19 +91,19 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | Image metadata inspection           | Reads LongLink OCI image labels plus the resolved manifest digest for app metadata and environment requirements.                         |
 | Image registry safety               | Rejects malformed image references, private/local/non-public registries, disallowed token realms, and registries outside the configured allowlist unless development mode allows the configured local registry. |
-| Icon catalog                        | Returns supported Lucide icon slugs and validates normalized app icons.                                                                 |
-| Application creation and deployment | Creates apps from images, records image/app/SDK versions, deploys the resolved image digest, selects registries, and queues verification. |
+| Icon catalog                        | Returns the fixed 30-icon Lucide runtime subset and validates normalized app icons.                                                     |
+| Application creation and deployment | Creates apps from images, records image/app/SDK versions, deploys the resolved image digest, selects registries, cleans failed partial runtime resources, and queues verification. |
 | Application deletion                | Lets permitted users soft-delete applications and queue immediate runtime resource removal with delay-ready scheduling.                 |
 | Required application envs           | Requires image-declared envs unless they are platform-managed and validates app env names, counts, and value sizes before deployment.    |
 | Platform env injection              | Strips user-supplied `LONGLINK_` envs and injects production database and validated storage runtime values.                              |
 | Application status model            | Supports `creating`, `running`, and `failed`.                                                                                           |
-| Application verification            | Marks apps running when rollout pods are ready and failed when current rollout pods crash, hit terminal image/config wait reasons, or exceed the verification timeout. |
+| Application verification            | Marks apps running when the current Deployment rollout is ready and failed when current rollout pods crash, hit terminal image/config wait reasons, or exceed the verification timeout. |
 | Global application listing          | Lets platform administrators list all active applications.                                                                              |
 | Application logs                    | Lets application maintainers/admins and elevated organization members fetch recent plain-text logs from the newest application pod.     |
-| Application proxy                   | Proxies `GET`, `POST`, `PATCH`, and `DELETE` non-root paths into running application services for users with application access and bounded body sizes. |
-| Application access roles            | Uses application membership roles for runtime access, with elevated organization roles allowed to manage application lifecycle actions. |
+| Application proxy                   | Proxies `GET`, `POST`, `PUT`, `PATCH`, and `DELETE` non-root paths into running application services for users with application access and 25 MiB request/response body caps. |
+| Application access roles            | Uses application membership roles for runtime access, with method-level role enforcement and elevated organization roles allowed to manage application lifecycle actions. |
 | Application member management       | Lets organization members view application permission rows and lets permitted app/org managers set or remove app roles up to their own role rank for org members. |
-| Proxy header policy                 | Rejects unsafe proxy paths, strips unsafe/spoofable proxy headers, injects `x-user-id`, caps proxy bodies, and returns no-store 503 for unavailable apps. |
+| Proxy header policy                 | Rejects unsafe or ambiguously encoded proxy paths, strips static and `Connection`-declared unsafe/spoofable proxy headers, injects trusted `x-user-id` and `x-user-role`, and returns no-store 503 for unavailable apps. |
 | Registry selection                  | Uses newest active compute registries and keeps database/storage registries consistent for all apps in an organization.                 |
 | Managed resource naming             | Validates slugs and managed Kubernetes/PostgreSQL/S3 resource names before provisioning.                                                |
 
@@ -111,15 +111,15 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                                   | Supported behavior                                                                                                       |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Operation records                         | Stores operation kind, step, app/org references, scheduled time, timestamps, redacted bounded errors, lease metadata, and derived status. |
+| Operation records                         | Stores operation kind, step, app/org references, scheduled time, timestamps, broadly redacted bounded errors, lease metadata, and derived status. |
 | Operation listing                         | Lets support/admin users list operations newest first.                                                                   |
-| Background operation scheduler            | Claims scheduled/expired operations, runs handlers, renews leases, and keeps polling without blocking requests.          |
+| Background operation scheduler            | Claims scheduled/expired operations, runs handlers, renews leases, defers retries with backoff, and keeps polling without blocking requests. |
 | Operation leases                          | Requires matching lease tokens for claim, complete, fail, defer, and renew operations.                                   |
 | Application create verification operation | Supports `application.create` step `verify` for checking rollout health.                                                 |
 | Application delete cleanup operation      | Supports `application.delete` step `remove` for deleting managed app runtime resources.                                  |
 | Organization delete cleanup operation     | Supports `organization.delete` step `remove` for deleting managed organization runtime resources.                        |
-| Kubernetes provisioning                   | Creates managed namespaces plus one Secret, restricted Deployment, and ClusterIP Service per app.                        |
-| Kubernetes service proxy                  | Proxies requests through the Kubernetes service proxy API with bounded request and response bodies.                      |
+| Kubernetes provisioning                   | Creates managed namespaces plus one exact Secret, probed restricted Deployment, and ClusterIP Service per app, while refusing unmanaged namespace collisions. |
+| Kubernetes service proxy                  | Proxies requests through the Kubernetes service proxy API with 25 MiB request and response body caps.                    |
 | PostgreSQL provisioning                   | Creates organization databases, migrates the shared schema, creates app schemas, runtime login roles, and read/write app plus read-only shared grants. |
 | PostgreSQL resource inspection            | Inspects databases, schemas, usage, tables, and preview rows.                                                            |
 | S3-compatible provisioning                | Creates or reuses shared and app buckets, and validates runtime credentials for app read/write, shared read-only, and cross-app denial before injection. |
@@ -132,7 +132,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                   | Supported behavior                                                                                     |
 | ------------------------- | ------------------------------------------------------------------------------------------------------ |
-| SDK exports               | Exports app, router, user, XML, env, database, app/shared storage, and import-time runtime objects.    |
+| SDK exports               | Exports app, router, user/auth helpers, XML, env, database, app/shared storage, and import-time runtime objects. |
 | SDK environment model     | Reads `LONGLINK_` runtime mode, database, and storage settings from process env.                       |
 | App env file loading      | Loads app-defined `.env` and `.env.sample` settings while ignoring extra keys.                         |
 | SDK package data          | Packages static web and XSD assets and requires Python 3.14 or newer.                                  |
@@ -179,8 +179,8 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Audit header scope            | Reads `x-user-id` as UUID and binds it for request audit attribution.                                        |
 | Audit auto fields             | Fills create/update audit fields and converts hard deletes on SDK tables into soft deletes.                  |
 | App Alembic migrations        | Discovers app models, excludes shared `users`, skips empty revisions, and applies app migrations.            |
-| Production schema search path | Uses app schema plus `public` when `DATABASE_SCHEMA` is set.                                                 |
-| SDK auth boundary             | Provides local users and audit attribution, but no login or permission system.                               |
+| Production schema search path | Uses app schema plus `shared` when `DATABASE_SCHEMA` is set.                                                 |
+| SDK auth boundary             | Provides request-scoped `get_user()`, local users, audit attribution, and method-level `/api` role enforcement without owning login. |
 | Environment storage backends  | Uses fsspec memory FS for testing, local file FS for development, and parsed `STORAGE_URL` for production.   |
 | S3 endpoint URL parsing       | Creates an S3 filesystem from `s3+http://key:secret@endpoint` style URLs.                                    |
 | App bucket scope              | Scopes app paths to `STORAGE_BUCKET` with `DirFileSystem`.                                                   |
@@ -211,7 +211,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | SDK web build mode    | Builds the embedded SDK runtime bundle into `sdk/longlink/.static/web`.                                                          |
 | API URL resolution    | Supports `VITE_API_URL` API prefixing and credentialed requests.                                                                 |
 | SDK user header       | Adds `x-user-id` from local storage in SDK mode unless already supplied.                                                         |
-| Lucide icon assets    | Serves and emits `/lucide-icons/*.svg` for icon loading by slug.                                                                 |
+| Lucide icon subset    | Renders a fixed 30-icon Lucide subset directly in the web bundle and falls back to `box` for unsupported XML icon names.          |
 | API route tree        | Exposes public, docs, legal, organization, settings, admin, resource, and proxied app routes.                                    |
 | SDK wildcard route    | Routes every SDK-mode path to the SDK application view.                                                                          |
 | Auth guard            | Shows sign-in for anonymous users, enforces platform role hierarchy, and renders 404 for insufficient access.                    |
@@ -233,7 +233,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | XML docs reference            | Documents XML state, query, loops, conditions, i18n, expressions, invalidation, layout tags, and component tags.                              |
 | Docs heading anchors          | Auto-slugs headings and renders hover anchor links.                                                                                           |
 | Organizations page            | Shows sign-in for anonymous users; authenticated users list memberships and create organizations.                                             |
-| User settings page            | Lets users edit name/email/language, theme/accent/radius preferences, list organizations, and create organizations.                            |
+| User settings page            | Lets users edit name/language, theme/accent/radius preferences, view provider-owned email, list organizations, and create organizations.        |
 | Organization shell            | Resolves organization slug and renders applications, people, database, storage, and settings sections.                                        |
 | Organization applications UI  | Lists organization applications and links to proxied app views.                                                                               |
 | Organization people UI        | Shows members/invitations, supports invitations, and supports member role changes for allowed roles.                                          |
@@ -279,7 +279,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                | Supported behavior                                                                                                                                                                                                                                                                                              |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| XML parser             | Parses XML into AST, preserves attributes, removes whitespace, ignores declarations/comments, and rejects visible literal text or malformed XML.                                                                                                                                                                |
+| XML parser             | Parses XML into AST, preserves attributes, removes whitespace, ignores declarations/comments, and rejects visible literal text, malformed XML, DOCTYPE, ENTITY, or CDATA constructs.                                                                                                                            |
 | XML component registry | Maps supported XML tag names explicitly to React adapters.                                                                                                                                                                                                                                                      |
 | XML renderer           | Initializes setup state/query nodes, loads translations, subscribes to Valtio state, scopes render/setup errors without exposing stack traces, and renders AST nodes.                                                                                                                                           |
 | XML execution context  | Provides runtime scope, setup registration, query invalidation, locale, translations, and state preservation.                                                                                                                                                                                                   |
@@ -293,7 +293,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Feature             | Supported behavior                                                                                                            |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | XML root/setup tags | `longlink`, `State`, `Query`, and `For` provide metadata, local state, JSON setup fetches, and scoped iteration.              |
-| XML actions         | Resolves click-time app-relative `GET`, `POST`, `PATCH`, or `DELETE` requests with JSON or multipart form payloads and invalidates queries. |
+| XML actions         | Resolves click-time app-relative `GET`, `POST`, `PUT`, `PATCH`, or `DELETE` requests with JSON or multipart form payloads and invalidates queries. |
 | XML queries         | Fetches JSON from expression-aware app-relative paths during setup and exposes results under a query id.                      |
 | XML state           | Initializes local reactive state from literal `State` attributes.                                                             |
 | XML loop rendering  | Iterates array-like expression results and exposes each item under a local alias.                                             |

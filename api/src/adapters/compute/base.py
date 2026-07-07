@@ -49,6 +49,10 @@ class Compute(ABC):
         """Return pods for one managed application."""
 
     @abstractmethod
+    def application_deployment_ready(self, organization: str, application: str) -> bool:
+        """Return whether the current application Deployment rollout is ready."""
+
+    @abstractmethod
     def proxy(
         self,
         organization: str,

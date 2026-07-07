@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from './props';
 
 const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
-const ALLOWED_ACTION_METHODS = new Set(['DELETE', 'GET', 'PATCH', 'POST']);
+const ALLOWED_ACTION_METHODS = new Set(['DELETE', 'GET', 'PATCH', 'POST', 'PUT']);
 
 /** Returns the action handler provided by the nearest XML Action wrapper. */
 export function useActionHandler() {

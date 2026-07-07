@@ -903,7 +903,12 @@ async def test_proxy_app_forwards_request_to_internal_service(
             return (
                 b"proxied",
                 200,
-                {"content-type": "text/plain", "set-cookie": "tenant=owned"},
+                {
+                    "content-type": "text/plain",
+                    "connection": "x-internal-debug",
+                    "set-cookie": "tenant=owned",
+                    "x-internal-debug": "hidden",
+                },
             )
 
     monkeypatch.setattr(
@@ -940,6 +945,8 @@ async def test_proxy_app_forwards_request_to_internal_service(
     assert forwarded_headers["x-user-id"] == str(user.id)
     assert "cookie" not in forwarded_headers
     assert "set-cookie" not in response.headers
+    assert "connection" not in response.headers
+    assert "x-internal-debug" not in response.headers
 
 
 async def test_proxy_app_requires_application_role_for_regular_member(
@@ -1058,9 +1065,13 @@ async def test_proxy_app_strips_conditional_headers_before_forwarding(
     response = client.get(
         f"/api/applications/{app.id}/proxy/i18n/en.json",
         headers={
+            "Connection": "X-Drop-Me, Keep-Alive",
             "If-None-Match": '"abc"',
             "If-Modified-Since": "Tue, 01 Jun 2020 00:00:00 GMT",
+            "Keep-Alive": "timeout=5",
+            "X-Drop-Me": "remove",
             "X-Test": "present",
+            "X-User-Email": "spoof@example.com",
             "X-User-Id": "00000000-0000-0000-0000-000000000000",
         },
     )
@@ -1072,6 +1083,10 @@ async def test_proxy_app_strips_conditional_headers_before_forwarding(
     forwarded_headers = {str(key).lower() for key in forwarded_values}
     assert "if-none-match" not in forwarded_headers
     assert "if-modified-since" not in forwarded_headers
+    assert "connection" not in forwarded_headers
+    assert "keep-alive" not in forwarded_headers
+    assert "x-drop-me" not in forwarded_headers
+    assert "x-user-email" not in forwarded_headers
     assert "x-test" in forwarded_headers
     assert forwarded_values.get("x-test") == "present"
     assert forwarded_values.get("x-user-id") == str(user.id)

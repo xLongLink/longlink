@@ -11,5 +11,7 @@ def test_icon_enum_exposes_typed_members() -> None:
         image="ghcr.io/longlink/dashboard:latest",
     )
 
+    assert len(Icon) == 30
     assert Icon.LAYOUT_GRID.value == "layout-grid"
+    assert Icon.ROCKET.value == "rocket"
     assert payload.icon is Icon.LAYOUT_GRID

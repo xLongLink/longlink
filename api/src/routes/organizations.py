@@ -43,6 +43,7 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 from src.database.services import operations
 from src.database.services import invitations
+from src.database.services import locations
 from src.database.services import applications
 from src.database.services import organizations
 
@@ -55,6 +56,11 @@ ORGANIZATION_ROLE_RANKS = {
     OrganizationRoles.maintain: 3,
     OrganizationRoles.admin: 4,
     OrganizationRoles.owner: 5,
+}
+ORGANIZATION_RESOURCE_INSPECTION_ROLES = {
+    OrganizationRoles.admin,
+    OrganizationRoles.maintain,
+    OrganizationRoles.owner,
 }
 
 
@@ -108,6 +114,10 @@ async def list_organization_database_resources(
     """Return database schemas for one organization."""
 
     organization = await organization_member_access(organization_id, user)
+    membership_role = await organizations.membership_role(organization_id, user.id)
+    if membership_role not in ORGANIZATION_RESOURCE_INSPECTION_ROLES:
+        raise ForbiddenError("Database resource inspection permissions required")
+
     registry = await provisioning.organization_database_registry(organization)
     if registry is None:
         return []
@@ -127,6 +137,10 @@ async def list_organization_storage_resources(
     """Return storage buckets for one organization."""
 
     organization = await organization_member_access(organization_id, user)
+    membership_role = await organizations.membership_role(organization_id, user.id)
+    if membership_role not in ORGANIZATION_RESOURCE_INSPECTION_ROLES:
+        raise ForbiddenError("Storage resource inspection permissions required")
+
     registry = await provisioning.organization_storage_registry(organization)
     if registry is None:
         return []
@@ -149,11 +163,7 @@ async def list_organization_database_resource_tables(
 
     organization = await organization_member_access(organization_id, user)
     membership_role = await organizations.membership_role(organization_id, user.id)
-    if membership_role not in {
-        OrganizationRoles.admin,
-        OrganizationRoles.maintain,
-        OrganizationRoles.owner,
-    }:
+    if membership_role not in ORGANIZATION_RESOURCE_INSPECTION_ROLES:
         raise ForbiddenError("Database resource inspection permissions required")
 
     registry = await provisioning.organization_database_registry(organization)
@@ -455,6 +465,9 @@ async def _storage_resource_rows(
 @router.post("/api/organizations", response_model=OrganizationSummary)
 async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)) -> OrganizationSummary:
     """Create a new organization."""
+
+    if await locations.get(payload.location_id) is None:
+        raise NotFoundError("Location", payload.location_id)
 
     # Map uniqueness failures to a conflict response.
     try:

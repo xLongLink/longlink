@@ -205,7 +205,7 @@ export const content = (
   <MenuSection value="overview" label="Overview" icon="layout-grid">
     ...
   </MenuSection>
-  <MenuSection value="orders" label="Orders" icon="package">
+  <MenuSection value="orders" label="Orders" icon="clipboard-list">
     <MenuSubSection value="open" label="Open orders">
       ...
     </MenuSubSection>

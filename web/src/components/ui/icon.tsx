@@ -3,96 +3,76 @@ import kebabCase from 'lodash/kebabCase';
 import {
     Activity,
     ArrowRight,
-    BadgeDollarSign,
-    BarChart,
-    BookOpen,
+    Banknote,
+    Bell,
     Box,
     Boxes,
     Building2,
+    Check,
     ClipboardList,
     Container,
-    Copy,
     Cpu,
     Database,
     Download,
-    FileCode,
-    FileText,
     HardDrive,
     Layers,
     LayoutDashboard,
     LayoutGrid,
+    Link,
     List,
     ListCheck,
-    Mail,
     MapPin,
-    Menu,
-    PackagePlus,
+    Plus,
     Rocket,
-    Search,
-    Settings,
+    RotateCcw,
     Settings2,
-    Shield,
-    ShoppingCart,
-    Sparkles,
-    Type,
-    User,
+    ShieldCheck,
+    SlidersHorizontal,
+    Timer,
     Users,
+    X,
     type LucideIcon,
     type LucideProps,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
-
-type IconProps = LucideProps & {
-    name: string;
-};
-
-const remoteIconCache = new Map<string, string>();
-const remoteIconRequests = new Map<string, Promise<string>>();
-const lucideIconAssetPath = '/lucide-icons/';
 
 const staticIconRegistry = {
     activity: Activity,
     'arrow-right': ArrowRight,
-    'badge-dollar-sign': BadgeDollarSign,
-    'bar-chart': BarChart,
-    'book-open': BookOpen,
+    banknote: Banknote,
+    bell: Bell,
     box: Box,
     boxes: Boxes,
     'building-2': Building2,
+    check: Check,
     'clipboard-list': ClipboardList,
     container: Container,
-    copy: Copy,
     cpu: Cpu,
     database: Database,
     download: Download,
-    'file-code': FileCode,
-    'file-text': FileText,
     'hard-drive': HardDrive,
+    layers: Layers,
     'layout-dashboard': LayoutDashboard,
     'layout-grid': LayoutGrid,
-    layers: Layers,
+    link: Link,
     list: List,
     'list-check': ListCheck,
-    mail: Mail,
     'map-pin': MapPin,
-    menu: Menu,
-    'package-plus': PackagePlus,
+    plus: Plus,
     rocket: Rocket,
-    search: Search,
-    settings: Settings,
+    'rotate-ccw': RotateCcw,
     'settings-2': Settings2,
-    shield: Shield,
-    'shopping-cart': ShoppingCart,
-    sparkles: Sparkles,
-    type: Type,
-    user: User,
+    'shield-check': ShieldCheck,
+    'sliders-horizontal': SlidersHorizontal,
+    timer: Timer,
     users: Users,
+    x: X,
 } satisfies Record<string, LucideIcon>;
 
 /** Normalizes XML and app icon names into Lucide's kebab-case format. */
 export function normalizeIconName(name: string): string {
     return kebabCase(name);
 }
+
 
 /** Returns a Lucide-compatible icon component for one normalized icon name. */
 export function createLucideIconComponent(name: string): LucideIcon | null {
@@ -107,100 +87,16 @@ export function createLucideIconComponent(name: string): LucideIcon | null {
     } as LucideIcon;
 }
 
-/** Returns a cached SVG request for one Lucide icon asset. */
-function loadRemoteIcon(name: string): Promise<string> {
-    const cachedIcon = remoteIconCache.get(name);
 
-    if (cachedIcon) {
-        return Promise.resolve(cachedIcon);
-    }
-
-    const pendingRequest = remoteIconRequests.get(name);
-
-    if (pendingRequest) {
-        return pendingRequest;
-    }
-
-    const request = (async () => {
-        try {
-            const response = await fetch(`${lucideIconAssetPath}${encodeURIComponent(name)}.svg`);
-
-            if (!response.ok) {
-                throw new Error(`Failed to load icon "${name}"`);
-            }
-
-            const svg = await response.text();
-            remoteIconCache.set(name, svg);
-
-            return svg;
-        } finally {
-            remoteIconRequests.delete(name);
-        }
-    })();
-
-    remoteIconRequests.set(name, request);
-
-    return request;
-}
-
-/** Escapes a value before it is injected into generated SVG markup. */
-function escapeSvgAttribute(value: string): string {
-    return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-/** Adds runtime classes to one trusted local SVG asset. */
-function renderRemoteIconMarkup(svg: string, className: string): string {
-    return svg.replace('<svg ', `<svg class="${escapeSvgAttribute(className)}" aria-hidden="true" `);
-}
-
-/** Fetches and renders one non-static Lucide SVG asset. */
-function RemoteIcon({ className, name, ...props }: IconProps) {
-    const [svg, setSvg] = useState(() => remoteIconCache.get(name) ?? '');
-
-    // Fetch exactly the requested icon asset. No other Lucide icons are loaded.
-    useEffect(() => {
-        let cancelled = false;
-
-        setSvg(remoteIconCache.get(name) ?? '');
-        void loadRemoteIcon(name)
-            .then((loadedSvg) => {
-                if (!cancelled) {
-                    setSvg(loadedSvg);
-                }
-            })
-            .catch(() => {
-                if (!cancelled) {
-                    setSvg('');
-                }
-            });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [name]);
-
-    if (!svg) {
-        return <Box aria-hidden={true} className={className} {...props} />;
-    }
-
-    return (
-        <span className="contents" dangerouslySetInnerHTML={{ __html: renderRemoteIconMarkup(svg, className ?? '') }} />
-    );
-}
-
-/** Renders a Lucide icon by name without loading the full dynamic icon set up front. */
-export function Icon({ className, name, ...props }: IconProps) {
+/** Renders one supported Lucide icon, falling back to Box for unsupported names. */
+export function Icon({ className, name, ...props }: LucideProps & { name: string }) {
     const normalizedName = normalizeIconName(name);
 
     if (!normalizedName) {
         throw new Error(`Unknown icon "${name}"`);
     }
 
-    const StaticIcon = staticIconRegistry[normalizedName as keyof typeof staticIconRegistry];
+    const StaticIcon = staticIconRegistry[normalizedName as keyof typeof staticIconRegistry] ?? Box;
 
-    if (StaticIcon) {
-        return <StaticIcon aria-hidden={true} className={cn('size-4 shrink-0', className)} {...props} />;
-    }
-
-    return <RemoteIcon name={normalizedName} aria-hidden={true} className={cn('size-4 shrink-0', className)} {...props} />;
+    return <StaticIcon aria-hidden={true} className={cn('size-4 shrink-0', className)} {...props} />;
 }

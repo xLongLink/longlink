@@ -1,4 +1,3 @@
-import xmltodict
 from lxml import etree
 from typing import Any
 from pathlib import Path
@@ -68,18 +67,3 @@ class Longlink(Element):
 
     LongLink documents are discovered from XML files and can define custom UI components and interactions.
     """
-
-    def __init__(self, path: str | Path, schema: str | Path | None = None) -> None:
-        """Store XML file path and document schema for later parsing operations."""
-
-        default_schema = schema or ROOT / ".static" / "xsd" / "schema.xsd"
-        super().__init__(path=path, schema=default_schema)
-        self._metadata: dict[str, Any] | None = None
-
-    @property
-    def metadata(self) -> dict[str, Any]:
-        """Return the parsed XML document as a dict for downstream processing."""
-
-        if self._metadata is None:
-            self._metadata = xmltodict.parse(self.content)
-        return self._metadata

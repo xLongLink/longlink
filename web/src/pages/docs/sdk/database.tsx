@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-02',
+    lastUpdated: '2026-07-07',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/database.tsx',
 };
 
@@ -107,8 +107,14 @@ async def create_project() -> None:
                 database. Applications read those users; they do not own login or membership management.
             </Li>
             <Li>
-                Requests proxied through the control plane include <Code>x-user-id</Code>. The SDK audit middleware
-                reads that header and fills create, update, and delete audit fields during database writes.
+                Requests proxied through the control plane include <Code>x-user-id</Code> and <Code>x-user-role</Code>.
+                The SDK audit middleware reads the user id and fills create, update, and delete audit fields during
+                database writes.
+            </Li>
+            <Li>
+                SDK application routes under <Code>/api</Code> enforce method-level roles locally: <Code>GET</Code> uses
+                <Code>read</Code>, write methods use <Code>write</Code>, and <Code>DELETE</Code> uses{' '}
+                <Code>maintain</Code>.
             </Li>
             <Li>
                 Hard deletes of <Code>db.Table</Code> rows are converted into soft deletes by setting{' '}

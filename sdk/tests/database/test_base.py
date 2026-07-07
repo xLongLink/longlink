@@ -1,6 +1,6 @@
 import pytest
-from typing import Any, ClassVar
 from types import SimpleNamespace
+from typing import Any, ClassVar
 from sqlmodel import Field, SQLModel
 from longlink.database import base as database_base
 from longlink.utils.settings import Envs
@@ -108,7 +108,7 @@ def test_create_engine_sets_production_schema_search_path(monkeypatch) -> None:
             "pool_pre_ping": True,
             "pool_recycle": 20,
             "pool_use_lifo": True,
-            "connect_args": {"server_settings": {"search_path": "dashboard,shared"}},
+            "connect_args": {"server_settings": {"search_path": '"dashboard",shared'}},
         }
     finally:
         database_base._engine = None

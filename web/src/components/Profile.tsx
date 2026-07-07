@@ -50,7 +50,7 @@ export function UserProfile() {
                     <DropdownMenuItem
                         className="cursor-pointer items-center gap-3 p-2 text-muted-foreground transition-colors data-highlighted:bg-accent data-highlighted:text-accent-foreground data-highlighted:[&_p]:text-accent-foreground data-highlighted:[&_svg]:text-accent-foreground"
                         onClick={() =>
-                            void switchAccount(() => {
+                            void switchAccount().catch(() => {
                                 toast.error(t('auth.switchAccountFailed'));
                             })
                         }
@@ -196,7 +196,7 @@ export function UserProfile() {
                 <DropdownMenuItem
                     className="cursor-pointer p-2 text-destructive transition-colors data-highlighted:bg-destructive/10 data-highlighted:text-destructive"
                     onClick={() =>
-                        void signOut(() => {
+                        void signOut().catch(() => {
                             toast.error(t('profile.signOutFailed'));
                         })
                     }

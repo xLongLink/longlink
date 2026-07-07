@@ -4,13 +4,14 @@ from typing import Any, Final, Literal
 from fastapi import Query, Request, Response, APIRouter
 from pydantic import ValidationError
 from src.auth import SessionAccountsService, oauth
-from src.errors import UnavailableError
+from src.errors import UnauthorizedError, UnavailableError
 from src.operations import provisioning
 from src.models.auth import OidcUserInfo
 from src.environments import env
 from fastapi.responses import RedirectResponse
 from src.models.common import SuccessResponse
 from src.database.services import users
+from authlib.integrations.base_client import OAuthError
 
 router = APIRouter()
 DEFAULT_POST_LOGIN_REDIRECT: Final[str] = "/organizations"
@@ -53,12 +54,18 @@ async def upsert_oidc_user(userinfo: OidcUserInfo) -> str:
 
         name = f"{given_name} {family_name}"
 
+    if userinfo.email_verified is not True:
+        raise UnauthorizedError("Authentication provider returned an unverified email")
+
     user = await users.upsert(
         oidc=userinfo.sub,
         email=str(email),
         name=name,
         avatar=userinfo.picture,
     )
+    if user.deleted_at is not None:
+        raise UnauthorizedError("Not authenticated")
+
     try:
         await provisioning.sync_user_organizations(user)
     except Exception as exc:
@@ -111,6 +118,8 @@ async def auth_oidc(request: Request) -> RedirectResponse:
         token: Any = await oidc.authorize_access_token(request)
     except httpx2.HTTPStatusError as exc:
         raise UnavailableError("OIDC token exchange failed. Verify provider URL and client credentials.") from exc
+    except OAuthError as exc:
+        raise UnauthorizedError("OIDC callback could not be validated") from exc
 
     raw_userinfo: Any = getattr(token, "userinfo", None)
     # Fall back to the userinfo endpoint when the token payload does not include profile claims.
@@ -129,6 +138,10 @@ async def auth_oidc(request: Request) -> RedirectResponse:
 
         try:
             raw_userinfo = await oidc.userinfo(token=token_payload)
+        except httpx2.HTTPStatusError as exc:
+            raise UnavailableError("OIDC userinfo endpoint failed. Verify provider URL and client credentials.") from exc
+        except OAuthError as exc:
+            raise UnauthorizedError("OIDC userinfo response could not be validated") from exc
         except ValidationError as exc:
             raise UnavailableError("Authentication provider returned an invalid user profile") from exc
 
@@ -143,7 +156,7 @@ async def auth_oidc(request: Request) -> RedirectResponse:
     return RedirectResponse(sanitize_post_login_redirect(next_path))
 
 
-@router.get("/auth/logout", response_model=SuccessResponse, include_in_schema=False)
+@router.post("/auth/logout", response_model=SuccessResponse, include_in_schema=False)
 async def logout(request: Request) -> SuccessResponse:
     """Clear the user session and log out."""
 

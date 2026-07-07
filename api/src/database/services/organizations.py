@@ -158,7 +158,16 @@ async def get(
         )
         active_applications = applications_result.scalars().all()
         application_roles = {}
+        caller_organization_role = None
         if application_user_id is not None:
+            role_result = await session.execute(
+                select(UserOrganization.role_name).where(
+                    UserOrganization.organization_id == organization.id,
+                    UserOrganization.user_id == application_user_id,
+                    UserOrganization.deleted_at.is_(None),
+                )
+            )
+            caller_organization_role = role_result.scalar_one_or_none()
             roles_result = await session.execute(
                 select(UserApplication.application_id, UserApplication.role_name).where(
                     UserApplication.organization_id == organization.id,
@@ -168,15 +177,21 @@ async def get(
             )
             application_roles = dict(roles_result.all())
 
-        invitations_result = await session.execute(
-            select(OrganizationInvitation)
-            .where(
-                OrganizationInvitation.organization_id == organization.id,
-                OrganizationInvitation.deleted_at.is_(None),
+        active_invitations = []
+        if application_user_id is None or caller_organization_role in {
+            OrganizationRoles.admin,
+            OrganizationRoles.maintain,
+            OrganizationRoles.owner,
+        }:
+            invitations_result = await session.execute(
+                select(OrganizationInvitation)
+                .where(
+                    OrganizationInvitation.organization_id == organization.id,
+                    OrganizationInvitation.deleted_at.is_(None),
+                )
+                .order_by(OrganizationInvitation.created_at.desc())
             )
-            .order_by(OrganizationInvitation.created_at.desc())
-        )
-        active_invitations = invitations_result.scalars().all()
+            active_invitations = invitations_result.scalars().all()
 
         memberships_result = await session.execute(
             select(User, UserOrganization.role_name, UserOrganization.updated_at)

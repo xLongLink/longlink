@@ -1,36 +1,25 @@
 import re
 import urllib.parse
-from uuid import UUID
-from pathlib import PurePosixPath
-from fastapi import Depends, Request, Response, APIRouter
-from datetime import UTC, datetime, timedelta
 from src import adapters
+from uuid import UUID
+from fastapi import Depends, Request, Response, APIRouter
+from pathlib import PurePosixPath
+from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authadmin, organization_member_access
 from src.utils import names
-from src.errors import (
-    ConflictError,
-    NotFoundError,
-    ForbiddenError,
-    BadGatewayError,
-    UnavailableError,
-    PayloadTooLargeError,
-)
+from src.errors import (ConflictError, NotFoundError, ForbiddenError, BadGatewayError, UnavailableError,
+                        PayloadTooLargeError)
 from src.operations import provisioning
+from collections.abc import Iterable
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
+from src.database.services import operations, applications, organizations
 from src.models.operations import OperationKind
-from src.models.applications import (
-    ApplicationCreate,
-    ApplicationResponse,
-    ApplicationMemberUpdate,
-    ApplicationMemberResponse,
-)
+from src.models.applications import (ApplicationCreate, ApplicationResponse, ApplicationMemberUpdate,
+                                     ApplicationMemberResponse)
 from src.database.models.users import User
 from kubernetes.client.exceptions import ApiException as KubernetesApiException
 from src.database.models.applications import Application
-from src.database.services import operations
-from src.database.services import applications
-from src.database.services import organizations
 
 HOP_BY_HOP_HEADERS = {
     "connection",
@@ -38,6 +27,7 @@ HOP_BY_HOP_HEADERS = {
     "keep-alive",
     "proxy-authenticate",
     "proxy-authorization",
+    "proxy-connection",
     "te",
     "trailer",
     "transfer-encoding",
@@ -49,7 +39,7 @@ FORWARDED_REQUEST_BLOCKLIST = HOP_BY_HOP_HEADERS | {
     "cookie",
 }
 FORWARDED_REQUEST_BLOCKLIST |= {"if-modified-since", "if-none-match"}
-FORWARDED_REQUEST_BLOCKLIST |= {"forwarded", "x-real-ip", "x-user-id"}
+FORWARDED_REQUEST_BLOCKLIST |= {"forwarded", "x-real-ip"}
 FORWARDED_RESPONSE_BLOCKLIST = HOP_BY_HOP_HEADERS | {"content-length", "set-cookie"}
 APPLICATION_DELETE_DELAY_DAYS = 0
 APPLICATION_ACCESS_ORGANIZATION_ROLES = {
@@ -60,7 +50,7 @@ APPLICATION_ACCESS_ORGANIZATION_ROLES = {
 ORGANIZATION_APPLICATION_ROLE_RANKS = {
     OrganizationRoles.maintain: 3,
     OrganizationRoles.admin: 4,
-    OrganizationRoles.owner: 4,
+    OrganizationRoles.owner: 5,
 }
 APPLICATION_ROLE_RANKS = {
     ApplicationRoles.read: 1,
@@ -68,10 +58,26 @@ APPLICATION_ROLE_RANKS = {
     ApplicationRoles.maintain: 3,
     ApplicationRoles.admin: 4,
 }
-APPLICATION_LOG_ROLES = {ApplicationRoles.admin, ApplicationRoles.maintain}
+RUNTIME_ROLE_RANKS = {
+    "read": 1,
+    "write": 2,
+    "maintain": 3,
+    "admin": 4,
+    "owner": 5,
+}
+PROXY_METHOD_REQUIRED_ROLES = {
+    "GET": "read",
+    "HEAD": "read",
+    "OPTIONS": "read",
+    "POST": "write",
+    "PUT": "write",
+    "PATCH": "write",
+    "DELETE": "maintain",
+}
 APPLICATION_MANAGEMENT_ROLES = {ApplicationRoles.admin, ApplicationRoles.maintain}
 INVALID_PERCENT_ESCAPE_PATTERN = re.compile(r"%(?![0-9A-Fa-f]{2})")
-PROXY_REQUEST_BODY_MAX_BYTES = 10 * 1024 * 1024
+UNSAFE_PERCENT_ENCODED_PATH_PATTERN = re.compile(r"(?i)%(?:0[0-9a-f]|1[0-9a-f]|2e|2f|5c|7f)")
+PROXY_REQUEST_BODY_MAX_BYTES = 25 * 1024 * 1024
 PROXY_RESPONSE_BODY_MAX_BYTES = 25 * 1024 * 1024
 
 router = APIRouter()
@@ -93,7 +99,39 @@ def _can_access_application(
 ) -> bool:
     """Return whether a user may access an application runtime."""
 
-    return application_role is not None or organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES
+    return _effective_runtime_role(organization_role, application_role) is not None
+
+
+def _effective_runtime_role(
+    organization_role: OrganizationRoles | None,
+    application_role: ApplicationRoles | None,
+) -> str | None:
+    """Return the strongest role the application runtime should see."""
+
+    roles: list[str] = []
+
+    # Application roles are the normal runtime grant for application members.
+    if application_role is not None:
+        roles.append(application_role.value)
+
+    # Elevated organization roles can open and operate runtimes without per-app grants.
+    if organization_role is not None and organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES:
+        roles.append(organization_role.value)
+
+    if not roles:
+        return None
+
+    return max(roles, key=lambda role: RUNTIME_ROLE_RANKS[role])
+
+
+def _require_proxy_method_role(method: str, runtime_role: str) -> None:
+    """Require a runtime role that allows the proxied HTTP method."""
+
+    required_role = PROXY_METHOD_REQUIRED_ROLES.get(method.upper(), "maintain")
+
+    # Enforce the same method-level policy before requests reach the app container.
+    if RUNTIME_ROLE_RANKS[runtime_role] < RUNTIME_ROLE_RANKS[required_role]:
+        raise ForbiddenError(f"Application {required_role} access required")
 
 
 def _can_manage_application(
@@ -102,9 +140,7 @@ def _can_manage_application(
 ) -> bool:
     """Return whether a user may perform application management actions."""
 
-    return (
-        application_role in APPLICATION_MANAGEMENT_ROLES or organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES
-    )
+    return application_role in APPLICATION_MANAGEMENT_ROLES or organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES
 
 
 def _can_view_application_logs(
@@ -113,7 +149,7 @@ def _can_view_application_logs(
 ) -> bool:
     """Return whether a user may view application logs."""
 
-    return application_role in APPLICATION_LOG_ROLES or organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES
+    return _can_manage_application(organization_role, application_role)
 
 
 def _application_role_rank(role: ApplicationRoles | None) -> int:
@@ -138,11 +174,31 @@ def _application_manager_role_rank(
     return max(_application_role_rank(application_role), organization_role_rank)
 
 
-def _forward_request_header_allowed(header_name: str) -> bool:
-    """Return whether a request header may be forwarded to an application."""
+def _connection_header_names(headers: Iterable[tuple[str, str]]) -> set[str]:
+    """Return lower-case header names declared hop-by-hop by Connection headers."""
 
-    normalized_name = header_name.lower()
-    return normalized_name not in FORWARDED_REQUEST_BLOCKLIST and not normalized_name.startswith("x-forwarded-")
+    connection_header_names: set[str] = set()
+    for header_name, header_value in headers:
+        if header_name.lower() != "connection":
+            continue
+
+        for token in header_value.split(","):
+            normalized_token = token.strip().lower()
+            if normalized_token:
+                connection_header_names.add(normalized_token)
+
+    return connection_header_names
+
+
+def _forward_response_headers(headers: dict[str, str]) -> dict[str, str]:
+    """Return response headers that are safe to forward from an application."""
+
+    connection_header_names = _connection_header_names(headers.items())
+    return {
+        key: value
+        for key, value in headers.items()
+        if key.lower() not in FORWARDED_RESPONSE_BLOCKLIST and key.lower() not in connection_header_names
+    }
 
 
 def _proxy_upstream_path(path: str) -> str:
@@ -152,13 +208,16 @@ def _proxy_upstream_path(path: str) -> str:
     if upstream_path == "":
         raise NotFoundError("Proxy root path", "/")
 
-    if INVALID_PERCENT_ESCAPE_PATTERN.search(upstream_path):
+    if INVALID_PERCENT_ESCAPE_PATTERN.search(upstream_path) or UNSAFE_PERCENT_ENCODED_PATH_PATTERN.search(upstream_path):
         raise NotFoundError("Proxy path", path)
 
     try:
         decoded_path = urllib.parse.unquote(upstream_path, errors="strict")
     except UnicodeDecodeError as exc:
         raise NotFoundError("Proxy path", path) from exc
+
+    if UNSAFE_PERCENT_ENCODED_PATH_PATTERN.search(decoded_path):
+        raise NotFoundError("Proxy path", path)
 
     parsed_path = PurePosixPath(decoded_path)
     if parsed_path.is_absolute() or "\\" in decoded_path:
@@ -171,7 +230,7 @@ def _proxy_upstream_path(path: str) -> str:
     if any(segment in {".", ".."} for segment in path_segments):
         raise NotFoundError("Proxy path", path)
 
-    return upstream_path
+    return urllib.parse.quote(decoded_path, safe="/!$&'()*+,;=:@")
 
 
 async def _proxy_request_body(request: Request) -> bytes:
@@ -209,6 +268,13 @@ def _proxy_response_content(content: bytes | str) -> bytes | str:
     return content
 
 
+def _exception_response_headers(exc: KubernetesApiException) -> dict[str, str]:
+    """Return normalized headers from one Kubernetes API exception."""
+
+    headers = getattr(exc, "headers", None) or {}
+    return dict(headers.items()) if hasattr(headers, "items") else {}
+
+
 @router.get("/api/applications", response_model=list[ApplicationResponse])
 async def list_applications(
     user: User = Depends(authadmin),
@@ -230,11 +296,7 @@ async def create_application(
     organization_record = await organization_member_access(organization_id, user)
     # Application creation provisions runtime resources, so it requires elevated organization permissions.
     membership_role = await organizations.membership_role(organization_id, user.id)
-    if membership_role not in {
-        OrganizationRoles.admin,
-        OrganizationRoles.maintain,
-        OrganizationRoles.owner,
-    }:
+    if membership_role not in APPLICATION_ACCESS_ORGANIZATION_ROLES:
         raise ForbiddenError("Application creation permissions required")
 
     try:
@@ -360,8 +422,8 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
 
 @router.api_route(
     "/api/applications/{application_id}/proxy/{path:path}",
-    methods=["DELETE", "GET", "PATCH", "POST"],
-    description="Proxy supports DELETE, GET, PATCH, and POST for non-root application paths. The application root path is intentionally not proxied.",
+    methods=["DELETE", "GET", "PATCH", "POST", "PUT"],
+    description="Proxy supports DELETE, GET, PATCH, POST, and PUT for non-root application paths. The application root path is intentionally not proxied.",
 )
 async def proxy_application_request(
     application_id: UUID,
@@ -378,8 +440,10 @@ async def proxy_application_request(
 
     organization = await organization_member_access(application.organization_id, user)
     organization_role, application_role = await _application_access_roles(application, user)
-    if not _can_access_application(organization_role, application_role):
+    runtime_role = _effective_runtime_role(organization_role, application_role)
+    if runtime_role is None:
         raise ForbiddenError("Application access required")
+    _require_proxy_method_role(request.method, runtime_role)
 
     if application.status != ApplicationStatus.running:
         return Response(status_code=503, headers={"cache-control": "no-store"})
@@ -392,9 +456,18 @@ async def proxy_application_request(
 
     names.knames(organization.slug, "Organization")
     names.knames(application.slug, "Application name")
-    # Strip hop-by-hop headers before forwarding the request upstream.
-    forward_headers = {key: value for key, value in request.headers.items() if _forward_request_header_allowed(key)}
+    # Strip hop-by-hop and identity-spoofing headers before forwarding the request upstream.
+    connection_header_names = _connection_header_names(request.headers.items())
+    forward_headers = {
+        key: value
+        for key, value in request.headers.items()
+        if (normalized_name := key.lower()) not in FORWARDED_REQUEST_BLOCKLIST
+        and normalized_name not in connection_header_names
+        and not normalized_name.startswith("x-forwarded-")
+        and not normalized_name.startswith("x-user-")
+    }
     forward_headers["x-user-id"] = str(user.id)
+    forward_headers["x-user-role"] = runtime_role
     k8s = adapters.compute(registry)
     request_body = await _proxy_request_body(request)
 
@@ -411,43 +484,28 @@ async def proxy_application_request(
         )
     except KubernetesApiException as exc:
         status = getattr(exc, "status", None)
+        response_headers = _exception_response_headers(exc)
         if str(status) == "503":
             return Response(status_code=503, headers={"cache-control": "no-store"})
 
         if str(status) == "304":
-            headers = getattr(exc, "headers", None) or {}
-            if hasattr(headers, "items"):
-                upstream_headers = dict(headers.items())
-            else:
-                upstream_headers = {}
-
             return Response(
                 status_code=304,
-                headers={
-                    key: value
-                    for key, value in upstream_headers.items()
-                    if key.lower() not in FORWARDED_RESPONSE_BLOCKLIST
-                },
+                headers=_forward_response_headers(response_headers),
             )
 
         status_code = int(status) if status is not None else 500
         body = _proxy_response_content(getattr(exc, "body", b""))
-        raw_response_headers = getattr(exc, "headers", None) or {}
-        response_headers = dict(raw_response_headers.items()) if hasattr(raw_response_headers, "items") else {}
 
         return Response(
             content=body,
             status_code=status_code,
-            headers={
-                key: value for key, value in response_headers.items() if key.lower() not in FORWARDED_RESPONSE_BLOCKLIST
-            },
+            headers=_forward_response_headers(response_headers),
         )
 
     # Filter hop-by-hop response headers so FastAPI can return a clean proxied response.
     return Response(
         content=_proxy_response_content(body),
         status_code=status_code,
-        headers={
-            key: value for key, value in upstream_headers.items() if key.lower() not in FORWARDED_RESPONSE_BLOCKLIST
-        },
+        headers=_forward_response_headers(upstream_headers),
     )

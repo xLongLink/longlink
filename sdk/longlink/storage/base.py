@@ -4,6 +4,9 @@ from fsspec.spec import AbstractFileSystem
 from longlink.utils.settings import Envs
 from fsspec.implementations.dirfs import DirFileSystem
 
+PRODUCTION_STORAGE_PROTOCOLS = {"s3"}
+PRODUCTION_ENDPOINT_PROTOCOLS = {"http", "https"}
+
 
 def create_fs(env: Envs) -> AbstractFileSystem:
     """Create the application-scoped filesystem for the active environment."""
@@ -39,8 +42,12 @@ def _create_scoped_fs(env: Envs, bucket: str | None) -> AbstractFileSystem:
         raise ValueError("Production storage requires a non-local storage URL")
 
     protocol_parts = storage_url.scheme.split("+", 1)
+    storage_protocol = protocol_parts[0]
+    if storage_protocol not in PRODUCTION_STORAGE_PROTOCOLS:
+        raise ValueError("Production storage requires an S3-compatible storage URL")
+
     if len(protocol_parts) == 1:
-        filesystem = fsspec.filesystem(protocol_parts[0])
+        filesystem = fsspec.filesystem(storage_protocol)
 
         if bucket:
             return DirFileSystem(path=bucket, fs=filesystem)
@@ -48,7 +55,10 @@ def _create_scoped_fs(env: Envs, bucket: str | None) -> AbstractFileSystem:
         return filesystem
 
     # LongLink stores endpoint transport in the URL scheme suffix, for example s3+https://...
-    storage_protocol, endpoint_protocol = protocol_parts
+    _, endpoint_protocol = protocol_parts
+    if endpoint_protocol not in PRODUCTION_ENDPOINT_PROTOCOLS or storage_url.hostname is None:
+        raise ValueError("Production storage endpoint URL must use http or https")
+
     endpoint_netloc = storage_url.netloc.rsplit("@", 1)[-1]
     endpoint_url = urllib.parse.urlunsplit(
         (endpoint_protocol, endpoint_netloc, storage_url.path, storage_url.query, storage_url.fragment)

@@ -9,6 +9,8 @@ type XMLValidationFailure = {
     };
 };
 
+const UNSUPPORTED_XML_MARKUP_PATTERN = /<!\s*(?:DOCTYPE|ENTITY)\b|<!\[CDATA\[/i;
+
 const parser = new XMLParser({
     ignoreAttributes: false,
     attributesGroupName: ':@',
@@ -36,6 +38,10 @@ const parser = new XMLParser({
  *   ]
  */
 export function parseXML(xml: string): ASTNode[] {
+    if (UNSUPPORTED_XML_MARKUP_PATTERN.test(xml)) {
+        throw new Error('XML DOCTYPE, ENTITY, and CDATA constructs are not supported');
+    }
+
     // Validate first because the preserve-order parser can otherwise recover from malformed tags.
     const validationResult = XMLValidator.validate(xml) as true | XMLValidationFailure;
 

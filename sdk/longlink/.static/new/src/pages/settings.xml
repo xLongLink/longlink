@@ -21,17 +21,15 @@
                 <P i18n="settings.application.description" />
                 <Stack>
                     <FieldLegend i18n="settings.application.legend" />
-                    <Flex space="between">
+                    <Flex>
                         <Avatar>
                             <AvatarImage src="$reviewer.avatarUrl" alt="$reviewer.name" />
                             <AvatarFallback>
                                 <P value="$reviewer.initials" />
                             </AvatarFallback>
-                            <AvatarBadge>
-                                <P value="$reviewer.badge" />
-                            </AvatarBadge>
                         </Avatar>
                         <P i18n="settings.application.reviewer" />
+                        <Badge variant="outline" value="$reviewer.badge" />
                     </Flex>
 
                     <Field>
@@ -110,7 +108,7 @@
                     </Field>
 
                     <Toggle pressed="$pinned">
-                        <Icon name="pin" />
+                        <Icon name="map-pin" />
                         <P i18n="settings.preferences.pin" />
                     </Toggle>
                 </Stack>
@@ -138,10 +136,10 @@
                                 <Icon name="banknote" />
                             </ToggleGroupItem>
                             <ToggleGroupItem value="equipment">
-                                <Icon name="laptop" />
+                                <Icon name="box" />
                             </ToggleGroupItem>
                             <ToggleGroupItem value="travel">
-                                <Icon name="plane" />
+                                <Icon name="rocket" />
                             </ToggleGroupItem>
                         </ToggleGroup>
                     </Field>

@@ -14,9 +14,15 @@ from src.database.models.operations import Operation
 OPERATION_ERROR_MAX_LENGTH = 2000
 OPERATION_ERROR_TRUNCATION_MARKER = "... [truncated]"
 URL_CREDENTIAL_PATTERN = re.compile(r"://([^\s/:@]+):([^\s/@]+)@")
-AUTHORIZATION_SECRET_PATTERN = re.compile(r"(?i)(authorization\s*[:=]\s*(?:bearer\s+)?)\S+")
+AUTHORIZATION_SECRET_PATTERN = re.compile(
+    r"(?i)([\"']?authorization[\"']?\s*[:=]\s*[\"']?(?:bearer\s+)?)[^\s'\",}]+([\"']?)"
+)
 ASSIGNED_SECRET_PATTERN = re.compile(
-    r"(?i)\b(password|secret|token|access_key|secret_key|database_url|storage_url|dsn)(\s*[:=]\s*)\S+"
+    r"(?i)((?<![a-z0-9_-])[\"']?"
+    r"(?:secret_access_key|secret-access-key|access_key_id|access-key-id|client_key_data|client-key-data|"
+    r"client_certificate_data|client-certificate-data|database_url|database-url|storage_url|storage-url|"
+    r"access_key|access-key|secret_key|secret-key|password|secret|token|dsn)"
+    r"[\"']?\s*[:=]\s*[\"']?)[^\s'\",}]+([\"']?)"
 )
 
 
@@ -25,8 +31,8 @@ def sanitize_operation_error(error: str) -> str:
 
     # Operation errors are visible through the API, so redact common credential shapes before persisting.
     redacted_error = URL_CREDENTIAL_PATTERN.sub("://<redacted>:<redacted>@", error)
-    redacted_error = AUTHORIZATION_SECRET_PATTERN.sub(r"\1<redacted>", redacted_error)
-    redacted_error = ASSIGNED_SECRET_PATTERN.sub(r"\1\2<redacted>", redacted_error)
+    redacted_error = AUTHORIZATION_SECRET_PATTERN.sub(r"\1<redacted>\2", redacted_error)
+    redacted_error = ASSIGNED_SECRET_PATTERN.sub(r"\1<redacted>\2", redacted_error)
 
     if len(redacted_error) <= OPERATION_ERROR_MAX_LENGTH:
         return redacted_error
@@ -142,12 +148,14 @@ async def claim(operation_id: UUID) -> Operation | None:
         return operation
 
 
-async def defer(operation_id: UUID, lease_token: str) -> Operation | None:
+async def defer(operation_id: UUID, lease_token: str, delay_seconds: int | None = None) -> Operation | None:
     """Make one active operation claimable later without changing its step."""
 
     async with session_scope() as session:
         # A waiting step should be retried later without blocking the worker.
         now = datetime.now(UTC)
+        retry_delay_seconds = env.OPERATION_RETRY_DELAY_SECONDS if delay_seconds is None else delay_seconds
+        scheduled_at = now + timedelta(seconds=max(0, retry_delay_seconds))
         statement = (
             update(Operation)
             .where(
@@ -160,6 +168,7 @@ async def defer(operation_id: UUID, lease_token: str) -> Operation | None:
                 started_at=None,
                 error=None,
                 lease_token=None,
+                scheduled_at=scheduled_at,
                 lease_expires_at=None,
                 updated_at=now,
             )

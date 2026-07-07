@@ -237,6 +237,8 @@ async def test_operations_service_defers_active_operation() -> None:
     assert claimed.status == "active"
     assert deferred is not None
     assert deferred.status == "scheduled"
+    assert deferred.scheduled_at is not None
+    assert deferred.scheduled_at > claimed.started_at
     assert deferred.started_at is None
     assert deferred.stopped_at is None
 

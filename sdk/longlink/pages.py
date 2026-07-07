@@ -1,8 +1,11 @@
+import re
 from lxml import etree
 from typing import Any
 from dataclasses import dataclass
 from collections.abc import Callable
 from fastapi.responses import Response
+
+PAGE_PARAMETER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 class XMLResponse(Response):
@@ -73,6 +76,9 @@ def page_file_route(relative_path: str) -> str:
 
             if not parameter_name:
                 raise ValueError("Dynamic page parameters cannot be empty")
+
+            if not PAGE_PARAMETER_PATTERN.fullmatch(parameter_name):
+                raise ValueError("Dynamic page parameters must be valid identifier names")
 
             route_segments.append(f":{parameter_name}")
             continue

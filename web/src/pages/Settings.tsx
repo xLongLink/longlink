@@ -22,8 +22,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
 
-type AccountField = 'name' | 'email';
-
 /** Renders the authenticated settings page. */
 export default function Settings() {
     const { t } = useTranslation();
@@ -31,9 +29,8 @@ export default function Settings() {
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
     const deleteOrganization = useDeleteOrganization();
     const [name, setName] = useState(() => user?.name ?? '');
-    const [email, setEmail] = useState(() => user?.email ?? '');
     const [accountError, setAccountError] = useState<string | null>(null);
-    const [focusedAccountField, setFocusedAccountField] = useState<AccountField | null>(null);
+    const [isNameFocused, setIsNameFocused] = useState(false);
 
     // Keep the editable fields aligned with the authenticated user record.
     useEffect(() => {
@@ -41,68 +38,36 @@ export default function Settings() {
             return;
         }
 
-        if (focusedAccountField !== 'name') {
+        if (!isNameFocused) {
             setName(user.name);
         }
-
-        if (focusedAccountField !== 'email') {
-            setEmail(user.email);
-        }
-    }, [user, focusedAccountField]);
+    }, [user, isNameFocused]);
 
     const accountName = name.trim();
-    const accountEmail = email.trim();
     const selectedLanguageValue = resolveSupportedLanguage(language);
-    const selectedLanguage =
-        LANGUAGE_OPTIONS.find((option) => option.value === selectedLanguageValue) ?? LANGUAGE_OPTIONS[0];
 
-    /** Saves one edited account field when focus leaves its input. */
-    const saveAccountField = async (field: AccountField, isValid = true) => {
+    /** Saves the edited account name when focus leaves its input. */
+    const saveAccountName = async () => {
         setAccountError(null);
 
         if (!user) {
             return;
         }
 
-        if (field === 'name') {
-            if (!accountName) {
-                setAccountError(t('settings.usernameRequired'));
-                return;
-            }
-
-            if (accountName === user.name) {
-                return;
-            }
-
-            try {
-                await updateUser({ name: accountName });
-                toast.success(t('settings.usernameSaved'));
-            } catch (error) {
-                setAccountError(error instanceof Error ? error.message : t('settings.failedUpdateUsername'));
-            }
+        if (!accountName) {
+            setAccountError(t('settings.usernameRequired'));
+            return;
         }
 
-        if (field === 'email') {
-            if (!accountEmail) {
-                setAccountError(t('settings.emailRequired'));
-                return;
-            }
+        if (accountName === user.name) {
+            return;
+        }
 
-            if (!isValid) {
-                setAccountError(t('settings.validEmail'));
-                return;
-            }
-
-            if (accountEmail === user.email) {
-                return;
-            }
-
-            try {
-                await updateUser({ email: accountEmail });
-                toast.success(t('settings.emailSaved'));
-            } catch (error) {
-                setAccountError(error instanceof Error ? error.message : t('settings.failedUpdateEmail'));
-            }
+        try {
+            await updateUser({ name: accountName });
+            toast.success(t('settings.usernameSaved'));
+        } catch (error) {
+            setAccountError(error instanceof Error ? error.message : t('settings.failedUpdateUsername'));
         }
     };
 
@@ -218,10 +183,10 @@ export default function Settings() {
                                             required
                                             value={name}
                                             onChange={(event) => setName(event.target.value)}
-                                            onFocus={() => setFocusedAccountField('name')}
+                                            onFocus={() => setIsNameFocused(true)}
                                             onBlur={() => {
-                                                setFocusedAccountField(null);
-                                                void saveAccountField('name');
+                                                setIsNameFocused(false);
+                                                void saveAccountName();
                                             }}
                                             autoComplete="nickname"
                                             disabled={isLoading || !user}
@@ -233,14 +198,8 @@ export default function Settings() {
                                         <Input
                                             id="settings-email"
                                             type="email"
-                                            required
-                                            value={email}
-                                            onChange={(event) => setEmail(event.target.value)}
-                                            onFocus={() => setFocusedAccountField('email')}
-                                            onBlur={(event) => {
-                                                setFocusedAccountField(null);
-                                                void saveAccountField('email', event.currentTarget.validity.valid);
-                                            }}
+                                            readOnly
+                                            value={user?.email ?? ''}
                                             autoComplete="email"
                                             disabled={isLoading || !user}
                                         />
@@ -256,9 +215,7 @@ export default function Settings() {
                                             }}
                                         >
                                             <SelectTrigger id="settings-language" className="w-full">
-                                                <SelectValue placeholder={t('settings.placeholders.language')}>
-                                                    {selectedLanguage.nativeLabel}
-                                                </SelectValue>
+                                                <SelectValue placeholder={t('settings.placeholders.language')} />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {LANGUAGE_OPTIONS.map((option) => (

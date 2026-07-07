@@ -1,20 +1,22 @@
+import re
+import longlink.utils.url as url
 from uuid import UUID
 from typing import Any, ClassVar
 from datetime import datetime
 from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel, select
-from sqlalchemy import DateTime, Uuid, Column, String
+from sqlalchemy import Uuid, Column, String, DateTime
 from tenant.utils import utcnow
 from tenant.models import User as TenantUser
 from sqlalchemy.orm import relationship, declared_attr
 from sqlalchemy.ext.asyncio import (AsyncEngine, async_sessionmaker,
                                     create_async_engine)
-import longlink.utils.url as url
 from longlink.utils.settings import Envs
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 # SQLModel accepts the SQLAlchemy type instance, while Pyright needs a looser value.
 UTC_DATETIME_TYPE: Any = DateTime(timezone=True)
+DATABASE_SCHEMA_PATTERN = re.compile(r"^[A-Za-z0-9_](?:[A-Za-z0-9_-]{0,61}[A-Za-z0-9_])?$")
 
 
 class Base(SQLModel):
@@ -41,6 +43,12 @@ class User(Base, table=True):
     created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTC_DATETIME_TYPE)
     updated_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTC_DATETIME_TYPE)
     deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTC_DATETIME_TYPE)
+
+    @property
+    def role(self) -> str:
+        """Return the user's application role name."""
+
+        return self.role_name
 
 
 LOCAL_USERS: tuple[TenantUser, ...] = (
@@ -80,6 +88,25 @@ LOCAL_USERS: tuple[TenantUser, ...] = (
         role_name="owner",
     ),
 )
+
+
+def validate_database_schema(database_schema: str) -> str:
+    """Return a database schema name after rejecting unsafe search path input."""
+
+    if not DATABASE_SCHEMA_PATTERN.fullmatch(database_schema):
+        raise ValueError(
+            "Database schema must be 1-63 letters, numbers, underscores, or hyphens, "
+            "and must not start or end with a hyphen"
+        )
+
+    return database_schema
+
+
+def database_schema_search_path(database_schema: str) -> str:
+    """Return a PostgreSQL search path for one validated app schema and shared users."""
+
+    validated_database_schema = validate_database_schema(database_schema)
+    return f'"{validated_database_schema}",shared'
 
 
 def created_by_relationship(cls: Any):
@@ -202,7 +229,7 @@ def create_engine(env: Envs) -> AsyncEngine:
         # while still resolving the shared organization users table from shared.
         engine_kwargs["connect_args"] = {
             "server_settings": {
-                "search_path": f"{env.DATABASE_SCHEMA},shared",
+                "search_path": database_schema_search_path(env.DATABASE_SCHEMA),
             },
         }
 

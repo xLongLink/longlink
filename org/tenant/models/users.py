@@ -1,6 +1,6 @@
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field, BaseModel, ConfigDict
 from tenant.utils import utcnow
 
 
@@ -22,3 +22,9 @@ class User(BaseModel):
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
     deleted_at: datetime | None = None
+
+    @property
+    def role(self) -> str:
+        """Return the user's application role name."""
+
+        return self.role_name

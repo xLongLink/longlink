@@ -2,7 +2,7 @@ import pytest
 from src import auth as auth_module
 from uuid import UUID
 from types import SimpleNamespace
-from src.errors import NotFoundError, ForbiddenError, UnavailableError
+from src.errors import NotFoundError, ForbiddenError, UnauthorizedError, UnavailableError
 from src.routes import auth as auth_routes
 from src.routes import users as users_routes
 from src.models.auth import OidcUserInfo
@@ -157,6 +157,7 @@ async def test_auth_oidc_upserts_activates_and_redirects(
         {
             "sub": "callback-subject",
             "email": "callback@example.com",
+            "email_verified": True,
             "name": "Callback User",
         }
     )
@@ -213,6 +214,7 @@ async def test_upsert_oidc_user_syncs_organization_databases(
         OidcUserInfo(
             sub="oidc-upsert",
             email="upsert@example.com",
+            email_verified=True,
             given_name="Upsert",
             family_name="User",
             picture="https://example.com/avatar.png",
@@ -238,7 +240,14 @@ async def test_upsert_oidc_user_rejects_missing_identity_claims() -> None:
         await auth_routes.upsert_oidc_user(OidcUserInfo(sub="missing-email", name="No Email"))
 
     with pytest.raises(UnavailableError, match="returned no display name"):
-        await auth_routes.upsert_oidc_user(OidcUserInfo(sub="missing-name", email="missing@example.com"))
+        await auth_routes.upsert_oidc_user(
+            OidcUserInfo(sub="missing-name", email="missing@example.com", email_verified=True)
+        )
+
+    with pytest.raises(UnauthorizedError, match="unverified email"):
+        await auth_routes.upsert_oidc_user(
+            OidcUserInfo(sub="unverified-email", email="unverified@example.com", email_verified=False, name="User")
+        )
 
 
 def test_session_accounts_activate_deactivate_and_remove() -> None:
@@ -369,9 +378,10 @@ async def test_upsert_bootstraps_first_user_role(
 
     session = FakeUserWriteSession(existing_user_count)
 
-    async def fake_get(oidc: str) -> None:
+    async def fake_get(oidc: str, include_deleted: bool = False) -> None:
         """Pretend no user exists yet for the requested OIDC subject."""
 
+        assert include_deleted is True
         return None
 
     monkeypatch.setattr(users_service_module, "get", fake_get)

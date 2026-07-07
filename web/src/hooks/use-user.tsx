@@ -18,7 +18,7 @@ import type { ApiUserProfile, ApiUserSummary } from '@/lib/types';
 
 export type User = ApiUserProfile;
 
-type UserUpdate = Partial<Pick<User, 'name' | 'email' | 'avatar' | 'theme' | 'accent' | 'radius' | 'language'>>;
+type UserUpdate = Partial<Pick<User, 'name' | 'avatar' | 'theme' | 'accent' | 'radius' | 'language'>>;
 
 type UserPreferences = Pick<User, 'theme' | 'accent' | 'radius' | 'language'>;
 
@@ -29,8 +29,6 @@ type AccountsState = {
     isLoading: boolean;
     error: Error | null;
 };
-
-type UserErrorHandler = () => void;
 
 type UserProfileState = {
     user: User | null;
@@ -164,14 +162,10 @@ export function useUser() {
     };
 
     /** Signs the current user out and clears cached session state. */
-    const signOut = async (onError?: UserErrorHandler) => {
-        try {
-            await fetchApiVoid('/auth/logout');
-            queryClient.clear();
-            window.location.assign('/organizations');
-        } catch {
-            onError?.();
-        }
+    const signOut = async () => {
+        await fetchApiVoid('/auth/logout', { method: 'POST' });
+        queryClient.clear();
+        window.location.assign('/organizations');
     };
 
     /** Activates one saved account and refreshes the current user session. */
@@ -185,18 +179,14 @@ export function useUser() {
     };
 
     /** Clears the active user on the server so another account can be selected. */
-    const switchAccount = async (onError?: UserErrorHandler) => {
-        try {
-            const savedAccounts = await fetchApiJson<ApiUserSummary[]>('/auth/accounts/deactivate', {
-                method: 'POST',
-            });
+    const switchAccount = async () => {
+        const savedAccounts = await fetchApiJson<ApiUserSummary[]>('/auth/accounts/deactivate', {
+            method: 'POST',
+        });
 
-            await queryClient.cancelQueries({ queryKey: accountsQueryKey() });
-            queryClient.setQueryData(accountsQueryKey(), savedAccounts);
-            queryClient.setQueryData(apiQueryKey('/api/me'), null);
-        } catch {
-            onError?.();
-        }
+        await queryClient.cancelQueries({ queryKey: accountsQueryKey() });
+        queryClient.setQueryData(accountsQueryKey(), savedAccounts);
+        queryClient.setQueryData(apiQueryKey('/api/me'), null);
     };
 
     return {

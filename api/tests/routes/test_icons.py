@@ -12,8 +12,9 @@ def test_list_icons_returns_lucide_icon_catalog(
 
     assert response.status_code == 200
     icons = response.json()["icons"]
+    assert len(icons) == 30
     assert "layout-grid" in icons
-    assert "zoom-out" in icons
+    assert "rocket" in icons
 
 
 def test_create_application_rejects_invalid_icon(
@@ -33,4 +34,4 @@ def test_create_application_rejects_invalid_icon(
     )
 
     assert response.status_code == 422
-    assert "Icon must be a valid Lucide icon slug" in response.text
+    assert "Icon must be a supported Lucide icon slug" in response.text

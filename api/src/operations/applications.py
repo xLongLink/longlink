@@ -70,6 +70,7 @@ def application_pods_startup_state(pods: list[Any], operation_created_at: dateti
     if not relevant_pods:
         return ApplicationStartupState.pending
 
+    ready_pods = 0
     for pod in relevant_pods:
         status = getattr(pod, "status", None)
         if status is None:
@@ -81,7 +82,10 @@ def application_pods_startup_state(pods: list[Any], operation_created_at: dateti
             and container_statuses
             and all(container.ready for container in container_statuses)
         ):
-            return ApplicationStartupState.ready
+            ready_pods += 1
+
+    if ready_pods == len(relevant_pods):
+        return ApplicationStartupState.ready
 
     dead_pods = 0
     for pod in relevant_pods:
@@ -135,6 +139,12 @@ async def inspect_application_startup(operation: Operation) -> ApplicationStartu
 
     compute_adapter = adapters.compute(registry)
 
+    try:
+        if compute_adapter.application_deployment_ready(organization.slug, application.slug):
+            return ApplicationStartupState.ready
+    except KubernetesApiException:
+        return ApplicationStartupState.pending
+
     # Inspect pods once so ready and terminal states use the same runtime snapshot.
     try:
         pods = compute_adapter.application_pods(organization.slug, application.slug)
@@ -168,27 +178,21 @@ async def execute_application_create(operation: Operation) -> Operation:
         completed = await operations.complete(operation.id, operation.lease_token)
         if completed is not None:
             logger.info("Completed application creation %s", operation.id)
-            return completed
-
-        return operation
+        return completed or operation
 
     if startup_state == ApplicationStartupState.dead:
         await applications.set_status(application.id, ApplicationStatus.failed)
         failed = await operations.fail(operation.id, "Application crashed during startup", operation.lease_token)
         if failed is not None:
             logger.info("Failed application creation %s", operation.id)
-            return failed
-
-        return operation
+        return failed or operation
 
     if application_verification_timed_out(operation.created_at):
         await applications.set_status(application.id, ApplicationStatus.failed)
         failed = await operations.fail(operation.id, "Application startup verification timed out", operation.lease_token)
         if failed is not None:
             logger.info("Timed out application creation %s", operation.id)
-            return failed
-
-        return operation
+        return failed or operation
 
     deferred = await operations.defer(operation.id, operation.lease_token)
     return deferred or operation

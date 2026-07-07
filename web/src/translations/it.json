@@ -399,15 +399,11 @@
         "stepMetadata": "2. Metadati"
     },
     "settings": {
-        "accountDescription": "Aggiorna nome utente, email e lingua.",
-        "accountSaved": "Impostazioni account salvate",
+        "accountDescription": "Aggiorna nome utente e lingua. L'email arriva dal provider di identita.",
         "accountTitle": "Account",
         "appearanceDescription": "Personalizza tema, colore accento e raggio dell'interfaccia.",
         "appearanceTitle": "Aspetto",
         "description": "Gestisci account, preferenze e accesso ai workspace.",
-        "emailRequired": "L'email e obbligatoria",
-        "emailSaved": "Email salvata",
-        "failedUpdateEmail": "Impossibile aggiornare l'email",
         "failedUpdateUsername": "Impossibile aggiornare il nome utente",
         "organizationDescription": "Controlla le organizzazioni collegate al tuo account personale.",
         "organizationsTitle": "Organizzazioni",
@@ -419,8 +415,7 @@
         },
         "title": "Impostazioni",
         "usernameRequired": "Il nome utente e obbligatorio",
-        "usernameSaved": "Nome utente salvato",
-        "validEmail": "Inserisci un indirizzo email valido"
+        "usernameSaved": "Nome utente salvato"
     },
     "organizationSettings": {
         "allApplications": "Tutte le applicazioni",

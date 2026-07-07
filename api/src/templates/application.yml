@@ -37,6 +37,18 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: $port
+          startupProbe:
+            httpGet:
+              path: /
+              port: $port
+            periodSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            httpGet:
+              path: /
+              port: $port
+            periodSeconds: 5
+            failureThreshold: 3
           envFrom:
             - secretRef:
                 name: $name

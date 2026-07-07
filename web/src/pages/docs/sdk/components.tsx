@@ -205,7 +205,7 @@ export const content = (
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<InputGroup>
-  <InputGroupAddon><Icon name="badge-dollar-sign" /></InputGroupAddon>
+  <InputGroupAddon><Icon name="banknote" /></InputGroupAddon>
   <InputGroupInput value="$form.price" />
   <InputGroupText i18n="..." />
   <InputGroupButton i18n="..." />
@@ -299,9 +299,9 @@ export const content = (
                     <Li>ToggleGroupItem size and variant are optional overrides.</Li>
                 </Ul>
             </Stack>
-            <CodeBlock language="xml">{`<ToggleGroup type="single" defaultValue="center">
-  <ToggleGroupItem value="left"><Icon name="align-left" /></ToggleGroupItem>
-  <ToggleGroupItem value="center"><Icon name="align-center" /></ToggleGroupItem>
+            <CodeBlock language="xml">{`<ToggleGroup type="single" defaultValue="list">
+  <ToggleGroupItem value="grid"><Icon name="layout-grid" /></ToggleGroupItem>
+  <ToggleGroupItem value="list"><Icon name="list" /></ToggleGroupItem>
 </ToggleGroup>`}</CodeBlock>
         </Stack>
         <Stack className="gap-3">

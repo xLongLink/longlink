@@ -6,7 +6,7 @@ import { Stack } from '@/components/ui/stack';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-02',
+    lastUpdated: '2026-07-07',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/applications.tsx',
 };
 
@@ -78,11 +78,22 @@ export const content = (
         <P>
             Users access applications through the control plane, not directly through public application ingress.
             LongLink checks access, rejects unavailable applications with a no-store <Code>503</Code>, strips unsafe
-            headers, and forwards the current user id as <Code>x-user-id</Code>.
+            headers, and forwards the current user id and effective runtime role as <Code>x-user-id</Code> and{' '}
+            <Code>x-user-role</Code>.
         </P>
         <P>
-            The proxy supports <Code>GET</Code>, <Code>POST</Code>, <Code>PATCH</Code>, and <Code>DELETE</Code> requests
-            to non-root application paths. The proxied application root path is intentionally not exposed.
+            The proxy supports <Code>GET</Code>, <Code>POST</Code>, <Code>PUT</Code>, <Code>PATCH</Code>, and{' '}
+            <Code>DELETE</Code> requests to non-root application paths. The proxied application root path is
+            intentionally not exposed.
+        </P>
+        <P>
+            Runtime requests are role-gated by method: <Code>read</Code> can use read methods, <Code>write</Code> can
+            also use write methods, and <Code>maintain</Code>, <Code>admin</Code>, or <Code>owner</Code> can use{' '}
+            <Code>DELETE</Code>.
+        </P>
+        <P>
+            Proxied request bodies and response bodies are capped at <Code>25 MiB</Code>. Use application storage for
+            files and keep uploads below that proxy limit until direct storage upload flows are supported.
         </P>
         <P>
             Users with an application role can open the runtime. Organization members with <Code>maintain</Code>,{' '}

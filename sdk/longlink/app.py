@@ -1,18 +1,18 @@
 from typing import Any
-from fastapi import APIRouter
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from pathlib import Path
-from collections.abc import Callable
 from longlink.pages import (XMLResponse, PageDefinition, page_file_tab,
                             page_file_route, normalize_page_path,
                             extract_longlink_metadata)
 from longlink.utils import Envs
+from collections.abc import Callable
 from longlink.routes import routes
 from pydantic_settings import BaseSettings
 from longlink.constants import ROOT
 from longlink.utils.xml import Longlink as LonglinkXml
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from longlink.auth import install_user_middleware
 from longlink.database.audit import install_audit_middleware
 
 API_PREFIX = "/api"
@@ -89,6 +89,7 @@ class LongLink(FastAPI):
             super().include_router(router)
 
         install_audit_middleware(self)
+        install_user_middleware(self, require_header=environments.ENV == "production")
 
         frontend_directory = ROOT / ".static" / "web"
 
@@ -196,8 +197,19 @@ class LongLink(FastAPI):
 
         normalized_prefix = normalize_mount_path(route_prefix)
         registered_pages: list[PageDefinition] = self.state.page_registry
+        stale_page_prefix = "/" if normalized_prefix == "/" else f"{normalized_prefix}/"
+        stale_page_paths = {
+            page.path for page in registered_pages if page.path.startswith(stale_page_prefix)
+        }
+
+        # Remove previously registered SDK page routes before replacing the page registry.
+        if stale_page_paths:
+            self.router.routes = [
+                route for route in self.router.routes if getattr(route, "path", None) not in stale_page_paths
+            ]
+
         registered_pages[:] = [
-            page for page in registered_pages if not page.path.startswith(f"{normalized_prefix}/")
+            page for page in registered_pages if page.path not in stale_page_paths
         ]
 
         for page_file in sorted(pages_directory.rglob("*.xml")):

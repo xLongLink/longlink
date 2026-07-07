@@ -63,6 +63,8 @@ describe('parseXML', () => {
 
     it('rejects malformed XML', () => {
         expect(() => parseXML('<longlink><Button></longlink>')).toThrow('XML is invalid');
+        expect(() => parseXML('<!DOCTYPE longlink><longlink />')).toThrow('XML DOCTYPE');
+        expect(() => parseXML('<longlink><![CDATA[hidden]]></longlink>')).toThrow('XML DOCTYPE');
     });
 
     /* Compiler output should only include page elements, not XML declarations or comments. */

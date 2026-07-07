@@ -95,6 +95,7 @@ class Env(BaseSettings):
     # Operation leases
     OPERATION_LEASE_SECONDS: int = 120
     OPERATION_HEARTBEAT_SECONDS: int = 30
+    OPERATION_RETRY_DELAY_SECONDS: int = 5
 
     model_config = SettingsConfigDict(
         env_file=_environment_files(),

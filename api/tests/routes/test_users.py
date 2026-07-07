@@ -84,7 +84,7 @@ async def test_logout_clears_the_active_account(
     client = TestClient(app, cookies=session_cookie(str(user_one.oidc)))
 
     # Act
-    response = client.get("/auth/logout")
+    response = client.post("/auth/logout")
 
     # Assert
     assert response.status_code == 200

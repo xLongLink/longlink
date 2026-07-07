@@ -1,5 +1,6 @@
 from longlink.app import LongLink
 from longlink.router import Router
+from longlink.auth import CurrentUser, get_user, require_role
 from longlink.storage import create_fs, create_shared_fs
 from longlink.database import User, create_db
 from longlink.utils.xml import Element, Longlink
@@ -9,6 +10,7 @@ from longlink.utils.environments import Environments
 __all__ = [
     "LongLink",
     "Router",
+    "CurrentUser",
     "User",
     "Element",
     "Longlink",
@@ -17,6 +19,8 @@ __all__ = [
     "create_db",
     "create_fs",
     "create_shared_fs",
+    "get_user",
+    "require_role",
     "db",
     "env",
     "fs",

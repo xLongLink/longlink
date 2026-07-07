@@ -1,3 +1,4 @@
+import base64
 import importlib
 import json
 import yaml
@@ -79,10 +80,44 @@ class K8s(Compute):
         name = names.knames(application, "Application name")
         return self._core_api.list_namespaced_pod(namespace, label_selector=f"app={name}").items
 
+    def _validate_managed_namespace(self, namespace: str, namespace_object: Any) -> None:
+        """Raise when one namespace is not owned by LongLink."""
+
+        labels = (namespace_object.metadata.labels or {}) if namespace_object.metadata is not None else {}
+        if labels.get("managed-by") != "longlink":
+            raise ValueError(f"Namespace '{namespace}' is not managed by LongLink")
+
     def application_pods(self, organization: str, application: str) -> list[client.V1Pod]:
         """Return pods for one managed application."""
 
         return self._pods(organization, application)
+
+    def application_deployment_ready(self, organization: str, application: str) -> bool:
+        """Return whether the current application Deployment rollout is ready."""
+
+        namespace = k8name(names.knames(organization, "Organization"))
+        name = names.knames(application, "Application name")
+        deployment = self._apps_api.read_namespaced_deployment(name, namespace)
+        metadata = deployment.metadata
+        spec = deployment.spec
+        status = deployment.status
+        if metadata is None or spec is None or status is None:
+            return False
+
+        expected_replicas = spec.replicas or 1
+        if status.observed_generation is None or metadata.generation is None:
+            return False
+
+        if status.observed_generation < metadata.generation:
+            return False
+
+        unavailable_replicas = status.unavailable_replicas or 0
+        return (
+            unavailable_replicas == 0
+            and status.updated_replicas == expected_replicas
+            and status.ready_replicas == expected_replicas
+            and status.available_replicas == expected_replicas
+        )
 
     def proxy(
         self,
@@ -139,7 +174,7 @@ class K8s(Compute):
         namespace = k8name(names.knames(organization, "Organization"))
         # Reuse the namespace when it already exists so setup stays idempotent.
         try:
-            self._core_api.read_namespace(namespace)
+            existing_namespace = self._core_api.read_namespace(namespace)
         except ApiException as exc:
             if exc.status != 404:
                 raise ValueError(f"Failed reading namespace '{namespace}'") from exc
@@ -151,6 +186,9 @@ class K8s(Compute):
                     "metadata": {"name": namespace, "labels": {"managed-by": "longlink"}},
                 }
             )
+            return None
+
+        self._validate_managed_namespace(namespace, existing_namespace)
 
     async def application(
         self,
@@ -166,24 +204,32 @@ class K8s(Compute):
         namespace = k8name(names.knames(organization, "Organization"))
         name = names.knames(application, "Application name")
 
-        # Create or replace the application Secret.
-        self._upsert(
-            self._core_api.create_namespaced_secret,
-            self._core_api.patch_namespaced_secret,
-            namespace,
-            name,
-            {
-                "apiVersion": "v1",
-                "kind": "Secret",
-                "metadata": {
-                    "name": name,
-                    "namespace": namespace,
-                    "labels": {"managed-by": "longlink", "compute-role": "application", "app": name},
-                },
-                "type": "Opaque",
-                "stringData": secrets,
+        # Replace the full Secret data map so removed environment keys do not survive a merge patch.
+        secret_body: dict[str, Any] = {
+            "apiVersion": "v1",
+            "kind": "Secret",
+            "metadata": {
+                "name": name,
+                "namespace": namespace,
+                "labels": {"managed-by": "longlink", "compute-role": "application", "app": name},
             },
-        )
+            "type": "Opaque",
+            "data": {
+                key: base64.b64encode(value.encode("utf-8")).decode("ascii") for key, value in secrets.items()
+            },
+        }
+        try:
+            existing_secret = self._core_api.read_namespaced_secret(name, namespace)
+            if existing_secret.metadata is None or existing_secret.metadata.resource_version is None:
+                raise ValueError(f"Secret '{namespace}/{name}' has no resource version")
+
+            secret_body["metadata"]["resourceVersion"] = existing_secret.metadata.resource_version
+            self._core_api.replace_namespaced_secret(name, namespace, secret_body)
+        except ApiException as exc:
+            if exc.status != 404:
+                raise ValueError(f"Failed replacing Secret '{namespace}/{name}'") from exc
+
+            self._core_api.create_namespaced_secret(namespace, secret_body)
 
         application_manifests = templates.readyml(
             TEMPLATES / "application.yml",
@@ -243,6 +289,16 @@ class K8s(Compute):
 
         namespace = k8name(names.knames(organization, "Organization"))
         try:
+            existing_namespace = self._core_api.read_namespace(namespace)
+        except ApiException as exc:
+            if exc.status == 404:
+                return None
+
+            raise ValueError(f"Failed reading namespace '{namespace}'") from exc
+
+        self._validate_managed_namespace(namespace, existing_namespace)
+
+        try:
             self._core_api.delete_namespace(namespace)
         except ApiException as exc:
             if exc.status != 404:
@@ -267,11 +323,7 @@ class K8s(Compute):
             return metadata.creation_timestamp
 
         # Pick the newest pod so logs stay aligned with the latest rollout.
-        pod = sorted(
-            pods,
-            key=pod_creation_time,
-            reverse=True,
-        )[0]
+        pod = max(pods, key=pod_creation_time)
         pod_metadata = pod.metadata
         if pod_metadata is None or pod_metadata.name is None:
             raise ValueError(f"No named pods found for application '{namespace}/{name}'")

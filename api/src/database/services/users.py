@@ -99,7 +99,7 @@ async def upsert(
 ) -> User:
     """Create a new OIDC user or update an existing one."""
 
-    existing_user = await get(oidc)
+    existing_user = await get(oidc, include_deleted=True)
 
     # Patch the current record in place when the subject already exists.
     if existing_user is not None:
@@ -165,10 +165,13 @@ async def upsert(
         return user
 
 
-async def get(oidc: str) -> User | None:
+async def get(oidc: str, include_deleted: bool = False) -> User | None:
     """Retrieve a user by OIDC subject."""
 
     async with session_scope() as session:
         statement = select(User).where(User.oidc == oidc)
+        if not include_deleted:
+            statement = statement.where(User.deleted_at.is_(None))
+
         result = await session.execute(statement)
         return result.scalars().first()

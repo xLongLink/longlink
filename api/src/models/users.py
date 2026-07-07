@@ -82,9 +82,11 @@ class Language(str, Enum):
 class UserUpdate(BaseModel):
     """Payload to update mutable user profile fields."""
 
+    # Metadata
     name: str | None = None
-    email: EmailStr | None = None
     avatar: str | None = None
+
+    # Preferences
     theme: Theme | None = None
     accent: Accent | None = None
     radius: Radius | None = None

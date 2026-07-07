@@ -97,7 +97,7 @@ def test_alembic_normalizes_postgresql_urls_to_asyncpg(monkeypatch) -> None:
     # Arrange
     log: list[tuple[str, object]] = []
     database_url = (
-        "postgresql+psycopg://longlink:secret@db.longlink.internal:5432/longlink?"
+        "postgresql+psycopg://longlink:sec%40ret@db.longlink.internal:5432/longlink?"
         "sslmode=require&application_name=longlink"
     )
     monkeypatch.setattr(env, "DATABASE_URL", database_url)
@@ -134,9 +134,9 @@ def test_alembic_normalizes_postgresql_urls_to_asyncpg(monkeypatch) -> None:
     spec.loader.exec_module(module)
 
     # Assert
-    assert log[0] == ("sqlalchemy.url", database_url)
+    assert log[0] == ("sqlalchemy.url", database_url.replace("%", "%%"))
     assert log[1][0] == "engine"
     assert log[1][1][0] == str(
-        make_url("postgresql+asyncpg://longlink:secret@db.longlink.internal:5432/longlink?application_name=longlink")
+        make_url("postgresql+asyncpg://longlink:sec%40ret@db.longlink.internal:5432/longlink?application_name=longlink")
     )
     assert log[1][1][1] == {"poolclass": module.pool.NullPool}

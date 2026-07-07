@@ -45,6 +45,8 @@ BUILD_CONTEXT_IGNORE_PATTERNS = (
     "htmlcov",
     "node_modules",
 )
+SAFE_GIT_DIRECTORY_NAMES = frozenset({"objects", "refs"})
+SAFE_GIT_FILE_NAMES = frozenset({"HEAD", "packed-refs", "shallow"})
 DOCKER_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
 DOCKER_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
 
@@ -340,13 +342,25 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     )
 
     if repo_root is not None:
-        # Preserve VCS metadata at its copied tree location so setuptools-scm can resolve versions in Docker.
+        # Preserve only the VCS metadata needed for version resolution, not local Git config or hooks.
         try:
             git_target = build_context / repo_root.relative_to(source_root) / ".git"
         except ValueError:
             git_target = build_context / ".git"
 
-        shutil.copytree(repo_root / ".git", git_target, dirs_exist_ok=True)
+        git_source = repo_root / ".git"
+        if git_source.is_dir():
+            git_target.mkdir(parents=True, exist_ok=True)
+
+            for file_name in SAFE_GIT_FILE_NAMES:
+                source_file = git_source / file_name
+                if source_file.is_file():
+                    shutil.copy2(source_file, git_target / file_name)
+
+            for directory_name in SAFE_GIT_DIRECTORY_NAMES:
+                source_directory = git_source / directory_name
+                if source_directory.is_dir():
+                    shutil.copytree(source_directory, git_target / directory_name, dirs_exist_ok=True)
 
     dockerfile_path = build_context / "Dockerfile"
     dockerfile_path.write_text(render_dockerfile(workdir, labels, str(metadata["sdk"])))

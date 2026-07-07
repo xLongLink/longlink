@@ -259,12 +259,6 @@ async def remove_organization_runtime(
         await shared_buckets.delete(storage_client, organization.slug)
 
 
-def runtime_database_url(database_url: str) -> str:
-    """Return a database URL compatible with the SDK runtime."""
-
-    return normalize_database_url(database_url)
-
-
 def runtime_storage_url(storage_registry: StorageRegistry, credentials: adapters.StorageRuntimeCredentials) -> str:
     """Return a storage URL compatible with the SDK runtime."""
 
@@ -299,7 +293,7 @@ def runtime_environment(
 
     environment = {
         "LONGLINK_ENV": "production",
-        "LONGLINK_DATABASE_URL": runtime_database_url(database_url),
+        "LONGLINK_DATABASE_URL": normalize_database_url(database_url),
         "LONGLINK_DATABASE_SCHEMA": application_slug,
     }
 
@@ -338,6 +332,57 @@ async def sync_user_organizations(user: User) -> None:
 
     for organization in await organizations.list_by_user(user.id):
         await sync_organization_users(organization)
+
+
+async def provision_application_runtime_resources(
+    organization: Organization | OrganizationDetails | OrganizationSummary,
+    application_slug: str,
+    payload: ApplicationCreate,
+    runtime_image: str,
+    compute_registry: ComputeRegistry,
+    database_registry: DatabaseRegistry,
+    storage_registry: StorageRegistry | None,
+    rollout_token: str = "",
+) -> None:
+    """Provision namespace, database, storage, and workload resources for one application."""
+
+    k8s = adapters.compute(compute_registry)
+    db_client = adapters.database(database_registry)
+
+    await k8s.namespace(organization.slug)
+    await db_client.sync_users(organization.slug, await organizations.database_users(organization.id))
+    storage_credentials: adapters.StorageRuntimeCredentials | None = None
+    if storage_registry is not None:
+        # Ensure object storage exists before the workload receives backend credentials.
+        storage_client = adapters.storage(storage_registry)
+        await shared_buckets.ensure(storage_client, organization.slug)
+        await storage_client.bucket(organization.slug, application_slug)
+        storage_credentials = await storage_client.application_credentials(
+            organization.slug,
+            application_slug,
+        )
+
+    database_url = await db_client.schema(organization.slug, application_slug)
+    runtime_envs = runtime_environment(
+        organization.slug,
+        application_slug,
+        database_url,
+        storage_registry,
+        storage_credentials,
+    )
+    application_arguments = (
+        organization.slug,
+        application_slug,
+        runtime_image,
+        APP_SERVICE_PORT,
+        {**application_runtime_environment(payload), **runtime_envs},
+    )
+
+    if rollout_token:
+        await k8s.application(*application_arguments, rollout_token=rollout_token)
+        return
+
+    await k8s.application(*application_arguments)
 
 
 async def create_application_runtime(
@@ -389,42 +434,27 @@ async def create_application_runtime(
         user=user,
     )
 
-    k8s = adapters.compute(compute_registry)
-    db_client = adapters.database(database_registry)
-
     # Provision the namespace, schema, and workload in order so failures can mark the application as failed.
     try:
-        await k8s.namespace(organization.slug)
-        await db_client.sync_users(organization.slug, await organizations.database_users(organization.id))
-        storage_credentials: adapters.StorageRuntimeCredentials | None = None
-        if storage_registry is not None:
-            # Ensure object storage exists before the workload receives backend credentials.
-            storage_client = adapters.storage(storage_registry)
-            await shared_buckets.ensure(storage_client, organization.slug)
-            await storage_client.bucket(organization.slug, application_slug)
-            storage_credentials = await storage_client.application_credentials(
-                organization.slug,
-                application_slug,
-            )
-
-        database_url = await db_client.schema(organization.slug, application_slug)
-        runtime_envs = runtime_environment(
-            organization.slug,
+        await provision_application_runtime_resources(
+            organization,
             application_slug,
-            database_url,
-            storage_registry,
-            storage_credentials,
-        )
-        await k8s.application(
-            organization.slug,
-            application_slug,
+            payload,
             runtime_image,
-            APP_SERVICE_PORT,
-            {**application_runtime_environment(payload), **runtime_envs},
+            compute_registry,
+            database_registry,
+            storage_registry,
         )
     except Exception as exc:
         await applications.set_status(application.id, ApplicationStatus.failed)
-        raise RuntimeError(f"Failed to initialize the application: {exc}") from exc
+        logger.exception("Failed to initialize application runtime for %s/%s", organization.slug, application_slug)
+        # Remove any resources that were created before the provisioning step failed.
+        try:
+            await remove_application_runtime(application, organization)
+        except Exception:
+            logger.exception("Failed to clean partial application runtime for %s/%s", organization.slug, application_slug)
+
+        raise RuntimeError("Failed to initialize the application") from exc
 
     try:
         operation = await operations.create(
@@ -435,6 +465,12 @@ async def create_application_runtime(
         )
     except Exception as exc:
         await applications.set_status(application.id, ApplicationStatus.failed)
+        # The workload exists at this point, but without verification it must not be left running.
+        try:
+            await remove_application_runtime(application, organization)
+        except Exception:
+            logger.exception("Failed to clean unverified application runtime for %s/%s", organization.slug, application_slug)
+
         logger.exception(
             "Failed to queue application verification for %s/%s",
             organization.slug,
@@ -506,43 +542,22 @@ async def sync_application_runtime(
     if updated_application is None:
         raise RuntimeError("Application no longer exists")
 
-    k8s = adapters.compute(compute_registry)
-    db_client = adapters.database(database_registry)
-
     # Reapply the workload with a fresh rollout token so fixed development tags pull the newest image.
     try:
-        await k8s.namespace(organization.slug)
-        await db_client.sync_users(organization.slug, await organizations.database_users(organization.id))
-        storage_credentials: adapters.StorageRuntimeCredentials | None = None
-        if storage_registry is not None:
-            # Ensure object storage exists before the workload receives backend credentials.
-            storage_client = adapters.storage(storage_registry)
-            await shared_buckets.ensure(storage_client, organization.slug)
-            await storage_client.bucket(organization.slug, application.slug)
-            storage_credentials = await storage_client.application_credentials(
-                organization.slug,
-                application.slug,
-            )
-
-        database_url = await db_client.schema(organization.slug, application.slug)
-        runtime_envs = runtime_environment(
-            organization.slug,
+        await provision_application_runtime_resources(
+            organization,
             application.slug,
-            database_url,
-            storage_registry,
-            storage_credentials,
-        )
-        await k8s.application(
-            organization.slug,
-            application.slug,
+            payload,
             runtime_image,
-            APP_SERVICE_PORT,
-            {**application_runtime_environment(payload), **runtime_envs},
+            compute_registry,
+            database_registry,
+            storage_registry,
             rollout_token=datetime.now(UTC).isoformat(),
         )
     except Exception as exc:
         await applications.set_status(application.id, ApplicationStatus.failed)
-        raise RuntimeError(f"Failed to refresh the application runtime: {exc}") from exc
+        logger.exception("Failed to refresh application runtime for %s/%s", organization.slug, application.slug)
+        raise RuntimeError("Failed to refresh the application runtime") from exc
 
     operation = await operations.create(
         OperationKind.application_create,

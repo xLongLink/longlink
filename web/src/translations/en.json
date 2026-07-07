@@ -399,15 +399,11 @@
         "stepMetadata": "2. Metadata"
     },
     "settings": {
-        "accountDescription": "Update your username, email address, and language.",
-        "accountSaved": "Account settings saved",
+        "accountDescription": "Update your username and language. Email comes from your identity provider.",
         "accountTitle": "Account",
         "appearanceDescription": "Customize the theme, accent color, and radius for the interface.",
         "appearanceTitle": "Appearance",
         "description": "Manage your account, preferences, and workspace access.",
-        "emailRequired": "Email is required",
-        "emailSaved": "Email saved",
-        "failedUpdateEmail": "Failed to update email",
         "failedUpdateUsername": "Failed to update username",
         "organizationDescription": "Review the organizations connected to your personal account.",
         "organizationsTitle": "Organizations",
@@ -419,8 +415,7 @@
         },
         "title": "Settings",
         "usernameRequired": "Username is required",
-        "usernameSaved": "Username saved",
-        "validEmail": "Enter a valid email address"
+        "usernameSaved": "Username saved"
     },
     "organizationSettings": {
         "allApplications": "All applications",
