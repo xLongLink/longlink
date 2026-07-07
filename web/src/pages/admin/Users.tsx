@@ -1,8 +1,13 @@
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { useTranslation } from '@/lib/i18n';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import type { TFunction } from 'i18next';
 import { MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
@@ -128,7 +133,7 @@ export default function AdminUsers() {
                     <HeroDescription>{t('admin.usersDescription')}</HeroDescription>
                 </div>
             </Hero>
-            <DataTable columns={userColumns} data={users} error={error} isLoading={isLoading} />
+            <DataTable columns={userColumns} data={users} error={error} isLoading={isLoading} pageSize={25} />
         </div>
     );
 }

@@ -1,6 +1,6 @@
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import type { TFunction } from 'i18next';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
@@ -182,6 +182,7 @@ export default function AdminCompute() {
                 data={computeRows}
                 error={computesError ?? locationsError}
                 isLoading={computesIsLoading || locationsIsLoading}
+                pageSize={25}
             />
             <DeleteConfirmationDialog {...deleteDialog.dialogProps} />
         </div>

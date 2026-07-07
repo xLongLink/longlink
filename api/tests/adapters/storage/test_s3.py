@@ -1,24 +1,20 @@
-import time
 import pytest
-import importlib
-from collections.abc import Iterator
+import asyncio
 from tenant.storage import shared_buckets
+from collections.abc import AsyncIterator
 from botocore.exceptions import EndpointConnectionError
 from src.adapters.storage.s3 import S3
 
-docker_errors = pytest.importorskip("docker.errors")
-testcontainers = pytest.importorskip("testcontainers.core.container")
-DockerException = docker_errors.DockerException
-DockerContainer = testcontainers.DockerContainer
+DockerException = pytest.importorskip("docker.errors").DockerException
+DockerContainer = pytest.importorskip("testcontainers.core.container").DockerContainer
 
 pytestmark = pytest.mark.no_db
-s3_module = importlib.import_module("src.adapters.storage.s3")
 MINIO_ACCESS_KEY = "minioadmin"
 MINIO_SECRET_KEY = "minioadmin"
 
 
 @pytest.fixture
-def minio_storage() -> Iterator[S3]:
+async def minio_storage() -> AsyncIterator[S3]:
     """Start a MinIO container and return an S3 adapter connected to it."""
 
     container = (
@@ -44,10 +40,10 @@ def minio_storage() -> Iterator[S3]:
     try:
         for _ in range(60):
             try:
-                storage._client.list_buckets()
+                await storage.buckets()
                 break
             except EndpointConnectionError:
-                time.sleep(0.5)
+                await asyncio.sleep(0.5)
         else:
             pytest.fail("MinIO did not become ready before the test timeout")
 
@@ -60,25 +56,25 @@ def minio_storage() -> Iterator[S3]:
 async def test_s3_adapter_manages_real_minio_buckets_objects_usage_and_cleanup(minio_storage: S3) -> None:
     """Exercise S3 bucket, object, usage, credential, and cleanup behavior against real MinIO."""
 
-    storage = minio_storage
+    shared_bucket = await shared_buckets.ensure(minio_storage, "acme")
+    repeated_shared_bucket = await shared_buckets.ensure(minio_storage, "acme")
+    app_bucket = await minio_storage.bucket("acme", "dashboard")
+    async with minio_storage._client() as client:
+        await client.put_object(Bucket=app_bucket, Key="reports/july.csv", Body=b"id,total\n1,42\n")
+        await client.put_object(Bucket=app_bucket, Key="reports/august.csv", Body=b"id,total\n2,84\n")
 
-    shared_bucket = await shared_buckets.ensure(storage, "acme")
-    repeated_shared_bucket = await shared_buckets.ensure(storage, "acme")
-    app_bucket = await storage.bucket("acme", "dashboard")
-    storage._client.put_object(Bucket=app_bucket, Key="reports/july.csv", Body=b"id,total\n1,42\n")
-    storage._client.put_object(Bucket=app_bucket, Key="reports/august.csv", Body=b"id,total\n2,84\n")
-
-    buckets = await storage.buckets()
-    objects = await storage.objects(app_bucket)
-    limited_objects = await storage.objects(app_bucket, limit=1)
-    usage = await storage.bucket_usage(app_bucket)
+    buckets = await minio_storage.buckets()
+    objects = await minio_storage.objects(app_bucket)
+    limited_objects = await minio_storage.objects(app_bucket, limit=1)
+    usage = await minio_storage.bucket_usage(app_bucket)
 
     with pytest.raises(ValueError, match="shared bucket"):
-        await storage.application_credentials("acme", "dashboard")
+        await minio_storage.application_credentials("acme", "dashboard")
 
-    await storage.delete_bucket(app_bucket)
-    await storage.delete_bucket(shared_bucket)
-    await storage.delete_bucket(shared_bucket)
+    await minio_storage.delete_bucket(app_bucket)
+    await minio_storage.delete_bucket(shared_bucket)
+    await minio_storage.delete_bucket(shared_bucket)
+    final_buckets = await minio_storage.buckets()
 
     assert repeated_shared_bucket == shared_bucket
     assert {shared_bucket, app_bucket} <= set(buckets)
@@ -92,5 +88,5 @@ async def test_s3_adapter_manages_real_minio_buckets_objects_usage_and_cleanup(m
     assert len(limited_objects) == 1
     assert limited_objects[0]["key"] in {"reports/august.csv", "reports/july.csv"}
     assert usage == {"object_count": 2, "space_used": 28}
-    assert app_bucket not in await storage.buckets()
-    assert shared_bucket not in await storage.buckets()
+    assert app_bucket not in final_buckets
+    assert shared_bucket not in final_buckets

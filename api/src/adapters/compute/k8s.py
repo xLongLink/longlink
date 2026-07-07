@@ -1,10 +1,8 @@
 import base64
-import importlib
 import json
 import yaml
 from .base import Compute
 from typing import Any
-from decimal import Decimal
 from datetime import UTC, datetime
 from src.utils import names, templates
 from kubernetes import client, config
@@ -13,24 +11,7 @@ from src.constants import TEMPLATES
 from collections.abc import Callable
 from src.utils.namespace import k8name
 from kubernetes.client.exceptions import ApiException
-
-parse_kubernetes_quantity: Callable[[str], Decimal] = getattr(
-    importlib.import_module("kubernetes.utils.quantity"),
-    "parse_quantity",
-)
-
-
-def parse_quantity(value: object) -> Decimal:
-    """Parse one Kubernetes resource quantity into base units."""
-
-    raw_value = str(value).strip()
-    if raw_value == "":
-        return Decimal(0)
-
-    try:
-        return parse_kubernetes_quantity(raw_value)
-    except ValueError:
-        return Decimal(0)
+from kubernetes.utils.quantity import parse_quantity
 
 
 class K8s(Compute):

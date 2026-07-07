@@ -1,5 +1,5 @@
-import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
 
 import { DataTable } from '@/components/DataTable';
@@ -122,7 +122,13 @@ export default function AdminOperations() {
                     <HeroDescription>{t('admin.operationsDescription')}</HeroDescription>
                 </div>
             </Hero>
-            <DataTable columns={operationColumns} data={operationRows} error={error} isLoading={isLoading} />
+            <DataTable
+                columns={operationColumns}
+                data={operationRows}
+                error={error}
+                isLoading={isLoading}
+                pageSize={25}
+            />
         </div>
     );
 }

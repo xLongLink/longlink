@@ -1,5 +1,5 @@
-import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import { type ColumnDef } from '@tanstack/react-table';
 import { Link, useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
@@ -61,6 +61,7 @@ export default function ComputeNamespaces() {
                 data={rows}
                 error={error}
                 isLoading={computesIsLoading || namespacesIsLoading}
+                pageSize={25}
             />
         </div>
     );

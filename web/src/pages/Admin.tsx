@@ -2,10 +2,10 @@ import { Auth } from '@/components/Auth';
 import Layout from '@/layout/Layout';
 import { useTranslation } from '@/lib/i18n';
 import { Activity, Boxes, Building2, Cpu, Database, HardDrive, MapPin, Users } from 'lucide-react';
-import { Outlet } from 'react-router';
+import type { ReactNode } from 'react';
 
 /** Renders the admin shell with tabbed navigation. */
-export default function Admin() {
+export default function Admin({ children }: { children: ReactNode }) {
     const { t } = useTranslation();
 
     return (
@@ -22,9 +22,7 @@ export default function Admin() {
                     [t('admin.tabs.operations')]: { href: '/admin/operations', icon: Activity },
                 }}
             >
-                <section className="mx-auto w-full max-w-[1000px] space-y-8">
-                    <Outlet />
-                </section>
+                <section className="mx-auto w-full max-w-[1000px] space-y-8">{children}</section>
             </Layout>
         </Auth>
     );

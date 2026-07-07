@@ -1,5 +1,5 @@
-import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import { type ColumnDef } from '@tanstack/react-table';
 import { useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
@@ -84,6 +84,7 @@ export default function StorageObjects() {
                 data={rows}
                 error={error}
                 isLoading={registriesIsLoading || objectsIsLoading}
+                pageSize={25}
             />
         </div>
     );

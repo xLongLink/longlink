@@ -2,11 +2,10 @@ import asyncio
 import json
 import time
 import pytest
-from decimal import Decimal
 from collections.abc import Iterator
 from docker.errors import DockerException
 from testcontainers.k3s import K3SContainer
-from src.adapters.compute.k8s import K8s, parse_quantity
+from src.adapters.compute.k8s import K8s
 
 pytestmark = pytest.mark.no_db
 K3S_IMAGE = "rancher/k3s:v1.31.5-k3s1"
@@ -28,15 +27,6 @@ def k8s_compute() -> Iterator[K8s]:
         yield K8s(container.config_yaml(), "shared-secret")
     finally:
         container.stop()
-
-
-def test_parse_quantity_uses_kubernetes_quantity_semantics() -> None:
-    """Parse Kubernetes resource quantities with the Kubernetes utility parser."""
-
-    # Act and assert
-    assert parse_quantity("250m") == Decimal("0.250")
-    assert parse_quantity("128Mi") == Decimal(128 * 1024 * 1024)
-    assert parse_quantity("invalid") == Decimal(0)
 
 
 @pytest.mark.integration

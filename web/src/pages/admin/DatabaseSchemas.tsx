@@ -1,5 +1,5 @@
-import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import { type ColumnDef } from '@tanstack/react-table';
 import { useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
@@ -57,6 +57,7 @@ export default function DatabaseSchemas() {
                 data={rows}
                 error={error}
                 isLoading={registriesIsLoading || schemasIsLoading}
+                pageSize={25}
             />
         </div>
     );

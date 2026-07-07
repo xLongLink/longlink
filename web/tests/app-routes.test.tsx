@@ -12,9 +12,11 @@ describe('getRoutes', () => {
     it('builds the API-mode public, organization, admin, and proxied app routes', () => {
         const routes = getRoutes('api');
         const routePaths = routes.map((route) => route.path);
-        const adminRoute = routes.find((route) => route.path === 'admin');
 
         expect(routePaths).toContain('/');
+        expect(routePaths).toContain('admin');
+        expect(routePaths).toContain('admin/users');
+        expect(routePaths).toContain('admin/locations');
         expect(routePaths).toContain('organizations');
         expect(routePaths).toContain('orgs/:organization');
         expect(routePaths).toContain('orgs/:organization/settings/applications');
@@ -30,6 +32,5 @@ describe('getRoutes', () => {
         expect(routePaths).toContain('orgs/:organization/settings/storage/:settingsBucket');
         expect(routePaths).toContain('orgs/:organization/apps/:application/*');
         expect(routePaths).toContain('*');
-        expect(adminRoute?.children?.length).toBeGreaterThan(0);
     });
 });

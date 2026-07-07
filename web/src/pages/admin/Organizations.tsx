@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { useTranslation } from '@/lib/i18n';
-import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import { useTranslation } from '@/lib/i18n';
+import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
@@ -185,7 +185,13 @@ export default function AdminOrganizations() {
                     <HeroDescription>{t('admin.organizationsDescription')}</HeroDescription>
                 </div>
             </Hero>
-            <DataTable columns={organizationColumns} data={organizations} error={error} isLoading={isLoading} />
+            <DataTable
+                columns={organizationColumns}
+                data={organizations}
+                error={error}
+                isLoading={isLoading}
+                pageSize={25}
+            />
             <DeleteConfirmationDialog {...deleteDialog.dialogProps} />
         </div>
     );

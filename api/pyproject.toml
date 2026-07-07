@@ -9,9 +9,11 @@ description = 'LongLink backend API'
 readme = 'README.md'
 requires-python = '>=3.14'
 dependencies = [
+    'aioboto3>=15.5.0',
     'aiosqlite',
     'alembic',
     'authlib',
+    'botocore',
     'email-validator',
     'fastapi==0.138.0',
     'httpx2',
@@ -23,7 +25,6 @@ dependencies = [
     'sqlalchemy',
     'sqlmodel',
     'starlette',
-    'boto3',
     'kubernetes',
     'tenant',
     "uvicorn<0.48.0",
@@ -34,8 +35,6 @@ tenant = { path = "../org", editable = true }
 
 [project.optional-dependencies]
 dev = [
-    'boto3-stubs[s3]==1.43.36',
-    'kubernetes-stubs==22.6.0.post1',
     'mypy==1.18.2',
     'pyright==1.1.411',
     'ruff==0.14.0',
@@ -44,6 +43,7 @@ dev = [
     'pytest-cov',
     'isort==8.0.1',
     'testcontainers==4.13.2',
+    'types-aiobotocore[s3]==3.7.0',
 ]
 
 [tool.setuptools_scm]

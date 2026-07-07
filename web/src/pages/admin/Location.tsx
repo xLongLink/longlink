@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { useTranslation } from '@/lib/i18n';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import type { TFunction } from 'i18next';
 import { toast } from 'sonner';
 
@@ -96,7 +96,13 @@ export default function AdminLocation() {
                 </Hero>
                 {canManage ? <CreateLocationDialog /> : null}
             </div>
-            <DataTable columns={locationColumns} data={locationRows} error={error} isLoading={isLoading} />
+            <DataTable
+                columns={locationColumns}
+                data={locationRows}
+                error={error}
+                isLoading={isLoading}
+                pageSize={25}
+            />
             <DeleteConfirmationDialog {...deleteDialog.dialogProps} />
         </div>
     );

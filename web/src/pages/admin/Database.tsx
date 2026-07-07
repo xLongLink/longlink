@@ -1,7 +1,7 @@
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 
-import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
@@ -174,6 +174,7 @@ export default function AdminDatabase() {
                 data={databaseTableRows}
                 error={databasesError ?? locationsError}
                 isLoading={databasesIsLoading || locationsIsLoading}
+                pageSize={25}
             />
             <DeleteConfirmationDialog {...deleteDialog.dialogProps} />
         </div>

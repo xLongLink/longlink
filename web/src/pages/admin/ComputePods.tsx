@@ -1,5 +1,5 @@
-import { type ColumnDef } from '@tanstack/react-table';
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import { type ColumnDef } from '@tanstack/react-table';
 import { useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
@@ -95,7 +95,13 @@ export default function ComputePods() {
                     </div>
                 </Hero>
             </div>
-            <DataTable columns={podColumns} data={rows} error={error} isLoading={computesIsLoading || podsIsLoading} />
+            <DataTable
+                columns={podColumns}
+                data={rows}
+                error={error}
+                isLoading={computesIsLoading || podsIsLoading}
+                pageSize={25}
+            />
         </div>
     );
 }
