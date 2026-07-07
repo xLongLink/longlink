@@ -1,0 +1,30 @@
+import { useCollectionQuery } from '@/hooks/use-collection-query';
+import type { ApiDatabaseInstance, ApiDatabaseRegistry, ApiDatabaseSchema } from '@/lib/types';
+
+/** Fetches the database registry list for admin views. */
+export function useDatabases() {
+    return useCollectionQuery<ApiDatabaseRegistry>('/api/databases');
+}
+
+
+/** Fetches databases for one database registry. */
+export function useDatabaseInstances(databaseId: string) {
+    const enabled = databaseId.length > 0;
+
+    return useCollectionQuery<ApiDatabaseInstance>(enabled ? `/api/databases/${databaseId}/databases` : null, {
+        enabled,
+    });
+}
+
+
+/** Fetches schemas for one database inside a registry. */
+export function useDatabaseSchemas(databaseId: string, databaseName: string) {
+    const enabled = databaseId.length > 0 && databaseName.length > 0;
+
+    return useCollectionQuery<ApiDatabaseSchema>(
+        enabled ? `/api/databases/${databaseId}/databases/${encodeURIComponent(databaseName)}/schemas` : null,
+        {
+            enabled,
+        }
+    );
+}

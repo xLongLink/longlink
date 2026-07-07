@@ -3,11 +3,12 @@ from __future__ import annotations
 from uuid import UUID
 from datetime import UTC, datetime
 from src.utils import names
+from src.utils import gateway
+from src.utils import buckets
 from sqlalchemy import select
 from tenant.models import User as TenantUser
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from tenant.storage import shared_bucket_name
 from src.models.roles import OrganizationRoles
 from src.models.users import UserSummary
 from src.utils.namespace import dbname, k8name
@@ -108,7 +109,7 @@ async def database_users(organization_id: UUID) -> list[TenantUser]:
                 name=user.name,
                 email=user.email,
                 avatar=user.avatar or "",
-                role_name=role_name.value,
+                role=role_name.value,
                 created_at=created_at,
                 updated_at=max(user.updated_at, updated_at),
             )
@@ -146,6 +147,7 @@ async def get(
         applications_result = await session.execute(
             select(Application)
             .options(
+                selectinload(Application.compute_registry),
                 selectinload(Application.created_by),
                 selectinload(Application.updated_by),
                 selectinload(Application.deleted_by),
@@ -220,6 +222,7 @@ async def get(
             avatar=organization.avatar,
             location=LocationResponse.model_validate(organization.location),
             location_id=organization.location_id,
+            shared_storage_bucket_name=organization.shared_storage_bucket_name,
             created_at=organization.created_at,
             updated_at=organization.updated_at,
             created_by=UserSummary.model_validate(organization.created_by),
@@ -239,6 +242,12 @@ async def get(
                         "created_by": application.created_by,
                         "updated_by": application.updated_by,
                         "deleted_by": application.deleted_by,
+                        "gateway_url": gateway.application_url(
+                            application.id,
+                            application.compute_registry.ingress_host,
+                        )
+                        if application.compute_registry is not None
+                        else None,
                         "role": application_roles.get(application.id),
                     }
                 )
@@ -312,8 +321,13 @@ async def create(name: str, location_id: UUID, user: User, avatar: str | None = 
         slug = names.slugify(name, "Organization")
         k8name(slug)
         dbname(slug)
-        shared_bucket_name(slug)
-        organization = Organization(name=name, slug=slug, avatar=avatar or "", location_id=location_id)
+        organization = Organization(
+            name=name,
+            slug=slug,
+            avatar=avatar or "",
+            location_id=location_id,
+            shared_storage_bucket_name=buckets.shared(slug),
+        )
         # Attach the creator as the initial owner for every organization.
         organization.created_id = user.id
         organization.updated_id = user.id

@@ -5,10 +5,12 @@ import { Icon } from '@/components/ui/icon';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { useApiQuery } from '@/hooks/use-api';
 import { useOrganizationActions } from '@/hooks/use-organization';
-import { useOrganizationDatabaseResourceTables } from '@/hooks/use-organization-database-resource-tables';
-import { useOrganizationDatabaseResources } from '@/hooks/use-organization-database-resources';
-import { useOrganizationStorageResources } from '@/hooks/use-organization-storage-resources';
-import { useStorageObjects } from '@/hooks/use-storage-objects';
+import {
+    useOrganizationDatabaseResourceTables,
+    useOrganizationDatabaseResources,
+    useOrganizationStorageResources,
+} from '@/data/organization';
+import { useStorageObjects } from '@/data/storage';
 import { useUserProfile } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';

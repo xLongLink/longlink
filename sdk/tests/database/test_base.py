@@ -183,7 +183,7 @@ async def test_get_session_autocreates_sqlite_tables_and_seeds_local_users(monke
 def test_local_users_cover_supported_local_roles() -> None:
     """Provide local users for every SDK local role."""
 
-    assert {user.role_name for user in database_base.LOCAL_USERS} == {
+    assert {user.role for user in database_base.LOCAL_USERS} == {
         "read",
         "write",
         "maintain",

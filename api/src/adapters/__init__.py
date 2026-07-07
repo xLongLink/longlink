@@ -15,7 +15,14 @@ def compute(registry: ComputeRegistry) -> Compute:
     """Build the compute adapter for one registry record."""
 
     if registry.kind == ComputeKind.kubernetes:
-        return K8s(registry.kubeconfig, registry.proxy_secret)
+        return K8s(
+            registry.kubeconfig,
+            registry.proxy_secret,
+            registry.ingress_host,
+            gateway_tls_key=registry.gateway_tls_key,
+            gateway_tls_certificate=registry.gateway_tls_certificate,
+            gateway_load_balancer_ip=registry.gateway_load_balancer_ip,
+        )
 
     raise ValueError(f"Unsupported compute registry kind '{registry.kind}'")
 
@@ -48,14 +55,3 @@ def storage(registry: StorageRegistry) -> Storage:
         )
 
     raise ValueError(f"Unsupported storage registry kind '{registry.kind}'")
-
-
-__all__ = [
-    "Compute",
-    "Database",
-    "Storage",
-    "StorageRuntimeCredentials",
-    "compute",
-    "database",
-    "storage",
-]

@@ -2,6 +2,7 @@ from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from src.auth import authadmin, authsupport
 from src import adapters
+from src.utils import buckets
 from src.logger import logger
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.models.storages import (
@@ -14,7 +15,7 @@ from src.database.models.users import User
 from src.database.services import storage
 
 router = APIRouter()
-MANAGED_STORAGE_BUCKET_PREFIX = "longlink-"
+MANAGED_STORAGE_BUCKET_PREFIX = f"{buckets.STORAGE_BUCKET_PREFIX}-"
 STORAGE_OBJECT_LIST_LIMIT = 1000
 
 

@@ -10,8 +10,8 @@ import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTab
 import { DataTable } from '@/components/DataTable';
 import ConnectDatabaseDialog from '@/components/dialogs/ConnectDatabaseDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
-import { useDatabases } from '@/hooks/use-databases';
-import { useLocations } from '@/hooks/use-locations';
+import { useLocations } from '@/data/admin';
+import { useDatabases } from '@/data/database';
 import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';

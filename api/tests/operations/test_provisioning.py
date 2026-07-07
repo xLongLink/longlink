@@ -28,4 +28,4 @@ def test_runtime_environment_requires_storage_credentials() -> None:
     )
 
     with pytest.raises(ValueError, match="Storage runtime credentials"):
-        runtime_environment("acme", "dashboard", "postgresql://fake", registry)
+        runtime_environment("dashboard", "postgresql://fake", registry)

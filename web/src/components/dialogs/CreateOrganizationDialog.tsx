@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
-import { useLocations } from '@/hooks/use-locations';
+import { useLocations } from '@/data/admin';
 import { useCreateOrganization } from '@/hooks/use-organization';
 import { useUserProfile } from '@/hooks/use-user';
 

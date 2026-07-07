@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 
 import { DataTable } from '@/components/DataTable';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useUsers } from '@/hooks/use-users';
+import { useUsers } from '@/data/admin';
 import type { ApiUserSummary } from '@/lib/types';
 import { getInitials } from '@/lib/utils';
 

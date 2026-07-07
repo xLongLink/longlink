@@ -1,7 +1,7 @@
 from enum import Enum
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, model_validator
 from src.models.users import UserSummary
 
 
@@ -19,9 +19,23 @@ class ComputeRegistryCreate(BaseModel):
     name: str
     kubeconfig: str
     ingress_host: str
+    gateway_tls_key: str | None = None
+    gateway_tls_certificate: str | None = None
+    gateway_load_balancer_ip: str | None = None
 
     # Relationships
     location_id: UUID
+
+    @model_validator(mode="after")
+    def validate_gateway_tls_pair(self) -> ComputeRegistryCreate:
+        """Require gateway TLS certificate and key to be supplied together."""
+
+        has_certificate = bool((self.gateway_tls_certificate or "").strip())
+        has_key = bool((self.gateway_tls_key or "").strip())
+        if has_certificate != has_key:
+            raise ValueError("Gateway TLS certificate and key must be provided together")
+
+        return self
 
 
 class ComputeRegistryResponse(BaseModel):
@@ -37,6 +51,7 @@ class ComputeRegistryResponse(BaseModel):
     name: str
     slug: str
     ingress_host: str
+    gateway_load_balancer_ip: str | None = None
 
     # Relationships
     location_id: UUID

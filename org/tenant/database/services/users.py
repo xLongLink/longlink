@@ -14,7 +14,13 @@ class UsersService:
         """Upsert active users and soft-delete stale shared users."""
 
         if users:
-            rows = [user.model_dump() for user in users]
+            rows = []
+            for user in users:
+                # The Python model exposes `role`; the shared table stores the historical `role_name` column.
+                row = user.model_dump(exclude={"role"})
+                row["role_name"] = user.role
+                rows.append(row)
+
             insert_statement = postgres_insert(shared_users_table)
             excluded = insert_statement.excluded
 

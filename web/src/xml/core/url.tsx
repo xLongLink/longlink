@@ -12,7 +12,10 @@ export function resolveUrl(baseUrl: string, path: string): string {
 
     const [pathPart, suffix = ''] = path.split(/([?#].*)/, 2);
     const basePart = baseUrl.split(/[?#]/, 1)[0];
-    const baseSegments = basePart.split('/').filter(Boolean);
+    const baseMatch = basePart.match(/^([A-Za-z][A-Za-z0-9+.-]*:\/\/[^/?#]+)(.*)$/);
+    const baseOrigin = baseMatch?.[1] ?? '';
+    const basePath = baseMatch?.[2] ?? basePart;
+    const baseSegments = basePath.split('/').filter(Boolean);
     const pathSegments = pathPart.split('/');
     const resolvedSegments = [...baseSegments];
 
@@ -29,7 +32,7 @@ export function resolveUrl(baseUrl: string, path: string): string {
         resolvedSegments.push(segment);
     }
 
-    return `/${resolvedSegments.join('/')}${suffix}`;
+    return `${baseOrigin}/${resolvedSegments.join('/')}${suffix}`;
 }
 
 /** Returns whether a URL can be safely fetched relative to an application base URL. */

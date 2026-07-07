@@ -37,8 +37,8 @@ export const content = (
             Request Flow &amp; Permissioning
         </Heading>
         <P>
-            All interactions with applications are proxied through the control plane. It enforces authentication and
-            permissions before routing requests and returning responses.
+            Application traffic enters a per-cluster gateway. The gateway asks the control plane to enforce
+            authentication and permissions before routing approved requests to internal application services.
         </P>
     </Stack>
 );

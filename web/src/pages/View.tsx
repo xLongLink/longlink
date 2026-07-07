@@ -328,13 +328,15 @@ export default function View({
         activePageState?.cacheKey === pageCacheKey &&
         activePageState.path === activePagePath &&
         activePageState.routePath === activeRoutePath;
+    const applicationFailed = applicationStatus === 'failed';
     const isNotFound =
         metadataDocument === null || Boolean(metadataDocument?.pages && normalizedRoutePath && !activeRouteMatch);
     const metadataLoading = error instanceof ApiError && error.status === 503;
     const shouldShowLogs =
         canViewLogs &&
-        applicationStatus === 'running' &&
-        (metadataLoading || (activePageStateIsCurrent && activePageState.status === 503));
+        (applicationFailed ||
+            (applicationStatus === 'running' &&
+                (metadataLoading || (activePageStateIsCurrent && activePageState.status === 503))));
 
     runtimeContextRef.current = runtimeContext;
 
@@ -583,7 +585,7 @@ export default function View({
         shouldShowLogs,
     ]);
 
-    // Fetch logs only when the current user is allowed to inspect a running application.
+    // Fetch logs when the current user is allowed to inspect an unavailable application runtime.
     useEffect(() => {
         if (!shouldShowLogs || !applicationId) {
             setLogsState(emptyLogsState);
@@ -614,7 +616,7 @@ export default function View({
         return () => controller.abort();
     }, [applicationId, shouldShowLogs]);
 
-    if (applicationIsLoading || (metadataLoading && !shouldShowLogs)) {
+    if ((applicationIsLoading || metadataLoading) && !shouldShowLogs) {
         return (
             <XML tabs={tabs}>
                 <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">

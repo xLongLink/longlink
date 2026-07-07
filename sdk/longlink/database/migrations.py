@@ -1,13 +1,25 @@
 import sys
+import time
+import socket
 import importlib.util
 from typing import Any
 from alembic import command
 from pathlib import Path
 from alembic.config import Config
+from sqlalchemy.exc import OperationalError
 
 CURRENT_FILE = Path(__file__).resolve()
 MIGRATIONS_DIRECTORY = "migrations"
 INITIAL_INVENTORY_MIGRATION = "20260630_0001_initial_inventory.py"
+MIGRATION_RETRY_ATTEMPTS = 30
+MIGRATION_RETRY_DELAY_SECONDS = 2
+RETRYABLE_MIGRATION_ERROR_MESSAGES = (
+    "connect call failed",
+    "connection refused",
+    "could not translate host name",
+    "name or service not known",
+    "temporary failure in name resolution",
+)
 INTEGER_AUDIT_COLUMN_REPLACEMENTS = {
     'sa.Column("created_id", sa.Integer(), nullable=True)': (
         'sa.Column("created_id", sa.Uuid(), nullable=True)'
@@ -19,6 +31,35 @@ INTEGER_AUDIT_COLUMN_REPLACEMENTS = {
         'sa.Column("deleted_id", sa.Uuid(), nullable=True)'
     ),
 }
+
+
+def iter_exception_chain(exc: BaseException) -> list[BaseException]:
+    """Return an exception with its chained causes and contexts."""
+
+    exceptions: list[BaseException] = []
+    seen: set[int] = set()
+    current: BaseException | None = exc
+    while current is not None and id(current) not in seen:
+        exceptions.append(current)
+        seen.add(id(current))
+        current = current.__cause__ or current.__context__
+
+    return exceptions
+
+
+def retryable_migration_error(exc: BaseException) -> bool:
+    """Return whether a migration failure looks like transient database connectivity."""
+
+    for chained_exception in iter_exception_chain(exc):
+        if isinstance(chained_exception, (ConnectionError, TimeoutError, socket.gaierror)):
+            return True
+
+        if isinstance(chained_exception, OperationalError):
+            message = str(chained_exception).lower()
+            if any(fragment in message for fragment in RETRYABLE_MIGRATION_ERROR_MESSAGES):
+                return True
+
+    return False
 
 
 def include_object(
@@ -159,7 +200,21 @@ def apply_migrations() -> None:
     cfg = Config()
     cfg.set_main_option("script_location", str(CURRENT_FILE.parent))
     cfg.set_main_option("version_locations", str(migrations_path))
-    command.upgrade(cfg, "head")
+    for attempt in range(1, MIGRATION_RETRY_ATTEMPTS + 1):
+        try:
+            command.upgrade(cfg, "head")
+            return
+        except Exception as exc:
+            if attempt == MIGRATION_RETRY_ATTEMPTS or not retryable_migration_error(exc):
+                raise
+
+            print(
+                "Database migrations could not connect to the database; "
+                f"retrying in {MIGRATION_RETRY_DELAY_SECONDS}s "
+                f"({attempt}/{MIGRATION_RETRY_ATTEMPTS})",
+                file=sys.stderr,
+            )
+            time.sleep(MIGRATION_RETRY_DELAY_SECONDS)
 
 
 def migrate() -> None:

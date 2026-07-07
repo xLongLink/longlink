@@ -3,8 +3,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Link, useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { useStorageBuckets } from '@/hooks/use-storage-buckets';
-import { useStorages } from '@/hooks/use-storages';
+import { useStorageBuckets, useStorages } from '@/data/storage';
 import { useTranslation } from '@/lib/i18n';
 import type { ApiStorageBucket } from '@/lib/types';
 import { S3 } from '@/svg/S3';

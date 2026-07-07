@@ -30,6 +30,9 @@ class Application(SQLModel, table=True):
     database_registry_id: UUID | None = Field(default=None, foreign_key="database_registries.id")
     storage_registry_id: UUID | None = Field(default=None, foreign_key="storage_registries.id")
 
+    # Storage
+    storage_bucket_name: str | None = Field(default=None, max_length=63)
+
     # Metadata
     name: str = Field(max_length=100)
     slug: str = Field(max_length=100)

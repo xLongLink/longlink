@@ -91,7 +91,7 @@ Infrastructure is connected through location-scoped registries. Compute registri
 
 Long-running work is tracked as operations. Application creation queues a verification operation that checks the deployed pods and moves the application to `running` or `failed`. Application deletion queues a removal operation that deletes runtime resources and marks the application deleted. The operation scheduler runs in the API process and keeps retrying pending work without blocking normal API requests.
 
-Application access is routed through the control plane. Users enter through authenticated organization and application routes; the API verifies access, checks the application status, strips unsafe hop-by-hop headers, and proxies the request to the internal application service on the selected compute backend.
+Application access is routed through the per-cluster gateway. Users open organization application routes in the web shell; runtime metadata and API calls go to the selected compute gateway. The gateway asks the control plane to authorize each request, and the API verifies access, checks the application status, and returns trusted runtime identity headers before the gateway forwards traffic to the internal application service.
 
 Production infrastructure is organized around organizations and applications. The control plane owns the setup, while adapters translate the platform model into the target backend.
 
@@ -103,7 +103,7 @@ Cluster                         # Managed by the control plane
     ├── App A Deployment        # Deployment for App A
     ├── App A Service           # Internal ClusterIP Service for App A
     ├── App A Secret            # Secret containing all app configuration
-    └── Proxy                   # Shared internal proxy service
+    └── Gateway                 # Shared Envoy gateway service
 ```
 
 Database uses one database per organization, one shared schema, and one schema per application:
@@ -121,9 +121,9 @@ File storage uses organization-scoped bucket names and isolated buckets per appl
 
 ```bash
 Storage Backend                         # Managed through the storage adapter
-├── longlink-{organization}-shared      # Optional organization-level objects
-├── longlink-{organization}-app-a       # Files owned by App A
-└── longlink-{organization}-app-b       # Files owned by App B
+├── Assigned organization bucket        # Optional organization-level objects
+├── Assigned App A bucket               # Files owned by App A
+└── Assigned App B bucket               # Files owned by App B
 ```
 
 ### Applications
@@ -182,6 +182,8 @@ Keep both web build modes working. API mode builds the authenticated control-pla
 - Include two blank lines between function definitions
 - Do not add new helper functions unless they are explicitly needed.
 - Python functions must have docstrings, and non-trivial logic blocks must have preceding `# ...` comments.
+- Python files must not start with module-level triple-quoted docstrings; use comments only when a file header is needed.
+- Do not add `__all__` unless a concrete public star-import contract requires it.
 - JavaScript functions must have JSDoc comments, and non-trivial logic blocks must have preceding `// ...` comments.
 - Keep `FEATURES.md` updated when supported behavior is added, removed, renamed, or materially changed.
 - Always check at the end of the implementation, for potential simplifications.

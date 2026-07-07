@@ -30,18 +30,34 @@ import Pricing from '@/pages/Pricing';
 import Settings from '@/pages/Settings';
 import View from '@/pages/View';
 import { createContext as createXmlContext } from '@/xml';
-import type { ReactElement } from 'react';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 
 type AppRouter = ReturnType<typeof createBrowserRouter>;
 
 let appRouter: AppRouter | null = null;
 
-/** Wraps an admin page in the shared admin shell. */
-function adminRoute(path: string, element: ReactElement) {
+/** Builds admin routes with a persistent shell around tab-specific pages. */
+function adminRoutes() {
     return {
-        path,
-        element: <Admin>{element}</Admin>,
+        path: 'admin',
+        element: <Admin />,
+        children: [
+            { index: true, element: <AdminUsers /> },
+            { path: 'users', element: <AdminUsers /> },
+            { path: 'applications', element: <AdminApplications /> },
+            { path: 'organizations', element: <AdminOrganizations /> },
+            { path: 'locations', element: <AdminLocation /> },
+            { path: 'database', element: <AdminDatabase /> },
+            { path: 'database/:database', element: <DatabaseInstances /> },
+            { path: 'database/:database/databases/:databaseName', element: <DatabaseSchemas /> },
+            { path: 'storage', element: <AdminStorage /> },
+            { path: 'storage/:storage', element: <StorageBuckets /> },
+            { path: 'storage/:storage/buckets/:bucket', element: <StorageObjects /> },
+            { path: 'compute', element: <AdminCompute /> },
+            { path: 'compute/:compute', element: <ComputeNamespaces /> },
+            { path: 'compute/:compute/namespace/:namespace', element: <ComputePods /> },
+            { path: 'operations', element: <AdminOperations /> },
+        ],
     };
 }
 
@@ -84,21 +100,7 @@ export function getRoutes(mode = import.meta.env.MODE) {
                 </Auth>
             ),
         },
-        adminRoute('admin', <AdminUsers />),
-        adminRoute('admin/users', <AdminUsers />),
-        adminRoute('admin/applications', <AdminApplications />),
-        adminRoute('admin/organizations', <AdminOrganizations />),
-        adminRoute('admin/locations', <AdminLocation />),
-        adminRoute('admin/database', <AdminDatabase />),
-        adminRoute('admin/database/:database', <DatabaseInstances />),
-        adminRoute('admin/database/:database/databases/:databaseName', <DatabaseSchemas />),
-        adminRoute('admin/storage', <AdminStorage />),
-        adminRoute('admin/storage/:storage', <StorageBuckets />),
-        adminRoute('admin/storage/:storage/buckets/:bucket', <StorageObjects />),
-        adminRoute('admin/compute', <AdminCompute />),
-        adminRoute('admin/compute/:compute', <ComputeNamespaces />),
-        adminRoute('admin/compute/:compute/namespace/:namespace', <ComputePods />),
-        adminRoute('admin/operations', <AdminOperations />),
+        adminRoutes(),
         {
             path: 'orgs/:organization',
             element: (
@@ -263,6 +265,7 @@ function OrganizationApplicationView() {
     const applicationRole = organizationApplication?.role ?? null;
     const hasApplicationAccess = canAccessApplication(organizationRole, applicationRole);
     const canViewLogs = platformRole === 'administrator' || canViewApplicationLogs(organizationRole, applicationRole);
+    const applicationGatewayUrl = organizationApplication?.gateway_url ?? '';
 
     if (isLoading) {
         return <View applicationStatus="loading" metadata="" />;
@@ -279,7 +282,7 @@ function OrganizationApplicationView() {
             applicationName={organizationApplication.name}
             canViewLogs={canViewLogs}
             applicationStatus={organizationApplication.status}
-            metadata={`/api/applications/${organizationApplication.id}/proxy/metadata.json`}
+            metadata={`${applicationGatewayUrl}metadata.json`}
             locale={language}
         />
     );

@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { AdminActionMenu } from '@/components/admin/AdminTableElements';
 import { DataTable } from '@/components/DataTable';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
-import { useOrganizations } from '@/hooks/use-organizations';
+import { useOrganizations } from '@/data/admin';
 import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiVoid } from '@/lib/api';
 import { organizationsQueryKey } from '@/lib/query-keys';

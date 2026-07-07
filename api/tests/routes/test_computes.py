@@ -26,16 +26,17 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     captured: dict[str, object] = {}
 
     class FakeCompute:
-        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
+        def __init__(self, kubeconfig: str, proxy_secret: str, ingress_host: str) -> None:
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
+            captured["ingress_host"] = ingress_host
 
         async def setup(self) -> None:
             captured["setup_calls"] = int(captured.get("setup_calls", 0)) + 1
 
     monkeypatch.setattr(
         "src.routes.computes.adapters.compute",
-        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret),
+        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret, registry.ingress_host),
     )
 
     # Act
@@ -67,4 +68,5 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     assert get_response.status_code == 404
     assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"
     assert captured["proxy_secret"]
+    assert captured["ingress_host"] == "apps.longlink.internal"
     assert captured["setup_calls"] == 1

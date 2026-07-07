@@ -3,9 +3,10 @@ import Layout from '@/layout/Layout';
 import { useTranslation } from '@/lib/i18n';
 import { Activity, Boxes, Building2, Cpu, Database, HardDrive, MapPin, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { Outlet } from 'react-router';
 
 /** Renders the admin shell with tabbed navigation. */
-export default function Admin({ children }: { children: ReactNode }) {
+export default function Admin({ children }: { children?: ReactNode }) {
     const { t } = useTranslation();
 
     return (
@@ -22,7 +23,7 @@ export default function Admin({ children }: { children: ReactNode }) {
                     [t('admin.tabs.operations')]: { href: '/admin/operations', icon: Activity },
                 }}
             >
-                <section className="mx-auto w-full max-w-[1000px] space-y-8">{children}</section>
+                <section className="mx-auto w-full max-w-[1000px] space-y-8">{children ?? <Outlet />}</section>
             </Layout>
         </Auth>
     );

@@ -28,6 +28,9 @@ class Organization(SQLModel, table=True):
     location: "Location" = Relationship()
     location_id: UUID = Field(foreign_key="locations.id")
 
+    # Storage
+    shared_storage_bucket_name: str | None = Field(default=None, max_length=63)
+
     # User
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Organization.created_id"})

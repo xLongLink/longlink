@@ -58,7 +58,7 @@ class FakeSeedClient:
             return FakeResponse(payload)
 
         if path == "/api/computes":
-            payload = [{"ingress_host": "localhost:8443"}] if self.existing else []
+            payload = [{"ingress_host": seed.LOCAL_COMPUTE_INGRESS_HOST}] if self.existing else []
             return FakeResponse(payload)
 
         if path == "/api/organizations":
@@ -133,6 +133,13 @@ def test_seed_main_creates_local_resources_with_runtime_endpoints(
         "runtime_endpoint_url": "http://host.k3d.internal:19000",
         "access_key_id": "admin",
         "secret_access_key": "adminadmin",
+        "location_id": FakeSeedClient.location_id,
+    }
+    assert posts["/api/computes"] == {
+        "kind": "kubernetes",
+        "name": "local",
+        "kubeconfig": "apiVersion: v1\nclusters: []\n",
+        "ingress_host": seed.LOCAL_COMPUTE_INGRESS_HOST,
         "location_id": FakeSeedClient.location_id,
     }
     assert posts[f"/api/organizations/{FakeSeedClient.organization_id}/applications"] == seed.LOCAL_APP

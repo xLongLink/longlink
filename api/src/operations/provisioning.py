@@ -2,11 +2,10 @@ import urllib.parse
 from uuid import UUID
 from datetime import UTC, datetime
 from src import adapters
-from src.utils import names, images
+from src.utils import names, images, buckets
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
 from src.utils.url import database as normalize_database_url
-from tenant.storage import bucket_name, shared_buckets, shared_bucket_name
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import ApplicationStatus
 from src.utils.namespace import dbname, k8name
@@ -191,6 +190,34 @@ async def application_storage_registry(
     return None
 
 
+def shared_storage_bucket(organization: Organization | OrganizationDetails | OrganizationSummary) -> str:
+    """Return the assigned shared storage bucket for one organization."""
+
+    if organization.shared_storage_bucket_name is None:
+        raise ValueError("Organization has no assigned shared storage bucket")
+
+    return organization.shared_storage_bucket_name
+
+
+def application_storage_bucket(application: Application) -> str:
+    """Return the assigned storage bucket for one application."""
+
+    if application.storage_bucket_name is None:
+        raise ValueError("Application has no assigned storage bucket")
+
+    return application.storage_bucket_name
+
+
+async def other_application_storage_buckets(organization_id: UUID, application_id: UUID) -> list[str]:
+    """Return assigned storage buckets for other applications in one organization."""
+
+    return [
+        application.storage_bucket_name
+        for application in await applications.list_by_organization(organization_id, include_deleted=True)
+        if application.id != application_id and application.storage_bucket_name is not None
+    ]
+
+
 async def remove_application_runtime(
     application: Application,
     organization: Organization | OrganizationDetails | OrganizationSummary,
@@ -201,7 +228,6 @@ async def remove_application_runtime(
     names.knames(application.slug, "Application name")
     k8name(organization.slug)
     dbname(organization.slug)
-    bucket_name(organization.slug, application.slug)
 
     compute_registry = await application_compute_registry(application, organization.location_id)
     if compute_registry is not None:
@@ -215,9 +241,9 @@ async def remove_application_runtime(
             await db_client.delete_schema(organization.slug, application.slug)
 
     storage_registry = await application_storage_registry(application)
-    if storage_registry is not None:
+    if storage_registry is not None and application.storage_bucket_name is not None:
         storage_client = adapters.storage(storage_registry)
-        await storage_client.delete_bucket(bucket_name(organization.slug, application.slug))
+        await storage_client.delete_bucket(application.storage_bucket_name)
 
 
 async def remove_organization_runtime(
@@ -228,7 +254,6 @@ async def remove_organization_runtime(
     names.knames(organization.slug, "Organization")
     k8name(organization.slug)
     dbname(organization.slug)
-    shared_bucket_name(organization.slug)
 
     organization_applications = await applications.list_by_organization(organization.id, include_deleted=True)
     for application in organization_applications:
@@ -254,9 +279,9 @@ async def remove_organization_runtime(
         await db_client.delete_database(organization.slug)
 
     storage_registry = await organization_storage_registry(organization, include_deleted=True)
-    if storage_registry is not None:
+    if storage_registry is not None and organization.shared_storage_bucket_name is not None:
         storage_client = adapters.storage(storage_registry)
-        await shared_buckets.delete(storage_client, organization.slug)
+        await storage_client.delete_bucket(organization.shared_storage_bucket_name)
 
 
 def runtime_storage_url(storage_registry: StorageRegistry, credentials: adapters.StorageRuntimeCredentials) -> str:
@@ -283,10 +308,11 @@ def runtime_storage_url(storage_registry: StorageRegistry, credentials: adapters
 
 
 def runtime_environment(
-    organization_slug: str,
     application_slug: str,
     database_url: str,
     storage_registry: StorageRegistry | None,
+    storage_bucket_name: str | None = None,
+    shared_storage_bucket_name: str | None = None,
     storage_credentials: adapters.StorageRuntimeCredentials | None = None,
 ) -> dict[str, str]:
     """Build platform-managed environment variables for an application runtime."""
@@ -300,12 +326,14 @@ def runtime_environment(
     if storage_registry is not None:
         if storage_credentials is None:
             raise ValueError("Storage runtime credentials are required when storage is configured")
+        if storage_bucket_name is None or shared_storage_bucket_name is None:
+            raise ValueError("Assigned storage buckets are required when storage is configured")
 
         environment.update(
             {
                 "LONGLINK_STORAGE_URL": runtime_storage_url(storage_registry, storage_credentials),
-                "LONGLINK_STORAGE_BUCKET": bucket_name(organization_slug, application_slug),
-                "LONGLINK_STORAGE_SHARED_BUCKET": shared_bucket_name(organization_slug),
+                "LONGLINK_STORAGE_BUCKET": storage_bucket_name,
+                "LONGLINK_STORAGE_SHARED_BUCKET": shared_storage_bucket_name,
             }
         )
 
@@ -337,6 +365,8 @@ async def sync_user_organizations(user: User) -> None:
 async def provision_application_runtime_resources(
     organization: Organization | OrganizationDetails | OrganizationSummary,
     application_slug: str,
+    application_id: UUID,
+    application_bucket_name: str,
     payload: ApplicationCreate,
     runtime_image: str,
     compute_registry: ComputeRegistry,
@@ -355,24 +385,28 @@ async def provision_application_runtime_resources(
     if storage_registry is not None:
         # Ensure object storage exists before the workload receives backend credentials.
         storage_client = adapters.storage(storage_registry)
-        await shared_buckets.ensure(storage_client, organization.slug)
-        await storage_client.bucket(organization.slug, application_slug)
+        shared_bucket_name = shared_storage_bucket(organization)
+        await storage_client.bucket(shared_bucket_name)
+        await storage_client.bucket(application_bucket_name)
         storage_credentials = await storage_client.application_credentials(
-            organization.slug,
-            application_slug,
+            application_bucket_name,
+            shared_bucket_name,
+            await other_application_storage_buckets(organization.id, application_id),
         )
 
     database_url = await db_client.schema(organization.slug, application_slug)
     runtime_envs = runtime_environment(
-        organization.slug,
         application_slug,
         database_url,
         storage_registry,
+        application_bucket_name,
+        shared_storage_bucket(organization),
         storage_credentials,
     )
     application_arguments = (
         organization.slug,
         application_slug,
+        str(application_id),
         runtime_image,
         APP_SERVICE_PORT,
         {**application_runtime_environment(payload), **runtime_envs},
@@ -397,8 +431,8 @@ async def create_application_runtime(
     names.knames(application_slug, "Application name")
     k8name(organization.slug)
     dbname(organization.slug)
-    shared_bucket_name(organization.slug)
-    bucket_name(organization.slug, application_slug)
+    shared_storage_bucket(organization)
+    application_bucket_name = buckets.application(organization.slug, application_slug)
     logger.info("Provisioning application %s/%s", organization.slug, application_slug)
 
     image_metadata = await application_image_metadata(payload)
@@ -425,6 +459,7 @@ async def create_application_runtime(
         compute_registry_id=compute_registry.id,
         database_registry_id=database_registry.id,
         storage_registry_id=storage_registry.id if storage_registry is not None else None,
+        storage_bucket_name=application_bucket_name,
         sdk=image_metadata.sdk,
         digest=digest,
         version=image_metadata.version,
@@ -439,6 +474,8 @@ async def create_application_runtime(
         await provision_application_runtime_resources(
             organization,
             application_slug,
+            application.id,
+            application_bucket_name,
             payload,
             runtime_image,
             compute_registry,
@@ -505,8 +542,8 @@ async def sync_application_runtime(
     names.knames(application.slug, "Application name")
     k8name(organization.slug)
     dbname(organization.slug)
-    shared_bucket_name(organization.slug)
-    bucket_name(organization.slug, application.slug)
+    shared_storage_bucket(organization)
+    application_bucket_name = application_storage_bucket(application)
     image_metadata = await application_image_metadata(payload)
     digest = image_metadata.digest
     assert digest is not None
@@ -547,6 +584,8 @@ async def sync_application_runtime(
         await provision_application_runtime_resources(
             organization,
             application.slug,
+            application.id,
+            application_bucket_name,
             payload,
             runtime_image,
             compute_registry,
@@ -609,7 +648,7 @@ async def create_organization_database(
 async def create_organization_storage(
     organization: Organization | OrganizationSummary,
 ) -> None:
-    """Best-effort create the shared bucket on the active storage registry."""
+    """Best-effort create the assigned shared bucket on the active storage registry."""
 
     registry = await latest_storage_registry(organization.location_id)
     if registry is None:
@@ -617,6 +656,6 @@ async def create_organization_storage(
 
     try:
         storage_client = adapters.storage(registry)
-        await shared_buckets.ensure(storage_client, organization.slug)
+        await storage_client.bucket(shared_storage_bucket(organization))
     except Exception:
         logger.exception("Failed to create storage for organization '%s'", organization.slug)

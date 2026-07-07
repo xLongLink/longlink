@@ -66,34 +66,28 @@ export const content = (
                 <Code>creating</Code>: the application record exists and deployment verification is still running.
             </Li>
             <Li>
-                <Code>running</Code>: the newest rollout pods are ready and the application can receive proxied traffic.
+                <Code>running</Code>: the newest rollout pods are ready and the application can receive gateway traffic.
             </Li>
             <Li>
                 <Code>failed</Code>: rollout verification found crashing current pods.
             </Li>
         </Ul>
-        <Heading id="access-and-proxying" level="h2">
-            Access And Proxying
+        <Heading id="access-and-gateway" level="h2">
+            Access And Gateway
         </Heading>
         <P>
-            Users access applications through the control plane, not directly through public application ingress.
-            LongLink checks access, rejects unavailable applications with a no-store <Code>503</Code>, strips unsafe
-            headers, and forwards the current user id and effective runtime role as <Code>x-user-id</Code> and{' '}
-            <Code>x-user-role</Code>.
+            Users access applications through the per-cluster LongLink gateway. The gateway asks the control plane to
+            authorize each request before it forwards traffic to the internal application service.
         </P>
         <P>
-            The proxy supports <Code>GET</Code>, <Code>POST</Code>, <Code>PUT</Code>, <Code>PATCH</Code>, and{' '}
-            <Code>DELETE</Code> requests to non-root application paths. The proxied application root path is
-            intentionally not exposed.
+            LongLink checks access, rejects unavailable applications with a no-store <Code>503</Code>, strips spoofable
+            runtime identity headers at the gateway, and forwards the current user id and effective runtime role as{' '}
+            <Code>x-user-id</Code> and <Code>x-user-role</Code>.
         </P>
         <P>
             Runtime requests are role-gated by method: <Code>read</Code> can use read methods, <Code>write</Code> can
             also use write methods, and <Code>maintain</Code>, <Code>admin</Code>, or <Code>owner</Code> can use{' '}
             <Code>DELETE</Code>.
-        </P>
-        <P>
-            Proxied request bodies and response bodies are capped at <Code>25 MiB</Code>. Use application storage for
-            files and keep uploads below that proxy limit until direct storage upload flows are supported.
         </P>
         <P>
             Users with an application role can open the runtime. Organization members with <Code>maintain</Code>,{' '}

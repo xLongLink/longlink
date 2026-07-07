@@ -1,5 +1,5 @@
 import { DataTable } from '@/components/DataTable';
-import { useOrganizationStorageResources } from '@/hooks/use-organization-storage-resources';
+import { useOrganizationStorageResources } from '@/data/organization';
 import { useTranslation } from '@/lib/i18n';
 import type { ApiOrganizationDetails, ApiOrganizationStorageResource } from '@/lib/types';
 import { formatBytes, formatNumber, getInitials } from '@/lib/utils';

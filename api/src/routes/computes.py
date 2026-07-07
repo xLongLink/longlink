@@ -1,7 +1,9 @@
 from uuid import UUID
+import urllib.parse
 from fastapi import Depends, Response, APIRouter
 from src.auth import authadmin, authsupport
 from src import adapters
+from src.environments import env
 from src.logger import logger
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.models.computes import (
@@ -15,6 +17,61 @@ from src.database.models.users import User
 from src.database.services import compute
 
 router = APIRouter()
+
+
+def _hostname(value: str) -> str | None:
+    """Return the hostname from an absolute or host-only gateway value."""
+
+    parsed_value = urllib.parse.urlsplit(value.strip())
+    if parsed_value.scheme in {"http", "https"} and not parsed_value.netloc:
+        return None
+
+    if parsed_value.hostname is not None:
+        return parsed_value.hostname.lower()
+
+    return value.strip().split(":", 1)[0].lower() or None
+
+
+def _cookie_domain_matches(host: str, cookie_domain: str) -> bool:
+    """Return whether one cookie domain covers the provided host exactly or as a parent domain."""
+
+    return host == cookie_domain or host.endswith(f".{cookie_domain}")
+
+
+def _validate_production_gateway_settings(payload: ComputeRegistryCreate) -> None:
+    """Reject compute settings that cannot support production gateway traffic."""
+
+    if env.DEVELOPMENT:
+        return
+
+    errors: list[str] = []
+    parsed_gateway_url = urllib.parse.urlsplit(payload.ingress_host.strip())
+    gateway_host = _hostname(payload.ingress_host)
+    control_plane_host = _hostname(env.CONTROL_PLANE_URL)
+    cookie_domain = (env.SESSION_COOKIE_DOMAIN or "").lstrip(".").lower()
+    if not (payload.gateway_tls_certificate or "").strip() or not (payload.gateway_tls_key or "").strip():
+        errors.append("gateway TLS certificate and key are required")
+
+    if parsed_gateway_url.scheme and parsed_gateway_url.netloc and parsed_gateway_url.scheme != "https":
+        errors.append("gateway ingress host must use HTTPS outside development")
+
+    if gateway_host is None:
+        errors.append("gateway host is invalid")
+
+    if control_plane_host is None:
+        errors.append("CONTROL_PLANE_URL host is invalid")
+
+    if gateway_host and control_plane_host and gateway_host != control_plane_host:
+        if not cookie_domain:
+            errors.append("SESSION_COOKIE_DOMAIN is required when the gateway host differs from the control plane host")
+        elif not _cookie_domain_matches(gateway_host, cookie_domain) or not _cookie_domain_matches(
+            control_plane_host,
+            cookie_domain,
+        ):
+            errors.append("SESSION_COOKIE_DOMAIN must cover both gateway and control-plane hosts")
+
+    if errors:
+        raise ValueError("Invalid production gateway settings: " + "; ".join(errors))
 
 
 @router.get("/api/computes", response_model=list[ComputeRegistryResponse])
@@ -60,6 +117,7 @@ async def create_compute_registry(
     """Create one compute backend registration."""
 
     try:
+        _validate_production_gateway_settings(payload)
         registry = await compute.create(**payload.model_dump(), user=user)
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc

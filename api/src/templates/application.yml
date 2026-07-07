@@ -11,6 +11,7 @@ metadata:
     managed-by: longlink
     compute-role: application
     app: $name
+    longlink.io/application-id: $application_id
 spec:
   replicas: 1
   selector:
@@ -21,7 +22,10 @@ spec:
       annotations:
         longlink.io/rollout-token: "$rollout_token"
       labels:
+        managed-by: longlink
+        compute-role: application
         app: $name
+        longlink.io/application-id: $application_id
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -39,13 +43,13 @@ spec:
             - containerPort: $port
           startupProbe:
             httpGet:
-              path: /
+              path: /health
               port: $port
             periodSeconds: 2
             failureThreshold: 60
           readinessProbe:
             httpGet:
-              path: /
+              path: /health
               port: $port
             periodSeconds: 5
             failureThreshold: 3
@@ -80,6 +84,8 @@ metadata:
   labels:
     managed-by: longlink
     compute-role: application
+    app: $name
+    longlink.io/application-id: $application_id
 spec:
   type: ClusterIP
   selector:

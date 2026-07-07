@@ -7,12 +7,23 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.roles import ApplicationRoles
 from src.models.statuses import ApplicationStatus
+from src.utils import gateway
+from src.utils import buckets
 from src.database.session import session_scope
 from src.models.applications import ApplicationResponse, ApplicationMemberResponse
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
+
+
+def response_gateway_url(application: Application) -> str | None:
+    """Return the gateway URL exposed for one application response."""
+
+    if application.compute_registry is None:
+        return None
+
+    return gateway.application_url(application.id, application.compute_registry.ingress_host)
 
 
 async def fetch_all() -> list[Application]:
@@ -70,6 +81,7 @@ async def fetch_all_responses(user: User) -> list[ApplicationResponse]:
                     "created_by": application.created_by or user,
                     "updated_by": application.updated_by or application.created_by or user,
                     "deleted_by": application.deleted_by,
+                    "gateway_url": response_gateway_url(application),
                     "role": None,
                 }
             )
@@ -146,6 +158,7 @@ async def list_responses(organization_id: UUID, user_id: UUID, user: User) -> li
                     "created_by": application.created_by or user,
                     "updated_by": application.updated_by or application.created_by or user,
                     "deleted_by": application.deleted_by,
+                    "gateway_url": response_gateway_url(application),
                     "role": role_name,
                 }
             )
@@ -350,10 +363,15 @@ async def create(
     description: str | None = None,
     digest: str | None = None,
     icon: str | None = None,
+    storage_bucket_name: str | None = None,
 ) -> Application:
     """Add a new application to the database for one organization."""
 
     async with session_scope() as session:
+        organization = await session.get(Organization, organization_id)
+        if organization is None:
+            raise ValueError("Organization not found")
+
         # Check slug uniqueness so K8s resource names stay collision-free.
         slug_statement = select(Application).where(
             Application.organization_id == organization_id,
@@ -368,6 +386,7 @@ async def create(
             "compute_registry_id": compute_registry_id,
             "database_registry_id": database_registry_id,
             "storage_registry_id": storage_registry_id,
+            "storage_bucket_name": storage_bucket_name or buckets.application(organization.slug, slug),
             "name": name,
             "slug": slug,
             "status": status,

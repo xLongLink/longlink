@@ -3,8 +3,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { useComputePods } from '@/hooks/use-compute-pods';
-import { useComputes } from '@/hooks/use-computes';
+import { useComputePods, useComputes } from '@/data/compute';
 import { useTranslation } from '@/lib/i18n';
 import type { ApiComputePod } from '@/lib/types';
 import { formatBytes, formatDateTime } from '@/lib/utils';

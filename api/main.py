@@ -132,6 +132,7 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=env.SESSION_KEY,
     session_cookie="longlink_session",
+    domain=env.SESSION_COOKIE_DOMAIN,
     same_site="lax",
     https_only=not env.DEVELOPMENT,
 )

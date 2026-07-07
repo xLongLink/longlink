@@ -14,11 +14,11 @@ function Hero({ className, icon, children, ...props }: HeroProps) {
     const iconNode = icon?.trim() ? <UIIcon name={icon} className="size-5" /> : null;
 
     return (
-        <section data-slot="hero" className={cn('flex items-start gap-4', className)} {...props}>
+        <section data-slot="hero" className={cn('flex items-center gap-4', className)} {...props}>
             {iconNode ? (
                 <div
                     data-slot="hero-icon"
-                    className="mt-1 flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent [&_svg]:size-5 [&_svg]:stroke-[2.5]"
+                    className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent [&_svg]:size-5 [&_svg]:stroke-[2.5]"
                 >
                     {iconNode}
                 </div>
@@ -33,7 +33,7 @@ function HeroTitle({ className, ...props }: React.ComponentProps<'div'>) {
     return (
         <div
             data-slot="hero-title"
-            className={cn('text-xl font-semibold tracking-tight sm:text-2xl', className)}
+            className={cn('text-lg font-semibold leading-6 tracking-tight sm:text-xl', className)}
             {...props}
         />
     );
@@ -44,7 +44,7 @@ function HeroDescription({ className, ...props }: React.ComponentProps<'div'>) {
     return (
         <div
             data-slot="hero-description"
-            className={cn('max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base', className)}
+            className={cn('max-w-2xl text-sm leading-5 text-muted-foreground', className)}
             {...props}
         />
     );

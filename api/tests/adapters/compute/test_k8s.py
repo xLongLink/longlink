@@ -1,5 +1,5 @@
 import asyncio
-import json
+import base64
 import time
 import pytest
 from collections.abc import Iterator
@@ -24,13 +24,13 @@ def k8s_compute() -> Iterator[K8s]:
         pytest.skip(f"Docker/k3s is not available for Kubernetes integration tests: {exc}")
 
     try:
-        yield K8s(container.config_yaml(), "shared-secret")
+        yield K8s(container.config_yaml(), "shared-secret", "apps.example.test")
     finally:
         container.stop()
 
 
 @pytest.mark.integration
-async def test_k8s_adapter_manages_real_namespace_application_proxy_and_cleanup(k8s_compute: K8s) -> None:
+async def test_k8s_adapter_manages_real_namespace_application_gateway_and_cleanup(k8s_compute: K8s) -> None:
     """Exercise the Kubernetes adapter against a real k3s cluster."""
 
     adapter = k8s_compute
@@ -38,9 +38,11 @@ async def test_k8s_adapter_manages_real_namespace_application_proxy_and_cleanup(
     try:
         await adapter.namespace("acme")
         await adapter.namespace("acme")
+        application_id = "00000000-0000-4000-8000-000000000001"
         route = await adapter.application(
             "acme",
             "dashboard",
+            application_id,
             ECHO_SERVER_IMAGE,
             80,
             {"LONG_LINK_REQUIRED": "value"},
@@ -78,19 +80,25 @@ async def test_k8s_adapter_manages_real_namespace_application_proxy_and_cleanup(
             ]
             pytest.fail(f"k3s application pod did not become ready before timeout: {pod_statuses}")
 
-        body, status_code, response_headers = adapter.proxy(
-            "acme",
-            "dashboard",
-            "inventory",
-            "POST",
-            [],
-            {
-                "content-type": "application/json",
-                "content-length": "32",
-                "x-echo-body": "proxied through k3s",
-                "x-echo-code": "201",
-            },
-            b'{"sku":"sku-1","quantity":1}',
+        gateway_config = adapter._core_api.read_namespaced_config_map(
+            "longlink-gateway",
+            "longlink-system",
+        ).data["envoy.yaml"]
+        gateway_secret = adapter._core_api.read_namespaced_secret(
+            "longlink-gateway-auth",
+            "longlink-system",
+        )
+        gateway_service = adapter._core_api.read_namespaced_service(
+            "longlink-gateway",
+            "longlink-system",
+        )
+        gateway_policy = adapter._networking_api.read_namespaced_network_policy(
+            "longlink-gateway-ingress",
+            "longlink-system",
+        )
+        gateway_ingress = adapter._networking_api.read_namespaced_ingress(
+            "longlink-gateway",
+            "longlink-system",
         )
         logs = await adapter.logs("acme", "dashboard", lines=50)
         namespaces = await adapter.namespaces()
@@ -99,9 +107,14 @@ async def test_k8s_adapter_manages_real_namespace_application_proxy_and_cleanup(
 
         assert route == "/longlink-acme/dashboard/"
         assert "longlink-acme" in namespaces
-        assert status_code == 201
-        assert json.loads(body.decode("utf-8")) == "proxied through k3s"
-        assert "content-type" in {key.lower() for key in response_headers}
+        assert f"/api/applications/{application_id}/proxy/" in gateway_config
+        assert "dashboard.longlink-acme.svc.cluster.local" in gateway_config
+        assert "shared-secret" not in gateway_config
+        assert "__LONG_LINK_GATEWAY_SECRET__" in gateway_config
+        assert base64.b64decode(gateway_secret.data["gateway-secret"]).decode("utf-8") == "shared-secret"
+        assert gateway_service.spec.type == "ClusterIP"
+        assert gateway_ingress.spec.rules[0].http.paths[0].backend.service.name == "longlink-gateway"
+        assert gateway_policy.spec.pod_selector.match_labels == {"app": "longlink-gateway"}
         assert isinstance(logs, str)
         assert cluster_resources["ram_total"] > 0
         assert cluster_resources["cpu_total"] > 0

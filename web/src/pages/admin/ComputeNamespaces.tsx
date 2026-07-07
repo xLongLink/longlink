@@ -3,8 +3,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Link, useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { useComputeNamespaces } from '@/hooks/use-compute-namespaces';
-import { useComputes } from '@/hooks/use-computes';
+import { useComputeNamespaces, useComputes } from '@/data/compute';
 import { useTranslation } from '@/lib/i18n';
 import type { ApiComputeNamespace } from '@/lib/types';
 

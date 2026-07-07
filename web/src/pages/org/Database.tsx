@@ -1,6 +1,5 @@
 import { DataTable } from '@/components/DataTable';
-import { useOrganizationDatabaseResourceTables } from '@/hooks/use-organization-database-resource-tables';
-import { useOrganizationDatabaseResources } from '@/hooks/use-organization-database-resources';
+import { useOrganizationDatabaseResourceTables, useOrganizationDatabaseResources } from '@/data/organization';
 import { useTranslation } from '@/lib/i18n';
 import type {
     ApiOrganizationDatabaseResource,

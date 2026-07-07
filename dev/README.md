@@ -14,7 +14,7 @@ Start the local service dependencies, including the local OCI registry on `local
 docker compose -f dev/compose.yml up -d
 ```
 
-Use a fixed ingress entry point for the compute cluster so local traffic stays stable:
+Use a fixed gateway entry point for the compute cluster so local traffic stays stable:
 
 ```bash
 k3d cluster create compute \
@@ -25,15 +25,8 @@ k3d cluster create compute \
   || true
 ```
 
-Use `localhost:8443` as the compute ingress host in local config.
+Use `http://localhost:8080` as the compute ingress host in local config. The local gateway runs plaintext HTTP through the k3d load-balancer mapping unless a gateway TLS certificate is supplied.
 Use `localhost:15000/<image>:<tag>` for images pushed to the local registry.
-
-Install Kong into the cluster before provisioning apps:
-
-```bash
-kubectl apply -k dev/kong
-kubectl -n kong rollout status deployment/kong-ingress-kong --timeout=5m
-```
 
 Export the kubeconfig afterward:
 

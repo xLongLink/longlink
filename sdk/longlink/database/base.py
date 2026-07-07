@@ -35,57 +35,51 @@ class User(Base, table=True):
 
     # Metadata
     name: str = Field(sa_column=Column(String(255), nullable=False))
+    role: str = Field(default="read", sa_column=Column("role_name", String(32), nullable=False))
     email: str = Field(sa_column=Column(String(254), nullable=False))
     avatar: str = Field(default="", sa_column=Column(String(2048), nullable=False, server_default=""))
-    role_name: str = Field(default="read", sa_column=Column(String(32), nullable=False))
 
     # Audit
     created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTC_DATETIME_TYPE)
     updated_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTC_DATETIME_TYPE)
     deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTC_DATETIME_TYPE)
 
-    @property
-    def role(self) -> str:
-        """Return the user's application role name."""
-
-        return self.role_name
-
 
 LOCAL_USERS: tuple[TenantUser, ...] = (
     TenantUser(
         id=UUID("00000000-0000-0000-0000-000000000001"),
         name="Read User",
+        role="read",
         email="read@local.longlink.dev",
         avatar="",
-        role_name="read",
     ),
     TenantUser(
         id=UUID("00000000-0000-0000-0000-000000000002"),
         name="Write User",
+        role="write",
         email="write@local.longlink.dev",
         avatar="",
-        role_name="write",
     ),
     TenantUser(
         id=UUID("00000000-0000-0000-0000-000000000003"),
         name="Maintain User",
+        role="maintain",
         email="maintain@local.longlink.dev",
         avatar="",
-        role_name="maintain",
     ),
     TenantUser(
         id=UUID("00000000-0000-0000-0000-000000000004"),
         name="Admin User",
+        role="admin",
         email="admin@local.longlink.dev",
         avatar="",
-        role_name="admin",
     ),
     TenantUser(
         id=UUID("00000000-0000-0000-0000-000000000005"),
         name="Owner User",
+        role="owner",
         email="owner@local.longlink.dev",
         avatar="",
-        role_name="owner",
     ),
 )
 
@@ -144,9 +138,9 @@ async def seed_local_users(session_maker: async_sessionmaker[AsyncSession]) -> N
                 continue
 
             user.name = payload.name
+            user.role = payload.role
             user.email = payload.email
             user.avatar = payload.avatar
-            user.role_name = payload.role_name
 
         await session.commit()
 

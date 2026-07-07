@@ -74,10 +74,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
         const matching = items.filter((item) => isTabPathActive(item.pathname, pathname));
 
         return matching.reduce<string | undefined>(
-            (best, item) =>
-                best === undefined || item.pathname.length > best.length
-                    ? item.pathname
-                    : best,
+            (best, item) => (best === undefined || item.pathname.length > best.length ? item.pathname : best),
             undefined
         );
     }
@@ -124,7 +121,6 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                                 <Link
                                     key={tab.label}
                                     to={tab.href}
-                                    replace
                                     aria-current={isActive ? 'page' : undefined}
                                     className={cn(
                                         'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground',

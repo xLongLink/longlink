@@ -10,6 +10,8 @@ from src.environments import env
 from fastapi.testclient import TestClient
 from src.models.applications import ApplicationCreate
 from src.database.services import users
+from src.database.session import session_scope
+from src.database.models.computes import ComputeRegistry
 from src.database.services import applications as application_service
 from src.database.services import organizations as organization_service
 
@@ -17,6 +19,7 @@ LOCAL_ORG = "test"
 LOCAL_ORG_AVATAR = "https://example.com/organizations/test.png"
 LOCAL_ADMIN_USERNAME = "admin"
 LOCAL_ADMIN_PASSWORD = "admin"
+LOCAL_COMPUTE_INGRESS_HOST = "http://localhost:8080"
 OIDC_LOGIN_TIMEOUT_SECONDS = 20.0
 
 LOCAL_APP = {
@@ -130,6 +133,18 @@ async def sync_local_application(application_id: UUID, organization_id: UUID, us
     )
 
 
+async def sync_local_compute_ingress_host(registry_id: UUID) -> None:
+    """Update the local compute registry gateway host after development port changes."""
+
+    async with session_scope() as session:
+        registry = await session.get(ComputeRegistry, registry_id)
+        if registry is None:
+            raise RuntimeError("Local compute registry could not be loaded")
+
+        registry.ingress_host = LOCAL_COMPUTE_INGRESS_HOST
+        await session.commit()
+
+
 def main() -> None:
     """Seed the control plane database via the public HTTP API."""
     from main import app  # noqa: PLC0415  — late import avoids circular issues
@@ -209,18 +224,28 @@ def main() -> None:
     kubeconfig = KUBECONFIG.read_text(encoding="utf-8")
 
     computes = client.get("/api/computes").json()
-    if not any(c["ingress_host"] == "localhost:8443" for c in computes):
+    compute = next(
+        (
+            compute
+            for compute in computes
+            if compute.get("name") == "local" or compute.get("ingress_host") == LOCAL_COMPUTE_INGRESS_HOST
+        ),
+        None,
+    )
+    if compute is None:
         r = client.post(
             "/api/computes",
             json={
                 "kind": "kubernetes",
                 "name": "local",
                 "kubeconfig": kubeconfig,
-                "ingress_host": "localhost:8443",
+                "ingress_host": LOCAL_COMPUTE_INGRESS_HOST,
                 "location_id": location_id,
             },
         )
         r.raise_for_status()
+    elif compute.get("ingress_host") != LOCAL_COMPUTE_INGRESS_HOST and compute.get("id"):
+        asyncio.run(sync_local_compute_ingress_host(UUID(str(compute["id"]))))
 
     # ------------------------------------------------------------------
     # Organization

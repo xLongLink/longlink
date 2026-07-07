@@ -32,6 +32,14 @@ describe('apiUrl', () => {
 
         expect(apiUrl('/api/healthz')).toBe('https://api.example.test/api/healthz');
     });
+
+    it('allows absolute HTTP gateway URLs', () => {
+        expect(apiUrl('https://apps.example.test/api/applications/app/proxy/metadata.json')).toBe(
+            'https://apps.example.test/api/applications/app/proxy/metadata.json'
+        );
+        expect(() => apiUrl('mailto:help@example.test')).toThrow('API URL must use HTTP(S)');
+        expect(() => apiUrl('https://apps.example.test\\evil')).toThrow('API path must not contain backslashes');
+    });
 });
 
 describe('createApiHeaders', () => {

@@ -53,6 +53,26 @@ async def get(registry_id: UUID, include_deleted: bool = False) -> ComputeRegist
         return result.scalar_one_or_none()
 
 
+async def get_by_proxy_secret(proxy_secret: str) -> ComputeRegistry | None:
+    """Return one active compute backend by its gateway proxy secret."""
+
+    async with session_scope() as session:
+        statement = (
+            select(ComputeRegistry)
+            .options(
+                selectinload(ComputeRegistry.created_by),
+                selectinload(ComputeRegistry.updated_by),
+                selectinload(ComputeRegistry.deleted_by),
+            )
+            .where(
+                ComputeRegistry.proxy_secret == proxy_secret,
+                ComputeRegistry.deleted_at.is_(None),
+            )
+        )
+        result = await session.execute(statement)
+        return result.scalar_one_or_none()
+
+
 async def create(
     kind: ComputeKind,
     name: str,
@@ -60,6 +80,9 @@ async def create(
     ingress_host: str,
     location_id: UUID,
     user: User,
+    gateway_tls_key: str | None = None,
+    gateway_tls_certificate: str | None = None,
+    gateway_load_balancer_ip: str | None = None,
 ) -> ComputeRegistry:
     """Create one compute backend registration."""
 
@@ -79,6 +102,9 @@ async def create(
             ingress_host=ingress_host,
             ingress_name=INGRESS_NAME,
             proxy_secret=proxy_secret_value,
+            gateway_tls_key=gateway_tls_key,
+            gateway_tls_certificate=gateway_tls_certificate,
+            gateway_load_balancer_ip=gateway_load_balancer_ip,
             location_id=location_id,
         )
         compute.created_id = user.id

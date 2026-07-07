@@ -9,12 +9,12 @@ class Compute(ABC):
         ├── App A Deployment        # Deployment for App A
         ├── App A Service           # Internal ClusterIP Service for App A
         ├── App A Secret            # Secret containing all app configuration
-        └── Proxy                   # Shared internal proxy service
+        └── Gateway                 # Shared Envoy gateway service
     """
 
     @abstractmethod
     async def setup(self) -> None:
-        """Bootstrap the cluster resources managed by the control plane."""
+        """Bootstrap the cluster gateway resources managed by the control plane."""
 
     @abstractmethod
     async def namespace(self, organization: str) -> None:
@@ -25,6 +25,7 @@ class Compute(ABC):
         self,
         organization: str,
         application: str,
+        application_id: str,
         image: str,
         port: int,
         secrets: dict[str, str],
@@ -51,19 +52,6 @@ class Compute(ABC):
     @abstractmethod
     def application_deployment_ready(self, organization: str, application: str) -> bool:
         """Return whether the current application Deployment rollout is ready."""
-
-    @abstractmethod
-    def proxy(
-        self,
-        organization: str,
-        application: str,
-        path: str,
-        method: str,
-        query_params: list[tuple[str, str]],
-        headers: dict[str, str],
-        body: bytes,
-    ) -> tuple[bytes, int, dict[str, str]]:
-        """Proxy one request to an application service."""
 
     @abstractmethod
     async def namespaces(self) -> list[str]:

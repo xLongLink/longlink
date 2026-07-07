@@ -23,6 +23,7 @@ METHOD_REQUIRED_ROLES = {
     "PATCH": "write",
     "DELETE": "maintain",
 }
+PUBLIC_RUNTIME_PATHS = {"/health", "/metadata.json"}
 LOCAL_USERS_BY_ID = {user.id: user for user in LOCAL_USERS}
 DEFAULT_LOCAL_USER = LOCAL_USERS[0]
 
@@ -33,15 +34,9 @@ class CurrentUser:
 
     id: UUID
     name: str
-    role_name: str
+    role: str
     email: str = ""
     avatar: str = ""
-
-    @property
-    def role(self) -> str:
-        """Return the current user's role name."""
-
-        return self.role_name
 
 
 _current_user: ContextVar[CurrentUser | None] = ContextVar("current_user", default=None)
@@ -77,6 +72,9 @@ def install_user_middleware(app: FastAPI, *, require_header: bool) -> None:
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
         """Bind the current user and enforce the role required by the HTTP method."""
+
+        if request.url.path in PUBLIC_RUNTIME_PATHS:
+            return await call_next(request)
 
         try:
             # Resolve the user once so app code and method checks see the same scoped identity.
@@ -128,7 +126,7 @@ def user_from_headers(user_id: str | None, role: str | None, *, require_header: 
         name="",
         email="",
         avatar="",
-        role_name=normalized_role,
+        role=normalized_role,
     )
 
 
@@ -140,7 +138,7 @@ def current_user_from_local(user: TenantUser) -> CurrentUser:
         name=user.name,
         email=user.email,
         avatar=user.avatar,
-        role_name=user.role_name,
+        role=user.role,
     )
 
 

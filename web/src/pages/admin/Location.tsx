@@ -10,7 +10,7 @@ import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTab
 import { DataTable } from '@/components/DataTable';
 import CreateLocationDialog from '@/components/dialogs/CreateLocationDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
-import { useLocations } from '@/hooks/use-locations';
+import { useLocations } from '@/data/admin';
 import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiVoid } from '@/lib/api';
 import { locationsQueryKey } from '@/lib/query-keys';

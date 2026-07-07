@@ -20,7 +20,7 @@ export function useCollectionQuery<TData>(
 ): UseCollectionQueryResult<TData> {
     const query = useApiQuery<Array<TData>>(path, {
         retry: options.retry ?? false,
-        refetchOnMount: options.refetchOnMount ?? 'always',
+        refetchOnMount: options.refetchOnMount,
         enabled: options.enabled,
         request: options.request,
     });

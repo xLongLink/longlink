@@ -1,3 +1,1 @@
-from . import names, images, namespace, templates
-
-__all__ = ["images", "names", "namespace", "templates"]
+from . import names, images, buckets, namespace, templates

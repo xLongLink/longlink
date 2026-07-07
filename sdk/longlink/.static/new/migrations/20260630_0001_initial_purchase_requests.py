@@ -1,9 +1,3 @@
-"""
-Revision ID: 20260630_0001
-Revises:
-Create Date: 2026-06-30 00:00:00.000000
-"""
-
 import sqlmodel
 import sqlalchemy as sa
 from alembic import op

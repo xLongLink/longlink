@@ -7,9 +7,15 @@
         <HeroTitle i18n="dashboard.title" />
         <HeroDescription i18n="dashboard.description" />
         <HeroAction>
-            <A to="/requests" i18n="dashboard.openRequests">
-                <Icon name="arrow-right" />
-            </A>
+            <Flex>
+                <Avatar size="lg">
+                    <AvatarImage src="/api/assets/logo" alt="Organization logo" />
+                    <AvatarFallback i18n="dashboard.logoFallback" />
+                </Avatar>
+                <A to="/requests" i18n="dashboard.openRequests">
+                    <Icon name="arrow-right" />
+                </A>
+            </Flex>
         </HeroAction>
     </Hero>
 

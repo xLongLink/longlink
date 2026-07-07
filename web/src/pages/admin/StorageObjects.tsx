@@ -3,8 +3,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { useStorageObjects } from '@/hooks/use-storage-objects';
-import { useStorages } from '@/hooks/use-storages';
+import { useStorageObjects, useStorages } from '@/data/storage';
 import { useTranslation } from '@/lib/i18n';
 import type { ApiStorageObject } from '@/lib/types';
 import { formatBytes, formatDateTime } from '@/lib/utils';

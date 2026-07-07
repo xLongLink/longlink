@@ -6,7 +6,7 @@ import { Stack } from '@/components/ui/stack';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-02',
+    lastUpdated: '2026-07-07',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/self-hosted.tsx',
 };
 
@@ -41,6 +41,14 @@ export const content = (
             </Li>
             <Li>
                 <Code>SESSION_KEY</Code> is a random signing secret with at least 32 characters.
+            </Li>
+            <Li>
+                <Code>CONTROL_PLANE_URL</Code> is the public API origin that per-cluster gateways call for request
+                authorization.
+            </Li>
+            <Li>
+                <Code>SESSION_COOKIE_DOMAIN</Code> can share the session cookie with app gateway subdomains when the
+                gateway and control plane use sibling hosts.
             </Li>
             <Li>
                 <Code>DEVELOPMENT</Code> must be unset or <Code>false</Code> in production.
@@ -93,23 +101,30 @@ export const content = (
             Compute
         </Heading>
         <P>
-            Register compute backends after startup. The API stores the registered kubeconfig and proxies authenticated
-            application traffic to managed ClusterIP services through the Kubernetes API.
+            Register dedicated compute clusters after startup. The API stores the registered kubeconfig, gateway host,
+            optional LoadBalancer IP, and gateway TLS certificate material, installs a per-cluster Envoy gateway, and
+            keeps gateway routes synchronized with managed application services.
+        </P>
+        <P>
+            Production compute registrations require gateway TLS certificate material. If the gateway host and control
+            plane host differ, <Code>SESSION_COOKIE_DOMAIN</Code> must cover both hosts so browser sessions reach the
+            authorization endpoint.
         </P>
         <Heading id="startup-validation" level="h2">
             Startup Validation
         </Heading>
         <P>
-            When development mode is off, the API fails startup for placeholder session keys, short session keys, or
-            non-HTTPS OIDC issuer and redirect URLs. Keep local HTTP OIDC values only in development mode.
+            When development mode is off, the API fails startup for placeholder session keys, short session keys,
+            non-HTTPS control-plane URLs, or non-HTTPS OIDC issuer and redirect URLs. Keep local HTTP values only in
+            development mode.
         </P>
         <Heading id="deployment-model" level="h2">
             Deployment Model
         </Heading>
-        <P>Deploy the control plane container and application containers in the same Kubernetes cluster.</P>
+        <P>Deploy the control plane outside or inside the compute clusters.</P>
         <P>
-            This keeps control-plane traffic inside the cluster boundary and avoids public ingress for application
-            routing.
+            Application traffic enters each compute cluster through its LongLink gateway. The gateway calls the public
+            control-plane API for authorization, then forwards approved requests to internal ClusterIP services.
         </P>
     </Stack>
 );

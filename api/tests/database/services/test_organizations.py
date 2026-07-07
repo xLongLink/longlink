@@ -223,7 +223,7 @@ async def test_database_users_returns_active_members_ordered_by_email(users: tup
 
     # Assert
     assert [user.email for user in database_users] == [owner.email, member.email]
-    assert [user.role_name for user in database_users] == [OrganizationRoles.owner.value, OrganizationRoles.write.value]
+    assert [user.role for user in database_users] == [OrganizationRoles.owner.value, OrganizationRoles.write.value]
 
 
 async def test_get_includes_application_role_for_requested_user(users: tuple[User, User, User]) -> None:

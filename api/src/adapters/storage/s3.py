@@ -7,7 +7,6 @@ from .base import Storage, StorageObjectData, StorageBucketUsage, StorageRuntime
 from typing import TYPE_CHECKING, cast
 from datetime import datetime
 from contextlib import AbstractAsyncContextManager, suppress
-from tenant.storage import bucket_name, shared_bucket_name, organization_bucket_prefix
 from src.environments import env
 from botocore.exceptions import ClientError
 
@@ -154,7 +153,12 @@ class S3(Storage):
 
             await client.delete_bucket(Bucket=bucket_name)
 
-    async def application_credentials(self, organization: str, application: str) -> StorageRuntimeCredentials:
+    async def application_credentials(
+        self,
+        application_bucket: str,
+        shared_bucket: str,
+        other_application_buckets: list[str],
+    ) -> StorageRuntimeCredentials:
         """Return validated runtime credentials for one application."""
 
         credentials: StorageRuntimeCredentials = {
@@ -165,11 +169,7 @@ class S3(Storage):
         if env.DEVELOPMENT and os.getenv("ENVIRONMENT", "").strip().lower() != "testing":
             return credentials
 
-        application_bucket = bucket_name(organization, application)
-        shared_bucket = shared_bucket_name(organization)
         check_key = f".longlink/access-check-{secrets.token_urlsafe(8)}"
-
-        listed_bucket_names = await self.buckets()
 
         async with self._client(credentials["access_key_id"], credentials["secret_access_key"]) as runtime_client:
             # Prove the runtime can read and write its own application bucket.
@@ -206,12 +206,9 @@ class S3(Storage):
                 await runtime_client.delete_object(Bucket=shared_bucket, Key=check_key)
                 raise ValueError("Storage runtime credentials must not write to the shared bucket")
 
-            # Reject credentials that can access another app bucket already visible in this organization.
-            bucket_prefix = organization_bucket_prefix(organization)
-            for listed_bucket_name in listed_bucket_names:
-                if listed_bucket_name in {application_bucket, shared_bucket} or not listed_bucket_name.startswith(
-                    bucket_prefix
-                ):
+            # Reject credentials that can access another assigned application bucket.
+            for listed_bucket_name in other_application_buckets:
+                if listed_bucket_name in {application_bucket, shared_bucket}:
                     continue
 
                 try:
@@ -244,22 +241,21 @@ class S3(Storage):
 
         return credentials
 
-    async def bucket(self, organization: str, bucket_slug: str) -> str:
-        """Create one managed organization bucket and return its name."""
+    async def bucket(self, bucket_name: str) -> str:
+        """Create one assigned bucket and return its name."""
 
-        managed_bucket_name = bucket_name(organization, bucket_slug)
         async with self._client() as client:
             # S3-compatible services disagree on repeated creates, so verify access when a bucket exists.
             try:
-                await client.create_bucket(Bucket=managed_bucket_name)
+                await client.create_bucket(Bucket=bucket_name)
             except ClientError as exc:
                 error_code = str(exc.response.get("Error", {}).get("Code", ""))
                 if error_code not in {"BucketAlreadyExists", "BucketAlreadyOwnedByYou"}:
                     raise
 
-                await client.head_bucket(Bucket=managed_bucket_name)
+                await client.head_bucket(Bucket=bucket_name)
 
-        return managed_bucket_name
+        return bucket_name
 
     async def setup(self) -> None:
         """Initialize the S3 backend used by the control plane."""

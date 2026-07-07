@@ -29,6 +29,7 @@
             "title": "Healthy request checklist"
         },
         "description": "Track office purchase requests, review policy, and keep the approval queue visible.",
+        "logoFallback": "LL",
         "openRequests": "Open requests",
         "policy": {
             "description": "The sample keeps the rules simple: amount decides who reviews and how quickly reviewers should respond.",

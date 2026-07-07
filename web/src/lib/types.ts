@@ -47,6 +47,7 @@ export type ApiOrganizationApplication = {
     status: 'creating' | 'running' | 'failed';
     role: ApplicationRole | null;
     description: string | null;
+    gateway_url: string | null;
     icon: IconName | null;
     created_at: string;
     updated_at: string;
@@ -99,6 +100,7 @@ export type ApiOrganizationSummary = {
     slug: string;
     avatar: string;
     location_id: string | null;
+    shared_storage_bucket_name: string | null;
     created_at: string;
     updated_at: string;
     created_by: ApiUserSummary | null;
@@ -114,6 +116,7 @@ export type ApiOrganizationDetails = {
     avatar: string;
     location_id: string | null;
     location: ApiLocation;
+    shared_storage_bucket_name: string | null;
     created_at: string;
     updated_at: string;
     created_by: ApiUserSummary | null;
@@ -252,6 +255,7 @@ export type ApiComputeRegistry = {
     kind: string;
     slug: string;
     ingress_host: string;
+    gateway_load_balancer_ip: string | null;
     location_id: string;
     created_at: string;
     created_by: ApiUserSummary | null;

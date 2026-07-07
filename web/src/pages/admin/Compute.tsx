@@ -9,8 +9,8 @@ import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTab
 import { DataTable } from '@/components/DataTable';
 import ConnectComputeDialog from '@/components/dialogs/ConnectComputeDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
-import { useComputes } from '@/hooks/use-computes';
-import { useLocations } from '@/hooks/use-locations';
+import { useLocations } from '@/data/admin';
+import { useComputes } from '@/data/compute';
 import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';

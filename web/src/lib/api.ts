@@ -27,8 +27,22 @@ export function apiQueryKey(path: string): [string, string] {
 export function apiUrl(path: string): string {
     const baseUrl = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
 
-    if (ABSOLUTE_API_PATH_PATTERN.test(path) || path.startsWith('//') || path.includes('\\')) {
-        throw new Error('API path must be same-origin relative');
+    if (path.includes('\\')) {
+        throw new Error('API path must not contain backslashes');
+    }
+
+    if (ABSOLUTE_API_PATH_PATTERN.test(path)) {
+        const url = new URL(path);
+
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+            throw new Error('API URL must use HTTP(S)');
+        }
+
+        return path;
+    }
+
+    if (path.startsWith('//')) {
+        throw new Error('API path must be relative or absolute HTTP(S)');
     }
 
     if (!baseUrl) {

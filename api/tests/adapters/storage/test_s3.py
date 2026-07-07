@@ -1,6 +1,5 @@
 import pytest
 import asyncio
-from tenant.storage import shared_buckets
 from collections.abc import AsyncIterator
 from botocore.exceptions import EndpointConnectionError
 from src.adapters.storage.s3 import S3
@@ -56,9 +55,9 @@ async def minio_storage() -> AsyncIterator[S3]:
 async def test_s3_adapter_manages_real_minio_buckets_objects_usage_and_cleanup(minio_storage: S3) -> None:
     """Exercise S3 bucket, object, usage, credential, and cleanup behavior against real MinIO."""
 
-    shared_bucket = await shared_buckets.ensure(minio_storage, "acme")
-    repeated_shared_bucket = await shared_buckets.ensure(minio_storage, "acme")
-    app_bucket = await minio_storage.bucket("acme", "dashboard")
+    shared_bucket = await minio_storage.bucket("longlink-acme-shared")
+    repeated_shared_bucket = await minio_storage.bucket("longlink-acme-shared")
+    app_bucket = await minio_storage.bucket("longlink-acme-dashboard")
     async with minio_storage._client() as client:
         await client.put_object(Bucket=app_bucket, Key="reports/july.csv", Body=b"id,total\n1,42\n")
         await client.put_object(Bucket=app_bucket, Key="reports/august.csv", Body=b"id,total\n2,84\n")
@@ -69,7 +68,7 @@ async def test_s3_adapter_manages_real_minio_buckets_objects_usage_and_cleanup(m
     usage = await minio_storage.bucket_usage(app_bucket)
 
     with pytest.raises(ValueError, match="shared bucket"):
-        await minio_storage.application_credentials("acme", "dashboard")
+        await minio_storage.application_credentials(app_bucket, shared_bucket, [])
 
     await minio_storage.delete_bucket(app_bucket)
     await minio_storage.delete_bucket(shared_bucket)

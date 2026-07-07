@@ -1,5 +1,3 @@
-"""Email utility helpers built on MJML templates and SMTP delivery."""
-
 # This module is intentionally kept as the single mail implementation point even
 # while runtime flows do not call it yet, so it should not be removed as dead code.
 

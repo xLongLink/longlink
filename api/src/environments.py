@@ -1,5 +1,6 @@
 import os
 import urllib.parse
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEVELOPMENT_CORS_ORIGINS = (
@@ -56,6 +57,10 @@ class Env(BaseSettings):
 
     # Session cookies
     SESSION_KEY: str
+    SESSION_COOKIE_DOMAIN: str | None = None
+
+    # Public control-plane origin used by remote cluster gateways for authorization checks.
+    CONTROL_PLANE_URL: str = "http://localhost:8000"
 
     # Control plane database URL
     DATABASE_URL: str
@@ -97,6 +102,17 @@ class Env(BaseSettings):
     OPERATION_HEARTBEAT_SECONDS: int = 30
     OPERATION_RETRY_DELAY_SECONDS: int = 5
 
+    @field_validator("SESSION_COOKIE_DOMAIN", mode="before")
+    @classmethod
+    def normalize_session_cookie_domain(cls, value: object) -> object:
+        """Treat a blank cookie domain as unset so session cookies remain host-only."""
+
+        if isinstance(value, str):
+            stripped_value = value.strip()
+            return stripped_value or None
+
+        return value
+
     model_config = SettingsConfigDict(
         env_file=_environment_files(),
         env_file_encoding="utf-8",
@@ -114,8 +130,8 @@ def validate_production_settings(settings: Env) -> None:
     if len(session_key) < MINIMUM_SESSION_KEY_LENGTH or session_key in INSECURE_SESSION_KEYS:
         errors.append("SESSION_KEY must be at least 32 random characters and cannot use a placeholder value")
 
-    # OIDC traffic carries authentication secrets, so production auth endpoints must be HTTPS.
-    for field_name in ("OIDC_ISSUER", "OIDC_REDIRECT_URI"):
+    # OIDC and gateway authorization traffic carry authentication secrets, so production endpoints must be HTTPS.
+    for field_name in ("CONTROL_PLANE_URL", "OIDC_ISSUER", "OIDC_REDIRECT_URI"):
         value = str(getattr(settings, field_name)).strip()
         parsed_url = urllib.parse.urlsplit(value)
         if parsed_url.scheme != "https" or not parsed_url.netloc:

@@ -46,7 +46,7 @@ async def test_sync_upserts_active_users_and_soft_deletes_stale_rows() -> None:
         name="Owner User",
         email="owner@example.com",
         avatar="",
-        role_name="owner",
+        role="owner",
         created_at=timestamp,
         updated_at=timestamp,
     )
@@ -58,7 +58,12 @@ async def test_sync_upserts_active_users_and_soft_deletes_stale_rows() -> None:
     update_statement, update_params = connection.calls[1]
     assert "INSERT INTO users" in compiled_sql(insert_statement)
     assert "ON CONFLICT" in compiled_sql(insert_statement)
-    assert insert_params == [active_user.model_dump()]
+    assert insert_params == [
+        {
+            **active_user.model_dump(exclude={"role"}),
+            "role_name": "owner",
+        }
+    ]
     assert "UPDATE users" in compiled_sql(update_statement)
     assert update_params is None
 

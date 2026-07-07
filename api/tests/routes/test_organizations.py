@@ -116,7 +116,7 @@ async def test_create_organization_initializes_database(
     assert calls[1][0] == "sync_users"
     assert calls[1][1] == "acme"
     assert synced_users[0].email == owner.email
-    assert synced_users[0].role_name == "owner"
+    assert synced_users[0].role == "owner"
 
 
 async def test_create_organization_initializes_storage(
@@ -155,9 +155,9 @@ async def test_create_organization_initializes_storage(
             self.access_key_id = access_key_id
             self.secret_access_key = secret_access_key
 
-        async def bucket(self, organization: str, application: str) -> str:
-            calls.append(("bucket", organization, application))
-            return f"longlink-{organization}-{application}"
+        async def bucket(self, bucket_name: str) -> str:
+            calls.append(("bucket", bucket_name))
+            return bucket_name
 
     monkeypatch.setattr(
         "src.operations.provisioning.adapters.storage",
@@ -177,7 +177,7 @@ async def test_create_organization_initializes_storage(
 
     # Assert
     assert response.status_code == 200
-    assert calls == [("bucket", "acme", "shared")]
+    assert calls == [("bucket", "longlink-acme-shared")]
 
 
 async def test_get_organization_returns_member_payload(

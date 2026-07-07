@@ -15,9 +15,9 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                   | Supported behavior                                                                                                                          |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hosted platform API       | Manages authentication, users, organizations, infrastructure registries, application deployment, operations, logs, and app proxying.        |
+| Hosted platform API       | Manages authentication, users, organizations, infrastructure registries, application deployment, operations, logs, and gateway authorization. |
 | Python SDK                | Provides a FastAPI app runtime, CLI, database helpers, storage helpers, XML page discovery, metadata, scaffolding, and image packaging.     |
-| API-mode frontend         | Serves public pages, docs, authenticated control-plane pages, organization pages, admin pages, and proxied app views.                       |
+| API-mode frontend         | Serves public pages, docs, authenticated control-plane pages, organization pages, admin pages, and gateway-backed app views.                |
 | SDK-mode frontend         | Serves a local embedded app runtime that renders XML pages from `/metadata.json` with deterministic local users.                            |
 | Declarative XML app model | Supports XML-defined pages with setup state, data queries, actions, expressions, translations, form bindings, and registered UI components. |
 | Local-first workflow      | Supports local services, SDK app scaffolding, image build/push, migrations, seeding, local API server, and local Vite web server.           |
@@ -61,7 +61,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Locations                | Lists and gets locations for support/admin users; administrators can create and delete unused locations.                                                      |
 | Location providers       | Supports `local`, `infomaniak`, `ovh`, `scaleway`, `hetzner`, and `exoscale`.                                                                                 |
-| Compute registries       | Creates Kubernetes compute registries with kubeconfig and ingress host; lists, gets, and deletes unused registries for support/admin users.                   |
+| Compute registries       | Creates dedicated Kubernetes compute registries with kubeconfig, gateway host, optional LoadBalancer IP, and production TLS material; lists, gets, and deletes unused registries for support/admin users. |
 | Compute inspection       | Inspects cluster resources, managed namespaces, managed-namespace pods, and pod usage when metrics are available.                                            |
 | Database registries      | Creates PostgreSQL registries with control-plane and optional runtime connection details; lists, gets, and deletes unused registries for support/admin users. |
 | Database inspection      | Inspects managed organization databases, managed database schemas, and aggregate non-system database storage usage.                                           |
@@ -100,10 +100,10 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Application verification            | Marks apps running when the current Deployment rollout is ready and failed when current rollout pods crash, hit terminal image/config wait reasons, or exceed the verification timeout. |
 | Global application listing          | Lets platform administrators list all active applications.                                                                              |
 | Application logs                    | Lets application maintainers/admins and elevated organization members fetch recent plain-text logs from the newest application pod.     |
-| Application proxy                   | Proxies `GET`, `POST`, `PUT`, `PATCH`, and `DELETE` non-root paths into running application services for users with application access and 25 MiB request/response body caps. |
+| Application gateway                 | Routes runtime traffic through per-cluster Envoy gateways exposed by production LoadBalancer services or local development Ingress and authorizes requests against the control plane before internal service forwarding. |
 | Application access roles            | Uses application membership roles for runtime access, with method-level role enforcement and elevated organization roles allowed to manage application lifecycle actions. |
 | Application member management       | Lets organization members view application permission rows and lets permitted app/org managers set or remove app roles up to their own role rank for org members. |
-| Proxy header policy                 | Rejects unsafe or ambiguously encoded proxy paths, strips static and `Connection`-declared unsafe/spoofable proxy headers, injects trusted `x-user-id` and `x-user-role`, and returns no-store 503 for unavailable apps. |
+| Gateway header policy               | Requires compute gateway secrets stored in Kubernetes Secrets for authorization, rejects unavailable apps with no-store 503, strips spoofable identity headers at the gateway, and injects trusted `x-user-id` and `x-user-role`. |
 | Registry selection                  | Uses newest active compute registries and keeps database/storage registries consistent for all apps in an organization.                 |
 | Managed resource naming             | Validates slugs and managed Kubernetes/PostgreSQL/S3 resource names before provisioning.                                                |
 
@@ -118,11 +118,11 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Application create verification operation | Supports `application.create` step `verify` for checking rollout health.                                                 |
 | Application delete cleanup operation      | Supports `application.delete` step `remove` for deleting managed app runtime resources.                                  |
 | Organization delete cleanup operation     | Supports `organization.delete` step `remove` for deleting managed organization runtime resources.                        |
-| Kubernetes provisioning                   | Creates managed namespaces plus one exact Secret, probed restricted Deployment, and ClusterIP Service per app, while refusing unmanaged namespace collisions. |
-| Kubernetes service proxy                  | Proxies requests through the Kubernetes service proxy API with 25 MiB request and response body caps.                    |
+| Kubernetes provisioning                   | Creates managed namespaces, gateway-only app ingress policies, one exact Secret, health-probed restricted Deployment, and ClusterIP Service per app, while refusing unmanaged namespace collisions. |
+| Kubernetes gateway                        | Installs and synchronizes a per-cluster Envoy gateway with Secret-backed authorization, optional TLS termination, health probes, access logs, local rate limits, a production LoadBalancer Service or development Ingress, and routes to managed ClusterIP app services. |
 | PostgreSQL provisioning                   | Creates organization databases, migrates the shared schema, creates app schemas, runtime login roles, and read/write app plus read-only shared grants. |
 | PostgreSQL resource inspection            | Inspects databases, schemas, usage, tables, and preview rows.                                                            |
-| S3-compatible provisioning                | Creates or reuses shared and app buckets, and validates runtime credentials for app read/write, shared read-only, and cross-app denial before injection. |
+| S3-compatible provisioning                | Creates or reuses assigned shared/app buckets, persists assignments, and validates runtime credentials for app read/write, shared read-only, and cross-app denial before injection. |
 | S3-compatible resource inspection         | Lists buckets and object metadata for storage browsers.                                                                  |
 | Invitation email utility                  | Provides MJML/SMTP invitation email helpers when email settings are complete.                                            |
 
@@ -132,11 +132,11 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                   | Supported behavior                                                                                     |
 | ------------------------- | ------------------------------------------------------------------------------------------------------ |
-| SDK exports               | Exports app, router, user/auth helpers, XML, env, database, app/shared storage, and import-time runtime objects. |
+| SDK exports               | Exports app, router, user/auth helpers, XML, env, database, organization assets, app/shared storage, and import-time runtime objects. |
 | SDK environment model     | Reads `LONGLINK_` runtime mode, database, and storage settings from process env.                       |
 | App env file loading      | Loads app-defined `.env` and `.env.sample` settings while ignoring extra keys.                         |
 | SDK package data          | Packages static web and XSD assets and requires Python 3.14 or newer.                                  |
-| LongLink FastAPI app      | Includes SDK routes, API-prefixed user routes, audit middleware, optional i18n/pages, frontend assets, and development CORS. |
+| LongLink FastAPI app      | Includes SDK routes, public runtime health, API-prefixed user routes, audit middleware, optional i18n/pages, frontend assets, and development CORS. |
 | SDK i18n route            | Mounts `src/i18n` under `/i18n` when translation files exist.                                          |
 | SDK XML page discovery    | Validates XML files in `src/pages` against XSD and registers them as GET routes under `/pages/...xml`. |
 | Dynamic SDK page routes   | Derives browser routes and route params from page filenames such as `issues/[issue].xml`.              |
@@ -185,6 +185,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | S3 endpoint URL parsing       | Creates an S3 filesystem from `s3+http://key:secret@endpoint` style URLs.                                    |
 | App bucket scope              | Scopes app paths to `STORAGE_BUCKET` with `DirFileSystem`.                                                   |
 | Shared bucket scope           | Exposes `shared_fs` and `create_shared_fs()` scoped to `STORAGE_SHARED_BUCKET` when configured.              |
+| Organization assets           | Exposes `longlink.assets.logo()` using shared `tenant.storage.assets` definitions, SDK static fallback locally, and shared storage in production. |
 
 ### XML Utilities and Scaffold
 
@@ -197,6 +198,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Scaffold app entrypoint      | New apps include `main.py` with LongLink app setup and the office-operations router.                                                                                                                                            |
 | Scaffold env sample          | New apps include required and optional environment examples.                                                                                                                                                                    |
 | Scaffold request API         | New apps include purchase-request table, schemas, service, API-prefixed list/get/create/status routes, and attachment file routes.                                                                                              |
+| Scaffold organization assets | New apps include an organization logo route and dashboard avatar that demonstrate consuming the SDK-managed `longlink.assets.logo()`.                                                                                             |
 | Scaffold XML app             | New apps include dashboard, purchase-request list/detail, and settings XML pages covering navigation tabs, actions, queries, translations, local state, form controls, tables, menus, dialogs, files, and dynamic routes.       |
 | Scaffold initial migration   | New apps include an initial purchase-request Alembic migration.                                                                                                                                                                 |
 | Scaffold testing mode        | New app tests use `LONGLINK_ENV=testing`, in-memory database settings, and a smoke test.                                                                                                                                        |
@@ -212,10 +214,10 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | API URL resolution    | Supports `VITE_API_URL` API prefixing and credentialed requests.                                                                 |
 | SDK user header       | Adds `x-user-id` from local storage in SDK mode unless already supplied.                                                         |
 | Lucide icon subset    | Renders a fixed 30-icon Lucide subset directly in the web bundle and falls back to `box` for unsupported XML icon names.          |
-| API route tree        | Exposes public, docs, legal, organization, settings, admin, resource, and proxied app routes.                                    |
+| API route tree        | Exposes public, docs, legal, organization, settings, admin, resource, and gateway-backed app routes.                            |
 | SDK wildcard route    | Routes every SDK-mode path to the SDK application view.                                                                          |
 | Auth guard            | Shows sign-in for anonymous users, enforces platform role hierarchy, and renders 404 for insufficient access.                    |
-| Organization app view | Resolves org/app slugs, enforces app access roles, fetches proxied metadata, renders static/dynamic XML pages, and exposes logs. |
+| Organization app view | Resolves org/app slugs, enforces app access roles, fetches gateway metadata, renders static/dynamic XML pages, and exposes logs. |
 | Top layout shell      | Provides shared header, brand, breadcrumbs, and active tabs.                                                                     |
 | XML app layout shell  | Provides app tab navigation, tab icons, SDK docs link, and SDK user selector.                                                    |
 | Docs layout           | Provides docs sidebar, breadcrumbs, table of contents, active scroll tracking, metadata, and edit links.                         |

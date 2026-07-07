@@ -107,7 +107,7 @@ async def create_project() -> None:
                 database. Applications read those users; they do not own login or membership management.
             </Li>
             <Li>
-                Requests proxied through the control plane include <Code>x-user-id</Code> and <Code>x-user-role</Code>.
+                Requests proxied through the LongLink gateway include <Code>x-user-id</Code> and <Code>x-user-role</Code>.
                 The SDK audit middleware reads the user id and fills create, update, and delete audit fields during
                 database writes.
             </Li>

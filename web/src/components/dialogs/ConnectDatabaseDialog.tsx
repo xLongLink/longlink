@@ -5,7 +5,7 @@ import { RegistryDialogShell, RegistryLocationField } from '@/components/dialogs
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useLocations } from '@/hooks/use-locations';
+import { useLocations } from '@/data/admin';
 import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';

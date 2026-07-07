@@ -43,7 +43,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             name="Owner User",
             email="owner@example.com",
             avatar="",
-            role_name="owner",
+            role="owner",
             created_at=datetime(2026, 7, 1, tzinfo=UTC),
             updated_at=datetime(2026, 7, 1, tzinfo=UTC),
         )

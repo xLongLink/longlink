@@ -3,7 +3,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
 
 import { DataTable } from '@/components/DataTable';
-import { useOperations } from '@/hooks/use-operations';
+import { useOperations } from '@/data/admin';
 import { useTranslation } from '@/lib/i18n';
 import type { ApiOperation } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils';

@@ -10,8 +10,8 @@ import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTab
 import { DataTable } from '@/components/DataTable';
 import ConnectStorageDialog from '@/components/dialogs/ConnectStorageDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
-import { useLocations } from '@/hooks/use-locations';
-import { useStorages } from '@/hooks/use-storages';
+import { useLocations } from '@/data/admin';
+import { useStorages } from '@/data/storage';
 import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';

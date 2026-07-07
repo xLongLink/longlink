@@ -14,17 +14,11 @@ class User(BaseModel):
 
     # Metadata
     name: str = Field(max_length=255)
+    role: str = Field(default="read", max_length=32)
     email: str = Field(max_length=254)
     avatar: str = Field(default="", max_length=2048)
-    role_name: str = Field(default="read", max_length=32)
 
     # Audit
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
     deleted_at: datetime | None = None
-
-    @property
-    def role(self) -> str:
-        """Return the user's application role name."""
-
-        return self.role_name

@@ -5,6 +5,9 @@ describe('resolveUrl', () => {
     it('joins base and relative paths', () => {
         expect(resolveUrl('/api', '/items')).toBe('/api/items');
         expect(resolveUrl('/api/', 'items')).toBe('/api/items');
+        expect(resolveUrl('https://apps.example/api/applications/123/proxy/', '/items')).toBe(
+            'https://apps.example/api/applications/123/proxy/items'
+        );
     });
 
     it('returns absolute urls unchanged', () => {
@@ -23,6 +26,9 @@ describe('resolveRequestUrl', () => {
     it('resolves app-relative request paths', () => {
         expect(resolveRequestUrl('/api/applications/123/proxy', '/items')).toBe('/api/applications/123/proxy/items');
         expect(resolveRequestUrl('/api/applications/123/proxy/', 'items')).toBe('/api/applications/123/proxy/items');
+        expect(resolveRequestUrl('https://apps.example/api/applications/123/proxy/', '/items')).toBe(
+            'https://apps.example/api/applications/123/proxy/items'
+        );
     });
 
     it('rejects external request URLs', () => {

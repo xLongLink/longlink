@@ -23,6 +23,7 @@ class ApplicationStartupState(str, Enum):
 
 
 POD_ROLLOUT_GRACE_SECONDS = 30
+POD_STARTUP_FAILURE_GRACE_SECONDS = 2 * 60
 APPLICATION_VERIFICATION_TIMEOUT_SECONDS = 15 * 60
 FAILED_CONTAINER_WAITING_REASONS = {
     "CrashLoopBackOff",
@@ -70,6 +71,10 @@ def application_pods_startup_state(pods: list[Any], operation_created_at: dateti
     if not relevant_pods:
         return ApplicationStartupState.pending
 
+    failure_grace_elapsed = datetime.now(UTC) - operation_created_at >= timedelta(
+        seconds=POD_STARTUP_FAILURE_GRACE_SECONDS
+    )
+
     ready_pods = 0
     for pod in relevant_pods:
         status = getattr(pod, "status", None)
@@ -104,9 +109,16 @@ def application_pods_startup_state(pods: list[Any], operation_created_at: dateti
                 continue
 
             if state.waiting is not None and state.waiting.reason in FAILED_CONTAINER_WAITING_REASONS:
+                # Crash loops can recover after transient startup dependencies, such as DNS or database readiness.
+                if state.waiting.reason == "CrashLoopBackOff" and not failure_grace_elapsed:
+                    continue
+
                 pod_dead = True
 
             if state.terminated is not None and state.terminated.exit_code != 0:
+                if not failure_grace_elapsed:
+                    continue
+
                 pod_dead = True
 
         if pod_dead:

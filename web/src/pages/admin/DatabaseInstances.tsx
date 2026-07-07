@@ -3,8 +3,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Link, useParams } from 'react-router';
 
 import { DataTable } from '@/components/DataTable';
-import { useDatabaseInstances } from '@/hooks/use-database-instances';
-import { useDatabases } from '@/hooks/use-databases';
+import { useDatabaseInstances, useDatabases } from '@/data/database';
 import { useTranslation } from '@/lib/i18n';
 import type { ApiDatabaseInstance } from '@/lib/types';
 import { PostgreSQL } from '@/svg/PostgreSQL';

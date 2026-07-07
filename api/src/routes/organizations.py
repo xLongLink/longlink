@@ -11,9 +11,9 @@ from src.auth import (
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.logger import logger
 from src.operations import provisioning
-from tenant.storage import bucket_name, shared_bucket_name, organization_bucket_prefix
 from tenant.database import SHARED_SCHEMA
 from src.models.icons import parse_icon
+from src.utils import buckets
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import (
     OrganizationStorageResourceKind,
@@ -384,17 +384,19 @@ async def _storage_resource_rows(
         storage_client = adapters.storage(registry)
         bucket_names = set(await storage_client.buckets())
         expected_bucket_names: set[str] = set()
-        managed_shared_bucket_name = shared_bucket_name(organization.slug)
-        expected_bucket_names.add(managed_shared_bucket_name)
         rows: list[OrganizationStorageResourceResponse] = []
+        shared_bucket_name = organization.shared_storage_bucket_name
 
-        if managed_shared_bucket_name in bucket_names:
-            usage = await storage_client.bucket_usage(managed_shared_bucket_name)
+        if shared_bucket_name is not None:
+            expected_bucket_names.add(shared_bucket_name)
+
+        if shared_bucket_name is not None and shared_bucket_name in bucket_names:
+            usage = await storage_client.bucket_usage(shared_bucket_name)
             rows.append(
                 OrganizationStorageResourceResponse(
                     kind=OrganizationStorageResourceKind.shared_bucket,
                     name="shared",
-                    bucket_name=managed_shared_bucket_name,
+                    bucket_name=shared_bucket_name,
                     application=None,
                     storage_registry_id=registry.id,
                     storage_registry_name=registry.name,
@@ -405,17 +407,19 @@ async def _storage_resource_rows(
 
         # Compare expected app buckets against the backend listing so only existing resources are visible.
         for application in sorted(active_applications, key=lambda item: item.name):
-            managed_bucket_name = bucket_name(organization.slug, application.slug)
-            expected_bucket_names.add(managed_bucket_name)
-            if managed_bucket_name not in bucket_names:
+            if application.storage_bucket_name is None:
                 continue
 
-            usage = await storage_client.bucket_usage(managed_bucket_name)
+            expected_bucket_names.add(application.storage_bucket_name)
+            if application.storage_bucket_name not in bucket_names:
+                continue
+
+            usage = await storage_client.bucket_usage(application.storage_bucket_name)
             rows.append(
                 OrganizationStorageResourceResponse(
                     kind=OrganizationStorageResourceKind.application_bucket,
                     name=application.slug,
-                    bucket_name=managed_bucket_name,
+                    bucket_name=application.storage_bucket_name,
                     application=OrganizationStorageApplicationResponse(
                         id=application.id,
                         name=application.name,
@@ -429,10 +433,10 @@ async def _storage_resource_rows(
                     space_used=usage["space_used"],
                     object_count=usage["object_count"],
                 )
-            )
+        )
 
         # Keep stale managed buckets visible as orphaned resources.
-        managed_bucket_prefix = organization_bucket_prefix(organization.slug)
+        managed_bucket_prefix = buckets.prefix(organization.slug)
         for listed_bucket_name in sorted(bucket_names):
             if listed_bucket_name in expected_bucket_names or not listed_bucket_name.startswith(managed_bucket_prefix):
                 continue

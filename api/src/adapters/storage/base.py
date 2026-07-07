@@ -30,19 +30,24 @@ class Storage(ABC):
     """Storage adapter root.
 
     Storage Backend                     # Managed by the control plane
-    ├── longlink-{organization}-shared  # Optional organization-level shared objects
-    ├── longlink-{organization}-app-a   # Isolated storage for App A
-    └── longlink-{organization}-app-b   # Isolated storage for App B
+    ├── assigned organization bucket    # Optional organization-level shared objects
+    ├── assigned App A bucket           # Isolated storage for App A
+    └── assigned App B bucket           # Isolated storage for App B
 
     Each application has read/write access to its own bucket, and read-only access to shared bucket.
     """
 
     @abstractmethod
-    async def bucket(self, organization: str, bucket_slug: str) -> str:
-        """Create or return one managed organization bucket and return its name."""
+    async def bucket(self, bucket_name: str) -> str:
+        """Create or return one assigned bucket and return its name."""
 
     @abstractmethod
-    async def application_credentials(self, organization: str, application: str) -> StorageRuntimeCredentials:
+    async def application_credentials(
+        self,
+        application_bucket: str,
+        shared_bucket: str,
+        other_application_buckets: list[str],
+    ) -> StorageRuntimeCredentials:
         """Return validated credentials with read/write app access and read-only shared access."""
 
     @abstractmethod
