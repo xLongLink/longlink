@@ -5,8 +5,6 @@ import { renderNode } from '@/xml/core/node';
 import type { Props } from '@/xml/types';
 import { resolveXmlString } from './props';
 
-/** Props accepted by the XML Label component. */
-
 /** Renders a shadcn-backed label element for form controls. */
 export function Label({ props, nodes }: Props) {
     const { ctx } = useXmlContext();

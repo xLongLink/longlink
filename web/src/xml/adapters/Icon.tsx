@@ -4,8 +4,6 @@ import type { Props } from '@/xml/types';
 import { useActionHandler } from './Action';
 import { resolveXmlString } from './props';
 
-/** Props accepted by the XML Icon component. */
-
 /** Renders a Lucide icon by XML name. */
 export function Icon({ props }: Props) {
     const { ctx } = useXmlContext();

@@ -1,102 +1,138 @@
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
-import { useTranslation } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
+import { ChevronRight } from 'lucide-react';
 
 const pricingOptions = [
     {
-        nameKey: 'pricing.plans.starterName',
-        priceKey: 'pricing.plans.starterPrice',
-        descriptionKey: 'pricing.plans.starterDescription',
+        name: 'Free',
+        price: 'CHF 0',
+        period: null,
+        description: 'Build locally and try a small hosted sandbox with hard resource limits.',
         features: [
-            'pricing.plans.starterFeatureOne',
-            'pricing.plans.starterFeatureTwo',
-            'pricing.plans.starterFeatureThree',
+            'Local SDK and XML runtime',
+            '100MB database and 1 DB connection',
+            '2GB object storage',
+            '5GB outbound bandwidth',
         ],
-        actionKey: 'pricing.plans.starterAction',
+        action: 'Start building',
+        comingSoon: false,
+        featured: false,
     },
     {
-        nameKey: 'pricing.plans.teamName',
-        priceKey: 'pricing.plans.teamPrice',
-        descriptionKey: 'pricing.plans.teamDescription',
-        features: ['pricing.plans.teamFeatureOne', 'pricing.plans.teamFeatureTwo', 'pricing.plans.teamFeatureThree'],
-        actionKey: 'pricing.plans.teamAction',
+        name: 'Team',
+        price: 'CHF 4',
+        period: '/ active user / month',
+        description: 'Run production apps with pricing that scales with the people using the workflow.',
+        features: [
+            'CHF 4 per active user',
+            '256Mi RAM and 500m CPU limit',
+            '1GB database and 2GB object storage',
+            '5GB outbound bandwidth included',
+        ],
+        action: 'Deploy an app',
+        comingSoon: false,
+        featured: true,
     },
     {
-        nameKey: 'pricing.plans.platformName',
-        priceKey: 'pricing.plans.platformPrice',
-        descriptionKey: 'pricing.plans.platformDescription',
-        features: [
-            'pricing.plans.platformFeatureOne',
-            'pricing.plans.platformFeatureTwo',
-            'pricing.plans.platformFeatureThree',
-        ],
-        actionKey: 'pricing.plans.platformAction',
+        name: 'Scale',
+        price: 'Coming soon',
+        period: null,
+        description: '',
+        features: [],
+        action: 'Coming soon',
+        comingSoon: true,
+        featured: false,
     },
 ] as const;
 
 /** Renders the public pricing page. */
 export default function Pricing() {
-    const { t } = useTranslation();
-
     return (
         <div className="min-h-screen bg-background text-foreground">
             <Navbar />
             <main className="min-h-[calc(100vh-9rem)]">
-                <section className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-20 sm:py-28">
-                    <div className="max-w-2xl space-y-4">
+                <section className="mx-auto flex w-full max-w-6xl flex-col items-center gap-8 px-6 pt-12 pb-16 sm:pt-16 sm:pb-24">
+                    <div className="mx-auto max-w-2xl space-y-3 text-center">
                         <p className="text-sm font-medium tracking-[0.24em] text-accent uppercase">
-                            {t('pricing.eyebrow')}
+                            Pricing
                         </p>
                         <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-                            {t('pricing.title')}
+                            Simple pricing for LongLink
                         </h1>
-                        <p className="text-lg leading-8 text-muted-foreground">{t('pricing.description')}</p>
+                        <p className="text-lg leading-8 text-muted-foreground">
+                            Build locally for free, then deploy production apps for CHF 4 per active user per month.
+                        </p>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-3">
+                    <div className="grid w-full gap-4 md:grid-cols-3">
                         {pricingOptions.map((option) => {
-                            const price = t(option.priceKey);
-
                             return (
                                 <article
-                                    key={option.nameKey}
-                                    className="flex min-h-96 flex-col rounded-lg border border-border bg-card p-6 shadow-sm"
+                                    key={option.name}
+                                    className="flex min-h-[34rem] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm"
                                 >
-                                    <div className="space-y-3">
-                                        <h2 className="text-xl font-semibold">{t(option.nameKey)}</h2>
-                                        <div className="flex items-end gap-2">
-                                            <span className="text-4xl font-semibold tracking-tight">{price}</span>
-                                            {option.priceKey === 'pricing.plans.teamPrice' ? (
-                                                <span className="pb-1 text-sm text-muted-foreground">
-                                                    {t('pricing.month')}
-                                                </span>
+                                    <div className="flex flex-col items-center px-6 pt-7 pb-5 text-center">
+                                        <h2 className="text-2xl font-semibold">{option.name}</h2>
+                                        {option.description ? (
+                                            <p className="mt-2 min-h-10 max-w-64 text-xs leading-5 text-muted-foreground">
+                                                {option.description}
+                                            </p>
+                                        ) : (
+                                            <p className="mt-2 min-h-10 max-w-64 text-xs leading-5 text-muted-foreground">
+                                                Larger limits, isolation, and support for apps that need more.
+                                            </p>
+                                        )}
+
+                                        <div className="mt-5 flex min-h-16 items-end justify-center gap-2">
+                                            <span className="text-5xl font-semibold tracking-tight">{option.price}</span>
+                                            {option.period ? (
+                                                <span className="pb-1 text-sm text-muted-foreground">{option.period}</span>
                                             ) : null}
                                         </div>
-                                        <p className="min-h-16 text-sm leading-6 text-muted-foreground">
-                                            {t(option.descriptionKey)}
-                                        </p>
+
+                                        <Button
+                                            disabled={option.comingSoon}
+                                            className="mt-5 w-full"
+                                            variant={option.featured ? 'default' : 'outline'}
+                                        >
+                                            {option.action}
+                                        </Button>
                                     </div>
 
-                                    <ul className="mt-8 flex-1 space-y-3 text-sm text-muted-foreground">
-                                        {option.features.map((feature) => (
-                                            <li key={feature} className="flex gap-3">
-                                                <span className="mt-2 size-1.5 rounded-full bg-accent" />
-                                                <span>{t(feature)}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    <div className="flex flex-1 flex-col border-t border-border bg-muted/20 px-6 py-6">
+                                        {option.name === 'Team' ? (
+                                            <p className="mb-5 text-sm text-foreground">Everything included in Free, plus...</p>
+                                        ) : null}
+                                        {option.name === 'Scale' ? (
+                                            <p className="mb-5 text-sm text-foreground">For larger production deployments...</p>
+                                        ) : null}
 
-                                    <Button
-                                        className="mt-8 w-full"
-                                        variant={option.nameKey === 'pricing.plans.teamName' ? 'default' : 'outline'}
-                                    >
-                                        {t(option.actionKey)}
-                                    </Button>
+                                        {option.features.length ? (
+                                            <ul className="space-y-4 text-sm text-muted-foreground">
+                                                {option.features.map((feature) => (
+                                                    <li key={feature} className="flex gap-3">
+                                                        <ChevronRight className="mt-0.5 size-4 shrink-0" strokeWidth={1.8} />
+                                                        <span>{feature}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        ) : (
+                                            <p className="text-sm leading-6 text-muted-foreground">
+                                                More compute, storage, bandwidth, retention, and isolation options will be
+                                                available before launch.
+                                            </p>
+                                        )}
+                                    </div>
                                 </article>
                             );
                         })}
                     </div>
+
+                    <p className="max-w-3xl text-center text-sm leading-6 text-muted-foreground">
+                        Included limits keep the shared platform predictable. Apps that need more compute, database,
+                        storage, bandwidth, retention, or isolation can move to a larger plan when available.
+                    </p>
                 </section>
             </main>
             <Footer />

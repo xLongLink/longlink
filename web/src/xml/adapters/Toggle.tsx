@@ -4,8 +4,6 @@ import { renderNode } from '@/xml/core/node';
 import type { Props } from '@/xml/types';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
 
-/** Props accepted by the XML Toggle component. */
-
 /** Renders a shadcn-backed toggle. */
 export function Toggle({ props, nodes }: Props) {
     const { ctx } = useXmlContext();

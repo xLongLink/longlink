@@ -32,6 +32,20 @@ def test_longlink_app_serves_runtime_routes_frontend_and_development_cors() -> N
     assert cors_response.headers["access-control-allow-origin"] == "http://localhost:5173"
 
 
+def test_production_health_is_public_and_root_requires_gateway_identity() -> None:
+    """Keep runtime health public while protecting app routes in production."""
+
+    client = TestClient(LongLink(env=Envs(ENV="production"), i18n=None, pages=None))
+
+    health_response = client.get("/health")
+    root_response = client.get("/")
+
+    assert health_response.status_code == 200
+    assert health_response.json() == {"ok": True}
+    assert root_response.status_code == 401
+    assert root_response.json() == {"detail": "User context required"}
+
+
 def test_xml_pages_are_registered_from_default_pages_directory(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     """Expose XML pages from the default SDK pages directory."""
 

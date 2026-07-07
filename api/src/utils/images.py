@@ -1,49 +1,62 @@
+import os
+import re
 import json
 import httpx2
-import re
-import socket
-import asyncio
-import ipaddress
 import urllib.parse
-import urllib.request
 from typing import Any
 from src.logger import logger
+from dataclasses import dataclass
 from src.environments import env
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
-IMAGE_REFERENCE_MAX_LENGTH = 255
 IMAGE_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
 IMAGE_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
 IMAGE_DIGEST_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9]*(?:[+._-][A-Za-z][A-Za-z0-9]*)*:[A-Za-z0-9=_+.-]+$")
-REGISTRY_TOKEN_REALM_HOSTS = {
-    "docker.io": {"auth.docker.io"},
-    "index.docker.io": {"auth.docker.io"},
-    "registry-1.docker.io": {"auth.docker.io"},
+IMAGE_MANIFEST_ACCEPT = ", ".join(
+    (
+        "application/vnd.docker.distribution.manifest.v2+json",
+        "application/vnd.oci.image.manifest.v1+json",
+        "application/vnd.oci.image.index.v1+json",
+        "application/vnd.docker.distribution.manifest.list.v2+json",
+    )
+)
+SUPPORTED_REGISTRIES = {
+    "ghcr.io": "https://ghcr.io",
+    "docker.io": "https://registry-1.docker.io",
+    "registry-1.docker.io": "https://registry-1.docker.io",
+    "registry.gitlab.com": "https://registry.gitlab.com",
 }
+
+
+@dataclass(frozen=True)
+class ImageReference:
+    """Parsed OCI image reference parts."""
+
+    value: str
+    registry: str
+    repository: str
+    tag_or_digest: str
 
 
 async def metadata(image: str) -> LongLinkMetadata | None:
     """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
 
     try:
-        image = validate_image_reference(image)
-        registry, repository, reference = _parse_image_ref(image)
-        if not _development_local_registry(registry):
-            _validate_allowed_registry(registry)
-
-        registry_url = _registry_url(registry)
+        image_reference = parse_reference(image)
+        registry_url = _registry_url(image_reference.registry)
     except ValueError as exc:
         logger.warning("Failed to inspect image metadata for '%s': %s", image, exc)
         return None
 
-    verify_tls = registry_url.startswith("https://")
-
-    async with httpx2.AsyncClient(verify=verify_tls, follow_redirects=False, timeout=5.0) as client:
+    async with httpx2.AsyncClient(verify=registry_url.startswith("https://"), follow_redirects=False, timeout=5.0) as client:
         try:
-            if verify_tls:
-                await _validate_public_host(_registry_hostname(registry))
-
-            manifest_result = await _fetch_manifest(client, registry_url, repository, reference)
+            # LongLink labels are stored in the image config blob, reached through the image manifest.
+            manifest_result = await _fetch_manifest(
+                client,
+                registry_url,
+                image_reference.repository,
+                image_reference.tag_or_digest,
+            )
             if manifest_result is None:
                 return None
 
@@ -56,11 +69,19 @@ async def metadata(image: str) -> LongLinkMetadata | None:
             if config_digest is None:
                 return None
 
-            config = await _fetch_blob(client, registry_url, repository, str(config_digest))
-            if config is None:
+            config_digest = str(config_digest)
+            if not IMAGE_DIGEST_PATTERN.fullmatch(config_digest):
                 return None
 
-            image_config = config.get("config", {})
+            blob_response = await client.get(f"{registry_url}/v2/{image_reference.repository}/blobs/{config_digest}")
+            if not blob_response.is_success:
+                return None
+
+            config_blob = blob_response.json()
+            if not isinstance(config_blob, dict):
+                return None
+
+            image_config = config_blob.get("config", {})
             if not isinstance(image_config, dict):
                 return None
 
@@ -77,6 +98,7 @@ async def metadata(image: str) -> LongLinkMetadata | None:
                 version=labels.get("longlink.version"),
                 description=labels.get("longlink.description"),
             )
+            result.image = f"{image_reference.registry}/{image_reference.repository}@{digest}"
 
             environments = labels.get("longlink.environments")
             if environments is not None:
@@ -95,48 +117,37 @@ async def metadata(image: str) -> LongLinkMetadata | None:
             return None
 
 
-def validate_image_reference(image: str) -> str:
-    """Return a normalized Docker/OCI image reference or raise a validation error."""
+def parse_reference(image: str) -> ImageReference:
+    """Parse and validate one fully-qualified OCI image reference."""
 
-    reference = image.strip()
-    if not reference:
+    value = image.strip()
+    if not value:
         raise ValueError("Image reference is required")
 
-    if len(reference) > IMAGE_REFERENCE_MAX_LENGTH:
+    if len(value) > 255:
         raise ValueError("Image reference is too long")
 
-    if reference.startswith("//") or "://" in reference:
+    if value.startswith("//") or "://" in value:
         raise ValueError("Image reference must not be a URL")
 
-    if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in reference):
+    if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in value):
         raise ValueError("Image reference contains invalid characters")
 
-    registry, repository, image_reference = _parse_image_ref(reference)
-    _validate_registry(registry)
-    _validate_repository(repository)
-    _validate_reference(image_reference)
-    return reference
+    registry, separator, remainder = value.partition("/")
+    if not separator:
+        raise ValueError("Image registry host is required")
 
-
-def pin_image_reference(image: str, digest: str) -> str:
-    """Return an image reference pinned to the resolved manifest digest."""
-
-    reference = validate_image_reference(image)
-    _validate_manifest_digest(digest)
-    digest_separator = reference.rfind("@")
-    if digest_separator != -1:
-        image_name = reference[:digest_separator]
+    if "@" in remainder:
+        repository, _separator, tag_or_digest = remainder.partition("@")
+        if not IMAGE_DIGEST_PATTERN.fullmatch(tag_or_digest):
+            raise ValueError("Image digest is invalid")
     else:
-        tag_separator = reference.rfind(":")
-        path_separator = reference.rfind("/")
-        image_name = reference[:tag_separator] if tag_separator > path_separator else reference
+        repository, separator, tag_or_digest = remainder.rpartition(":")
+        if not separator:
+            raise ValueError("Image reference tag or digest is required")
 
-    pinned_reference = f"{image_name}@{digest}"
-    return validate_image_reference(pinned_reference)
-
-
-def _validate_registry(registry: str) -> None:
-    """Validate the registry hostname syntax in one image reference."""
+        if not IMAGE_TAG_PATTERN.fullmatch(tag_or_digest):
+            raise ValueError("Image tag is invalid")
 
     parsed_registry = urllib.parse.urlsplit(f"//{registry}")
     if parsed_registry.hostname is None or parsed_registry.username or parsed_registry.password:
@@ -147,224 +158,53 @@ def _validate_registry(registry: str) -> None:
     except ValueError as exc:
         raise ValueError("Image registry port is invalid") from exc
 
-    if parsed_registry.path not in {"", "/"}:
-        raise ValueError("Image registry must not contain a path")
-
-
-def _validate_repository(repository: str) -> None:
-    """Validate Docker repository path components."""
-
-    components = repository.split("/")
-    if not components or any(not IMAGE_NAME_COMPONENT_PATTERN.fullmatch(component) for component in components):
+    if not repository or any(not IMAGE_NAME_COMPONENT_PATTERN.fullmatch(component) for component in repository.split("/")):
         raise ValueError("Image repository is invalid")
 
-
-def _validate_reference(reference: str) -> None:
-    """Validate an image tag or digest reference."""
-
-    if not reference:
-        raise ValueError("Image reference tag or digest is required")
-
-    if ":" in reference:
-        if not IMAGE_DIGEST_PATTERN.fullmatch(reference):
-            raise ValueError("Image digest is invalid")
-        return
-
-    if not IMAGE_TAG_PATTERN.fullmatch(reference):
-        raise ValueError("Image tag is invalid")
-
-
-def _validate_manifest_digest(digest: str) -> None:
-    """Validate one OCI manifest digest value."""
-
-    if not IMAGE_DIGEST_PATTERN.fullmatch(digest):
-        raise ValueError("Image digest is invalid")
-
-
-def _parse_image_ref(image: str) -> tuple[str, str, str]:
-    """Parse an image reference into registry, repository, and tag or digest."""
-
-    reference = "latest"
-    digest_separator = image.rfind("@")
-
-    # Digest references include a colon that must not be treated as a tag separator.
-    if digest_separator != -1:
-        reference = image[digest_separator + 1 :]
-        image = image[:digest_separator]
-    else:
-        tag_separator = image.rfind(":")
-        path_separator = image.rfind("/")
-
-        if tag_separator > path_separator:
-            reference = image[tag_separator + 1 :]
-            image = image[:tag_separator]
-
-    if "/" in image:
-        parts = image.split("/", 1)
-        if "." in parts[0] or ":" in parts[0] or parts[0] == "localhost":
-            registry = parts[0]
-            repository = parts[1]
-        else:
-            registry = "registry-1.docker.io"
-            repository = image
-    else:
-        registry = "registry-1.docker.io"
-        repository = f"library/{image}"
-
-    return registry, repository, reference
-
-
-def _registry_hostname(registry: str) -> str:
-    """Return the hostname portion of a registry reference."""
-
-    hostname = urllib.parse.urlparse(f"https://{registry}").hostname
-    if hostname is None:
-        raise ValueError("Image registry host is invalid")
-
-    return hostname
-
-
-def _registry_url_hostname(registry_url: str) -> str:
-    """Return the hostname portion of an OCI registry URL."""
-
-    hostname = urllib.parse.urlparse(registry_url).hostname
-    if hostname is None:
-        raise ValueError("Image registry host is invalid")
-
-    return hostname
-
-
-def _token_realm_allowed(registry_hostname: str, realm_hostname: str) -> bool:
-    """Return whether a registry bearer-token realm belongs to the registry."""
-
-    if realm_hostname == registry_hostname:
-        return True
-
-    return realm_hostname in REGISTRY_TOKEN_REALM_HOSTS.get(registry_hostname, set())
-
-
-def _normalize_registry(registry: str) -> str:
-    """Return a comparable registry host without URL syntax."""
-
-    value = registry.strip().rstrip("/")
-    if value.startswith("http://"):
-        value = value.removeprefix("http://")
-    elif value.startswith("https://"):
-        value = value.removeprefix("https://")
-
-    return value.lower()
-
-
-def _development_local_registry(registry: str) -> bool:
-    """Return whether a registry is explicitly allowed for local development."""
-
-    configured_registry = env.LOCAL_CONTAINER_REGISTRY
-    if not env.DEVELOPMENT or configured_registry is None:
-        return False
-
-    return _normalize_registry(registry) == _normalize_registry(configured_registry)
-
-
-def _allowed_registries() -> set[str]:
-    """Return normalized image registries allowed for metadata inspection."""
-
-    return {
-        _normalize_registry(item)
-        for item in env.IMAGE_REGISTRY_ALLOWLIST.split(",")
-        if item.strip()
-    }
-
-
-def _validate_allowed_registry(registry: str) -> None:
-    """Reject registry hosts outside the configured image inspection allowlist."""
-
-    if _normalize_registry(registry) not in _allowed_registries():
-        raise ValueError("Image registry is not allowed")
+    return ImageReference(value, registry, repository, tag_or_digest)
 
 
 def _registry_url(registry: str) -> str:
-    """Return the OCI Distribution API base URL for a registry reference."""
+    """Return the supported OCI Distribution API base URL for one registry."""
 
-    if _development_local_registry(registry):
-        return f"http://{_normalize_registry(registry)}"
+    normalized_registry = registry.strip().rstrip("/").lower()
+    if normalized_registry == "localhost" or normalized_registry.startswith("localhost:"):
+        testing = os.getenv("ENVIRONMENT", "").strip().lower() == "testing"
+        if not env.DEVELOPMENT and not testing:
+            raise ValueError("Local image registries are only supported in development and testing")
 
-    return f"https://{registry}"
+        return f"http://{normalized_registry}"
 
+    registry_url = SUPPORTED_REGISTRIES.get(normalized_registry)
+    if registry_url is None:
+        raise ValueError("Image registry is not supported")
 
-def _response_json_object(resp: httpx2.Response) -> dict[str, Any] | None:
-    """Return a response JSON payload only when it is an object."""
-
-    data = resp.json()
-    if not isinstance(data, dict):
-        return None
-
-    return data
-
-
-def _response_manifest_digest(resp: httpx2.Response) -> str | None:
-    """Return a validated manifest digest from an OCI registry response."""
-
-    digest = resp.headers.get("Docker-Content-Digest")
-    if digest is None:
-        return None
-
-    _validate_manifest_digest(digest)
-    return digest
-
-
-async def _validate_public_host(hostname: str) -> None:
-    """Reject localhost, private, and otherwise non-public registry hosts."""
-
-    if hostname == "localhost" or hostname.endswith(".localhost"):
-        raise ValueError("Image registry host must be public")
-
-    try:
-        addresses = [ipaddress.ip_address(hostname)]
-    except ValueError:
-        loop = asyncio.get_running_loop()
-        try:
-            resolved = await loop.getaddrinfo(hostname, None, type=socket.SOCK_STREAM)
-        except OSError as exc:
-            raise ValueError("Image registry host could not be resolved") from exc
-
-        addresses = [ipaddress.ip_address(item[4][0]) for item in resolved]
-
-    if not addresses or any(not address.is_global for address in addresses):
-        raise ValueError("Image registry host must resolve to public addresses")
+    return registry_url
 
 
 async def _fetch_manifest(
     client: httpx2.AsyncClient,
     registry_url: str,
     repository: str,
-    tag: str,
+    reference: str,
 ) -> tuple[dict[str, Any], str] | None:
     """Fetch an image manifest, resolving manifest lists to a single platform manifest."""
 
-    url = f"{registry_url}/v2/{repository}/manifests/{tag}"
-    accept = ", ".join(
-        (
-            "application/vnd.docker.distribution.manifest.v2+json",
-            "application/vnd.oci.image.manifest.v1+json",
-            "application/vnd.oci.image.index.v1+json",
-            "application/vnd.docker.distribution.manifest.list.v2+json",
-        )
-    )
-
-    resp = await client.get(url, headers={"Accept": accept})
-    token: str | None = None
-    if not resp.is_success:
-        token = await _resolve_bearer_token(client, repository, resp, _registry_url_hostname(registry_url))
-        if token is None:
-            return None
-        resp = await client.get(url, headers={"Accept": accept, "Authorization": f"Bearer {token}"})
-        if not resp.is_success:
-            return None
-
-    data = _response_json_object(resp)
-    if data is None:
+    url = f"{registry_url}/v2/{repository}/manifests/{reference}"
+    manifest_response = await client.get(url, headers={"Accept": IMAGE_MANIFEST_ACCEPT})
+    if not manifest_response.is_success:
         return None
-    digest = _response_manifest_digest(resp) or (tag if IMAGE_DIGEST_PATTERN.fullmatch(tag) else None)
+
+    data = manifest_response.json()
+    if not isinstance(data, dict):
+        return None
+
+    digest = manifest_response.headers.get("Docker-Content-Digest")
+    if digest is not None:
+        if not IMAGE_DIGEST_PATTERN.fullmatch(digest):
+            return None
+    elif IMAGE_DIGEST_PATTERN.fullmatch(reference):
+        digest = reference
 
     # Resolve multi-arch manifest list to a single platform manifest.
     manifests = data.get("manifests")
@@ -382,83 +222,31 @@ async def _fetch_manifest(
             manifest_entries[0],
         )
 
-        manifest_digest = str(entry["digest"])
-        _validate_manifest_digest(manifest_digest)
-        resp = await client.get(
+        manifest_digest = entry.get("digest")
+        media_type = entry.get("mediaType")
+        if manifest_digest is None or media_type is None:
+            return None
+
+        manifest_digest = str(manifest_digest)
+        if not IMAGE_DIGEST_PATTERN.fullmatch(manifest_digest):
+            return None
+
+        manifest_response = await client.get(
             f"{registry_url}/v2/{repository}/manifests/{manifest_digest}",
-            headers={
-                "Accept": str(entry["mediaType"]),
-                **({"Authorization": f"Bearer {token}"} if token else {}),
-            },
+            headers={"Accept": str(media_type)},
         )
-        if not resp.is_success:
+        if not manifest_response.is_success:
             return None
-        data = _response_json_object(resp)
-        if data is None:
-            return None
-        digest = _response_manifest_digest(resp) or manifest_digest
 
-    if digest is None:
+        data = manifest_response.json()
+        if not isinstance(data, dict):
+            return None
+
+        digest = manifest_response.headers.get("Docker-Content-Digest") or manifest_digest
+        if not IMAGE_DIGEST_PATTERN.fullmatch(digest):
+            return None
+
+    if digest is None or not IMAGE_DIGEST_PATTERN.fullmatch(digest):
         return None
 
-    _validate_manifest_digest(digest)
     return data, digest
-
-
-async def _fetch_blob(
-    client: httpx2.AsyncClient, registry_url: str, repository: str, digest: str
-) -> dict[str, Any] | None:
-    """Fetch an image config blob from the OCI Distribution API."""
-
-    url = f"{registry_url}/v2/{repository}/blobs/{digest}"
-
-    resp = await client.get(url)
-    if resp.is_success:
-        return _response_json_object(resp)
-
-    token = await _resolve_bearer_token(client, repository, resp, _registry_url_hostname(registry_url))
-    if token is not None:
-        resp = await client.get(url, headers={"Authorization": f"Bearer {token}"})
-        if resp.is_success:
-            return _response_json_object(resp)
-
-    return None
-
-
-async def _resolve_bearer_token(
-    client: httpx2.AsyncClient, repository: str, resp: httpx2.Response, registry_hostname: str
-) -> str | None:
-    """Resolve a bearer token from a 401 Www-Authenticate response."""
-
-    auth_header = resp.headers.get("www-authenticate", "")
-    if not auth_header.startswith("Bearer "):
-        return None
-
-    params = urllib.request.parse_keqv_list(urllib.request.parse_http_list(auth_header.removeprefix("Bearer ")))
-
-    realm = params.get("realm")
-    if realm is None:
-        return None
-
-    parsed_realm = urllib.parse.urlparse(realm)
-    if parsed_realm.scheme != "https" or parsed_realm.hostname is None:
-        return None
-
-    if not _token_realm_allowed(registry_hostname, parsed_realm.hostname):
-        return None
-
-    token_params: dict[str, str] = {}
-    for key in ("service", "scope"):
-        if key in params:
-            token_params[key] = params[key]
-
-    try:
-        await _validate_public_host(parsed_realm.hostname)
-        token_resp = await client.get(realm, params=token_params)
-        if token_resp.is_success:
-            token = token_resp.json().get("token")
-            return token if isinstance(token, str) else None
-    except (httpx2.HTTPError, ValueError) as exc:
-        logger.warning("Failed to resolve image registry bearer token: %s", exc)
-
-    return None

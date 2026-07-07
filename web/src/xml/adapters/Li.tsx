@@ -4,8 +4,6 @@ import { renderNode } from '@/xml/core/node';
 import type { Props } from '@/xml/types';
 import { resolveXmlValue } from './props';
 
-/** Props accepted by the XML li bridge component. */
-
 /** Renders a list item and preserves nested XML children. */
 export function Li({ props, nodes }: Props) {
     const { ctx } = useXmlContext();

@@ -7,8 +7,7 @@ from pathlib import Path
 def readyml(template_path: str | Path, **context: object) -> dict[str, Any] | list[dict[str, Any]]:
     """Render one YAML template file into a manifest dictionary or list."""
 
-    source = Path(template_path)
-    rendered = Template(source.read_text(encoding="utf-8")).safe_substitute(**context)
+    rendered = Template(Path(template_path).read_text(encoding="utf-8")).safe_substitute(**context)
     docs: list[dict[str, Any]] = []
     for document in yaml.safe_load_all(rendered):
         if document is None:

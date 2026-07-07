@@ -11,18 +11,11 @@ from src.models.storages import StorageKind
 from src.database.session import get_session
 from src.models.countries import Country
 from src.models.databases import DatabaseKind
+from src.database.services import users, compute, storage, database, locations, operations, applications, organizations
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationStatus
 from src.database.models.users import User
-from src.database.services import users
-from src.database.services import compute
-from src.database.services import storage
-from src.database.services import database
 from src.database.models.association import UserApplication, UserOrganization
-from src.database.services import locations
-from src.database.services import operations
-from src.database.services import applications
-from src.database.services import organizations
 
 db = SimpleNamespace(
     applications=applications,
@@ -260,7 +253,13 @@ async def test_create_app_returns_app_response(
     )
 
     async def fake_metadata(image: str) -> LongLinkMetadata:
-        return LongLinkMetadata(version="20250623_120000", sdk="0.1.0", digest="sha256:manifest")
+        image_metadata = LongLinkMetadata(
+            version="20250623_120000",
+            sdk="0.1.0",
+            digest="sha256:manifest",
+        )
+        image_metadata.image = "ghcr.io/longlink/dashboard@sha256:manifest"
+        return image_metadata
 
     monkeypatch.setattr("src.operations.provisioning.images.metadata", fake_metadata)
 
@@ -563,7 +562,7 @@ async def test_create_app_requires_storage_registry_for_required_storage_envs(
     async def fake_metadata(image: str) -> LongLinkMetadata:
         """Return metadata for an app that needs platform-managed storage."""
 
-        return LongLinkMetadata(
+        image_metadata = LongLinkMetadata(
             version="20250623_120000",
             sdk="0.1.0",
             digest="sha256:manifest",
@@ -571,6 +570,8 @@ async def test_create_app_requires_storage_registry_for_required_storage_envs(
                 EnvironmentMetadata(name="LONGLINK_STORAGE_URL", type="str", required=True),
             ],
         )
+        image_metadata.image = "ghcr.io/longlink/dashboard@sha256:manifest"
+        return image_metadata
 
     monkeypatch.setattr("src.operations.provisioning.images.metadata", fake_metadata)
     client = clients[0]

@@ -4,8 +4,6 @@ import type { Props } from '@/xml/types';
 import { getVersion, useSnapshot } from 'valtio';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
-/** Props accepted by the XML Slider component. */
-
 /** Renders a shadcn-backed slider with optional reactive state binding. */
 export function Slider({ props, nodes }: Props) {
     const { ctx } = useXmlContext();

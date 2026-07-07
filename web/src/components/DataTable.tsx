@@ -56,7 +56,6 @@ function getPaginationItems(currentPage: number, pageCount: number): PaginationI
     return items;
 }
 
-
 /** Renders a shadcn-style data table. */
 export function DataTable<TData, TValue>({
     columns,
@@ -104,7 +103,7 @@ export function DataTable<TData, TValue>({
                                 {headerGroup.headers.map((header) => (
                                     <TableHead
                                         key={header.id}
-                                        className={`bg-muted/50 ${header.column.columnDef.meta?.className ?? ''}`}
+                                        className={cn('bg-muted/50', header.column.columnDef.meta?.className)}
                                     >
                                         {header.isPlaceholder
                                             ? null

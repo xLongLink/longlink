@@ -285,35 +285,6 @@
         "noPeople": "Nessuna persona trovata.",
         "roleChanged": "{{name}} ora ha il permesso {{role}}"
     },
-    "pricing": {
-        "description": "Scegli il livello di supporto piattaforma adatto alle tue applicazioni LongLink di oggi.",
-        "eyebrow": "Prezzi",
-        "month": "/ mese",
-        "plans": {
-            "platformAction": "Parla con noi",
-            "platformDescription": "Esegui LongLink su infrastruttura dedicata e con esigenze di supporto specifiche.",
-            "platformFeatureOne": "Sedi dedicate",
-            "platformFeatureThree": "Modello di distribuzione personalizzato",
-            "platformFeatureTwo": "Supporto operativo",
-            "platformName": "Platform",
-            "platformPrice": "Personalizzato",
-            "starterAction": "Inizia a sviluppare",
-            "starterDescription": "Crea e testa app LongLink in locale con l'SDK.",
-            "starterFeatureOne": "Runtime SDK locale",
-            "starterFeatureThree": "SQLite e file storage locale",
-            "starterFeatureTwo": "Rendering pagine XML",
-            "starterName": "Starter",
-            "starterPrice": "Gratis",
-            "teamAction": "Contatta vendite",
-            "teamDescription": "Esegui piccole app di produzione con risorse organizzative gestite.",
-            "teamFeatureOne": "Distribuzioni gestite",
-            "teamFeatureThree": "Provisioning database e storage",
-            "teamFeatureTwo": "Controllo accesso organizzazione",
-            "teamName": "Team",
-            "teamPrice": "CHF 49"
-        },
-        "title": "Inizia in locale, distribuisci quando il workflow e pronto."
-    },
     "profile": {
         "applications": "Applicazioni",
         "compute": "Calcolo",

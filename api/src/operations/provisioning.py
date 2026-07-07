@@ -1,14 +1,14 @@
 import urllib.parse
+from src import adapters
 from uuid import UUID
 from datetime import UTC, datetime
-from src import adapters
 from src.utils import names, images, buckets
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
 from src.utils.url import database as normalize_database_url
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import ApplicationStatus
-from src.utils.namespace import dbname, k8name
+from src.database.services import compute, storage, database, operations, applications, organizations
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
 from src.models.organizations import OrganizationDetails, OrganizationSummary
@@ -16,14 +16,8 @@ from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
-from src.database.services import compute
-from src.database.services import storage
-from src.database.services import database
 from src.database.models.applications import Application
-from src.database.services import operations
 from src.database.models.organizations import Organization
-from src.database.services import applications
-from src.database.services import organizations
 
 PLATFORM_ENVIRONMENT_NAMES = {
     "LONGLINK_DATABASE_SCHEMA",
@@ -106,7 +100,7 @@ async def application_image_metadata(
     if image_metadata is None:
         raise ValueError("Image metadata could not be inspected")
 
-    if image_metadata.digest is None:
+    if image_metadata.digest is None or image_metadata.image is None:
         raise ValueError("Image digest could not be resolved")
 
     # Reject required LongLink-prefixed envs that the platform does not know how to provide.
@@ -226,8 +220,8 @@ async def remove_application_runtime(
 
     names.knames(organization.slug, "Organization")
     names.knames(application.slug, "Application name")
-    k8name(organization.slug)
-    dbname(organization.slug)
+    names.k8name(organization.slug)
+    names.dbname(organization.slug)
 
     compute_registry = await application_compute_registry(application, organization.location_id)
     if compute_registry is not None:
@@ -252,8 +246,8 @@ async def remove_organization_runtime(
     """Remove runtime resources for one organization and its applications."""
 
     names.knames(organization.slug, "Organization")
-    k8name(organization.slug)
-    dbname(organization.slug)
+    names.k8name(organization.slug)
+    names.dbname(organization.slug)
 
     organization_applications = await applications.list_by_organization(organization.id, include_deleted=True)
     for application in organization_applications:
@@ -429,16 +423,17 @@ async def create_application_runtime(
     application_slug = names.slugify(payload.name, "Application name")
     names.knames(organization.slug, "Organization")
     names.knames(application_slug, "Application name")
-    k8name(organization.slug)
-    dbname(organization.slug)
+    names.k8name(organization.slug)
+    names.dbname(organization.slug)
     shared_storage_bucket(organization)
     application_bucket_name = buckets.application(organization.slug, application_slug)
     logger.info("Provisioning application %s/%s", organization.slug, application_slug)
 
     image_metadata = await application_image_metadata(payload)
     digest = image_metadata.digest
+    runtime_image = image_metadata.image
     assert digest is not None
-    runtime_image = images.pin_image_reference(payload.image, digest)
+    assert runtime_image is not None
 
     compute_registry = await latest_compute_registry(organization.location_id)
     if compute_registry is None:
@@ -540,14 +535,15 @@ async def sync_application_runtime(
     )
     names.knames(organization.slug, "Organization")
     names.knames(application.slug, "Application name")
-    k8name(organization.slug)
-    dbname(organization.slug)
+    names.k8name(organization.slug)
+    names.dbname(organization.slug)
     shared_storage_bucket(organization)
     application_bucket_name = application_storage_bucket(application)
     image_metadata = await application_image_metadata(payload)
     digest = image_metadata.digest
+    runtime_image = image_metadata.image
     assert digest is not None
-    runtime_image = images.pin_image_reference(payload.image, digest)
+    assert runtime_image is not None
 
     compute_registry = await application_compute_registry(application, organization.location_id)
     if compute_registry is None:

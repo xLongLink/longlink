@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
 
 import { useApiQuery } from '@/hooks/use-api';
 import { useUserProfile } from '@/hooks/use-user';
@@ -56,10 +55,7 @@ export function resolveOrganizationId(
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string): UseOrganizationResult {
     const { organizations, isLoading: isUserLoading } = useUserProfile();
-    const organizationId = useMemo(
-        () => resolveOrganizationId(organizationSlug, organizations),
-        [organizationSlug, organizations]
-    );
+    const organizationId = resolveOrganizationId(organizationSlug, organizations);
     const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
 
     const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
@@ -88,10 +84,7 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
 export function useOrganizationActions(organizationSlug: string): UseOrganizationActionsResult {
     const queryClient = useQueryClient();
     const { organizations } = useUserProfile();
-    const organizationId = useMemo(
-        () => resolveOrganizationId(organizationSlug, organizations),
-        [organizationSlug, organizations]
-    );
+    const organizationId = resolveOrganizationId(organizationSlug, organizations);
     const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
     const organizationMembership = organizations.find((item) => item.slug === organizationSlug);
     const canInviteMembers = organizationMembership?.role

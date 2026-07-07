@@ -14,18 +14,6 @@ import { resolveXmlBoolean, resolveXmlNumber, resolveXmlString, resolveXmlValue 
 
 import { readBindableFileInputValue, useBindableValue } from './binding';
 
-/** Props accepted by the XML InputGroup component. */
-
-/** Props accepted by the XML InputGroupAddon component. */
-
-/** Props accepted by the XML InputGroupButton component. */
-
-/** Props accepted by the XML InputGroupText component. */
-
-/** Props accepted by the XML InputGroupInput component. */
-
-/** Props accepted by the XML InputGroupTextarea component. */
-
 /** Renders the shared input group shell. */
 export function InputGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();

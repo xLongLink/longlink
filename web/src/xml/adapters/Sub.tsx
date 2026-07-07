@@ -3,8 +3,6 @@ import { resolveTranslation } from '@/xml/core/i18n';
 import { renderNode } from '@/xml/core/node';
 import type { Props } from '@/xml/types';
 
-/** Props accepted by the XML sub bridge component. */
-
 /** Renders subscript text. */
 export function Sub({ props, nodes }: Props) {
     const { ctx } = useXmlContext();

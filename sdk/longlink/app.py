@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 from fastapi import FastAPI, APIRouter
 from pathlib import Path
@@ -7,6 +8,7 @@ from longlink.pages import (XMLResponse, PageDefinition, page_file_tab,
 from longlink.utils import Envs
 from collections.abc import Callable
 from longlink.routes import routes
+from longlink.logger import ApiAccessFilter
 from pydantic_settings import BaseSettings
 from longlink.constants import ROOT
 from longlink.utils.xml import Longlink as LonglinkXml
@@ -84,6 +86,12 @@ class LongLink(FastAPI):
         environments = env if isinstance(env, Envs) else Envs()
         page_registry: list[PageDefinition] = []
         self.state.page_registry = page_registry
+
+        if environments.ENV == "production":
+            # Built app containers run plain uvicorn, so attach the SDK access filter here.
+            access_logger = logging.getLogger("uvicorn.access")
+            if not any(isinstance(item, ApiAccessFilter) for item in access_logger.filters):
+                access_logger.addFilter(ApiAccessFilter())
 
         for router in routes:
             super().include_router(router)

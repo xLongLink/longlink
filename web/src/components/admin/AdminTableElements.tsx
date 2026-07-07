@@ -9,20 +9,8 @@ import type { ApiLocation } from '@/lib/types';
 import { MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
 
-type AdminLocationBadgeProps = {
-    fallbackId?: string;
-    location?: ApiLocation;
-};
-
-type AdminActionMenuProps = {
-    label: string;
-    copyLabel: string;
-    copyValue: string;
-    onDelete: () => void;
-};
-
 /** Renders a compact location badge for admin tables. */
-export function AdminLocationBadge({ fallbackId, location }: AdminLocationBadgeProps) {
+export function AdminLocationBadge({ fallbackId, location }: { fallbackId?: string; location?: ApiLocation }) {
     const country = location?.country;
 
     return (
@@ -43,7 +31,17 @@ export function AdminLocationBadge({ fallbackId, location }: AdminLocationBadgeP
 }
 
 /** Renders the shared copy/delete action menu for admin tables. */
-export function AdminActionMenu({ label, copyLabel, copyValue, onDelete }: AdminActionMenuProps) {
+export function AdminActionMenu({
+    label,
+    copyLabel,
+    copyValue,
+    onDelete,
+}: {
+    label: string;
+    copyLabel: string;
+    copyValue: string;
+    onDelete: () => void;
+}) {
     return (
         <div className="flex justify-end">
             <DropdownMenu>

@@ -16,6 +16,7 @@ type ApplicationsProps = {
 /** Renders the organization applications table. */
 export default function Applications({ organization, applications, isLoading, error }: ApplicationsProps) {
     const { t } = useTranslation();
+    const applicationsError = error ? new Error(t('errors.loadApplications')) : null;
 
     const appColumns: Array<ColumnDef<ApiOrganizationApplication>> = [
         {
@@ -46,13 +47,5 @@ export default function Applications({ organization, applications, isLoading, er
         },
     ] satisfies Array<ColumnDef<ApiOrganizationApplication>>;
 
-    return (
-        <div className="space-y-4">
-            {isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
-                <div className="rounded-md border p-4 text-sm text-destructive">{t('errors.loadApplications')}</div>
-            ) : (
-                <DataTable columns={appColumns} data={applications} />
-            )}
-        </div>
-    );
+    return <DataTable columns={appColumns} data={applications} error={applicationsError} isLoading={isLoading} />;
 }

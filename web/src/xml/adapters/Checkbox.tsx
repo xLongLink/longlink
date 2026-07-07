@@ -3,8 +3,6 @@ import { useXmlContext } from '@/xml/core/context';
 import type { Props } from '@/xml/types';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
 
-/** Props accepted by the XML Checkbox component. */
-
 /** Renders a shadcn-backed checkbox. */
 export function Checkbox({ props, nodes }: Props) {
     const { ctx } = useXmlContext();

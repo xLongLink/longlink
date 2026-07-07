@@ -6,26 +6,6 @@ import { useTranslation } from '@/lib/i18n';
 import type { ApiLocation } from '@/lib/types';
 import type { ReactNode } from 'react';
 
-type RegistryDialogShellProps = {
-    title: string;
-    error: string | null;
-    open: boolean;
-    children: ReactNode;
-    canSubmit: boolean;
-    isPending: boolean;
-    description: string;
-    pendingLabel: string;
-    onSubmit: () => Promise<void>;
-    onOpenChange: (open: boolean) => void;
-};
-
-type RegistryLocationFieldProps = {
-    id: string;
-    value: string;
-    locations: ApiLocation[];
-    onValueChange: (value: string) => void;
-};
-
 /** Renders the shared shell for registry connection dialogs. */
 export function RegistryDialogShell({
     title,
@@ -38,7 +18,18 @@ export function RegistryDialogShell({
     pendingLabel,
     onSubmit,
     onOpenChange,
-}: RegistryDialogShellProps) {
+}: {
+    title: string;
+    error: string | null;
+    open: boolean;
+    children: ReactNode;
+    canSubmit: boolean;
+    isPending: boolean;
+    description: string;
+    pendingLabel: string;
+    onSubmit: () => Promise<void>;
+    onOpenChange: (open: boolean) => void;
+}) {
     const { t } = useTranslation();
 
     return (
@@ -83,7 +74,17 @@ export function RegistryDialogShell({
 }
 
 /** Renders a shared location selector for registry connection dialogs. */
-export function RegistryLocationField({ id, value, locations, onValueChange }: RegistryLocationFieldProps) {
+export function RegistryLocationField({
+    id,
+    value,
+    locations,
+    onValueChange,
+}: {
+    id: string;
+    value: string;
+    locations: ApiLocation[];
+    onValueChange: (value: string) => void;
+}) {
     const { t } = useTranslation();
     const selectedLocationName = locations.find((location) => location.id === value)?.name;
 

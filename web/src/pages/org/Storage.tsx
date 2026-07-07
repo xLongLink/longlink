@@ -1,11 +1,11 @@
 import { DataTable } from '@/components/DataTable';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useOrganizationStorageResources } from '@/data/organization';
 import { useTranslation } from '@/lib/i18n';
 import type { ApiOrganizationDetails, ApiOrganizationStorageResource } from '@/lib/types';
 import { formatBytes, formatNumber, getInitials } from '@/lib/utils';
 import { S3 } from '@/svg/S3';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link, useParams } from 'react-router';
 
 type StorageProps = {
@@ -34,6 +34,27 @@ export default function Storage({ organization, organizationDetails, isLoading }
         (!isLoading && !storageResourcesIsLoading && isDetailPage && !selectedResource
             ? new Error(t('resources.storageBucketNotFound', { name: bucket }))
             : null);
+    const storageUsageColumn: ColumnDef<ApiOrganizationStorageResource> = {
+        id: 'usage',
+        header: t('columns.usage'),
+        cell: ({ row }) => {
+            const { object_count, space_used } = row.original;
+
+            return (
+                <div className="min-w-0 space-y-1">
+                    <div className="font-medium text-foreground">
+                        {space_used === null ? t('common.unknown') : formatBytes(space_used)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                        {object_count === null
+                            ? t('resources.unknownObjects')
+                            : t('resources.objectCount', { count: formatNumber(object_count) })}
+                    </div>
+                </div>
+            );
+        },
+        meta: { className: 'min-w-40' },
+    };
 
     if (isDetailPage) {
         const storageDetailColumns: Array<ColumnDef<ApiOrganizationStorageResource>> = [
@@ -56,27 +77,7 @@ export default function Storage({ organization, organizationDetails, isLoading }
                 header: t('columns.registry'),
                 meta: { className: 'min-w-44' },
             },
-            {
-                id: 'usage',
-                header: t('columns.usage'),
-                cell: ({ row }) => {
-                    const { object_count, space_used } = row.original;
-
-                    return (
-                        <div className="min-w-0 space-y-1">
-                            <div className="font-medium text-foreground">
-                                {space_used === null ? t('common.unknown') : formatBytes(space_used)}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                                {object_count === null
-                                    ? t('resources.unknownObjects')
-                                    : t('resources.objectCount', { count: formatNumber(object_count) })}
-                            </div>
-                        </div>
-                    );
-                },
-                meta: { className: 'min-w-40' },
-            },
+            storageUsageColumn,
         ];
 
         return (
@@ -164,27 +165,7 @@ export default function Storage({ organization, organizationDetails, isLoading }
             },
             meta: { className: 'min-w-44' },
         },
-        {
-            id: 'usage',
-            header: t('columns.usage'),
-            cell: ({ row }) => {
-                const { object_count, space_used } = row.original;
-
-                return (
-                    <div className="min-w-0 space-y-1">
-                        <div className="font-medium text-foreground">
-                            {space_used === null ? t('common.unknown') : formatBytes(space_used)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                            {object_count === null
-                                ? t('resources.unknownObjects')
-                                : t('resources.objectCount', { count: formatNumber(object_count) })}
-                        </div>
-                    </div>
-                );
-            },
-            meta: { className: 'min-w-40' },
-        },
+        storageUsageColumn,
     ];
 
     return (

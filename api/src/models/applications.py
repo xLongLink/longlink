@@ -2,8 +2,8 @@ import re
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
+from src.utils import images
 from src.models.icons import Icon, parse_icon
-from src.utils.images import validate_image_reference
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import Avatar, UserSummary
 from src.models.statuses import ApplicationStatus
@@ -39,7 +39,7 @@ class ApplicationCreate(BaseModel):
     def validate_image(cls, image: str) -> str:
         """Validate the application container image reference."""
 
-        return validate_image_reference(image)
+        return images.parse_reference(image).value
 
     @field_validator("envs")
     @classmethod

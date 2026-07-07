@@ -13,14 +13,6 @@ import { resolveXmlString } from './props';
 
 const AVATAR_ABSOLUTE_URL_PATTERN = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 
-/** Props accepted by the XML Avatar component. */
-
-/** Props accepted by the XML AvatarImage component. */
-
-/** Props accepted by the XML AvatarFallback component. */
-
-/** Props accepted by the XML AvatarBadge component. */
-
 /** Returns a safe browser image URL for an XML avatar source. */
 function resolveAvatarImageSource(baseUrl: string, src: string): string | undefined {
     const value = src.trim();

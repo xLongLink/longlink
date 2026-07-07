@@ -4,17 +4,7 @@ import { resolveTranslation } from '@/xml/core/i18n';
 import { renderNode } from '@/xml/core/node';
 import type { Props } from '@/xml/types';
 import { useBindableValue } from './binding';
-import {
-    requireXmlString,
-    resolveXmlBoolean,
-    resolveXmlString,
-    resolveXmlValue,
-    useXmlValueSnapshot,
-} from './props';
-
-/** Props accepted by the XML RadioGroup component. */
-
-/** Props accepted by the XML RadioGroupItem component. */
+import { requireXmlString, resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
 
 /** Renders a radio group shell with XML-rendered children. */
 export function RadioGroup({ props, nodes }: Props) {

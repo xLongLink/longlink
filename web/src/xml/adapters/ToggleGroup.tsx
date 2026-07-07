@@ -11,10 +11,6 @@ import {
     useXmlValueSnapshot,
 } from './props';
 
-/** Props accepted by the XML ToggleGroup component. */
-
-/** Props accepted by the XML ToggleGroupItem component. */
-
 /** Renders a toggle group shell with XML-rendered children. */
 export function ToggleGroup({ props, nodes }: Props) {
     const { ctx } = useXmlContext();

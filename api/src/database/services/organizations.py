@@ -2,24 +2,17 @@ from __future__ import annotations
 
 from uuid import UUID
 from datetime import UTC, datetime
-from src.utils import names
-from src.utils import gateway
-from src.utils import buckets
+from src.utils import names, buckets, gateway
 from sqlalchemy import select
 from tenant.models import User as TenantUser
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.roles import OrganizationRoles
 from src.models.users import UserSummary
-from src.utils.namespace import dbname, k8name
 from src.database.session import session_scope
 from src.models.locations import LocationResponse
-from src.models.organizations import (
-    OrganizationDetails,
-    OrganizationMemberSummary,
-    OrganizationInvitationResponse,
-    OrganizationApplicationResponse,
-)
+from src.models.organizations import (OrganizationDetails, OrganizationMemberSummary, OrganizationInvitationResponse,
+                                      OrganizationApplicationResponse)
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -319,8 +312,8 @@ async def create(name: str, location_id: UUID, user: User, avatar: str | None = 
 
     async with session_scope() as session:
         slug = names.slugify(name, "Organization")
-        k8name(slug)
-        dbname(slug)
+        names.k8name(slug)
+        names.dbname(slug)
         organization = Organization(
             name=name,
             slug=slug,

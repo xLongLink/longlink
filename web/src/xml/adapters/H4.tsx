@@ -5,8 +5,6 @@ import { renderNode } from '@/xml/core/node';
 import type { Props } from '@/xml/types';
 import { headingId } from './heading';
 
-/** Props accepted by the XML h4 bridge component. */
-
 /** Renders a quaternary heading with typographic defaults. */
 export function H4({ props, nodes }: Props) {
     const { ctx } = useXmlContext();

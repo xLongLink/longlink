@@ -285,35 +285,6 @@
         "noPeople": "No people found.",
         "roleChanged": "{{name}} now has {{role}} permission"
     },
-    "pricing": {
-        "description": "Choose the level of platform support that matches your LongLink applications today.",
-        "eyebrow": "Pricing",
-        "month": "/ month",
-        "plans": {
-            "platformAction": "Talk to us",
-            "platformDescription": "Operate LongLink across dedicated infrastructure and support needs.",
-            "platformFeatureOne": "Dedicated locations",
-            "platformFeatureThree": "Custom deployment model",
-            "platformFeatureTwo": "Operations support",
-            "platformName": "Platform",
-            "platformPrice": "Custom",
-            "starterAction": "Start building",
-            "starterDescription": "Build and test LongLink apps locally with the SDK.",
-            "starterFeatureOne": "Local SDK runtime",
-            "starterFeatureThree": "SQLite and local file storage",
-            "starterFeatureTwo": "XML page rendering",
-            "starterName": "Starter",
-            "starterPrice": "Free",
-            "teamAction": "Contact sales",
-            "teamDescription": "Run small production apps with managed organization resources.",
-            "teamFeatureOne": "Managed deployments",
-            "teamFeatureThree": "Database and storage provisioning",
-            "teamFeatureTwo": "Organization access control",
-            "teamName": "Team",
-            "teamPrice": "CHF 49"
-        },
-        "title": "Start locally, deploy when the workflow is ready."
-    },
     "profile": {
         "applications": "Applications",
         "compute": "Compute",

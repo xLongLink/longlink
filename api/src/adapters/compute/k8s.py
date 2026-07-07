@@ -1,19 +1,18 @@
+import yaml
 import base64
 import hashlib
 import urllib.parse
-import yaml
 from .base import Compute
 from typing import Any
 from datetime import UTC, datetime
 from src.utils import names, templates
 from kubernetes import client, config
-from src.environments import env, resolve_cors_origins
 from src.logger import logger
 from src.constants import TEMPLATES
 from collections.abc import Callable
-from src.utils.namespace import k8name
-from kubernetes.client.exceptions import ApiException
+from src.environments import env, resolve_cors_origins
 from kubernetes.utils.quantity import parse_quantity
+from kubernetes.client.exceptions import ApiException
 
 GATEWAY_NAME = "longlink-gateway"
 GATEWAY_NAMESPACE = "longlink-system"
@@ -100,7 +99,7 @@ class K8s(Compute):
     def _pods(self, organization: str, application: str) -> list[client.V1Pod]:
         """Return pods for one managed application."""
 
-        namespace = k8name(names.knames(organization, "Organization"))
+        namespace = names.k8name(names.knames(organization, "Organization"))
         name = names.knames(application, "Application name")
         return self._core_api.list_namespaced_pod(namespace, label_selector=f"app={name}").items
 
@@ -893,7 +892,7 @@ end
     def application_deployment_ready(self, organization: str, application: str) -> bool:
         """Return whether the current application Deployment rollout is ready."""
 
-        namespace = k8name(names.knames(organization, "Organization"))
+        namespace = names.k8name(names.knames(organization, "Organization"))
         name = names.knames(application, "Application name")
         deployment = self._apps_api.read_namespaced_deployment(name, namespace)
         metadata = deployment.metadata
@@ -920,7 +919,7 @@ end
     async def namespace(self, organization: str) -> None:
         """Create the namespace for an organization if it does not exist."""
 
-        namespace = k8name(names.knames(organization, "Organization"))
+        namespace = names.k8name(names.knames(organization, "Organization"))
         # Reuse the namespace when it already exists so setup stays idempotent.
         try:
             existing_namespace = self._core_api.read_namespace(namespace)
@@ -953,7 +952,7 @@ end
     ) -> str:
         """Create or replace one internal application Deployment and Service."""
 
-        namespace = k8name(names.knames(organization, "Organization"))
+        namespace = names.k8name(names.knames(organization, "Organization"))
         name = names.knames(application, "Application name")
 
         # Replace the full Secret data map so removed environment keys do not survive a merge patch.
@@ -1028,7 +1027,7 @@ end
     async def delete_application(self, organization: str, application: str) -> None:
         """Delete one managed application workload and tolerate missing resources."""
 
-        namespace = k8name(names.knames(organization, "Organization"))
+        namespace = names.k8name(names.knames(organization, "Organization"))
         name = names.knames(application, "Application name")
 
         delete_calls = (
@@ -1048,7 +1047,7 @@ end
     async def delete_namespace(self, organization: str) -> None:
         """Delete one managed organization namespace and tolerate missing namespaces."""
 
-        namespace = k8name(names.knames(organization, "Organization"))
+        namespace = names.k8name(names.knames(organization, "Organization"))
         try:
             existing_namespace = self._core_api.read_namespace(namespace)
         except ApiException as exc:
@@ -1070,7 +1069,7 @@ end
     async def logs(self, organization: str, application: str, lines: int = 200) -> str:
         """Return recent logs for one managed application."""
 
-        namespace = k8name(names.knames(organization, "Organization"))
+        namespace = names.k8name(names.knames(organization, "Organization"))
         name = names.knames(application, "Application name")
         pods = self._pods(organization, application)
         if not pods:

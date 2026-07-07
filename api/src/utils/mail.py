@@ -3,12 +3,11 @@
 
 from __future__ import annotations
 
-import asyncio
-import email.utils
-import subprocess
 import ssl
+import asyncio
+import subprocess
+import email.utils
 from string import Template
-from typing import Any
 from pathlib import Path
 from smtplib import SMTP, SMTP_SSL
 from src.logger import logger
@@ -42,11 +41,9 @@ def _render_template(template_path: str | Path, context: Mapping[str, object] | 
 def render_mjml(mjml_content: str) -> str:
     """Compile MJML markup to HTML using the configured MJML CLI."""
 
-    command = env.EMAIL_MJML_COMMAND
-    if command is None:
+    command = (env.EMAIL_MJML_COMMAND or "").strip()
+    if not command:
         raise MailTemplateError("EMAIL_MJML_COMMAND is not set")
-
-    command = command.strip()
 
     try:
         result = subprocess.run(
@@ -129,10 +126,12 @@ def _authenticate_client(client: SMTP | SMTP_SSL) -> None:
 def _send_message(message: EmailMessage) -> None:
     """Send one prepared email message over SMTP."""
 
-    if env.EMAIL_SMTP_HOST is None:
+    smtp_host = env.EMAIL_SMTP_HOST
+    if smtp_host is None:
         raise MailDeliveryError("EMAIL_SMTP_HOST is required before sending mail")
 
-    if env.EMAIL_SMTP_PORT is None:
+    smtp_port = env.EMAIL_SMTP_PORT
+    if smtp_port is None:
         raise MailDeliveryError("EMAIL_SMTP_PORT is required before sending mail")
 
     timeout = float(env.EMAIL_SMTP_TIMEOUT_SECONDS) if env.EMAIL_SMTP_TIMEOUT_SECONDS is not None else None
@@ -140,22 +139,16 @@ def _send_message(message: EmailMessage) -> None:
 
     if env.EMAIL_SMTP_USE_SSL:
         if timeout is None:
-            smtp_client = SMTP_SSL(env.EMAIL_SMTP_HOST, env.EMAIL_SMTP_PORT, context=ssl_context)
+            smtp_client = SMTP_SSL(smtp_host, smtp_port, context=ssl_context)
         else:
-            smtp_client = SMTP_SSL(env.EMAIL_SMTP_HOST, env.EMAIL_SMTP_PORT, timeout=timeout, context=ssl_context)
-
-        with smtp_client as client:
-            _authenticate_client(client)
-            client.send_message(message)
-        return
-
-    if timeout is None:
-        smtp_client = SMTP(env.EMAIL_SMTP_HOST, env.EMAIL_SMTP_PORT)
+            smtp_client = SMTP_SSL(smtp_host, smtp_port, timeout=timeout, context=ssl_context)
+    elif timeout is None:
+        smtp_client = SMTP(smtp_host, smtp_port)
     else:
-        smtp_client = SMTP(env.EMAIL_SMTP_HOST, env.EMAIL_SMTP_PORT, timeout=timeout)
+        smtp_client = SMTP(smtp_host, smtp_port, timeout=timeout)
 
     with smtp_client as client:
-        if env.EMAIL_SMTP_USE_TLS:
+        if env.EMAIL_SMTP_USE_TLS and not env.EMAIL_SMTP_USE_SSL:
             client.starttls(context=ssl_context)
         _authenticate_client(client)
         client.send_message(message)
@@ -188,24 +181,6 @@ async def send_templated_email(
     await asyncio.to_thread(_send_message, message)
 
 
-def _build_invitation_context(
-    recipient_email: str,
-    inviter_name: str,
-    organization_name: str,
-    invitation_role: str,
-    organization_id: str,
-) -> dict[str, Any]:
-    """Build context keys expected by the organization invitation templates."""
-
-    return {
-        "recipient_email": recipient_email,
-        "inviter_name": inviter_name,
-        "organization_name": organization_name,
-        "invitation_role": invitation_role,
-        "organization_id": organization_id,
-    }
-
-
 async def send_organization_invitation_email(
     recipient_email: str,
     inviter_name: str,
@@ -215,9 +190,13 @@ async def send_organization_invitation_email(
 ) -> None:
     """Send a ready-to-use organization invitation message."""
 
-    context = _build_invitation_context(
-        recipient_email, inviter_name, organization_name, invitation_role, organization_id
-    )
+    context = {
+        "recipient_email": recipient_email,
+        "inviter_name": inviter_name,
+        "organization_name": organization_name,
+        "invitation_role": invitation_role,
+        "organization_id": organization_id,
+    }
     await send_templated_email(
         recipient_email=recipient_email,
         subject=f"You are invited to {organization_name}",

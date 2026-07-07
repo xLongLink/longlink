@@ -3,8 +3,6 @@ import { useXmlContext } from '@/xml/core/context';
 import type { Props } from '@/xml/types';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
 
-/** Props accepted by the XML Switch component. */
-
 /** Renders a shadcn-backed switch. */
 export function Switch({ props, nodes }: Props) {
     const { ctx } = useXmlContext();

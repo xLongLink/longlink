@@ -91,11 +91,7 @@ class Env(BaseSettings):
     CORS_ORIGINS: tuple[str, ...] = ()
 
     # Development image registry
-    LOCAL_CONTAINER_REGISTRY: str | None = None
     LOCAL_APPLICATION_IMAGE: str = "localhost:15000/longlink-app:dev"
-
-    # Image inspection safety
-    IMAGE_REGISTRY_ALLOWLIST: str = "registry-1.docker.io,docker.io,index.docker.io,ghcr.io"
 
     # Operation leases
     OPERATION_LEASE_SECONDS: int = 120

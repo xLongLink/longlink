@@ -1,51 +1,29 @@
+from src import adapters
 from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from datetime import UTC, datetime, timedelta
-from src import adapters
-from src.auth import (
-    authuser,
-    authsupport,
-    organization_access,
-    organization_member_access,
-)
+from src.auth import authuser, authsupport, organization_access, organization_member_access
+from src.utils import names, buckets
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.logger import logger
 from src.operations import provisioning
 from tenant.database import SHARED_SCHEMA
 from src.models.icons import parse_icon
-from src.utils import buckets
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.storages import (
-    OrganizationStorageResourceKind,
-    OrganizationStorageResourceResponse,
-    OrganizationStorageApplicationResponse,
-)
-from src.utils.namespace import dbname
-from src.models.databases import (
-    OrganizationDatabaseResourceKind,
-    OrganizationDatabaseTableResponse,
-    OrganizationDatabaseResourceResponse,
-    OrganizationDatabaseApplicationResponse,
-)
+from src.models.storages import (OrganizationStorageResourceKind, OrganizationStorageResourceResponse,
+                                 OrganizationStorageApplicationResponse)
+from src.models.databases import (OrganizationDatabaseResourceKind, OrganizationDatabaseTableResponse,
+                                  OrganizationDatabaseResourceResponse, OrganizationDatabaseApplicationResponse)
+from src.database.services import locations, operations, invitations, applications, organizations
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationResponse
-from src.models.organizations import (
-    OrganizationCreate,
-    OrganizationDetails,
-    OrganizationSummary,
-    OrganizationMemberUpdate,
-    OrganizationInvitationCreate,
-)
+from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary,
+                                      OrganizationMemberUpdate, OrganizationInvitationCreate)
 from src.database.models.users import User
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
-from src.database.services import operations
-from src.database.services import invitations
-from src.database.services import locations
-from src.database.services import applications
-from src.database.services import organizations
 
 router = APIRouter()
 TABLE_PREVIEW_LIMIT = 100
@@ -171,7 +149,7 @@ async def list_organization_database_resource_tables(
         raise NotFoundError("Database resource", resource_name)
 
     database_adapter = adapters.database(registry)
-    database_name = dbname(organization.slug)
+    database_name = names.dbname(organization.slug)
 
     try:
         if resource_name in {
@@ -294,7 +272,7 @@ async def _database_resource_rows(
 ) -> list[OrganizationDatabaseResourceResponse]:
     """Inspect one organization database and return API resource rows."""
 
-    database_name = dbname(organization.slug)
+    database_name = names.dbname(organization.slug)
     application_by_schema = {application.slug: application for application in active_applications}
 
     try:

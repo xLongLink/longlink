@@ -90,7 +90,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Feature                             | Supported behavior                                                                                                                      |
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | Image metadata inspection           | Reads LongLink OCI image labels plus the resolved manifest digest for app metadata and environment requirements.                         |
-| Image registry safety               | Rejects malformed image references, private/local/non-public registries, disallowed token realms, and registries outside the configured allowlist unless development mode allows the configured local registry. |
+| Image registry safety               | Requires explicit registry hosts plus image tags or digests and only reads public unauthenticated image metadata from GHCR, Docker Hub, GitLab.com, and localhost in development/testing. |
 | Icon catalog                        | Returns the fixed 30-icon Lucide runtime subset and validates normalized app icons.                                                     |
 | Application creation and deployment | Creates apps from images, records image/app/SDK versions, deploys the resolved image digest, selects registries, cleans failed partial runtime resources, and queues verification. |
 | Application deletion                | Lets permitted users soft-delete applications and queue immediate runtime resource removal with delay-ready scheduling.                 |

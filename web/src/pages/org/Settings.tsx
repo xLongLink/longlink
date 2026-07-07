@@ -1,16 +1,27 @@
 import { DataTable } from '@/components/DataTable';
 import CreateApplicationDialog from '@/components/dialogs/CreateApplicationDialog';
 import LogsDialog from '@/components/dialogs/LogsDialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Icon } from '@/components/ui/icon';
+import { Menu, MenuSection, MenuSubSection } from '@/components/ui/menu';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
-import { useApiQuery } from '@/hooks/use-api';
-import { useOrganizationActions } from '@/hooks/use-organization';
 import {
     useOrganizationDatabaseResourceTables,
     useOrganizationDatabaseResources,
     useOrganizationStorageResources,
 } from '@/data/organization';
 import { useStorageObjects } from '@/data/storage';
+import { useApiQuery } from '@/hooks/use-api';
+import { useOrganizationActions } from '@/hooks/use-organization';
 import { useUserProfile } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
@@ -22,12 +33,12 @@ import {
 } from '@/lib/roles';
 import type {
     ApiApplicationMember,
+    ApiInvitation,
     ApiOrganizationApplication,
     ApiOrganizationDatabaseResource,
     ApiOrganizationDatabaseTable,
     ApiOrganizationDetails,
     ApiOrganizationMemberSummary,
-    ApiInvitation,
     ApiOrganizationStorageResource,
     ApiStorageObject,
 } from '@/lib/types';
@@ -36,15 +47,10 @@ import { PostgreSQL } from '@/svg/PostgreSQL';
 import { S3 } from '@/svg/S3';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Menu, MenuSection, MenuSubSection } from '@/components/ui/menu';
 import { Boxes, Building2, Database, HardDrive, MoreVertical, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { DatabaseTableRows } from './DatabaseTableRows';
 import People from './People';
 
 type SettingsProps = {
@@ -767,7 +773,7 @@ export default function Settings({
                                             {databaseTableDetailError.message}
                                         </div>
                                     ) : selectedDatabaseTable ? (
-                                        <SettingsDatabaseTableRows table={selectedDatabaseTable} />
+                                        <DatabaseTableRows table={selectedDatabaseTable} />
                                     ) : null
                                 ) : databaseResourceTables.length ? (
                                     <DataTable columns={databaseTableColumns} data={databaseResourceTables} />
@@ -929,39 +935,4 @@ export default function Settings({
             </Dialog>
         </>
     );
-}
-
-type DatabaseTableRow = Record<string, string | number | boolean | null>;
-
-type SettingsDatabaseTableRowsProps = {
-    table: ApiOrganizationDatabaseTable;
-};
-
-/** Renders preview rows for one database table inside organization settings. */
-function SettingsDatabaseTableRows({ table }: SettingsDatabaseTableRowsProps) {
-    const { t } = useTranslation();
-    const databaseRowColumns: Array<ColumnDef<DatabaseTableRow>> = table.columns.length
-        ? table.columns.map((column) => ({
-              id: column.name,
-              header: column.name,
-              cell: ({ row }) => {
-                  const value = row.original[column.name];
-
-                  return value === null || value === undefined ? (
-                      <span className="text-muted-foreground">NULL</span>
-                  ) : (
-                      <span className="font-mono text-xs">{String(value)}</span>
-                  );
-              },
-              meta: { className: 'max-w-72 truncate' },
-          }))
-        : [
-              {
-                  id: 'empty',
-                  header: t('resources.noColumns'),
-                  cell: () => <span className="text-muted-foreground">{t('resources.noColumns')}</span>,
-              },
-          ];
-
-    return <DataTable columns={databaseRowColumns} data={table.rows} emptyMessage={t('resources.noRows')} />;
 }

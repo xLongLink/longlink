@@ -3,8 +3,6 @@ import { resolveTranslation } from '@/xml/core/i18n';
 import { renderNode } from '@/xml/core/node';
 import type { Props } from '@/xml/types';
 
-/** Props accepted by the XML s bridge component. */
-
 /** Renders strikethrough text. */
 export function S({ props, nodes }: Props) {
     const { ctx } = useXmlContext();

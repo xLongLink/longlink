@@ -1,20 +1,22 @@
-import contextlib
-import functools
 import hashlib
 import secrets
+import functools
+import contextlib
 from uuid import UUID
-from tenant.models import User
-from tenant.database import SHARED_SCHEMA, migrate_database, users as tenant_users
 from .base import Database
 from .types import DatabaseCellValue, DatabaseTableData, DatabaseTableUsage, DatabaseSchemaUsage, DatabaseTableColumn
 from decimal import Decimal
 from datetime import date, datetime
+from src.utils import names
 from sqlalchemy import String, text, inspect
+from tenant.models import User
 from collections.abc import AsyncIterator
+from tenant.database import SHARED_SCHEMA
+from tenant.database import users as tenant_users
+from tenant.database import migrate_database
 from src.environments import env
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
-from src.utils.namespace import dbname
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
 from sqlalchemy.sql.elements import quoted_name
 
@@ -140,7 +142,7 @@ class Postgres(Database):
     async def _ensure_organization_database(self, organization: str) -> None:
         """Create the organization database when it is missing."""
 
-        database_name_value = dbname(organization)
+        database_name_value = names.dbname(organization)
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
             result = await conn.execute(
                 text("SELECT 1 FROM pg_database WHERE datname = :organization"), {"organization": database_name_value}
@@ -153,7 +155,7 @@ class Postgres(Database):
     async def _organization_database_exists(self, organization: str) -> bool:
         """Return whether an organization database currently exists."""
 
-        database_name_value = dbname(organization)
+        database_name_value = names.dbname(organization)
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
             result = await conn.execute(
                 text("SELECT 1 FROM pg_database WHERE datname = :organization"),
@@ -233,7 +235,7 @@ class Postgres(Database):
     async def database(self, organization: str) -> str:
         """Create the organization database if it does not exist and return a connection DSN."""
         await self._ensure_organization_database(organization)
-        database_name = dbname(organization)
+        database_name = names.dbname(organization)
         await self._migrate_shared_schema(database_name)
 
         async with self._connection(database_name) as conn:
@@ -244,7 +246,7 @@ class Postgres(Database):
     async def sync_users(self, organization: str, users: list[User]) -> None:
         """Synchronize shared organization users for one organization."""
         await self._ensure_organization_database(organization)
-        database_name = dbname(organization)
+        database_name = names.dbname(organization)
         await self._migrate_shared_schema(database_name)
 
         async with self._connection(database_name, search_path=SHARED_SCHEMA) as conn:
@@ -254,7 +256,7 @@ class Postgres(Database):
     async def schema(self, organization: str, application: str) -> str:
         """Create or replace the schema for one application and return a connection DSN."""
         await self._ensure_organization_database(organization)
-        database_name = dbname(organization)
+        database_name = names.dbname(organization)
         role_name = self._application_role(organization, application)
         role_password = secrets.token_urlsafe(24)
         await self._migrate_shared_schema(database_name)
@@ -273,7 +275,7 @@ class Postgres(Database):
         if not await self._organization_database_exists(organization):
             return
 
-        database_name = dbname(organization)
+        database_name = names.dbname(organization)
         role_name = self._application_role(organization, application)
 
         async with self._connection(database_name) as conn:
@@ -292,7 +294,7 @@ class Postgres(Database):
     async def delete_database(self, organization: str) -> None:
         """Delete one organization database and tolerate missing databases."""
 
-        database_name_value = dbname(organization)
+        database_name_value = names.dbname(organization)
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
             database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(database_name_value)
             await conn.execute(
