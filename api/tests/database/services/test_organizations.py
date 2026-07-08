@@ -189,11 +189,12 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
     assert await db.organizations.membership_role(organization.id, owner.id) == OrganizationRoles.owner
 
 
-async def test_database_users_returns_active_members_ordered_by_email(users: tuple[User, User, User]) -> None:
-    """Return active organization members for tenant database synchronization."""
+async def test_database_users_returns_member_state_ordered_by_email(users: tuple[User, User, User]) -> None:
+    """Return organization member state for tenant database synchronization."""
 
     # Arrange
     owner, member, deleted_member = users
+    deleted_at = datetime.now(UTC)
     location = await db.locations.create("local", "Local testing", owner, "CH")
     organization = await db.organizations.create("acme", "acme", location.id, owner)
 
@@ -211,7 +212,7 @@ async def test_database_users_returns_active_members_ordered_by_email(users: tup
                 user_id=deleted_member.id,
                 organization_id=organization.id,
                 role_name=OrganizationRoles.read,
-                deleted_at=datetime.now(UTC),
+                deleted_at=deleted_at,
             )
         )
         await session.commit()
@@ -220,8 +221,13 @@ async def test_database_users_returns_active_members_ordered_by_email(users: tup
     database_users = await db.organizations.database_users(organization.id)
 
     # Assert
-    assert [user.email for user in database_users] == [owner.email, member.email]
-    assert [user.role for user in database_users] == [OrganizationRoles.owner.value, OrganizationRoles.write.value]
+    assert [user.email for user in database_users] == [owner.email, member.email, deleted_member.email]
+    assert [user.role for user in database_users] == [
+        OrganizationRoles.owner.value,
+        OrganizationRoles.write.value,
+        OrganizationRoles.read.value,
+    ]
+    assert [user.deleted_at is not None for user in database_users] == [False, False, True]
 
 
 async def test_get_includes_application_role_for_requested_user(users: tuple[User, User, User]) -> None:

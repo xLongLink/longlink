@@ -38,7 +38,7 @@ async def fetch_all() -> list[Organization]:
 
 
 async def list_by_user(user_id: UUID) -> list[Organization]:
-    """Return all active organizations for one active member."""
+    """Return active organizations that contain current or historical user membership."""
 
     async with session_scope() as session:
         statement = (
@@ -47,7 +47,6 @@ async def list_by_user(user_id: UUID) -> list[Organization]:
             .options(selectinload(Organization.location))
             .where(
                 UserOrganization.user_id == user_id,
-                UserOrganization.deleted_at.is_(None),
                 Organization.deleted_at.is_(None),
             )
         )
@@ -90,7 +89,7 @@ async def get_member_access(organization_id: UUID, user_id: UUID) -> tuple[Organ
 
 
 async def database_users(organization_id: UUID) -> list[TenantUser]:
-    """Return active organization members for shared user synchronization."""
+    """Return organization user state for shared user synchronization."""
 
     async with session_scope() as session:
         statement = (
@@ -99,30 +98,42 @@ async def database_users(organization_id: UUID) -> list[TenantUser]:
                 UserOrganization.role_name,
                 UserOrganization.created_at,
                 UserOrganization.updated_at,
+                UserOrganization.deleted_at,
             )
             .join(UserOrganization, UserOrganization.user_id == User.id)
-            .where(
-                UserOrganization.organization_id == organization_id,
-                UserOrganization.deleted_at.is_(None),
-                User.deleted_at.is_(None),
-            )
+            .where(UserOrganization.organization_id == organization_id)
             .order_by(User.email)
         )
         result = await session.execute(statement)
         rows = result.all()
 
-        return [
-            TenantUser(
-                id=user.id,
-                name=user.name,
-                email=user.email,
-                avatar=user.avatar or "",
-                role=role_name.value,
-                created_at=created_at,
-                updated_at=max(user.updated_at, updated_at),
+        database_users: list[TenantUser] = []
+        # Convert each membership row to the tenant-facing user snapshot.
+        for user, role_name, created_at, updated_at, membership_deleted_at in rows:
+            # A shared user becomes inactive when either the account or organization membership is inactive.
+            deleted_at = user.deleted_at
+            if membership_deleted_at is not None and (deleted_at is None or membership_deleted_at > deleted_at):
+                deleted_at = membership_deleted_at
+
+            # The tenant row should advance when profile, membership, or deactivation state changes.
+            tenant_updated_at = max(user.updated_at, updated_at)
+            if deleted_at is not None and deleted_at > tenant_updated_at:
+                tenant_updated_at = deleted_at
+
+            database_users.append(
+                TenantUser(
+                    id=user.id,
+                    name=user.name,
+                    email=user.email,
+                    avatar=user.avatar,
+                    role=role_name.value,
+                    created_at=created_at,
+                    updated_at=tenant_updated_at,
+                    deleted_at=deleted_at,
+                )
             )
-            for user, role_name, created_at, updated_at in rows
-        ]
+
+        return database_users
 
 
 async def get(
@@ -216,7 +227,7 @@ async def get(
                 id=user.id,
                 name=user.name,
                 email=user.email,
-                avatar=user.avatar or "",
+                avatar=user.avatar,
                 role=role_name,
                 last_access_at=updated_at,
             )

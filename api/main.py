@@ -1,11 +1,9 @@
 import asyncio
 import contextlib
-from uuid import UUID
 from alembic import command
 from fastapi import FastAPI
 from pathlib import Path
 from src.errors import register_error_handlers
-from src.logger import logger
 from src.routes import (
     auth,
     icons,
@@ -23,55 +21,13 @@ from src.routes import (
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
 from alembic.config import Config
-from src.operations import execute
+from src.operations.worker import run_operation_scheduler
 from collections.abc import AsyncIterator
 from src.environments import env, resolve_cors_origins, validate_production_settings
 import src.utils.url as url
 from sqlalchemy.engine import make_url
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-from src.database.services import operations
-
-
-async def renew_operation_lease(operation_id: UUID, lease_token: str) -> None:
-    """Keep one claimed operation leased while the current worker executes it."""
-
-    while True:
-        await asyncio.sleep(max(1, env.OPERATION_HEARTBEAT_SECONDS))
-        renewed = await operations.renew_lease(operation_id, lease_token)
-        if renewed is None:
-            logger.warning("Operation %s lease was lost", operation_id)
-            return
-
-
-async def run_operation_scheduler() -> None:
-    """Continuously claim and execute scheduled operations."""
-
-    # Keep polling the queue so new claimed operations are drained continuously.
-    while True:
-        operation = await operations.claim_next()
-        if operation is None:
-            await asyncio.sleep(1)
-            continue
-
-        logger.info("Executing operation %s (%s)", operation.id, operation.kind)
-        if operation.lease_token is None:
-            logger.warning("Skipping operation %s without a lease token", operation.id)
-            continue
-
-        heartbeat = asyncio.create_task(renew_operation_lease(operation.id, operation.lease_token))
-        # Execute one claimed operation without stopping the worker on failure.
-        try:
-            result = await execute(operation)
-            if result.started_at is None and result.stopped_at is None and result.step == operation.step:
-                await asyncio.sleep(1)
-        except Exception:
-            # Keep draining so one failed operation does not block the queue.
-            logger.exception("Operation scheduler failed for %s (%s)", operation.id, operation.kind)
-        finally:
-            heartbeat.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await heartbeat
 
 
 async def migrate_development_sqlite_database() -> None:

@@ -105,7 +105,7 @@ async def test_create_organization_initializes_database(
             calls.append(("sync_users", organization, users))
 
     monkeypatch.setattr(
-        "src.operations.provisioning.adapters.database",
+        "src.operations.implementation.bootstrap.adapters.database",
         lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
     )
 
@@ -166,7 +166,7 @@ async def test_create_organization_initializes_storage(
             return bucket_name
 
     monkeypatch.setattr(
-        "src.operations.provisioning.adapters.storage",
+        "src.operations.implementation.bootstrap.adapters.storage",
         lambda registry: FakeStorage(
             registry.protocol,
             registry.endpoint_url,

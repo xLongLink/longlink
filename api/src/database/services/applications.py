@@ -274,7 +274,7 @@ async def list_members(application_id: UUID, organization_id: UUID) -> list[Appl
                 id=member.id,
                 name=member.name,
                 email=member.email,
-                avatar=member.avatar or "",
+                avatar=member.avatar,
                 application_role=application_role,
                 organization_role=organization_role,
             )

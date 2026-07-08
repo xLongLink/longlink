@@ -6,12 +6,50 @@ from typing import Any, cast
 from src.compute import Kubernetes
 from docker.errors import DockerException
 from collections.abc import Iterator
-from testcontainers.k3s import K3SContainer
-from kr8s.asyncio.objects import Secret, Ingress, Service, ConfigMap, NetworkPolicy
+from containers import DockerRuntimeContainer, wait_for_container_log
+from src.compute.library import Secret, Ingress, Service, ConfigMap, NetworkPolicy
 
 pytestmark = pytest.mark.no_db
 K3S_IMAGE = "rancher/k3s:v1.31.5-k3s1"
 ECHO_SERVER_IMAGE = "ealen/echo-server:0.9.2"
+K3S_HOST = "127.0.0.1"
+K3S_PORT = 6443
+K3S_WEBHOOK_PORT = 8443
+
+
+class K3SRuntimeContainer(DockerRuntimeContainer):
+    """Run a k3s server container for Kubernetes integration tests."""
+
+    def __init__(self, image: str) -> None:
+        """Configure the k3s server container."""
+
+        super().__init__(
+            image,
+            command=f"server --disable traefik --tls-san={K3S_HOST}",
+            environment={"K3S_URL": f"https://{K3S_HOST}:{K3S_PORT}"},
+            ports=[K3S_PORT, K3S_WEBHOOK_PORT],
+            privileged=True,
+            tmpfs={"/run": "", "/var/run": ""},
+        )
+
+    def start(self) -> K3SRuntimeContainer:
+        """Start k3s and wait until the server reports readiness."""
+
+        super().start()
+        wait_for_container_log(self, "Node controller sync successful", 120)
+        return self
+
+    def config_yaml(self) -> str:
+        """Return kubeconfig content that points at the published host port."""
+
+        exit_code, output = self.execute(["cat", "/etc/rancher/k3s/k3s.yaml"])
+        if exit_code:
+            raise RuntimeError(f"Failed reading k3s kubeconfig: {output}")
+
+        return output.replace(
+            f"https://127.0.0.1:{K3S_PORT}",
+            f"https://{self.host()}:{self.port(K3S_PORT)}",
+        )
 
 
 @pytest.fixture
@@ -19,7 +57,7 @@ def kubernetes_compute() -> Iterator[Kubernetes]:
     """Start a k3s container and return a Kubernetes compute client connected to it."""
 
     # Avoid binding host cgroups so nested pod sandboxes start reliably under Docker.
-    container = K3SContainer(K3S_IMAGE, enable_cgroup_mount=False)
+    container = K3SRuntimeContainer(K3S_IMAGE)
     try:
         container.start()
     except DockerException as exc:

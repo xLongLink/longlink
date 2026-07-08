@@ -1,4 +1,3 @@
-import { getStoredSdkUserId } from '@/lib/sdk-users';
 import { hasProtocol } from 'ufo';
 
 const DEFAULT_API_URL = '';
@@ -61,13 +60,7 @@ async function readApiError(response: Response): Promise<string> {
 
 /** Builds request headers shared by API and SDK XML action requests. */
 export function createApiHeaders(initHeaders?: HeadersInit): Headers {
-    const headers = new Headers(initHeaders);
-
-    if (import.meta.env.MODE === 'sdk' && !headers.has('x-user-id')) {
-        headers.set('x-user-id', getStoredSdkUserId());
-    }
-
-    return headers;
+    return new Headers(initHeaders);
 }
 
 /** Sends one API request with shared URL, credential, and header handling. */

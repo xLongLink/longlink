@@ -9,7 +9,7 @@ import pytest
 from docker.errors import DockerException
 from fastapi.testclient import TestClient
 from authlib.integrations.starlette_client import OAuth
-from testcontainers.core.container import DockerContainer
+from containers import DockerRuntimeContainer
 from main import app
 from src.routes import auth as auth_routes
 from src import auth as auth_module
@@ -23,6 +23,7 @@ KEYCLOAK_CLIENT_SECRET = "longlink-secret"
 KEYCLOAK_ADMIN_USERNAME = "admin"
 KEYCLOAK_ADMIN_PASSWORD = "admin"
 KEYCLOAK_REDIRECT_URI = "http://localhost:5173/auth/oidc"
+KEYCLOAK_PORT = 8080
 
 
 def _wait_for_keycloak(issuer_url: str) -> None:
@@ -45,15 +46,17 @@ def _wait_for_keycloak(issuer_url: str) -> None:
 def keycloak_issuer() -> Iterator[str]:
     """Start Keycloak with the local test realm and return its issuer URL."""
 
-    container = (
-        DockerContainer(KEYCLOAK_IMAGE)
-        .with_env("KEYCLOAK_ADMIN", KEYCLOAK_ADMIN_USERNAME)
-        .with_env("KEYCLOAK_ADMIN_PASSWORD", KEYCLOAK_ADMIN_PASSWORD)
-        .with_env("KC_BOOTSTRAP_ADMIN_USERNAME", KEYCLOAK_ADMIN_USERNAME)
-        .with_env("KC_BOOTSTRAP_ADMIN_PASSWORD", KEYCLOAK_ADMIN_PASSWORD)
-        .with_exposed_ports(8080)
-        .with_volume_mapping(str(KEYCLOAK_REALM_FILE), "/opt/keycloak/data/import/dev.json")
-        .with_command("start-dev --http-port=8080 --import-realm")
+    container = DockerRuntimeContainer(
+        KEYCLOAK_IMAGE,
+        command="start-dev --http-port=8080 --import-realm",
+        ports=[KEYCLOAK_PORT],
+        volumes=[(str(KEYCLOAK_REALM_FILE), "/opt/keycloak/data/import/dev.json", "ro")],
+        environment={
+            "KEYCLOAK_ADMIN": KEYCLOAK_ADMIN_USERNAME,
+            "KEYCLOAK_ADMIN_PASSWORD": KEYCLOAK_ADMIN_PASSWORD,
+            "KC_BOOTSTRAP_ADMIN_USERNAME": KEYCLOAK_ADMIN_USERNAME,
+            "KC_BOOTSTRAP_ADMIN_PASSWORD": KEYCLOAK_ADMIN_PASSWORD,
+        },
     )
 
     try:
@@ -62,7 +65,7 @@ def keycloak_issuer() -> Iterator[str]:
         pytest.skip(f"Docker is not available for Keycloak integration tests: {exc}")
 
     issuer = (
-        f"http://{container.get_container_host_ip()}:{container.get_exposed_port(8080)}/"
+        f"http://{container.host()}:{container.port(KEYCLOAK_PORT)}/"
         f"realms/{KEYCLOAK_REALM_NAME}"
     )
     try:

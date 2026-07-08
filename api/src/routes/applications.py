@@ -3,40 +3,34 @@ from src import compute as compute_runtime
 from uuid import UUID
 from dataclasses import dataclass
 from collections.abc import Mapping
+from datetime import UTC, datetime
 from fastapi import Depends, Request, Response, APIRouter
-from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authadmin
 from src.utils import names, buckets, gateway
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
-from src.operations import provisioning
+from src.operations.constants import RESOURCE_REMOVE_STEP
+from src.operations.implementation import resources, registries
 from src.models.statuses import ApplicationStatus
 from src.models.roles import role, ApplicationRoles, OrganizationRoles
-from src.compute.constants import GATEWAY_SECRET_HEADER, GATEWAY_IDENTITY_HEADERS
+from src.compute.constants import GATEWAY_SECRET_HEADER
 from src.database.services import operations, applications, organizations
 from src.models.operations import OperationKind
-from src.models.applications import (ApplicationCreate, ApplicationResponse, ApplicationMemberUpdate,
-                                     ApplicationMemberResponse)
+from src.models.applications import ApplicationCreate, ApplicationResponse, ApplicationMemberUpdate, ApplicationMemberResponse
 from src.database.models.users import User
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
-APPLICATION_DELETE_DELAY_DAYS = 0
-APPLICATION_PROXY_METHODS = ["DELETE", "GET", "PATCH", "POST", "PUT"]
 APPLICATION_PROXY_TIMEOUT_SECONDS = 300.0
 APPLICATION_PROXY_METHOD_REQUIRED_ROLES = {
+    "DELETE": "maintain",
     "GET": "read",
+    "PATCH": "write",
     "POST": "write",
     "PUT": "write",
-    "PATCH": "write",
-    "DELETE": "maintain",
 }
-APPLICATION_PROXY_REQUEST_EXCLUDED_HEADERS = {
-    "accept-encoding",
-    "authorization",
+APPLICATION_PROXY_METHODS = list(APPLICATION_PROXY_METHOD_REQUIRED_ROLES)
+APPLICATION_PROXY_HOP_BY_HOP_HEADERS = {
     "connection",
-    "content-length",
-    "cookie",
-    "host",
     "keep-alive",
     "proxy-authenticate",
     "proxy-authorization",
@@ -44,22 +38,10 @@ APPLICATION_PROXY_REQUEST_EXCLUDED_HEADERS = {
     "trailer",
     "transfer-encoding",
     "upgrade",
-    GATEWAY_SECRET_HEADER,
-    *GATEWAY_IDENTITY_HEADERS,
 }
-APPLICATION_PROXY_RESPONSE_EXCLUDED_HEADERS = {
-    "connection",
-    "content-encoding",
-    "content-length",
-    "keep-alive",
-    "proxy-authenticate",
-    "proxy-authorization",
-    "set-cookie",
-    "te",
-    "trailer",
-    "transfer-encoding",
-    "upgrade",
-}
+APPLICATION_PROXY_PLATFORM_HEADER_PREFIXES = ("x-longlink-", "x-user-")
+APPLICATION_PROXY_REQUEST_PRIVATE_HEADERS = {"accept-encoding", "authorization", "content-length", "cookie", "host"}
+APPLICATION_PROXY_RESPONSE_PRIVATE_HEADERS = {"content-encoding", "content-length", "set-cookie"}
 
 router = APIRouter()
 
@@ -90,6 +72,27 @@ def _application_proxy_request_url(application_id: UUID, ingress_host: str, path
     return url
 
 
+def _application_proxy_hop_by_hop_headers(headers: Mapping[str, str]) -> set[str]:
+    """Return connection-scoped header names that must not cross proxy hops."""
+
+    blocked_headers = set(APPLICATION_PROXY_HOP_BY_HOP_HEADERS)
+
+    # The Connection header can name additional hop-by-hop headers for this specific request or response.
+    connection_header = headers.get("connection")
+    if connection_header:
+        blocked_headers.update(name.strip().lower() for name in connection_header.split(",") if name.strip())
+
+    return blocked_headers
+
+
+def _application_proxy_platform_header(name: str) -> bool:
+    """Return whether one header name is controlled by the platform proxy."""
+
+    # Platform identity and routing headers are always owned by the API proxy.
+    lowered_name = name.lower()
+    return lowered_name == GATEWAY_SECRET_HEADER or lowered_name.startswith(APPLICATION_PROXY_PLATFORM_HEADER_PREFIXES)
+
+
 def _application_proxy_request_headers(
     request: Request,
     gateway_secret: str,
@@ -98,10 +101,18 @@ def _application_proxy_request_headers(
     """Return sanitized request headers for the cluster gateway."""
 
     headers: dict[str, str] = {}
+    blocked_headers = _application_proxy_hop_by_hop_headers(request.headers)
 
     # Copy only client headers that are safe for the runtime app to receive.
     for name, value in request.headers.items():
-        if name.lower() in APPLICATION_PROXY_REQUEST_EXCLUDED_HEADERS:
+        lowered_name = name.lower()
+
+        # Drop transport, session, and platform-owned headers before forwarding to the app.
+        if (
+            lowered_name in blocked_headers
+            or lowered_name in APPLICATION_PROXY_REQUEST_PRIVATE_HEADERS
+            or _application_proxy_platform_header(lowered_name)
+        ):
             continue
 
         headers[name] = value
@@ -115,11 +126,15 @@ def _application_proxy_request_headers(
 def _application_proxy_response_headers(headers: Mapping[str, str]) -> dict[str, str]:
     """Return response headers safe to pass back from the proxied application."""
 
+    blocked_headers = _application_proxy_hop_by_hop_headers(headers)
+
     # Drop hop-by-hop and platform-owned headers before returning the app response to the browser.
     return {
         name: value
         for name, value in headers.items()
-        if name.lower() not in APPLICATION_PROXY_RESPONSE_EXCLUDED_HEADERS
+        if name.lower() not in blocked_headers
+        and name.lower() not in APPLICATION_PROXY_RESPONSE_PRIVATE_HEADERS
+        and not _application_proxy_platform_header(name)
     }
 
 
@@ -159,7 +174,7 @@ async def create_application(
     organization_id: UUID,
     payload: ApplicationCreate,
     user: User = Depends(authuser),
-) -> ApplicationResponse:
+) -> dict[str, object]:
     """Register a new application in the database and deploy it on the compute cluster."""
 
     # Resolve access inside the handler so body validation can reject malformed payloads first.
@@ -180,14 +195,15 @@ async def create_application(
         names.knames(application_slug, "Application name")
         names.k8name(organization.slug)
         names.dbname(organization.slug)
-        provisioning.shared_storage_bucket(organization)
+        if organization.shared_storage_bucket_name is None:
+            raise ValueError("Organization has no assigned shared storage bucket")
         buckets.application(organization.slug, application_slug)
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
 
     # Provision runtime resources and convert infrastructure failures into API availability errors.
     try:
-        application = await provisioning.create_application_runtime(
+        application = await resources.create_application_runtime(
             organization,
             application_slug,
             payload,
@@ -201,16 +217,14 @@ async def create_application(
     if reloaded_application is None:
         raise NotFoundError("Application", application.id)
 
-    return ApplicationResponse.model_validate(
-        {
-            **reloaded_application.model_dump(),
-            "organization": reloaded_application.organization,
-            "created_by": reloaded_application.created_by or user,
-            "updated_by": reloaded_application.updated_by or reloaded_application.created_by or user,
-            "deleted_by": reloaded_application.deleted_by,
-            "gateway_url": applications.response_gateway_url(reloaded_application),
-        }
-    )
+    return {
+        **reloaded_application.model_dump(),
+        "organization": reloaded_application.organization,
+        "created_by": reloaded_application.created_by or user,
+        "updated_by": reloaded_application.updated_by or reloaded_application.created_by or user,
+        "deleted_by": reloaded_application.deleted_by,
+        "gateway_url": applications.response_gateway_url(reloaded_application),
+    }
 
 
 @router.get("/api/applications/{application_id}/logs")
@@ -224,7 +238,7 @@ async def get_application_logs(access: ApplicationAccess = Depends(application_a
     if not can_manage_application:
         raise ForbiddenError("Application log permissions required")
 
-    registry = await provisioning.application_compute_registry(access.application, access.organization.location_id)
+    registry = await registries.application_compute_registry(access.application, access.organization.location_id)
     if registry is None:
         raise UnavailableError(f"No compute cluster configured for location '{access.organization.location_id}'")
 
@@ -306,23 +320,15 @@ async def delete_application(access: ApplicationAccess = Depends(application_acc
     await operations.create(
         OperationKind.application_delete,
         application_id=access.application.id,
-        scheduled_at=datetime.now(UTC) + timedelta(days=APPLICATION_DELETE_DELAY_DAYS),
-        step="remove",
+        scheduled_at=datetime.now(UTC),
+        step=RESOURCE_REMOVE_STEP,
         user=access.user,
     )
     return Response(status_code=204)
 
 
-@router.api_route(
-    "/api/applications/{application_id}/proxy",
-    methods=APPLICATION_PROXY_METHODS,
-    include_in_schema=False,
-)
-@router.api_route(
-    "/api/applications/{application_id}/proxy/{path:path}",
-    methods=APPLICATION_PROXY_METHODS,
-    include_in_schema=False,
-)
+@router.api_route("/api/applications/{application_id}/proxy", methods=APPLICATION_PROXY_METHODS, include_in_schema=False)
+@router.api_route("/api/applications/{application_id}/proxy/{path:path}", methods=APPLICATION_PROXY_METHODS, include_in_schema=False)
 async def proxy_application_request(
     request: Request,
     path: str = "",
@@ -356,7 +362,7 @@ async def proxy_application_request(
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
     # Use the app's assigned compute registry so the proxy targets the correct cluster gateway.
-    registry = await provisioning.application_compute_registry(access.application, access.organization.location_id)
+    registry = await registries.application_compute_registry(access.application, access.organization.location_id)
     if registry is None:
         raise UnavailableError(f"No compute cluster configured for location '{access.organization.location_id}'")
 

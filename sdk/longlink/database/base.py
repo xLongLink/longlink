@@ -3,10 +3,9 @@ from uuid import UUID
 from typing import Any, ClassVar
 from datetime import datetime
 from pydantic import ConfigDict
-from sqlmodel import Field, SQLModel, select
+from sqlmodel import Field, SQLModel
 from sqlalchemy import Uuid, Column, String, DateTime
 from tenant.utils import utcnow
-from tenant.models import User as TenantUser
 from sqlalchemy.orm import relationship, declared_attr
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import (AsyncEngine, async_sessionmaker,
@@ -45,45 +44,6 @@ class User(Base, table=True):
     deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTC_DATETIME_TYPE)
 
 
-LOCAL_USERS: tuple[TenantUser, ...] = (
-    TenantUser(
-        id=UUID("00000000-0000-0000-0000-000000000001"),
-        name="Read User",
-        role="read",
-        email="read@local.longlink.dev",
-        avatar="",
-    ),
-    TenantUser(
-        id=UUID("00000000-0000-0000-0000-000000000002"),
-        name="Write User",
-        role="write",
-        email="write@local.longlink.dev",
-        avatar="",
-    ),
-    TenantUser(
-        id=UUID("00000000-0000-0000-0000-000000000003"),
-        name="Maintain User",
-        role="maintain",
-        email="maintain@local.longlink.dev",
-        avatar="",
-    ),
-    TenantUser(
-        id=UUID("00000000-0000-0000-0000-000000000004"),
-        name="Admin User",
-        role="admin",
-        email="admin@local.longlink.dev",
-        avatar="",
-    ),
-    TenantUser(
-        id=UUID("00000000-0000-0000-0000-000000000005"),
-        name="Owner User",
-        role="owner",
-        email="owner@local.longlink.dev",
-        avatar="",
-    ),
-)
-
-
 def validate_database_schema(database_schema: str) -> str:
     """Return a database schema name after rejecting unsafe search path input."""
 
@@ -118,30 +78,6 @@ def deleted_by_relationship(cls: Any):
     """Return the deleter relationship for mapped subclasses."""
 
     return relationship(User, foreign_keys=[cls.deleted_id], lazy="selectin")
-
-
-async def seed_local_users(session_maker: async_sessionmaker[AsyncSession]) -> None:
-    """Create deterministic local users for SDK development auditing."""
-
-    async with session_maker() as session:
-        user_id_column = getattr(User, "id")
-        result = await session.exec(select(User).where(user_id_column.in_([user.id for user in LOCAL_USERS])))
-        existing_users = {user.id: user for user in result.all()}
-
-        # Keep seeded users deterministic if the SDK scaffold is restarted with existing data.
-        for payload in LOCAL_USERS:
-            user = existing_users.get(payload.id)
-
-            if user is None:
-                session.add(User(**payload.model_dump()))
-                continue
-
-            user.name = payload.name
-            user.role = payload.role
-            user.email = payload.email
-            user.avatar = payload.avatar
-
-        await session.commit()
 
 
 class Table(Base):
@@ -272,7 +208,5 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
     if str(_engine.url).startswith("sqlite+"):
         async with _engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.create_all)
-
-        await seed_local_users(Session)
 
     return Session

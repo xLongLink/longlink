@@ -13,28 +13,29 @@ from src.models.databases import (
     DatabaseRegistryResponse,
 )
 from src.database.models.users import User
+from src.database.models.databases import DatabaseRegistry
 from src.database.services import database
 
 router = APIRouter()
 
 
 @router.get("/api/databases", response_model=list[DatabaseRegistryResponse])
-async def list_database_registries(_user: User = Depends(authsupport)) -> list[DatabaseRegistryResponse]:
+async def list_database_registries(_user: User = Depends(authsupport)) -> list[DatabaseRegistry]:
     """Return all registered database backends."""
 
     registries = await database.fetch_all()
-    return [DatabaseRegistryResponse.model_validate(registry) for registry in registries]
+    return registries
 
 
 @router.get("/api/databases/{registry_id}", response_model=DatabaseRegistryResponse)
-async def get_database_registry(registry_id: UUID, _: User = Depends(authsupport)) -> DatabaseRegistryResponse:
+async def get_database_registry(registry_id: UUID, _: User = Depends(authsupport)) -> DatabaseRegistry:
     """Return one database backend registration."""
 
     registry = await database.get(registry_id)
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 
-    return DatabaseRegistryResponse.model_validate(registry)
+    return registry
 
 
 @router.delete("/api/databases/{registry_id}", status_code=204)
@@ -52,7 +53,7 @@ async def delete_database_registry(registry_id: UUID, user: User = Depends(autha
 @router.post("/api/databases", response_model=DatabaseRegistryResponse)
 async def create_database_registry(
     payload: DatabaseRegistryCreate, user: User = Depends(authadmin)
-) -> DatabaseRegistryResponse:
+) -> DatabaseRegistry:
     """Create one database backend registration."""
 
     try:
@@ -62,14 +63,14 @@ async def create_database_registry(
 
     registry = await database.create(**payload.model_dump(), slug=slug, user=user)
 
-    return DatabaseRegistryResponse.model_validate(registry)
+    return registry
 
 
 @router.get(
     "/api/databases/{registry_id}/databases",
     response_model=list[DatabaseDatabaseResponse],
 )
-async def list_database_databases(registry_id: UUID, _: User = Depends(authsupport)) -> list[DatabaseDatabaseResponse]:
+async def list_database_databases(registry_id: UUID, _: User = Depends(authsupport)) -> list[dict[str, str]]:
     """List all databases on a database backend."""
 
     registry = await database.get(registry_id)
@@ -83,7 +84,7 @@ async def list_database_databases(registry_id: UUID, _: User = Depends(authsuppo
         logger.exception("Failed to inspect databases for registry '%s'", registry_id)
         raise UnavailableError("Database resources unavailable") from exc
 
-    return [DatabaseDatabaseResponse(name=database_name) for database_name in database_names]
+    return [{"name": database_name} for database_name in database_names]
 
 
 @router.get(
@@ -94,7 +95,7 @@ async def list_database_schemas(
     registry_id: UUID,
     database_name: str,
     _: User = Depends(authsupport),
-) -> list[DatabaseSchemaResponse]:
+) -> list[dict[str, str]]:
     """List all schemas in a database on a database backend."""
 
     registry = await database.get(registry_id)
@@ -112,11 +113,11 @@ async def list_database_schemas(
         )
         raise UnavailableError("Database schemas unavailable") from exc
 
-    return [DatabaseSchemaResponse(name=schema_name) for schema_name in schema_names]
+    return [{"name": schema_name} for schema_name in schema_names]
 
 
 @router.get("/api/databases/{registry_id}/usage", response_model=DatabaseUsageResponse)
-async def get_database_usage(registry_id: UUID, _user: User = Depends(authsupport)) -> DatabaseUsageResponse:
+async def get_database_usage(registry_id: UUID, _user: User = Depends(authsupport)) -> dict[str, int]:
     """Return total and free storage for one database backend."""
 
     registry = await database.get(registry_id)
@@ -130,4 +131,4 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
         logger.exception("Failed to inspect database usage for registry '%s'", registry_id)
         raise UnavailableError("Database usage unavailable") from exc
 
-    return DatabaseUsageResponse(**data)
+    return data

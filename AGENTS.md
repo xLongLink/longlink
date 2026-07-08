@@ -180,6 +180,7 @@ Keep both web build modes working. API mode builds the authenticated control-pla
 - Reduce complexity and remove dead code
 - Enforce project conventions, normalize naming, improve readability
 - Prefer established, well-maintained libraries for common concerns such as parsing, validation, routing, URL handling, forms, and i18n when they keep the code simpler than handwritten implementations.
+- For FastAPI routes, declare `response_model` and return raw ORM objects, dictionaries, or primitive data; do not instantiate or `model_validate` response models only to validate route output.
 - Prefer inlining simple, single-use local prop object types directly in component signatures.
 - Keep local prop type aliases when the shape is shared, reused, or significantly complex.
 - Prefer direct inline className expressions for one-off style values instead of temporary local `...ClassName` constants used only once or twice in JSX.
@@ -188,6 +189,7 @@ Keep both web build modes working. API mode builds the authenticated control-pla
 - Keep Python and JavaScript function definitions on one line when the full signature fits within the configured line length.
 - Do not add new helper functions unless they are explicitly needed.
 - Python functions must have docstrings, and any logic blocks must have preceding `# ...` comments.
+- Keep one blank line before each logic-block comment so comments visually separate consecutive code blocks.
 - Python files must not start with module-level triple-quoted docstrings; use comments only when a file header is needed. Alembic revision files may keep their generated revision header docstring.
 - Do not add `__all__` unless a concrete public star-import contract requires it.
 - JavaScript functions must have JSDoc comments, and non-trivial logic blocks must have preceding `// ...` comments.

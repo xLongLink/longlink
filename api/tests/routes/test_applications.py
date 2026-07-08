@@ -3,7 +3,7 @@ import httpx2
 from types import SimpleNamespace
 from datetime import UTC, datetime
 from tenant.models import User as TenantUser
-from src.operations import provisioning
+from src.operations.implementation import registries
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from fastapi.testclient import TestClient
 from src.models.computes import ComputeKind
@@ -266,7 +266,7 @@ async def test_create_app_returns_app_response(
         image_metadata.image = "ghcr.io/longlink/dashboard@sha256:manifest"
         return image_metadata
 
-    monkeypatch.setattr("src.operations.provisioning.images.metadata", fake_metadata)
+    monkeypatch.setattr("src.operations.implementation.environments.images.metadata", fake_metadata)
 
     captured: dict[str, object] = {}
     captured_buckets: list[tuple[str, ...]] = []
@@ -388,11 +388,11 @@ async def test_create_app_returns_app_response(
             return {"access_key_id": "app-access", "secret_access_key": "app-secret"}
 
     monkeypatch.setattr(
-        "src.operations.provisioning.compute_runtime.kubernetes",
+        "src.operations.implementation.resources.compute_runtime.kubernetes",
         lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret, registry.ingress_host),
     )
     monkeypatch.setattr(
-        "src.operations.provisioning.adapters.database",
+        "src.operations.implementation.resources.adapters.database",
         lambda registry: FakeDatabase(
             registry.host,
             registry.port,
@@ -401,7 +401,7 @@ async def test_create_app_returns_app_response(
         ),
     )
     monkeypatch.setattr(
-        "src.operations.provisioning.adapters.storage",
+        "src.operations.implementation.resources.adapters.storage",
         lambda registry: FakeStorage(
             registry.protocol,
             registry.endpoint_url,
@@ -420,8 +420,6 @@ async def test_create_app_returns_app_response(
             "description": "Dashboard app",
             "envs": {
                 "API_KEY": "secret-value",
-                "LONGLINK_ENV": "development",
-                "LONGLINK_INTERNAL": "user-controlled",
                 "PORT": "8080",
             },
         },
@@ -482,7 +480,6 @@ async def test_create_app_returns_app_response(
     assert application_secrets["LONGLINK_STORAGE_PASSWORD"] == "app-secret"
     assert application_secrets["LONGLINK_STORAGE_SHARED_BUCKET"] == "longlink-acme-shared"
     assert application_secrets["LONGLINK_STORAGE_USERNAME"] == "app-access"
-    assert "LONGLINK_INTERNAL" not in application_secrets
 
 
 async def test_organization_storage_registry_reuses_existing_app_registry(users: tuple[User, User, User]) -> None:
@@ -524,7 +521,7 @@ async def test_organization_storage_registry_reuses_existing_app_registry(users:
     )
 
     # Act
-    selected = await provisioning.organization_storage_registry(organization)
+    selected = await registries.organization_storage_registry(organization)
 
     # Assert
     assert selected is not None
@@ -548,7 +545,7 @@ async def test_create_app_returns_409_when_image_metadata_is_missing(
 
         return None
 
-    monkeypatch.setattr("src.operations.provisioning.images.metadata", fake_metadata)
+    monkeypatch.setattr("src.operations.implementation.environments.images.metadata", fake_metadata)
     client = clients[0]
 
     # Act
@@ -563,12 +560,12 @@ async def test_create_app_returns_409_when_image_metadata_is_missing(
     assert await db.applications.list_by_organization(organization.id) == []
 
 
-async def test_create_app_requires_storage_registry_for_required_storage_envs(
+async def test_create_app_rejects_reserved_platform_environment_requirements(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
-    """Reject apps that require platform storage envs when no storage backend is configured."""
+    """Reject apps that declare LongLink-managed runtime environment variables."""
 
     # Arrange
     owner = users[0]
@@ -609,7 +606,7 @@ async def test_create_app_requires_storage_registry_for_required_storage_envs(
         image_metadata.image = "ghcr.io/longlink/dashboard@sha256:manifest"
         return image_metadata
 
-    monkeypatch.setattr("src.operations.provisioning.images.metadata", fake_metadata)
+    monkeypatch.setattr("src.operations.implementation.environments.images.metadata", fake_metadata)
     client = clients[0]
 
     # Act
@@ -618,17 +615,12 @@ async def test_create_app_requires_storage_registry_for_required_storage_envs(
         json={
             "name": "dashboard",
             "image": "ghcr.io/longlink/dashboard:latest",
-            "envs": {"LONGLINK_STORAGE_ENDPOINT_URL": "http://user-supplied"},
         },
     )
 
     # Assert
-    assert response.status_code == 503
-    expected_detail = (
-        f"No storage configured for location '{organization.location_id}' "
-        "required by image environment variables: LONGLINK_STORAGE_ENDPOINT_URL"
-    )
-    assert response.json() == {"detail": expected_detail}
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Reserved platform environment variables: LONGLINK_STORAGE_ENDPOINT_URL"}
     assert await db.applications.list_by_organization(organization.id) == []
 
 
@@ -686,7 +678,7 @@ async def test_create_app_returns_403_for_regular_member(
         raise AssertionError("Regular organization members must not start provisioning")
 
     monkeypatch.setattr(
-        "src.routes.applications.provisioning.create_application_runtime",
+        "src.routes.applications.resources.create_application_runtime",
         fail_create_application_runtime,
     )
     client = clients[1]

@@ -17,11 +17,3 @@ GATEWAY_AUTH_SECRET_PLACEHOLDER = "__LONG_LINK_GATEWAY_SECRET__"
 GATEWAY_SECRET_HEADER = "x-longlink-gateway-secret"
 GATEWAY_MAX_REQUEST_HEADERS_KB = 64
 GATEWAY_PER_CONNECTION_BUFFER_LIMIT_BYTES = 1024 * 1024
-GATEWAY_IDENTITY_HEADERS = [
-    "x-user-id",
-    "x-user-role",
-    "x-longlink-application-id",
-    "x-longlink-application-slug",
-    "x-longlink-organization-id",
-    "x-longlink-organization-slug",
-]

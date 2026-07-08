@@ -1,4 +1,3 @@
-from .errors import ComputeError, ComputeResourceError
 from .kubernetes import Kubernetes
 from src.database.models.computes import ComputeRegistry
 

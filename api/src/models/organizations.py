@@ -4,7 +4,7 @@ from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.icons import Icon
 from src.models.countries import Country, DEFAULT_COUNTRY
 from src.models.roles import ApplicationRoles, OrganizationRoles
-from src.models.users import Avatar, UserSummary
+from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
 from src.models.locations import LocationResponse
 
@@ -67,7 +67,7 @@ class OrganizationSummary(BaseModel):
     # Metadata
     name: str
     slug: str
-    avatar: Avatar = ""
+    avatar: str = ""
     country: Country
 
     # Relationships
@@ -128,7 +128,7 @@ class OrganizationMemberSummary(BaseModel):
     # Metadata
     name: str
     email: str
-    avatar: Avatar = ""
+    avatar: str = ""
 
     # State
     role: OrganizationRoles
@@ -148,7 +148,7 @@ class OrganizationDetails(BaseModel):
     # Metadata
     name: str
     slug: str
-    avatar: Avatar = ""
+    avatar: str = ""
     country: Country
 
     # Location

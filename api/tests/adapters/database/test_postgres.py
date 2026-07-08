@@ -1,4 +1,6 @@
 import pytest
+import time
+import psycopg
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import text
@@ -7,22 +9,48 @@ from tenant.models import User as TenantUser
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine
-from testcontainers.postgres import PostgresContainer
+from containers import DockerRuntimeContainer
 from src.adapters.database.postgres import Postgres
 
 pytestmark = pytest.mark.no_db
+POSTGRES_PORT = 5432
+
+
+def _wait_for_postgres(container: DockerRuntimeContainer, username: str, password: str, database: str) -> None:
+    """Wait until the PostgreSQL container accepts connections."""
+
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline:
+        try:
+            with psycopg.connect(
+                host=container.host(),
+                port=container.port(POSTGRES_PORT),
+                user=username,
+                password=password,
+                dbname=database,
+                connect_timeout=1,
+            ) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT 1")
+            return
+        except psycopg.OperationalError:
+            time.sleep(0.5)
+
+    pytest.fail("PostgreSQL container did not become ready")
 
 
 @pytest.mark.integration
 async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cleanup() -> None:
     """Exercise the PostgreSQL adapter against a real PostgreSQL container."""
 
-    container = PostgresContainer(
+    container = DockerRuntimeContainer(
         "postgres:16-alpine",
-        username="longlink",
-        password="secret",
-        dbname="postgres",
-        driver="psycopg",
+        ports=[POSTGRES_PORT],
+        environment={
+            "POSTGRES_USER": "longlink",
+            "POSTGRES_PASSWORD": "secret",
+            "POSTGRES_DB": "postgres",
+        },
     )
     try:
         container.start()
@@ -30,14 +58,15 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         pytest.skip(f"Docker is not available for PostgreSQL integration tests: {exc}")
 
     adapter = Postgres(
-        host=container.get_container_host_ip(),
-        port=int(container.get_exposed_port(5432)),
+        host=container.host(),
+        port=container.port(POSTGRES_PORT),
         username="longlink",
         password="secret",
     )
     runtime_engine = None
 
     try:
+        _wait_for_postgres(container, "longlink", "secret", "postgres")
         database_url = await adapter.database("acme")
         active_user = TenantUser(
             id=UUID("11111111-1111-1111-1111-111111111111"),
@@ -77,7 +106,9 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
                 )
             ).mappings().one()
 
-        await adapter.sync_users("acme", [])
+        inactive_at = datetime(2026, 7, 2, tzinfo=UTC)
+        inactive_user = active_user.model_copy(update={"updated_at": inactive_at, "deleted_at": inactive_at})
+        await adapter.sync_users("acme", [inactive_user])
         maintenance_engine = create_async_engine(database_url)
         try:
             async with maintenance_engine.begin() as conn:

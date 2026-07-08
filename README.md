@@ -13,14 +13,13 @@ A platform for workflows, data, and validation
 
 ## Introduction
 
-An open-source platform for building custom business-process applications as real Python software.
+AI has changed the economics and cost structure of software creation. As applications become faster and cheaper to build, more workflows, processes, and operational needs can be expressed directly in code, providing greater flexibility, control, and long-term maintainability than rigid generic SaaS products, spreadsheets, manual coordination, or fragile no-code automations. But speed and lower cost alone are not enough: without a shared foundation, this new wave of application creation risks producing duplicated infrastructure, inconsistent systems, and long-term technical debt.
 
-It gives teams the foundation every workflow app needs: 
-authentication, organizations, permissions, deployment, databases, storage, routing, logs, status, and a modern UI. The development focus on the process itself.
+LongLink provides that foundation. It turns real-world processes into production-grade Python codebases while handling the common layer around every app: authentication, permissions, deployment, storage, routing, logs, governance, and operational structure. Users define how the work should happen; developers focus on the application logic.
 
-Use LongLink when spreadsheets, dashboards, generic SaaS, or closed enterprise platforms are too rigid, but rebuilding everything from scratch is too expensive. Each LongLink app owns its business logic, data model, validation, workflow, integrations, APIs, and pages, while the platform handles the repeated enterprise layer.
+Specific workflows can be customized like software, built quickly like modern AI-assisted applications, and maintained with the discipline of proper engineering. LongLink brings software-development principles to the broader world of work, making valuable processes structured, deployable, reviewable, and cheap to maintain over time.
 
-Built on the Python stack, LongLink is designed for the next era of development, where developers and AI coding tools work together to build clear, maintainable codebases, and where business users and AI agents can use the resulting applications as reliable process interfaces. It focuses on code quality, simplicity, best practices, and long-term maintainability.
+
 
 <br />
 
@@ -40,9 +39,6 @@ Work on the SDK runtime::
 ```bash
 make sdk
 ```
-
-> See detailed setup, testing, and contribution guidelines in [`CONTRIBUTING.md`](./CONTRIBUTING.md) and the folder-specific CONTRIBUTING files.
-
 
 <br />
 <br />

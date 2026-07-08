@@ -1,19 +1,9 @@
 from enum import Enum
 from uuid import UUID
-from typing import Annotated
-from pydantic import Field, EmailStr, BaseModel, ConfigDict, BeforeValidator
+from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.countries import Country
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.locations import LocationResponse
-
-
-def normalize_avatar(value: str | None) -> str:
-    """Convert missing avatar values into an empty string."""
-
-    return value or ""
-
-
-Avatar = Annotated[str, BeforeValidator(normalize_avatar)]
 
 
 class Theme(str, Enum):
@@ -49,6 +39,34 @@ class Accent(str, Enum):
     fuchsia = "fuchsia"
     pink = "pink"
     rose = "rose"
+
+
+ACCENT_COLORS: dict[Accent, str] = {
+    Accent.slate: "#64748b",
+    Accent.gray: "#6b7280",
+    Accent.zinc: "#71717a",
+    Accent.neutral: "#737373",
+    Accent.stone: "#78716c",
+    Accent.red: "#ef4444",
+    Accent.orange: "#f97316",
+    Accent.amber: "#f59e0b",
+    Accent.yellow: "#eab308",
+    Accent.lime: "#84cc16",
+    Accent.green: "#22c55e",
+    Accent.emerald: "#10b981",
+    Accent.teal: "#14b8a6",
+    Accent.cyan: "#06b6d4",
+    Accent.sky: "#0ea5e9",
+    Accent.blue: "#3b82f6",
+    Accent.indigo: "#6366f1",
+    Accent.violet: "#8b5cf6",
+    Accent.purple: "#a855f7",
+    Accent.fuchsia: "#d946ef",
+    Accent.pink: "#ec4899",
+    Accent.rose: "#f43f5e",
+}
+
+ACCENT_COLOR_VALUES: tuple[str, ...] = tuple(ACCENT_COLORS.values())
 
 
 class Radius(str, Enum):
@@ -103,7 +121,7 @@ class UserOrganizationMembership(BaseModel):
     # Metadata
     name: str
     slug: str
-    avatar: Avatar = ""
+    avatar: str = ""
     country: Country
     location: LocationResponse
 
@@ -122,7 +140,7 @@ class UserSummary(BaseModel):
     # Metadata
     name: str
     email: EmailStr
-    avatar: Avatar = ""
+    avatar: str = ""
 
     # State
     role: PlatformRoles

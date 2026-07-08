@@ -1,4 +1,3 @@
-import { SdkUserProvider } from '@/hooks/use-sdk-user';
 import { UserProvider, useUserProfile } from '@/hooks/use-user';
 import '@/index.css';
 import { ApiI18nProvider } from '@/lib/i18n';
@@ -22,13 +21,11 @@ function ApiAppShell() {
 
 /** Renders the bundle-specific app shell. */
 function AppShell() {
-    // SDK mode uses deterministic local users instead of control-plane authentication.
+    // SDK mode renders the local app shell; authentication is owned by the control plane.
     if (import.meta.env.MODE === 'sdk') {
         return (
             <ApiI18nProvider language={DEFAULT_LANGUAGE}>
-                <SdkUserProvider>
-                    <App />
-                </SdkUserProvider>
+                <App />
             </ApiI18nProvider>
         );
     }

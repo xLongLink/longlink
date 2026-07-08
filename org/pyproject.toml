@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=69"]
+requires = ["setuptools==83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,19 +9,19 @@ description = "LongLink tenant-scoped shared resources"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "alembic",
-    "pydantic",
-    "sqlalchemy",
-    "sqlmodel",
+    "alembic==1.18.5",
+    "pydantic==2.13.4",
+    "sqlalchemy==2.0.51",
+    "sqlmodel==0.0.39",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "isort",
-    "pytest",
-    "pytest-asyncio",
-    "pytest-cov",
-    "pyright",
+    "isort==8.0.1",
+    "pytest==9.1.1",
+    "pytest-asyncio==1.4.0",
+    "pytest-cov==7.1.0",
+    "pyright==1.1.411",
 ]
 
 [tool.setuptools]

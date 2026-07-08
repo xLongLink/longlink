@@ -8,7 +8,7 @@ import { Stack } from '@/components/ui/stack';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-07',
+    lastUpdated: '2026-07-08',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/routes.tsx',
 };
 
@@ -22,7 +22,7 @@ export const content = (
         <Heading id="usage" level="h2">
             Usage
         </Heading>
-        <CodeBlock language="python">{`from longlink import LongLink, Router, get_user
+        <CodeBlock language="python">{`from longlink import LongLink, Router
 from pydantic import BaseModel
 
 router = Router()
@@ -35,17 +35,14 @@ class SampleResponse(BaseModel):
 
 @router.get("/sample", response_model=SampleResponse)
 async def sample() -> SampleResponse:
-    user = get_user()
-    return SampleResponse(id=1, name=user.role)
+    return SampleResponse(id=1, name="Example")
 
 
 app = LongLink()
 app.include_router(router)`}</CodeBlock>
         <P>
-            SDK API routes are exposed under <Code>/api</Code> and use method-level role defaults. <Code>GET</Code>
-            uses <Code>read</Code>, <Code>POST</Code>, <Code>PUT</Code>, and <Code>PATCH</Code> use{' '}
-            <Code>write</Code>, and <Code>DELETE</Code> uses <Code>maintain</Code>. Use <Code>get_user()</Code> to read
-            the scoped user for audit-aware business logic.
+            SDK API routes are exposed under <Code>/api</Code>. Login, membership, and runtime authorization are handled
+            by the LongLink control plane before production traffic reaches the application runtime.
         </P>
         <Heading id="resources" level="h2">
             Resources

@@ -1,24 +1,24 @@
 [build-system]
-requires = ["setuptools>=68", "setuptools-scm[toml]>=8"]
+requires = ["setuptools==83.0.0", "setuptools-scm[toml]==10.2.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "longlink"
 dynamic = ["version"]
 dependencies = [
-    "alembic",
-    "click",
-    "lxml",
-    "uvicorn",
-    "pydantic",
-    "pydantic-settings",
-    "fsspec",
-    "s3fs",
-    "fastapi>=0.138.0",
-    "aiosqlite",
-    "asyncpg",
-    "sqlmodel",
-    "tenant",
+    "alembic==1.18.4",
+    "click==8.3.3",
+    "lxml==6.1.0",
+    "uvicorn==0.46.0",
+    "pydantic==2.13.3",
+    "pydantic-settings==2.14.0",
+    "fsspec==2026.4.0",
+    "s3fs==2026.4.0",
+    "fastapi==0.138.0",
+    "aiosqlite==0.22.1",
+    "asyncpg==0.31.0",
+    "sqlmodel==0.0.38",
+    "tenant==0.0.0",
 ]
 requires-python = ">=3.14"
 authors = [
@@ -43,32 +43,32 @@ tenant = { path = "../org", editable = true }
 
 [project.optional-dependencies]
 cli = [
-  "rich",
-  "click",
+  "rich==15.0.0",
+  "click==8.3.3",
 ]
 dev = [
-    "pytest",
-    "pytest-asyncio",
-    "pytest-cov",
-    "pytest-mock",
-    "pyright",
-    "ruff",
-    "lxml-stubs",
-    "isort",
-    "httpx2",
+    "pytest==8.4.2",
+    "pytest-asyncio==1.3.0",
+    "pytest-cov==7.1.0",
+    "pytest-mock==3.14.1",
+    "pyright==1.1.411",
+    "ruff==0.15.20",
+    "lxml-stubs==0.5.1",
+    "isort==8.0.1",
+    "httpx2==2.3.0",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest",
-    "pytest-asyncio",
-    "pytest-cov",
-    "pytest-mock",
-    "pyright",
-    "ruff",
-    "lxml-stubs",
-    "isort",
-    "httpx2",
+    "pytest==8.4.2",
+    "pytest-asyncio==1.3.0",
+    "pytest-cov==7.1.0",
+    "pytest-mock==3.14.1",
+    "pyright==1.1.411",
+    "ruff==0.15.20",
+    "lxml-stubs==0.5.1",
+    "isort==8.0.1",
+    "httpx2==2.3.0",
 ]
 
 [project.urls]

@@ -123,8 +123,8 @@ def test_create_engine_sets_production_schema_search_path(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_session_autocreates_sqlite_tables_and_seeds_local_users(monkeypatch) -> None:
-    """Auto-create SQLModel tables and seed local users for SQLite engines."""
+async def test_get_session_autocreates_sqlite_tables(monkeypatch) -> None:
+    """Auto-create SQLModel tables for SQLite engines."""
 
     calls: list[tuple[str, Any]] = []
     expected_session_maker = object()
@@ -166,15 +166,9 @@ async def test_get_session_autocreates_sqlite_tables_and_seeds_local_users(monke
         calls.append(("sessionmaker", (args, kwargs)))
         return expected_session_maker
 
-    async def fake_seed_local_users(session_maker: object) -> None:
-        """Capture local user seeding."""
-
-        calls.append(("seed", session_maker))
-
     database_base.Session = None
     database_base._engine = FakeEngine()
     monkeypatch.setattr(database_base, "async_sessionmaker", fake_async_sessionmaker)
-    monkeypatch.setattr(database_base, "seed_local_users", fake_seed_local_users)
 
     try:
         session_maker = await database_base.get_session()
@@ -182,20 +176,6 @@ async def test_get_session_autocreates_sqlite_tables_and_seeds_local_users(monke
         assert session_maker is expected_session_maker
         assert [call[0] for call in calls].count("run_sync") == 2
         assert any(call[0] == "sessionmaker" for call in calls)
-        assert ("seed", expected_session_maker) in calls
     finally:
         database_base.Session = None
         database_base._engine = None
-
-
-def test_local_users_cover_supported_local_roles() -> None:
-    """Provide local users for every SDK local role."""
-
-    assert {user.role for user in database_base.LOCAL_USERS} == {
-        "read",
-        "write",
-        "maintain",
-        "admin",
-        "owner",
-    }
-    assert all(user.email.endswith("@local.longlink.dev") for user in database_base.LOCAL_USERS)

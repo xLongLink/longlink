@@ -11,8 +11,8 @@ class HealthResponse(BaseModel):
     ok: bool
 
 
-@router.get("/health", include_in_schema=False)
-async def health() -> HealthResponse:
+@router.get("/health", response_model=HealthResponse, include_in_schema=False)
+async def health() -> dict[str, bool]:
     """Return runtime health for Kubernetes probes."""
 
-    return HealthResponse(ok=True)
+    return {"ok": True}

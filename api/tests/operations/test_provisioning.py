@@ -2,7 +2,7 @@ import pytest
 from src import adapters
 from types import SimpleNamespace
 from typing import cast
-from src.operations.provisioning import runtime_environment
+from src.operations.implementation.environments import runtime_environment
 from src.database.models.storages import StorageRegistry
 
 pytestmark = pytest.mark.no_db

@@ -32,8 +32,8 @@ def test_longlink_app_serves_runtime_routes_frontend_and_development_cors() -> N
     assert cors_response.headers["access-control-allow-origin"] == "http://localhost:5173"
 
 
-def test_production_health_is_public_and_root_requires_gateway_identity() -> None:
-    """Keep runtime health public while protecting app routes in production."""
+def test_production_health_and_root_are_served_without_sdk_auth() -> None:
+    """Serve runtime health and the app shell without SDK-owned authorization."""
 
     client = TestClient(LongLink(env=Envs(ENV="production"), i18n=None, pages=None))
 
@@ -42,8 +42,8 @@ def test_production_health_is_public_and_root_requires_gateway_identity() -> Non
 
     assert health_response.status_code == 200
     assert health_response.json() == {"ok": True}
-    assert root_response.status_code == 401
-    assert root_response.json() == {"detail": "User context required"}
+    assert root_response.status_code == 200
+    assert "text/html" in root_response.headers["content-type"]
 
 
 def test_xml_pages_are_registered_from_default_pages_directory(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
@@ -159,8 +159,8 @@ def test_translation_catalog_is_served(monkeypatch: MonkeyPatch, tmp_path: Path)
     assert response.json()["examples"]["text"]["title"] == "Localized text elements"
 
 
-def test_sdk_auth_boundary_has_no_login_or_permission_routes() -> None:
-    """Keep SDK auth limited to local users and audit attribution."""
+def test_sdk_runtime_has_no_login_or_permission_routes() -> None:
+    """Keep login and permission routes out of the SDK runtime."""
 
     app = LongLink(env=Envs(ENV="testing"), i18n=None, pages=None)
 

@@ -1,7 +1,6 @@
 import { Auth } from '@/components/Auth';
 import { Toaster } from '@/components/ui/sonner';
 import { useOrganization } from '@/hooks/use-organization';
-import { useSdkUser } from '@/hooks/use-sdk-user';
 import { useUserProfile } from '@/hooks/use-user';
 import ArticleLayout from '@/layout/ArticleLayout';
 import { canAccessApplication, canViewApplicationLogs } from '@/lib/roles';
@@ -29,7 +28,6 @@ import Organizations from '@/pages/Organizations';
 import Pricing from '@/pages/Pricing';
 import Settings from '@/pages/Settings';
 import View from '@/pages/View';
-import { createContext as createXmlContext } from '@/xml';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 
 type AppRouter = ReturnType<typeof createBrowserRouter>;
@@ -244,14 +242,9 @@ export function getRoutes(mode = import.meta.env.MODE) {
     ];
 }
 
-/** Renders the SDK application with the selected local user in XML runtime scope. */
+/** Renders the SDK application without control-plane routes. */
 function SdkApplicationView() {
-    const { user } = useSdkUser();
-    const runtimeContext = createXmlContext();
-
-    runtimeContext.user = user;
-
-    return <View metadata="/metadata.json" runtimeContext={runtimeContext} runtimeKey={`sdk-user-${user.id}`} />;
+    return <View metadata="/metadata.json" />;
 }
 
 /** Resolves an organization application slug to its proxy-backed XML view. */

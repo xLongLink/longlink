@@ -18,7 +18,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Hosted platform API       | Manages authentication, users, organizations, infrastructure registries, application deployment, operations, logs, and application proxying. |
 | Python SDK                | Provides a FastAPI app runtime, CLI, database helpers, storage helpers, XML page discovery, metadata, scaffolding, and image packaging.     |
 | API-mode frontend         | Serves public pages, docs, authenticated control-plane pages, organization pages, admin pages, and proxy-backed app views.                |
-| SDK-mode frontend         | Serves a local embedded app runtime that renders XML pages from `/metadata.json` with deterministic local users.                            |
+| SDK-mode frontend         | Serves a local embedded app runtime that renders XML pages from `/metadata.json` without control-plane pages.                               |
 | Declarative XML app model | Supports XML-defined pages with setup state, data queries, actions, expressions, translations, form bindings, and registered UI components. |
 | Local-first workflow      | Supports local services, SDK app scaffolding, image build/push, migrations, seeding, local API server, and local Vite web server.           |
 
@@ -77,6 +77,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Organization creation                 | Lets authenticated users create organizations with a country in active locations and become owner.                                           |
 | Organization deletion                 | Lets owners and platform administrators soft-delete organizations and queue immediate runtime resource removal with delay-ready scheduling. |
 | Organization infrastructure bootstrap | Best-effort initializes compute namespace, organization database shared schema, and shared storage bucket.                                  |
+| Organization shared users             | Sends complete member state to tenant shared users, syncs `deleted_at` explicitly, and preserves original creation timestamps.              |
 | Organization details                  | Lets members fetch an organization with location, users, and applications; pending invitations are shown only to maintainers/admins/owners. |
 | Organization listing                  | Lets support/admin users list all organizations.                                                                                            |
 | Organization applications             | Lets members list active applications in an organization, including caller application role when present.                                   |
@@ -133,7 +134,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                   | Supported behavior                                                                                     |
 | ------------------------- | ------------------------------------------------------------------------------------------------------ |
-| SDK exports               | Exports app, router, user/auth helpers, XML, env, database, organization assets, app/shared storage, and import-time runtime objects. |
+| SDK exports               | Exports app, router, XML, env, database, organization assets, app/shared storage, and import-time runtime objects.                  |
 | SDK environment model     | Reads `LONGLINK_` runtime mode, database, and storage settings from process env.                       |
 | App env file loading      | Loads app-defined `.env` and `.env.sample` settings while ignoring extra keys.                         |
 | SDK package data          | Packages static web and XSD assets and requires Python 3.14 or newer.                                  |
@@ -175,13 +176,11 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Table base model              | Adds audit timestamps, soft-delete fields, user foreign keys, and user relationships.                        |
 | Database environment settings | Uses in-memory SQLite for testing, `./dev.db` for development, and control-plane database components for production. |
 | Production database URL build | Builds the asyncpg runtime URL from separate database host, port, name, username, and password settings.     |
-| SQLite autocreate and seed    | Auto-creates SQLModel tables and seeds deterministic local users for SQLite.                                 |
-| Local user roles              | Provides deterministic local/test users for `read`, `write`, `maintain`, `admin`, and `owner`.               |
+| SQLite autocreate             | Auto-creates SQLModel tables for SQLite.                                                                   |
 | Audit header scope            | Reads `x-user-id` as UUID and binds it for request audit attribution.                                        |
 | Audit auto fields             | Fills create/update audit fields and converts hard deletes on SDK tables into soft deletes.                  |
 | App Alembic migrations        | Discovers app models, excludes shared `users`, skips empty revisions, and applies app migrations.            |
 | Production schema search path | Uses app schema plus `shared` when `DATABASE_SCHEMA` is set.                                                 |
-| SDK auth boundary             | Provides request-scoped `get_user()`, local users, audit attribution, and method-level `/api` role enforcement without owning login. |
 | Environment storage backends  | Uses fsspec memory FS for testing, local file FS for development, and platform S3 storage for production.    |
 | S3 endpoint configuration     | Creates an S3 filesystem from separate control-plane endpoint URL, username, and password settings.          |
 | App bucket scope              | Exposes `fs` and `create_fs(env, bucket)` scoped to `STORAGE_BUCKET` when configured.                        |
@@ -213,14 +212,13 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | API web build mode    | Builds the public/docs/control-plane bundle into `api/src/.static/web`.                                                          |
 | SDK web build mode    | Builds the embedded SDK runtime bundle into `sdk/longlink/.static/web`.                                                          |
 | API URL resolution    | Supports `VITE_API_URL` API prefixing and credentialed requests.                                                                 |
-| SDK user header       | Adds `x-user-id` from local storage in SDK mode unless already supplied.                                                         |
 | Lucide icon subset    | Renders a fixed 30-icon Lucide subset directly in the web bundle and falls back to `box` for unsupported XML icon names.          |
 | API route tree        | Exposes public, docs, legal, organization, settings, admin, resource, and gateway-backed app routes.                            |
 | SDK wildcard route    | Routes every SDK-mode path to the SDK application view.                                                                          |
 | Auth guard            | Shows sign-in for anonymous users, enforces platform role hierarchy, and renders 404 for insufficient access.                    |
 | Organization app view | Resolves org/app slugs, enforces app access roles, fetches and validates gateway metadata, renders static/dynamic XML pages, and exposes logs. |
 | Top layout shell      | Provides shared header, brand, breadcrumbs, and active tabs.                                                                     |
-| XML app layout shell  | Provides app tab navigation, tab icons, SDK docs link, and SDK user selector.                                                    |
+| XML app layout shell  | Provides app tab navigation, tab icons, and SDK docs link.                                                                       |
 | Docs layout           | Provides docs sidebar, breadcrumbs, table of contents, active scroll tracking, metadata, and edit links.                         |
 | Legal layout          | Provides shared public legal page layout.                                                                                        |
 | Not found page        | Renders a shared 404 with current path and navigation links.                                                                     |
@@ -230,7 +228,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Feature                       | Supported behavior                                                                                                                            |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | Public home page              | Renders the marketing landing page with navbar, hero CTA, compact feature cards, and centered post-card CTAs.                                 |
-| Pricing page                  | Exposes `/pricing` with Starter, Team, and Platform pricing options.                                                                          |
+| Pricing page                  | Exposes `/pricing` with Free, Team, and Scale pricing options.                                                                                |
 | Legal pages                   | Exposes impressum, privacy, and terms pages with minimal legal content.                                                                       |
 | Documentation catalog         | Exposes docs pages for API, self-hosting, SDK, environments, routes, storage, database, testing, building, XML pages, layout, and components. |
 | XML docs reference            | Documents XML state, query, loops, conditions, i18n, expressions, invalidation, layout tags, and component tags.                              |
@@ -257,12 +255,11 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                       | Supported behavior                                                                                                                                    |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fetch helpers                 | Normalize JSON/text/void fetches, optional response parsing, same-origin API paths, fixed credentials, SDK user headers, URL prefixing, and API errors. |
+| Fetch helpers                 | Normalize JSON/text/void fetches, optional response parsing, same-origin API paths, fixed credentials, URL prefixing, and API errors. |
 | Query hooks                   | Wrap React Query with collection fallbacks, schema-backed parsing, 401 session clearing, 404 handling, and query keys.                                |
 | Auth hooks                    | Support current user fetching, saved accounts, logout, profile menu, and theme application.                                                           |
 | Login redirect sanitization   | Normalizes login redirects to same-origin relative paths and rejects external or malformed values.                                                    |
 | API page localization         | Provides bundled English and lazy-loaded Italian translations for public/control-plane UI through the user language preference, with English fallback. |
-| SDK user hooks                | Provides deterministic SDK users for `read`, `write`, `maintain`, `admin`, and `owner`.                                                               |
 | Resource hooks                | Provides typed hooks for users, orgs, apps, locations, databases, storages, computes, operations, metadata, and mobile breakpoint detection.          |
 | Organization mutation helpers | Supports create organization, invite member, change member role, and create application flows.                                                        |
 | Create application dialog     | Supports schema-backed image inspection, metadata review, icon selection, env entry, and app creation.                                                |

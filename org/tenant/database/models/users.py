@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlmodel import Field, SQLModel
 from sqlalchemy import TIMESTAMP, Uuid, Column, String, MetaData, Table
 
-from tenant.database.constants import SHARED_USERS_TABLE
+from tenant.constants import SHARED_USERS_TABLE
 
 shared_metadata = MetaData()
 

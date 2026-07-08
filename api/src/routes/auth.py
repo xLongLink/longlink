@@ -5,7 +5,7 @@ from pydantic import ValidationError
 from src.auth import SessionAccountsService, oauth
 from src.utils import urls
 from src.errors import UnauthorizedError, UnavailableError
-from src.operations import provisioning
+from src.operations.implementation import bootstrap
 from src.models.auth import OidcUserInfo
 from src.environments import env
 from fastapi.responses import RedirectResponse
@@ -53,7 +53,7 @@ async def upsert_oidc_user(userinfo: OidcUserInfo) -> str:
         raise UnauthorizedError("Not authenticated")
 
     try:
-        await provisioning.sync_user_organizations(user)
+        await bootstrap.sync_user_organizations(user)
     except Exception as exc:
         raise UnavailableError("Failed to synchronize user profile") from exc
 
@@ -143,8 +143,8 @@ async def auth_oidc(request: Request) -> RedirectResponse:
 
 
 @router.post("/auth/logout", response_model=SuccessResponse, include_in_schema=False)
-async def logout(request: Request) -> SuccessResponse:
+async def logout(request: Request) -> dict[str, object]:
     """Clear the user session and log out."""
 
     SessionAccountsService(request).remove()
-    return SuccessResponse()
+    return {}

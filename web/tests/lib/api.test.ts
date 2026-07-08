@@ -7,22 +7,16 @@ import {
     fetchApiText,
     fetchApiVoid,
 } from '@/lib/api';
-import { SDK_USER_STORAGE_KEY } from '@/lib/sdk-users';
 import { afterEach, describe, expect, it } from 'bun:test';
 
 const originalFetch = globalThis.fetch;
 const originalMode = import.meta.env.MODE;
 const originalApiUrl = import.meta.env.VITE_API_URL;
-const originalWindow = globalThis.window;
 
 afterEach(() => {
     globalThis.fetch = originalFetch;
     import.meta.env.MODE = originalMode;
     import.meta.env.VITE_API_URL = originalApiUrl;
-    Object.defineProperty(globalThis, 'window', {
-        configurable: true,
-        value: originalWindow,
-    });
 });
 
 describe('apiUrl', () => {
@@ -43,21 +37,11 @@ describe('apiUrl', () => {
 });
 
 describe('createApiHeaders', () => {
-    /* SDK mode forwards the deterministic local user id for runtime audit attribution. */
-    it('adds the stored SDK user header when one is not already present', () => {
+    /* API helpers preserve caller-provided headers without adding SDK auth state. */
+    it('creates headers without SDK user injection', () => {
         import.meta.env.MODE = 'sdk';
-        Object.defineProperty(globalThis, 'window', {
-            configurable: true,
-            value: {
-                localStorage: {
-                    getItem: (key: string) =>
-                        key === SDK_USER_STORAGE_KEY ? '00000000-0000-0000-0000-000000000004' : null,
-                    setItem: () => undefined,
-                },
-            },
-        });
 
-        expect(createApiHeaders().get('x-user-id')).toBe('00000000-0000-0000-0000-000000000004');
+        expect(createApiHeaders().has('x-user-id')).toBe(false);
         expect(createApiHeaders({ 'x-user-id': '00000000-0000-0000-0000-000000000002' }).get('x-user-id')).toBe(
             '00000000-0000-0000-0000-000000000002'
         );

@@ -35,8 +35,8 @@ def compiled_sql(statement: CompilableStatement) -> str:
     return str(statement.compile(dialect=postgresql.dialect()))
 
 
-async def test_sync_upserts_active_users_and_soft_deletes_stale_rows() -> None:
-    """Synchronize active tenant users into the shared users table."""
+async def test_sync_upserts_user_state_from_payload() -> None:
+    """Synchronize tenant users from the control-plane payload."""
 
     connection = FakeConnection()
     timestamp = datetime(2026, 7, 6, tzinfo=UTC)
@@ -53,31 +53,26 @@ async def test_sync_upserts_active_users_and_soft_deletes_stale_rows() -> None:
 
     await users.sync(cast(AsyncConnection, connection), [active_user])
 
-    assert len(connection.calls) == 2
+    assert len(connection.calls) == 1
     insert_statement, insert_params = connection.calls[0]
-    update_statement, update_params = connection.calls[1]
-    assert "INSERT INTO users" in compiled_sql(insert_statement)
-    assert "ON CONFLICT" in compiled_sql(insert_statement)
+    sql = compiled_sql(insert_statement)
+    assert "INSERT INTO users" in sql
+    assert "ON CONFLICT" in sql
+    assert "created_at = excluded.created_at" not in sql
+    assert "deleted_at = excluded.deleted_at" in sql
     assert insert_params == [
         {
             **active_user.model_dump(exclude={"role"}),
             "role_name": "owner",
         }
     ]
-    assert "UPDATE users" in compiled_sql(update_statement)
-    assert update_params is None
 
 
-async def test_sync_soft_deletes_all_users_when_no_active_users_remain() -> None:
-    """Soft-delete every shared user when the active user list is empty."""
+async def test_sync_does_not_infer_deactivation_from_an_empty_payload() -> None:
+    """Do nothing when the control plane sends no user rows."""
 
     connection = FakeConnection()
 
     await users.sync(cast(AsyncConnection, connection), [])
 
-    assert len(connection.calls) == 1
-    statement, params = connection.calls[0]
-    sql = compiled_sql(statement)
-    assert "UPDATE users" in sql
-    assert "id NOT IN" not in sql
-    assert params is None
+    assert connection.calls == []

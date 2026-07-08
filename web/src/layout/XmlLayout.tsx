@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
-import { SdkUserSelector } from '@/components/SdkUserSelector';
 import { Wordmark } from '@/components/Wordmark';
 import { useTranslation } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
@@ -60,18 +59,15 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                         )}
                     </div>
                     {isSdkMode ? (
-                        <div className="flex items-center gap-2">
-                            <a
-                                href="https://www.longlink.dev/docs"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
-                            >
-                                {t('common.documentation')}
-                                <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
-                            </a>
-                            <SdkUserSelector />
-                        </div>
+                        <a
+                            href="https://www.longlink.dev/docs"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
+                        >
+                            {t('common.documentation')}
+                            <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
+                        </a>
                     ) : (
                         <UserProfile />
                     )}

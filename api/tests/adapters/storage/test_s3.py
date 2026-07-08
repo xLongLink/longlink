@@ -1,34 +1,36 @@
 import pytest
 import asyncio
+from docker.errors import DockerException
 from collections.abc import AsyncIterator
 from botocore.exceptions import EndpointConnectionError
+from containers import DockerRuntimeContainer
 from src.adapters.storage.s3 import S3
-
-DockerException = pytest.importorskip("docker.errors").DockerException
-DockerContainer = pytest.importorskip("testcontainers.core.container").DockerContainer
 
 pytestmark = pytest.mark.no_db
 MINIO_ACCESS_KEY = "minioadmin"
 MINIO_SECRET_KEY = "minioadmin"
+MINIO_PORT = 9000
 
 
 @pytest.fixture
 async def minio_storage() -> AsyncIterator[S3]:
     """Start a MinIO container and return an S3 adapter connected to it."""
 
-    container = (
-        DockerContainer("minio/minio:latest")
-        .with_env("MINIO_ROOT_USER", MINIO_ACCESS_KEY)
-        .with_env("MINIO_ROOT_PASSWORD", MINIO_SECRET_KEY)
-        .with_exposed_ports(9000)
-        .with_command("server /data")
+    container = DockerRuntimeContainer(
+        "minio/minio:latest",
+        command="server /data",
+        ports=[MINIO_PORT],
+        environment={
+            "MINIO_ROOT_USER": MINIO_ACCESS_KEY,
+            "MINIO_ROOT_PASSWORD": MINIO_SECRET_KEY,
+        },
     )
     try:
         container.start()
     except DockerException as exc:
         pytest.skip(f"Docker is not available for S3 integration tests: {exc}")
 
-    endpoint_url = f"http://{container.get_container_host_ip()}:{container.get_exposed_port(9000)}"
+    endpoint_url = f"http://{container.host()}:{container.port(MINIO_PORT)}"
     storage = S3(
         protocol="http",
         endpoint_url=endpoint_url,

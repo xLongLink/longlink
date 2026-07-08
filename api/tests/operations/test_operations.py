@@ -1,10 +1,10 @@
-import main
 import pytest
 import asyncio
 from uuid import UUID
 from datetime import UTC, datetime
 from src.routes import operations as operation_routes
-from src.operations import applications as application_operations
+from src.operations import worker as operation_worker
+from src.operations.implementation import applications as application_operations
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
 from src.models.locations import LocationProvider, LocationResponse
@@ -291,13 +291,13 @@ async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytes
 
         raise StopScheduler()
 
-    monkeypatch.setattr(main.operations, "claim_next", fake_claim_next)
-    monkeypatch.setattr(main, "execute", fake_execute)
-    monkeypatch.setattr(main, "renew_operation_lease", fake_renew_operation_lease)
-    monkeypatch.setattr(main.asyncio, "sleep", fake_sleep)
+    monkeypatch.setattr(operation_worker.operations, "claim_next", fake_claim_next)
+    monkeypatch.setattr(operation_worker, "execute", fake_execute)
+    monkeypatch.setattr(operation_worker, "renew_operation_lease", fake_renew_operation_lease)
+    monkeypatch.setattr(operation_worker.asyncio, "sleep", fake_sleep)
 
     with pytest.raises(StopScheduler):
-        await main.run_operation_scheduler()
+        await operation_worker.run_operation_scheduler()
 
     assert executed == [operation]
     assert renewals == [(operation.id, "lease-token")]
@@ -349,12 +349,12 @@ async def test_application_and_organization_delete_handlers_remove_runtime(monke
     monkeypatch.setattr(application_operations.applications, "get_by_id", fake_get_application)
     monkeypatch.setattr(application_operations.organizations, "get", fake_get_organization)
     monkeypatch.setattr(
-        application_operations.provisioning,
+        application_operations.resources,
         "remove_application_runtime",
         fake_remove_application_runtime,
     )
     monkeypatch.setattr(
-        application_operations.provisioning,
+        application_operations.resources,
         "remove_organization_runtime",
         fake_remove_organization_runtime,
     )

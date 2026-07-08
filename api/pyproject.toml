@@ -1,5 +1,5 @@
 [build-system]
-requires = ['setuptools>=69', 'setuptools_scm[toml]>=8']
+requires = ['setuptools==83.0.0', 'setuptools_scm[toml]==10.2.0']
 build-backend = 'setuptools.build_meta'
 
 [project]
@@ -9,28 +9,28 @@ description = 'LongLink backend API'
 readme = 'README.md'
 requires-python = '>=3.14'
 dependencies = [
-    'aioboto3>=15.5.0',
-    'aiosqlite',
-    'alembic',
-    'authlib',
-    'botocore',
-    'email-validator',
+    'aioboto3==15.5.0',
+    'aiosqlite==0.22.1',
+    'alembic==1.18.4',
+    'authlib==1.7.2',
+    'botocore==1.40.61',
+    'email-validator==2.3.0',
     'fastapi==0.138.0',
-    'httpx2',
-    'itsdangerous',
-    'aiomysql',
-    'pydantic',
-    'pydantic-settings',
-    'pycountry>=26.2.16',
-    'python-slugify',
-    'psycopg[binary,pool]',
-    'sqlalchemy',
-    'sqlmodel',
-    'starlette',
-    'kr8s',
-    'kubernetes',
-    'tenant',
-    'uvicorn<0.48.0',
+    'httpx2==2.3.0',
+    'itsdangerous==2.2.0',
+    'aiomysql==0.3.2',
+    'pydantic==2.13.4',
+    'pydantic-settings==2.14.0',
+    'pycountry==26.2.16',
+    'python-slugify==8.0.4',
+    'psycopg[binary,pool]==3.3.4',
+    'sqlalchemy==2.0.49',
+    'sqlmodel==0.0.38',
+    'starlette==1.0.0',
+    'kr8s==0.20.15',
+    'kubernetes==36.0.2',
+    'tenant==0.0.0',
+    'uvicorn==0.47.0',
 ]
 
 [tool.uv.sources]
@@ -43,9 +43,9 @@ dev = [
     'ruff==0.14.0',
     'pytest==8.2.2',
     'pytest-asyncio==1.2.0',
-    'pytest-cov',
+    'pytest-cov==7.1.0',
+    'docker==7.1.0',
     'isort==8.0.1',
-    'testcontainers==4.13.2',
     'types-aiobotocore[s3]==3.7.0',
 ]
 
@@ -61,7 +61,7 @@ py-modules = ['main']
 include = ['src*']
 
 [tool.ruff]
-line-length = 120
+line-length = 140
 target-version = "py314"
 
 [tool.ruff.lint]
@@ -73,7 +73,7 @@ select = ["UP", "D300"]
 
 [tool.isort]
 from_first = false
-line_length = 120
+line_length = 140
 no_sections = true
 lines_between_types = 0
 length_sort = true
@@ -88,7 +88,7 @@ exclude = [".venv", "build", "dist", "src/.static", "tests", "**/__pycache__"]
 # Pyright treats SQLModel descriptors as plain Python values, so keep ORM diagnostics
 # out of the gate while still checking callers and non-ORM API code.
 ignore = ["src/database/models", "src/database/services"]
-extraPaths = ["src", "../sdk", "../org"]
+extraPaths = ["src", "../sdk", "../org", "tests"]
 
 [tool.pytest.ini_options]
 pythonpath = [".", "../org"]

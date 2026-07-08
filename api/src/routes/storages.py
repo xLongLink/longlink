@@ -11,7 +11,9 @@ from src.models.storages import (
     StorageRegistryCreate,
     StorageRegistryResponse,
 )
+from src.adapters.storage.base import StorageObjectData
 from src.database.models.users import User
+from src.database.models.storages import StorageRegistry
 from src.database.services import storage
 
 router = APIRouter()
@@ -26,22 +28,22 @@ def _managed_storage_bucket(bucket_name: str) -> bool:
 
 
 @router.get("/api/storages", response_model=list[StorageRegistryResponse])
-async def list_storage_registries(_: User = Depends(authsupport)) -> list[StorageRegistryResponse]:
+async def list_storage_registries(_: User = Depends(authsupport)) -> list[StorageRegistry]:
     """Return all registered storage backends."""
 
     registries = await storage.fetch_all()
-    return [StorageRegistryResponse.model_validate(registry) for registry in registries]
+    return registries
 
 
 @router.get("/api/storages/{registry_id}", response_model=StorageRegistryResponse)
-async def get_storage_registry(registry_id: UUID, _: User = Depends(authsupport)) -> StorageRegistryResponse:
+async def get_storage_registry(registry_id: UUID, _: User = Depends(authsupport)) -> StorageRegistry:
     """Return one storage backend registration."""
 
     registry = await storage.get(registry_id)
     if registry is None:
         raise NotFoundError("Storage registry", registry_id)
 
-    return StorageRegistryResponse.model_validate(registry)
+    return registry
 
 
 @router.delete("/api/storages/{registry_id}", status_code=204)
@@ -59,7 +61,7 @@ async def delete_storage_registry(registry_id: UUID, user: User = Depends(authad
 @router.post("/api/storages", response_model=StorageRegistryResponse)
 async def create_storage_registry(
     payload: StorageRegistryCreate, user: User = Depends(authadmin)
-) -> StorageRegistryResponse:
+) -> StorageRegistry:
     """Create one storage backend registration."""
 
     try:
@@ -69,11 +71,11 @@ async def create_storage_registry(
 
     registry = await storage.create(**payload.model_dump(), slug=slug, user=user)
 
-    return StorageRegistryResponse.model_validate(registry)
+    return registry
 
 
 @router.get("/api/storages/{registry_id}/buckets", response_model=list[StorageBucketResponse])
-async def list_storage_buckets(registry_id: UUID, _: User = Depends(authsupport)) -> list[StorageBucketResponse]:
+async def list_storage_buckets(registry_id: UUID, _: User = Depends(authsupport)) -> list[dict[str, str]]:
     """List all buckets on a storage backend."""
 
     registry = await storage.get(registry_id)
@@ -87,7 +89,7 @@ async def list_storage_buckets(registry_id: UUID, _: User = Depends(authsupport)
         logger.exception("Failed to inspect storage buckets for registry '%s'", registry_id)
         raise UnavailableError("Storage buckets unavailable") from exc
 
-    return [StorageBucketResponse(name=n) for n in names]
+    return [{"name": name} for name in names]
 
 
 @router.get(
@@ -98,7 +100,7 @@ async def list_storage_bucket_objects(
     registry_id: UUID,
     bucket_name: str,
     _: User = Depends(authsupport),
-) -> list[StorageObjectResponse]:
+) -> list[StorageObjectData]:
     """List object metadata for one storage bucket."""
 
     registry = await storage.get(registry_id)
@@ -119,4 +121,4 @@ async def list_storage_bucket_objects(
         )
         raise UnavailableError("Storage objects unavailable") from exc
 
-    return [StorageObjectResponse(**item) for item in objects]
+    return objects

@@ -3,13 +3,14 @@ from src.auth import SessionAccountsService
 from src.errors import NotFoundError, ForbiddenError
 from src.models.users import UserListItem
 from src.models.common import SuccessResponse
+from src.database.models.users import User
 from src.database.services import users
 
 router = APIRouter()
 
 
 @router.post("/auth/accounts/{oidc}/activate", response_model=SuccessResponse, include_in_schema=False)
-async def activate_account(oidc: str, request: Request) -> SuccessResponse:
+async def activate_account(oidc: str, request: Request) -> dict[str, object]:
     """Switch the active account within the current browser session."""
 
     session_accounts = SessionAccountsService(request)
@@ -20,11 +21,11 @@ async def activate_account(oidc: str, request: Request) -> SuccessResponse:
         raise NotFoundError("Account", oidc)
 
     session_accounts.activate(oidc)
-    return SuccessResponse()
+    return {}
 
 
 @router.post("/auth/accounts/deactivate", response_model=list[UserListItem], include_in_schema=False)
-async def deactivate_account(request: Request) -> list[UserListItem]:
+async def deactivate_account(request: Request) -> list[User]:
     """Clear the active account without removing saved accounts."""
 
     SessionAccountsService(request).deactivate()
@@ -33,15 +34,15 @@ async def deactivate_account(request: Request) -> list[UserListItem]:
 
 
 @router.get("/auth/accounts", response_model=list[UserListItem], include_in_schema=False)
-async def list_accounts(request: Request) -> list[UserListItem]:
+async def list_accounts(request: Request) -> list[User]:
     """Return the saved session accounts for the login screen."""
 
-    accounts: list[UserListItem] = []
+    accounts: list[User] = []
     for oidc in SessionAccountsService(request).list():
         user = await users.get(oidc)
         if user is None:
             continue
 
-        accounts.append(UserListItem.model_validate(user))
+        accounts.append(user)
 
     return accounts

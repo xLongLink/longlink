@@ -14,7 +14,6 @@ from longlink.constants import ROOT
 from longlink.utils.xml import Longlink as LonglinkXml
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from longlink.auth import install_user_middleware
 from longlink.database.audit import install_audit_middleware
 
 API_PREFIX = "/api"
@@ -95,7 +94,6 @@ class LongLink(FastAPI):
             super().include_router(router)
 
         install_audit_middleware(self)
-        install_user_middleware(self, require_header=environments.ENV == "production")
 
         frontend_directory = ROOT / ".static" / "web"
 

@@ -1,62 +1,59 @@
-import kr8s
 import base64
 from typing import Any, cast
-from .errors import ComputeResourceError
 from datetime import UTC, datetime
 from .cluster import KubernetesCluster
 from src.utils import names, templates
 from .constants import APPLICATION_ID_LABEL
 from .resources import parse_kubernetes_timestamp
 from src.constants import TEMPLATES
-from kr8s.asyncio.objects import Pod, Secret, Service, APIObject, Deployment
+from .library import Pod, Secret, Service, APIObject, Deployment, kr8s
 
 
 class KubernetesApplications(KubernetesCluster):
     """Manage LongLink application workloads and runtime logs."""
 
-    def _application_resource_names(self, organization: str, application: str) -> tuple[str, str]:
-        """Return the Kubernetes namespace and resource name for one application."""
-
-        return (
-            names.k8name(names.knames(organization, "Organization")),
-            names.knames(application, "Application name"),
-        )
-
     async def _pods(self, organization: str, application: str) -> list[APIObject]:
         """Return pods for one managed application."""
 
-        namespace, name = self._application_resource_names(organization, application)
+        namespace = names.k8name(names.knames(organization, "Organization"))
+        name = names.knames(application, "Application name")
         return await self._list(Pod, namespace, {"app": name})
 
     async def application_pods(self, organization: str, application: str) -> list[APIObject]:
         """Return pods for one managed application."""
 
+        # Convert Kubernetes API failures into a simple caller error.
         try:
             return await self._pods(organization, application)
         except kr8s.ServerError as exc:
-            raise ComputeResourceError("Failed reading application pods") from exc
+            raise RuntimeError("Failed reading application pods") from exc
 
     async def application_deployment_ready(self, organization: str, application: str) -> bool:
         """Return whether the current application Deployment rollout is ready."""
 
-        namespace, name = self._application_resource_names(organization, application)
+        namespace = names.k8name(names.knames(organization, "Organization"))
+        name = names.knames(application, "Application name")
+        # Read the live Deployment so rollout status reflects the Kubernetes controller state.
         try:
             deployment = await self._read(Deployment, name, namespace)
         except kr8s.ServerError as exc:
-            raise ComputeResourceError("Failed reading application deployment") from exc
+            raise RuntimeError("Failed reading application deployment") from exc
 
         metadata = deployment.metadata
         spec = deployment.spec
         status = deployment.status
+        # Missing deployment sections mean Kubernetes has not reported readiness yet.
         if metadata is None or spec is None or status is None:
             return False
 
         expected_replicas = spec.get("replicas") or 1
         observed_generation = status.get("observedGeneration")
         generation = metadata.get("generation")
+        # A rollout without generation tracking cannot be proven ready.
         if observed_generation is None or generation is None:
             return False
 
+        # Wait until the controller has observed the latest desired generation.
         if observed_generation < generation:
             return False
 
@@ -80,7 +77,8 @@ class KubernetesApplications(KubernetesCluster):
     ) -> str:
         """Create or replace one internal application Deployment and Service."""
 
-        namespace, name = self._application_resource_names(organization, application)
+        namespace = names.k8name(names.knames(organization, "Organization"))
+        name = names.knames(application, "Application name")
 
         # Replace the full Secret data map so removed environment keys do not survive a merge patch.
         secret_body: dict[str, Any] = {
@@ -113,6 +111,7 @@ class KubernetesApplications(KubernetesCluster):
             rollout_token=rollout_token,
         )
 
+        # Apply Deployment and Service manifests after the runtime Secret exists.
         for manifest in application_manifests:
             await self._upsert(manifest)
 
@@ -122,14 +121,17 @@ class KubernetesApplications(KubernetesCluster):
     async def delete_application(self, organization: str, application: str) -> None:
         """Delete one managed application workload and tolerate missing resources."""
 
-        namespace, name = self._application_resource_names(organization, application)
+        namespace = names.k8name(names.knames(organization, "Organization"))
+        name = names.knames(application, "Application name")
 
         delete_calls = (
             (Deployment, "Deployment"),
             (Service, "Service"),
             (Secret, "Secret"),
         )
+        # Delete all named workload resources owned by the application.
         for resource_class, kind in delete_calls:
+            # Surface Kubernetes deletion failures with resource context.
             try:
                 await self._delete(resource_class, name, namespace)
             except kr8s.ServerError as exc:
@@ -140,12 +142,15 @@ class KubernetesApplications(KubernetesCluster):
     async def logs(self, organization: str, application: str, lines: int = 200) -> str:
         """Return recent logs for one managed application."""
 
-        namespace, name = self._application_resource_names(organization, application)
+        namespace = names.k8name(names.knames(organization, "Organization"))
+        name = names.knames(application, "Application name")
+        # List pods before selecting the most recent log source.
         try:
             pods = await self._pods(organization, application)
         except kr8s.ServerError as exc:
             raise ValueError(f"Failed listing pods for application '{namespace}/{name}'") from exc
 
+        # Logs require at least one application pod.
         if not pods:
             raise ValueError(f"No pods found for application '{namespace}/{name}'")
 
@@ -158,16 +163,20 @@ class KubernetesApplications(KubernetesCluster):
         pod = max(pods, key=pod_creation_time)
 
         pod_status = pod.raw.get("status", {})
+        # Count all container restarts so logs include the previous crash when available.
         restart_count = sum(
             container.get("restartCount") or 0
             for container in pod_status.get("containerStatuses", [])
         )
         previous_logs = ""
+        # Include previous container logs only when Kubernetes reports a restart.
         if restart_count > 0:
+            # Previous logs are best effort because old container logs may already be gone.
             try:
                 previous_logs = "\n".join([line async for line in cast(Any, pod).logs(tail_lines=lines, previous=True)])
             except kr8s.ServerError as exc:
                 response = getattr(exc, "response", None)
+                # Kubernetes returns 400 or 404 when no previous container logs exist.
                 if getattr(response, "status_code", None) not in {400, 404}:
                     raise ValueError(f"Failed reading previous logs for '{namespace}/{name}'") from exc
 
@@ -177,6 +186,7 @@ class KubernetesApplications(KubernetesCluster):
         except kr8s.ServerError as exc:
             raise ValueError(f"Failed reading logs for '{namespace}/{name}'") from exc
 
+        # Separate previous and current logs when both are available.
         if previous_logs.strip() and current_logs.strip():
             return f"Previous container logs:\n{previous_logs.rstrip()}\n\nCurrent container logs:\n{current_logs}"
 

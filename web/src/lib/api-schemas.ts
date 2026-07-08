@@ -1,4 +1,5 @@
 import { APPLICATION_ROLE_NAMES, PLATFORM_ROLE_NAMES, ROLE_NAMES } from '@/lib/roles';
+import { ACCENT_VALUES, RADIUS_VALUES, THEME_VALUES } from '@/lib/theme';
 import type {
     ApiApplicationResponse,
     ApiApplicationMember,
@@ -34,32 +35,9 @@ const applicationStatusSchema = z.enum(['creating', 'running', 'failed']);
 const applicationRoleSchema = z.enum(APPLICATION_ROLE_NAMES);
 const platformRoleSchema = z.enum(PLATFORM_ROLE_NAMES);
 const roleSchema = z.enum(ROLE_NAMES);
-const themeSchema = z.enum(['light', 'dark', 'system']);
-const accentSchema = z.enum([
-    'slate',
-    'gray',
-    'zinc',
-    'neutral',
-    'stone',
-    'red',
-    'orange',
-    'amber',
-    'yellow',
-    'lime',
-    'green',
-    'emerald',
-    'teal',
-    'cyan',
-    'sky',
-    'blue',
-    'indigo',
-    'violet',
-    'purple',
-    'fuchsia',
-    'pink',
-    'rose',
-]);
-const radiusSchema = z.enum(['none', 'small', 'medium', 'large']);
+const themeSchema = z.enum(THEME_VALUES);
+const accentSchema = z.enum(ACCENT_VALUES);
+const radiusSchema = z.enum(RADIUS_VALUES);
 const iconNameSchema = z.string().nullable() as z.ZodType<ApiOrganizationApplication['icon']>;
 
 export const apiLocationSchema = z.object({
@@ -81,7 +59,7 @@ export const apiUserListItemSchema = apiUserSummarySchema.extend({
     oidc: z.string(),
 }) satisfies z.ZodType<ApiUserListItem>;
 
-const nullableUserSummarySchema = z.lazy(() => apiUserSummarySchema.nullable());
+const nullableUserSummarySchema = apiUserSummarySchema.nullable();
 
 export const apiUserOrganizationMembershipSchema = z.object({
     id: z.string(),

@@ -202,7 +202,7 @@ async def test_upsert_oidc_user_syncs_organization_databases(monkeypatch: pytest
 
     monkeypatch.setattr(auth_routes.users, "upsert", fake_upsert)
     monkeypatch.setattr(
-        auth_routes.provisioning,
+        auth_routes.bootstrap,
         "sync_user_organizations",
         fake_sync_user_organizations,
     )
@@ -321,7 +321,7 @@ async def test_patch_me_updates_profile_and_resyncs_organizations(monkeypatch: p
     monkeypatch.setattr(users_routes.users, "upsert", fake_upsert)
     monkeypatch.setattr(users_routes.users, "profile", fake_profile)
     monkeypatch.setattr(
-        users_routes.provisioning,
+        users_routes.bootstrap,
         "sync_user_organizations",
         fake_sync_user_organizations,
     )

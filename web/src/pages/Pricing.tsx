@@ -6,7 +6,7 @@ const pricingOptions = [
     {
         name: 'Free',
         price: 'CHF 0',
-        period: null,
+        period: '/user/month',
         description: 'A real LongLink account for building and running apps, with included platform limits.',
         features: [
             'Real hosted LongLink workspace',
@@ -18,11 +18,10 @@ const pricingOptions = [
     },
     {
         name: 'Team',
-        price: 'CHF 4',
-        period: '/ user / month',
+        price: 'Coming soon',
+        period: null,
         description: 'Run production apps with pricing that scales with the people using the workflow.',
         features: [
-            'CHF 4 per user',
             '256Mi RAM and 500m CPU limit',
             '1GB database and 2GB object storage',
             '5GB outbound bandwidth included',

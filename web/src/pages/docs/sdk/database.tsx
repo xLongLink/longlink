@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-07',
+    lastUpdated: '2026-07-08',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/database.tsx',
 };
 
@@ -94,13 +94,11 @@ async def create_project() -> None:
         </P>
         <Ul>
             <Li>
-                In testing, the SDK uses an in-memory SQLite database and seeds deterministic local users for{' '}
-                <Code>read</Code>, <Code>write</Code>, <Code>maintain</Code>, <Code>admin</Code>, and <Code>owner</Code>
-                .
+                In testing, the SDK uses an in-memory SQLite database and auto-creates the shared <Code>users</Code>
+                table for application model references.
             </Li>
             <Li>
-                In development, the SDK uses <Code>./dev.db</Code> and keeps the same deterministic local users synced
-                whenever the SQLite database is initialized.
+                In development, the SDK uses <Code>./dev.db</Code> without seeding local users or managing authentication.
             </Li>
             <Li>
                 In production, the control plane manages organization users and syncs them into the organization
@@ -112,9 +110,8 @@ async def create_project() -> None:
                 database writes.
             </Li>
             <Li>
-                SDK application routes under <Code>/api</Code> enforce method-level roles locally: <Code>GET</Code> uses
-                <Code>read</Code>, write methods use <Code>write</Code>, and <Code>DELETE</Code> uses{' '}
-                <Code>maintain</Code>.
+                Local SDK requests do not include an authenticated user by default, so audit user ids remain empty unless
+                a caller explicitly supplies a trusted <Code>x-user-id</Code> header.
             </Li>
             <Li>
                 Hard deletes of <Code>db.Table</Code> rows are converted into soft deletes by setting{' '}

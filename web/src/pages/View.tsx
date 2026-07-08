@@ -177,7 +177,7 @@ function resolveTemplate(template: string, params: Record<string, string | undef
     return resolvedTemplate.replace(/\{([A-Za-z0-9_]+)\}/g, (_, key: string) => params[key] ?? `{${key}}`);
 }
 
-/** Creates an isolated page runtime context while preserving shared runtime values like the user. */
+/** Creates an isolated page runtime context while preserving supplied shared runtime values. */
 function createPageRuntimeContext(runtimeContext?: ExecutionContext): ExecutionContext {
     const pageRuntimeContext = createXmlContext();
 

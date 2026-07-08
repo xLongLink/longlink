@@ -28,7 +28,7 @@ class ColorFormatter(logging.Formatter):
 class ApiAccessFilter(logging.Filter):
     """Allow access logs for application requests while hiding frontend noise."""
 
-    _allowed_prefixes = ("/api/", "/auth/")
+    _allowed_prefixes = ("/api/",)
     _allowed_methods = ("POST", "PUT", "PATCH", "DELETE")
 
     def filter(self, record: logging.LogRecord) -> bool:

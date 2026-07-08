@@ -7,14 +7,15 @@ from src.auth import authuser, authsupport
 from src.utils import names, buckets
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.logger import logger
-from src.operations import provisioning
+from src.operations.constants import RESOURCE_REMOVE_STEP
+from src.operations.implementation import bootstrap, registries
 from src.adapters.storage.base import StorageBucketUsage
+from src.adapters.database.types import DatabaseTableData
 from tenant.database import SHARED_SCHEMA
 from src.models.roles import role, PlatformRoles, OrganizationRoles
-from src.models.storages import (OrganizationStorageResourceKind, OrganizationStorageResourceResponse,
-                                 OrganizationStorageApplicationResponse)
+from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import (OrganizationDatabaseResourceKind, OrganizationDatabaseTableResponse,
-                                  OrganizationDatabaseResourceResponse, OrganizationDatabaseApplicationResponse)
+                                   OrganizationDatabaseResourceResponse)
 from src.database.services import locations, operations, invitations, applications, organizations
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationResponse
@@ -53,11 +54,11 @@ async def organization_access(organization_id: UUID, user: User = Depends(authus
 
 
 @router.get("/api/organizations", response_model=list[OrganizationSummary])
-async def list_organizations(_user: User = Depends(authsupport)) -> list[OrganizationSummary]:
+async def list_organizations(_user: User = Depends(authsupport)) -> list[Organization]:
     """Return all organizations for support and administrator views."""
 
     records = await organizations.fetch_all()
-    return [OrganizationSummary.model_validate(record) for record in records]
+    return records
 
 
 @router.get("/api/organizations/{organization_id}", response_model=OrganizationDetails)
@@ -94,14 +95,14 @@ async def list_organization_applications(
 )
 async def list_organization_database_resources(
     member_access: OrganizationAccess = Depends(organization_access),
-) -> list[OrganizationDatabaseResourceResponse]:
+) -> list[dict[str, object]]:
     """Return database schemas for one organization."""
 
     organization = member_access.organization
     if not role.atleast(member_access.role, OrganizationRoles.maintain):
         raise ForbiddenError("Database resource inspection permissions required")
 
-    registry = await provisioning.organization_database_registry(organization)
+    registry = await registries.organization_database_registry(organization)
     if registry is None:
         return []
 
@@ -115,14 +116,14 @@ async def list_organization_database_resources(
 )
 async def list_organization_storage_resources(
     member_access: OrganizationAccess = Depends(organization_access),
-) -> list[OrganizationStorageResourceResponse]:
+) -> list[dict[str, object]]:
     """Return storage buckets for one organization."""
 
     organization = member_access.organization
     if not role.atleast(member_access.role, OrganizationRoles.maintain):
         raise ForbiddenError("Storage resource inspection permissions required")
 
-    registry = await provisioning.organization_storage_registry(organization)
+    registry = await registries.organization_storage_registry(organization)
     if registry is None:
         return []
 
@@ -138,14 +139,14 @@ async def list_organization_database_resource_tables(
     resource_kind: OrganizationDatabaseResourceKind,
     resource_name: str,
     member_access: OrganizationAccess = Depends(organization_access),
-) -> list[OrganizationDatabaseTableResponse]:
+) -> list[DatabaseTableData]:
     """Return tables, columns, and preview rows for one organization database resource."""
 
     organization = member_access.organization
     if not role.atleast(member_access.role, OrganizationRoles.maintain):
         raise ForbiddenError("Database resource inspection permissions required")
 
-    registry = await provisioning.organization_database_registry(organization)
+    registry = await registries.organization_database_registry(organization)
     if registry is None:
         raise NotFoundError("Database resource", resource_name)
 
@@ -172,7 +173,7 @@ async def list_organization_database_resource_tables(
         )
         raise UnavailableError("Database resource unavailable") from exc
 
-    return [OrganizationDatabaseTableResponse.model_validate(table) for table in tables]
+    return tables
 
 
 @router.post("/api/organizations/{organization_id}/invitations", status_code=204)
@@ -218,7 +219,7 @@ async def update_organization_member(
         raise NotFoundError("Organization member", member_id)
 
     try:
-        await provisioning.sync_organization_users(organization)
+        await bootstrap.sync_organization_users(organization)
     except Exception as exc:
         raise UnavailableError("Failed to synchronize organization members") from exc
 
@@ -250,7 +251,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
         OperationKind.organization_delete,
         organization_id=organization_id,
         scheduled_at=datetime.now(UTC) + timedelta(days=ORGANIZATION_DELETE_DELAY_DAYS),
-        step="remove",
+        step=RESOURCE_REMOVE_STEP,
         user=user,
     )
     return Response(status_code=204)
@@ -260,7 +261,7 @@ async def _database_resource_rows(
     organization: Organization | OrganizationDetails,
     registry: DatabaseRegistry,
     active_applications: list[Application],
-) -> list[OrganizationDatabaseResourceResponse]:
+) -> list[dict[str, object]]:
     """Inspect one organization database and return API resource rows."""
 
     database_name = names.dbname(organization.slug)
@@ -276,8 +277,8 @@ async def _database_resource_rows(
         )
         raise UnavailableError("Database resources unavailable") from exc
 
-    rows: list[OrganizationDatabaseResourceResponse] = []
-    resource_fields = {
+    rows: list[dict[str, object]] = []
+    resource_fields: dict[str, object] = {
         "kind": OrganizationDatabaseResourceKind.schema,
         "database_name": database_name,
         "database_registry_id": registry.id,
@@ -288,14 +289,14 @@ async def _database_resource_rows(
     shared_usage = usage_by_schema.get(SHARED_SCHEMA)
     if shared_usage is not None:
         rows.append(
-            OrganizationDatabaseResourceResponse(
+            {
                 **resource_fields,
-                name=SHARED_SCHEMA,
-                application=None,
-                space_used=shared_usage["space_used"],
-                table_count=shared_usage["table_count"],
-                row_estimate=shared_usage["row_estimate"],
-            )
+                "name": SHARED_SCHEMA,
+                "application": None,
+                "space_used": shared_usage["space_used"],
+                "table_count": shared_usage["table_count"],
+                "row_estimate": shared_usage["row_estimate"],
+            }
         )
 
     for application in sorted(active_applications, key=lambda item: item.name):
@@ -304,23 +305,21 @@ async def _database_resource_rows(
             continue
 
         rows.append(
-            OrganizationDatabaseResourceResponse(
+            {
                 **resource_fields,
-                name=application.slug,
-                application=OrganizationDatabaseApplicationResponse.model_validate(
-                    {
-                        "id": application.id,
-                        "name": application.name,
-                        "slug": application.slug,
-                        "icon": application.icon,
-                        "description": application.description,
-                        "status": application.status,
-                    }
-                ),
-                space_used=usage["space_used"],
-                table_count=usage["table_count"],
-                row_estimate=usage["row_estimate"],
-            )
+                "name": application.slug,
+                "application": {
+                    "id": application.id,
+                    "name": application.name,
+                    "slug": application.slug,
+                    "icon": application.icon,
+                    "description": application.description,
+                    "status": application.status,
+                },
+                "space_used": usage["space_used"],
+                "table_count": usage["table_count"],
+                "row_estimate": usage["row_estimate"],
+            }
         )
 
     for usage in sorted(schema_usage, key=lambda item: item["name"]):
@@ -328,14 +327,14 @@ async def _database_resource_rows(
             continue
 
         rows.append(
-            OrganizationDatabaseResourceResponse(
+            {
                 **resource_fields,
-                name=usage["name"],
-                application=None,
-                space_used=usage["space_used"],
-                table_count=usage["table_count"],
-                row_estimate=usage["row_estimate"],
-            )
+                "name": usage["name"],
+                "application": None,
+                "space_used": usage["space_used"],
+                "table_count": usage["table_count"],
+                "row_estimate": usage["row_estimate"],
+            }
         )
 
     return rows
@@ -345,7 +344,7 @@ async def _storage_resource_rows(
     organization: Organization | OrganizationDetails,
     registry: StorageRegistry,
     active_applications: list[Application],
-) -> list[OrganizationStorageResourceResponse]:
+) -> list[dict[str, object]]:
     """Inspect one storage backend and return managed organization bucket rows."""
 
     try:
@@ -361,7 +360,7 @@ async def _storage_resource_rows(
         raise UnavailableError("Storage resources unavailable") from exc
 
     expected_bucket_names: set[str] = set()
-    rows: list[OrganizationStorageResourceResponse] = []
+    rows: list[dict[str, object]] = []
     bucket_names_requiring_usage: list[str] = []
     shared_bucket_name = organization.shared_storage_bucket_name
     visible_application_buckets: list[tuple[Application, str]] = []
@@ -409,62 +408,60 @@ async def _storage_resource_rows(
     if shared_bucket_name is not None and shared_bucket_name in bucket_names:
         usage = bucket_usage_by_name[shared_bucket_name]
         rows.append(
-            OrganizationStorageResourceResponse(
-                kind=OrganizationStorageResourceKind.shared_bucket,
-                name="shared",
-                bucket_name=shared_bucket_name,
-                application=None,
-                storage_registry_id=registry.id,
-                storage_registry_name=registry.name,
-                space_used=usage["space_used"],
-                object_count=usage["object_count"],
-            )
+            {
+                "kind": OrganizationStorageResourceKind.shared_bucket,
+                "name": "shared",
+                "bucket_name": shared_bucket_name,
+                "application": None,
+                "storage_registry_id": registry.id,
+                "storage_registry_name": registry.name,
+                "space_used": usage["space_used"],
+                "object_count": usage["object_count"],
+            }
         )
 
     for application, application_bucket_name in visible_application_buckets:
         usage = bucket_usage_by_name[application_bucket_name]
         rows.append(
-            OrganizationStorageResourceResponse(
-                kind=OrganizationStorageResourceKind.application_bucket,
-                name=application.slug,
-                bucket_name=application_bucket_name,
-                application=OrganizationStorageApplicationResponse.model_validate(
-                    {
-                        "id": application.id,
-                        "name": application.name,
-                        "slug": application.slug,
-                        "icon": application.icon,
-                        "description": application.description,
-                        "status": application.status,
-                    }
-                ),
-                storage_registry_id=registry.id,
-                storage_registry_name=registry.name,
-                space_used=usage["space_used"],
-                object_count=usage["object_count"],
-            )
+            {
+                "kind": OrganizationStorageResourceKind.application_bucket,
+                "name": application.slug,
+                "bucket_name": application_bucket_name,
+                "application": {
+                    "id": application.id,
+                    "name": application.name,
+                    "slug": application.slug,
+                    "icon": application.icon,
+                    "description": application.description,
+                    "status": application.status,
+                },
+                "storage_registry_id": registry.id,
+                "storage_registry_name": registry.name,
+                "space_used": usage["space_used"],
+                "object_count": usage["object_count"],
+            }
         )
 
     for orphaned_bucket_name in orphaned_bucket_names:
         usage = bucket_usage_by_name[orphaned_bucket_name]
         rows.append(
-            OrganizationStorageResourceResponse(
-                kind=OrganizationStorageResourceKind.application_bucket,
-                name=orphaned_bucket_name.removeprefix(managed_bucket_prefix),
-                bucket_name=orphaned_bucket_name,
-                application=None,
-                storage_registry_id=registry.id,
-                storage_registry_name=registry.name,
-                space_used=usage["space_used"],
-                object_count=usage["object_count"],
-            )
+            {
+                "kind": OrganizationStorageResourceKind.application_bucket,
+                "name": orphaned_bucket_name.removeprefix(managed_bucket_prefix),
+                "bucket_name": orphaned_bucket_name,
+                "application": None,
+                "storage_registry_id": registry.id,
+                "storage_registry_name": registry.name,
+                "space_used": usage["space_used"],
+                "object_count": usage["object_count"],
+            }
         )
 
     return rows
 
 
 @router.post("/api/organizations", response_model=OrganizationSummary)
-async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)) -> OrganizationSummary:
+async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)) -> Organization:
     """Create a new organization."""
 
     if await locations.get(payload.location_id) is None:
@@ -487,8 +484,8 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
         country=payload.country,
     )
 
-    await provisioning.create_organization_namespace(organization)
-    await provisioning.create_organization_database(organization)
-    await provisioning.create_organization_storage(organization)
+    await bootstrap.create_organization_namespace(organization)
+    await bootstrap.create_organization_database(organization)
+    await bootstrap.create_organization_storage(organization)
 
-    return OrganizationSummary.model_validate(organization)
+    return organization

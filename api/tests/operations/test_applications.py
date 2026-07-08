@@ -4,7 +4,7 @@ from src.operations import execute
 from src.database.services import users, compute, database, locations, operations, applications, organizations
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationStatus
-from src.operations.applications import ApplicationStartupState, application_pods_startup_state
+from src.operations.implementation.applications import ApplicationStartupState, application_pods_startup_state
 
 db = SimpleNamespace(
     applications=applications,
@@ -136,7 +136,7 @@ async def test_execute_application_create_operation_completes_running_applicatio
         return ApplicationStartupState.ready
 
     monkeypatch.setattr(
-        "src.operations.applications.inspect_application_startup",
+        "src.operations.implementation.applications.inspect_application_startup",
         fake_inspect_application_startup,
     )
 
@@ -191,7 +191,7 @@ async def test_execute_application_create_operation_marks_failed_when_dead(monke
         return ApplicationStartupState.dead
 
     monkeypatch.setattr(
-        "src.operations.applications.inspect_application_startup",
+        "src.operations.implementation.applications.inspect_application_startup",
         fake_inspect_application_startup,
     )
 
@@ -244,7 +244,7 @@ async def test_execute_application_create_operation_releases_when_not_ready(monk
         return ApplicationStartupState.pending
 
     monkeypatch.setattr(
-        "src.operations.applications.inspect_application_startup",
+        "src.operations.implementation.applications.inspect_application_startup",
         fake_inspect_application_startup,
     )
 

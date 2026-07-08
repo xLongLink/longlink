@@ -5,7 +5,7 @@ from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.utils import images
 from src.models.icons import Icon
 from src.models.roles import ApplicationRoles, OrganizationRoles
-from src.models.users import Avatar, UserSummary
+from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
 from src.models.organizations import OrganizationSummary
 
@@ -105,7 +105,7 @@ class ApplicationMemberResponse(BaseModel):
     # Metadata
     name: str
     email: str
-    avatar: Avatar = ""
+    avatar: str = ""
 
     # State
     application_role: ApplicationRoles | None = None

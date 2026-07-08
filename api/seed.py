@@ -5,7 +5,7 @@ import urllib.parse
 from pathlib import Path
 from uuid import UUID
 import httpx2
-from src.operations import provisioning
+from src.operations.implementation import resources
 from src.environments import env
 from fastapi.testclient import TestClient
 from src.models.applications import ApplicationCreate
@@ -125,7 +125,7 @@ async def sync_local_application(application_id: UUID, organization_id: UUID, us
     if user is None or organization is None or application is None:
         raise RuntimeError("Seeded application could not be loaded for runtime sync")
 
-    await provisioning.sync_application_runtime(
+    await resources.sync_application_runtime(
         application,
         organization,
         ApplicationCreate.model_validate(LOCAL_APP),
