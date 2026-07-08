@@ -20,6 +20,7 @@ ENV PATH="/app/.venv/bin:${PATH}"
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 
+COPY org/ /org/
 COPY api/ /app/
 RUN uv sync --frozen --no-dev --no-editable --no-cache
 COPY --from=web-builder /repo/api/src/.static/web /app/src/.static/web
