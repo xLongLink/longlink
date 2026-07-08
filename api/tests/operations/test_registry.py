@@ -1,6 +1,6 @@
 from src.operations import execute
+from src.operations import registry
 from src.models.operations import OperationKind
-from src.operations.registry import operation_handler, get_operation_handler
 from src.database.models.operations import Operation
 
 
@@ -11,7 +11,7 @@ async def test_operation_handler_decorator_registers_and_dispatches_handler() ->
     kind = OperationKind.application_create
     step = "custom_step"
 
-    @operation_handler(kind, step)
+    @registry.operation_handler(kind, step)
     async def fake_handler(operation: Operation) -> Operation:
         """Return the operation unchanged for dispatch verification."""
 
@@ -20,7 +20,7 @@ async def test_operation_handler_decorator_registers_and_dispatches_handler() ->
     operation = Operation(kind=kind, step=step, lease_token="test-lease")
 
     # Act
-    handler = get_operation_handler(kind, step)
+    handler = registry.get_operation_handler(kind, step)
     result = await execute(operation)
 
     # Assert

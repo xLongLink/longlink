@@ -93,7 +93,10 @@ class PodResponse(BaseModel):
 class ComputeResourcesResponse(BaseModel):
     """Cluster resource totals and allocatable amounts."""
 
-    ram_total: int
-    ram_free: int
+    # CPU
     cpu_total: float
-    cpu_free: float
+    cpu_allocatable: float
+
+    # RAM
+    ram_total: int
+    ram_allocatable: int

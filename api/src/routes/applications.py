@@ -1,5 +1,5 @@
 import re
-from src import adapters
+from src import adapters, permissions
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter
 from datetime import UTC, datetime, timedelta
@@ -7,49 +7,14 @@ from src.auth import authuser, authadmin, organization_member_access
 from src.utils import names
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.operations import provisioning
-from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
-from src.database.services import compute, operations, applications, organizations
+from src.database.services import compute, operations, applications
 from src.models.operations import OperationKind
 from src.models.applications import (ApplicationCreate, ApplicationResponse, ApplicationMemberUpdate,
                                      ApplicationMemberResponse)
 from src.database.models.users import User
-from src.database.models.applications import Application
 
 APPLICATION_DELETE_DELAY_DAYS = 0
-APPLICATION_ACCESS_ORGANIZATION_ROLES = {
-    OrganizationRoles.admin,
-    OrganizationRoles.maintain,
-    OrganizationRoles.owner,
-}
-ORGANIZATION_APPLICATION_ROLE_RANKS = {
-    OrganizationRoles.maintain: 3,
-    OrganizationRoles.admin: 4,
-    OrganizationRoles.owner: 5,
-}
-APPLICATION_ROLE_RANKS = {
-    ApplicationRoles.read: 1,
-    ApplicationRoles.write: 2,
-    ApplicationRoles.maintain: 3,
-    ApplicationRoles.admin: 4,
-}
-RUNTIME_ROLE_RANKS = {
-    "read": 1,
-    "write": 2,
-    "maintain": 3,
-    "admin": 4,
-    "owner": 5,
-}
-PROXY_METHOD_REQUIRED_ROLES = {
-    "GET": "read",
-    "HEAD": "read",
-    "OPTIONS": "read",
-    "POST": "write",
-    "PUT": "write",
-    "PATCH": "write",
-    "DELETE": "maintain",
-}
-APPLICATION_MANAGEMENT_ROLES = {ApplicationRoles.admin, ApplicationRoles.maintain}
 GATEWAY_SECRET_HEADER = "x-longlink-gateway-secret"
 GATEWAY_ORIGINAL_METHOD_HEADER = "x-longlink-original-method"
 GATEWAY_ORIGINAL_PATH_HEADER = "x-longlink-original-path"
@@ -59,97 +24,6 @@ GATEWAY_APPLICATION_PROXY_PATTERN = re.compile(
 GATEWAY_AUTHORIZATION_METHODS = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
 
 router = APIRouter()
-
-
-async def _application_access_roles(
-    application: Application, user: User
-) -> tuple[OrganizationRoles | None, ApplicationRoles | None]:
-    """Return organization and application roles for one user/application pair."""
-
-    organization_role = await organizations.membership_role(application.organization_id, user.id)
-    application_role = await applications.membership_role(application.id, user.id)
-    return organization_role, application_role
-
-
-def _can_access_application(
-    organization_role: OrganizationRoles | None,
-    application_role: ApplicationRoles | None,
-) -> bool:
-    """Return whether a user may access an application runtime."""
-
-    return _effective_runtime_role(organization_role, application_role) is not None
-
-
-def _effective_runtime_role(
-    organization_role: OrganizationRoles | None,
-    application_role: ApplicationRoles | None,
-) -> str | None:
-    """Return the strongest role the application runtime should see."""
-
-    roles: list[str] = []
-
-    # Application roles are the normal runtime grant for application members.
-    if application_role is not None:
-        roles.append(application_role.value)
-
-    # Elevated organization roles can open and operate runtimes without per-app grants.
-    if organization_role is not None and organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES:
-        roles.append(organization_role.value)
-
-    if not roles:
-        return None
-
-    return max(roles, key=lambda role: RUNTIME_ROLE_RANKS[role])
-
-
-def _require_proxy_method_role(method: str, runtime_role: str) -> None:
-    """Require a runtime role that allows the proxied HTTP method."""
-
-    required_role = PROXY_METHOD_REQUIRED_ROLES.get(method.upper(), "maintain")
-
-    # Enforce the same method-level policy before requests reach the app container.
-    if RUNTIME_ROLE_RANKS[runtime_role] < RUNTIME_ROLE_RANKS[required_role]:
-        raise ForbiddenError(f"Application {required_role} access required")
-
-
-def _can_manage_application(
-    organization_role: OrganizationRoles | None,
-    application_role: ApplicationRoles | None,
-) -> bool:
-    """Return whether a user may perform application management actions."""
-
-    return application_role in APPLICATION_MANAGEMENT_ROLES or organization_role in APPLICATION_ACCESS_ORGANIZATION_ROLES
-
-
-def _can_view_application_logs(
-    organization_role: OrganizationRoles | None,
-    application_role: ApplicationRoles | None,
-) -> bool:
-    """Return whether a user may view application logs."""
-
-    return _can_manage_application(organization_role, application_role)
-
-
-def _application_role_rank(role: ApplicationRoles | None) -> int:
-    """Return the comparable privilege rank for an application role."""
-
-    if role is None:
-        return 0
-
-    return APPLICATION_ROLE_RANKS[role]
-
-
-def _application_manager_role_rank(
-    organization_role: OrganizationRoles | None,
-    application_role: ApplicationRoles | None,
-) -> int:
-    """Return the strongest application role rank the caller may manage."""
-
-    organization_role_rank = 0
-    if organization_role is not None and organization_role in ORGANIZATION_APPLICATION_ROLE_RANKS:
-        organization_role_rank = ORGANIZATION_APPLICATION_ROLE_RANKS[organization_role]
-
-    return max(_application_role_rank(application_role), organization_role_rank)
 
 
 def _gateway_original_path(request: Request, path: str) -> str:
@@ -201,18 +75,17 @@ async def list_applications(
     response_model=ApplicationResponse,
 )
 async def create_application(
-    organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)
+    payload: ApplicationCreate,
+    member_access: permissions.OrganizationAccess = Depends(permissions.organization_member),
 ) -> ApplicationResponse:
     """Register a new application in the database and deploy it on the compute cluster."""
 
-    organization_record = await organization_member_access(organization_id, user)
     # Application creation provisions runtime resources, so it requires elevated organization permissions.
-    membership_role = await organizations.membership_role(organization_id, user.id)
-    if membership_role not in APPLICATION_ACCESS_ORGANIZATION_ROLES:
+    if not permissions.can_create_application(member_access.role):
         raise ForbiddenError("Application creation permissions required")
 
     try:
-        application = await provisioning.create_application_runtime(organization_record, payload, user)
+        application = await provisioning.create_application_runtime(member_access.organization, payload, member_access.user)
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
     except RuntimeError as exc:
@@ -226,8 +99,8 @@ async def create_application(
         {
             **reloaded_application.model_dump(),
             "organization": reloaded_application.organization,
-            "created_by": reloaded_application.created_by or user,
-            "updated_by": reloaded_application.updated_by or reloaded_application.created_by or user,
+            "created_by": reloaded_application.created_by or member_access.user,
+            "updated_by": reloaded_application.updated_by or reloaded_application.created_by or member_access.user,
             "deleted_by": reloaded_application.deleted_by,
             "gateway_url": applications.response_gateway_url(reloaded_application),
         }
@@ -244,8 +117,8 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
         raise NotFoundError("Application", application_id)
 
     organization_record = await organization_member_access(application.organization_id, user)
-    organization_role, application_role = await _application_access_roles(application, user)
-    if not _can_view_application_logs(organization_role, application_role):
+    organization_role, application_role = await permissions.application_access_roles(application, user)
+    if not permissions.can_view_application_logs(organization_role, application_role):
         raise ForbiddenError("Application log permissions required")
 
     registry = await provisioning.application_compute_registry(application, organization_record.location_id)
@@ -294,15 +167,15 @@ async def update_application_member(
         raise NotFoundError("Application", application_id)
 
     await organization_member_access(application.organization_id, user)
-    organization_role, application_role = await _application_access_roles(application, user)
-    if not _can_manage_application(organization_role, application_role):
+    organization_role, application_role = await permissions.application_access_roles(application, user)
+    if not permissions.can_manage_application(organization_role, application_role):
         raise ForbiddenError("Application member management permissions required")
 
-    caller_role_rank = _application_manager_role_rank(organization_role, application_role)
+    caller_role_rank = permissions.application_manager_role_rank(organization_role, application_role)
     member_application_role = await applications.membership_role(application.id, member_id)
-    if _application_role_rank(member_application_role) > caller_role_rank:
+    if permissions.application_role_rank(member_application_role) > caller_role_rank:
         raise ForbiddenError("Application role management permissions required")
-    if _application_role_rank(payload.role) > caller_role_rank:
+    if permissions.application_role_rank(payload.role) > caller_role_rank:
         raise ForbiddenError("Application role management permissions required")
 
     updated = await applications.set_member_role(
@@ -327,8 +200,8 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
         raise NotFoundError("Application", application_id)
 
     await organization_member_access(application.organization_id, user)
-    organization_role, application_role = await _application_access_roles(application, user)
-    if not _can_manage_application(organization_role, application_role):
+    organization_role, application_role = await permissions.application_access_roles(application, user)
+    if not permissions.can_manage_application(organization_role, application_role):
         raise ForbiddenError("Application deletion permissions required")
 
     deleted = await applications.soft_delete(application_id, user)
@@ -374,12 +247,12 @@ async def authorize_gateway_request(request: Request, path: str = "") -> Respons
 
     user = await authuser(request)
     organization = await organization_member_access(application.organization_id, user)
-    organization_role, application_role = await _application_access_roles(application, user)
-    runtime_role = _effective_runtime_role(organization_role, application_role)
+    organization_role, application_role = await permissions.application_access_roles(application, user)
+    runtime_role = permissions.effective_runtime_role(organization_role, application_role)
     if runtime_role is None:
         raise ForbiddenError("Application access required")
 
-    _require_proxy_method_role(_gateway_original_method(request), runtime_role)
+    permissions.require_proxy_method_role(_gateway_original_method(request), runtime_role)
     names.knames(organization.slug, "Organization")
     names.knames(application.slug, "Application name")
 

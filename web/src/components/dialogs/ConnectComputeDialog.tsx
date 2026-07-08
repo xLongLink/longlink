@@ -30,6 +30,18 @@ export default function ConnectComputeDialog() {
     const hasGatewayTlsKey = gatewayTlsKey.trim().length > 0;
     const hasGatewayTlsCertificate = gatewayTlsCertificate.trim().length > 0;
 
+    /** Clears sensitive compute connection form state. */
+    function resetDialogState() {
+        setKind('kubernetes');
+        setKubeconfig('');
+        setIngressHost('');
+        setGatewayTlsKey('');
+        setGatewayTlsCertificate('');
+        setGatewayLoadBalancerIp('');
+        setLocationId('');
+        setError(null);
+    }
+
     const canSubmit =
         kind.trim().length > 0 &&
         kubeconfig.trim().length > 0 &&
@@ -70,13 +82,7 @@ export default function ConnectComputeDialog() {
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: computesQueryKey() });
             setOpen(false);
-            setKind('kubernetes');
-            setKubeconfig('');
-            setIngressHost('');
-            setGatewayTlsKey('');
-            setGatewayTlsCertificate('');
-            setGatewayLoadBalancerIp('');
-            setLocationId('');
+            resetDialogState();
         },
     });
 
@@ -95,7 +101,9 @@ export default function ConnectComputeDialog() {
             pendingLabel={t('actions.connecting')}
             onOpenChange={(nextOpen) => {
                 setOpen(nextOpen);
-                if (!nextOpen) setError(null);
+                if (!nextOpen) {
+                    resetDialogState();
+                }
             }}
             onSubmit={async () => {
                 setError(null);

@@ -2,10 +2,9 @@ import urllib.parse
 from src import adapters
 from uuid import UUID
 from datetime import UTC, datetime
-from src.utils import names, images, buckets
+from src.utils import names, images, buckets, url
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
-from src.utils.url import database as normalize_database_url
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import ApplicationStatus
 from src.database.services import compute, storage, database, operations, applications, organizations
@@ -313,7 +312,7 @@ def runtime_environment(
 
     environment = {
         "LONGLINK_ENV": "production",
-        "LONGLINK_DATABASE_URL": normalize_database_url(database_url),
+        "LONGLINK_DATABASE_URL": url.database(database_url),
         "LONGLINK_DATABASE_SCHEMA": application_slug,
     }
 

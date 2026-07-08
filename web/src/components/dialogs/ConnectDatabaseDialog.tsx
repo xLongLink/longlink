@@ -29,6 +29,20 @@ export default function ConnectDatabaseDialog() {
     const [error, setError] = useState<string | null>(null);
     const { items: locations } = useLocations(open);
 
+    /** Clears sensitive database connection form state. */
+    function resetDialogState() {
+        setKind('postgresql');
+        setName('');
+        setHost('');
+        setPort('5432');
+        setUsername('');
+        setPassword('');
+        setRuntimeHost('');
+        setRuntimePort('');
+        setLocationId('');
+        setError(null);
+    }
+
     const canSubmit =
         kind.trim().length > 0 &&
         name.trim().length > 0 &&
@@ -61,15 +75,7 @@ export default function ConnectDatabaseDialog() {
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
             setOpen(false);
-            setKind('postgresql');
-            setName('');
-            setHost('');
-            setPort('5432');
-            setUsername('');
-            setPassword('');
-            setRuntimeHost('');
-            setRuntimePort('');
-            setLocationId('');
+            resetDialogState();
         },
     });
 
@@ -88,7 +94,9 @@ export default function ConnectDatabaseDialog() {
             pendingLabel={t('actions.connecting')}
             onOpenChange={(nextOpen) => {
                 setOpen(nextOpen);
-                if (!nextOpen) setError(null);
+                if (!nextOpen) {
+                    resetDialogState();
+                }
             }}
             onSubmit={async () => {
                 setError(null);

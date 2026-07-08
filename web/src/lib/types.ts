@@ -270,10 +270,10 @@ export type ApiComputeNamespace = {
 };
 
 export type ApiComputeResources = {
-    ram_total: number;
-    ram_free: number;
     cpu_total: number;
-    cpu_free: number;
+    cpu_allocatable: number;
+    ram_total: number;
+    ram_allocatable: number;
 };
 
 export type ApiComputePodResources = {

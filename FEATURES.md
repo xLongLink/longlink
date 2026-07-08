@@ -62,7 +62,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Locations                | Lists and gets locations for support/admin users; administrators can create and delete unused locations.                                                      |
 | Location providers       | Supports `local`, `infomaniak`, `ovh`, `scaleway`, `hetzner`, and `exoscale`.                                                                                 |
 | Compute registries       | Creates dedicated Kubernetes compute registries with kubeconfig, gateway host, optional LoadBalancer IP, and production TLS material; lists, gets, and deletes unused registries for support/admin users. |
-| Compute inspection       | Inspects cluster resources, managed namespaces, managed-namespace pods, and pod usage when metrics are available.                                            |
+| Compute inspection       | Inspects total and allocatable cluster resources, managed namespaces, managed-namespace pods, and pod usage when metrics are available.                       |
 | Database registries      | Creates PostgreSQL registries with control-plane and optional runtime connection details; lists, gets, and deletes unused registries for support/admin users. |
 | Database inspection      | Inspects managed organization databases, managed database schemas, and aggregate non-system database storage usage.                                           |
 | Storage registries       | Creates S3-compatible storage registries with control-plane and optional runtime endpoints; administrators can delete unused registries.                      |

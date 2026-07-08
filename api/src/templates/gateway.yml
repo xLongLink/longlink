@@ -1,0 +1,152 @@
+# Template for the per-cluster Envoy gateway resources.
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: $gateway_auth_secret_name
+  namespace: $gateway_namespace
+  labels:
+    managed-by: longlink
+    app: $gateway_name
+type: Opaque
+data:
+  gateway-secret: "$gateway_secret"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: $gateway_config_name
+  namespace: $gateway_namespace
+  labels:
+    managed-by: longlink
+    app: $gateway_name
+data:
+  envoy.yaml: $envoy_config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $gateway_name
+  namespace: $gateway_namespace
+  labels:
+    managed-by: longlink
+    app: $gateway_name
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: $gateway_name
+  template:
+    metadata:
+      annotations:
+        longlink.io/config-hash: $config_hash
+      labels:
+        managed-by: longlink
+        app: $gateway_name
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: render-config
+          image: $gateway_config_render_image
+          command:
+            - sh
+            - -c
+            - >-
+              sed 's|$gateway_auth_secret_placeholder|'"$$LONG_LINK_GATEWAY_SECRET"'|g'
+              $gateway_template_mount_path/envoy.yaml >
+              $gateway_config_mount_path/envoy.yaml
+          env:
+            - name: LONG_LINK_GATEWAY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: $gateway_auth_secret_name
+                  key: gateway-secret
+          volumeMounts:
+            - name: template
+              mountPath: $gateway_template_mount_path
+              readOnly: true
+            - name: config
+              mountPath: $gateway_config_mount_path
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+      containers:
+        - name: $gateway_name
+          image: $gateway_image
+          args:
+            - -c
+            - $gateway_config_mount_path/envoy.yaml
+          ports:
+            - name: gateway
+              containerPort: $gateway_container_port
+            - name: admin
+              containerPort: $gateway_admin_container_port
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: gateway
+              scheme: $gateway_scheme
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: gateway
+              scheme: $gateway_scheme
+            periodSeconds: 10
+            failureThreshold: 3
+          volumeMounts: $gateway_volume_mounts
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+      volumes: $gateway_volumes
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: $gateway_name
+  namespace: $gateway_namespace
+  labels:
+    managed-by: longlink
+    app: $gateway_name
+spec: $gateway_service_spec
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: longlink-gateway-ingress
+  namespace: $gateway_namespace
+  labels:
+    managed-by: longlink
+    app: $gateway_name
+spec:
+  podSelector:
+    matchLabels:
+      app: $gateway_name
+  policyTypes:
+    - Ingress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: $gateway_container_port

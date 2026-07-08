@@ -63,20 +63,20 @@ function createComputeColumnsBase(
             cell: ({ row }) => {
                 const r = row.original.resources;
                 if (!r) return <span className="text-muted-foreground">—</span>;
-                const ramPct = Math.round((r.ram_free / r.ram_total) * 100);
-                const cpuPct = Math.round((r.cpu_free / r.cpu_total) * 100);
+                const ramPct = Math.round((r.ram_allocatable / r.ram_total) * 100);
+                const cpuPct = Math.round((r.cpu_allocatable / r.cpu_total) * 100);
                 return (
                     <div className="min-w-0 space-y-0.5">
                         <div className="flex items-center gap-1.5">
                             <div className="truncate font-medium text-foreground">{formatBytes(r.ram_total)}</div>
                             <div className="shrink-0 text-xs text-muted-foreground">
-                                ({t('resources.freePercent', { percent: ramPct })})
+                                ({t('resources.allocatablePercent', { percent: ramPct })})
                             </div>
                         </div>
                         <div className="flex items-center gap-1.5">
                             <div className="truncate font-medium text-foreground">{r.cpu_total} vCPU</div>
                             <div className="shrink-0 text-xs text-muted-foreground">
-                                ({t('resources.freePercent', { percent: cpuPct })})
+                                ({t('resources.allocatablePercent', { percent: cpuPct })})
                             </div>
                         </div>
                     </div>

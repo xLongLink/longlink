@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from src.logger import logger
-from src.operations.registry import get_operation_handler
+from src.operations import registry
 from src.database.models.operations import Operation
 from src.database.services import operations
 
@@ -16,7 +16,7 @@ async def execute(operation: Operation) -> Operation:
         from src.operations import applications as _applications  # noqa: F401
 
         # Dispatch the operation to the registered handler for its kind and step.
-        handler = get_operation_handler(operation.kind, operation.step)
+        handler = registry.get_operation_handler(operation.kind, operation.step)
         if handler is None:
             raise ValueError(f"Unsupported operation '{operation.kind}' step '{operation.step}'")
 

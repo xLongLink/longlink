@@ -13,7 +13,8 @@ export function resolveBuildOutDir(mode: string): string {
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
 
-    const devServerPort = env.VITE_DEV_PORT ? parseInt(env.VITE_DEV_PORT) : 5173;
+    const devServerHost = env.VITE_DEV_HOST?.trim() || 'localhost';
+    const devServerPort = env.VITE_DEV_PORT ? Number.parseInt(env.VITE_DEV_PORT, 10) : 5173;
 
     return {
         plugins: [react(), tailwindcss()],
@@ -32,7 +33,7 @@ export default defineConfig(({ mode }) => {
         },
 
         server: {
-            host: '0.0.0.0',
+            host: devServerHost,
             port: devServerPort,
             proxy: {
                 '/api': 'http://localhost:8000',

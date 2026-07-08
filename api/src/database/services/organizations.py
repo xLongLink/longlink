@@ -58,10 +58,20 @@ async def list_by_user(user_id: UUID) -> list[Organization]:
 async def get_member(organization_id: UUID, user_id: UUID) -> Organization | None:
     """Return one active organization for an active member without details."""
 
+    member_access = await get_member_access(organization_id, user_id)
+    if member_access is None:
+        return None
+
+    return member_access[0]
+
+
+async def get_member_access(organization_id: UUID, user_id: UUID) -> tuple[Organization, OrganizationRoles] | None:
+    """Return one active organization and member role for an active member."""
+
     async with session_scope() as session:
         # Join membership in the access check so non-members and missing organizations look identical.
         statement = (
-            select(Organization)
+            select(Organization, UserOrganization.role_name)
             .join(UserOrganization, UserOrganization.organization_id == Organization.id)
             .where(
                 Organization.id == organization_id,
@@ -71,7 +81,12 @@ async def get_member(organization_id: UUID, user_id: UUID) -> Organization | Non
             )
         )
         result = await session.execute(statement)
-        return result.scalar_one_or_none()
+        row = result.one_or_none()
+        if row is None:
+            return None
+
+        organization, role = row
+        return organization, role
 
 
 async def database_users(organization_id: UUID) -> list[TenantUser]:

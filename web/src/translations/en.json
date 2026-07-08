@@ -310,7 +310,7 @@
         "databaseTableNotFound": "Database table \"{{name}}\" not found",
         "databasesDescription": "Databases managed by database backend {{name}}.",
         "databasesTitle": "Databases",
-        "freePercent": "{{percent}}% Free",
+        "allocatablePercent": "{{percent}}% Allocatable",
         "noActiveApp": "No active app",
         "noColumns": "No columns",
         "noObjects": "No objects found.",

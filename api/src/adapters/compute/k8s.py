@@ -1,9 +1,10 @@
 import yaml
+import json
 import base64
 import hashlib
 import urllib.parse
 from .base import Compute
-from typing import Any
+from typing import Any, cast
 from datetime import UTC, datetime
 from src.utils import names, templates
 from kubernetes import client, config
@@ -63,15 +64,13 @@ class K8s(Compute):
         self._gateway_tls_key = gateway_tls_key
         self._gateway_tls_certificate = gateway_tls_certificate
         self._gateway_load_balancer_ip = gateway_load_balancer_ip
-        kubernetes_client: Any = client
-        kubernetes_config: Any = config
-        configuration = kubernetes_client.Configuration()
-        loader = kubernetes_config.kube_config.KubeConfigLoader(yaml.safe_load(self._kubeconfig))
+        configuration = client.Configuration()
+        loader = config.kube_config.KubeConfigLoader(yaml.safe_load(self._kubeconfig))
         loader.load_and_set(configuration)
-        self._api_client: Any = kubernetes_client.ApiClient(configuration)
-        self._core_api: Any = kubernetes_client.CoreV1Api(self._api_client)
-        self._apps_api: Any = kubernetes_client.AppsV1Api(self._api_client)
-        self._networking_api: Any = kubernetes_client.NetworkingV1Api(self._api_client)
+        self._api_client: client.ApiClient = client.ApiClient(configuration)
+        self._core_api: client.CoreV1Api = client.CoreV1Api(self._api_client)
+        self._apps_api: client.AppsV1Api = client.AppsV1Api(self._api_client)
+        self._networking_api: client.NetworkingV1Api = client.NetworkingV1Api(self._api_client)
 
     async def setup(self) -> None:
         """Create or refresh the per-cluster Envoy gateway."""
@@ -101,9 +100,12 @@ class K8s(Compute):
 
         namespace = names.k8name(names.knames(organization, "Organization"))
         name = names.knames(application, "Application name")
-        return self._core_api.list_namespaced_pod(namespace, label_selector=f"app={name}").items
+        return cast(
+            list[client.V1Pod],
+            self._core_api.list_namespaced_pod(namespace, label_selector=f"app={name}").items,
+        )
 
-    def _validate_managed_namespace(self, namespace: str, namespace_object: Any) -> None:
+    def _validate_managed_namespace(self, namespace: str, namespace_object: client.V1Namespace) -> None:
         """Raise when one namespace is not owned by LongLink."""
 
         labels = (namespace_object.metadata.labels or {}) if namespace_object.metadata is not None else {}
@@ -114,7 +116,7 @@ class K8s(Compute):
         """Create the dedicated gateway namespace when it is missing."""
 
         try:
-            namespace = self._core_api.read_namespace(GATEWAY_NAMESPACE)
+            namespace = cast(client.V1Namespace, self._core_api.read_namespace(GATEWAY_NAMESPACE))
         except ApiException as exc:
             if exc.status != 404:
                 raise ValueError(f"Failed reading namespace '{GATEWAY_NAMESPACE}'") from exc
@@ -132,7 +134,8 @@ class K8s(Compute):
             return None
 
         self._validate_managed_namespace(GATEWAY_NAMESPACE, namespace)
-        labels = namespace.metadata.labels or {}
+        metadata = namespace.metadata
+        labels = (metadata.labels or {}) if metadata is not None else {}
         if labels.get(GATEWAY_NAMESPACE_LABEL) != "true":
             self._core_api.patch_namespace(
                 GATEWAY_NAMESPACE,
@@ -243,7 +246,10 @@ class K8s(Compute):
         routes: list[dict[str, Any]] = []
         clusters: list[dict[str, Any]] = []
         namespaces = sorted(
-            self._core_api.list_namespace(label_selector="managed-by=longlink").items,
+            cast(
+                list[client.V1Namespace],
+                self._core_api.list_namespace(label_selector="managed-by=longlink").items,
+            ),
             key=lambda item: item.metadata.name if item.metadata is not None else "",
         )
 
@@ -254,10 +260,13 @@ class K8s(Compute):
                 continue
 
             services = sorted(
-                self._core_api.list_namespaced_service(
-                    namespace,
-                    label_selector="managed-by=longlink,compute-role=application",
-                ).items,
+                cast(
+                    list[client.V1Service],
+                    self._core_api.list_namespaced_service(
+                        namespace,
+                        label_selector="managed-by=longlink,compute-role=application",
+                    ).items,
+                ),
                 key=lambda item: item.metadata.name if item.metadata is not None else "",
             )
             for service in services:
@@ -539,7 +548,8 @@ end
         """Return Kubernetes manifests for the per-cluster Envoy gateway."""
 
         config_hash = hashlib.sha256(envoy_config.encode("utf-8")).hexdigest()
-        gateway_scheme = "HTTPS" if self._gateway_uses_tls() else "HTTP"
+        gateway_uses_tls = self._gateway_uses_tls()
+        gateway_scheme = "HTTPS" if gateway_uses_tls else "HTTP"
         volume_mounts: list[dict[str, Any]] = [
             {"name": "config", "mountPath": GATEWAY_CONFIG_MOUNT_PATH},
             {"name": "tmp", "mountPath": "/tmp"},
@@ -549,30 +559,13 @@ end
             {"name": "config", "emptyDir": {}},
             {"name": "tmp", "emptyDir": {}},
         ]
-        tls_manifest: dict[str, Any] | None = None
-        if self._gateway_uses_tls():
-            tls_manifest = {
-                "apiVersion": "v1",
-                "kind": "Secret",
-                "metadata": {
-                    "name": GATEWAY_TLS_SECRET_NAME,
-                    "namespace": GATEWAY_NAMESPACE,
-                    "labels": {"managed-by": "longlink", "app": GATEWAY_NAME},
-                },
-                "type": "kubernetes.io/tls",
-                "data": {
-                    "tls.crt": base64.b64encode(
-                        (self._gateway_tls_certificate or "").encode("utf-8")
-                    ).decode("ascii"),
-                    "tls.key": base64.b64encode((self._gateway_tls_key or "").encode("utf-8")).decode("ascii"),
-                },
-            }
+        if gateway_uses_tls:
             volume_mounts.append(
                 {"name": "tls", "mountPath": GATEWAY_TLS_MOUNT_PATH, "readOnly": True}
             )
             volumes.append({"name": "tls", "secret": {"secretName": GATEWAY_TLS_SECRET_NAME}})
 
-        use_development_ingress = env.DEVELOPMENT and not self._gateway_uses_tls()
+        use_development_ingress = env.DEVELOPMENT and not gateway_uses_tls
         gateway_service_port = 80 if use_development_ingress else GATEWAY_SERVICE_PORT
         service_spec: dict[str, Any] = {
             "type": "ClusterIP" if use_development_ingress else "LoadBalancer",
@@ -586,227 +579,65 @@ end
                 }
             ],
         }
-        if not use_development_ingress and self._gateway_load_balancer_ip is not None and self._gateway_load_balancer_ip.strip():
+        if (
+            not use_development_ingress
+            and self._gateway_load_balancer_ip is not None
+            and self._gateway_load_balancer_ip.strip()
+        ):
             service_spec["loadBalancerIP"] = self._gateway_load_balancer_ip.strip()
 
-        manifests = [
-            {
-                "apiVersion": "v1",
-                "kind": "Secret",
-                "metadata": {
-                    "name": GATEWAY_AUTH_SECRET_NAME,
-                    "namespace": GATEWAY_NAMESPACE,
-                    "labels": {"managed-by": "longlink", "app": GATEWAY_NAME},
-                },
-                "type": "Opaque",
-                "data": {
-                    "gateway-secret": base64.b64encode(self._proxy_secret.encode("utf-8")).decode("ascii")
-                },
-            },
-            {
-                "apiVersion": "v1",
-                "kind": "ConfigMap",
-                "metadata": {
-                    "name": GATEWAY_CONFIG_NAME,
-                    "namespace": GATEWAY_NAMESPACE,
-                    "labels": {"managed-by": "longlink", "app": GATEWAY_NAME},
-                },
-                "data": {"envoy.yaml": envoy_config},
-            },
-            {
-                "apiVersion": "apps/v1",
-                "kind": "Deployment",
-                "metadata": {
-                    "name": GATEWAY_NAME,
-                    "namespace": GATEWAY_NAMESPACE,
-                    "labels": {"managed-by": "longlink", "app": GATEWAY_NAME},
-                },
-                "spec": {
-                    "replicas": 2,
-                    "selector": {"matchLabels": {"app": GATEWAY_NAME}},
-                    "template": {
-                        "metadata": {
-                            "annotations": {"longlink.io/config-hash": config_hash},
-                            "labels": {"managed-by": "longlink", "app": GATEWAY_NAME},
-                        },
-                        "spec": {
-                            "automountServiceAccountToken": False,
-                            "securityContext": {
-                                "runAsNonRoot": True,
-                                "runAsUser": 101,
-                                "runAsGroup": 101,
-                                "fsGroup": 101,
-                                "seccompProfile": {"type": "RuntimeDefault"},
-                            },
-                            "initContainers": [
-                                {
-                                    "name": "render-config",
-                                    "image": GATEWAY_CONFIG_RENDER_IMAGE,
-                                    "command": [
-                                        "sh",
-                                        "-c",
-                                        f"sed 's|{GATEWAY_AUTH_SECRET_PLACEHOLDER}|'\"$LONG_LINK_GATEWAY_SECRET\"'|g' "
-                                        f"{GATEWAY_TEMPLATE_MOUNT_PATH}/envoy.yaml > "
-                                        f"{GATEWAY_CONFIG_MOUNT_PATH}/envoy.yaml",
-                                    ],
-                                    "env": [
-                                        {
-                                            "name": "LONG_LINK_GATEWAY_SECRET",
-                                            "valueFrom": {
-                                                "secretKeyRef": {
-                                                    "name": GATEWAY_AUTH_SECRET_NAME,
-                                                    "key": "gateway-secret",
-                                                }
-                                            },
-                                        }
-                                    ],
-                                    "volumeMounts": [
-                                        {
-                                            "name": "template",
-                                            "mountPath": GATEWAY_TEMPLATE_MOUNT_PATH,
-                                            "readOnly": True,
-                                        },
-                                        {"name": "config", "mountPath": GATEWAY_CONFIG_MOUNT_PATH},
-                                    ],
-                                    "securityContext": {
-                                        "allowPrivilegeEscalation": False,
-                                        "capabilities": {"drop": ["ALL"]},
-                                        "readOnlyRootFilesystem": True,
-                                    },
-                                }
-                            ],
-                            "containers": [
-                                {
-                                    "name": GATEWAY_NAME,
-                                    "image": GATEWAY_IMAGE,
-                                    "args": ["-c", f"{GATEWAY_CONFIG_MOUNT_PATH}/envoy.yaml"],
-                                    "ports": [
-                                        {
-                                            "name": "gateway",
-                                            "containerPort": GATEWAY_CONTAINER_PORT,
-                                        },
-                                        {
-                                            "name": "admin",
-                                            "containerPort": GATEWAY_ADMIN_CONTAINER_PORT,
-                                        },
-                                    ],
-                                    "readinessProbe": {
-                                        "httpGet": {
-                                            "path": "/ready",
-                                            "port": "gateway",
-                                            "scheme": gateway_scheme,
-                                        },
-                                        "periodSeconds": 5,
-                                        "failureThreshold": 3,
-                                    },
-                                    "livenessProbe": {
-                                        "httpGet": {
-                                            "path": "/ready",
-                                            "port": "gateway",
-                                            "scheme": gateway_scheme,
-                                        },
-                                        "periodSeconds": 10,
-                                        "failureThreshold": 3,
-                                    },
-                                    "volumeMounts": volume_mounts,
-                                    "resources": {
-                                        "requests": {"cpu": "100m", "memory": "128Mi"},
-                                        "limits": {"cpu": "500m", "memory": "256Mi"},
-                                    },
-                                    "securityContext": {
-                                        "allowPrivilegeEscalation": False,
-                                        "capabilities": {"drop": ["ALL"]},
-                                        "readOnlyRootFilesystem": True,
-                                    },
-                                }
-                            ],
-                            "volumes": volumes,
-                        },
-                    },
-                },
-            },
-            {
-                "apiVersion": "v1",
-                "kind": "Service",
-                "metadata": {
-                    "name": GATEWAY_NAME,
-                    "namespace": GATEWAY_NAMESPACE,
-                    "labels": {"managed-by": "longlink", "app": GATEWAY_NAME},
-                },
-                "spec": service_spec,
-            },
-            {
-                "apiVersion": "networking.k8s.io/v1",
-                "kind": "NetworkPolicy",
-                "metadata": {
-                    "name": "longlink-gateway-ingress",
-                    "namespace": GATEWAY_NAMESPACE,
-                    "labels": {"managed-by": "longlink", "app": GATEWAY_NAME},
-                },
-                "spec": {
-                    "podSelector": {"matchLabels": {"app": GATEWAY_NAME}},
-                    "policyTypes": ["Ingress"],
-                    "ingress": [
-                        {
-                            "ports": [
-                                {
-                                    "protocol": "TCP",
-                                    "port": GATEWAY_CONTAINER_PORT,
-                                }
-                            ]
-                        }
-                    ]
-                },
-            },
-        ]
-        if tls_manifest is not None:
-            manifests.insert(1, tls_manifest)
+        template_context: dict[str, object] = {
+            "config_hash": config_hash,
+            "envoy_config": json.dumps(envoy_config),
+            "gateway_admin_container_port": GATEWAY_ADMIN_CONTAINER_PORT,
+            "gateway_auth_secret_name": GATEWAY_AUTH_SECRET_NAME,
+            "gateway_auth_secret_placeholder": GATEWAY_AUTH_SECRET_PLACEHOLDER,
+            "gateway_config_mount_path": GATEWAY_CONFIG_MOUNT_PATH,
+            "gateway_config_name": GATEWAY_CONFIG_NAME,
+            "gateway_config_render_image": GATEWAY_CONFIG_RENDER_IMAGE,
+            "gateway_container_port": GATEWAY_CONTAINER_PORT,
+            "gateway_image": GATEWAY_IMAGE,
+            "gateway_name": GATEWAY_NAME,
+            "gateway_namespace": GATEWAY_NAMESPACE,
+            "gateway_scheme": gateway_scheme,
+            "gateway_secret": base64.b64encode(self._proxy_secret.encode("utf-8")).decode("ascii"),
+            "gateway_service_port": gateway_service_port,
+            "gateway_service_spec": json.dumps(service_spec),
+            "gateway_template_mount_path": GATEWAY_TEMPLATE_MOUNT_PATH,
+            "gateway_volume_mounts": json.dumps(volume_mounts),
+            "gateway_volumes": json.dumps(volumes),
+        }
+        rendered_manifests = templates.readyml(TEMPLATES / "gateway.yml", **template_context)
+        manifests = rendered_manifests if isinstance(rendered_manifests, list) else [rendered_manifests]
+
+        if gateway_uses_tls:
+            rendered_tls_manifest = templates.readyml(
+                TEMPLATES / "gateway_tls_secret.yml",
+                **template_context,
+                gateway_tls_certificate=base64.b64encode(
+                    (self._gateway_tls_certificate or "").encode("utf-8")
+                ).decode("ascii"),
+                gateway_tls_key=base64.b64encode(
+                    (self._gateway_tls_key or "").encode("utf-8")
+                ).decode("ascii"),
+                gateway_tls_secret_name=GATEWAY_TLS_SECRET_NAME,
+            )
+            tls_manifests = (
+                rendered_tls_manifest if isinstance(rendered_tls_manifest, list) else [rendered_tls_manifest]
+            )
+            manifests[1:1] = tls_manifests
 
         if use_development_ingress:
-            manifests.append(
-                {
-                    "apiVersion": "networking.k8s.io/v1",
-                    "kind": "Ingress",
-                    "metadata": {
-                        "name": GATEWAY_NAME,
-                        "namespace": GATEWAY_NAMESPACE,
-                        "labels": {"managed-by": "longlink", "app": GATEWAY_NAME},
-                        "annotations": {
-                            "traefik.ingress.kubernetes.io/router.entrypoints": "web,websecure"
-                        },
-                    },
-                    "spec": {
-                        "rules": [
-                            {
-                                "http": {
-                                    "paths": [
-                                        {
-                                            "path": "/api/applications",
-                                            "pathType": "Prefix",
-                                            "backend": {
-                                                "service": {
-                                                    "name": GATEWAY_NAME,
-                                                    "port": {"number": gateway_service_port},
-                                                }
-                                            },
-                                        },
-                                        {
-                                            "path": "/ready",
-                                            "pathType": "Exact",
-                                            "backend": {
-                                                "service": {
-                                                    "name": GATEWAY_NAME,
-                                                    "port": {"number": gateway_service_port},
-                                                }
-                                            },
-                                        },
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                }
+            rendered_ingress_manifest = templates.readyml(
+                TEMPLATES / "gateway_development_ingress.yml",
+                **template_context,
             )
+            ingress_manifests = (
+                rendered_ingress_manifest
+                if isinstance(rendered_ingress_manifest, list)
+                else [rendered_ingress_manifest]
+            )
+            manifests.extend(ingress_manifests)
 
         return manifests
 
@@ -894,7 +725,7 @@ end
 
         namespace = names.k8name(names.knames(organization, "Organization"))
         name = names.knames(application, "Application name")
-        deployment = self._apps_api.read_namespaced_deployment(name, namespace)
+        deployment = cast(client.V1Deployment, self._apps_api.read_namespaced_deployment(name, namespace))
         metadata = deployment.metadata
         spec = deployment.spec
         status = deployment.status
@@ -922,7 +753,7 @@ end
         namespace = names.k8name(names.knames(organization, "Organization"))
         # Reuse the namespace when it already exists so setup stays idempotent.
         try:
-            existing_namespace = self._core_api.read_namespace(namespace)
+            existing_namespace = cast(client.V1Namespace, self._core_api.read_namespace(namespace))
         except ApiException as exc:
             if exc.status != 404:
                 raise ValueError(f"Failed reading namespace '{namespace}'") from exc
@@ -975,7 +806,7 @@ end
             },
         }
         try:
-            existing_secret = self._core_api.read_namespaced_secret(name, namespace)
+            existing_secret = cast(client.V1Secret, self._core_api.read_namespaced_secret(name, namespace))
             if existing_secret.metadata is None or existing_secret.metadata.resource_version is None:
                 raise ValueError(f"Secret '{namespace}/{name}' has no resource version")
 
@@ -1049,7 +880,7 @@ end
 
         namespace = names.k8name(names.knames(organization, "Organization"))
         try:
-            existing_namespace = self._core_api.read_namespace(namespace)
+            existing_namespace = cast(client.V1Namespace, self._core_api.read_namespace(namespace))
         except ApiException as exc:
             if exc.status == 404:
                 return None
@@ -1150,10 +981,10 @@ end
             allocatable_cpu += float(parse_quantity(allocatable.get("cpu", "0")))
 
         return {
-            "ram_total": total_ram,
-            "ram_free": allocatable_ram,
             "cpu_total": total_cpu,
-            "cpu_free": allocatable_cpu,
+            "cpu_allocatable": allocatable_cpu,
+            "ram_total": total_ram,
+            "ram_allocatable": allocatable_ram,
         }
 
     async def pods(self, namespace: str) -> list[dict[str, object]]:
@@ -1178,18 +1009,22 @@ end
         except ApiException as exc:
             logger.info("Kubernetes metrics API unavailable for namespace '%s': %s", namespace, exc)
 
-        def pod_resources(pod: Any) -> dict[str, int | float]:
+        def pod_resources(pod: client.V1Pod) -> dict[str, int | float]:
             """Return resource limits and observed usage for one pod."""
 
             cpu_limit = 0.0
             ram_limit = 0
-            for container in pod.spec.containers or []:
+            pod_spec = pod.spec
+            for container in (pod_spec.containers if pod_spec is not None else []) or []:
                 resources = container.resources
                 if resources:
                     limits = resources.limits or {}
                     cpu_limit += float(parse_quantity(limits.get("cpu", "0")))
                     ram_limit += int(parse_quantity(limits.get("memory", "0")))
-            usage = metrics_by_pod.get(pod.metadata.name, {})
+
+            pod_metadata = pod.metadata
+            pod_name = pod_metadata.name if pod_metadata is not None and pod_metadata.name is not None else ""
+            usage = metrics_by_pod.get(pod_name, {})
             return {
                 "cpu_limit": cpu_limit,
                 "ram_limit": ram_limit,

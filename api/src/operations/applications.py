@@ -3,10 +3,9 @@ from typing import Any
 from datetime import UTC, datetime, timedelta
 from src import adapters
 from src.logger import logger
-from src.operations import provisioning
+from src.operations import provisioning, registry
 from src.models.statuses import ApplicationStatus
 from src.models.operations import OperationKind
-from src.operations.registry import operation_handler
 from kubernetes.client.exceptions import ApiException as KubernetesApiException
 from src.database.models.operations import Operation
 from src.database.services import operations
@@ -145,11 +144,11 @@ async def inspect_application_startup(operation: Operation) -> ApplicationStartu
     if organization is None:
         return ApplicationStartupState.pending
 
-    registry = await provisioning.application_compute_registry(application, organization.location_id)
-    if registry is None:
+    compute_registry = await provisioning.application_compute_registry(application, organization.location_id)
+    if compute_registry is None:
         return ApplicationStartupState.pending
 
-    compute_adapter = adapters.compute(registry)
+    compute_adapter = adapters.compute(compute_registry)
 
     try:
         if compute_adapter.application_deployment_ready(organization.slug, application.slug):
@@ -166,7 +165,7 @@ async def inspect_application_startup(operation: Operation) -> ApplicationStartu
     return application_pods_startup_state(pods, operation.created_at)
 
 
-@operation_handler(OperationKind.application_create, step="verify")
+@registry.operation_handler(OperationKind.application_create, step="verify")
 async def execute_application_create(operation: Operation) -> Operation:
     """Run one application creation verification step."""
 
@@ -210,7 +209,7 @@ async def execute_application_create(operation: Operation) -> Operation:
     return deferred or operation
 
 
-@operation_handler(OperationKind.application_delete, step="remove")
+@registry.operation_handler(OperationKind.application_delete, step="remove")
 async def execute_application_delete(operation: Operation) -> Operation:
     """Run one application deletion cleanup step."""
 
@@ -243,7 +242,7 @@ async def execute_application_delete(operation: Operation) -> Operation:
     return operation
 
 
-@operation_handler(OperationKind.organization_delete, step="remove")
+@registry.operation_handler(OperationKind.organization_delete, step="remove")
 async def execute_organization_delete(operation: Operation) -> Operation:
     """Run one organization deletion cleanup step."""
 

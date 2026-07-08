@@ -52,11 +52,13 @@ The combined repository architecture is maintained in `../AGENTS.md`.
 ```
 
 ```bash
-bun run dev         # Starts the Vite dev server for live preview.
+bun run dev         # Starts the Vite dev server on localhost for live preview.
 bun run build:api   # Builds the control-plane web bundle
 bun run build:sdk   # Builds the SDK embedded web bundle
 bun run format      # Format the code
 ```
+
+Set `VITE_DEV_HOST=0.0.0.0` only when the local Vite server must be reachable from another device.
 
 ## Guidelines
 

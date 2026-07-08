@@ -310,7 +310,7 @@
         "databaseTableNotFound": "Tabella database \"{{name}}\" non trovata",
         "databasesDescription": "Database gestiti dal backend database {{name}}.",
         "databasesTitle": "Database",
-        "freePercent": "{{percent}}% libero",
+        "allocatablePercent": "{{percent}}% allocabile",
         "noActiveApp": "Nessuna app attiva",
         "noColumns": "Nessuna colonna",
         "noObjects": "Nessun oggetto trovato.",

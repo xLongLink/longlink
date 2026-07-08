@@ -1,0 +1,31 @@
+# Template for the local development gateway Ingress.
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: $gateway_name
+  namespace: $gateway_namespace
+  labels:
+    managed-by: longlink
+    app: $gateway_name
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /api/applications
+            pathType: Prefix
+            backend:
+              service:
+                name: $gateway_name
+                port:
+                  number: $gateway_service_port
+          - path: /ready
+            pathType: Exact
+            backend:
+              service:
+                name: $gateway_name
+                port:
+                  number: $gateway_service_port

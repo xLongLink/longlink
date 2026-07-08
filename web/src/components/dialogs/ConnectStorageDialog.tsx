@@ -27,6 +27,19 @@ export default function ConnectStorageDialog() {
     const [locationId, setLocationId] = useState('');
     const [error, setError] = useState<string | null>(null);
 
+    /** Clears sensitive storage connection form state. */
+    function resetDialogState() {
+        setKind('s3');
+        setName('');
+        setProtocol('https');
+        setEndpointUrl('');
+        setRuntimeEndpointUrl('');
+        setAccessKeyId('');
+        setSecretAccessKey('');
+        setLocationId('');
+        setError(null);
+    }
+
     const canSubmit =
         kind.trim().length > 0 &&
         name.trim().length > 0 &&
@@ -60,14 +73,7 @@ export default function ConnectStorageDialog() {
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: storagesQueryKey() });
             setOpen(false);
-            setKind('s3');
-            setName('');
-            setProtocol('https');
-            setEndpointUrl('');
-            setRuntimeEndpointUrl('');
-            setAccessKeyId('');
-            setSecretAccessKey('');
-            setLocationId('');
+            resetDialogState();
         },
     });
 
@@ -86,7 +92,9 @@ export default function ConnectStorageDialog() {
             pendingLabel={t('actions.connecting')}
             onOpenChange={(nextOpen) => {
                 setOpen(nextOpen);
-                if (!nextOpen) setError(null);
+                if (!nextOpen) {
+                    resetDialogState();
+                }
             }}
             onSubmit={async () => {
                 setError(null);
