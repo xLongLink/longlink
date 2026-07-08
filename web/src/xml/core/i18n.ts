@@ -1,10 +1,12 @@
+import i18next, { type Resource, type i18n } from 'i18next';
 import { evaluate } from '../expressions';
 import type { ASTProps, ExecutionContext, XmlTranslations } from '../types';
 
 const defaultLocale = 'en';
-const pluralCategories = new Set(['zero', 'one', 'two', 'few', 'many', 'other']);
-const pluralRulesCache = new Map<string, Intl.PluralRules>();
+const pluralCategoryOrder = ['other', 'one', 'few', 'many', 'two', 'zero'] as const;
+const pluralCategories = new Set<string>(pluralCategoryOrder);
 const translationKeyPattern = /^[a-z][A-Za-z0-9]*(?:\.[a-z][A-Za-z0-9]*)+$/;
+const i18nCache = new WeakMap<XmlTranslations, Map<string, i18n>>();
 
 /** Resolves a localized string or plural form from the active XML translation bundle. */
 export function resolveTranslation(props: ASTProps, ctx: ExecutionContext): string {
@@ -21,37 +23,30 @@ export function resolveTranslation(props: ASTProps, ctx: ExecutionContext): stri
         throw new Error(`Missing translation catalog for key "${key}"`);
     }
 
-    const entry = findTranslationEntry(translations, key);
-
-    if (entry == null) {
-        throw new Error(`Missing translation for key "${key}"`);
-    }
-
-    if (typeof entry === 'string') {
-        return interpolate(entry, props, ctx);
-    }
-
-    if (typeof entry !== 'object' || Array.isArray(entry) || !isPluralEntry(entry as Record<string, unknown>)) {
-        throw new Error(`Translation key "${key}" must resolve to a string or plural map`);
-    }
-
+    const xmlI18n = getXmlI18n(translations, ctx.locale ?? defaultLocale);
     const count = resolveCount(props, ctx);
-    if (count == null) {
+    const hasText = xmlI18n.exists(key);
+    const hasPlural = xmlI18n.exists(key, { count: count ?? 0 });
+
+    if (count == null && !hasText && hasPlural) {
         throw new Error(`Plural translation key "${key}" requires a count prop`);
     }
 
-    // Plural entries use Intl.PluralRules categories and fall back to "other".
-    const pluralEntry = entry as Record<string, unknown>;
-    const category = getPluralRules(ctx.locale ?? defaultLocale).select(count);
-    const template = pluralEntry[category] ?? pluralEntry.other ?? firstPluralTemplate(pluralEntry);
-
-    if (typeof template !== 'string') {
-        throw new Error(`Plural translation key "${key}" does not contain a usable template`);
+    if (!hasText && !hasPlural) {
+        throw new Error(`Missing translation for key "${key}"`);
     }
 
-    return interpolate(template, props, ctx, count);
-}
+    const template = xmlI18n.t(key, {
+        ...(count != null && { count }),
+        interpolation: { skipOnVariables: true },
+    });
 
+    if (typeof template !== 'string') {
+        throw new Error(`Translation key "${key}" must resolve to a string or plural map`);
+    }
+
+    return interpolate(template, props, ctx, count ?? undefined);
+}
 
 /** Returns whether a value can be used as a LongLink translation catalog key. */
 function isTranslationKey(value: string): boolean {
@@ -71,31 +66,69 @@ function resolveCount(props: ASTProps, ctx: ExecutionContext): number | null {
     return Number.isNaN(numberValue) ? null : numberValue;
 }
 
-/** Returns a locale-aware plural rule resolver, cached by locale. */
-function getPluralRules(locale: string): Intl.PluralRules {
-    // Cache per locale to avoid recreating Intl objects on every render.
-    const cached = pluralRulesCache.get(locale);
+/** Returns an i18next instance for one XML translation catalog and locale. */
+function getXmlI18n(translations: XmlTranslations, locale: string): i18n {
+    const cachedByLocale = i18nCache.get(translations);
+    const cached = cachedByLocale?.get(locale);
 
     if (cached) return cached;
 
-    const rules = new Intl.PluralRules(locale);
-    pluralRulesCache.set(locale, rules);
+    const instance = i18next.createInstance();
 
-    return rules;
+    void instance.init({
+        defaultNS: 'translation',
+        fallbackLng: false,
+        initAsync: false,
+        interpolation: {
+            escapeValue: false,
+        },
+        lng: locale,
+        resources: {
+            [locale]: {
+                translation: toI18nextResources(translations),
+            },
+        } as Resource,
+        returnNull: false,
+        returnObjects: false,
+    });
+
+    const nextByLocale = cachedByLocale ?? new Map<string, i18n>();
+    nextByLocale.set(locale, instance);
+    i18nCache.set(translations, nextByLocale);
+
+    return instance;
 }
 
-/** Finds a nested translation entry by dotted path. */
-function findTranslationEntry(translations: XmlTranslations, key: string): unknown {
-    // Walk the dotted path through nested locale objects.
-    return key.split('.').reduce<unknown>((current, segment) => {
-        if (current == null || typeof current !== 'object' || Array.isArray(current)) {
-            return undefined;
+/** Converts LongLink plural leaves into i18next plural suffix keys. */
+function toI18nextResources(input: unknown): unknown {
+    if (input == null || typeof input !== 'object' || Array.isArray(input)) {
+        return input;
+    }
+
+    const output: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+        if (
+            value != null &&
+            typeof value === 'object' &&
+            !Array.isArray(value) &&
+            isPluralEntry(value as Record<string, unknown>)
+        ) {
+            const pluralEntry = value as Record<string, string>;
+            const fallback = firstPluralTemplate(pluralEntry);
+
+            for (const category of pluralCategoryOrder) {
+                output[`${key}_${category}`] = pluralEntry[category] ?? fallback;
+            }
+
+            continue;
         }
 
-        return (current as Record<string, unknown>)[segment];
-    }, translations);
-}
+        output[key] = toI18nextResources(value);
+    }
 
+    return output;
+}
 
 /** Returns whether a translation object is a pluralized message leaf. */
 function isPluralEntry(entry: Record<string, unknown>): boolean {
@@ -110,7 +143,7 @@ function isPluralEntry(entry: Record<string, unknown>): boolean {
 /** Returns the first usable plural template when the exact category is missing. */
 function firstPluralTemplate(entry: Record<string, unknown>): string | undefined {
     // Keep the first usable plural string if the exact category is missing.
-    for (const key of ['other', 'one', 'few', 'many', 'two', 'zero']) {
+    for (const key of pluralCategoryOrder) {
         const candidate = entry[key];
 
         if (typeof candidate === 'string') {

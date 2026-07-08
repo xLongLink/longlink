@@ -19,6 +19,8 @@ class S3(Storage):
     """S3-compatible storage adapter."""
 
     _ACCESS_DENIED_CODES = {"403", "AccessDenied", "AllAccessDisabled"}
+    _BUCKET_EXISTS_CODES = {"BucketAlreadyExists", "BucketAlreadyOwnedByYou"}
+    _MISSING_BUCKET_CODES = {"404", "NoSuchBucket", "NotFound"}
     _MISSING_OBJECT_CODES = {"404", "NoSuchKey", "NotFound"}
 
     def __init__(
@@ -53,17 +55,21 @@ class S3(Storage):
             ),
         )
 
+    @staticmethod
+    def _error_code(exc: ClientError) -> str:
+        """Return the normalized S3 error code from one client error."""
+
+        return str(exc.response.get("Error", {}).get("Code", ""))
+
     def _is_access_denied(self, exc: ClientError) -> bool:
         """Return whether an S3 client error represents denied access."""
 
-        error_code = str(exc.response.get("Error", {}).get("Code", ""))
-        return error_code in self._ACCESS_DENIED_CODES
+        return self._error_code(exc) in self._ACCESS_DENIED_CODES
 
     def _is_missing_object(self, exc: ClientError) -> bool:
         """Return whether an S3 client error proves object read access for a missing key."""
 
-        error_code = str(exc.response.get("Error", {}).get("Code", ""))
-        return error_code in self._MISSING_OBJECT_CODES
+        return self._error_code(exc) in self._MISSING_OBJECT_CODES
 
     async def _drain_object_body(self, response: GetObjectOutputTypeDef) -> None:
         """Drain an S3 object response so the async connection can be reused."""
@@ -138,8 +144,7 @@ class S3(Storage):
             try:
                 await client.head_bucket(Bucket=bucket_name)
             except ClientError as exc:
-                error_code = str(exc.response.get("Error", {}).get("Code", ""))
-                if error_code in {"404", "NoSuchBucket", "NotFound"}:
+                if self._error_code(exc) in self._MISSING_BUCKET_CODES:
                     return
                 raise
 
@@ -249,8 +254,7 @@ class S3(Storage):
             try:
                 await client.create_bucket(Bucket=bucket_name)
             except ClientError as exc:
-                error_code = str(exc.response.get("Error", {}).get("Code", ""))
-                if error_code not in {"BucketAlreadyExists", "BucketAlreadyOwnedByYou"}:
+                if self._error_code(exc) not in self._BUCKET_EXISTS_CODES:
                     raise
 
                 await client.head_bucket(Bucket=bucket_name)

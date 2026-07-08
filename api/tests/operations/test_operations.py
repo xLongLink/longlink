@@ -7,7 +7,6 @@ from src.routes import operations as operation_routes
 from src.operations import applications as application_operations
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
-from src.models.countries import Country
 from src.models.locations import LocationProvider, LocationResponse
 from src.models.operations import OperationKind, OperationStatus
 from src.models.organizations import OrganizationDetails
@@ -134,7 +133,7 @@ def location_response() -> LocationResponse:
         id=UUID("22222222-2222-2222-2222-222222222222"),
         name="Local",
         slug="local",
-        country=Country.CH,
+        country="CH",
         provider=LocationProvider.local,
     )
 

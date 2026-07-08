@@ -1,22 +1,32 @@
 import { useApiQuery } from '@/hooks/use-api';
+import { z } from 'zod';
 
-type MetadataPage = {
-    tab: string;
-    path: string;
-    route?: string;
-    name?: string;
-    icon?: string;
-};
+const metadataPageSchema = z.object({
+    tab: z.string().trim().min(1),
+    path: z.string().trim().min(1),
+    name: z.string().trim().min(1).optional(),
+    icon: z.string().trim().min(1).optional(),
+    route: z.string().trim().min(1).optional(),
+});
 
-type MetadataResponse = {
-    pages?: MetadataPage[];
-};
+const metadataResponseSchema = z.object({
+    pages: z.array(metadataPageSchema).optional(),
+});
+
+type MetadataPage = z.infer<typeof metadataPageSchema>;
+type MetadataResponse = z.infer<typeof metadataResponseSchema>;
+
+/** Validates application metadata fetched from the SDK/runtime boundary. */
+function parseMetadataResponse(value: unknown): MetadataResponse | null {
+    return value === null ? null : metadataResponseSchema.parse(value);
+}
 
 /** Fetches XML metadata for one page bundle. */
 export function useMetadata(metadataPath: string, enabled: boolean) {
     return useApiQuery<MetadataResponse | null>(enabled ? metadataPath : null, {
         enabled,
         notFound: null,
+        parse: parseMetadataResponse,
     });
 }
 

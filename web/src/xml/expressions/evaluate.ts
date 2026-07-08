@@ -1,4 +1,4 @@
-import { parse } from 'acorn';
+import { parse, parseExpressionAt } from 'acorn';
 import type { ExecutionContext } from '../types';
 
 import { createScopeProxy, hasSafeProperty, isSafePropertyName, readSafeProperty, resolvePath } from './resolve';
@@ -88,25 +88,35 @@ function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined
     return undefined;
 }
 
-/** Finds the closing brace for one `${...}` segment by accepting the first valid expression. */
+/** Finds the closing brace for one `${...}` segment using Acorn expression parsing. */
 function readInterpolationSegment(input: string, start: number): InterpolationSegment {
-    for (let index = start + 2; index < input.length; index += 1) {
-        if (input[index] !== '}') continue;
+    try {
+        const node = parseExpressionAt(input, start + 2, {
+            ecmaVersion: 'latest',
+            sourceType: 'script',
+        }) as unknown as ExpressionNode & { end: number };
+        let end = node.end;
 
-        const expression = input.slice(start + 2, index).trim();
-
-        if (!expression) continue;
-
-        try {
-            parseExpression(expression);
-
-            return { start, end: index, expression };
-        } catch {
-            // Keep scanning so nested braces, strings, and template literals can close later.
+        while (end < input.length && /\s/.test(input[end])) {
+            end += 1;
         }
-    }
 
-    throw new Error('Unclosed XML expression interpolation');
+        if (input[end] !== '}') {
+            throw new Error('Unclosed XML expression interpolation');
+        }
+
+        const expression = input.slice(start + 2, node.end).trim();
+
+        if (!expression) {
+            throw new Error('Unclosed XML expression interpolation');
+        }
+
+        expressionNodeCache.set(expression, node);
+
+        return { start, end, expression };
+    } catch {
+        throw new Error('Unclosed XML expression interpolation');
+    }
 }
 
 /** Returns one standalone expression when the entire value is wrapped in `${...}`. */

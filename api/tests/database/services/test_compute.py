@@ -2,7 +2,7 @@ import pytest
 from uuid import uuid4
 from types import SimpleNamespace
 from src.constants import INGRESS_NAME
-from src.models.countries import Country
+from src.errors import ConflictError
 from src.models.computes import ComputeKind
 from src.database.models.users import User
 from src.database.services import compute
@@ -23,12 +23,13 @@ async def test_create_get_and_fetch_all_return_active_compute_registries(users: 
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
 
     # Act
     registry = await db.compute.create(
         ComputeKind.kubernetes,
         "Primary compute",
+        "primary-compute",
         "kubeconfig",
         "apps.example",
         location.id,
@@ -58,14 +59,23 @@ async def test_create_rejects_duplicate_compute_registry_names(users: tuple[User
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
-    await db.compute.create(ComputeKind.kubernetes, "Primary compute", "kubeconfig", "apps.example", location.id, owner)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
+    await db.compute.create(
+        ComputeKind.kubernetes,
+        "Primary compute",
+        "primary-compute",
+        "kubeconfig",
+        "apps.example",
+        location.id,
+        owner,
+    )
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.compute.create(
             ComputeKind.kubernetes,
             "Primary compute",
+            "primary-compute",
             "other-kubeconfig",
             "other.example",
             location.id,
@@ -83,10 +93,11 @@ async def test_delete_soft_deletes_compute_registry_and_include_deleted_can_relo
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
     registry = await db.compute.create(
         ComputeKind.kubernetes,
         "Primary compute",
+        "primary-compute",
         "kubeconfig",
         "apps.example",
         location.id,
@@ -115,11 +126,12 @@ async def test_delete_rejects_compute_registry_used_by_active_applications(users
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     registry = await db.compute.create(
         ComputeKind.kubernetes,
         "Primary compute",
+        "primary-compute",
         "kubeconfig",
         "apps.example",
         location.id,
@@ -135,7 +147,7 @@ async def test_delete_rejects_compute_registry_used_by_active_applications(users
     )
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.compute.delete(registry.id, owner)
 
     # Assert

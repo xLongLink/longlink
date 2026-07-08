@@ -1,8 +1,9 @@
-import urllib.parse
+from src import compute as compute_runtime
 from src import adapters
 from uuid import UUID
 from datetime import UTC, datetime
-from src.utils import names, images, buckets, url
+from src.utils import url, urls, names, images, buckets
+from src.errors import ConflictError
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
 from src.models.metadata import LongLinkMetadata
@@ -97,10 +98,10 @@ async def application_image_metadata(
 
     image_metadata = await images.metadata(payload.image)
     if image_metadata is None:
-        raise ValueError("Image metadata could not be inspected")
+        raise ConflictError("Image metadata could not be inspected")
 
     if image_metadata.digest is None or image_metadata.image is None:
-        raise ValueError("Image digest could not be resolved")
+        raise ConflictError("Image digest could not be resolved")
 
     # Reject required LongLink-prefixed envs that the platform does not know how to provide.
     unsupported_platform_envs = sorted(
@@ -111,7 +112,7 @@ async def application_image_metadata(
         and environment.name not in PLATFORM_ENVIRONMENT_NAMES
     )
     if unsupported_platform_envs:
-        raise ValueError(f"Unsupported platform environment variables: {', '.join(unsupported_platform_envs)}")
+        raise ConflictError(f"Unsupported platform environment variables: {', '.join(unsupported_platform_envs)}")
 
     # Reject images that require app-managed values the creation payload does not provide.
     missing_envs = sorted(
@@ -122,7 +123,7 @@ async def application_image_metadata(
         and not payload.envs.get(environment.name, "").strip()
     )
     if missing_envs:
-        raise ValueError(f"Missing required environment variables: {', '.join(missing_envs)}")
+        raise ConflictError(f"Missing required environment variables: {', '.join(missing_envs)}")
 
     return image_metadata
 
@@ -224,7 +225,7 @@ async def remove_application_runtime(
 
     compute_registry = await application_compute_registry(application, organization.location_id)
     if compute_registry is not None:
-        compute_adapter = adapters.compute(compute_registry)
+        compute_adapter = compute_runtime.kubernetes(compute_registry)
         await compute_adapter.delete_application(organization.slug, application.slug)
 
     if application.database_registry_id is not None:
@@ -253,17 +254,20 @@ async def remove_organization_runtime(
         await remove_application_runtime(application, organization)
 
     compute_registries = []
+    seen_compute_registry_ids: set[UUID] = set()
     for application in organization_applications:
         registry = await application_compute_registry(application, organization.location_id)
-        if registry is not None and registry.id not in {item.id for item in compute_registries}:
+        if registry is not None and registry.id not in seen_compute_registry_ids:
             compute_registries.append(registry)
+            seen_compute_registry_ids.add(registry.id)
 
     latest_compute = await latest_compute_registry(organization.location_id)
-    if latest_compute is not None and latest_compute.id not in {item.id for item in compute_registries}:
+    if latest_compute is not None and latest_compute.id not in seen_compute_registry_ids:
         compute_registries.append(latest_compute)
+        seen_compute_registry_ids.add(latest_compute.id)
 
     for registry in compute_registries:
-        compute_adapter = adapters.compute(registry)
+        compute_adapter = compute_runtime.kubernetes(registry)
         await compute_adapter.delete_namespace(organization.slug)
 
     database_registry = await organization_database_registry(organization, include_deleted=True)
@@ -281,22 +285,10 @@ def runtime_storage_url(storage_registry: StorageRegistry, credentials: adapters
     """Return a storage URL compatible with the SDK runtime."""
 
     endpoint_url = storage_registry.runtime_endpoint_url or storage_registry.endpoint_url
-    endpoint = urllib.parse.urlsplit(endpoint_url)
-    if not endpoint.scheme or not endpoint.netloc:
-        raise ValueError(f"Invalid storage runtime endpoint URL: {endpoint_url}")
-
-    # Store scoped runtime credentials in the URL while preserving the endpoint shape for fsspec.
-    access_key_id = urllib.parse.quote(credentials["access_key_id"], safe="")
-    secret_access_key = urllib.parse.quote(credentials["secret_access_key"], safe="")
-    netloc = f"{access_key_id}:{secret_access_key}@{endpoint.netloc}"
-    return urllib.parse.urlunsplit(
-        (
-            f"s3+{endpoint.scheme}",
-            netloc,
-            endpoint.path,
-            endpoint.query,
-            endpoint.fragment,
-        )
+    return urls.storage_url_with_credentials(
+        endpoint_url,
+        credentials["access_key_id"],
+        credentials["secret_access_key"],
     )
 
 
@@ -369,10 +361,10 @@ async def provision_application_runtime_resources(
 ) -> None:
     """Provision namespace, database, storage, and workload resources for one application."""
 
-    k8s = adapters.compute(compute_registry)
+    compute_client = compute_runtime.kubernetes(compute_registry)
     db_client = adapters.database(database_registry)
 
-    await k8s.namespace(organization.slug)
+    await compute_client.namespace(organization.slug)
     await db_client.sync_users(organization.slug, await organizations.database_users(organization.id))
     storage_credentials: adapters.StorageRuntimeCredentials | None = None
     if storage_registry is not None:
@@ -396,35 +388,25 @@ async def provision_application_runtime_resources(
         shared_storage_bucket(organization),
         storage_credentials,
     )
-    application_arguments = (
+    await compute_client.application(
         organization.slug,
         application_slug,
         str(application_id),
         runtime_image,
         APP_SERVICE_PORT,
         {**application_runtime_environment(payload), **runtime_envs},
+        rollout_token=rollout_token,
     )
-
-    if rollout_token:
-        await k8s.application(*application_arguments, rollout_token=rollout_token)
-        return
-
-    await k8s.application(*application_arguments)
 
 
 async def create_application_runtime(
     organization: Organization | OrganizationDetails | OrganizationSummary,
+    application_slug: str,
     payload: ApplicationCreate,
     user: User,
 ) -> Application:
     """Create the application row, provision runtime resources, and queue verification."""
 
-    application_slug = names.slugify(payload.name, "Application name")
-    names.knames(organization.slug, "Organization")
-    names.knames(application_slug, "Application name")
-    names.k8name(organization.slug)
-    names.dbname(organization.slug)
-    shared_storage_bucket(organization)
     application_bucket_name = buckets.application(organization.slug, application_slug)
     logger.info("Provisioning application %s/%s", organization.slug, application_slug)
 
@@ -618,7 +600,7 @@ async def create_organization_namespace(
         return
 
     try:
-        await adapters.compute(registry).namespace(organization.slug)
+        await compute_runtime.kubernetes(registry).namespace(organization.slug)
     except Exception:
         logger.exception("Failed to create namespace for organization '%s'", organization.slug)
 

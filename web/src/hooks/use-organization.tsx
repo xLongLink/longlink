@@ -2,6 +2,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useApiQuery } from '@/hooks/use-api';
 import { useUserProfile } from '@/hooks/use-user';
+import {
+    apiApplicationResponseSchema,
+    apiOrganizationDetailsSchema,
+    apiOrganizationSummarySchema,
+    parseApiResponse,
+} from '@/lib/api-schemas';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { applicationsQueryKey, organizationsQueryKey } from '@/lib/query-keys';
 import type { Role } from '@/lib/roles';
@@ -61,6 +67,7 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
     const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
 
     const organizationQuery = useApiQuery<ApiOrganizationDetails>(organizationPath, {
+        parse: (value) => parseApiResponse(apiOrganizationDetailsSchema, value),
         retry: false,
     });
 
@@ -138,11 +145,15 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
                 throw new Error('Organization not found');
             }
 
-            return fetchApiJson<ApiApplicationResponse>(`/api/organizations/${organizationId}/applications`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, image, description, icon, envs }),
-            });
+            return fetchApiJson(
+                `/api/organizations/${organizationId}/applications`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, image, description, icon, envs }),
+                },
+                (value) => parseApiResponse(apiApplicationResponseSchema, value)
+            );
         },
         onSuccess: async () => {
             if (organizationPath === null) {
@@ -219,16 +230,22 @@ export function useCreateOrganization() {
             name,
             location_id,
             avatar,
+            country,
         }: {
             name: string;
             location_id: string;
             avatar?: string | null;
+            country: string;
         }) => {
-            return fetchApiJson<ApiOrganizationSummary>('/api/organizations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, location_id, avatar: avatar?.trim() ? avatar.trim() : null }),
-            });
+            return fetchApiJson(
+                '/api/organizations',
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, location_id, avatar: avatar?.trim() ? avatar.trim() : null, country }),
+                },
+                (value) => parseApiResponse(apiOrganizationSummarySchema, value)
+            );
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/me') });

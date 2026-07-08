@@ -1,22 +1,21 @@
 import { createContext as createReactContext, useContext as useReactContext } from 'react';
+import { hasProtocol, parsePath, parseURL } from 'ufo';
 
 export const BaseUrlContext = createReactContext<string>('');
-const ABSOLUTE_URL_PATTERN = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 const SAFE_ANCHOR_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
 const URL_VALIDATION_BASE = 'http://longlink.local';
 
 /** Resolves a request URL against a base URL string. */
 export function resolveUrl(baseUrl: string, path: string): string {
     if (!path) return baseUrl;
-    if (ABSOLUTE_URL_PATTERN.test(path) || path.startsWith('//')) return path;
+    if (hasProtocol(path) || path.startsWith('//')) return path;
 
-    const [pathPart, suffix = ''] = path.split(/([?#].*)/, 2);
-    const basePart = baseUrl.split(/[?#]/, 1)[0];
-    const baseMatch = basePart.match(/^([A-Za-z][A-Za-z0-9+.-]*:\/\/[^/?#]+)(.*)$/);
-    const baseOrigin = baseMatch?.[1] ?? '';
-    const basePath = baseMatch?.[2] ?? basePart;
+    const base = parseURL(baseUrl);
+    const parsedPath = parsePath(path);
+    const baseOrigin = base.protocol && base.host ? `${base.protocol}//${base.host}` : '';
+    const basePath = base.pathname;
     const baseSegments = basePath.split('/').filter(Boolean);
-    const pathSegments = pathPart.split('/');
+    const pathSegments = parsedPath.pathname.split('/');
     const resolvedSegments = [...baseSegments];
 
     for (const segment of pathSegments) {
@@ -32,7 +31,7 @@ export function resolveUrl(baseUrl: string, path: string): string {
         resolvedSegments.push(segment);
     }
 
-    return `${baseOrigin}/${resolvedSegments.join('/')}${suffix}`;
+    return `${baseOrigin}/${resolvedSegments.join('/')}${parsedPath.search}${parsedPath.hash}`;
 }
 
 /** Returns whether a URL can be safely fetched relative to an application base URL. */
@@ -40,7 +39,7 @@ export function isAppRelativeUrl(path: string): boolean {
     const value = path.trim();
 
     if (!value) return true;
-    if (value.includes('\\') || ABSOLUTE_URL_PATTERN.test(value)) return false;
+    if (value.includes('\\') || hasProtocol(value)) return false;
 
     // Use URL parsing to catch protocol-relative values without hand-rolled host checks.
     try {
@@ -70,7 +69,7 @@ export function resolveAnchorUrl(baseUrl: string, path: string): string {
 
     if (!value || value.startsWith('//')) return '';
 
-    if (ABSOLUTE_URL_PATTERN.test(value)) {
+    if (hasProtocol(value)) {
         try {
             const url = new URL(value);
 

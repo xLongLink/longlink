@@ -1,9 +1,9 @@
 import httpx2
-import urllib.parse
 from typing import Any, Final, Literal
 from fastapi import Query, Request, Response, APIRouter
 from pydantic import ValidationError
 from src.auth import SessionAccountsService, oauth
+from src.utils import urls
 from src.errors import UnauthorizedError, UnavailableError
 from src.operations import provisioning
 from src.models.auth import OidcUserInfo
@@ -21,21 +21,7 @@ OIDC_NEXT_SESSION_KEY: Final[str] = "oidc_next"
 def sanitize_post_login_redirect(next_path: object) -> str:
     """Return a safe same-origin post-login redirect path."""
 
-    if not isinstance(next_path, str):
-        return DEFAULT_POST_LOGIN_REDIRECT
-
-    if not next_path.startswith("/") or next_path.startswith("//") or "\\" in next_path:
-        return DEFAULT_POST_LOGIN_REDIRECT
-
-    if any(ord(character) < 32 or ord(character) == 127 for character in next_path):
-        return DEFAULT_POST_LOGIN_REDIRECT
-
-    # Use URL parsing so protocol-relative paths cannot be confused with local paths.
-    parsed_path = urllib.parse.urlsplit(next_path)
-    if parsed_path.scheme or parsed_path.netloc:
-        return DEFAULT_POST_LOGIN_REDIRECT
-
-    return next_path
+    return urls.safe_local_path(next_path, DEFAULT_POST_LOGIN_REDIRECT)
 
 
 async def upsert_oidc_user(userinfo: OidcUserInfo) -> str:

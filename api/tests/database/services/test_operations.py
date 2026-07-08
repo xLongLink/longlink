@@ -1,7 +1,6 @@
 from types import SimpleNamespace
 from datetime import UTC, datetime, timedelta
 from src.environments import env
-from src.models.countries import Country
 from src.models.operations import OperationKind
 from src.database.session import get_session
 from src.database.models.operations import Operation
@@ -137,8 +136,8 @@ async def test_operations_service_tracks_successful_operation_lifecycle() -> Non
 
     # Arrange
     user = await db.users.upsert(oidc="ops-oidc", email="ops@longlink.dev", name="Ops User", avatar="")
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, user)
     application = await db.applications.create(
         organization.id,
         "dashboard",
@@ -174,8 +173,8 @@ async def test_operations_service_tracks_failed_operation_lifecycle() -> None:
 
     # Arrange
     user = await db.users.upsert(oidc="ops-oidc-2", email="ops2@longlink.dev", name="Ops User 2", avatar="")
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, user)
     application = await db.applications.create(
         organization.id,
         "dashboard",
@@ -210,8 +209,8 @@ async def test_operations_service_defers_active_operation() -> None:
 
     # Arrange
     user = await db.users.upsert(oidc="ops-oidc-3", email="ops3@longlink.dev", name="Ops User 3", avatar="")
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, user)
     application = await db.applications.create(
         organization.id,
         "dashboard",
@@ -253,8 +252,8 @@ async def test_operations_service_skips_future_scheduled_operations() -> None:
         name="Ops Future",
         avatar="",
     )
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, user)
     application = await db.applications.create(
         organization.id,
         "dashboard",
@@ -284,8 +283,8 @@ async def test_operations_service_resets_active_operations(monkeypatch) -> None:
     # Arrange
     monkeypatch.setattr(env, "OPERATION_LEASE_SECONDS", -1)
     user = await db.users.upsert(oidc="ops-oidc-4", email="ops4@longlink.dev", name="Ops User 4", avatar="")
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, user)
     application = await db.applications.create(
         organization.id,
         "dashboard",

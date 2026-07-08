@@ -175,6 +175,7 @@ Keep both web build modes working. API mode builds the authenticated control-pla
 - Keep changes small and clear
 - Reduce complexity and remove dead code
 - Enforce project conventions, normalize naming, improve readability
+- Prefer established, well-maintained libraries for common concerns such as parsing, validation, routing, URL handling, forms, and i18n when they keep the code simpler than handwritten implementations.
 - Prefer inlining simple, single-use local prop object types directly in component signatures.
 - Keep local prop type aliases when the shape is shared, reused, or significantly complex.
 - Prefer direct inline className expressions for one-off style values instead of temporary local `...ClassName` constants used only once or twice in JSX.

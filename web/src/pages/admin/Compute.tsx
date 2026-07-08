@@ -12,6 +12,7 @@ import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmatio
 import { useLocations } from '@/data/admin';
 import { useComputes } from '@/data/compute';
 import { useUserProfile } from '@/hooks/use-user';
+import { apiComputeResourcesSchema, parseApiResponse } from '@/lib/api-schemas';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
 import { computeResourcesQueryKey, computesQueryKey } from '@/lib/query-keys';
@@ -111,7 +112,10 @@ export default function AdminCompute() {
     const resourcesQueries = useQueries({
         queries: computes.map((c) => ({
             queryKey: computeResourcesQueryKey(c.id),
-            queryFn: async () => fetchApiJson<ApiComputeResources>(`/api/computes/${c.id}/resources`),
+            queryFn: async () =>
+                fetchApiJson(`/api/computes/${c.id}/resources`, undefined, (value) =>
+                    parseApiResponse(apiComputeResourcesSchema, value)
+                ),
             retry: false,
         })),
     });

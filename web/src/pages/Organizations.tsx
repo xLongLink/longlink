@@ -47,7 +47,7 @@ export default function Organizations() {
                             {getValue<string>()}
                         </Link>
                         <div className="truncate text-sm text-muted-foreground">
-                            {row.original.location.country} · {row.original.location.name}
+                            {row.original.country} · {row.original.location.name}
                         </div>
                     </div>
                 </div>

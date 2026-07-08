@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Column, String, text
-from src.models.countries import Country
+from src.models.countries import DEFAULT_COUNTRY
 from src.models.locations import LocationProvider
 
 if TYPE_CHECKING:
@@ -22,8 +22,8 @@ class Location(SQLModel, table=True):
     # Metadata
     name: str = Field(max_length=255)
     slug: str = Field(unique=True, max_length=128)
-    country: Country = Field(
-        default=Country.CH, sa_column=Column(String(2), server_default=text("'CH'"), nullable=False)
+    country: str = Field(
+        default=DEFAULT_COUNTRY, sa_column=Column(String(2), server_default=text("'CH'"), nullable=False)
     )
     provider: LocationProvider = Field(
         default=LocationProvider.local,

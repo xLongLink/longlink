@@ -1,6 +1,16 @@
 import { useCollectionQuery } from '@/hooks/use-collection-query';
+import {
+    apiApplicationResponseSchema,
+    apiCountryOptionSchema,
+    apiLocationSchema,
+    apiOperationSchema,
+    apiOrganizationSummarySchema,
+    apiUserSummarySchema,
+    parseApiCollection,
+} from '@/lib/api-schemas';
 import type {
     ApiApplicationResponse,
+    ApiCountryOption,
     ApiLocation,
     ApiOperation,
     ApiOrganizationSummary,
@@ -9,7 +19,9 @@ import type {
 
 /** Fetches the application list for admin views. */
 export function useApplications() {
-    return useCollectionQuery<ApiApplicationResponse>('/api/applications');
+    return useCollectionQuery<ApiApplicationResponse>('/api/applications', {
+        parse: (value) => parseApiCollection(apiApplicationResponseSchema, value),
+    });
 }
 
 
@@ -17,23 +29,39 @@ export function useApplications() {
 export function useLocations(enabled = true) {
     return useCollectionQuery<ApiLocation>(enabled ? '/api/locations' : null, {
         enabled,
+        parse: (value) => parseApiCollection(apiLocationSchema, value),
+    });
+}
+
+
+/** Fetches ISO country options for selectors. */
+export function useCountries(enabled = true) {
+    return useCollectionQuery<ApiCountryOption>(enabled ? '/api/countries' : null, {
+        enabled,
+        parse: (value) => parseApiCollection(apiCountryOptionSchema, value),
     });
 }
 
 
 /** Fetches the operation list for admin views. */
 export function useOperations() {
-    return useCollectionQuery<ApiOperation>('/api/operations');
+    return useCollectionQuery<ApiOperation>('/api/operations', {
+        parse: (value) => parseApiCollection(apiOperationSchema, value),
+    });
 }
 
 
 /** Fetches the organization list for admin views. */
 export function useOrganizations() {
-    return useCollectionQuery<ApiOrganizationSummary>('/api/organizations');
+    return useCollectionQuery<ApiOrganizationSummary>('/api/organizations', {
+        parse: (value) => parseApiCollection(apiOrganizationSummarySchema, value),
+    });
 }
 
 
 /** Fetches the full user list for admin views. */
 export function useUsers() {
-    return useCollectionQuery<ApiUserSummary>('/api/users');
+    return useCollectionQuery<ApiUserSummary>('/api/users', {
+        parse: (value) => parseApiCollection(apiUserSummarySchema, value),
+    });
 }

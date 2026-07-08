@@ -13,6 +13,7 @@ import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmatio
 import { useLocations } from '@/data/admin';
 import { useDatabases } from '@/data/database';
 import { useUserProfile } from '@/hooks/use-user';
+import { apiDatabaseUsageSchema, parseApiResponse } from '@/lib/api-schemas';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
 import { databaseUsageQueryKey, databasesQueryKey } from '@/lib/query-keys';
@@ -107,7 +108,10 @@ export default function AdminDatabase() {
     const usageQueries = useQueries({
         queries: databases.map((registry) => ({
             queryKey: databaseUsageQueryKey(registry.id),
-            queryFn: async () => fetchApiJson<ApiDatabaseUsage>(`/api/databases/${registry.id}/usage`),
+            queryFn: async () =>
+                fetchApiJson(`/api/databases/${registry.id}/usage`, undefined, (value) =>
+                    parseApiResponse(apiDatabaseUsageSchema, value)
+                ),
             retry: false,
         })),
     });

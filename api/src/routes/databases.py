@@ -2,6 +2,7 @@ from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from src.auth import authadmin, authsupport
 from src import adapters
+from src.utils import names
 from src.logger import logger
 from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.models.databases import (
@@ -15,13 +16,6 @@ from src.database.models.users import User
 from src.database.services import database
 
 router = APIRouter()
-MANAGED_DATABASE_PREFIX = "longlink_"
-
-
-def _managed_database_name(database_name: str) -> bool:
-    """Return whether a database name follows the LongLink managed database convention."""
-
-    return database_name.startswith(MANAGED_DATABASE_PREFIX)
 
 
 @router.get("/api/databases", response_model=list[DatabaseRegistryResponse])
@@ -49,10 +43,7 @@ async def get_database_registry(registry_id: UUID, _: User = Depends(authsupport
 async def delete_database_registry(registry_id: UUID, user: User = Depends(authadmin)) -> Response:
     """Soft-delete one database backend registration."""
 
-    try:
-        deleted = await database.delete(registry_id, user)
-    except ValueError as exc:
-        raise ConflictError(str(exc)) from exc
+    deleted = await database.delete(registry_id, user)
 
     if not deleted:
         raise NotFoundError("Database registry", registry_id)
@@ -67,9 +58,11 @@ async def create_database_registry(
     """Create one database backend registration."""
 
     try:
-        registry = await database.create(**payload.model_dump(), user=user)
+        slug = names.slugify(payload.name)
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
+
+    registry = await database.create(**payload.model_dump(), slug=slug, user=user)
 
     return DatabaseRegistryResponse.model_validate(registry)
 
@@ -87,12 +80,12 @@ async def list_database_databases(registry_id: UUID, _: User = Depends(authsuppo
 
     database_adapter = adapters.database(registry)
     try:
-        names = [name for name in await database_adapter.databases() if _managed_database_name(name)]
+        database_names = await database_adapter.databases()
     except Exception as exc:
         logger.exception("Failed to inspect databases for registry '%s'", registry_id)
         raise UnavailableError("Database resources unavailable") from exc
 
-    return [DatabaseDatabaseResponse(name=n) for n in names]
+    return [DatabaseDatabaseResponse(name=database_name) for database_name in database_names]
 
 
 @router.get(
@@ -110,12 +103,9 @@ async def list_database_schemas(
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 
-    if not _managed_database_name(database_name):
-        raise NotFoundError("Database", database_name)
-
     database_adapter = adapters.database(registry)
     try:
-        names = await database_adapter.schemas(database_name)
+        schema_names = await database_adapter.schemas(database_name)
     except Exception as exc:
         logger.exception(
             "Failed to inspect schemas for database '%s' in registry '%s'",
@@ -124,7 +114,7 @@ async def list_database_schemas(
         )
         raise UnavailableError("Database schemas unavailable") from exc
 
-    return [DatabaseSchemaResponse(name=n) for n in names]
+    return [DatabaseSchemaResponse(name=schema_name) for schema_name in schema_names]
 
 
 @router.get("/api/databases/{registry_id}/usage", response_model=DatabaseUsageResponse)

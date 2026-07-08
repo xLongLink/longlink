@@ -1,9 +1,9 @@
 from enum import Enum
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict
 from src.models.users import UserSummary
-from src.models.icons import Icon, parse_icon
+from src.models.icons import Icon
 from src.models.statuses import ApplicationStatus
 
 
@@ -34,14 +34,6 @@ class OrganizationStorageApplicationResponse(BaseModel):
 
     # State
     status: ApplicationStatus
-
-    @field_validator("icon", mode="before")
-    @classmethod
-    def validate_icon(cls, icon: str | Icon | None) -> Icon | None:
-        """Normalize and validate persisted application icon slugs."""
-
-        return parse_icon(icon)
-
 
 class StorageRegistryCreate(BaseModel):
     """Request body for creating a storage registry."""

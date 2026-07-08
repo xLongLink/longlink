@@ -1,5 +1,5 @@
 import os
-import urllib.parse
+from src.utils import urls
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -8,15 +8,6 @@ DEVELOPMENT_CORS_ORIGINS = (
     "http://localhost:5173",
     "http://localhost:8000",
 )
-INSECURE_SESSION_KEYS = {
-    "1234",
-    "changeme",
-    "change-me",
-    "longlink-secret",
-    "replace-with-a-long-random-secret",
-    "secret",
-}
-MINIMUM_SESSION_KEY_LENGTH = 32
 
 
 def _development_enabled() -> bool:
@@ -122,15 +113,10 @@ def validate_production_settings(settings: Env) -> None:
         return
 
     errors: list[str] = []
-    session_key = settings.SESSION_KEY.strip()
-    if len(session_key) < MINIMUM_SESSION_KEY_LENGTH or session_key in INSECURE_SESSION_KEYS:
-        errors.append("SESSION_KEY must be at least 32 random characters and cannot use a placeholder value")
-
     # OIDC and gateway authorization traffic carry authentication secrets, so production endpoints must be HTTPS.
     for field_name in ("CONTROL_PLANE_URL", "OIDC_ISSUER", "OIDC_REDIRECT_URI"):
         value = str(getattr(settings, field_name)).strip()
-        parsed_url = urllib.parse.urlsplit(value)
-        if parsed_url.scheme != "https" or not parsed_url.netloc:
+        if not urls.is_https_url(value):
             errors.append(f"{field_name} must be an HTTPS URL outside development")
 
     if errors:

@@ -99,8 +99,7 @@ def validate_database_schema(database_schema: str) -> str:
 def database_schema_search_path(database_schema: str) -> str:
     """Return a PostgreSQL search path for one validated app schema and shared users."""
 
-    validated_database_schema = validate_database_schema(database_schema)
-    return f'"{validated_database_schema}",shared'
+    return f'"{validate_database_schema(database_schema)}",shared'
 
 
 def created_by_relationship(cls: Any):

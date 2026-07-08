@@ -1,7 +1,6 @@
 from types import SimpleNamespace
 from datetime import UTC, datetime
 from fastapi.testclient import TestClient
-from src.models.countries import Country
 from src.database.services import users
 from src.database.services import storage
 from src.database.services import locations
@@ -22,7 +21,7 @@ async def test_storage_registry_endpoint_supports_create_and_list(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    location = await db.locations.create("local", "Local testing", user1, Country.CH)
+    location = await db.locations.create("local", "Local testing", user1, "CH")
 
     # Act
     create_response = client.post(
@@ -66,7 +65,7 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    location = await db.locations.create("local", "Local testing", user1, Country.CH)
+    location = await db.locations.create("local", "Local testing", user1, "CH")
     create_response = client.post(
         "/api/storages",
         json={
@@ -126,7 +125,7 @@ async def test_storage_object_endpoint_returns_bucket_objects(
     client = clients[0]
     user1, _, _ = users
     last_modified = datetime(2026, 7, 1, tzinfo=UTC)
-    location = await db.locations.create("local", "Local testing", user1, Country.CH)
+    location = await db.locations.create("local", "Local testing", user1, "CH")
     create_response = client.post(
         "/api/storages",
         json={

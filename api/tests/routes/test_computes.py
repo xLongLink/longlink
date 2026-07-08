@@ -1,9 +1,6 @@
 from types import SimpleNamespace
 from fastapi.testclient import TestClient
-from src.models.countries import Country
-from src.database.services import users
-from src.database.services import compute
-from src.database.services import locations
+from src.database.services import users, compute, locations
 
 db = SimpleNamespace(
     compute=compute,
@@ -22,20 +19,27 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    location = await db.locations.create("local", "Local testing", user1, Country.CH)
+    location = await db.locations.create("local", "Local testing", user1, "CH")
     captured: dict[str, object] = {}
 
     class FakeCompute:
+        """Fake Kubernetes compute client for registry route tests."""
+
         def __init__(self, kubeconfig: str, proxy_secret: str, ingress_host: str) -> None:
+            """Capture constructor arguments passed by the route."""
+
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
             captured["ingress_host"] = ingress_host
 
         async def setup(self) -> None:
-            captured["setup_calls"] = int(captured.get("setup_calls", 0)) + 1
+            """Capture cluster setup calls."""
+
+            setup_calls = captured.get("setup_calls")
+            captured["setup_calls"] = setup_calls + 1 if isinstance(setup_calls, int) else 1
 
     monkeypatch.setattr(
-        "src.routes.computes.adapters.compute",
+        "src.routes.computes.compute_runtime.kubernetes",
         lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret, registry.ingress_host),
     )
 

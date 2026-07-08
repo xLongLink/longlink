@@ -22,3 +22,10 @@ def readyml(template_path: str | Path, **context: object) -> dict[str, Any] | li
         raise ValueError("Rendered YAML template did not contain any documents")
 
     return docs if len(docs) > 1 else docs[0]
+
+
+def readyml_list(template_path: str | Path, **context: object) -> list[dict[str, Any]]:
+    """Render one YAML template file into a manifest list."""
+
+    rendered = readyml(template_path, **context)
+    return rendered if isinstance(rendered, list) else [rendered]

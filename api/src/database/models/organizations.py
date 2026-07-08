@@ -2,6 +2,8 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
+from sqlalchemy import Column, String, text
+from src.models.countries import DEFAULT_COUNTRY
 from src.database.models.association import UserOrganization
 
 if TYPE_CHECKING:
@@ -23,6 +25,9 @@ class Organization(SQLModel, table=True):
     name: str = Field(unique=True, max_length=128)
     slug: str = Field(unique=True, max_length=128)
     avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
+    country: str = Field(
+        default=DEFAULT_COUNTRY, sa_column=Column(String(2), server_default=text("'CH'"), nullable=False)
+    )
 
     # Location
     location: "Location" = Relationship()

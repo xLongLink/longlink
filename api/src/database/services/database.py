@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from uuid import UUID
 from datetime import UTC, datetime
-from src.utils import names
 from sqlalchemy import select
+from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.database.session import session_scope
@@ -54,6 +54,7 @@ async def get(registry_id: UUID, include_deleted: bool = False) -> DatabaseRegis
 async def create(
     kind: DatabaseKind,
     name: str,
+    slug: str,
     host: str,
     port: int,
     username: str,
@@ -69,9 +70,8 @@ async def create(
         result = await session.execute(select(DatabaseRegistry).where(DatabaseRegistry.name == name))
         database = result.scalar_one_or_none()
         if database is not None:
-            raise ValueError("Database registry already exists")
+            raise ConflictError("Database registry already exists")
 
-        slug = names.slugify(name)
         database = DatabaseRegistry(
             kind=kind,
             name=name,
@@ -92,8 +92,9 @@ async def create(
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
-            raise ValueError("Database registry already exists") from exc
+            raise ConflictError("Database registry already exists") from exc
 
+        registry_id = database.id
         await session.refresh(database)
         statement = (
             select(DatabaseRegistry)
@@ -102,7 +103,7 @@ async def create(
                 selectinload(DatabaseRegistry.updated_by),
                 selectinload(DatabaseRegistry.deleted_by),
             )
-            .where(DatabaseRegistry.name == name)
+            .where(DatabaseRegistry.id == registry_id)
         )
         result = await session.execute(statement)
         return result.scalar_one()
@@ -123,7 +124,7 @@ async def delete(registry_id: UUID, user: User) -> bool:
             )
         )
         if active_application.scalar_one_or_none() is not None:
-            raise ValueError("Database registry is used by active applications")
+            raise ConflictError("Database registry is used by active applications")
 
         now = datetime.now(UTC)
         registry.deleted_at = now

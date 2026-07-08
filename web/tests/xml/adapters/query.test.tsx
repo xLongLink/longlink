@@ -8,13 +8,13 @@ import { createElement, Fragment } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 describe('Query', () => {
-    /* Query nodes must reject nested children so invalid layouts fail fast. */
-    it('throws when children are present', () => {
+    /* Query nodes must render a scoped setup error when invalid layouts include children. */
+    it('renders an error when children are present', () => {
         const runtime: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const client = new QueryClient();
         const ast = parseXML('<Query id="user" path="/api/user"><P i18n="query.ready" /></Query>');
 
-        expect(() =>
+        expect(
             renderToStaticMarkup(
                 createElement(
                     QueryClientProvider,
@@ -25,16 +25,16 @@ describe('Query', () => {
                     })
                 )
             )
-        ).toThrow('Query cannot have children');
+        ).toContain('Query cannot have children');
     });
 
-    /* Query should reject missing ids so invalid XML fails fast. */
-    it('throws when id is missing', () => {
+    /* Query should render a clear scoped runtime error when ids are missing. */
+    it('renders an error when id is missing', () => {
         const runtime: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const client = new QueryClient();
         const ast = parseXML('<Query path="/api/user" />');
 
-        expect(() =>
+        expect(
             renderToStaticMarkup(
                 createElement(
                     QueryClientProvider,
@@ -45,6 +45,6 @@ describe('Query', () => {
                     })
                 )
             )
-        ).toThrow('Query requires a string id');
+        ).toContain('Query requires a string id');
     });
 });

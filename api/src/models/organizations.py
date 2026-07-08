@@ -1,7 +1,8 @@
 from uuid import UUID
 from datetime import datetime
-from pydantic import Field, EmailStr, BaseModel, ConfigDict, field_validator
-from src.models.icons import Icon, parse_icon
+from pydantic import Field, EmailStr, BaseModel, ConfigDict
+from src.models.icons import Icon
+from src.models.countries import Country, DEFAULT_COUNTRY
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import Avatar, UserSummary
 from src.models.statuses import ApplicationStatus
@@ -14,6 +15,7 @@ class OrganizationCreate(BaseModel):
     # Metadata
     name: str = Field(min_length=1, max_length=128)
     avatar: str | None = None
+    country: Country = DEFAULT_COUNTRY
 
     # Location
     location_id: UUID
@@ -66,6 +68,7 @@ class OrganizationSummary(BaseModel):
     name: str
     slug: str
     avatar: Avatar = ""
+    country: Country
 
     # Relationships
     location_id: UUID
@@ -113,13 +116,6 @@ class OrganizationApplicationResponse(BaseModel):
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
 
-    @field_validator("icon", mode="before")
-    @classmethod
-    def validate_icon(cls, icon: str | Icon | None) -> Icon | None:
-        """Normalize and validate persisted application icon slugs."""
-
-        return parse_icon(icon)
-
 
 class OrganizationMemberSummary(BaseModel):
     """Represent one organization member in API responses."""
@@ -153,6 +149,7 @@ class OrganizationDetails(BaseModel):
     name: str
     slug: str
     avatar: Avatar = ""
+    country: Country
 
     # Location
     location: LocationResponse

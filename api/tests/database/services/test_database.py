@@ -1,7 +1,7 @@
 import pytest
 from uuid import uuid4
 from types import SimpleNamespace
-from src.models.countries import Country
+from src.errors import ConflictError
 from src.models.databases import DatabaseKind
 from src.database.models.users import User
 from src.database.services import database
@@ -22,12 +22,13 @@ async def test_create_get_and_fetch_all_return_active_database_registries(users:
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
 
     # Act
     registry = await db.database.create(
         DatabaseKind.postgresql,
         "Primary database",
+        "primary-database",
         "postgres.example",
         5432,
         "longlink",
@@ -61,12 +62,13 @@ async def test_create_persists_database_runtime_connection_overrides(users: tupl
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
 
     # Act
     registry = await db.database.create(
         DatabaseKind.postgresql,
         "Primary database",
+        "primary-database",
         "postgres.example",
         5432,
         "longlink",
@@ -87,10 +89,11 @@ async def test_create_rejects_duplicate_database_registry_names(users: tuple[Use
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
     await db.database.create(
         DatabaseKind.postgresql,
         "Primary database",
+        "primary-database",
         "postgres.example",
         5432,
         "longlink",
@@ -100,10 +103,11 @@ async def test_create_rejects_duplicate_database_registry_names(users: tuple[Use
     )
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.database.create(
             DatabaseKind.postgresql,
             "Primary database",
+            "primary-database",
             "other-postgres.example",
             5433,
             "other",
@@ -123,10 +127,11 @@ async def test_delete_soft_deletes_database_registry_and_include_deleted_can_rel
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
     registry = await db.database.create(
         DatabaseKind.postgresql,
         "Primary database",
+        "primary-database",
         "postgres.example",
         5432,
         "longlink",
@@ -157,11 +162,12 @@ async def test_delete_rejects_database_registry_used_by_active_applications(user
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     registry = await db.database.create(
         DatabaseKind.postgresql,
         "Primary database",
+        "primary-database",
         "postgres.example",
         5432,
         "longlink",
@@ -179,7 +185,7 @@ async def test_delete_rejects_database_registry_used_by_active_applications(user
     )
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.database.delete(registry.id, owner)
 
     # Assert

@@ -6,6 +6,7 @@ type UseCollectionQueryOptions<TData> = {
     retry?: boolean;
     refetchOnMount?: boolean | 'always';
     enabled?: boolean;
+    parse?: (value: unknown) => TData[];
     request?: RequestInit;
 };
 
@@ -22,6 +23,7 @@ export function useCollectionQuery<TData>(
         retry: options.retry ?? false,
         refetchOnMount: options.refetchOnMount,
         enabled: options.enabled,
+        parse: options.parse,
         request: options.request,
     });
 

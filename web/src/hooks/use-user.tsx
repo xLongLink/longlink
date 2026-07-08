@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect } from 'react';
 
 import { useApiQuery } from '@/hooks/use-api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { apiUserProfileSchema, apiUserSummarySchema, parseApiCollection, parseApiResponse } from '@/lib/api-schemas';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { accountsQueryKey } from '@/lib/query-keys';
 import {
@@ -70,6 +71,7 @@ function applyUserPreferences(preferences: UserPreferences) {
 function useUserQuery() {
     return useApiQuery<User | null>('/api/me', {
         // Auth state must refresh immediately after login/logout redirects.
+        parse: (value) => (value === null ? null : parseApiResponse(apiUserProfileSchema, value)),
         staleTime: 0,
         refetchOnWindowFocus: true,
         retry: false,
@@ -152,6 +154,7 @@ export function useUser() {
     const profile = useUserProfile();
     const queryClient = useQueryClient();
     const accountsQuery = useCollectionQuery<ApiUserSummary>('/auth/accounts', {
+        parse: (value) => parseApiCollection(apiUserSummarySchema, value),
         refetchOnMount: 'always',
         retry: false,
     });
@@ -180,9 +183,13 @@ export function useUser() {
 
     /** Clears the active user on the server so another account can be selected. */
     const switchAccount = async () => {
-        const savedAccounts = await fetchApiJson<ApiUserSummary[]>('/auth/accounts/deactivate', {
-            method: 'POST',
-        });
+        const savedAccounts = await fetchApiJson(
+            '/auth/accounts/deactivate',
+            {
+                method: 'POST',
+            },
+            (value) => parseApiCollection(apiUserSummarySchema, value)
+        );
 
         await queryClient.cancelQueries({ queryKey: accountsQueryKey() });
         queryClient.setQueryData(accountsQueryKey(), savedAccounts);
@@ -204,11 +211,15 @@ export function useUpdateUser() {
 
     return useMutation({
         mutationFn: async (payload: UserUpdate) => {
-            return fetchApiJson<User>('/api/me', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
+            return fetchApiJson(
+                '/api/me',
+                {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                },
+                (value) => parseApiResponse(apiUserProfileSchema, value)
+            );
         },
         onSuccess: (user) => {
             queryClient.setQueryData(apiQueryKey('/api/me'), user);

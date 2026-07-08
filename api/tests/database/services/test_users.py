@@ -3,7 +3,6 @@ from uuid import uuid4
 from types import SimpleNamespace
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.users import Theme, Accent, Radius, Language, UserOrganizationMembership
-from src.models.countries import Country
 from src.models.locations import LocationResponse
 from src.database.models.users import User
 from src.database.services import users
@@ -109,7 +108,7 @@ async def test_profile_returns_created_organization_membership() -> None:
         name="First User",
         avatar=None,
     )
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
+    location = await db.locations.create("local", "Local testing", user, "CH")
     organization = await db.organizations.create(
         "test", location.id, user, avatar="https://example.com/organizations/test.png"
     )

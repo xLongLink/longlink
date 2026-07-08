@@ -3,9 +3,9 @@ from uuid import uuid4
 from types import SimpleNamespace
 from datetime import UTC, datetime
 from sqlalchemy import select
+from src.errors import ConflictError
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.database.session import get_session
-from src.models.countries import Country
 from src.database.models.users import User
 from src.database.services import users
 from src.database.services import compute
@@ -38,19 +38,21 @@ async def test_create_persists_org_and_owner_membership(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
 
     # Act
-    organization = await db.organizations.create("acme", location.id, owner)
+    organization = await db.organizations.create("acme", "acme", location.id, owner, country="DE")
 
     # Assert
     assert organization.name == "acme"
     assert organization.slug == "acme"
+    assert organization.country == "DE"
 
     reloaded = await db.organizations.get(organization.id)
     assert reloaded is not None
     assert reloaded.name == "acme"
     assert reloaded.slug == "acme"
+    assert reloaded.country == "DE"
     assert [member.id for member in reloaded.users] == [owner.id]
 
     Session = await get_session()
@@ -71,8 +73,8 @@ async def test_get_returns_users_from_membership_table(
 
     # Arrange
     owner, member = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -98,9 +100,9 @@ async def test_fetch_all_and_list_by_user_ignore_deleted_organizations(users: tu
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    active_organization = await db.organizations.create("acme", location.id, owner)
-    deleted_organization = await db.organizations.create("deleted", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    active_organization = await db.organizations.create("acme", "acme", location.id, owner)
+    deleted_organization = await db.organizations.create("deleted", "deleted", location.id, owner)
     await db.organizations.soft_delete(deleted_organization.id, owner)
 
     # Act
@@ -117,8 +119,8 @@ async def test_get_member_and_membership_role_require_active_membership(users: t
 
     # Arrange
     owner, non_member = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
     owner_organization = await db.organizations.get_member(organization.id, owner.id)
@@ -139,8 +141,8 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
 
     # Arrange
     owner, member, non_member = users
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -179,11 +181,11 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.organizations.update_member_role(organization.id, owner.id, OrganizationRoles.admin, owner)
 
     # Assert
@@ -196,8 +198,8 @@ async def test_database_users_returns_active_members_ordered_by_email(users: tup
 
     # Arrange
     owner, member, deleted_member = users
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -231,8 +233,8 @@ async def test_get_includes_application_role_for_requested_user(users: tuple[Use
 
     # Arrange
     owner, member = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -264,19 +266,19 @@ async def test_get_includes_application_role_for_requested_user(users: tuple[Use
     assert details.applications[0].role == ApplicationRoles.read
 
 
-async def test_create_raises_value_error_when_org_already_exists(
+async def test_create_rejects_duplicate_organization_names(
     users: tuple[User, User, User],
 ) -> None:
     """Reject duplicate organization names."""
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
-    with pytest.raises(ValueError) as exc:
-        await db.organizations.create("acme", location.id, owner)
+    with pytest.raises(ConflictError) as exc:
+        await db.organizations.create("acme", "acme", location.id, owner)
 
     # Assert
     assert str(exc.value) == "Organization already exists"
@@ -289,11 +291,11 @@ async def test_create_rejects_organization_with_overlong_runtime_name(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
 
     # Act
     with pytest.raises(ValueError, match="S3 bucket name must be at most 63 characters"):
-        await db.organizations.create("a" * 48, location.id, owner)
+        await db.organizations.create("a" * 48, "a" * 48, location.id, owner)
 
     # Assert
     assert await db.organizations.fetch_all() == []
@@ -306,8 +308,8 @@ async def test_create_invitation_persists_pending_invitation(
 
     # Arrange
     owner, invitee = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
     invitation = await db.invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
@@ -327,12 +329,12 @@ async def test_create_invitation_rejects_duplicate_email(
 
     # Arrange
     owner, invitee = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     await db.invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.invitations.create(organization.id, invitee.email, OrganizationRoles.admin, owner)
 
     # Assert
@@ -344,8 +346,8 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
 
     # Arrange
     owner, member = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     application = await db.applications.create(
         organization.id,
         "Dashboard",

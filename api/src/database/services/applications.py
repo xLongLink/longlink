@@ -3,7 +3,7 @@ from __future__ import annotations
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import and_, select
-from sqlalchemy.exc import IntegrityError
+from src.errors import NotFoundError, ConflictError
 from sqlalchemy.orm import selectinload
 from src.models.roles import ApplicationRoles
 from src.models.statuses import ApplicationStatus
@@ -370,7 +370,7 @@ async def create(
     async with session_scope() as session:
         organization = await session.get(Organization, organization_id)
         if organization is None:
-            raise ValueError("Organization not found")
+            raise NotFoundError("Organization", organization_id)
 
         # Check slug uniqueness so K8s resource names stay collision-free.
         slug_statement = select(Application).where(
@@ -379,7 +379,7 @@ async def create(
         )
         slug_result = await session.execute(slug_statement)
         if slug_result.scalar_one_or_none() is not None:
-            raise ValueError("Application slug already exists")
+            raise ConflictError("Application slug already exists")
 
         application_kwargs: dict[str, object] = {
             "organization_id": organization_id,

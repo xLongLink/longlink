@@ -2,28 +2,32 @@ import { useQuery, useQueryClient, type UseQueryOptions, type UseQueryResult } f
 
 import { ApiError, apiQueryKey, fetchApiJson } from '@/lib/api';
 
-type UseApiQueryOptions<TData> = Omit<UseQueryOptions<TData, Error, TData, Array<string>>, 'queryKey' | 'queryFn'> & {
-    notFound?: TData;
+type UseApiQueryOptions<TQueryFnData, TData = TQueryFnData> = Omit<
+    UseQueryOptions<TQueryFnData, Error, TData, Array<string>>,
+    'queryKey' | 'queryFn'
+> & {
+    notFound?: TQueryFnData;
+    parse?: (value: unknown) => TQueryFnData;
     request?: RequestInit;
 };
 
 /** Fetches one API resource through the shared transport and React Query cache. */
-export function useApiQuery<TData>(
+export function useApiQuery<TQueryFnData, TData = TQueryFnData>(
     path: string | null,
-    options: UseApiQueryOptions<TData> = {}
+    options: UseApiQueryOptions<TQueryFnData, TData> = {}
 ): UseQueryResult<TData, Error> {
-    const { notFound, request, ...queryOptions } = options;
+    const { notFound, parse, request, ...queryOptions } = options;
     const queryClient = useQueryClient();
 
     const enabled = path !== null && (queryOptions.enabled ?? true);
 
-    return useQuery<TData, Error, TData, Array<string>>({
+    return useQuery<TQueryFnData, Error, TData, Array<string>>({
         ...queryOptions,
         enabled,
         queryKey: path !== null ? apiQueryKey(path) : ['api', 'disabled'],
         queryFn: async () => {
             try {
-                return await fetchApiJson<TData>(path!, request);
+                return await fetchApiJson<TQueryFnData>(path!, request, parse);
             } catch (error) {
                 // Clear the cached session immediately when any request reports auth loss.
                 if (error instanceof ApiError && error.status === 401) {
@@ -31,7 +35,7 @@ export function useApiQuery<TData>(
                 }
 
                 if (error instanceof ApiError && error.status === 404 && 'notFound' in options) {
-                    return notFound as TData;
+                    return notFound as TQueryFnData;
                 }
 
                 throw error;

@@ -15,6 +15,7 @@ def production_settings(**overrides: object) -> Env:
 
     settings = {
         "DEVELOPMENT": False,
+        "CONTROL_PLANE_URL": "https://app.example",
         "DATABASE_URL": "sqlite+aiosqlite:///./dev.db",
         "SESSION_KEY": "production-session-key-that-is-long-enough",
         "OIDC_CLIENT_ID": "longlink-api",
@@ -74,17 +75,9 @@ def test_explicit_cors_origins_override_development_defaults() -> None:
 
 
 def test_validate_production_settings_accepts_secure_values() -> None:
-    """Accept production settings with strong secrets and HTTPS OIDC URLs."""
+    """Accept production settings with HTTPS OIDC URLs."""
 
     validate_production_settings(production_settings())
-
-
-@pytest.mark.parametrize("session_key", ["1234", "replace-with-a-long-random-secret"])
-def test_validate_production_settings_rejects_weak_session_keys(session_key: str) -> None:
-    """Reject short and placeholder session signing keys outside development."""
-
-    with pytest.raises(RuntimeError, match="SESSION_KEY"):
-        validate_production_settings(production_settings(SESSION_KEY=session_key))
 
 
 def test_validate_production_settings_rejects_non_https_oidc_urls() -> None:
@@ -104,7 +97,7 @@ def test_validate_production_settings_rejects_non_https_oidc_urls() -> None:
 
 
 def test_validate_production_settings_allows_local_development_values() -> None:
-    """Allow local auth and short secrets when development mode is enabled."""
+    """Allow local auth endpoints when development mode is enabled."""
 
     settings = production_settings(
         DEVELOPMENT=True,

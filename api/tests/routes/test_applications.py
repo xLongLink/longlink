@@ -9,7 +9,6 @@ from src.models.computes import ComputeKind
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.models.storages import StorageKind
 from src.database.session import get_session
-from src.models.countries import Country
 from src.models.databases import DatabaseKind
 from src.database.services import users, compute, storage, database, locations, operations, applications, organizations
 from src.models.operations import OperationKind
@@ -38,8 +37,8 @@ async def test_list_organization_apps_returns_app_membership_role(
     # Arrange
     owner = users[0]
     user = users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -87,8 +86,8 @@ async def test_list_organization_apps_returns_creator_app_admin_role(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, user)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -116,9 +115,9 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    acme = await db.organizations.create("acme", location.id, user)
-    globex = await db.organizations.create("globex", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    acme = await db.organizations.create("acme", "acme", location.id, user)
+    globex = await db.organizations.create("globex", "globex", location.id, user)
     dashboard = await db.applications.create(
         acme.id,
         "dashboard",
@@ -171,8 +170,8 @@ async def test_list_organization_apps_returns_404_for_non_member(
     # Arrange
     owner = users[0]
     user = users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     await db.applications.create(
         organization.id,
         "dashboard",
@@ -199,12 +198,13 @@ async def test_create_app_returns_app_response(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
-    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
-    organization = await db.organizations.create("acme", remote_location.id, user)
+    local_location = await db.locations.create("local", "Local testing", user, "CH")
+    remote_location = await db.locations.create("remote", "Remote testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", remote_location.id, user)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="local",
+        slug="local",
         kubeconfig="apiVersion: v1\nclusters: []\n",
         ingress_host="apps.local.longlink.internal",
         location_id=local_location.id,
@@ -213,6 +213,7 @@ async def test_create_app_returns_app_response(
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="remote",
+        slug="remote",
         kubeconfig="apiVersion: v1\nclusters: []\n",
         ingress_host="apps.remote.longlink.internal",
         location_id=remote_location.id,
@@ -221,6 +222,7 @@ async def test_create_app_returns_app_response(
     await db.database.create(
         kind=DatabaseKind.postgresql,
         name="local",
+        slug="local",
         host="db.local.longlink.internal",
         port=5432,
         username="longlink",
@@ -231,6 +233,7 @@ async def test_create_app_returns_app_response(
     await db.database.create(
         kind=DatabaseKind.postgresql,
         name="remote",
+        slug="remote",
         host="db.remote.longlink.internal",
         port=5432,
         username="longlink",
@@ -243,6 +246,7 @@ async def test_create_app_returns_app_response(
     await db.storage.create(
         kind=StorageKind.s3,
         name="remote",
+        slug="remote",
         protocol="http",
         endpoint_url="http://storage.control.longlink.internal",
         runtime_endpoint_url="http://storage.runtime.longlink.internal:19000",
@@ -285,6 +289,7 @@ async def test_create_app_returns_app_response(
             image: str,
             port: int,
             secrets: dict[str, str],
+            rollout_token: str = "",
         ) -> None:
             captured["application"] = {
                 "organization": organization,
@@ -293,6 +298,7 @@ async def test_create_app_returns_app_response(
                 "image": image,
                 "port": port,
                 "secrets": secrets,
+                "rollout_token": rollout_token,
             }
 
     class FakeDatabase:
@@ -364,7 +370,7 @@ async def test_create_app_returns_app_response(
             return {"access_key_id": "app-access", "secret_access_key": "app-secret"}
 
     monkeypatch.setattr(
-        "src.operations.provisioning.adapters.compute",
+        "src.operations.provisioning.compute_runtime.kubernetes",
         lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret, registry.ingress_host),
     )
     monkeypatch.setattr(
@@ -458,11 +464,12 @@ async def test_organization_storage_registry_reuses_existing_app_registry(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     primary = await db.storage.create(
         kind=StorageKind.s3,
         name="primary",
+        slug="primary",
         protocol="http",
         endpoint_url="http://storage-primary.local",
         access_key_id="primary-access",
@@ -481,6 +488,7 @@ async def test_organization_storage_registry_reuses_existing_app_registry(
     await db.storage.create(
         kind=StorageKind.s3,
         name="secondary",
+        slug="secondary",
         protocol="http",
         endpoint_url="http://storage-secondary.local",
         access_key_id="secondary-access",
@@ -506,8 +514,8 @@ async def test_create_app_returns_409_when_image_metadata_is_missing(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     async def fake_metadata(image: str) -> None:
         """Pretend the registry inspection failed or returned invalid metadata."""
@@ -538,11 +546,12 @@ async def test_create_app_requires_storage_registry_for_required_storage_envs(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="local",
+        slug="local",
         kubeconfig="apiVersion: v1\nclusters: []\n",
         ingress_host="apps.local.longlink.internal",
         location_id=location.id,
@@ -551,6 +560,7 @@ async def test_create_app_requires_storage_registry_for_required_storage_envs(
     await db.database.create(
         kind=DatabaseKind.postgresql,
         name="primary",
+        slug="primary",
         host="db.local.longlink.internal",
         port=5432,
         username="longlink",
@@ -604,8 +614,8 @@ async def test_create_app_returns_409_for_overlong_runtime_bucket_name(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     client = clients[0]
 
     # Act
@@ -630,8 +640,8 @@ async def test_create_app_returns_403_for_regular_member(
     # Arrange
     owner = users[0]
     regular_member = users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -675,8 +685,8 @@ async def test_get_app_logs_returns_pod_logs(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, user)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -687,6 +697,7 @@ async def test_get_app_logs_returns_pod_logs(
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="local",
+        slug="local",
         kubeconfig=(
             "apiVersion: v1\n"
             "clusters:\n"
@@ -730,7 +741,7 @@ async def test_get_app_logs_returns_pod_logs(
             return "line 1\nline 2"
 
     monkeypatch.setattr(
-        "src.routes.applications.adapters.compute",
+        "src.routes.applications.compute_runtime.kubernetes",
         lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret, registry.ingress_host),
     )
     client = clients[0]
@@ -757,8 +768,8 @@ async def test_delete_application_soft_deletes_and_queues_removal(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, user)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -793,9 +804,9 @@ async def test_gateway_authz_allows_application_request(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
-    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
-    organization = await db.organizations.create("acme", remote_location.id, user)
+    local_location = await db.locations.create("local", "Local testing", user, "CH")
+    remote_location = await db.locations.create("remote", "Remote testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", remote_location.id, user)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -807,6 +818,7 @@ async def test_gateway_authz_allows_application_request(
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="local",
+        slug="local",
         kubeconfig=(
             "apiVersion: v1\n"
             "clusters:\n"
@@ -834,6 +846,7 @@ async def test_gateway_authz_allows_application_request(
     registry = await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="remote",
+        slug="remote",
         kubeconfig=(
             "apiVersion: v1\n"
             "clusters:\n"
@@ -861,6 +874,7 @@ async def test_gateway_authz_allows_application_request(
     await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="remote-extra",
+        slug="remote-extra",
         kubeconfig=(
             "apiVersion: v1\n"
             "clusters:\n"
@@ -923,8 +937,8 @@ async def test_gateway_authz_requires_application_role_for_regular_member(
     # Arrange
     owner = users[0]
     user = users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -947,6 +961,7 @@ async def test_gateway_authz_requires_application_role_for_regular_member(
     registry = await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="local",
+        slug="local",
         kubeconfig="apiVersion: v1\nclusters: []\n",
         ingress_host="localhost:9443",
         location_id=location.id,
@@ -984,9 +999,9 @@ async def test_gateway_authz_requires_compute_secret(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
-    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
-    organization = await db.organizations.create("acme", remote_location.id, user)
+    local_location = await db.locations.create("local", "Local testing", user, "CH")
+    remote_location = await db.locations.create("remote", "Remote testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", remote_location.id, user)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -998,6 +1013,7 @@ async def test_gateway_authz_requires_compute_secret(
     registry = await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="local",
+        slug="local",
         kubeconfig=(
             "apiVersion: v1\n"
             "clusters:\n"
@@ -1054,9 +1070,9 @@ async def test_gateway_authz_enforces_method_role(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user, Country.CH)
-    remote_location = await db.locations.create("remote", "Remote testing", user, Country.CH)
-    organization = await db.organizations.create("acme", remote_location.id, user)
+    local_location = await db.locations.create("local", "Local testing", user, "CH")
+    remote_location = await db.locations.create("remote", "Remote testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", remote_location.id, user)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -1068,6 +1084,7 @@ async def test_gateway_authz_enforces_method_role(
     registry = await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="local",
+        slug="local",
         kubeconfig=(
             "apiVersion: v1\n"
             "clusters:\n"
@@ -1141,8 +1158,8 @@ async def test_gateway_authz_rejects_other_compute_app(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, user)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -1154,6 +1171,7 @@ async def test_gateway_authz_rejects_other_compute_app(
     registry = await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="local",
+        slug="local",
         kubeconfig=(
             "apiVersion: v1\n"
             "clusters:\n"
@@ -1204,8 +1222,8 @@ async def test_organization_access_rejects_soft_deleted_membership(
     # Arrange
     owner = users[0]
     user = users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     await db.applications.create(
         organization.id,
         "dashboard",
@@ -1244,8 +1262,8 @@ async def test_gateway_authz_shows_loading_when_app_is_not_ready(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -1256,6 +1274,7 @@ async def test_gateway_authz_shows_loading_when_app_is_not_ready(
     registry = await db.compute.create(
         kind=ComputeKind.kubernetes,
         name="local",
+        slug="local",
         kubeconfig="apiVersion: v1\nclusters: []\n",
         ingress_host="localhost:9443",
         location_id=location.id,

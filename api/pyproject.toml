@@ -21,13 +21,16 @@ dependencies = [
     'aiomysql',
     'pydantic',
     'pydantic-settings',
+    'pycountry>=26.2.16',
+    'python-slugify',
     'psycopg[binary,pool]',
     'sqlalchemy',
     'sqlmodel',
     'starlette',
+    'kr8s',
     'kubernetes',
     'tenant',
-    "uvicorn<0.48.0",
+    'uvicorn<0.48.0',
 ]
 
 [tool.uv.sources]

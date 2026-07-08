@@ -1,11 +1,11 @@
 import re
+from slugify import slugify as text_slugify
 
 
 def slugify(value: str, label: str = "Value", max_length: int = 63) -> str:
     """Convert a string to a URL-safe and K8s-safe slug."""
 
-    slug = value.strip().lower()
-    slug = re.sub(r"[^a-z0-9]+", "-", slug).strip("-")
+    slug = text_slugify(value, lowercase=True, regex_pattern=r"[^a-z0-9]+", separator="-").strip("-")
 
     if not slug:
         raise ValueError(f"{label} must contain at least one lowercase letter or number")

@@ -8,7 +8,6 @@ from src.errors import ConflictError, NotFoundError, ForbiddenError, Unavailable
 from src.logger import logger
 from src.operations import provisioning
 from tenant.database import SHARED_SCHEMA
-from src.models.icons import parse_icon
 from src.models.roles import PlatformRoles
 from src.models.storages import (OrganizationStorageResourceKind, OrganizationStorageResourceResponse,
                                  OrganizationStorageApplicationResponse)
@@ -162,10 +161,7 @@ async def create_organization_invitation(
     if permissions.organization_role_rank(payload.role) > permissions.organization_role_rank(member_access.role):
         raise ForbiddenError("Invitation role permissions required")
 
-    try:
-        await invitations.create(member_access.organization.id, payload.email, payload.role, member_access.user)
-    except ValueError as exc:
-        raise ConflictError(str(exc)) from exc
+    await invitations.create(member_access.organization.id, payload.email, payload.role, member_access.user)
 
     return Response(status_code=204)
 
@@ -190,10 +186,7 @@ async def update_organization_member(
     if permissions.is_organization_owner_role(target_role) and not can_manage_owner_role:
         raise ForbiddenError("Owner management permissions required")
 
-    try:
-        updated = await organizations.update_member_role(organization.id, member_id, payload.role, member_access.user)
-    except ValueError as exc:
-        raise ConflictError(str(exc)) from exc
+    updated = await organizations.update_member_role(organization.id, member_id, payload.role, member_access.user)
 
     if not updated:
         raise NotFoundError("Organization member", member_id)
@@ -258,17 +251,20 @@ async def _database_resource_rows(
         raise UnavailableError("Database resources unavailable") from exc
 
     rows: list[OrganizationDatabaseResourceResponse] = []
+    resource_fields = {
+        "kind": OrganizationDatabaseResourceKind.schema,
+        "database_name": database_name,
+        "database_registry_id": registry.id,
+        "database_registry_name": registry.name,
+    }
 
     usage_by_schema = {item["name"]: item for item in schema_usage}
     shared_usage = usage_by_schema.get(SHARED_SCHEMA)
     if shared_usage is not None:
         rows.append(
             OrganizationDatabaseResourceResponse(
-                kind=OrganizationDatabaseResourceKind.schema,
+                **resource_fields,
                 name=SHARED_SCHEMA,
-                database_name=database_name,
-                database_registry_id=registry.id,
-                database_registry_name=registry.name,
                 application=None,
                 space_used=shared_usage["space_used"],
                 table_count=shared_usage["table_count"],
@@ -283,18 +279,17 @@ async def _database_resource_rows(
 
         rows.append(
             OrganizationDatabaseResourceResponse(
-                kind=OrganizationDatabaseResourceKind.schema,
+                **resource_fields,
                 name=application.slug,
-                database_name=database_name,
-                database_registry_id=registry.id,
-                database_registry_name=registry.name,
-                application=OrganizationDatabaseApplicationResponse(
-                    id=application.id,
-                    name=application.name,
-                    slug=application.slug,
-                    icon=parse_icon(application.icon),
-                    description=application.description,
-                    status=application.status,
+                application=OrganizationDatabaseApplicationResponse.model_validate(
+                    {
+                        "id": application.id,
+                        "name": application.name,
+                        "slug": application.slug,
+                        "icon": application.icon,
+                        "description": application.description,
+                        "status": application.status,
+                    }
                 ),
                 space_used=usage["space_used"],
                 table_count=usage["table_count"],
@@ -308,11 +303,8 @@ async def _database_resource_rows(
 
         rows.append(
             OrganizationDatabaseResourceResponse(
-                kind=OrganizationDatabaseResourceKind.schema,
+                **resource_fields,
                 name=usage["name"],
-                database_name=database_name,
-                database_registry_id=registry.id,
-                database_registry_name=registry.name,
                 application=None,
                 space_used=usage["space_used"],
                 table_count=usage["table_count"],
@@ -370,13 +362,15 @@ async def _storage_resource_rows(
                     kind=OrganizationStorageResourceKind.application_bucket,
                     name=application.slug,
                     bucket_name=application.storage_bucket_name,
-                    application=OrganizationStorageApplicationResponse(
-                        id=application.id,
-                        name=application.name,
-                        slug=application.slug,
-                        icon=parse_icon(application.icon),
-                        description=application.description,
-                        status=application.status,
+                    application=OrganizationStorageApplicationResponse.model_validate(
+                        {
+                            "id": application.id,
+                            "name": application.name,
+                            "slug": application.slug,
+                            "icon": application.icon,
+                            "description": application.description,
+                            "status": application.status,
+                        }
                     ),
                     storage_registry_id=registry.id,
                     storage_registry_name=registry.name,
@@ -423,11 +417,22 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     if await locations.get(payload.location_id) is None:
         raise NotFoundError("Location", payload.location_id)
 
-    # Map uniqueness failures to a conflict response.
     try:
-        organization = await organizations.create(payload.name, payload.location_id, user, payload.avatar)
+        slug = names.slugify(payload.name, "Organization")
+        names.k8name(slug)
+        names.dbname(slug)
+        buckets.shared(slug)
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
+
+    organization = await organizations.create(
+        payload.name,
+        slug,
+        payload.location_id,
+        user,
+        payload.avatar,
+        country=payload.country,
+    )
 
     await provisioning.create_organization_namespace(organization)
     await provisioning.create_organization_database(organization)

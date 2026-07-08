@@ -2,9 +2,9 @@ import pytest
 from uuid import uuid4
 from types import SimpleNamespace
 from datetime import UTC, datetime
+from src.errors import NotFoundError, ConflictError
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session
-from src.models.countries import Country
 from src.database.models.users import User
 from src.database.models.invitations import OrganizationInvitation
 from src.database.services import invitations
@@ -25,8 +25,8 @@ async def test_create_normalizes_invitation_email_and_lists_active_invitations(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
     invitation = await db.invitations.create(
@@ -50,13 +50,14 @@ async def test_create_rejects_invitation_for_missing_organization(users: tuple[U
 
     # Arrange
     owner = users[0]
+    organization_id = uuid4()
 
     # Act
-    with pytest.raises(ValueError) as exc:
-        await db.invitations.create(uuid4(), "invited@example.com", OrganizationRoles.write, owner)
+    with pytest.raises(NotFoundError) as exc:
+        await db.invitations.create(organization_id, "invited@example.com", OrganizationRoles.write, owner)
 
     # Assert
-    assert str(exc.value) == "Organization not found"
+    assert exc.value.detail == f"Organization '{organization_id}' not found"
 
 
 async def test_create_rejects_invitation_for_existing_member_email(users: tuple[User, User, User]) -> None:
@@ -64,11 +65,11 @@ async def test_create_rejects_invitation_for_existing_member_email(users: tuple[
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.invitations.create(organization.id, owner.email.upper(), OrganizationRoles.write, owner)
 
     # Assert
@@ -82,12 +83,12 @@ async def test_create_rejects_duplicate_invitation_email_case_insensitively(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     await db.invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.invitations.create(organization.id, "INVITED@example.com", OrganizationRoles.admin, owner)
 
     # Assert
@@ -99,8 +100,8 @@ async def test_list_by_organization_ignores_deleted_invitations(users: tuple[Use
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     invitation = await db.invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 
     Session = await get_session()

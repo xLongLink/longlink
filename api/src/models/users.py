@@ -2,6 +2,7 @@ from enum import Enum
 from uuid import UUID
 from typing import Annotated
 from pydantic import Field, EmailStr, BaseModel, ConfigDict, BeforeValidator
+from src.models.countries import Country
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.locations import LocationResponse
 
@@ -103,6 +104,7 @@ class UserOrganizationMembership(BaseModel):
     name: str
     slug: str
     avatar: Avatar = ""
+    country: Country
     location: LocationResponse
 
     # State

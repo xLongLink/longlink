@@ -1,7 +1,7 @@
 import pytest
 from uuid import uuid4
 from types import SimpleNamespace
-from src.models.countries import Country
+from src.errors import ConflictError
 from src.models.computes import ComputeKind
 from src.models.storages import StorageKind
 from src.models.databases import DatabaseKind
@@ -31,14 +31,14 @@ async def test_create_get_and_fetch_all_return_active_locations(users: tuple[Use
     owner = users[0]
 
     # Act
-    location = await db.locations.create("primary", "Primary", owner, Country.CH, LocationProvider.hetzner)
+    location = await db.locations.create("primary", "Primary", owner, "CH", LocationProvider.hetzner)
     fetched = await db.locations.fetch_all()
     reloaded = await db.locations.get(location.id)
 
     # Assert
     assert location.name == "Primary"
     assert location.slug == "primary"
-    assert location.country == Country.CH
+    assert location.country == "CH"
     assert location.provider == LocationProvider.hetzner
     assert location.created_id == owner.id
     assert location.updated_id == owner.id
@@ -52,11 +52,11 @@ async def test_create_rejects_duplicate_location_slug(users: tuple[User, User, U
 
     # Arrange
     owner = users[0]
-    await db.locations.create("primary", "Primary", owner, Country.CH)
+    await db.locations.create("primary", "Primary", owner, "CH")
 
     # Act
-    with pytest.raises(ValueError) as exc:
-        await db.locations.create("primary", "Primary duplicate", owner, Country.CH)
+    with pytest.raises(ConflictError) as exc:
+        await db.locations.create("primary", "Primary!", owner, "CH")
 
     # Assert
     assert str(exc.value) == "Location already exists"
@@ -67,7 +67,7 @@ async def test_delete_soft_deletes_location_and_read_services_ignore_it(users: t
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
 
     # Act
     deleted = await db.locations.delete(location.id, owner)
@@ -87,11 +87,11 @@ async def test_delete_rejects_location_used_by_active_organizations(users: tuple
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
-    await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
+    await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.locations.delete(location.id, owner)
 
     # Assert
@@ -104,11 +104,19 @@ async def test_delete_rejects_location_used_by_active_compute_registries(users: 
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
-    await db.compute.create(ComputeKind.kubernetes, "Primary compute", "kubeconfig", "apps.example", location.id, owner)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
+    await db.compute.create(
+        ComputeKind.kubernetes,
+        "Primary compute",
+        "primary-compute",
+        "kubeconfig",
+        "apps.example",
+        location.id,
+        owner,
+    )
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.locations.delete(location.id, owner)
 
     # Assert
@@ -120,10 +128,11 @@ async def test_delete_rejects_location_used_by_active_database_registries(users:
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
     await db.database.create(
         DatabaseKind.postgresql,
         "Primary database",
+        "primary-database",
         "postgres.example",
         5432,
         "longlink",
@@ -133,7 +142,7 @@ async def test_delete_rejects_location_used_by_active_database_registries(users:
     )
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.locations.delete(location.id, owner)
 
     # Assert
@@ -145,10 +154,11 @@ async def test_delete_rejects_location_used_by_active_storage_registries(users: 
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
     await db.storage.create(
         StorageKind.s3,
         "Primary storage",
+        "primary-storage",
         "s3",
         "https://s3.example",
         "access-key",
@@ -158,7 +168,7 @@ async def test_delete_rejects_location_used_by_active_storage_registries(users: 
     )
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.locations.delete(location.id, owner)
 
     # Assert

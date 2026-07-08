@@ -1,10 +1,10 @@
 import pytest
 from uuid import uuid4
 from types import SimpleNamespace
+from src.errors import ConflictError
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
 from src.database.session import get_session
-from src.models.countries import Country
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
@@ -31,8 +31,8 @@ async def create_application_context(prefix: str) -> tuple[User, Organization, A
         name=f"{prefix} User",
         avatar="",
     )
-    location = await db.locations.create(f"{prefix}-location", "Local testing", user, Country.CH)
-    organization = await db.organizations.create(f"{prefix}-org", location.id, user)
+    location = await db.locations.create(f"{prefix}-location", f"{prefix} location", user, "CH")
+    organization = await db.organizations.create(f"{prefix}-org", f"{prefix}-org", location.id, user)
     application = await db.applications.create(
         organization.id,
         "Dashboard",
@@ -48,9 +48,9 @@ async def test_create_allows_duplicate_application_names_across_organizations() 
 
     # Arrange
     user = await db.users.upsert(oidc="app-oidc", email="app@longlink.dev", name="App User", avatar="")
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    first_org = await db.organizations.create("acme", location.id, user)
-    second_org = await db.organizations.create("globex", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    first_org = await db.organizations.create("acme", "acme", location.id, user)
+    second_org = await db.organizations.create("globex", "globex", location.id, user)
 
     # Act
     first_app = await db.applications.create(
@@ -82,7 +82,7 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
     user, organization, _ = await create_application_context("duplicate")
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.applications.create(
             organization.id,
             "Duplicate dashboard",
@@ -179,8 +179,8 @@ async def test_list_members_includes_organization_members_with_optional_applicat
 
     # Arrange
     owner, member = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     application = await db.applications.create(
         organization.id,
         "Dashboard",
@@ -218,8 +218,8 @@ async def test_set_member_role_creates_updates_removes_and_restores_memberships(
 
     # Arrange
     owner, member, non_member = users
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     application = await db.applications.create(
         organization.id,
         "Dashboard",

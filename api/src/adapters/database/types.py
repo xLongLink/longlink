@@ -10,14 +10,6 @@ class DatabaseSchemaUsage(TypedDict):
     row_estimate: int
 
 
-class DatabaseTableUsage(TypedDict):
-    """Describe storage usage for one database table."""
-
-    name: str
-    space_used: int
-    row_estimate: int
-
-
 DatabaseCellValue = str | int | float | bool | None
 
 

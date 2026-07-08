@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
 
-def test_list_icons_returns_lucide_icon_catalog(
+def test_list_icons_returns_lucide_icon_list(
     clients: tuple[TestClient, TestClient, TestClient],
 ) -> None:
     """Return all valid Lucide icon slugs for UI selectors."""
@@ -11,7 +11,7 @@ def test_list_icons_returns_lucide_icon_catalog(
     response = client.get("/api/icons")
 
     assert response.status_code == 200
-    icons = response.json()["icons"]
+    icons = response.json()
     assert len(icons) == 30
     assert "layout-grid" in icons
     assert "rocket" in icons
@@ -34,4 +34,4 @@ def test_create_application_rejects_invalid_icon(
     )
 
     assert response.status_code == 422
-    assert "Icon must be a supported Lucide icon slug" in response.text
+    assert "Input should be" in response.text

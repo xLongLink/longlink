@@ -1,0 +1,26 @@
+GATEWAY_NAME = "longlink-gateway"
+GATEWAY_NAMESPACE = "longlink-system"
+GATEWAY_CONFIG_NAME = "longlink-gateway"
+GATEWAY_AUTH_SECRET_NAME = "longlink-gateway-auth"
+GATEWAY_TLS_SECRET_NAME = "longlink-gateway-tls"
+GATEWAY_CONFIG_MOUNT_PATH = "/etc/envoy"
+GATEWAY_TEMPLATE_MOUNT_PATH = "/etc/envoy-template"
+GATEWAY_TLS_MOUNT_PATH = "/etc/longlink/tls"
+GATEWAY_CONTAINER_PORT = 8443
+GATEWAY_ADMIN_CONTAINER_PORT = 9901
+GATEWAY_SERVICE_PORT = 443
+GATEWAY_IMAGE = "envoyproxy/envoy:v1.31.5"
+GATEWAY_CONFIG_RENDER_IMAGE = "busybox:1.36.1"
+GATEWAY_NAMESPACE_LABEL = "longlink.io/gateway"
+APPLICATION_ID_LABEL = "longlink.io/application-id"
+GATEWAY_AUTH_SECRET_PLACEHOLDER = "__LONG_LINK_GATEWAY_SECRET__"
+GATEWAY_MAX_REQUEST_HEADERS_KB = 64
+GATEWAY_PER_CONNECTION_BUFFER_LIMIT_BYTES = 1024 * 1024
+GATEWAY_IDENTITY_HEADERS = [
+    "x-user-id",
+    "x-user-role",
+    "x-longlink-application-id",
+    "x-longlink-application-slug",
+    "x-longlink-organization-id",
+    "x-longlink-organization-slug",
+]

@@ -15,6 +15,7 @@ from src.routes import (
     accounts,
     branding,
     computes,
+    countries,
     storages,
     databases,
     locations,
@@ -145,6 +146,7 @@ app.include_router(accounts.router)
 app.include_router(applications.router)
 app.include_router(branding.router)
 app.include_router(computes.router)
+app.include_router(countries.router)
 app.include_router(databases.router)
 app.include_router(health.router)
 app.include_router(icons.router)

@@ -1,20 +1,15 @@
+from src import compute as compute_runtime
 from uuid import UUID
-import urllib.parse
 from fastapi import Depends, Response, APIRouter
 from src.auth import authadmin, authsupport
-from src import adapters
-from src.environments import env
-from src.logger import logger
+from src.utils import urls, names
 from src.errors import ConflictError, NotFoundError, UnavailableError
-from src.models.computes import (
-    PodResponse,
-    NamespaceResponse,
-    ComputeRegistryCreate,
-    ComputeRegistryResponse,
-    ComputeResourcesResponse,
-)
-from src.database.models.users import User
+from src.logger import logger
+from src.environments import env
+from src.models.computes import (PodResponse, NamespaceResponse, ComputeRegistryCreate, ComputeRegistryResponse,
+                                 ComputeResourcesResponse)
 from src.database.services import compute
+from src.database.models.users import User
 
 router = APIRouter()
 
@@ -22,14 +17,7 @@ router = APIRouter()
 def _hostname(value: str) -> str | None:
     """Return the hostname from an absolute or host-only gateway value."""
 
-    parsed_value = urllib.parse.urlsplit(value.strip())
-    if parsed_value.scheme in {"http", "https"} and not parsed_value.netloc:
-        return None
-
-    if parsed_value.hostname is not None:
-        return parsed_value.hostname.lower()
-
-    return value.strip().split(":", 1)[0].lower() or None
+    return urls.hostname(value)
 
 
 def _cookie_domain_matches(host: str, cookie_domain: str) -> bool:
@@ -45,14 +33,14 @@ def _validate_production_gateway_settings(payload: ComputeRegistryCreate) -> Non
         return
 
     errors: list[str] = []
-    parsed_gateway_url = urllib.parse.urlsplit(payload.ingress_host.strip())
+    gateway_scheme = urls.absolute_url_scheme(payload.ingress_host)
     gateway_host = _hostname(payload.ingress_host)
     control_plane_host = _hostname(env.CONTROL_PLANE_URL)
     cookie_domain = (env.SESSION_COOKIE_DOMAIN or "").lstrip(".").lower()
     if not (payload.gateway_tls_certificate or "").strip() or not (payload.gateway_tls_key or "").strip():
         errors.append("gateway TLS certificate and key are required")
 
-    if parsed_gateway_url.scheme and parsed_gateway_url.netloc and parsed_gateway_url.scheme != "https":
+    if gateway_scheme is not None and gateway_scheme != "https":
         errors.append("gateway ingress host must use HTTPS outside development")
 
     if gateway_host is None:
@@ -71,7 +59,7 @@ def _validate_production_gateway_settings(payload: ComputeRegistryCreate) -> Non
             errors.append("SESSION_COOKIE_DOMAIN must cover both gateway and control-plane hosts")
 
     if errors:
-        raise ValueError("Invalid production gateway settings: " + "; ".join(errors))
+        raise ConflictError("Invalid production gateway settings: " + "; ".join(errors))
 
 
 @router.get("/api/computes", response_model=list[ComputeRegistryResponse])
@@ -99,10 +87,7 @@ async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)
 async def delete_compute_registry(registry_id: UUID, user: User = Depends(authadmin)) -> Response:
     """Soft-delete one compute backend registration."""
 
-    try:
-        deleted = await compute.delete(registry_id, user)
-    except ValueError as exc:
-        raise ConflictError(str(exc)) from exc
+    deleted = await compute.delete(registry_id, user)
 
     if not deleted:
         raise NotFoundError("Compute registry", registry_id)
@@ -116,15 +101,17 @@ async def create_compute_registry(
 ) -> ComputeRegistryResponse:
     """Create one compute backend registration."""
 
+    _validate_production_gateway_settings(payload)
     try:
-        _validate_production_gateway_settings(payload)
-        registry = await compute.create(**payload.model_dump(), user=user)
+        slug = names.slugify(payload.name)
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
 
+    registry = await compute.create(**payload.model_dump(), slug=slug, user=user)
+
     # Initialize the cluster immediately so unavailable backends fail fast.
     try:
-        compute_adapter = adapters.compute(registry)
+        compute_adapter = compute_runtime.kubernetes(registry)
         await compute_adapter.setup()
     except Exception as exc:
         raise UnavailableError("Failed to initialize the compute cluster") from exc
@@ -140,7 +127,7 @@ async def get_compute_resources(registry_id: UUID, _: User = Depends(authsupport
     if registry is None:
         raise NotFoundError("Compute registry", registry_id)
 
-    compute_adapter = adapters.compute(registry)
+    compute_adapter = compute_runtime.kubernetes(registry)
     try:
         data = await compute_adapter.resources()
     except Exception as exc:
@@ -158,14 +145,14 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
     if registry is None:
         raise NotFoundError("Compute registry", registry_id)
 
-    compute_adapter = adapters.compute(registry)
+    compute_adapter = compute_runtime.kubernetes(registry)
     try:
-        names = await compute_adapter.namespaces()
+        namespace_names = await compute_adapter.namespaces()
     except Exception as exc:
         logger.exception("Failed to inspect compute namespaces for registry '%s'", registry_id)
         raise UnavailableError("Compute namespaces unavailable") from exc
 
-    return [NamespaceResponse(name=n) for n in names]
+    return [NamespaceResponse(name=namespace_name) for namespace_name in namespace_names]
 
 
 @router.get(
@@ -179,7 +166,7 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
     if registry is None:
         raise NotFoundError("Compute registry", registry_id)
 
-    compute_adapter = adapters.compute(registry)
+    compute_adapter = compute_runtime.kubernetes(registry)
     try:
         managed_namespaces = set(await compute_adapter.namespaces())
     except Exception as exc:

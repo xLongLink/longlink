@@ -1,26 +1,34 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCountries } from '@/data/admin';
 import { useUserProfile } from '@/hooks/use-user';
+import { apiLocationSchema, parseApiResponse } from '@/lib/api-schemas';
 import { fetchApiJson } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
 import { locationsQueryKey } from '@/lib/query-keys';
 import type { ApiLocation } from '@/lib/types';
 
-const COUNTRY_OPTIONS = [
-    { label: 'Switzerland', value: 'CH' },
-    { label: 'Germany', value: 'DE' },
-    { label: 'France', value: 'FR' },
-    { label: 'Italy', value: 'IT' },
-    { label: 'Netherlands', value: 'NL' },
-    { label: 'United Kingdom', value: 'GB' },
-    { label: 'United States', value: 'US' },
-];
+const createLocationSchema = z.object({
+    name: z.string().trim().min(1),
+    country: z.string().length(2),
+});
+
+type CreateLocationInput = z.input<typeof createLocationSchema>;
+type CreateLocationValues = z.output<typeof createLocationSchema>;
+
+const defaultCreateLocationValues = {
+    name: '',
+    country: 'CH',
+} satisfies CreateLocationInput;
 
 /** Renders the admin create location dialog. */
 export default function CreateLocationDialog() {
@@ -28,33 +36,47 @@ export default function CreateLocationDialog() {
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
-    const [name, setName] = useState('');
-    const [country, setCountry] = useState('CH');
     const [error, setError] = useState<string | null>(null);
+    const form = useForm<CreateLocationInput, unknown, CreateLocationValues>({
+        defaultValues: defaultCreateLocationValues,
+        mode: 'onChange',
+        resolver: zodResolver(createLocationSchema),
+    });
+    const values = form.watch();
+    const { items: countryOptions } = useCountries(open);
 
     const createLocation = useMutation({
-        mutationFn: async () => {
-            return fetchApiJson<ApiLocation>('/api/locations', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+        mutationFn: async (payload: CreateLocationValues) => {
+            return fetchApiJson<ApiLocation>(
+                '/api/locations',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: payload.name,
+                        country: payload.country,
+                    }),
                 },
-                body: JSON.stringify({
-                    name: name.trim(),
-                    country,
-                }),
-            });
+                (value) => parseApiResponse(apiLocationSchema, value)
+            );
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: locationsQueryKey() });
             setOpen(false);
-            setName('');
-            setCountry('CH');
+            resetDialogState();
         },
     });
 
     if (role !== 'administrator') {
         return null;
+    }
+
+    /** Clears the location creation form state. */
+    function resetDialogState() {
+        form.reset(defaultCreateLocationValues);
+        setError(null);
     }
 
     return (
@@ -68,7 +90,7 @@ export default function CreateLocationDialog() {
                 onOpenChange={(nextOpen) => {
                     setOpen(nextOpen);
                     if (!nextOpen) {
-                        setError(null);
+                        resetDialogState();
                     }
                 }}
             >
@@ -81,12 +103,11 @@ export default function CreateLocationDialog() {
 
                         <form
                             className="space-y-4"
-                            onSubmit={async (event) => {
-                                event.preventDefault();
+                            onSubmit={form.handleSubmit(async (payload) => {
                                 setError(null);
 
                                 try {
-                                    await createLocation.mutateAsync();
+                                    await createLocation.mutateAsync(payload);
                                 } catch (mutationError) {
                                     setError(
                                         mutationError instanceof Error
@@ -94,14 +115,13 @@ export default function CreateLocationDialog() {
                                             : t('dialogs.createLocationFailed')
                                     );
                                 }
-                            }}
+                            })}
                         >
                             <div className="space-y-2">
                                 <Label htmlFor="location-name">{t('labels.name')}</Label>
                                 <Input
                                     id="location-name"
-                                    value={name}
-                                    onChange={(event) => setName(event.target.value)}
+                                    {...form.register('name')}
                                     placeholder="US East (N. Virginia)"
                                     autoComplete="off"
                                 />
@@ -109,14 +129,19 @@ export default function CreateLocationDialog() {
 
                             <div className="space-y-2">
                                 <Label htmlFor="location-country">{t('labels.country')}</Label>
-                                <Select value={country} onValueChange={(value) => setCountry(value ?? 'CH')}>
+                                <Select
+                                    value={values.country}
+                                    onValueChange={(value) =>
+                                        form.setValue('country', value ?? '', { shouldValidate: true })
+                                    }
+                                >
                                     <SelectTrigger id="location-country" className="w-full">
                                         <SelectValue placeholder={t('dialogs.chooseCountry')} />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {COUNTRY_OPTIONS.map((countryOption) => (
-                                            <SelectItem key={countryOption.value} value={countryOption.value}>
-                                                {countryOption.label}
+                                        {countryOptions.map((countryOption) => (
+                                            <SelectItem key={countryOption.code} value={countryOption.code}>
+                                                {countryOption.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -131,12 +156,12 @@ export default function CreateLocationDialog() {
                                     variant="outline"
                                     onClick={() => {
                                         setOpen(false);
-                                        setError(null);
+                                        resetDialogState();
                                     }}
                                 >
                                     {t('actions.cancel')}
                                 </Button>
-                                <Button type="submit" disabled={createLocation.isPending || name.trim().length === 0}>
+                                <Button type="submit" disabled={createLocation.isPending || !form.formState.isValid}>
                                     {createLocation.isPending ? t('actions.creating') : t('actions.create')}
                                 </Button>
                             </div>

@@ -1,10 +1,11 @@
 import re
-from src import adapters, permissions
+from src import compute as compute_runtime
+from src import permissions
 from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter
 from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authadmin, organization_member_access
-from src.utils import names
+from src.utils import names, buckets
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.operations import provisioning
 from src.models.statuses import ApplicationStatus
@@ -85,9 +86,23 @@ async def create_application(
         raise ForbiddenError("Application creation permissions required")
 
     try:
-        application = await provisioning.create_application_runtime(member_access.organization, payload, member_access.user)
+        application_slug = names.slugify(payload.name, "Application name")
+        names.knames(member_access.organization.slug, "Organization")
+        names.knames(application_slug, "Application name")
+        names.k8name(member_access.organization.slug)
+        names.dbname(member_access.organization.slug)
+        provisioning.shared_storage_bucket(member_access.organization)
+        buckets.application(member_access.organization.slug, application_slug)
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
+
+    try:
+        application = await provisioning.create_application_runtime(
+            member_access.organization,
+            application_slug,
+            payload,
+            member_access.user,
+        )
     except RuntimeError as exc:
         raise UnavailableError(str(exc)) from exc
 
@@ -125,11 +140,11 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     if registry is None:
         raise UnavailableError(f"No compute cluster configured for location '{organization_record.location_id}'")
 
-    k8s = adapters.compute(registry)
+    compute_client = compute_runtime.kubernetes(registry)
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
-        logs = await k8s.logs(organization_record.slug, application.slug)
+        logs = await compute_client.logs(organization_record.slug, application.slug)
     except ValueError as exc:
         raise UnavailableError(str(exc)) from exc
 

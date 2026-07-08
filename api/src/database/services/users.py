@@ -77,6 +77,7 @@ async def profile(user_id: UUID) -> UserProfile | None:
                     name=organization.name,
                     slug=organization.slug,
                     avatar=organization.avatar,
+                    country=organization.country,
                     location=LocationResponse.model_validate(organization.location),
                     role=role_name,
                 )

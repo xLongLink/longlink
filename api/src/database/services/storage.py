@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from uuid import UUID
 from datetime import UTC, datetime
-from src.utils import names
 from sqlalchemy import select
+from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.storages import StorageKind
@@ -54,6 +54,7 @@ async def get(registry_id: UUID, include_deleted: bool = False) -> StorageRegist
 async def create(
     kind: StorageKind,
     name: str,
+    slug: str,
     protocol: str,
     endpoint_url: str,
     access_key_id: str,
@@ -68,9 +69,8 @@ async def create(
         result = await session.execute(select(StorageRegistry).where(StorageRegistry.name == name))
         storage = result.scalar_one_or_none()
         if storage is not None:
-            raise ValueError("Storage registry already exists")
+            raise ConflictError("Storage registry already exists")
 
-        slug = names.slugify(name)
         storage = StorageRegistry(
             kind=kind,
             name=name,
@@ -90,7 +90,7 @@ async def create(
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
-            raise ValueError("Storage registry already exists") from exc
+            raise ConflictError("Storage registry already exists") from exc
 
         await session.refresh(storage)
         statement = (
@@ -121,7 +121,7 @@ async def delete(registry_id: UUID, user: User) -> bool:
             )
         )
         if active_application.scalar_one_or_none() is not None:
-            raise ValueError("Storage registry is used by active applications")
+            raise ConflictError("Storage registry is used by active applications")
 
         now = datetime.now(UTC)
         registry.deleted_at = now

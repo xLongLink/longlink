@@ -1,3 +1,4 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Icon } from '@/components/ui/icon';
@@ -8,10 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useApiQuery } from '@/hooks/use-api';
 import { useOrganizationActions } from '@/hooks/use-organization';
 import { useUserProfile } from '@/hooks/use-user';
+import { apiIconsSchema, apiImageMetadataSchema, parseApiResponse } from '@/lib/api-schemas';
 import { fetchApiJson } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
-import type { ApiIconCatalog, ApiImageMetadata } from '@/lib/types';
-import { type SyntheticEvent, useState } from 'react';
+import type { ApiImageMetadata } from '@/lib/types';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 type CreateApplicationDialogProps = {
     organization: string;
@@ -26,6 +30,29 @@ const platformEnvironmentNames = new Set([
     'LONGLINK_STORAGE_URL',
 ]);
 
+const createApplicationFormSchema = z.object({
+    image: z.string().trim().min(1),
+    name: z.string().trim(),
+    description: z.string().trim(),
+    icon: z.string().trim(),
+    envs: z.record(z.string(), z.string()).default({}),
+});
+
+const createApplicationSubmitSchema = createApplicationFormSchema.extend({
+    name: z.string().trim().min(1),
+});
+
+type CreateApplicationInput = z.input<typeof createApplicationFormSchema>;
+type CreateApplicationValues = z.output<typeof createApplicationFormSchema>;
+
+const defaultCreateApplicationValues = {
+    image: '',
+    name: '',
+    description: '',
+    icon: '',
+    envs: {},
+} satisfies CreateApplicationInput;
+
 /** Renders the create-application dialog for an organization. */
 export default function CreateApplicationDialog({ organization }: CreateApplicationDialogProps) {
     const { t } = useTranslation();
@@ -33,16 +60,21 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
     const { createApplication, isCreatingApplication } = useOrganizationActions(organization);
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [icon, setIcon] = useState('');
-    const [image, setImage] = useState('');
     const [imageMetadata, setImageMetadata] = useState<ApiImageMetadata | null>(null);
     const [isInspecting, setIsInspecting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { data: iconCatalog } = useApiQuery<ApiIconCatalog>(open ? '/api/icons' : null, { staleTime: Infinity });
-    const iconOptions: string[] = iconCatalog?.icons ?? [];
-    const visibleIconOptions = icon && !iconOptions.includes(icon) ? [icon, ...iconOptions] : iconOptions;
+    const form = useForm<CreateApplicationInput, unknown, CreateApplicationValues>({
+        defaultValues: defaultCreateApplicationValues,
+        mode: 'onChange',
+        resolver: zodResolver(createApplicationFormSchema),
+    });
+    const values = form.watch();
+    const { data: iconCatalog } = useApiQuery<string[]>(open ? '/api/icons' : null, {
+        parse: (value) => parseApiResponse(apiIconsSchema, value),
+        staleTime: Infinity,
+    });
+    const iconOptions: string[] = iconCatalog ?? [];
+    const visibleIconOptions = values.icon && !iconOptions.includes(values.icon) ? [values.icon, ...iconOptions] : iconOptions;
     const configurableEnvironments =
         imageMetadata?.environments.filter((env) => !platformEnvironmentNames.has(env.name)) ?? [];
 
@@ -53,28 +85,29 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
     /** Reset the dialog state when the flow closes or completes. */
     function resetDialogState() {
         setStep('image');
-        setName('');
-        setDescription('');
-        setIcon('');
-        setImage('');
+        form.reset(defaultCreateApplicationValues);
         setImageMetadata(null);
         setIsInspecting(false);
         setError(null);
     }
 
     /** Inspect the image and advance to the app details step. */
-    async function handleInspectImage(event: SyntheticEvent<HTMLFormElement>) {
-        event.preventDefault();
+    async function handleInspectImage(payload: CreateApplicationValues) {
         setError(null);
         setIsInspecting(true);
 
         try {
-            const query = new URLSearchParams({ image: image.trim() });
-            const metadata = await fetchApiJson<ApiImageMetadata>(`/api/image?${query.toString()}`);
+            const query = new URLSearchParams({ image: payload.image });
+            const metadata = await fetchApiJson(
+                `/api/image?${query.toString()}`,
+                undefined,
+                (value) => parseApiResponse(apiImageMetadataSchema, value)
+            );
 
             setImageMetadata(metadata);
-            setName(metadata.title ?? '');
-            setDescription(metadata.description ?? '');
+            form.setValue('name', metadata.title ?? '', { shouldValidate: true });
+            form.setValue('description', metadata.description ?? '', { shouldValidate: true });
+            form.setValue('envs', {}, { shouldValidate: true });
             setStep('metadata');
         } catch (inspectError) {
             setError(inspectError instanceof Error ? inspectError.message : t('dialogs.inspectImageFailed'));
@@ -84,17 +117,18 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
     }
 
     /** Create the app after the image metadata has been reviewed. */
-    async function handleCreateApp(event: SyntheticEvent<HTMLFormElement>) {
-        event.preventDefault();
+    async function handleCreateApp(payload: CreateApplicationValues) {
         setError(null);
 
-        const envs: Record<string, string> = {};
-        // Collect all environment inputs from the final step before creating the app.
-        for (const [key, value] of new FormData(event.currentTarget).entries()) {
-            if (typeof value !== 'string') {
-                continue;
-            }
+        const application = createApplicationSubmitSchema.safeParse(payload);
+        if (!application.success) {
+            setError(t('dialogs.createApplicationFailed'));
+            return;
+        }
 
+        const envs: Record<string, string> = {};
+        // Collect configured environment values while skipping optional empty fields.
+        for (const [key, value] of Object.entries(application.data.envs)) {
             if (value.length === 0) {
                 continue;
             }
@@ -105,10 +139,10 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
         // Submit the new app and close the dialog on success.
         try {
             await createApplication({
-                name: name.trim(),
-                image: image.trim(),
-                description: description.trim().length > 0 ? description.trim() : null,
-                icon: icon.trim().length > 0 ? icon.trim() : null,
+                name: application.data.name,
+                image: application.data.image,
+                description: application.data.description.length > 0 ? application.data.description : null,
+                icon: application.data.icon.length > 0 ? application.data.icon : null,
                 envs,
             });
             setOpen(false);
@@ -159,13 +193,12 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                         </div>
 
                         {step === 'image' ? (
-                            <form className="space-y-4" onSubmit={handleInspectImage}>
+                            <form className="space-y-4" onSubmit={form.handleSubmit(handleInspectImage)}>
                                 <div className="space-y-2">
                                     <Label htmlFor="application-image">{t('labels.image')}</Label>
                                     <Input
                                         id="application-image"
-                                        value={image}
-                                        onChange={(event) => setImage(event.target.value)}
+                                        {...form.register('image')}
                                         placeholder="ghcr.io/longlink/dashboard:latest"
                                         autoComplete="off"
                                     />
@@ -184,7 +217,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                     >
                                         {t('actions.cancel')}
                                     </Button>
-                                    <Button type="submit" disabled={isInspecting || image.trim().length === 0}>
+                                    <Button type="submit" disabled={isInspecting || values.image.trim().length === 0}>
                                         {isInspecting ? t('dialogs.inspecting') : t('dialogs.inspectImage')}
                                     </Button>
                                 </div>
@@ -194,7 +227,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                 className="space-y-4"
                                 onSubmit={(event) => {
                                     event.preventDefault();
-                                    if (name.trim().length > 0 && image.trim().length > 0) {
+                                    if (values.name.trim().length > 0 && values.image.trim().length > 0) {
                                         setStep('envs');
                                     }
                                 }}
@@ -203,8 +236,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                     <Label htmlFor="application-name">{t('labels.name')}</Label>
                                     <Input
                                         id="application-name"
-                                        value={name}
-                                        onChange={(event) => setName(event.target.value)}
+                                        {...form.register('name')}
                                         placeholder="dashboard"
                                         autoComplete="off"
                                     />
@@ -214,8 +246,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                     <Label htmlFor="application-description">{t('labels.description')}</Label>
                                     <Input
                                         id="application-description"
-                                        value={description}
-                                        onChange={(event) => setDescription(event.target.value)}
+                                        {...form.register('description')}
                                         placeholder="Dashboard app"
                                         autoComplete="off"
                                     />
@@ -224,12 +255,16 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                 <div className="space-y-2">
                                     <Label htmlFor="application-icon">{t('labels.icon')}</Label>
                                     <Select
-                                        value={icon}
-                                        onValueChange={(value) => setIcon(value === '__none__' ? '' : (value ?? ''))}
+                                        value={values.icon}
+                                        onValueChange={(value) =>
+                                            form.setValue('icon', value === '__none__' ? '' : (value ?? ''), {
+                                                shouldValidate: true,
+                                            })
+                                        }
                                     >
                                         <SelectTrigger id="application-icon" className="w-full">
-                                            {icon ? (
-                                                <Icon name={icon} className="size-4 text-muted-foreground" />
+                                            {values.icon ? (
+                                                <Icon name={values.icon} className="size-4 text-muted-foreground" />
                                             ) : null}
                                             <SelectValue placeholder={t('dialogs.chooseIcon')} />
                                         </SelectTrigger>
@@ -270,7 +305,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                         </Button>
                                         <Button
                                             type="button"
-                                            disabled={name.trim().length === 0 || image.trim().length === 0}
+                                            disabled={values.name.trim().length === 0 || values.image.trim().length === 0}
                                             onClick={() => setStep('envs')}
                                         >
                                             {t('actions.next')}
@@ -279,7 +314,7 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                 </div>
                             </form>
                         ) : (
-                            <form className="space-y-4" onSubmit={handleCreateApp}>
+                            <form className="space-y-4" onSubmit={form.handleSubmit(handleCreateApp)}>
                                 {configurableEnvironments.length ? (
                                     <ScrollArea className="max-h-80 pr-3">
                                         <div className="space-y-4">
@@ -297,8 +332,9 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                                     </Label>
                                                     <Input
                                                         id={`env-${env.name}`}
-                                                        name={env.name}
-                                                        required={env.required}
+                                                        {...form.register(`envs.${env.name}` as `envs.${string}`, {
+                                                            required: env.required,
+                                                        })}
                                                         placeholder={
                                                             env.description ??
                                                             t('dialogs.enterEnvironment', { name: env.name })
@@ -339,8 +375,9 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                             type="submit"
                                             disabled={
                                                 isCreatingApplication ||
-                                                name.trim().length === 0 ||
-                                                image.trim().length === 0
+                                                values.name.trim().length === 0 ||
+                                                values.image.trim().length === 0 ||
+                                                !form.formState.isValid
                                             }
                                         >
                                             {isCreatingApplication ? t('actions.creating') : t('actions.create')}

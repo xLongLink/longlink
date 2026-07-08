@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from tenant.models import User
-from .types import DatabaseTableData, DatabaseTableUsage, DatabaseSchemaUsage
+from .types import DatabaseTableData, DatabaseSchemaUsage
 
 
 class Database(ABC):
@@ -41,10 +41,6 @@ class Database(ABC):
         """Delete the database for one organization."""
 
     @abstractmethod
-    async def setup(self) -> None:
-        """Initialize the database backend used by the control plane."""
-
-    @abstractmethod
     async def databases(self) -> list[str]:
         """List all databases on the server."""
 
@@ -57,18 +53,8 @@ class Database(ABC):
         """Return usage details for schemas in a database."""
 
     @abstractmethod
-    async def table_usage(self, database_name: str, schema_name: str, table_name: str) -> DatabaseTableUsage | None:
-        """Return usage details for one table in a database."""
-
-    @abstractmethod
     async def tables(self, database_name: str, schema_name: str, *, limit: int = 100) -> list[DatabaseTableData]:
         """Return tables, columns, and preview rows for one schema."""
-
-    @abstractmethod
-    async def table(
-        self, database_name: str, schema_name: str, table_name: str, *, limit: int = 100
-    ) -> DatabaseTableData | None:
-        """Return columns and preview rows for one table."""
 
     @abstractmethod
     async def usage(self) -> dict[str, int]:

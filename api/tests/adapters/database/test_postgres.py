@@ -90,7 +90,6 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         schemas = await adapter.schemas("longlink_acme")
         databases = await adapter.databases()
         schema_usage = await adapter.schema_usage("longlink_acme")
-        table_usage = await adapter.table_usage("longlink_acme", "dashboard", "runtime_items")
         server_usage = await adapter.usage()
 
         await runtime_engine.dispose()
@@ -109,9 +108,6 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         assert {"dashboard", "shared"} <= set(schemas)
         assert "longlink_acme" in databases
         assert {item["name"] for item in schema_usage} >= {"dashboard", "shared"}
-        assert table_usage is not None
-        assert table_usage["name"] == "runtime_items"
-        assert table_usage["space_used"] > 0
         assert server_usage["space_used"] > 0
         assert "dashboard" not in schemas_after_delete
         assert "longlink_acme" not in databases_after_delete

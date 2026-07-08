@@ -3,9 +3,9 @@ from __future__ import annotations
 from uuid import UUID
 from datetime import UTC, datetime
 from sqlalchemy import select
+from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from src.database.session import session_scope
-from src.models.countries import Country
 from src.models.locations import LocationProvider
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -37,7 +37,7 @@ async def create(
     slug: str,
     name: str,
     user: User,
-    country: Country,
+    country: str,
     provider: LocationProvider = LocationProvider.local,
 ) -> Location:
     """Create one location."""
@@ -52,7 +52,7 @@ async def create(
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
-            raise ValueError("Location already exists") from exc
+            raise ConflictError("Location already exists") from exc
 
         await session.refresh(location)
         return location
@@ -80,7 +80,7 @@ async def delete(location_id: UUID, user: User) -> bool:
                 )
             )
             if result.scalar_one_or_none() is not None:
-                raise ValueError(f"Location is used by {label}")
+                raise ConflictError(f"Location is used by {label}")
 
         now = datetime.now(UTC)
         location.deleted_at = now

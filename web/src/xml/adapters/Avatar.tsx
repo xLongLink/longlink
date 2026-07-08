@@ -9,9 +9,8 @@ import { resolveTranslation } from '@/xml/core/i18n';
 import { renderNode } from '@/xml/core/node';
 import { isAppRelativeUrl, resolveUrl, useUrl } from '@/xml/core/url';
 import type { Props } from '@/xml/types';
+import { hasProtocol } from 'ufo';
 import { resolveXmlString } from './props';
-
-const AVATAR_ABSOLUTE_URL_PATTERN = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 
 /** Returns a safe browser image URL for an XML avatar source. */
 function resolveAvatarImageSource(baseUrl: string, src: string): string | undefined {
@@ -19,7 +18,7 @@ function resolveAvatarImageSource(baseUrl: string, src: string): string | undefi
 
     if (!value || value.startsWith('//') || value.includes('\\')) return undefined;
 
-    if (AVATAR_ABSOLUTE_URL_PATTERN.test(value)) {
+    if (hasProtocol(value)) {
         try {
             const url = new URL(value);
 

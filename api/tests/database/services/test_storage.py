@@ -1,7 +1,7 @@
 import pytest
 from uuid import uuid4
 from types import SimpleNamespace
-from src.models.countries import Country
+from src.errors import ConflictError
 from src.models.storages import StorageKind
 from src.database.models.users import User
 from src.database.services import storage
@@ -22,12 +22,13 @@ async def test_create_get_and_fetch_all_return_active_storage_registries(users: 
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
 
     # Act
     registry = await db.storage.create(
         StorageKind.s3,
         "Primary storage",
+        "primary-storage",
         "s3",
         "https://s3.example",
         "access-key",
@@ -60,12 +61,13 @@ async def test_create_persists_storage_runtime_endpoint_override(users: tuple[Us
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
 
     # Act
     registry = await db.storage.create(
         StorageKind.s3,
         "Primary storage",
+        "primary-storage",
         "s3",
         "https://s3.example",
         "access-key",
@@ -84,10 +86,11 @@ async def test_create_rejects_duplicate_storage_registry_names(users: tuple[User
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
     await db.storage.create(
         StorageKind.s3,
         "Primary storage",
+        "primary-storage",
         "s3",
         "https://s3.example",
         "access-key",
@@ -97,11 +100,12 @@ async def test_create_rejects_duplicate_storage_registry_names(users: tuple[User
     )
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.storage.create(
             StorageKind.s3,
             "Primary storage",
-            "s3",
+            "primary-storage",
+        "s3",
             "https://other-s3.example",
             "other-access-key",
             "other-secret-key",
@@ -120,10 +124,11 @@ async def test_delete_soft_deletes_storage_registry_and_include_deleted_can_relo
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
     registry = await db.storage.create(
         StorageKind.s3,
         "Primary storage",
+        "primary-storage",
         "s3",
         "https://s3.example",
         "access-key",
@@ -154,11 +159,12 @@ async def test_delete_rejects_storage_registry_used_by_active_applications(users
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("primary", "Primary", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     registry = await db.storage.create(
         StorageKind.s3,
         "Primary storage",
+        "primary-storage",
         "s3",
         "https://s3.example",
         "access-key",
@@ -176,7 +182,7 @@ async def test_delete_rejects_storage_registry_used_by_active_applications(users
     )
 
     # Act
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(ConflictError) as exc:
         await db.storage.delete(registry.id, owner)
 
     # Assert

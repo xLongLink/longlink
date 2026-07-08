@@ -3,7 +3,7 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.utils import images
-from src.models.icons import Icon, parse_icon
+from src.models.icons import Icon
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import Avatar, UserSummary
 from src.models.statuses import ApplicationStatus
@@ -26,13 +26,6 @@ class ApplicationCreate(BaseModel):
 
     # Relationships
     envs: dict[str, str] = Field(default_factory=dict)
-
-    @field_validator("icon", mode="before")
-    @classmethod
-    def validate_icon(cls, icon: str | Icon | None) -> Icon | None:
-        """Normalize and validate application icon slugs."""
-
-        return parse_icon(icon)
 
     @field_validator("image")
     @classmethod
@@ -94,14 +87,6 @@ class ApplicationResponse(BaseModel):
     updated_by: UserSummary
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
-
-    @field_validator("icon", mode="before")
-    @classmethod
-    def validate_icon(cls, icon: str | Icon | None) -> Icon | None:
-        """Normalize and validate persisted application icon slugs."""
-
-        return parse_icon(icon)
-
 
 class ApplicationMemberUpdate(BaseModel):
     """Validate application member role updates."""

@@ -3,7 +3,6 @@ from types import SimpleNamespace
 from conftest import session_cookie
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
-from src.models.countries import Country
 from src.database.models.users import User
 from src.database.services import users
 from src.database.services import compute
@@ -34,8 +33,8 @@ async def test_get_me_returns_authenticated_user_profile_and_org_memberships(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    await db.organizations.create("acme", location.id, user, avatar="https://example.com/organizations/acme.png")
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    await db.organizations.create("acme", "acme", location.id, user, avatar="https://example.com/organizations/acme.png")
 
     client = clients[0]
 
@@ -105,8 +104,8 @@ async def test_list_users_returns_admin_user_summaries(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    await db.organizations.create("acme", "acme", location.id, user)
 
     client = clients[0]
 

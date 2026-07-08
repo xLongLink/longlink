@@ -1,9 +1,17 @@
 import { useCollectionQuery } from '@/hooks/use-collection-query';
+import {
+    apiComputeNamespaceSchema,
+    apiComputePodSchema,
+    apiComputeRegistrySchema,
+    parseApiCollection,
+} from '@/lib/api-schemas';
 import type { ApiComputeNamespace, ApiComputePod, ApiComputeRegistry } from '@/lib/types';
 
 /** Fetches the compute registry list for admin views. */
 export function useComputes() {
-    return useCollectionQuery<ApiComputeRegistry>('/api/computes');
+    return useCollectionQuery<ApiComputeRegistry>('/api/computes', {
+        parse: (value) => parseApiCollection(apiComputeRegistrySchema, value),
+    });
 }
 
 
@@ -13,6 +21,7 @@ export function useComputeNamespaces(computeId: string) {
 
     return useCollectionQuery<ApiComputeNamespace>(enabled ? `/api/computes/${computeId}/namespaces` : null, {
         enabled,
+        parse: (value) => parseApiCollection(apiComputeNamespaceSchema, value),
     });
 }
 
@@ -25,6 +34,7 @@ export function useComputePods(computeId: string, namespace: string) {
         enabled ? `/api/computes/${computeId}/namespaces/${encodeURIComponent(namespace)}/pods` : null,
         {
             enabled,
+            parse: (value) => parseApiCollection(apiComputePodSchema, value),
         }
     );
 }

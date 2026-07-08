@@ -1,7 +1,7 @@
 import { getStoredSdkUserId } from '@/lib/sdk-users';
+import { hasProtocol } from 'ufo';
 
 const DEFAULT_API_URL = '';
-const ABSOLUTE_API_PATH_PATTERN = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 
 type ApiErrorPayload = {
     detail?: string;
@@ -31,7 +31,7 @@ export function apiUrl(path: string): string {
         throw new Error('API path must not contain backslashes');
     }
 
-    if (ABSOLUTE_API_PATH_PATTERN.test(path)) {
+    if (hasProtocol(path)) {
         const url = new URL(path);
 
         if (url.protocol !== 'http:' && url.protocol !== 'https:') {
@@ -100,11 +100,16 @@ async function requestApi(path: string, init?: RequestInit): Promise<Response> {
     return response;
 }
 
-/** Fetches JSON and throws a normalized error for non-OK responses. */
-export async function fetchApiJson<T>(path: string, init?: RequestInit): Promise<T> {
+/** Fetches JSON and optionally validates it before returning typed data. */
+export async function fetchApiJson<T>(
+    path: string,
+    init?: RequestInit,
+    parse?: (value: unknown) => T
+): Promise<T> {
     const response = await requestApi(path, init);
+    const value = (await response.json()) as unknown;
 
-    return (await response.json()) as T;
+    return parse ? parse(value) : (value as T);
 }
 
 /** Fetches text and throws a normalized error for non-OK responses. */

@@ -4,10 +4,12 @@ from uuid import UUID
 from datetime import UTC, datetime
 from src.utils import names, buckets, gateway
 from sqlalchemy import select
+from src.errors import ConflictError
 from tenant.models import User as TenantUser
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.roles import OrganizationRoles
+from src.models.countries import DEFAULT_COUNTRY
 from src.models.users import UserSummary
 from src.database.session import session_scope
 from src.models.locations import LocationResponse
@@ -228,6 +230,7 @@ async def get(
             name=organization.name,
             slug=organization.slug,
             avatar=organization.avatar,
+            country=organization.country,
             location=LocationResponse.model_validate(organization.location),
             location_id=organization.location_id,
             shared_storage_bucket_name=organization.shared_storage_bucket_name,
@@ -313,7 +316,7 @@ async def update_member_role(
             )
             owner_result = await session.execute(owner_statement)
             if len(owner_result.scalars().all()) <= 1:
-                raise ValueError("Organization must have at least one owner")
+                raise ConflictError("Organization must have at least one owner")
 
         membership.updated_at = datetime.now(UTC)
         membership.updated_id = user.id
@@ -322,19 +325,27 @@ async def update_member_role(
         return True
 
 
-async def create(name: str, location_id: UUID, user: User, avatar: str | None = None) -> Organization:
+async def create(
+    name: str,
+    slug: str,
+    location_id: UUID,
+    user: User,
+    avatar: str | None = None,
+    country: str = DEFAULT_COUNTRY,
+) -> Organization:
     """Create an organization."""
 
+    names.k8name(slug)
+    names.dbname(slug)
+    shared_storage_bucket_name = buckets.shared(slug)
     async with session_scope() as session:
-        slug = names.slugify(name, "Organization")
-        names.k8name(slug)
-        names.dbname(slug)
         organization = Organization(
             name=name,
             slug=slug,
             avatar=avatar or "",
+            country=country,
             location_id=location_id,
-            shared_storage_bucket_name=buckets.shared(slug),
+            shared_storage_bucket_name=shared_storage_bucket_name,
         )
         # Attach the creator as the initial owner for every organization.
         organization.created_id = user.id
@@ -353,9 +364,9 @@ async def create(name: str, location_id: UUID, user: User, avatar: str | None = 
         try:
             await session.commit()
         except IntegrityError as exc:
-            # Keep name collisions at the service boundary as a simple value error.
+            # Keep name collisions at the service boundary as an API conflict.
             await session.rollback()
-            raise ValueError("Organization already exists") from exc
+            raise ConflictError("Organization already exists") from exc
 
         await session.refresh(organization)
         statement = (

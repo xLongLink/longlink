@@ -49,23 +49,23 @@ describe('State', () => {
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toContain('first value 10 0');
     });
 
-    /* State nodes must reject nested children so the runtime contract stays declarative. */
-    it('throws when children are present', () => {
+    /* State nodes must render a scoped setup error when nested children are present. */
+    it('renders an error when children are present', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const ast = parseXML('<State id="filter" value="day"><P i18n="state.ready" /></State>');
 
-        expect(() =>
-            renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))
-        ).toThrow('State cannot have children');
+        expect(renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))).toContain(
+            'State cannot have children'
+        );
     });
 
-    /* Missing ids should fail fast so XML authors get a clear runtime error. */
-    it('throws when id is missing', () => {
+    /* Missing ids should render a clear scoped runtime error. */
+    it('renders an error when id is missing', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const ast = parseXML('<State value="x" />');
 
-        expect(() =>
-            renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))
-        ).toThrow('State requires a string id');
+        expect(renderToStaticMarkup(createElement(Fragment, null, createElement(RenderXML, { ast, ctx })))).toContain(
+            'State requires a string id'
+        );
     });
 });

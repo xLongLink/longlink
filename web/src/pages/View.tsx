@@ -1,4 +1,6 @@
+import { buttonVariants } from '@/components/ui/button';
 import { createLucideIconComponent } from '@/components/ui/icon';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMetadata, type MetadataPage } from '@/hooks/use-metadata';
 import XML from '@/layout/XmlLayout';
 import { ApiError, fetchApiText } from '@/lib/api';
@@ -12,11 +14,17 @@ import {
     type ASTNode,
     type ExecutionContext,
 } from '@/xml';
-import { buttonVariants } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import startCase from 'lodash/startCase';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
+import {
+    generatePath,
+    Link,
+    matchRoutes,
+    useNavigate,
+    useParams,
+    useSearchParams,
+    type RouteObject,
+} from 'react-router';
 import NotFound from './NotFound';
 
 type ViewProps = {
@@ -42,7 +50,6 @@ type LoadingStateProps = {
 };
 
 type LogsStateProps = {
-    applicationId: string;
     applicationName: string;
 };
 
@@ -69,7 +76,10 @@ type PageRouteMatch = {
     page: MetadataPage;
     params: Record<string, string>;
     path: string;
-    score: number;
+};
+
+type MetadataRoute = RouteObject & {
+    page: MetadataPage;
 };
 
 type LogsState = {
@@ -104,69 +114,24 @@ function pageRouteIsDynamic(page: MetadataPage): boolean {
         .some((segment) => segment.startsWith(':'));
 }
 
-/** Matches one browser path against a metadata route pattern. */
-function matchRoutePattern(pattern: string, path: string): Omit<PageRouteMatch, 'page'> | null {
-    const routePattern = normalizePath(pattern);
-    const routePath = normalizePath(path);
-
-    if (!routePattern && !routePath) {
-        return { params: {}, path: routePath, score: 0 };
-    }
-
-    const patternSegments = routePattern.split('/').filter(Boolean);
-    const pathSegments = routePath.split('/').filter(Boolean);
-
-    if (patternSegments.length !== pathSegments.length) {
-        return null;
-    }
-
-    const params: Record<string, string> = {};
-    let score = 0;
-
-    for (let index = 0; index < patternSegments.length; index += 1) {
-        const patternSegment = patternSegments[index];
-        const pathSegment = pathSegments[index];
-
-        // Static segments outrank dynamic segments so exact page routes win first.
-        if (!patternSegment.startsWith(':')) {
-            if (patternSegment !== pathSegment) {
-                return null;
-            }
-
-            score += 2;
-            continue;
-        }
-
-        const parameterName = patternSegment.slice(1);
-
-        if (!parameterName || !pathSegment) {
-            return null;
-        }
-
-        params[parameterName] = pathSegment;
-        score += 1;
-    }
-
-    return { params, path: routePath, score };
-}
-
 /** Finds the best metadata page for the current app-relative browser path. */
 export function findPageRouteMatch(pages: MetadataPage[] | undefined, path: string): PageRouteMatch | null {
-    let bestMatch: PageRouteMatch | null = null;
+    const routes = (pages ?? []).map<MetadataRoute>((page) => ({
+        path: pageRoutePattern(page) || '/',
+        page,
+    }));
+    const routePath = normalizePath(path);
+    const [match] = matchRoutes(routes, `/${routePath}`) ?? [];
 
-    for (const page of pages ?? []) {
-        const match = matchRoutePattern(pageRoutePattern(page), path);
+    if (!match) return null;
 
-        if (!match) {
-            continue;
-        }
-
-        if (!bestMatch || match.score > bestMatch.score) {
-            bestMatch = { ...match, page };
-        }
-    }
-
-    return bestMatch;
+    return {
+        page: match.route.page,
+        params: Object.fromEntries(
+            Object.entries(match.params).filter((entry): entry is [string, string] => entry[1] != null)
+        ),
+        path: routePath,
+    };
 }
 
 /** Finds the preferred page for one tab, preferring static pages over dynamic detail pages. */
@@ -183,11 +148,12 @@ export function findPageTabMatch(pages: MetadataPage[] | undefined, tab: string 
 /** Builds an app-shell href for one metadata route path. */
 function resolveApplicationHref(routePath: string, organization?: string, application?: string): string {
     const normalizedRoutePath = normalizePath(routePath);
-    const basePath = application
-        ? `/orgs/${organization}/apps/${application}`
-        : organization
-          ? `/orgs/${organization}`
-          : '';
+    const basePath =
+        application && organization
+            ? generatePath('/orgs/:organization/apps/:application', { organization, application })
+            : organization
+              ? generatePath('/orgs/:organization', { organization })
+              : '';
 
     if (!normalizedRoutePath) {
         return basePath || '/';
@@ -206,9 +172,9 @@ function resolveTabHref(tab: string, organization?: string, application?: string
 
 /** Resolves route params inside a URL template. */
 function resolveTemplate(template: string, params: Record<string, string | undefined>): string {
-    return template
-        .replace(/:([A-Za-z0-9_]+)/g, (_, key: string) => params[key] ?? `:${key}`)
-        .replace(/\{([A-Za-z0-9_]+)\}/g, (_, key: string) => params[key] ?? `{${key}}`);
+    const resolvedTemplate = template.includes('/:') ? generatePath(template, params) : template;
+
+    return resolvedTemplate.replace(/\{([A-Za-z0-9_]+)\}/g, (_, key: string) => params[key] ?? `{${key}}`);
 }
 
 /** Creates an isolated page runtime context while preserving shared runtime values like the user. */
@@ -631,7 +597,6 @@ export default function View({
             <XML tabs={tabs}>
                 <section className="px-6 py-10">
                     <LogsState
-                        applicationId={applicationId ?? ''}
                         applicationName={applicationName ?? application ?? 'Application'}
                         logsContent={logsState.content}
                         logsError={logsState.error}

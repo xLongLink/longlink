@@ -1,6 +1,5 @@
 from types import SimpleNamespace
 from fastapi.testclient import TestClient
-from src.models.countries import Country
 from src.models.operations import OperationKind
 from src.database.services import users
 from src.database.services import locations
@@ -26,8 +25,8 @@ async def test_operations_endpoint_returns_recorded_operations(
     # Arrange
     client = clients[0]
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, user)
     application = await db.applications.create(
         organization.id,
         "dashboard",

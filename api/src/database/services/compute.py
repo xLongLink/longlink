@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import secrets
 from uuid import UUID
+import secrets
 from datetime import UTC, datetime
-from src.utils import names
 from sqlalchemy import select
+from src.errors import ConflictError
 from src.constants import INGRESS_NAME
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
@@ -76,6 +76,7 @@ async def get_by_proxy_secret(proxy_secret: str) -> ComputeRegistry | None:
 async def create(
     kind: ComputeKind,
     name: str,
+    slug: str,
     kubeconfig: str,
     ingress_host: str,
     location_id: UUID,
@@ -89,11 +90,10 @@ async def create(
     async with session_scope() as session:
         result = await session.execute(select(ComputeRegistry.id).where(ComputeRegistry.name == name))
         if result.scalar_one_or_none() is not None:
-            raise ValueError("Compute registry already exists")
+            raise ConflictError("Compute registry already exists")
 
         # Registries are append-only once created.
         proxy_secret_value = secrets.token_urlsafe(32)
-        slug = names.slugify(name)
         compute = ComputeRegistry(
             kind=kind,
             name=name,
@@ -115,7 +115,7 @@ async def create(
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
-            raise ValueError("Compute registry already exists") from exc
+            raise ConflictError("Compute registry already exists") from exc
 
         await session.refresh(compute)
         statement = (
@@ -146,7 +146,7 @@ async def delete(registry_id: UUID, user: User) -> bool:
             )
         )
         if active_application.scalar_one_or_none() is not None:
-            raise ValueError("Compute registry is used by active applications")
+            raise ConflictError("Compute registry is used by active applications")
 
         now = datetime.now(UTC)
         registry.deleted_at = now

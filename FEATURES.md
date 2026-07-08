@@ -59,7 +59,8 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                  | Supported behavior                                                                                                                                            |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Locations                | Lists and gets locations for support/admin users; administrators can create and delete unused locations.                                                      |
+| Locations                | Lists and gets locations for support/admin users; administrators can create and delete unused locations with ISO country codes.                                |
+| Country options          | Returns pycountry-backed ISO country options for organization and location selectors.                                                                          |
 | Location providers       | Supports `local`, `infomaniak`, `ovh`, `scaleway`, `hetzner`, and `exoscale`.                                                                                 |
 | Compute registries       | Creates dedicated Kubernetes compute registries with kubeconfig, gateway host, optional LoadBalancer IP, and production TLS material; lists, gets, and deletes unused registries for support/admin users. |
 | Compute inspection       | Inspects total and allocatable cluster resources, managed namespaces, managed-namespace pods, and pod usage when metrics are available.                       |
@@ -73,7 +74,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                               | Supported behavior                                                                                                                          |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Organization creation                 | Lets authenticated users create organizations in active locations and become owner.                                                         |
+| Organization creation                 | Lets authenticated users create organizations with a country in active locations and become owner.                                           |
 | Organization deletion                 | Lets owners and platform administrators soft-delete organizations and queue immediate runtime resource removal with delay-ready scheduling. |
 | Organization infrastructure bootstrap | Best-effort initializes compute namespace, organization database shared schema, and shared storage bucket.                                  |
 | Organization details                  | Lets members fetch an organization with location, users, and applications; pending invitations are shown only to maintainers/admins/owners. |
@@ -91,7 +92,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | Image metadata inspection           | Reads LongLink OCI image labels plus the resolved manifest digest for app metadata and environment requirements.                         |
 | Image registry safety               | Requires explicit registry hosts plus image tags or digests and only reads public unauthenticated image metadata from GHCR, Docker Hub, GitLab.com, and localhost in development/testing. |
-| Icon catalog                        | Returns the fixed 30-icon Lucide runtime subset and validates normalized app icons.                                                     |
+| Icon catalog                        | Returns the fixed 30-icon Lucide runtime subset as a list and validates exact app icon slugs.                                           |
 | Application creation and deployment | Creates apps from images, records image/app/SDK versions, deploys the resolved image digest, selects registries, cleans failed partial runtime resources, and queues verification. |
 | Application deletion                | Lets permitted users soft-delete applications and queue immediate runtime resource removal with delay-ready scheduling.                 |
 | Required application envs           | Requires image-declared envs unless they are platform-managed and validates app env names, counts, and value sizes before deployment.    |
@@ -105,7 +106,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Application member management       | Lets organization members view application permission rows and lets permitted app/org managers set or remove app roles up to their own role rank for org members. |
 | Gateway header policy               | Requires compute gateway secrets stored in Kubernetes Secrets for authorization, rejects unavailable apps with no-store 503, strips spoofable identity headers at the gateway, and injects trusted `x-user-id` and `x-user-role`. |
 | Registry selection                  | Uses newest active compute registries and keeps database/storage registries consistent for all apps in an organization.                 |
-| Managed resource naming             | Validates slugs and managed Kubernetes/PostgreSQL/S3 resource names before provisioning.                                                |
+| Managed resource naming             | Generates slugs with library-backed normalization and validates managed Kubernetes/PostgreSQL/S3 resource names before provisioning.     |
 
 ### Operations and Adapters
 
@@ -217,7 +218,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | API route tree        | Exposes public, docs, legal, organization, settings, admin, resource, and gateway-backed app routes.                            |
 | SDK wildcard route    | Routes every SDK-mode path to the SDK application view.                                                                          |
 | Auth guard            | Shows sign-in for anonymous users, enforces platform role hierarchy, and renders 404 for insufficient access.                    |
-| Organization app view | Resolves org/app slugs, enforces app access roles, fetches gateway metadata, renders static/dynamic XML pages, and exposes logs. |
+| Organization app view | Resolves org/app slugs, enforces app access roles, fetches and validates gateway metadata, renders static/dynamic XML pages, and exposes logs. |
 | Top layout shell      | Provides shared header, brand, breadcrumbs, and active tabs.                                                                     |
 | XML app layout shell  | Provides app tab navigation, tab icons, SDK docs link, and SDK user selector.                                                    |
 | Docs layout           | Provides docs sidebar, breadcrumbs, table of contents, active scroll tracking, metadata, and edit links.                         |
@@ -256,18 +257,18 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                       | Supported behavior                                                                                                                                    |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fetch helpers                 | Normalize JSON/text/void fetches, same-origin API paths, fixed credentials, SDK user headers, URL prefixing, and API errors.                         |
-| Query hooks                   | Wrap React Query with collection fallbacks, 401 session clearing, 404 handling, and query keys.                                                       |
+| Fetch helpers                 | Normalize JSON/text/void fetches, optional response parsing, same-origin API paths, fixed credentials, SDK user headers, URL prefixing, and API errors. |
+| Query hooks                   | Wrap React Query with collection fallbacks, schema-backed parsing, 401 session clearing, 404 handling, and query keys.                                |
 | Auth hooks                    | Support current user fetching, saved accounts, logout, profile menu, and theme application.                                                           |
 | Login redirect sanitization   | Normalizes login redirects to same-origin relative paths and rejects external or malformed values.                                                    |
 | API page localization         | Provides bundled English and lazy-loaded Italian translations for public/control-plane UI through the user language preference, with English fallback. |
 | SDK user hooks                | Provides deterministic SDK users for `read`, `write`, `maintain`, `admin`, and `owner`.                                                               |
 | Resource hooks                | Provides typed hooks for users, orgs, apps, locations, databases, storages, computes, operations, metadata, and mobile breakpoint detection.          |
 | Organization mutation helpers | Supports create organization, invite member, change member role, and create application flows.                                                        |
-| Create application dialog     | Supports image inspection, metadata review, icon selection, env entry, and app creation.                                                              |
-| Registry connection dialogs   | Create database, storage, and compute registries with location selection.                                                                             |
-| Create location dialog        | Supports administrator-only location creation.                                                                                                        |
-| Create organization dialog    | Supports organization creation with name, avatar URL, and location.                                                                                   |
+| Create application dialog     | Supports schema-backed image inspection, metadata review, icon selection, env entry, and app creation.                                                |
+| Registry connection dialogs   | Create database, storage, and compute registries with location selection and schema-backed client validation.                                         |
+| Create location dialog        | Supports administrator-only schema-backed location creation.                                                                                          |
+| Create organization dialog    | Supports schema-backed organization creation with name, avatar URL, and location.                                                                     |
 | Logs dialog                   | Fetches application logs only while open and displays logs/errors.                                                                                    |
 | Delete confirmation dialog    | Provides reusable destructive confirmation UI for supported destructive resource actions.                                                             |
 | Data table component          | Wraps TanStack Table with loading, empty, error, and column class support.                                                                            |

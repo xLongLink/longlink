@@ -5,7 +5,6 @@ from src.models.roles import OrganizationRoles
 from fastapi.testclient import TestClient
 from src.models.storages import StorageKind
 from src.database.session import get_session
-from src.models.countries import Country
 from src.models.databases import DatabaseKind
 from src.models.operations import OperationKind
 from src.database.models.users import User
@@ -40,13 +39,13 @@ async def test_create_organization_returns_owner_role(
     # Arrange
     owner = users[0]
     client = clients[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
     avatar = "https://example.com/organizations/acme.png"
 
     # Act
     response = client.post(
         "/api/organizations",
-        json={"name": "acme", "avatar": avatar, "location_id": str(location.id)},
+        json={"name": "acme", "avatar": avatar, "country": "DE", "location_id": str(location.id)},
     )
 
     # Assert
@@ -57,6 +56,7 @@ async def test_create_organization_returns_owner_role(
     assert payload["id"] == str(organization.id)
     assert payload["name"] == "acme"
     assert payload["avatar"] == avatar
+    assert payload["country"] == "DE"
     assert payload["location_id"] == str(location.id)
 
 
@@ -71,9 +71,10 @@ async def test_create_organization_initializes_database(
     owner = users[0]
     client = clients[0]
     calls: list[tuple[str, str, list[TenantUser] | None]] = []
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
     await db.database.create(
         DatabaseKind.postgresql,
+        "primary",
         "primary",
         "db.longlink.internal",
         5432,
@@ -130,9 +131,10 @@ async def test_create_organization_initializes_storage(
     owner = users[0]
     client = clients[0]
     calls: list[tuple[str, ...]] = []
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
     await db.storage.create(
         StorageKind.s3,
+        "primary",
         "primary",
         "http",
         "http://storage.local",
@@ -188,9 +190,9 @@ async def test_get_organization_returns_member_payload(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
     organization = await db.organizations.create(
-        "acme", location.id, owner, avatar="https://example.com/organizations/acme.png"
+        "acme", "acme", location.id, owner, avatar="https://example.com/organizations/acme.png"
     )
     application = await db.applications.create(
         organization.id,
@@ -226,8 +228,8 @@ async def test_delete_organization_soft_deletes_and_queues_removal(
     # Arrange
     owner = users[0]
     client = clients[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     await db.applications.create(
         organization.id,
         "dashboard",
@@ -264,10 +266,11 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     # Arrange
     owner = users[0]
     client = clients[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     registry = await db.database.create(
         DatabaseKind.postgresql,
+        "primary",
         "primary",
         "db.longlink.internal",
         5432,
@@ -359,10 +362,11 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     # Arrange
     owner = users[0]
     client = clients[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     registry = await db.database.create(
         DatabaseKind.postgresql,
+        "primary",
         "primary",
         "db.longlink.internal",
         5432,
@@ -413,10 +417,11 @@ async def test_organization_storage_endpoint_returns_managed_buckets(
     # Arrange
     owner = users[0]
     client = clients[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     registry = await db.storage.create(
         StorageKind.s3,
+        "primary",
         "primary",
         "http",
         "http://storage.local",
@@ -508,10 +513,11 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     # Arrange
     owner = users[0]
     client = clients[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     registry = await db.storage.create(
         StorageKind.s3,
+        "primary",
         "primary",
         "http",
         "http://storage.local",
@@ -573,10 +579,11 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
     # Arrange
     owner = users[0]
     client = clients[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     registry = await db.database.create(
         DatabaseKind.postgresql,
+        "primary",
         "primary",
         "db.longlink.internal",
         5432,
@@ -680,8 +687,8 @@ async def test_organization_database_resource_tables_endpoint_requires_elevated_
 
     # Arrange
     owner, regular_member, _ = users
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -718,8 +725,8 @@ async def test_get_organization_returns_invitations(
 
     # Arrange
     owner, invitee, regular_member = users
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     invitation = await db.invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
 
     Session = await get_session()
@@ -758,8 +765,8 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     client = clients[0]
 
     # Act
@@ -783,8 +790,8 @@ async def test_get_organization_returns_404_for_non_member(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     client = clients[1]
 
     # Act
@@ -803,8 +810,8 @@ async def test_create_organization_invitation_returns_204(
 
     # Arrange
     owner, invitee = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     client = clients[0]
 
     # Act
@@ -827,8 +834,8 @@ async def test_create_organization_invitation_returns_204_for_maintainer(
 
     # Arrange
     owner, maintainer, invitee = users[0], users[1], users[2]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -863,8 +870,8 @@ async def test_update_organization_member_changes_role(
 
     # Arrange
     owner, member = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -901,8 +908,8 @@ async def test_update_organization_member_returns_403_for_regular_member(
 
     # Arrange
     owner, regular_member, target_member = users[0], users[1], users[2]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -943,8 +950,8 @@ async def test_create_organization_invitation_returns_409_for_duplicate_email(
 
     # Arrange
     owner, invitee = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     await db.invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
     client = clients[0]
 
@@ -967,8 +974,8 @@ async def test_create_organization_invitation_returns_404_for_non_member(
 
     # Arrange
     owner, invitee = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
     client = clients[1]
 
     # Act
@@ -990,8 +997,8 @@ async def test_create_organization_invitation_returns_403_for_regular_member(
 
     # Arrange
     owner, regular_member, invitee = users[0], users[1], users[2]
-    location = await db.locations.create("local", "Local testing", owner, Country.CH)
-    organization = await db.organizations.create("acme", location.id, owner)
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -1025,8 +1032,8 @@ async def test_create_organization_returns_409_for_duplicate_name(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    await db.organizations.create("acme", "acme", location.id, user)
     client = clients[0]
 
     # Act

@@ -1,20 +1,10 @@
 from types import SimpleNamespace
 from datetime import UTC, datetime, timedelta
 from src.operations import execute
-from src.models.countries import Country
+from src.database.services import users, compute, database, locations, operations, applications, organizations
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationStatus
-from src.database.services import users
-from src.operations.applications import (
-    ApplicationStartupState,
-    application_pods_startup_state,
-)
-from src.database.services import compute
-from src.database.services import database
-from src.database.services import locations
-from src.database.services import operations
-from src.database.services import applications
-from src.database.services import organizations
+from src.operations.applications import ApplicationStartupState, application_pods_startup_state
 
 db = SimpleNamespace(
     applications=applications,
@@ -128,8 +118,8 @@ async def test_execute_application_create_operation_completes_running_applicatio
         name="Dev User",
         avatar=None,
     )
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, user)
     application = await db.applications.create(
         organization.id,
         "dashboard",
@@ -145,7 +135,7 @@ async def test_execute_application_create_operation_completes_running_applicatio
     )
     calls: list[str] = []
 
-    async def fake_inspect_application_startup(operation) -> ApplicationStartupState:
+    async def fake_inspect_application_startup(operation, application=None) -> ApplicationStartupState:
         """Pretend the application is already ready."""
 
         calls.append("startup-check")
@@ -185,8 +175,8 @@ async def test_execute_application_create_operation_marks_failed_when_dead(
         name="Dev User Existing",
         avatar=None,
     )
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, user)
     application = await db.applications.create(
         organization.id,
         "dashboard",
@@ -202,7 +192,7 @@ async def test_execute_application_create_operation_marks_failed_when_dead(
     )
     calls: list[str] = []
 
-    async def fake_inspect_application_startup(operation) -> ApplicationStartupState:
+    async def fake_inspect_application_startup(operation, application=None) -> ApplicationStartupState:
         """Pretend the application has crashed."""
 
         calls.append("startup-check")
@@ -242,8 +232,8 @@ async def test_execute_application_create_operation_releases_when_not_ready(
         name="Dev User Waiting",
         avatar=None,
     )
-    location = await db.locations.create("local", "Local testing", user, Country.CH)
-    organization = await db.organizations.create("acme", location.id, user)
+    location = await db.locations.create("local", "Local testing", user, "CH")
+    organization = await db.organizations.create("acme", "acme", location.id, user)
     application = await db.applications.create(
         organization.id,
         "dashboard",
@@ -258,7 +248,7 @@ async def test_execute_application_create_operation_releases_when_not_ready(
         user=user,
     )
 
-    async def fake_inspect_application_startup(operation) -> ApplicationStartupState:
+    async def fake_inspect_application_startup(operation, application=None) -> ApplicationStartupState:
         """Pretend the application is still starting."""
 
         return ApplicationStartupState.pending

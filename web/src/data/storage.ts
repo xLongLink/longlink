@@ -1,9 +1,17 @@
 import { useCollectionQuery } from '@/hooks/use-collection-query';
+import {
+    apiStorageBucketSchema,
+    apiStorageObjectSchema,
+    apiStorageRegistrySchema,
+    parseApiCollection,
+} from '@/lib/api-schemas';
 import type { ApiStorageBucket, ApiStorageObject, ApiStorageRegistry } from '@/lib/types';
 
 /** Fetches the storage registry list for admin views. */
 export function useStorages() {
-    return useCollectionQuery<ApiStorageRegistry>('/api/storages');
+    return useCollectionQuery<ApiStorageRegistry>('/api/storages', {
+        parse: (value) => parseApiCollection(apiStorageRegistrySchema, value),
+    });
 }
 
 
@@ -13,6 +21,7 @@ export function useStorageBuckets(storageId: string) {
 
     return useCollectionQuery<ApiStorageBucket>(enabled ? `/api/storages/${storageId}/buckets` : null, {
         enabled,
+        parse: (value) => parseApiCollection(apiStorageBucketSchema, value),
     });
 }
 
@@ -25,6 +34,7 @@ export function useStorageObjects(storageId: string, bucketName: string) {
         enabled ? `/api/storages/${storageId}/buckets/${encodeURIComponent(bucketName)}/objects` : null,
         {
             enabled,
+            parse: (value) => parseApiCollection(apiStorageObjectSchema, value),
         }
     );
 }

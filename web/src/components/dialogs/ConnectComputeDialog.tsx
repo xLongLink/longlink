@@ -1,5 +1,8 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import { RegistryDialogShell, RegistryLocationField } from '@/components/dialogs/RegistryDialogElements';
 import { Input } from '@/components/ui/input';
@@ -8,10 +11,38 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useLocations } from '@/data/admin';
 import { useUserProfile } from '@/hooks/use-user';
+import { apiComputeRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
 import { fetchApiJson } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
 import { computesQueryKey } from '@/lib/query-keys';
 import type { ApiComputeRegistry } from '@/lib/types';
+
+const computeConnectionSchema = z
+    .object({
+        kind: z.literal('kubernetes'),
+        kubeconfig: z.string().refine((value) => value.trim().length > 0),
+        ingressHost: z.string().trim().min(1),
+        gatewayLoadBalancerIp: z.string().trim(),
+        gatewayTlsCertificate: z.string().trim(),
+        gatewayTlsKey: z.string().trim(),
+        locationId: z.string().min(1),
+    })
+    .refine((value) => Boolean(value.gatewayTlsKey) === Boolean(value.gatewayTlsCertificate), {
+        path: ['gatewayTlsKey'],
+    });
+
+type ComputeConnectionInput = z.input<typeof computeConnectionSchema>;
+type ComputeConnectionValues = z.output<typeof computeConnectionSchema>;
+
+const defaultComputeConnectionValues = {
+    kind: 'kubernetes',
+    kubeconfig: '',
+    ingressHost: '',
+    gatewayLoadBalancerIp: '',
+    gatewayTlsCertificate: '',
+    gatewayTlsKey: '',
+    locationId: '',
+} satisfies ComputeConnectionInput;
 
 /** Renders the admin compute connect dialog. */
 export default function ConnectComputeDialog() {
@@ -19,65 +50,49 @@ export default function ConnectComputeDialog() {
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const [open, setOpen] = useState(false);
-    const [kind, setKind] = useState('kubernetes');
-    const [kubeconfig, setKubeconfig] = useState('');
-    const [ingressHost, setIngressHost] = useState('');
-    const [gatewayTlsKey, setGatewayTlsKey] = useState('');
-    const [gatewayTlsCertificate, setGatewayTlsCertificate] = useState('');
-    const [gatewayLoadBalancerIp, setGatewayLoadBalancerIp] = useState('');
-    const [locationId, setLocationId] = useState('');
     const [error, setError] = useState<string | null>(null);
-    const hasGatewayTlsKey = gatewayTlsKey.trim().length > 0;
-    const hasGatewayTlsCertificate = gatewayTlsCertificate.trim().length > 0;
+    const form = useForm<ComputeConnectionInput, unknown, ComputeConnectionValues>({
+        defaultValues: defaultComputeConnectionValues,
+        mode: 'onChange',
+        resolver: zodResolver(computeConnectionSchema),
+    });
+    const values = form.watch();
 
     /** Clears sensitive compute connection form state. */
     function resetDialogState() {
-        setKind('kubernetes');
-        setKubeconfig('');
-        setIngressHost('');
-        setGatewayTlsKey('');
-        setGatewayTlsCertificate('');
-        setGatewayLoadBalancerIp('');
-        setLocationId('');
+        form.reset(defaultComputeConnectionValues);
         setError(null);
     }
-
-    const canSubmit =
-        kind.trim().length > 0 &&
-        kubeconfig.trim().length > 0 &&
-        ingressHost.trim().length > 0 &&
-        hasGatewayTlsKey === hasGatewayTlsCertificate &&
-        locationId.length > 0;
 
     const { items: locations } = useLocations(open);
 
     const connectCompute = useMutation({
-        mutationFn: async () => {
-            const gatewayLoadBalancerIpValue = gatewayLoadBalancerIp.trim();
-            const gatewayTlsCertificateValue = gatewayTlsCertificate.trim();
-            const gatewayTlsKeyValue = gatewayTlsKey.trim();
-
-            return fetchApiJson<ApiComputeRegistry>('/api/computes', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+        mutationFn: async (payload: ComputeConnectionValues) => {
+            return fetchApiJson<ApiComputeRegistry>(
+                '/api/computes',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        kind: payload.kind,
+                        kubeconfig: payload.kubeconfig,
+                        ingress_host: payload.ingressHost,
+                        ...(payload.gatewayLoadBalancerIp
+                            ? { gateway_load_balancer_ip: payload.gatewayLoadBalancerIp }
+                            : {}),
+                        ...(payload.gatewayTlsCertificate && payload.gatewayTlsKey
+                            ? {
+                                  gateway_tls_certificate: payload.gatewayTlsCertificate,
+                                  gateway_tls_key: payload.gatewayTlsKey,
+                              }
+                            : {}),
+                        location_id: payload.locationId,
+                    }),
                 },
-                body: JSON.stringify({
-                    kind: kind.trim(),
-                    kubeconfig,
-                    ingress_host: ingressHost.trim(),
-                    ...(gatewayLoadBalancerIpValue
-                        ? { gateway_load_balancer_ip: gatewayLoadBalancerIpValue }
-                        : {}),
-                    ...(gatewayTlsCertificateValue && gatewayTlsKeyValue
-                        ? {
-                              gateway_tls_certificate: gatewayTlsCertificateValue,
-                              gateway_tls_key: gatewayTlsKeyValue,
-                          }
-                        : {}),
-                    location_id: locationId,
-                }),
-            });
+                (value) => parseApiResponse(apiComputeRegistrySchema, value)
+            );
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: computesQueryKey() });
@@ -96,7 +111,7 @@ export default function ConnectComputeDialog() {
             description={t('dialogs.connectComputeDescription')}
             open={open}
             error={error}
-            canSubmit={canSubmit}
+            canSubmit={form.formState.isValid}
             isPending={connectCompute.isPending}
             pendingLabel={t('actions.connecting')}
             onOpenChange={(nextOpen) => {
@@ -105,20 +120,25 @@ export default function ConnectComputeDialog() {
                     resetDialogState();
                 }
             }}
-            onSubmit={async () => {
+            onSubmit={form.handleSubmit(async (payload) => {
                 setError(null);
                 try {
-                    await connectCompute.mutateAsync();
+                    await connectCompute.mutateAsync(payload);
                 } catch (mutationError) {
                     setError(
                         mutationError instanceof Error ? mutationError.message : t('dialogs.failedConnectCompute')
                     );
                 }
-            }}
+            })}
         >
             <div className="space-y-2">
                 <Label htmlFor="compute-kind">{t('labels.kind')}</Label>
-                <Select value={kind} onValueChange={(value) => setKind(value ?? '')}>
+                <Select
+                    value={values.kind}
+                    onValueChange={(value) =>
+                        form.setValue('kind', value === 'kubernetes' ? value : 'kubernetes', { shouldValidate: true })
+                    }
+                >
                     <SelectTrigger id="compute-kind" className="w-full">
                         <SelectValue placeholder={t('dialogs.chooseComputeKind')} />
                     </SelectTrigger>
@@ -132,8 +152,7 @@ export default function ConnectComputeDialog() {
                 <Label htmlFor="compute-kubeconfig">{t('labels.kubeconfig')}</Label>
                 <Textarea
                     id="compute-kubeconfig"
-                    value={kubeconfig}
-                    onChange={(event) => setKubeconfig(event.target.value)}
+                    {...form.register('kubeconfig')}
                     placeholder="Paste the kubeconfig file contents"
                     className="min-h-40 max-w-full overflow-auto resize-y [field-sizing:fixed]"
                 />
@@ -143,8 +162,7 @@ export default function ConnectComputeDialog() {
                 <Label htmlFor="compute-ingress-host">{t('labels.ingressHost')}</Label>
                 <Input
                     id="compute-ingress-host"
-                    value={ingressHost}
-                    onChange={(event) => setIngressHost(event.target.value)}
+                    {...form.register('ingressHost')}
                     placeholder="apps.example.com"
                     autoComplete="off"
                 />
@@ -154,8 +172,7 @@ export default function ConnectComputeDialog() {
                 <Label htmlFor="compute-gateway-load-balancer-ip">{t('labels.gatewayLoadBalancerIp')}</Label>
                 <Input
                     id="compute-gateway-load-balancer-ip"
-                    value={gatewayLoadBalancerIp}
-                    onChange={(event) => setGatewayLoadBalancerIp(event.target.value)}
+                    {...form.register('gatewayLoadBalancerIp')}
                     placeholder="203.0.113.10"
                     autoComplete="off"
                 />
@@ -165,8 +182,7 @@ export default function ConnectComputeDialog() {
                 <Label htmlFor="compute-gateway-tls-certificate">{t('labels.gatewayTlsCertificate')}</Label>
                 <Textarea
                     id="compute-gateway-tls-certificate"
-                    value={gatewayTlsCertificate}
-                    onChange={(event) => setGatewayTlsCertificate(event.target.value)}
+                    {...form.register('gatewayTlsCertificate')}
                     placeholder="-----BEGIN CERTIFICATE-----"
                     className="min-h-28 max-w-full overflow-auto resize-y [field-sizing:fixed]"
                 />
@@ -176,8 +192,7 @@ export default function ConnectComputeDialog() {
                 <Label htmlFor="compute-gateway-tls-key">{t('labels.gatewayTlsKey')}</Label>
                 <Textarea
                     id="compute-gateway-tls-key"
-                    value={gatewayTlsKey}
-                    onChange={(event) => setGatewayTlsKey(event.target.value)}
+                    {...form.register('gatewayTlsKey')}
                     placeholder="-----BEGIN PRIVATE KEY-----"
                     className="min-h-28 max-w-full overflow-auto resize-y [field-sizing:fixed]"
                 />
@@ -185,9 +200,9 @@ export default function ConnectComputeDialog() {
 
             <RegistryLocationField
                 id="compute-location"
-                value={locationId}
+                value={values.locationId}
                 locations={locations}
-                onValueChange={setLocationId}
+                onValueChange={(value) => form.setValue('locationId', value, { shouldValidate: true })}
             />
         </RegistryDialogShell>
     );

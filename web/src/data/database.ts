@@ -1,9 +1,17 @@
 import { useCollectionQuery } from '@/hooks/use-collection-query';
+import {
+    apiDatabaseInstanceSchema,
+    apiDatabaseRegistrySchema,
+    apiDatabaseSchemaSchema,
+    parseApiCollection,
+} from '@/lib/api-schemas';
 import type { ApiDatabaseInstance, ApiDatabaseRegistry, ApiDatabaseSchema } from '@/lib/types';
 
 /** Fetches the database registry list for admin views. */
 export function useDatabases() {
-    return useCollectionQuery<ApiDatabaseRegistry>('/api/databases');
+    return useCollectionQuery<ApiDatabaseRegistry>('/api/databases', {
+        parse: (value) => parseApiCollection(apiDatabaseRegistrySchema, value),
+    });
 }
 
 
@@ -13,6 +21,7 @@ export function useDatabaseInstances(databaseId: string) {
 
     return useCollectionQuery<ApiDatabaseInstance>(enabled ? `/api/databases/${databaseId}/databases` : null, {
         enabled,
+        parse: (value) => parseApiCollection(apiDatabaseInstanceSchema, value),
     });
 }
 
@@ -25,6 +34,7 @@ export function useDatabaseSchemas(databaseId: string, databaseName: string) {
         enabled ? `/api/databases/${databaseId}/databases/${encodeURIComponent(databaseName)}/schemas` : null,
         {
             enabled,
+            parse: (value) => parseApiCollection(apiDatabaseSchemaSchema, value),
         }
     );
 }

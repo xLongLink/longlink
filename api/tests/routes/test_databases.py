@@ -1,6 +1,5 @@
 from types import SimpleNamespace
 from fastapi.testclient import TestClient
-from src.models.countries import Country
 from src.database.services import users
 from src.database.services import database
 from src.database.services import locations
@@ -21,7 +20,7 @@ async def test_database_registry_endpoint_supports_create_and_list(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    location = await db.locations.create("local", "Local testing", user1, Country.CH)
+    location = await db.locations.create("local", "Local testing", user1, "CH")
 
     # Act
     create_response = client.post(
@@ -66,7 +65,7 @@ async def test_database_usage_endpoint_returns_backend_capacity(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    location = await db.locations.create("local", "Local testing", user1, Country.CH)
+    location = await db.locations.create("local", "Local testing", user1, "CH")
     create_response = client.post(
         "/api/databases",
         json={

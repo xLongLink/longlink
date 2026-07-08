@@ -5,10 +5,12 @@ from src.models.applications import ApplicationCreate
 def test_icon_enum_exposes_typed_members() -> None:
     """Expose icon slugs as a typed enum for API models and OpenAPI schemas."""
 
-    payload = ApplicationCreate(
-        name="dashboard",
-        icon="LayoutGrid",
-        image="ghcr.io/longlink/dashboard:latest",
+    payload = ApplicationCreate.model_validate(
+        {
+            "name": "dashboard",
+            "icon": "layout-grid",
+            "image": "ghcr.io/longlink/dashboard:latest",
+        }
     )
 
     assert len(Icon) == 30

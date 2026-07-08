@@ -24,6 +24,7 @@ export type ApiUserOrganizationMembership = {
     name: string;
     slug: string;
     avatar: string;
+    country: string;
     location: ApiLocation;
     role: Role;
 };
@@ -90,8 +91,9 @@ export type ApiImageMetadata = {
     environments: ApiEnvironmentMetadata[];
 };
 
-export type ApiIconCatalog = {
-    icons: IconName[];
+export type ApiCountryOption = {
+    code: string;
+    name: string;
 };
 
 export type ApiOrganizationSummary = {
@@ -99,6 +101,7 @@ export type ApiOrganizationSummary = {
     name: string;
     slug: string;
     avatar: string;
+    country: string;
     location_id: string | null;
     shared_storage_bucket_name: string | null;
     created_at: string;
@@ -114,6 +117,7 @@ export type ApiOrganizationDetails = {
     name: string;
     slug: string;
     avatar: string;
+    country: string;
     location_id: string | null;
     location: ApiLocation;
     shared_storage_bucket_name: string | null;

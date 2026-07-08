@@ -4,7 +4,7 @@ import functools
 import contextlib
 from uuid import UUID
 from .base import Database
-from .types import DatabaseCellValue, DatabaseTableData, DatabaseTableUsage, DatabaseSchemaUsage, DatabaseTableColumn
+from .types import DatabaseCellValue, DatabaseTableData, DatabaseSchemaUsage, DatabaseTableColumn
 from decimal import Decimal
 from datetime import date, datetime
 from src.utils import names
@@ -108,6 +108,20 @@ class Postgres(Database):
 
         return str(value)
 
+    def _quote_identifier(self, conn: AsyncConnection, value: str) -> str:
+        """Return a SQLAlchemy dialect-quoted SQL identifier."""
+
+        return conn.engine.sync_engine.dialect.identifier_preparer.quote(value)
+
+    def _quote_literal(self, conn: AsyncConnection, value: str) -> str:
+        """Return a SQLAlchemy dialect-quoted SQL string literal."""
+
+        processor = String().literal_processor(conn.engine.sync_engine.dialect)
+        if processor is None:
+            raise ValueError("PostgreSQL string literal processing is unavailable")
+
+        return processor(value)
+
     @contextlib.asynccontextmanager
     async def _connection(
         self,
@@ -130,12 +144,9 @@ class Postgres(Database):
             **engine_kwargs,
         )
         try:
-            if autocommit:
-                async with engine.connect() as conn:
-                    yield conn
-            else:
-                async with engine.begin() as conn:
-                    yield conn
+            connection_context = engine.connect() if autocommit else engine.begin()
+            async with connection_context as conn:
+                yield conn
         finally:
             await engine.dispose()
 
@@ -149,7 +160,7 @@ class Postgres(Database):
             )
             if result.scalar_one_or_none() is None:
                 # CREATE DATABASE needs a quoted identifier, so compile it with SQLAlchemy's dialect preparer.
-                database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(database_name_value)
+                database_name = self._quote_identifier(conn, database_name_value)
                 await conn.exec_driver_sql(f"CREATE DATABASE {database_name}")
 
     async def _organization_database_exists(self, organization: str) -> bool:
@@ -175,8 +186,7 @@ class Postgres(Database):
     async def _restrict_shared_schema(self, conn: AsyncConnection) -> None:
         """Restrict default write access to organization shared schema tables."""
 
-        preparer = conn.engine.sync_engine.dialect.identifier_preparer
-        shared_schema = preparer.quote(SHARED_SCHEMA)
+        shared_schema = self._quote_identifier(conn, SHARED_SCHEMA)
         await conn.execute(text("REVOKE CREATE ON SCHEMA public FROM PUBLIC"))
         await conn.exec_driver_sql(f"REVOKE CREATE ON SCHEMA {shared_schema} FROM PUBLIC")
         await conn.execute(text("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC"))
@@ -188,12 +198,8 @@ class Postgres(Database):
         """Create or update the runtime login role for one application."""
 
         result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": role_name})
-        role = conn.engine.sync_engine.dialect.identifier_preparer.quote(role_name)
-        password_processor = String().literal_processor(conn.engine.sync_engine.dialect)
-        if password_processor is None:
-            raise ValueError("PostgreSQL password literal processing is unavailable")
-
-        password_literal = password_processor(password)
+        role = self._quote_identifier(conn, role_name)
+        password_literal = self._quote_literal(conn, password)
         if result.scalar_one_or_none() is None:
             await conn.exec_driver_sql(f"CREATE ROLE {role} LOGIN PASSWORD {password_literal}")
             return
@@ -209,11 +215,10 @@ class Postgres(Database):
     ) -> None:
         """Grant one application role write access to its schema and read-only shared access."""
 
-        preparer = conn.engine.sync_engine.dialect.identifier_preparer
-        database = preparer.quote(database_name)
-        schema = preparer.quote(application)
-        shared_schema = preparer.quote(SHARED_SCHEMA)
-        role = preparer.quote(role_name)
+        database = self._quote_identifier(conn, database_name)
+        schema = self._quote_identifier(conn, application)
+        shared_schema = self._quote_identifier(conn, SHARED_SCHEMA)
+        role = self._quote_identifier(conn, role_name)
 
         await conn.exec_driver_sql(f"GRANT CONNECT ON DATABASE {database} TO {role}")
         await conn.exec_driver_sql(f"GRANT USAGE, CREATE ON SCHEMA {schema} TO {role}")
@@ -279,16 +284,15 @@ class Postgres(Database):
         role_name = self._application_role(organization, application)
 
         async with self._connection(database_name) as conn:
-            preparer = conn.engine.sync_engine.dialect.identifier_preparer
-            schema = preparer.quote(application)
-            role = preparer.quote(role_name)
+            schema = self._quote_identifier(conn, application)
+            role = self._quote_identifier(conn, role_name)
             role_exists = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": role_name})
             await conn.exec_driver_sql(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
             if role_exists.scalar_one_or_none() is not None:
                 await conn.exec_driver_sql(f"DROP OWNED BY {role}")
 
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
-            role = conn.engine.sync_engine.dialect.identifier_preparer.quote(role_name)
+            role = self._quote_identifier(conn, role_name)
             await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
 
     async def delete_database(self, organization: str) -> None:
@@ -296,7 +300,7 @@ class Postgres(Database):
 
         database_name_value = names.dbname(organization)
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
-            database_name = conn.engine.sync_engine.dialect.identifier_preparer.quote(database_name_value)
+            database_name = self._quote_identifier(conn, database_name_value)
             await conn.execute(
                 text(
                     """
@@ -366,36 +370,6 @@ class Postgres(Database):
                 for row in result.mappings().all()
             ]
 
-    async def table_usage(self, database_name: str, schema_name: str, table_name: str) -> DatabaseTableUsage | None:
-        """Return usage details for one table in a database."""
-
-        async with self._connection(database_name) as conn:
-            result = await conn.execute(
-                text(
-                    """
-                    SELECT
-                        c.relname AS name,
-                        pg_total_relation_size(c.oid) AS space_used,
-                        GREATEST(c.reltuples, 0) AS row_estimate
-                    FROM pg_class c
-                    JOIN pg_namespace n ON n.oid = c.relnamespace
-                    WHERE n.nspname = :schema_name
-                    AND c.relname = :table_name
-                    AND c.relkind IN ('r', 'p', 'm')
-                    """
-                ),
-                {"schema_name": schema_name, "table_name": table_name},
-            )
-            row = result.mappings().one_or_none()
-            if row is None:
-                return None
-
-            return {
-                "name": row["name"],
-                "space_used": int(row["space_used"]),
-                "row_estimate": int(row["row_estimate"]),
-            }
-
     async def _table_names(self, conn: AsyncConnection, schema_name: str) -> list[str]:
         """Return queryable table names for one schema."""
 
@@ -444,10 +418,8 @@ class Postgres(Database):
             functools.partial(self._inspected_table_columns, schema_name=schema_name, table_name=table_name)
         )
 
-        preparer = conn.engine.sync_engine.dialect.identifier_preparer
-        schema = preparer.quote(schema_name)
-        table = preparer.quote(table_name)
-        rows_result = await conn.execute(text(f"SELECT * FROM {schema}.{table} LIMIT :limit"), {"limit": limit})
+        table_identifier = ".".join(self._quote_identifier(conn, value) for value in (schema_name, table_name))
+        rows_result = await conn.execute(text(f"SELECT * FROM {table_identifier} LIMIT :limit"), {"limit": limit})
         rows = [{key: self._cell_value(value) for key, value in row.items()} for row in rows_result.mappings().all()]
 
         return {
@@ -464,17 +436,6 @@ class Postgres(Database):
             names = await self._table_names(conn, schema_name)
             return [await self._table_data(conn, schema_name, name, limit) for name in names]
 
-    async def table(
-        self, database_name: str, schema_name: str, table_name: str, *, limit: int = 100
-    ) -> DatabaseTableData | None:
-        """Return columns and preview rows for one table."""
-
-        async with self._connection(database_name) as conn:
-            if table_name not in await self._table_names(conn, schema_name):
-                return None
-
-            return await self._table_data(conn, schema_name, table_name, limit)
-
     async def usage(self) -> dict[str, int]:
         """Return the total non-system database size in bytes."""
 
@@ -490,9 +451,3 @@ class Postgres(Database):
             )
             database_size = result.scalar_one()
             return {"space_used": int(database_size)}
-
-    async def setup(self) -> None:
-        """Initialize the PostgreSQL backend used by the control plane."""
-
-        # The backend is provisioned externally; instantiating the adapter is enough here.
-        return None

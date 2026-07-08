@@ -23,6 +23,7 @@ import { useStorageObjects } from '@/data/storage';
 import { useApiQuery } from '@/hooks/use-api';
 import { useOrganizationActions } from '@/hooks/use-organization';
 import { useUserProfile } from '@/hooks/use-user';
+import { apiApplicationMemberSchema, parseApiCollection } from '@/lib/api-schemas';
 import { apiQueryKey, fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
 import {
@@ -173,7 +174,10 @@ export default function Settings({
     );
     const applicationMembersPath = selectedApplication ? `/api/applications/${selectedApplication.id}/members` : null;
     const organizationDetailsPath = organizationDetails ? `/api/organizations/${organizationDetails.id}` : null;
-    const applicationMembersQuery = useApiQuery<ApiApplicationMember[]>(applicationMembersPath, { retry: false });
+    const applicationMembersQuery = useApiQuery<ApiApplicationMember[]>(applicationMembersPath, {
+        parse: (value) => parseApiCollection(apiApplicationMemberSchema, value),
+        retry: false,
+    });
     const canManageSelectedApplication = selectedApplication
         ? canManageApplication(organizationRole, selectedApplication.role)
         : false;
@@ -648,7 +652,7 @@ export default function Settings({
                             <div className="min-w-0">
                                 <div className="truncate font-medium text-foreground">{organizationName}</div>
                                 <div className="truncate text-sm text-muted-foreground">
-                                    {organizationDetails?.location.country} · {organizationDetails?.location.name}
+                                    {organizationDetails?.country} · {organizationDetails?.location.name}
                                 </div>
                             </div>
                         </div>

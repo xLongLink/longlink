@@ -26,7 +26,7 @@ LOCAL_APP = {
     "name": "sample",
     "image": env.LOCAL_APPLICATION_IMAGE,
     "description": "Local SDK development application",
-    "icon": "Rocket",
+    "icon": "rocket",
     "envs": {"REQUIRED": "local-development"},
 }
 KUBECONFIG = Path(__file__).with_name("kubeconfig.yaml")
@@ -261,6 +261,7 @@ def main() -> None:
             json={
                 "name": LOCAL_ORG,
                 "avatar": LOCAL_ORG_AVATAR,
+                "country": "CH",
                 "location_id": location_id,
             },
         )

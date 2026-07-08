@@ -1,4 +1,10 @@
 import { useCollectionQuery } from '@/hooks/use-collection-query';
+import {
+    apiOrganizationDatabaseResourceSchema,
+    apiOrganizationDatabaseTableSchema,
+    apiOrganizationStorageResourceSchema,
+    parseApiCollection,
+} from '@/lib/api-schemas';
 import type {
     ApiOrganizationDatabaseResource,
     ApiOrganizationDatabaseTable,
@@ -13,6 +19,7 @@ export function useOrganizationDatabaseResources(organizationId: string) {
         enabled ? `/api/organizations/${organizationId}/database` : null,
         {
             enabled,
+            parse: (value) => parseApiCollection(apiOrganizationDatabaseResourceSchema, value),
         }
     );
 }
@@ -30,6 +37,7 @@ export function useOrganizationDatabaseResourceTables(
 
     return useCollectionQuery<ApiOrganizationDatabaseTable>(path, {
         enabled,
+        parse: (value) => parseApiCollection(apiOrganizationDatabaseTableSchema, value),
     });
 }
 
@@ -42,6 +50,7 @@ export function useOrganizationStorageResources(organizationId: string) {
         enabled ? `/api/organizations/${organizationId}/storage` : null,
         {
             enabled,
+            parse: (value) => parseApiCollection(apiOrganizationStorageResourceSchema, value),
         }
     );
 }
