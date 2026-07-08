@@ -24,9 +24,20 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Install dependencies
         working-directory: api
         run: uv sync --extra dev
+
+      - name: Install web dependencies
+        working-directory: web
+        run: bun install --frozen-lockfile
+
+      - name: Build API web bundle
+        working-directory: web
+        run: bun run vite build --mode api --logLevel warn
 
       - name: Run tests
         working-directory: api
