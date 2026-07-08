@@ -167,6 +167,7 @@ script.bat
 /api/openapi.yml
 /sdk/longlink/.static/web/
 /sdk/dev/
+/.wrangler/
 
 /web/logs/
 /web/coverage/

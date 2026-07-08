@@ -209,6 +209,15 @@ wheels = [
 ]
 
 [[package]]
+name = "certifi"
+version = "2026.6.17"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c9/c7/424b75da314c1045981bd9777432fad05a9e0c69daa4ed7e308bbaffe405/certifi-2026.6.17.tar.gz", hash = "sha256:024c88eeec92ca068db80f02b8b07c9cef7b9fe261d1d535abfd5abd6f6af432", size = 134594, upload-time = "2026-06-17T10:31:07.894Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ef/2f/c5464532e965badff2f4c4c1a3a83f5697f0d7c407ed0cda44aaa99bb451/certifi-2026.6.17-py3-none-any.whl", hash = "sha256:2227dcbaafe0d2f59279d1762ddddc37783ed4354594f194ffc31d20f41fc3db", size = 133289, upload-time = "2026-06-17T10:31:06.348Z" },
+]
+
+[[package]]
 name = "click"
 version = "8.3.3"
 source = { registry = "https://pypi.org/simple" }
@@ -367,6 +376,19 @@ wheels = [
 ]
 
 [[package]]
+name = "httpcore"
+version = "1.0.9"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "h11" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/06/94/82699a10bca87a5556c9c59b5963f2d039dbd239f25bc2a63907a05a14cb/httpcore-1.0.9.tar.gz", hash = "sha256:6e34463af53fd2ab5d807f399a9b45ea31c3dfa2276f15a2c3f00afff6e176e8", size = 85484, upload-time = "2025-04-24T22:06:22.219Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7e/f5/f66802a942d491edb555dd61e3a9961140fd64c90bce1eafd741609d334d/httpcore-1.0.9-py3-none-any.whl", hash = "sha256:2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55", size = 78784, upload-time = "2025-04-24T22:06:20.566Z" },
+]
+
+[[package]]
 name = "httpcore2"
 version = "2.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -377,6 +399,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e6/34/18f1c596e677962f040284246f393b10a1f8ce440b3a7e69c637d0f1c7ad/httpcore2-2.3.0.tar.gz", hash = "sha256:07327e251560960eea8e969d92d4c6a325feb13cca39e25340731336c3baf924", size = 64300, upload-time = "2026-06-01T13:15:02.998Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c2/dd/3357218c69360d1cecc196c230c9a1d5c9afd5dba362056e23e60a5e64e5/httpcore2-2.3.0-py3-none-any.whl", hash = "sha256:477e9e334f74e5240dcac002e890580f36a57d40ff0fb14cc9655731d23b8415", size = 80024, upload-time = "2026-06-01T13:15:00.001Z" },
+]
+
+[[package]]
+name = "httpx"
+version = "0.28.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "certifi" },
+    { name = "httpcore" },
+    { name = "idna" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b1/df/48c586a5fe32a0f01324ee087459e112ebb7224f646c0b5023f5e79e9956/httpx-0.28.1.tar.gz", hash = "sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc", size = 141406, upload-time = "2024-12-06T15:37:23.222Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl", hash = "sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad", size = 73517, upload-time = "2024-12-06T15:37:21.509Z" },
 ]
 
 [[package]]
@@ -455,6 +492,7 @@ cli = [
     { name = "rich" },
 ]
 dev = [
+    { name = "httpx" },
     { name = "httpx2" },
     { name = "isort" },
     { name = "lxml-stubs" },
@@ -468,6 +506,7 @@ dev = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "httpx" },
     { name = "httpx2" },
     { name = "isort" },
     { name = "lxml-stubs" },
@@ -488,6 +527,7 @@ requires-dist = [
     { name = "click", marker = "extra == 'cli'", specifier = ">=8.3.3,<9" },
     { name = "fastapi", specifier = ">=0.138.0,<0.139" },
     { name = "fsspec", specifier = ">=2026.4.0,<2027" },
+    { name = "httpx", marker = "extra == 'dev'", specifier = "==0.28.1" },
     { name = "httpx2", marker = "extra == 'dev'", specifier = "==2.3.0" },
     { name = "isort", marker = "extra == 'dev'", specifier = "==8.0.1" },
     { name = "lxml", specifier = ">=6.1.0,<7" },
@@ -495,7 +535,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.13.4,<3" },
     { name = "pydantic-settings", specifier = ">=2.14.0,<3" },
     { name = "pyright", marker = "extra == 'dev'", specifier = "==1.1.411" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = "==8.4.2" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = "==9.1.1" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = "==1.3.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==7.1.0" },
     { name = "pytest-mock", marker = "extra == 'dev'", specifier = "==3.14.1" },
@@ -510,11 +550,12 @@ provides-extras = ["cli", "dev"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "httpx", specifier = "==0.28.1" },
     { name = "httpx2", specifier = "==2.3.0" },
     { name = "isort", specifier = "==8.0.1" },
     { name = "lxml-stubs", specifier = "==0.5.1" },
     { name = "pyright", specifier = "==1.1.411" },
-    { name = "pytest", specifier = "==8.4.2" },
+    { name = "pytest", specifier = "==9.1.1" },
     { name = "pytest-asyncio", specifier = "==1.3.0" },
     { name = "pytest-cov", specifier = "==7.1.0" },
     { name = "pytest-mock", specifier = "==3.14.1" },
@@ -846,7 +887,7 @@ wheels = [
 
 [[package]]
 name = "pytest"
-version = "8.4.2"
+version = "9.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
@@ -855,9 +896,9 @@ dependencies = [
     { name = "pluggy" },
     { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a3/5c/00a0e072241553e1a7496d638deababa67c5058571567b92a7eaa258397c/pytest-8.4.2.tar.gz", hash = "sha256:86c0d0b93306b961d58d62a4db4879f27fe25513d4b969df351abdddb3c30e01", size = 1519618, upload-time = "2025-09-04T14:34:22.711Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/47/b9efed96c114afcfa3c9d3fe98a76a1d14c74a9e266d397cf6eb64be5e01/pytest-9.1.1.tar.gz", hash = "sha256:1088fbde8f2b49d95a549a195707afa7a76a3ce9bcadc26b6d71f0ffda5fe313", size = 1636369, upload-time = "2026-06-19T10:58:32.857Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a8/a4/20da314d277121d6534b3a980b29035dcd51e6744bd79075a6ce8fa4eb8d/pytest-8.4.2-py3-none-any.whl", hash = "sha256:872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79", size = 365750, upload-time = "2025-09-04T14:34:20.226Z" },
+    { url = "https://files.pythonhosted.org/packages/24/25/1de2678b631f5a49215c6c96fff41ba892b0a34df68d6d80292b1b48aa7f/pytest-9.1.1-py3-none-any.whl", hash = "sha256:37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c", size = 386536, upload-time = "2026-06-19T10:58:31.347Z" },
 ]
 
 [[package]]

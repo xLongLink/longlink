@@ -66,7 +66,7 @@ tests\:all: api\:tests sdk\:tests org\:tests web\:tests
 
 
 # Run all API tests with coverage, including container-backed integration tests.
-api\:tests: api\:install
+api\:tests: api\:install api\:build
 	cd api && ENVIRONMENT=testing uv run pytest $(API_PYTEST_MARK) --cov=src --cov-report=term-missing tests
 
 
