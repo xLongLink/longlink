@@ -16,6 +16,9 @@ export type ApiUserSummary = {
     email: string;
     avatar: string;
     role: PlatformRole;
+};
+
+export type ApiUserListItem = ApiUserSummary & {
     oidc: string;
 };
 
@@ -29,7 +32,7 @@ export type ApiUserOrganizationMembership = {
     role: Role;
 };
 
-export type ApiUserProfile = ApiUserSummary & {
+export type ApiUserProfile = ApiUserListItem & {
     theme: Theme;
     accent: Accent;
     radius: Radius;
@@ -214,8 +217,6 @@ export type ApiDatabaseRegistry = {
     host: string;
     port: number;
     username: string;
-    runtime_host: string;
-    runtime_port: number;
     location_id: string;
     created_at: string;
     created_by: ApiUserSummary | null;

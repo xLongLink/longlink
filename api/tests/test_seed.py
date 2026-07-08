@@ -97,11 +97,8 @@ class FakeSeedClient:
         raise AssertionError(f"Unexpected POST {path}")
 
 
-def test_seed_main_creates_local_resources_with_runtime_endpoints(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path,
-) -> None:
-    """Seed local resources through public API routes with pod-facing endpoints."""
+def test_seed_main_creates_local_resources(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    """Seed local resources through public API routes."""
 
     kubeconfig = tmp_path / "kubeconfig.yaml"
     kubeconfig.write_text("apiVersion: v1\nclusters: []\n", encoding="utf-8")
@@ -121,8 +118,6 @@ def test_seed_main_creates_local_resources_with_runtime_endpoints(
         "port": 15432,
         "username": "admin",
         "password": "admin",
-        "runtime_host": "host.k3d.internal",
-        "runtime_port": 15432,
         "location_id": FakeSeedClient.location_id,
     }
     assert posts["/api/storages"] == {
@@ -145,10 +140,7 @@ def test_seed_main_creates_local_resources_with_runtime_endpoints(
     assert posts[f"/api/organizations/{FakeSeedClient.organization_id}/applications"] == seed.LOCAL_APP
 
 
-def test_seed_main_refreshes_existing_application_runtime(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path,
-) -> None:
+def test_seed_main_refreshes_existing_application_runtime(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     """Refresh the local application runtime when the seeded app already exists."""
 
     kubeconfig = tmp_path / "kubeconfig.yaml"

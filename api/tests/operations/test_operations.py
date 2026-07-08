@@ -189,9 +189,7 @@ def leased_operation(kind: OperationKind = OperationKind.application_create, ste
     )
 
 
-async def test_operation_claim_sets_lease_token_and_expiry(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_operation_claim_sets_lease_token_and_expiry(monkeypatch: pytest.MonkeyPatch) -> None:
     """Claiming an operation assigns a lease token and expiration."""
 
     operation = Operation(kind=OperationKind.application_create, step="verify")
@@ -258,9 +256,7 @@ async def test_operation_mutations_require_active_lease(
     assert stale_session.commits == 0
 
 
-async def test_operation_scheduler_claims_executes_and_renews(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytest.MonkeyPatch) -> None:
     """Claim scheduled work, renew its lease during execution, and keep polling."""
 
     operation = leased_operation()
@@ -306,9 +302,7 @@ async def test_operation_scheduler_claims_executes_and_renews(
     assert renewals == [(operation.id, "lease-token")]
 
 
-async def test_application_and_organization_delete_handlers_remove_runtime(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_application_and_organization_delete_handlers_remove_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
     """Execute delete cleanup handlers for applications and organizations."""
 
     application = application_model()
@@ -333,9 +327,7 @@ async def test_application_and_organization_delete_handlers_remove_runtime(
 
         removals.append(("application", application.id))
 
-    async def fake_remove_organization_runtime(
-        organization: OrganizationDetails,
-    ) -> None:
+    async def fake_remove_organization_runtime(organization: OrganizationDetails) -> None:
         """Record organization runtime removal."""
 
         removals.append(("organization", organization.id))

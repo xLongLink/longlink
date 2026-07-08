@@ -1,5 +1,5 @@
 from .storage import S3, Storage
-from .database import Database, Postgres
+from .database import Database, Postgres, DatabaseRuntimeConnection
 from .storage.base import StorageRuntimeCredentials
 from src.models.storages import StorageKind
 from src.models.databases import DatabaseKind
@@ -16,8 +16,6 @@ def database(registry: DatabaseRegistry) -> Database:
             registry.port,
             registry.username,
             registry.password,
-            runtime_host=registry.runtime_host,
-            runtime_port=registry.runtime_port,
         )
 
     raise ValueError(f"Unsupported database registry kind '{registry.kind}'")

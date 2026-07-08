@@ -112,8 +112,8 @@ export default function AdminCompute() {
     const resourcesQueries = useQueries({
         queries: computes.map((c) => ({
             queryKey: computeResourcesQueryKey(c.id),
-            queryFn: async () =>
-                fetchApiJson(`/api/computes/${c.id}/resources`, undefined, (value) =>
+            queryFn: async ({ signal }) =>
+                fetchApiJson(`/api/computes/${c.id}/resources`, { signal }, (value) =>
                     parseApiResponse(apiComputeResourcesSchema, value)
                 ),
             retry: false,

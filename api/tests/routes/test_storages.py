@@ -81,19 +81,17 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
     registry_id = create_response.json()["id"]
 
     class FakeS3:
-        def __init__(
-            self,
-            protocol: str,
-            endpoint_url: str,
-            access_key_id: str,
-            secret_access_key: str,
-        ) -> None:
+        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+            """Store storage registry configuration for assertions."""
+
             self.protocol = protocol
             self.endpoint_url = endpoint_url
             self.access_key_id = access_key_id
             self.secret_access_key = secret_access_key
 
         async def buckets(self) -> list[str]:
+            """Return fake bucket names from the storage backend."""
+
             return ["alpha", "longlink-acme-shared", "longlink-acme-dashboard"]
 
     monkeypatch.setattr(
@@ -141,19 +139,17 @@ async def test_storage_object_endpoint_returns_bucket_objects(
     registry_id = create_response.json()["id"]
 
     class FakeS3:
-        def __init__(
-            self,
-            protocol: str,
-            endpoint_url: str,
-            access_key_id: str,
-            secret_access_key: str,
-        ) -> None:
+        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+            """Store storage registry configuration for assertions."""
+
             self.protocol = protocol
             self.endpoint_url = endpoint_url
             self.access_key_id = access_key_id
             self.secret_access_key = secret_access_key
 
         async def objects(self, bucket_name: str, *, limit: int = 1000) -> list[dict[str, object]]:
+            """Return fake object metadata for one bucket."""
+
             assert bucket_name == "longlink-acme-dashboard"
             assert limit == 1000
             return [

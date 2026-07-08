@@ -55,12 +55,30 @@ def get_user() -> CurrentUser:
 def require_role(user: CurrentUser, role: str) -> None:
     """Require the current user to have at least one role rank."""
 
-    required_rank = ROLE_RANKS.get(role)
-    if required_rank is None:
+    if not has_minimum_role(user.role, role):
+        raise HTTPException(status_code=403, detail=f"{role.capitalize()} access required")
+
+
+def role_rank(role: str | None) -> int:
+    """Return the numeric rank for one runtime role."""
+
+    if role is None:
+        return 0
+
+    rank = ROLE_RANKS.get(role.strip().lower())
+    if rank is None:
         raise ValueError(f"Unknown role '{role}'")
 
-    if ROLE_RANKS.get(user.role, 0) < required_rank:
-        raise HTTPException(status_code=403, detail=f"{role.capitalize()} access required")
+    return rank
+
+
+def has_minimum_role(role: str | None, required_role: str) -> bool:
+    """Return whether one runtime role is at least as privileged as the required role."""
+
+    if role is None:
+        return False
+
+    return role_rank(role) >= role_rank(required_role)
 
 
 def install_user_middleware(app: FastAPI, *, require_header: bool) -> None:

@@ -5,16 +5,10 @@ import type { ReactElement } from 'react';
 import { useLocation } from 'react-router';
 
 import { SignInCard } from '@/components/SignInCard';
-import type { PlatformRole } from '@/lib/roles';
+import { hasMinimumRole, type PlatformRole } from '@/lib/roles';
 
 /** Protects routes and optionally requires a platform role. */
-export function Auth({
-    children,
-    requiredRole,
-}: {
-    children: ReactElement;
-    requiredRole?: PlatformRole;
-}) {
+export function Auth({ children, requiredRole }: { children: ReactElement; requiredRole?: PlatformRole }) {
     const { user, role, isLoading } = useUserProfile();
     const location = useLocation();
 
@@ -33,12 +27,7 @@ export function Auth({
     }
 
     if (requiredRole) {
-        // Treat required roles as a minimum access level so administrators can reach user and support routes.
-        const roleHierarchy: PlatformRole[] = ['user', 'support', 'administrator'];
-        const currentRoleIndex = roleHierarchy.indexOf(role);
-        const requiredRoleIndex = roleHierarchy.indexOf(requiredRole);
-
-        if (currentRoleIndex < requiredRoleIndex) {
+        if (!hasMinimumRole(role, requiredRole)) {
             return <NotFound />;
         }
     }

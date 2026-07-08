@@ -1,4 +1,3 @@
-from tenant.models import User
-
-from .base import Database
+from .base import Database, DatabaseRuntimeConnection
 from .postgres import Postgres
+from tenant.models import User

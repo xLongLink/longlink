@@ -10,7 +10,7 @@ import {
 } from '@/lib/api-schemas';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { applicationsQueryKey, organizationsQueryKey } from '@/lib/query-keys';
-import type { Role } from '@/lib/roles';
+import { canCreateOrganizationInvitation, canManageOrganizationMembers, type Role } from '@/lib/roles';
 import type {
     ApiApplicationResponse,
     ApiInvitation,
@@ -94,12 +94,8 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
     const organizationId = resolveOrganizationId(organizationSlug, organizations);
     const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
     const organizationMembership = organizations.find((item) => item.slug === organizationSlug);
-    const canInviteMembers = organizationMembership?.role
-        ? ['admin', 'maintain', 'owner'].includes(organizationMembership.role)
-        : false;
-    const canManageMembers = organizationMembership?.role
-        ? ['admin', 'owner'].includes(organizationMembership.role)
-        : false;
+    const canInviteMembers = canCreateOrganizationInvitation(organizationMembership?.role);
+    const canManageMembers = canManageOrganizationMembers(organizationMembership?.role);
 
     const inviteMemberMutation = useMutation({
         mutationFn: async ({ email, role }: { email: string; role: Role }) => {

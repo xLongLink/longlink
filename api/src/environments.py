@@ -50,7 +50,7 @@ class Env(BaseSettings):
     SESSION_KEY: str
     SESSION_COOKIE_DOMAIN: str | None = None
 
-    # Public control-plane origin used by remote cluster gateways for authorization checks.
+    # Optional public control-plane origin retained for deployment configuration.
     CONTROL_PLANE_URL: str = "http://localhost:8000"
 
     # Control plane database URL
@@ -113,8 +113,8 @@ def validate_production_settings(settings: Env) -> None:
         return
 
     errors: list[str] = []
-    # OIDC and gateway authorization traffic carry authentication secrets, so production endpoints must be HTTPS.
-    for field_name in ("CONTROL_PLANE_URL", "OIDC_ISSUER", "OIDC_REDIRECT_URI"):
+    # OIDC traffic carries authentication secrets, so production endpoints must be HTTPS.
+    for field_name in ("OIDC_ISSUER", "OIDC_REDIRECT_URI"):
         value = str(getattr(settings, field_name)).strip()
         if not urls.is_https_url(value):
             errors.append(f"{field_name} must be an HTTPS URL outside development")

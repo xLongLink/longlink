@@ -11,6 +11,8 @@ def operation_handler(kind: OperationKind, step: str) -> Callable[[OperationHand
     """Register one operation handler for a kind and step."""
 
     def decorator(handler: OperationHandler) -> OperationHandler:
+        """Store the handler under its operation kind and step."""
+
         _handlers[(kind, step)] = handler
         return handler
 

@@ -1,12 +1,13 @@
+from typing import cast
 from tenant.storage import assets as organization_assets
 from longlink.constants import ROOT
-from longlink.storage import create_shared_fs
+from longlink.storage import create_fs
 from longlink.utils.settings import Envs
 
 LOCAL_LOGO_PATH = ROOT / ".static" / "assets" / "logo.svg"
 
 _env = Envs()
-_shared_fs = create_shared_fs(_env)
+_shared_fs = create_fs(_env, _env.STORAGE_SHARED_BUCKET or "")
 
 
 def logo() -> organization_assets.OrganizationAsset:
@@ -22,7 +23,7 @@ def logo() -> organization_assets.OrganizationAsset:
             raise ValueError("Organization assets require LONGLINK_STORAGE_SHARED_BUCKET in production")
 
         with _shared_fs.open(asset_path, "rb") as asset_file:
-            content = asset_file.read()
+            content = cast(bytes, asset_file.read())
 
     return organization_assets.organization_asset(
         asset_path,

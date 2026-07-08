@@ -25,9 +25,9 @@ export function useApiQuery<TQueryFnData, TData = TQueryFnData>(
         ...queryOptions,
         enabled,
         queryKey: path !== null ? apiQueryKey(path) : ['api', 'disabled'],
-        queryFn: async () => {
+        queryFn: async ({ signal }) => {
             try {
-                return await fetchApiJson<TQueryFnData>(path!, request, parse);
+                return await fetchApiJson<TQueryFnData>(path!, request ? { ...request, signal } : { signal }, parse);
             } catch (error) {
                 // Clear the cached session immediately when any request reports auth loss.
                 if (error instanceof ApiError && error.status === 401) {

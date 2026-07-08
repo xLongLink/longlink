@@ -8,13 +8,13 @@ from typing import Any
 from src.utils import templates
 from .constants import (GATEWAY_NAME, GATEWAY_IMAGE, GATEWAY_NAMESPACE, GATEWAY_CONFIG_NAME, APPLICATION_ID_LABEL,
                         GATEWAY_SERVICE_PORT, GATEWAY_CONTAINER_PORT, GATEWAY_TLS_MOUNT_PATH, GATEWAY_NAMESPACE_LABEL,
-                        GATEWAY_TLS_SECRET_NAME, GATEWAY_AUTH_SECRET_NAME, GATEWAY_IDENTITY_HEADERS,
+                        GATEWAY_TLS_SECRET_NAME, GATEWAY_AUTH_SECRET_NAME, GATEWAY_SECRET_HEADER,
                         GATEWAY_CONFIG_MOUNT_PATH, GATEWAY_CONFIG_RENDER_IMAGE, GATEWAY_TEMPLATE_MOUNT_PATH,
                         GATEWAY_ADMIN_CONTAINER_PORT, GATEWAY_MAX_REQUEST_HEADERS_KB, GATEWAY_AUTH_SECRET_PLACEHOLDER,
                         GATEWAY_PER_CONNECTION_BUFFER_LIMIT_BYTES)
 from .resources import KubernetesResources
 from src.constants import TEMPLATES
-from src.environments import env, resolve_cors_origins
+from src.environments import env
 from kr8s.asyncio.objects import Service, Namespace
 
 
@@ -29,6 +29,7 @@ class KubernetesGateway(KubernetesResources):
     async def _ensure_gateway_namespace(self) -> None:
         """Create the dedicated gateway namespace when it is missing."""
 
+        # Create the namespace if it is absent; otherwise only LongLink-managed namespaces may be reused.
         try:
             namespace = await self._read(Namespace, GATEWAY_NAMESPACE)
         except kr8s.ServerError as exc:
@@ -50,6 +51,8 @@ class KubernetesGateway(KubernetesResources):
 
         self._validate_managed_namespace(GATEWAY_NAMESPACE, namespace)
         labels = namespace.metadata.get("labels", {})
+
+        # Keep the gateway namespace discoverable by network policy and gateway maintenance code.
         if labels.get(GATEWAY_NAMESPACE_LABEL) != "true":
             await namespace.patch({"metadata": {"labels": {**labels, GATEWAY_NAMESPACE_LABEL: "true"}}})
 
@@ -68,55 +71,13 @@ class KubernetesGateway(KubernetesResources):
 
         return bool((self._gateway_tls_key or "").strip() and (self._gateway_tls_certificate or "").strip())
 
-    def _control_plane_cluster(self) -> tuple[str, dict[str, Any]]:
-        """Return the control-plane origin and Envoy cluster for authorization calls."""
-
-        parsed_url = urllib.parse.urlsplit(env.CONTROL_PLANE_URL.rstrip("/"))
-        if parsed_url.scheme not in {"http", "https"} or not parsed_url.hostname:
-            raise ValueError("CONTROL_PLANE_URL must be an absolute HTTP(S) URL")
-
-        port = parsed_url.port or (443 if parsed_url.scheme == "https" else 80)
-        origin = f"{parsed_url.scheme}://{parsed_url.netloc}"
-        cluster: dict[str, Any] = {
-            "name": "longlink-control-plane",
-            "connect_timeout": "5s",
-            "type": "STRICT_DNS",
-            "load_assignment": {
-                "cluster_name": "longlink-control-plane",
-                "endpoints": [
-                    {
-                        "lb_endpoints": [
-                            {
-                                "endpoint": {
-                                    "address": {
-                                        "socket_address": {
-                                            "address": parsed_url.hostname,
-                                            "port_value": port,
-                                        }
-                                    }
-                                }
-                            }
-                        ]
-                    }
-                ],
-            },
-        }
-        if parsed_url.scheme == "https":
-            cluster["transport_socket"] = {
-                "name": "envoy.transport_sockets.tls",
-                "typed_config": {
-                    "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext",
-                    "sni": parsed_url.hostname,
-                },
-            }
-
-        return origin, cluster
-
     async def _gateway_routes(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """Return Envoy routes and clusters for all managed application services."""
 
         routes: list[dict[str, Any]] = []
         clusters: list[dict[str, Any]] = []
+
+        # Discover app services from managed namespaces so Envoy config mirrors deployed workloads.
         namespaces = sorted(
             await self._list(Namespace, label_selector={"managed-by": "longlink"}),
             key=lambda item: item.name,
@@ -127,6 +88,7 @@ class KubernetesGateway(KubernetesResources):
             if namespace == GATEWAY_NAMESPACE:
                 continue
 
+            # Only managed application services become gateway routes.
             services = sorted(
                 await self._list(
                     Service,
@@ -146,16 +108,37 @@ class KubernetesGateway(KubernetesResources):
                 cluster_name = f"{namespace}-{service_name}"
                 service_host = f"{service_name}.{namespace}.svc.cluster.local"
 
+                # The cluster gateway only accepts requests authenticated by the API proxy.
+                gateway_secret_match = {
+                    "name": GATEWAY_SECRET_HEADER,
+                    "string_match": {"exact": GATEWAY_AUTH_SECRET_PLACEHOLDER},
+                }
+
+                # Secret-matched routes forward to the app and remove the secret before the app sees it.
                 routes.append(
                     {
-                        "match": {"prefix": f"/api/applications/{application_id}/proxy/"},
+                        "match": {
+                            "prefix": f"/api/applications/{application_id}/proxy/",
+                            "headers": [gateway_secret_match],
+                        },
                         "route": {
                             "cluster": cluster_name,
                             "prefix_rewrite": "/",
                             "timeout": "300s",
                         },
+                        "request_headers_to_remove": [GATEWAY_SECRET_HEADER],
                     }
                 )
+
+                # Requests that bypass the API proxy match the same path but fail before reaching the app.
+                routes.append(
+                    {
+                        "match": {"prefix": f"/api/applications/{application_id}/proxy/"},
+                        "direct_response": {"status": 403, "body": {"inline_string": "Forbidden"}},
+                    }
+                )
+
+                # Each app service gets a DNS-backed cluster target inside the organization namespace.
                 clusters.append(
                     {
                         "name": cluster_name,
@@ -189,21 +172,14 @@ class KubernetesGateway(KubernetesResources):
         """Render the Envoy configuration for the current application service set."""
 
         application_routes, application_clusters = await self._gateway_routes()
-        control_plane_origin, control_plane_cluster = self._control_plane_cluster()
-        allowed_origins = [
-            {"exact": origin}
-            for origin in sorted({control_plane_origin, *resolve_cors_origins(env.DEVELOPMENT, env.CORS_ORIGINS)})
-        ]
+
+        # Keep health checks independent from application routing and gateway secrets.
         health_route = {
             "match": {"path": "/ready"},
             "direct_response": {"status": 200, "body": {"inline_string": "ready"}},
-            "typed_per_filter_config": {
-                "envoy.filters.http.ext_authz": {
-                    "@type": "type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthzPerRoute",
-                    "disabled": True,
-                }
-            },
         }
+
+        # Evaluate app routes before the final catch-all so unknown paths return a stable 404.
         routes = [
             health_route,
             *application_routes,
@@ -212,6 +188,8 @@ class KubernetesGateway(KubernetesResources):
                 "direct_response": {"status": 404, "body": {"inline_string": "Not found"}},
             },
         ]
+
+        # Envoy only fronts API-authenticated app traffic and forwards to internal ClusterIP services.
         http_connection_manager = {
             "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
             "stat_prefix": "longlink_gateway",
@@ -244,31 +222,11 @@ class KubernetesGateway(KubernetesResources):
                     {
                         "name": "applications",
                         "domains": [self._gateway_domain()],
-                        "cors": {
-                            "allow_origin_string_match": allowed_origins,
-                            "allow_methods": "DELETE,GET,OPTIONS,PATCH,POST,PUT",
-                            "allow_headers": "accept,authorization,content-type,x-requested-with",
-                            "allow_credentials": True,
-                            "max_age": "86400",
-                        },
                         "routes": routes,
                     }
                 ],
             },
             "http_filters": [
-                {
-                    "name": "envoy.filters.http.cors",
-                    "typed_config": {
-                        "@type": "type.googleapis.com/envoy.extensions.filters.http.cors.v3.Cors"
-                    },
-                },
-                {
-                    "name": "envoy.filters.http.lua",
-                    "typed_config": {
-                        "@type": "type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua",
-                        "inline_code": self._gateway_lua_filter(),
-                    },
-                },
                 {
                     "name": "envoy.filters.http.local_ratelimit",
                     "typed_config": {
@@ -288,57 +246,6 @@ class KubernetesGateway(KubernetesResources):
                     },
                 },
                 {
-                    "name": "envoy.filters.http.ext_authz",
-                    "typed_config": {
-                        "@type": "type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz",
-                        "transport_api_version": "V3",
-                        "failure_mode_allow": False,
-                        "http_service": {
-                            "server_uri": {
-                                "uri": control_plane_origin,
-                                "cluster": "longlink-control-plane",
-                                "timeout": "5s",
-                            },
-                            "path_prefix": "/api/gateway/authz",
-                            "authorization_request": {
-                                "allowed_headers": {
-                                    "patterns": [
-                                        {"exact": "authorization"},
-                                        {"exact": "cookie"},
-                                        {"exact": "origin"},
-                                        {"exact": "x-requested-with"},
-                                    ]
-                                },
-                                "headers_to_add": [
-                                    {
-                                        "key": "x-longlink-gateway-secret",
-                                        "value": GATEWAY_AUTH_SECRET_PLACEHOLDER,
-                                    },
-                                    {
-                                        "key": "x-longlink-original-method",
-                                        "value": "%REQ(:METHOD)%",
-                                    },
-                                    {
-                                        "key": "x-longlink-original-path",
-                                        "value": "%REQ(:PATH)%",
-                                    },
-                                ],
-                            },
-                            "authorization_response": {
-                                "allowed_upstream_headers": {
-                                    "patterns": [{"exact": header} for header in GATEWAY_IDENTITY_HEADERS]
-                                },
-                                "allowed_client_headers": {
-                                    "patterns": [
-                                        {"exact": "cache-control"},
-                                        {"exact": "content-type"},
-                                    ]
-                                },
-                            },
-                        },
-                    },
-                },
-                {
                     "name": "envoy.filters.http.router",
                     "typed_config": {
                         "@type": "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router"
@@ -354,6 +261,8 @@ class KubernetesGateway(KubernetesResources):
                 }
             ]
         }
+
+        # Add TLS termination only when production gateway certificate material is configured.
         if self._gateway_uses_tls():
             filter_chain["transport_socket"] = {
                 "name": "envoy.transport_sockets.tls",
@@ -388,22 +297,10 @@ class KubernetesGateway(KubernetesResources):
                         "filter_chains": [filter_chain],
                     }
                 ],
-                "clusters": [control_plane_cluster, *application_clusters],
+                "clusters": application_clusters,
             }
         }
         return yaml.safe_dump(config, sort_keys=False)
-
-    def _gateway_lua_filter(self) -> str:
-        """Return Lua code that strips spoofable identity headers before authorization."""
-
-        header_lines = "\n".join(
-            f'    request_headers:remove("{header}")' for header in GATEWAY_IDENTITY_HEADERS
-        )
-        return f"""function envoy_on_request(request_handle)
-    local request_headers = request_handle:headers()
-{header_lines}
-end
-"""
 
     def _gateway_manifests(self, envoy_config: str) -> list[dict[str, Any]]:
         """Return Kubernetes manifests for the per-cluster Envoy gateway."""
@@ -420,12 +317,15 @@ end
             {"name": "config", "emptyDir": {}},
             {"name": "tmp", "emptyDir": {}},
         ]
+
+        # Mount TLS material only when Envoy terminates HTTPS itself.
         if gateway_uses_tls:
             volume_mounts.append(
                 {"name": "tls", "mountPath": GATEWAY_TLS_MOUNT_PATH, "readOnly": True}
             )
             volumes.append({"name": "tls", "secret": {"secretName": GATEWAY_TLS_SECRET_NAME}})
 
+        # Local development can use an Ingress on port 80; production exposes the gateway service directly.
         use_development_ingress = env.DEVELOPMENT and not gateway_uses_tls
         gateway_service_port = 80 if use_development_ingress else GATEWAY_SERVICE_PORT
         service_spec: dict[str, Any] = {
@@ -440,6 +340,8 @@ end
                 }
             ],
         }
+
+        # Preserve static load balancer assignments when production infrastructure requires one.
         if (
             not use_development_ingress
             and self._gateway_load_balancer_ip is not None
@@ -470,6 +372,7 @@ end
         }
         manifests = templates.readyml_list(TEMPLATES / "gateway.yml", **template_context)
 
+        # Insert the TLS Secret before the ConfigMap so referenced certificate data exists with the deployment.
         if gateway_uses_tls:
             tls_manifests = templates.readyml_list(
                 TEMPLATES / "gateway_tls_secret.yml",
@@ -484,6 +387,7 @@ end
             )
             manifests[1:1] = tls_manifests
 
+        # Development needs an Ingress resource because the local gateway service stays ClusterIP.
         if use_development_ingress:
             ingress_manifests = templates.readyml_list(
                 TEMPLATES / "gateway_development_ingress.yml",
@@ -498,6 +402,8 @@ end
 
         await self._ensure_gateway_namespace()
         envoy_config = await self._gateway_config()
+
+        # Apply all rendered manifests, with a development-only Service type recreation fallback.
         for manifest in self._gateway_manifests(envoy_config):
             if manifest["kind"] == "Service":
                 try:

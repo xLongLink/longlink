@@ -76,9 +76,7 @@ async def test_create_rejects_invitation_for_existing_member_email(users: tuple[
     assert str(exc.value) == "User is already a member"
 
 
-async def test_create_rejects_duplicate_invitation_email_case_insensitively(
-    users: tuple[User, User, User],
-) -> None:
+async def test_create_rejects_duplicate_invitation_email_case_insensitively(users: tuple[User, User, User]) -> None:
     """Reject duplicate pending invitations even when email case differs."""
 
     # Arrange

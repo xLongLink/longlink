@@ -43,8 +43,6 @@ class DatabaseRegistry(SQLModel, table=True):
     port: int
     password: str = Field(max_length=255)
     username: str = Field(max_length=255)
-    runtime_host: str = Field(max_length=255)
-    runtime_port: int
 
     # Location
     location_id: UUID = Field(foreign_key="locations.id")

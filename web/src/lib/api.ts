@@ -101,11 +101,7 @@ async function requestApi(path: string, init?: RequestInit): Promise<Response> {
 }
 
 /** Fetches JSON and optionally validates it before returning typed data. */
-export async function fetchApiJson<T>(
-    path: string,
-    init?: RequestInit,
-    parse?: (value: unknown) => T
-): Promise<T> {
+export async function fetchApiJson<T>(path: string, init?: RequestInit, parse?: (value: unknown) => T): Promise<T> {
     const response = await requestApi(path, init);
     const value = (await response.json()) as unknown;
 

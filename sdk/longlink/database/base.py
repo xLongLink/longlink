@@ -1,5 +1,4 @@
 import re
-import longlink.utils.url as url
 from uuid import UUID
 from typing import Any, ClassVar
 from datetime import datetime
@@ -9,6 +8,7 @@ from sqlalchemy import Uuid, Column, String, DateTime
 from tenant.utils import utcnow
 from tenant.models import User as TenantUser
 from sqlalchemy.orm import relationship, declared_attr
+from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import (AsyncEngine, async_sessionmaker,
                                     create_async_engine)
 from longlink.utils.settings import Envs
@@ -207,7 +207,29 @@ def create_engine(env: Envs) -> AsyncEngine:
     elif env.ENV == "development":
         dburl = "sqlite+aiosqlite:///./dev.db"
     else:
-        dburl = url.database(env.DATABASE_URL)
+        database_host = env.DATABASE_HOST
+        database_name = env.DATABASE_NAME
+        database_port = env.DATABASE_PORT
+        database_password = env.DATABASE_PASSWORD
+        database_username = env.DATABASE_USERNAME
+        if (
+            database_host is None
+            or database_name is None
+            or database_port is None
+            or database_password is None
+            or database_username is None
+        ):
+            raise ValueError("Production database settings require host, port, name, username, and password")
+
+        # Production runtimes receive database connection components from the control plane.
+        dburl = URL.create(
+            "postgresql+asyncpg",
+            username=database_username,
+            password=database_password,
+            host=database_host,
+            port=database_port,
+            database=database_name,
+        ).render_as_string(hide_password=False)
 
     engine_kwargs: dict[str, Any] = {
         "pool_pre_ping": True,

@@ -22,8 +22,6 @@ const databaseConnectionSchema = z.object({
     port: z.coerce.number().int().min(1).max(65535),
     username: z.string().trim().min(1),
     password: z.string().min(1),
-    runtimeHost: z.string().trim(),
-    runtimePort: z.union([z.literal(''), z.coerce.number().int().min(1).max(65535)]),
     locationId: z.string().min(1),
 });
 
@@ -37,8 +35,6 @@ const defaultDatabaseConnectionValues = {
     port: '5432',
     username: '',
     password: '',
-    runtimeHost: '',
-    runtimePort: '',
     locationId: '',
 } satisfies DatabaseConnectionInput;
 
@@ -79,8 +75,6 @@ export default function ConnectDatabaseDialog() {
                         port: payload.port,
                         username: payload.username,
                         password: payload.password,
-                        runtime_host: payload.runtimeHost || undefined,
-                        runtime_port: payload.runtimePort === '' ? undefined : payload.runtimePort,
                         location_id: payload.locationId,
                     }),
                 },
@@ -175,27 +169,6 @@ export default function ConnectDatabaseDialog() {
             <div className="space-y-2">
                 <Label htmlFor="database-password">{t('labels.password')}</Label>
                 <Input id="database-password" type="password" {...form.register('password')} autoComplete="off" />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                    <Label htmlFor="database-runtime-host">{t('labels.runtimeHost')}</Label>
-                    <Input
-                        id="database-runtime-host"
-                        {...form.register('runtimeHost')}
-                        placeholder="host.k3d.internal"
-                        autoComplete="off"
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="database-runtime-port">{t('labels.runtimePort')}</Label>
-                    <Input
-                        id="database-runtime-port"
-                        type="number"
-                        {...form.register('runtimePort')}
-                        placeholder={String(values.port || '5432')}
-                    />
-                </div>
             </div>
 
             <RegistryLocationField

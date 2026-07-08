@@ -368,15 +368,6 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     return dockerfile_path, version, project_metadata.name
 
 
-def run_docker_command(command: list[str]) -> None:
-    """Run a Docker command and report a missing Docker CLI accurately."""
-
-    try:
-        subprocess.run(command, check=True)
-    except FileNotFoundError as error:
-        raise click.ClickException("Docker CLI is not installed or not available on PATH") from error
-
-
 def resolve_image_tag(app_name: str, version: str, registry: str | None = None) -> str:
     """Return the Docker image tag for an app name, version, and optional registry."""
 
@@ -418,20 +409,25 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
 def build_command(tag: str | None, registry: str | None, push: bool) -> None:
     """Create temporary Docker build artifacts and build the image locally."""
 
-    try:
-        with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
-            build_context = Path(temp_dir)
-            dockerfile_path, version, app_name = build_app(build_context, tag=tag)
-            try:
-                image_tag = resolve_image_tag(app_name, version, registry)
-            except ValueError as exc:
-                raise click.ClickException(str(exc)) from exc
-            image_id_path = build_context / "image-id.txt"
+    with tempfile.TemporaryDirectory(prefix="longlink-build-") as temp_dir:
+        build_context = Path(temp_dir)
+        dockerfile_path, version, app_name = build_app(build_context, tag=tag)
+        try:
+            image_tag = resolve_image_tag(app_name, version, registry)
+        except ValueError as exc:
+            raise click.ClickException(str(exc)) from exc
 
+        docker_command = shutil.which("docker")
+        if docker_command is None:
+            raise click.ClickException("Docker is required to build images")
+
+        image_id_path = build_context / "image-id.txt"
+
+        try:
             # Build from a context that includes local path dependencies referenced by uv.
-            run_docker_command(
+            subprocess.run(
                 [
-                    "docker",
+                    docker_command,
                     "build",
                     "--iidfile",
                     str(image_id_path),
@@ -440,20 +436,21 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
                     "-t",
                     image_tag,
                     str(build_context),
-                ]
+                ],
+                check=True,
             )
             image_id = image_id_path.read_text().strip()
 
             if push:
-                run_docker_command(["docker", "push", image_tag])
+                subprocess.run([docker_command, "push", image_tag], check=True)
+        except subprocess.CalledProcessError as error:
+            raise click.ClickException(f"Docker command failed with exit code {error.returncode}") from error
 
-        click.echo(f"Build completed for version {version}")
-        click.echo(f"- Built image: {image_tag}")
-        if push:
-            click.echo(f"- Pushed image: {image_tag}")
-        click.echo(f"- Image ID: {image_id}")
-        click.echo(f"- View it with: docker image inspect {image_tag}")
-        click.echo(f"- Run it with: docker run --rm -p 8000:8000 {image_tag}")
-        click.echo(f"- Remove it with: docker rmi {image_tag}")
-    except subprocess.CalledProcessError as error:
-        raise click.ClickException(f"Docker command failed with exit code {error.returncode}") from error
+    click.echo(f"Build completed for version {version}")
+    click.echo(f"- Built image: {image_tag}")
+    if push:
+        click.echo(f"- Pushed image: {image_tag}")
+    click.echo(f"- Image ID: {image_id}")
+    click.echo(f"- View it with: docker image inspect {image_tag}")
+    click.echo(f"- Run it with: docker run --rm -p 8000:8000 {image_tag}")
+    click.echo(f"- Remove it with: docker rmi {image_tag}")

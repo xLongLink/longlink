@@ -1,6 +1,6 @@
 from pathlib import Path
-from click.testing import CliRunner
 from longlink.cli import build
+from click.testing import CliRunner
 from longlink.cli.build import (build_app, build_command, read_env_spec,
                                 render_dockerfile, resolve_image_tag)
 
@@ -73,7 +73,7 @@ def test_build_reports_missing_project_file_before_docker() -> None:
         # Assert
         assert result.exit_code == 1
         assert f"Project file not found: {Path.cwd() / 'pyproject.toml'}" in result.output
-        assert "Docker CLI is not installed" not in result.output
+        assert "Docker is required" not in result.output
 
 
 def test_read_env_spec_emits_only_supported_environment_metadata(tmp_path: Path) -> None:
@@ -221,24 +221,26 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch) -> None:
         dockerfile_path.write_text("FROM scratch\n", encoding="utf-8")
         return dockerfile_path, "dev", "Demo App"
 
-    def fake_run_docker_command(command: list[str]) -> None:
+    def fake_run(command: list[str], check: bool) -> None:
         """Capture Docker commands and write the expected build image id."""
 
+        assert check is True
         commands.append(command)
-        if command[:2] == ["docker", "build"]:
+        if command[1] == "build":
             image_id_path = Path(command[command.index("--iidfile") + 1])
             image_id_path.write_text("sha256:demo\n", encoding="utf-8")
 
     monkeypatch.setattr(build, "build_app", fake_build_app)
-    monkeypatch.setattr(build, "run_docker_command", fake_run_docker_command)
+    monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
+    monkeypatch.setattr(build.subprocess, "run", fake_run)
 
     result = runner.invoke(build.build_command, ["--tag", "dev", "--registry", "localhost:15000", "--push"])
 
     assert result.exit_code == 0
     assert len(commands) == 2
-    assert commands[0][0:2] == ["docker", "build"]
+    assert commands[0][0:2] == ["/usr/bin/docker", "build"]
     assert commands[0][commands[0].index("-t") + 1] == "localhost:15000/demo-app:dev"
-    assert commands[1][0:2] == ["docker", "push"]
+    assert commands[1][0:2] == ["/usr/bin/docker", "push"]
     assert commands[1][-1] == "localhost:15000/demo-app:dev"
     assert "- Built image: localhost:15000/demo-app:dev" in result.output
     assert "- Pushed image: localhost:15000/demo-app:dev" in result.output

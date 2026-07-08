@@ -11,8 +11,6 @@ import { apiUrl } from '@/lib/api';
 import { sanitizeRedirectPath } from '@/lib/redirects';
 import { getInitials } from '@/lib/utils';
 
-type SocialLoginProvider = 'github' | 'google';
-
 /** Renders the shared OIDC redirect sign-in card. */
 export function SignInCard({ redirectTo }: { redirectTo: string }) {
     const { t } = useTranslation();
@@ -30,13 +28,9 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
         }
     }
 
-    /** Redirects the browser to the OIDC login endpoint with the optional provider hint and target path. */
-    function handleProviderSignIn(provider?: SocialLoginProvider) {
+    /** Redirects the browser to the OIDC login endpoint with the target path. */
+    function handleProviderSignIn() {
         const redirectParameters = new URLSearchParams({ next: safeRedirectTo });
-
-        if (provider !== undefined) {
-            redirectParameters.set('provider', provider);
-        }
 
         window.location.assign(apiUrl(`/auth/login/oidc?${redirectParameters.toString()}`));
     }
@@ -63,25 +57,9 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
                             type="button"
                             variant="outline"
                             className="w-full"
-                            onClick={() => handleProviderSignIn()}
+                            onClick={handleProviderSignIn}
                         >
                             {t('actions.login')}
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full"
-                            onClick={() => handleProviderSignIn('github')}
-                        >
-                            {t('actions.continueWithGithub')}
-                        </Button>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full"
-                            onClick={() => handleProviderSignIn('google')}
-                        >
-                            {t('actions.continueWithGoogle')}
                         </Button>
                     </div>
 

@@ -1,78 +1,34 @@
 import fsspec
-import urllib.parse
 from fsspec.spec import AbstractFileSystem
 from longlink.utils.settings import Envs
 from fsspec.implementations.dirfs import DirFileSystem
 
-PRODUCTION_STORAGE_PROTOCOLS = {"s3"}
-PRODUCTION_ENDPOINT_PROTOCOLS = {"http", "https"}
 
+def create_fs(env: Envs, bucket: str) -> AbstractFileSystem:
+    """Create the active runtime filesystem, optionally scoped to one bucket path."""
 
-def create_fs(env: Envs) -> AbstractFileSystem:
-    """Create the application-scoped filesystem for the active environment."""
-
-    return _create_scoped_fs(env, env.STORAGE_BUCKET)
-
-
-def create_shared_fs(env: Envs) -> AbstractFileSystem:
-    """Create the shared organization filesystem for the active environment."""
-
-    return _create_scoped_fs(env, env.STORAGE_SHARED_BUCKET)
-
-
-def _create_scoped_fs(env: Envs, bucket: str | None) -> AbstractFileSystem:
-    """Create a filesystem, optionally scoped to one bucket path."""
-
+    # Tests use isolated in-memory storage so they never touch local files or remote services.
     if env.ENV == "testing":
         filesystem = fsspec.filesystem("memory")
-        if bucket:
-            return DirFileSystem(path=bucket, fs=filesystem)
 
-        return filesystem
-
-    if env.ENV == "development":
+    # Development uses the local filesystem so generated files remain easy to inspect.
+    elif env.ENV == "development":
         filesystem = fsspec.filesystem("file")
-        if bucket:
-            return DirFileSystem(path=bucket, fs=filesystem)
 
-        return filesystem
+    else:
+        if env.STORAGE_ENDPOINT_URL is None or env.STORAGE_USERNAME is None or env.STORAGE_PASSWORD is None:
+            raise ValueError("Production storage settings require endpoint URL, username, and password")
 
-    storage_url = urllib.parse.urlsplit(env.STORAGE_URL)
-    if storage_url.scheme in {"", "file"}:
-        raise ValueError("Production storage requires a non-local storage URL")
+        # Production runtimes receive S3 connection options from the control plane.
+        filesystem = fsspec.filesystem(
+            "s3",
+            endpoint_url=env.STORAGE_ENDPOINT_URL,
+            key=env.STORAGE_USERNAME,
+            secret=env.STORAGE_PASSWORD,
+        )
 
-    protocol_parts = storage_url.scheme.split("+", 1)
-    storage_protocol = protocol_parts[0]
-    if storage_protocol not in PRODUCTION_STORAGE_PROTOCOLS:
-        raise ValueError("Production storage requires an S3-compatible storage URL")
-
-    if len(protocol_parts) == 1:
-        filesystem = fsspec.filesystem(storage_protocol)
-
-        if bucket:
-            return DirFileSystem(path=bucket, fs=filesystem)
-
-        return filesystem
-
-    # LongLink stores endpoint transport in the URL scheme suffix, for example s3+https://...
-    _, endpoint_protocol = protocol_parts
-    if endpoint_protocol not in PRODUCTION_ENDPOINT_PROTOCOLS or storage_url.hostname is None:
-        raise ValueError("Production storage endpoint URL must use http or https")
-
-    endpoint_netloc = storage_url.netloc.rsplit("@", 1)[-1]
-    endpoint_url = urllib.parse.urlunsplit(
-        (endpoint_protocol, endpoint_netloc, storage_url.path, storage_url.query, storage_url.fragment)
-    )
-
-    filesystem = fsspec.filesystem(
-        storage_protocol,
-        endpoint_url=endpoint_url,
-        key=urllib.parse.unquote(storage_url.username or ""),
-        secret=urllib.parse.unquote(storage_url.password or ""),
-    )
-
+    # A bucket turns the filesystem into a scoped view; an empty bucket keeps the backend root.
     if bucket:
-        # Runtime applications should work with keys inside the selected bucket only.
         return DirFileSystem(path=bucket, fs=filesystem)
 
     return filesystem

@@ -15,11 +15,11 @@ import { toast } from 'sonner';
 import { DataTable } from '@/components/DataTable';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUsers } from '@/data/admin';
-import type { ApiUserSummary } from '@/lib/types';
+import type { ApiUserListItem } from '@/lib/types';
 import { getInitials } from '@/lib/utils';
 
 /** Builds localized admin user table columns. */
-function createUserColumns(t: TFunction): Array<ColumnDef<ApiUserSummary>> {
+function createUserColumns(t: TFunction): Array<ColumnDef<ApiUserListItem>> {
     return [
         {
             id: 'user',

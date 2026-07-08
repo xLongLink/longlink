@@ -4,8 +4,8 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { CheckIcon, ChevronRightIcon } from 'lucide-react';
 
-function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
-    return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
+function DropdownMenu({ modal = false, ...props }: MenuPrimitive.Root.Props) {
+    return <MenuPrimitive.Root data-slot="dropdown-menu" modal={modal} {...props} />;
 }
 
 function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
@@ -50,13 +50,7 @@ function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
     return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />;
 }
 
-function DropdownMenuLabel({
-    className,
-    inset,
-    ...props
-}: MenuPrimitive.GroupLabel.Props & {
-    inset?: boolean;
-}) {
+function DropdownMenuLabel({ className, inset, ...props }: MenuPrimitive.GroupLabel.Props & { inset?: boolean }) {
     return (
         <MenuPrimitive.GroupLabel
             data-slot="dropdown-menu-label"

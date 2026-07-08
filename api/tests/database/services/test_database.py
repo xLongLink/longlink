@@ -47,41 +47,12 @@ async def test_create_get_and_fetch_all_return_active_database_registries(users:
     assert registry.port == 5432
     assert registry.username == "longlink"
     assert registry.password == "secret"
-    assert registry.runtime_host == "postgres.example"
-    assert registry.runtime_port == 5432
     assert registry.location_id == location.id
     assert registry.created_by.id == owner.id
     assert registry.updated_by.id == owner.id
     assert [item.id for item in fetched] == [registry.id]
     assert reloaded is not None
     assert reloaded.id == registry.id
-
-
-async def test_create_persists_database_runtime_connection_overrides(users: tuple[User, User, User]) -> None:
-    """Persist database runtime host and port overrides when provided."""
-
-    # Arrange
-    owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, "CH")
-
-    # Act
-    registry = await db.database.create(
-        DatabaseKind.postgresql,
-        "Primary database",
-        "primary-database",
-        "postgres.example",
-        5432,
-        "longlink",
-        "secret",
-        location.id,
-        owner,
-        runtime_host="postgres.runtime",
-        runtime_port=15432,
-    )
-
-    # Assert
-    assert registry.runtime_host == "postgres.runtime"
-    assert registry.runtime_port == 15432
 
 
 async def test_create_rejects_duplicate_database_registry_names(users: tuple[User, User, User]) -> None:

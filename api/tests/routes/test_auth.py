@@ -46,9 +46,7 @@ class OAuthStub:
         return self.oidc_client
 
 
-def test_login_oidc_forwards_social_provider_hint(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_login_oidc_forwards_social_provider_hint(monkeypatch: pytest.MonkeyPatch) -> None:
     """Pass the selected social provider to Keycloak as an identity-provider hint."""
 
     # Arrange
@@ -111,10 +109,7 @@ def test_login_oidc_rejects_unsafe_next_path(monkeypatch: pytest.MonkeyPatch) ->
 
 
 @pytest.mark.parametrize("unsafe_next_path", ["%2F%5Cevil.example", "%2Fsafe%0ASet-Cookie%3Aevil"])
-def test_login_oidc_rejects_malformed_next_path(
-    monkeypatch: pytest.MonkeyPatch,
-    unsafe_next_path: str,
-) -> None:
+def test_login_oidc_rejects_malformed_next_path(monkeypatch: pytest.MonkeyPatch, unsafe_next_path: str) -> None:
     """Fallback to the default page when the next path contains unsafe characters."""
 
     # Arrange
@@ -136,9 +131,7 @@ def test_login_oidc_rejects_malformed_next_path(
     ]
 
 
-async def test_list_accounts_returns_current_active_account(
-    users: tuple[User, User, User],
-) -> None:
+async def test_list_accounts_returns_current_active_account(users: tuple[User, User, User]) -> None:
     """Return the saved session accounts for the login screen."""
 
     # Arrange
@@ -159,9 +152,7 @@ async def test_list_accounts_returns_current_active_account(
     ]
 
 
-async def test_activate_account_switches_the_active_session_account(
-    users: tuple[User, User, User],
-) -> None:
+async def test_activate_account_switches_the_active_session_account(users: tuple[User, User, User]) -> None:
     """Switch the active account inside the saved session list."""
 
     # Arrange
@@ -191,9 +182,7 @@ async def test_activate_account_switches_the_active_session_account(
     assert me_response.json() == UserProfile.model_validate(current_profile.model_dump()).model_dump(mode="json")
 
 
-async def test_activate_account_rejects_account_not_saved_in_session(
-    users: tuple[User, User, User],
-) -> None:
+async def test_activate_account_rejects_account_not_saved_in_session(users: tuple[User, User, User]) -> None:
     """Reject account switching when the target account was not saved by this browser session."""
 
     # Arrange
@@ -211,9 +200,7 @@ async def test_activate_account_rejects_account_not_saved_in_session(
     assert response.json() == {"detail": "Account is not saved in this session"}
 
 
-async def test_deactivate_account_clears_only_the_active_session_account(
-    users: tuple[User, User, User],
-) -> None:
+async def test_deactivate_account_clears_only_the_active_session_account(users: tuple[User, User, User]) -> None:
     """Clear the active account without removing saved accounts."""
 
     # Arrange

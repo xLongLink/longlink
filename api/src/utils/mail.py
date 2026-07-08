@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import ssl
+import shutil
 import asyncio
 import subprocess
 import email.utils
@@ -45,18 +46,19 @@ def render_mjml(mjml_content: str) -> str:
     if not command:
         raise MailTemplateError("EMAIL_MJML_COMMAND is not set")
 
-    try:
-        result = subprocess.run(
-            [command, "-s"],
-            input=mjml_content,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
-    except FileNotFoundError as exc:
+    resolved_command = shutil.which(command)
+    if resolved_command is None:
         raise MailTemplateError(
             f"MJML command '{command}' is not available. Install '@mjml/cli' and set EMAIL_MJML_COMMAND accordingly."
-        ) from exc
+        )
+
+    result = subprocess.run(
+        [resolved_command, "-s"],
+        input=mjml_content,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
 
     if result.returncode != 0:
         raise MailTemplateError(

@@ -19,9 +19,7 @@ router = APIRouter()
 
 
 @router.get("/api/databases", response_model=list[DatabaseRegistryResponse])
-async def list_database_registries(
-    _user: User = Depends(authsupport),
-) -> list[DatabaseRegistryResponse]:
+async def list_database_registries(_user: User = Depends(authsupport)) -> list[DatabaseRegistryResponse]:
     """Return all registered database backends."""
 
     registries = await database.fetch_all()

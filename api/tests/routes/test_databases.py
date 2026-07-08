@@ -32,8 +32,6 @@ async def test_database_registry_endpoint_supports_create_and_list(
             "port": 5432,
             "username": "longlink",
             "password": "secret",
-            "runtime_host": "db.runtime.longlink.internal",
-            "runtime_port": 15432,
             "location_id": str(location.id),
         },
     )
@@ -47,7 +45,6 @@ async def test_database_registry_endpoint_supports_create_and_list(
     create_payload = create_response.json()
     assert create_payload["id"] == registry_id
     assert create_payload["name"] == "primary"
-    assert create_payload["runtime_host"] == "db.runtime.longlink.internal"
     assert "password" not in create_payload
     assert list_response.status_code == 200
     assert [item["id"] for item in list_response.json()] == [registry_id]
@@ -82,12 +79,16 @@ async def test_database_usage_endpoint_returns_backend_capacity(
 
     class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str) -> None:
+            """Store database registry configuration for assertions."""
+
             self.host = host
             self.port = port
             self.username = username
             self.password = password
 
         async def usage(self) -> dict[str, int]:
+            """Return fake backend capacity counters."""
+
             return {"space_used": 987654321}
 
     monkeypatch.setattr(

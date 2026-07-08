@@ -63,25 +63,3 @@ def absolute_url_scheme(value: str) -> str | None:
         return parsed_value.scheme
 
     return None
-
-
-def storage_url_with_credentials(endpoint_url: str, access_key_id: str, secret_access_key: str) -> str:
-    """Return an S3 runtime URL with scoped credentials embedded."""
-
-    endpoint = urllib.parse.urlsplit(endpoint_url)
-    if not endpoint.scheme or not endpoint.netloc:
-        raise ValueError(f"Invalid storage runtime endpoint URL: {endpoint_url}")
-
-    # Preserve the endpoint shape for fsspec while adding runtime credentials safely.
-    encoded_access_key_id = urllib.parse.quote(access_key_id, safe="")
-    encoded_secret_access_key = urllib.parse.quote(secret_access_key, safe="")
-    netloc = f"{encoded_access_key_id}:{encoded_secret_access_key}@{endpoint.netloc}"
-    return urllib.parse.urlunsplit(
-        (
-            f"s3+{endpoint.scheme}",
-            netloc,
-            endpoint.path,
-            endpoint.query,
-            endpoint.fragment,
-        )
-    )

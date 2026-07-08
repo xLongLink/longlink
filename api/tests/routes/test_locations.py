@@ -2,9 +2,7 @@ from fastapi.testclient import TestClient
 from src.models.locations import LocationProvider
 
 
-async def test_create_location_accepts_iso_country_code(
-    clients: tuple[TestClient, TestClient, TestClient],
-) -> None:
+async def test_create_location_accepts_iso_country_code(clients: tuple[TestClient, TestClient, TestClient]) -> None:
     """Accept a valid ISO 3166-1 alpha-2 country code."""
 
     # Arrange

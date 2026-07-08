@@ -23,13 +23,7 @@ class S3(Storage):
     _MISSING_BUCKET_CODES = {"404", "NoSuchBucket", "NotFound"}
     _MISSING_OBJECT_CODES = {"404", "NoSuchKey", "NotFound"}
 
-    def __init__(
-        self,
-        protocol: str,
-        endpoint_url: str,
-        access_key_id: str,
-        secret_access_key: str,
-    ) -> None:
+    def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
         """Initialize the storage adapter."""
         self._protocol = protocol
         self._endpoint_url = endpoint_url

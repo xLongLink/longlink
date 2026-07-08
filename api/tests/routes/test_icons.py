@@ -1,9 +1,7 @@
 from fastapi.testclient import TestClient
 
 
-def test_list_icons_returns_lucide_icon_list(
-    clients: tuple[TestClient, TestClient, TestClient],
-) -> None:
+def test_list_icons_returns_lucide_icon_list(clients: tuple[TestClient, TestClient, TestClient]) -> None:
     """Return all valid Lucide icon slugs for UI selectors."""
 
     client = clients[0]
@@ -17,9 +15,7 @@ def test_list_icons_returns_lucide_icon_list(
     assert "rocket" in icons
 
 
-def test_create_application_rejects_invalid_icon(
-    clients: tuple[TestClient, TestClient, TestClient],
-) -> None:
+def test_create_application_rejects_invalid_icon(clients: tuple[TestClient, TestClient, TestClient]) -> None:
     """Reject application creation payloads with unknown icon slugs."""
 
     client = clients[0]

@@ -61,8 +61,6 @@ async def create(
     password: str,
     location_id: UUID,
     user: User,
-    runtime_host: str | None = None,
-    runtime_port: int | None = None,
 ) -> DatabaseRegistry:
     """Create one database backend registration."""
 
@@ -80,8 +78,6 @@ async def create(
             port=port,
             password=password,
             username=username,
-            runtime_host=runtime_host or host,
-            runtime_port=runtime_port if runtime_port is not None else port,
             location_id=location_id,
         )
         database.created_id = user.id

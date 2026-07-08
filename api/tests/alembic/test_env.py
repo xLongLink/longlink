@@ -13,9 +13,13 @@ class _FakeTransaction:
     """Minimal sync transaction context manager for Alembic tests."""
 
     def __enter__(self):
+        """Enter the fake transaction context."""
+
         return self
 
     def __exit__(self, exc_type, exc, tb):
+        """Exit the fake transaction context without suppressing errors."""
+
         return False
 
 
@@ -23,12 +27,18 @@ class _FakeConnection:
     """Minimal async connection used by the Alembic engine stub."""
 
     async def __aenter__(self):
+        """Enter the fake async connection context."""
+
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
+        """Exit the fake async connection context without suppressing errors."""
+
         return False
 
     async def run_sync(self, fn):
+        """Run the supplied sync Alembic callback."""
+
         fn("sync-connection")
 
 
@@ -36,13 +46,19 @@ class _FakeEngine:
     """Minimal async engine stub for Alembic startup tests."""
 
     def __init__(self, log: list[tuple[str, object]]) -> None:
+        """Store the shared call log."""
+
         self.log = log
 
     def connect(self):
+        """Return a fake async connection and record the connection attempt."""
+
         self.log.append(("connect", None))
         return _FakeConnection()
 
     async def dispose(self):
+        """Record engine disposal."""
+
         self.log.append(("dispose", None))
 
 
@@ -69,6 +85,8 @@ def test_alembic_normalizes_mysql_urls_to_aiomysql(monkeypatch) -> None:
     monkeypatch.setattr(context, "run_migrations", lambda: log.append(("migrations", None)), raising=False)
 
     def fake_create_async_engine(url, **kwargs):
+        """Capture the normalized URL used to build the async engine."""
+
         log.append(("engine", (str(url), kwargs)))
         return _FakeEngine(log)
 
@@ -118,6 +136,8 @@ def test_alembic_normalizes_postgresql_urls_to_asyncpg(monkeypatch) -> None:
     monkeypatch.setattr(context, "run_migrations", lambda: log.append(("migrations", None)), raising=False)
 
     def fake_create_async_engine(url, **kwargs):
+        """Capture the normalized URL used to build the async engine."""
+
         log.append(("engine", (str(url), kwargs)))
         return _FakeEngine(log)
 

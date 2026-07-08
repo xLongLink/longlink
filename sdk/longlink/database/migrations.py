@@ -10,27 +10,15 @@ from sqlalchemy.exc import OperationalError
 
 CURRENT_FILE = Path(__file__).resolve()
 MIGRATIONS_DIRECTORY = "migrations"
-INITIAL_INVENTORY_MIGRATION = "20260630_0001_initial_inventory.py"
 MIGRATION_RETRY_ATTEMPTS = 30
 MIGRATION_RETRY_DELAY_SECONDS = 2
-RETRYABLE_MIGRATION_ERROR_MESSAGES = (
+_RETRYABLE_MIGRATION_ERROR_FRAGMENTS = (
     "connect call failed",
     "connection refused",
     "could not translate host name",
     "name or service not known",
     "temporary failure in name resolution",
 )
-INTEGER_AUDIT_COLUMN_REPLACEMENTS = {
-    'sa.Column("created_id", sa.Integer(), nullable=True)': (
-        'sa.Column("created_id", sa.Uuid(), nullable=True)'
-    ),
-    'sa.Column("updated_id", sa.Integer(), nullable=True)': (
-        'sa.Column("updated_id", sa.Uuid(), nullable=True)'
-    ),
-    'sa.Column("deleted_id", sa.Integer(), nullable=True)': (
-        'sa.Column("deleted_id", sa.Uuid(), nullable=True)'
-    ),
-}
 
 
 def iter_exception_chain(exc: BaseException) -> list[BaseException]:
@@ -56,7 +44,7 @@ def retryable_migration_error(exc: BaseException) -> bool:
 
         if isinstance(chained_exception, OperationalError):
             message = str(chained_exception).lower()
-            if any(fragment in message for fragment in RETRYABLE_MIGRATION_ERROR_MESSAGES):
+            if any(fragment in message for fragment in _RETRYABLE_MIGRATION_ERROR_FRAGMENTS):
                 return True
 
     return False
@@ -98,14 +86,6 @@ def iter_application_model_files() -> list[Path]:
             if not py_file.name.startswith("__")
         )
 
-    legacy_model_path = root / "src" / "database"
-    if legacy_model_path.exists():
-        model_files.extend(
-            py_file
-            for py_file in sorted(legacy_model_path.glob("*.py"))
-            if not py_file.name.startswith("__")
-        )
-
     return model_files
 
 
@@ -126,26 +106,6 @@ def load_application_models() -> None:
         module = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
-
-
-def repair_stale_initial_inventory_migration(migrations_path: Path) -> None:
-    """Repair the generated initial inventory migration from older SDK scaffolds."""
-
-    migration_path = migrations_path / INITIAL_INVENTORY_MIGRATION
-    if not migration_path.exists():
-        return
-
-    migration_text = migration_path.read_text(encoding="utf-8")
-    repaired_text = migration_text
-
-    # Older SDK scaffolds wrote integer audit foreign keys, which fail against UUID users.id.
-    for old_column, new_column in INTEGER_AUDIT_COLUMN_REPLACEMENTS.items():
-        repaired_text = repaired_text.replace(old_column, new_column)
-
-    if repaired_text == migration_text:
-        return
-
-    migration_path.write_text(repaired_text, encoding="utf-8")
 
 
 def make_migrations() -> bool:
@@ -195,7 +155,6 @@ def apply_migrations() -> None:
 
     migrations_path = Path.cwd() / MIGRATIONS_DIRECTORY
     migrations_path.mkdir(exist_ok=True)
-    repair_stale_initial_inventory_migration(migrations_path)
 
     cfg = Config()
     cfg.set_main_option("script_location", str(CURRENT_FILE.parent))
@@ -215,12 +174,6 @@ def apply_migrations() -> None:
                 file=sys.stderr,
             )
             time.sleep(MIGRATION_RETRY_DELAY_SECONDS)
-
-
-def migrate() -> None:
-    """Apply all pending Alembic migrations."""
-
-    apply_migrations()
 
 
 if __name__ == "__main__":

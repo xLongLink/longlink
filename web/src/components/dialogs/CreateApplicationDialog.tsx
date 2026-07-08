@@ -12,6 +12,7 @@ import { useUserProfile } from '@/hooks/use-user';
 import { apiIconsSchema, apiImageMetadataSchema, parseApiResponse } from '@/lib/api-schemas';
 import { fetchApiJson } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
+import { canCreateApplication } from '@/lib/roles';
 import type { ApiImageMetadata } from '@/lib/types';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -22,12 +23,18 @@ type CreateApplicationDialogProps = {
 };
 
 const platformEnvironmentNames = new Set([
+    'LONGLINK_DATABASE_HOST',
+    'LONGLINK_DATABASE_NAME',
+    'LONGLINK_DATABASE_PASSWORD',
+    'LONGLINK_DATABASE_PORT',
     'LONGLINK_DATABASE_SCHEMA',
-    'LONGLINK_DATABASE_URL',
+    'LONGLINK_DATABASE_USERNAME',
     'LONGLINK_ENV',
     'LONGLINK_STORAGE_BUCKET',
+    'LONGLINK_STORAGE_ENDPOINT_URL',
+    'LONGLINK_STORAGE_PASSWORD',
     'LONGLINK_STORAGE_SHARED_BUCKET',
-    'LONGLINK_STORAGE_URL',
+    'LONGLINK_STORAGE_USERNAME',
 ]);
 
 const createApplicationFormSchema = z.object({
@@ -56,7 +63,7 @@ const defaultCreateApplicationValues = {
 /** Renders the create-application dialog for an organization. */
 export default function CreateApplicationDialog({ organization }: CreateApplicationDialogProps) {
     const { t } = useTranslation();
-    const { role } = useUserProfile();
+    const { organizations } = useUserProfile();
     const { createApplication, isCreatingApplication } = useOrganizationActions(organization);
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
@@ -77,8 +84,9 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
     const visibleIconOptions = values.icon && !iconOptions.includes(values.icon) ? [values.icon, ...iconOptions] : iconOptions;
     const configurableEnvironments =
         imageMetadata?.environments.filter((env) => !platformEnvironmentNames.has(env.name)) ?? [];
+    const organizationMembership = organizations.find((item) => item.slug === organization);
 
-    if (role === 'support') {
+    if (!canCreateApplication(organizationMembership?.role)) {
         return null;
     }
 

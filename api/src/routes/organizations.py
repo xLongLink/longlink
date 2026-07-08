@@ -2,13 +2,13 @@ from src import adapters, permissions
 from uuid import UUID
 from fastapi import Depends, Response, APIRouter
 from datetime import UTC, datetime, timedelta
-from src.auth import authuser, authsupport, organization_access
+from src.auth import authuser, authsupport
 from src.utils import names, buckets
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.logger import logger
 from src.operations import provisioning
 from tenant.database import SHARED_SCHEMA
-from src.models.roles import PlatformRoles
+from src.models.roles import role, PlatformRoles, OrganizationRoles
 from src.models.storages import (OrganizationStorageResourceKind, OrganizationStorageResourceResponse,
                                  OrganizationStorageApplicationResponse)
 from src.models.databases import (OrganizationDatabaseResourceKind, OrganizationDatabaseTableResponse,
@@ -30,9 +30,7 @@ ORGANIZATION_DELETE_DELAY_DAYS = 0
 
 
 @router.get("/api/organizations", response_model=list[OrganizationSummary])
-async def list_organizations(
-    _user: User = Depends(authsupport),
-) -> list[OrganizationSummary]:
+async def list_organizations(_user: User = Depends(authsupport)) -> list[OrganizationSummary]:
     """Return all organizations for support and administrator views."""
 
     records = await organizations.fetch_all()
@@ -43,7 +41,12 @@ async def list_organizations(
 async def get_organization(organization_id: UUID, user: User = Depends(authuser)) -> OrganizationDetails:
     """Return one organization and its metadata."""
 
-    return await organization_access(organization_id, user)
+    await permissions.organization_access(organization_id, user)
+    organization = await organizations.get(organization_id, application_user_id=user.id)
+    if organization is None:
+        raise NotFoundError("Organization", organization_id)
+
+    return organization
 
 
 @router.get(
@@ -51,7 +54,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     response_model=list[ApplicationResponse],
 )
 async def list_organization_applications(
-    member_access: permissions.OrganizationAccess = Depends(permissions.organization_member),
+    member_access: permissions.OrganizationAccess = Depends(permissions.organization_access),
 ) -> list[ApplicationResponse]:
     """Return the applications for one organization."""
 
@@ -67,12 +70,12 @@ async def list_organization_applications(
     response_model=list[OrganizationDatabaseResourceResponse],
 )
 async def list_organization_database_resources(
-    member_access: permissions.OrganizationAccess = Depends(permissions.organization_member),
+    member_access: permissions.OrganizationAccess = Depends(permissions.organization_access),
 ) -> list[OrganizationDatabaseResourceResponse]:
     """Return database schemas for one organization."""
 
     organization = member_access.organization
-    if not permissions.can_inspect_organization_resources(member_access.role):
+    if not role.atleast(member_access.role, OrganizationRoles.maintain):
         raise ForbiddenError("Database resource inspection permissions required")
 
     registry = await provisioning.organization_database_registry(organization)
@@ -88,12 +91,12 @@ async def list_organization_database_resources(
     response_model=list[OrganizationStorageResourceResponse],
 )
 async def list_organization_storage_resources(
-    member_access: permissions.OrganizationAccess = Depends(permissions.organization_member),
+    member_access: permissions.OrganizationAccess = Depends(permissions.organization_access),
 ) -> list[OrganizationStorageResourceResponse]:
     """Return storage buckets for one organization."""
 
     organization = member_access.organization
-    if not permissions.can_inspect_organization_resources(member_access.role):
+    if not role.atleast(member_access.role, OrganizationRoles.maintain):
         raise ForbiddenError("Storage resource inspection permissions required")
 
     registry = await provisioning.organization_storage_registry(organization)
@@ -111,12 +114,12 @@ async def list_organization_storage_resources(
 async def list_organization_database_resource_tables(
     resource_kind: OrganizationDatabaseResourceKind,
     resource_name: str,
-    member_access: permissions.OrganizationAccess = Depends(permissions.organization_member),
+    member_access: permissions.OrganizationAccess = Depends(permissions.organization_access),
 ) -> list[OrganizationDatabaseTableResponse]:
     """Return tables, columns, and preview rows for one organization database resource."""
 
     organization = member_access.organization
-    if not permissions.can_inspect_organization_resources(member_access.role):
+    if not role.atleast(member_access.role, OrganizationRoles.maintain):
         raise ForbiddenError("Database resource inspection permissions required")
 
     registry = await provisioning.organization_database_registry(organization)
@@ -152,13 +155,13 @@ async def list_organization_database_resource_tables(
 @router.post("/api/organizations/{organization_id}/invitations", status_code=204)
 async def create_organization_invitation(
     payload: OrganizationInvitationCreate,
-    member_access: permissions.OrganizationAccess = Depends(permissions.organization_member),
+    member_access: permissions.OrganizationAccess = Depends(permissions.organization_access),
 ) -> Response:
     """Create one invitation for an organization member."""
 
-    if not permissions.can_create_organization_invitation(member_access.role):
+    if not role.atleast(member_access.role, OrganizationRoles.maintain):
         raise ForbiddenError("Invitation permissions required")
-    if permissions.organization_role_rank(payload.role) > permissions.organization_role_rank(member_access.role):
+    if role.rank(payload.role) > role.rank(member_access.role):
         raise ForbiddenError("Invitation role permissions required")
 
     await invitations.create(member_access.organization.id, payload.email, payload.role, member_access.user)
@@ -170,20 +173,20 @@ async def create_organization_invitation(
 async def update_organization_member(
     member_id: UUID,
     payload: OrganizationMemberUpdate,
-    member_access: permissions.OrganizationAccess = Depends(permissions.organization_member),
+    member_access: permissions.OrganizationAccess = Depends(permissions.organization_access),
 ) -> Response:
     """Update one organization member role."""
 
     organization = member_access.organization
-    if not permissions.can_manage_organization_members(member_access.role):
+    if not role.atleast(member_access.role, OrganizationRoles.admin):
         raise ForbiddenError("Member management permissions required")
 
-    can_manage_owner_role = permissions.can_manage_organization_owner_role(member_access.role)
-    if permissions.is_organization_owner_role(payload.role) and not can_manage_owner_role:
+    can_manage_owner_role = role.atleast(member_access.role, OrganizationRoles.owner)
+    if payload.role == OrganizationRoles.owner and not can_manage_owner_role:
         raise ForbiddenError("Owner management permissions required")
 
     target_role = await organizations.membership_role(organization.id, member_id)
-    if permissions.is_organization_owner_role(target_role) and not can_manage_owner_role:
+    if target_role == OrganizationRoles.owner and not can_manage_owner_role:
         raise ForbiddenError("Owner management permissions required")
 
     updated = await organizations.update_member_role(organization.id, member_id, payload.role, member_access.user)
@@ -213,7 +216,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
             raise NotFoundError("Organization", organization_id)
 
         _, membership_role = member_access
-        if not permissions.can_delete_organization(membership_role):
+        if not role.atleast(membership_role, OrganizationRoles.owner):
             raise ForbiddenError("Organization deletion permissions required")
 
     deleted = await organizations.soft_delete(organization_id, user)

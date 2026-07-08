@@ -32,8 +32,7 @@ function createDatabaseColumnsBase(
             meta: { className: 'min-w-64' },
             cell: ({ row }) => {
                 const database = row.original;
-                const managementAddress = `${database.host}:${database.port}`;
-                const runtimeAddress = `${database.runtime_host}:${database.runtime_port}`;
+                const address = `${database.host}:${database.port}`;
 
                 return (
                     <Link
@@ -46,12 +45,7 @@ function createDatabaseColumnsBase(
                         />
                         <div className="min-w-0">
                             <div className="truncate font-medium text-foreground">{database.username}</div>
-                            <div className="truncate text-xs text-muted-foreground">{managementAddress}</div>
-                            {runtimeAddress !== managementAddress ? (
-                                <div className="truncate text-xs text-muted-foreground">
-                                    {t('common.runtime')} {runtimeAddress}
-                                </div>
-                            ) : null}
+                            <div className="truncate text-xs text-muted-foreground">{address}</div>
                         </div>
                     </Link>
                 );
@@ -108,8 +102,8 @@ export default function AdminDatabase() {
     const usageQueries = useQueries({
         queries: databases.map((registry) => ({
             queryKey: databaseUsageQueryKey(registry.id),
-            queryFn: async () =>
-                fetchApiJson(`/api/databases/${registry.id}/usage`, undefined, (value) =>
+            queryFn: async ({ signal }) =>
+                fetchApiJson(`/api/databases/${registry.id}/usage`, { signal }, (value) =>
                     parseApiResponse(apiDatabaseUsageSchema, value)
                 ),
             retry: false,

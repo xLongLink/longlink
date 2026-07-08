@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect } from 'react';
 
 import { useApiQuery } from '@/hooks/use-api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
-import { apiUserProfileSchema, apiUserSummarySchema, parseApiCollection, parseApiResponse } from '@/lib/api-schemas';
+import { apiUserListItemSchema, apiUserProfileSchema, parseApiCollection, parseApiResponse } from '@/lib/api-schemas';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { accountsQueryKey } from '@/lib/query-keys';
 import {
@@ -15,7 +15,7 @@ import {
     type Theme,
     type ThemeConfig,
 } from '@/lib/theme';
-import type { ApiUserProfile, ApiUserSummary } from '@/lib/types';
+import type { ApiUserListItem, ApiUserProfile } from '@/lib/types';
 
 export type User = ApiUserProfile;
 
@@ -26,7 +26,7 @@ type UserPreferences = Pick<User, 'theme' | 'accent' | 'radius' | 'language'>;
 type UserQueryResult = UseQueryResult<User | null, Error>;
 
 type AccountsState = {
-    items: ApiUserSummary[];
+    items: ApiUserListItem[];
     isLoading: boolean;
     error: Error | null;
 };
@@ -120,7 +120,7 @@ export function useUserProfile(): UserProfileState {
         throw new Error('useUserProfile must be used within a UserProvider');
     }
 
-    const { data: user, error, isFetching, isLoading } = context;
+    const { data: user, error, isLoading } = context;
 
     if (!user) {
         return {
@@ -131,7 +131,7 @@ export function useUserProfile(): UserProfileState {
             accent: DEFAULT_USER_PREFERENCES.accent,
             radius: DEFAULT_USER_PREFERENCES.radius,
             language: DEFAULT_USER_PREFERENCES.language,
-            isLoading: isLoading || isFetching,
+            isLoading,
             error: error ?? null,
         };
     }
@@ -144,7 +144,7 @@ export function useUserProfile(): UserProfileState {
         accent: user.accent,
         radius: user.radius,
         language: user.language,
-        isLoading: isLoading || isFetching,
+        isLoading,
         error: error ?? null,
     };
 }
@@ -153,8 +153,8 @@ export function useUserProfile(): UserProfileState {
 export function useUser() {
     const profile = useUserProfile();
     const queryClient = useQueryClient();
-    const accountsQuery = useCollectionQuery<ApiUserSummary>('/auth/accounts', {
-        parse: (value) => parseApiCollection(apiUserSummarySchema, value),
+    const accountsQuery = useCollectionQuery<ApiUserListItem>('/auth/accounts', {
+        parse: (value) => parseApiCollection(apiUserListItemSchema, value),
         refetchOnMount: 'always',
         retry: false,
     });
@@ -188,7 +188,7 @@ export function useUser() {
             {
                 method: 'POST',
             },
-            (value) => parseApiCollection(apiUserSummarySchema, value)
+            (value) => parseApiCollection(apiUserListItemSchema, value)
         );
 
         await queryClient.cancelQueries({ queryKey: accountsQueryKey() });

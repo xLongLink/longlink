@@ -57,13 +57,7 @@ function ContextMenuGroup({ ...props }: ContextMenuPrimitive.Group.Props) {
     return <ContextMenuPrimitive.Group data-slot="context-menu-group" {...props} />;
 }
 
-function ContextMenuLabel({
-    className,
-    inset,
-    ...props
-}: ContextMenuPrimitive.GroupLabel.Props & {
-    inset?: boolean;
-}) {
+function ContextMenuLabel({ className, inset, ...props }: ContextMenuPrimitive.GroupLabel.Props & { inset?: boolean }) {
     return (
         <ContextMenuPrimitive.GroupLabel
             data-slot="context-menu-label"

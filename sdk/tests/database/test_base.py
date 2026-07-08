@@ -38,7 +38,7 @@ def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> Non
 
 
 def test_create_engine_selects_database_url_by_environment(monkeypatch) -> None:
-    """Use testing, development, and normalized production database URLs."""
+    """Use testing, development, and component-built production database URLs."""
 
     captured: list[tuple[str, dict[str, object]]] = []
 
@@ -54,7 +54,11 @@ def test_create_engine_selects_database_url_by_environment(monkeypatch) -> None:
         Envs(ENV="development"),
         Envs(
             ENV="production",
-            DATABASE_URL="postgresql://app:secret@db:5432/longlink?sslmode=require&application_name=longlink",
+            DATABASE_HOST="db",
+            DATABASE_NAME="longlink",
+            DATABASE_PORT=5432,
+            DATABASE_PASSWORD="secret",
+            DATABASE_USERNAME="app",
         ),
     ]
 
@@ -72,7 +76,7 @@ def test_create_engine_selects_database_url_by_environment(monkeypatch) -> None:
             {"pool_pre_ping": True, "pool_recycle": 20},
         )
         assert captured[2] == (
-            "postgresql+asyncpg://app:secret@db:5432/longlink?application_name=longlink",
+            "postgresql+asyncpg://app:secret@db:5432/longlink",
             {"pool_pre_ping": True, "pool_recycle": 20, "pool_use_lifo": True},
         )
     finally:
@@ -98,8 +102,12 @@ def test_create_engine_sets_production_schema_search_path(monkeypatch) -> None:
         database_base.create_engine(
             Envs(
                 ENV="production",
-                DATABASE_URL="postgresql://app:secret@db:5432/longlink",
+                DATABASE_HOST="db",
+                DATABASE_NAME="longlink",
+                DATABASE_PORT=5432,
                 DATABASE_SCHEMA="dashboard",
+                DATABASE_PASSWORD="secret",
+                DATABASE_USERNAME="app",
             )
         )
 

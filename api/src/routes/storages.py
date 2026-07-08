@@ -26,9 +26,7 @@ def _managed_storage_bucket(bucket_name: str) -> bool:
 
 
 @router.get("/api/storages", response_model=list[StorageRegistryResponse])
-async def list_storage_registries(
-    _: User = Depends(authsupport),
-) -> list[StorageRegistryResponse]:
+async def list_storage_registries(_: User = Depends(authsupport)) -> list[StorageRegistryResponse]:
     """Return all registered storage backends."""
 
     registries = await storage.fetch_all()

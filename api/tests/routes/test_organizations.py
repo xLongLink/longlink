@@ -86,16 +86,22 @@ async def test_create_organization_initializes_database(
 
     class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str) -> None:
+            """Store database registry configuration for assertions."""
+
             self.host = host
             self.port = port
             self.username = username
             self.password = password
 
         async def database(self, organization: str) -> str:
+            """Record organization database creation and return its URL."""
+
             calls.append(("database", organization, None))
             return f"postgresql://db/{organization}"
 
         async def sync_users(self, organization: str, users: list[TenantUser]) -> None:
+            """Record synchronized tenant users for the organization."""
+
             calls.append(("sync_users", organization, users))
 
     monkeypatch.setattr(
@@ -145,19 +151,17 @@ async def test_create_organization_initializes_storage(
     )
 
     class FakeStorage:
-        def __init__(
-            self,
-            protocol: str,
-            endpoint_url: str,
-            access_key_id: str,
-            secret_access_key: str,
-        ) -> None:
+        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+            """Store storage registry configuration for assertions."""
+
             self.protocol = protocol
             self.endpoint_url = endpoint_url
             self.access_key_id = access_key_id
             self.secret_access_key = secret_access_key
 
         async def bucket(self, bucket_name: str) -> str:
+            """Record bucket creation and return the bucket name."""
+
             calls.append(("bucket", bucket_name))
             return bucket_name
 
@@ -300,12 +304,16 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
 
     class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str) -> None:
+            """Store database registry configuration for assertions."""
+
             self.host = host
             self.port = port
             self.username = username
             self.password = password
 
         async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
+            """Return fake schema usage rows for the organization database."""
+
             assert database_name == "longlink_acme"
             return [
                 {
@@ -386,12 +394,16 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
 
     class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str) -> None:
+            """Store database registry configuration for assertions."""
+
             self.host = host
             self.port = port
             self.username = username
             self.password = password
 
         async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
+            """Raise the backend error expected by the test."""
+
             raise RuntimeError("database offline")
 
     monkeypatch.setattr(
@@ -450,19 +462,17 @@ async def test_organization_storage_endpoint_returns_managed_buckets(
     )
 
     class FakeStorage:
-        def __init__(
-            self,
-            protocol: str,
-            endpoint_url: str,
-            access_key_id: str,
-            secret_access_key: str,
-        ) -> None:
+        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+            """Store storage registry configuration for assertions."""
+
             self.protocol = protocol
             self.endpoint_url = endpoint_url
             self.access_key_id = access_key_id
             self.secret_access_key = secret_access_key
 
         async def buckets(self) -> list[str]:
+            """Return fake bucket names from the storage backend."""
+
             return [
                 "longlink-acme-shared",
                 "longlink-acme-dashboard",
@@ -471,6 +481,8 @@ async def test_organization_storage_endpoint_returns_managed_buckets(
             ]
 
         async def bucket_usage(self, bucket_name: str) -> dict[str, int]:
+            """Return fake usage counters for one bucket."""
+
             assert bucket_name.startswith("longlink-acme-")
             return {"space_used": len(bucket_name), "object_count": 2}
 
@@ -536,19 +548,17 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     )
 
     class FakeStorage:
-        def __init__(
-            self,
-            protocol: str,
-            endpoint_url: str,
-            access_key_id: str,
-            secret_access_key: str,
-        ) -> None:
+        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+            """Store storage registry configuration for assertions."""
+
             self.protocol = protocol
             self.endpoint_url = endpoint_url
             self.access_key_id = access_key_id
             self.secret_access_key = secret_access_key
 
         async def buckets(self) -> list[str]:
+            """Raise the backend error expected by the test."""
+
             raise RuntimeError("storage offline")
 
     monkeypatch.setattr(
@@ -603,14 +613,19 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
 
     class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str) -> None:
+            """Store database registry configuration for assertions."""
+
             self.host = host
             self.port = port
             self.username = username
             self.password = password
 
         async def tables(self, database_name: str, schema_name: str, *, limit: int = 100) -> list[dict[str, object]]:
+            """Return fake table previews for shared and app schemas."""
+
             assert database_name == "longlink_acme"
             assert limit == 100
+            # The route requests each schema separately, so mirror different backend rows per schema.
             if schema_name == "shared":
                 return [
                     {

@@ -1,4 +1,5 @@
 import pytest
+import httpx2
 from types import SimpleNamespace
 from datetime import UTC, datetime
 from tenant.models import User as TenantUser
@@ -238,8 +239,6 @@ async def test_create_app_returns_app_response(
         port=5432,
         username="longlink",
         password="secret",
-        runtime_host="db.runtime.longlink.internal",
-        runtime_port=15432,
         location_id=remote_location.id,
         user=user,
     )
@@ -257,6 +256,8 @@ async def test_create_app_returns_app_response(
     )
 
     async def fake_metadata(image: str) -> LongLinkMetadata:
+        """Return image metadata with a resolved immutable image reference."""
+
         image_metadata = LongLinkMetadata(
             version="20250623_120000",
             sdk="0.1.0",
@@ -274,11 +275,15 @@ async def test_create_app_returns_app_response(
         """Fake compute adapter for app creation tests."""
 
         def __init__(self, kubeconfig: str, proxy_secret: str, ingress_host: str) -> None:
+            """Capture compute registry configuration."""
+
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
             captured["ingress_host"] = ingress_host
 
         async def namespace(self, organization: str) -> None:
+            """Record the namespace requested for the organization."""
+
             captured["namespace"] = organization
 
         async def application(
@@ -291,6 +296,8 @@ async def test_create_app_returns_app_response(
             secrets: dict[str, str],
             rollout_token: str = "",
         ) -> None:
+            """Record the application deployment request."""
+
             captured["application"] = {
                 "organization": organization,
                 "application": application,
@@ -304,32 +311,43 @@ async def test_create_app_returns_app_response(
     class FakeDatabase:
         """Fake database adapter for app creation tests."""
 
-        def __init__(
-            self,
-            host: str,
-            port: int,
-            username: str,
-            password: str,
-            runtime_host: str | None = None,
-            runtime_port: int | None = None,
-        ) -> None:
+        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+            """Capture database registry configuration."""
+
             captured["database"] = {
                 "host": host,
                 "port": port,
                 "username": username,
                 "password": password,
-                "runtime_host": runtime_host,
-                "runtime_port": runtime_port,
             }
 
-        async def schema(self, organization: str, application: str) -> str:
+        async def schema(
+            self,
+            organization: str,
+            application: str,
+            *,
+            organization_id,
+            application_id,
+        ) -> dict[str, str | int]:
+            """Record the requested application schema and return fake credentials."""
+
             captured["schema"] = {
                 "organization": organization,
                 "application": application,
+                "organization_id": organization_id,
+                "application_id": application_id,
             }
-            return "postgresql://fake"
+            return {
+                "host": "db.remote.longlink.internal",
+                "port": 5432,
+                "password": "runtime-secret",
+                "username": "longlink_acme_dashboard",
+                "database_name": "longlink_acme",
+            }
 
         async def sync_users(self, organization: str, users: list[TenantUser]) -> None:
+            """Record synchronized tenant users for the organization."""
+
             captured["sync_users"] = {
                 "organization": organization,
                 "users": users,
@@ -338,13 +356,9 @@ async def test_create_app_returns_app_response(
     class FakeStorage:
         """Fake storage adapter for app creation tests."""
 
-        def __init__(
-            self,
-            protocol: str,
-            endpoint_url: str,
-            access_key_id: str,
-            secret_access_key: str,
-        ) -> None:
+        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+            """Capture storage registry configuration."""
+
             captured["storage"] = {
                 "protocol": protocol,
                 "endpoint_url": endpoint_url,
@@ -353,6 +367,8 @@ async def test_create_app_returns_app_response(
             }
 
         async def bucket(self, bucket_name: str) -> str:
+            """Record bucket creation and return the bucket name."""
+
             captured_buckets.append(("bucket", bucket_name))
             return bucket_name
 
@@ -362,6 +378,8 @@ async def test_create_app_returns_app_response(
             shared_bucket: str,
             other_application_buckets: list[str],
         ) -> dict[str, str]:
+            """Record application credential inputs and return fake credentials."""
+
             captured["storage_credentials"] = {
                 "application_bucket": application_bucket,
                 "shared_bucket": shared_bucket,
@@ -380,8 +398,6 @@ async def test_create_app_returns_app_response(
             registry.port,
             registry.username,
             registry.password,
-            runtime_host=registry.runtime_host,
-            runtime_port=registry.runtime_port,
         ),
     )
     monkeypatch.setattr(
@@ -419,11 +435,16 @@ async def test_create_app_returns_app_response(
     assert payload["version"] == "20250623_120000"
     assert payload["sdk"] == "0.1.0"
     assert payload["digest"] == "sha256:manifest"
-    assert payload["gateway_url"] == f"https://apps.remote.longlink.internal/api/applications/{payload['id']}/proxy/"
+    assert payload["gateway_url"] == f"/api/applications/{payload['id']}/proxy/"
     assert captured["namespace"] == "acme"
     assert captured["proxy_secret"]
     assert captured["ingress_host"] == "apps.remote.longlink.internal"
-    assert captured["schema"] == {"organization": "acme", "application": "dashboard"}
+    schema_payload = captured["schema"]
+    assert isinstance(schema_payload, dict)
+    assert schema_payload["organization"] == "acme"
+    assert schema_payload["application"] == "dashboard"
+    assert schema_payload["organization_id"] == organization.id
+    assert str(schema_payload["application_id"]) == payload["id"]
     assert captured_buckets == [
         ("bucket", "longlink-acme-shared"),
         ("bucket", "longlink-acme-dashboard"),
@@ -450,16 +471,21 @@ async def test_create_app_returns_app_response(
     assert isinstance(application_secrets, dict)
     assert application_secrets["API_KEY"] == "secret-value"
     assert application_secrets["LONGLINK_ENV"] == "production"
-    assert application_secrets["LONGLINK_DATABASE_URL"] == "postgresql+asyncpg://fake"
+    assert application_secrets["LONGLINK_DATABASE_HOST"] == "db.remote.longlink.internal"
+    assert application_secrets["LONGLINK_DATABASE_NAME"] == "longlink_acme"
+    assert application_secrets["LONGLINK_DATABASE_PASSWORD"] == "runtime-secret"
+    assert application_secrets["LONGLINK_DATABASE_PORT"] == "5432"
+    assert application_secrets["LONGLINK_DATABASE_SCHEMA"] == "dashboard"
+    assert application_secrets["LONGLINK_DATABASE_USERNAME"] == "longlink_acme_dashboard"
     assert application_secrets["LONGLINK_STORAGE_BUCKET"] == "longlink-acme-dashboard"
+    assert application_secrets["LONGLINK_STORAGE_ENDPOINT_URL"] == "http://storage.runtime.longlink.internal:19000"
+    assert application_secrets["LONGLINK_STORAGE_PASSWORD"] == "app-secret"
     assert application_secrets["LONGLINK_STORAGE_SHARED_BUCKET"] == "longlink-acme-shared"
-    assert application_secrets["LONGLINK_STORAGE_URL"].startswith("s3+http://app-access:app-secret@")
+    assert application_secrets["LONGLINK_STORAGE_USERNAME"] == "app-access"
     assert "LONGLINK_INTERNAL" not in application_secrets
 
 
-async def test_organization_storage_registry_reuses_existing_app_registry(
-    users: tuple[User, User, User],
-) -> None:
+async def test_organization_storage_registry_reuses_existing_app_registry(users: tuple[User, User, User]) -> None:
     """Keep organization storage on the first registry already used by its apps."""
 
     # Arrange
@@ -577,7 +603,7 @@ async def test_create_app_requires_storage_registry_for_required_storage_envs(
             sdk="0.1.0",
             digest="sha256:manifest",
             environments=[
-                EnvironmentMetadata(name="LONGLINK_STORAGE_URL", type="str", required=True),
+                EnvironmentMetadata(name="LONGLINK_STORAGE_ENDPOINT_URL", type="str", required=True),
             ],
         )
         image_metadata.image = "ghcr.io/longlink/dashboard@sha256:manifest"
@@ -592,7 +618,7 @@ async def test_create_app_requires_storage_registry_for_required_storage_envs(
         json={
             "name": "dashboard",
             "image": "ghcr.io/longlink/dashboard:latest",
-            "envs": {"LONGLINK_STORAGE_URL": "s3+http://user-supplied"},
+            "envs": {"LONGLINK_STORAGE_ENDPOINT_URL": "http://user-supplied"},
         },
     )
 
@@ -600,7 +626,7 @@ async def test_create_app_requires_storage_registry_for_required_storage_envs(
     assert response.status_code == 503
     expected_detail = (
         f"No storage configured for location '{organization.location_id}' "
-        "required by image environment variables: LONGLINK_STORAGE_URL"
+        "required by image environment variables: LONGLINK_STORAGE_ENDPOINT_URL"
     )
     assert response.json() == {"detail": expected_detail}
     assert await db.applications.list_by_organization(organization.id) == []
@@ -728,11 +754,15 @@ async def test_get_app_logs_returns_pod_logs(
         """Fake compute adapter for app log tests."""
 
         def __init__(self, kubeconfig: str, proxy_secret: str, ingress_host: str) -> None:
+            """Capture compute registry configuration."""
+
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
             captured["ingress_host"] = ingress_host
 
         async def logs(self, organization: str, application: str, lines: int = 200) -> str:
+            """Record the log request and return fake pod logs."""
+
             captured["logs"] = {
                 "organization": organization,
                 "application": application,
@@ -796,11 +826,12 @@ async def test_delete_application_soft_deletes_and_queues_removal(
     assert recorded_operations[0].scheduled_at is not None
 
 
-async def test_gateway_authz_allows_application_request(
+async def test_application_proxy_forwards_authenticated_request(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
+    monkeypatch,
 ) -> None:
-    """Authorize a gateway request and return trusted runtime headers."""
+    """Forward an authenticated application request through the cluster gateway."""
 
     # Arrange
     user = users[0]
@@ -906,29 +937,80 @@ async def test_gateway_authz_allows_application_request(
         status=ApplicationStatus.running,
         user=user,
     )
+    captured: dict[str, object] = {}
+
+    class FakeProxyClient:
+        """Fake upstream HTTP client for application proxy requests."""
+
+        def __init__(self, **kwargs) -> None:
+            """Capture client construction options."""
+
+            captured["client_kwargs"] = kwargs
+
+        async def __aenter__(self) -> FakeProxyClient:
+            """Return the fake client context."""
+
+            return self
+
+        async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
+            """Close the fake client context."""
+
+            return None
+
+        async def request(self, method: str, url: str, content: bytes, headers: dict[str, str]) -> SimpleNamespace:
+            """Capture the forwarded application request."""
+
+            captured["request"] = {
+                "method": method,
+                "url": url,
+                "content": content,
+                "headers": headers,
+            }
+            return SimpleNamespace(
+                status_code=201,
+                content=b"proxied",
+                headers={"content-type": "text/plain", "set-cookie": "ignored=1", "content-length": "999"},
+            )
+
+    monkeypatch.setattr("src.routes.applications.httpx2.AsyncClient", FakeProxyClient)
     client = clients[0]
 
     # Act
     response = client.post(
-        "/api/gateway/authz",
+        f"/api/applications/{app.id}/proxy/anything?answer=42",
+        content=b"payload",
         headers={
-            "x-longlink-gateway-secret": registry.proxy_secret,
-            "x-longlink-original-method": "POST",
-            "x-longlink-original-path": f"/api/applications/{app.id}/proxy/anything?answer=42",
+            "authorization": "Bearer user-controlled",
+            "x-user-id": "spoofed",
         },
     )
 
     # Assert
-    assert response.status_code == 200
-    assert response.headers["x-user-id"] == str(user.id)
-    assert response.headers["x-user-role"] == "owner"
-    assert response.headers["x-longlink-application-id"] == str(app.id)
-    assert response.headers["x-longlink-application-slug"] == "dashboard"
-    assert response.headers["x-longlink-organization-id"] == str(organization.id)
-    assert response.headers["x-longlink-organization-slug"] == "acme"
+    assert response.status_code == 201
+    assert response.text == "proxied"
+    assert response.headers["content-type"] == "text/plain"
+    assert "set-cookie" not in response.headers
+    assert "content-length" in response.headers
+    assert captured["client_kwargs"] == {"follow_redirects": False, "timeout": 300.0}
+    forwarded = captured["request"]
+    assert isinstance(forwarded, dict)
+    assert forwarded["method"] == "POST"
+    assert forwarded["url"] == f"https://localhost:8443/api/applications/{app.id}/proxy/anything?answer=42"
+    assert forwarded["content"] == b"payload"
+    headers = forwarded["headers"]
+    assert isinstance(headers, dict)
+    assert headers["x-longlink-gateway-secret"] == registry.proxy_secret
+    assert headers["x-user-id"] == str(user.id)
+    assert headers["x-user-role"] == "owner"
+    assert headers["x-longlink-application-id"] == str(app.id)
+    assert headers["x-longlink-application-slug"] == "dashboard"
+    assert headers["x-longlink-organization-id"] == str(organization.id)
+    assert headers["x-longlink-organization-slug"] == "acme"
+    assert "authorization" not in headers
+    assert "cookie" not in headers
 
 
-async def test_gateway_authz_requires_application_role_for_regular_member(
+async def test_application_proxy_requires_application_role_for_regular_member(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
@@ -977,25 +1059,19 @@ async def test_gateway_authz_requires_application_role_for_regular_member(
     client = clients[1]
 
     # Act
-    response = client.get(
-        "/api/gateway/authz",
-        headers={
-            "x-longlink-gateway-secret": registry.proxy_secret,
-            "x-longlink-original-method": "GET",
-            "x-longlink-original-path": f"/api/applications/{app.id}/proxy/metadata.json",
-        },
-    )
+    response = client.get(f"/api/applications/{app.id}/proxy/metadata.json")
 
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Application access required"}
 
 
-async def test_gateway_authz_requires_compute_secret(
+async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
+    monkeypatch,
 ) -> None:
-    """Reject gateway authorization requests without the compute proxy secret."""
+    """Return unavailable when the authenticated cluster gateway request fails."""
 
     # Arrange
     user = users[0]
@@ -1045,28 +1121,52 @@ async def test_gateway_authz_requires_compute_secret(
         status=ApplicationStatus.running,
         user=user,
     )
+    captured: dict[str, object] = {}
+
+    class FailingProxyClient:
+        """Fake upstream HTTP client that fails application proxy requests."""
+
+        def __init__(self, **kwargs) -> None:
+            """Capture client construction options."""
+
+            captured["client_kwargs"] = kwargs
+
+        async def __aenter__(self) -> FailingProxyClient:
+            """Return the fake client context."""
+
+            return self
+
+        async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
+            """Close the fake client context."""
+
+            return None
+
+        async def request(self, method: str, url: str, content: bytes, headers: dict[str, str]) -> SimpleNamespace:
+            """Raise a proxy transport error."""
+
+            captured["request"] = {"method": method, "url": url, "content": content, "headers": headers}
+            raise httpx2.HTTPError("gateway unavailable")
+
+    monkeypatch.setattr("src.routes.applications.httpx2.AsyncClient", FailingProxyClient)
     client = clients[0]
 
     # Act
-    response = client.get(
-        "/api/gateway/authz",
-        headers={
-            "x-longlink-gateway-secret": "wrong",
-            "x-longlink-original-method": "GET",
-            "x-longlink-original-path": f"/api/applications/{app.id}/proxy/i18n/en.json",
-        },
-    )
+    response = client.get(f"/api/applications/{app.id}/proxy/i18n/en.json")
 
     # Assert
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Gateway authorization required"}
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Application proxy request failed"}
+    assert captured["client_kwargs"] == {"follow_redirects": False, "timeout": 300.0}
+    forwarded = captured["request"]
+    assert isinstance(forwarded, dict)
+    assert forwarded["url"] == f"https://localhost:9443/api/applications/{app.id}/proxy/i18n/en.json"
 
 
-async def test_gateway_authz_enforces_method_role(
+async def test_application_proxy_enforces_method_role(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Reject mutating gateway requests when the runtime role is read-only."""
+    """Reject mutating proxy requests when the runtime role is read-only."""
 
     # Arrange
     user = users[0]
@@ -1136,25 +1236,18 @@ async def test_gateway_authz_enforces_method_role(
     client = clients[0]
 
     # Act
-    response = client.post(
-        "/api/gateway/authz",
-        headers={
-            "x-longlink-gateway-secret": registry.proxy_secret,
-            "x-longlink-original-method": "POST",
-            "x-longlink-original-path": f"/api/applications/{app.id}/proxy/api/tasks",
-        },
-    )
+    response = client.post(f"/api/applications/{app.id}/proxy/api/tasks")
 
     # Assert
     assert response.status_code == 403
     assert response.json() == {"detail": "Application write access required"}
 
 
-async def test_gateway_authz_rejects_other_compute_app(
+async def test_application_proxy_returns_unavailable_without_compute_registry(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Reject gateway requests for applications not assigned to that compute."""
+    """Return unavailable when no compute registry can receive application traffic."""
 
     # Arrange
     user = users[0]
@@ -1168,49 +1261,14 @@ async def test_gateway_authz_rejects_other_compute_app(
         user=user,
     )
     await db.applications.set_status(app.id, ApplicationStatus.running)
-    registry = await db.compute.create(
-        kind=ComputeKind.kubernetes,
-        name="local",
-        slug="local",
-        kubeconfig=(
-            "apiVersion: v1\n"
-            "clusters:\n"
-            "- name: k3d-compute\n"
-            "  cluster:\n"
-            "    server: https://0.0.0.0:8001\n"
-            "contexts:\n"
-            "- name: k3d-compute\n"
-            "  context:\n"
-            "    cluster: k3d-compute\n"
-            "    user: admin@k3d-compute\n"
-            "current-context: k3d-compute\n"
-            "kind: Config\n"
-            "preferences: {}\n"
-            "users:\n"
-            "- name: admin@k3d-compute\n"
-            "  user:\n"
-            "    client-certificate-data: Y2VydA==\n"
-            "    client-key-data: a2V5\n"
-        ),
-        ingress_host="localhost:9443",
-        location_id=location.id,
-        user=user,
-    )
     client = clients[0]
 
     # Act
-    response = client.get(
-        "/api/gateway/authz",
-        headers={
-            "x-longlink-gateway-secret": registry.proxy_secret,
-            "x-longlink-original-method": "GET",
-            "x-longlink-original-path": f"/api/applications/{app.id}/proxy/i18n/en.json",
-        },
-    )
+    response = client.get(f"/api/applications/{app.id}/proxy/i18n/en.json")
 
     # Assert
-    assert response.status_code == 404
-    assert response.json() == {"detail": f"Application '{app.id}' not found"}
+    assert response.status_code == 503
+    assert response.json() == {"detail": f"No compute cluster configured for location '{location.id}'"}
 
 
 async def test_organization_access_rejects_soft_deleted_membership(
@@ -1254,7 +1312,7 @@ async def test_organization_access_rejects_soft_deleted_membership(
     assert response.json() == {"detail": f"Organization '{organization.id}' not found"}
 
 
-async def test_gateway_authz_shows_loading_when_app_is_not_ready(
+async def test_application_proxy_shows_loading_when_app_is_not_ready(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
@@ -1289,14 +1347,7 @@ async def test_gateway_authz_shows_loading_when_app_is_not_ready(
     client = clients[0]
 
     # Act
-    response = client.get(
-        "/api/gateway/authz",
-        headers={
-            "x-longlink-gateway-secret": registry.proxy_secret,
-            "x-longlink-original-method": "GET",
-            "x-longlink-original-path": f"/api/applications/{app.id}/proxy/metadata.json",
-        },
-    )
+    response = client.get(f"/api/applications/{app.id}/proxy/metadata.json")
 
     # Assert
     assert response.status_code == 503

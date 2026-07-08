@@ -18,12 +18,12 @@ from src.database.models.organizations import Organization
 
 
 def response_gateway_url(application: Application) -> str | None:
-    """Return the gateway URL exposed for one application response."""
+    """Return the API proxy URL exposed for one application response."""
 
     if application.compute_registry is None:
         return None
 
-    return gateway.application_url(application.id, application.compute_registry.ingress_host)
+    return gateway.application_url(application.id)
 
 
 async def fetch_all() -> list[Application]:

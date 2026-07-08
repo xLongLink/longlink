@@ -25,6 +25,7 @@ import type {
     ApiStorageBucket,
     ApiStorageObject,
     ApiStorageRegistry,
+    ApiUserListItem,
     ApiUserOrganizationMembership,
     ApiUserProfile,
     ApiUserSummary,
@@ -76,8 +77,11 @@ export const apiUserSummarySchema = z.object({
     email: z.string(),
     avatar: z.string(),
     role: platformRoleSchema,
-    oidc: z.string(),
 }) satisfies z.ZodType<ApiUserSummary>;
+
+export const apiUserListItemSchema = apiUserSummarySchema.extend({
+    oidc: z.string(),
+}) satisfies z.ZodType<ApiUserListItem>;
 
 const nullableUserSummarySchema = z.lazy(() => apiUserSummarySchema.nullable());
 
@@ -91,7 +95,7 @@ export const apiUserOrganizationMembershipSchema = z.object({
     role: roleSchema,
 }) satisfies z.ZodType<ApiUserOrganizationMembership>;
 
-export const apiUserProfileSchema = apiUserSummarySchema.extend({
+export const apiUserProfileSchema = apiUserListItemSchema.extend({
     theme: themeSchema,
     accent: accentSchema,
     radius: radiusSchema,
@@ -220,8 +224,6 @@ export const apiDatabaseRegistrySchema = z.object({
     host: z.string(),
     port: z.number(),
     username: z.string(),
-    runtime_host: z.string(),
-    runtime_port: z.number(),
     location_id: z.string(),
     created_at: z.string(),
     created_by: nullableUserSummarySchema,

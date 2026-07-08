@@ -31,9 +31,7 @@ db = SimpleNamespace(
 )
 
 
-async def test_create_persists_org_and_owner_membership(
-    users: tuple[User, User, User],
-) -> None:
+async def test_create_persists_org_and_owner_membership(users: tuple[User, User, User]) -> None:
     """Persist a new org and link the creator as owner."""
 
     # Arrange
@@ -66,9 +64,7 @@ async def test_create_persists_org_and_owner_membership(
         assert result.scalar_one() == OrganizationRoles.owner
 
 
-async def test_get_returns_users_from_membership_table(
-    users: tuple[User, User, User],
-) -> None:
+async def test_get_returns_users_from_membership_table(users: tuple[User, User, User]) -> None:
     """Return org members loaded through the organization relationship."""
 
     # Arrange
@@ -266,9 +262,7 @@ async def test_get_includes_application_role_for_requested_user(users: tuple[Use
     assert details.applications[0].role == ApplicationRoles.read
 
 
-async def test_create_rejects_duplicate_organization_names(
-    users: tuple[User, User, User],
-) -> None:
+async def test_create_rejects_duplicate_organization_names(users: tuple[User, User, User]) -> None:
     """Reject duplicate organization names."""
 
     # Arrange
@@ -284,9 +278,7 @@ async def test_create_rejects_duplicate_organization_names(
     assert str(exc.value) == "Organization already exists"
 
 
-async def test_create_rejects_organization_with_overlong_runtime_name(
-    users: tuple[User, User, User],
-) -> None:
+async def test_create_rejects_organization_with_overlong_runtime_name(users: tuple[User, User, User]) -> None:
     """Reject organizations whose managed runtime resource names would exceed backend limits."""
 
     # Arrange
@@ -301,9 +293,7 @@ async def test_create_rejects_organization_with_overlong_runtime_name(
     assert await db.organizations.fetch_all() == []
 
 
-async def test_create_invitation_persists_pending_invitation(
-    users: tuple[User, User, User],
-) -> None:
+async def test_create_invitation_persists_pending_invitation(users: tuple[User, User, User]) -> None:
     """Persist one invitation for a user email."""
 
     # Arrange
@@ -322,9 +312,7 @@ async def test_create_invitation_persists_pending_invitation(
     assert [item.id for item in reloaded] == [invitation.id]
 
 
-async def test_create_invitation_rejects_duplicate_email(
-    users: tuple[User, User, User],
-) -> None:
+async def test_create_invitation_rejects_duplicate_email(users: tuple[User, User, User]) -> None:
     """Reject a second invitation for the same email address."""
 
     # Arrange

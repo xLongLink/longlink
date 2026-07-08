@@ -181,8 +181,9 @@ Keep both web build modes working. API mode builds the authenticated control-pla
 - Prefer direct inline className expressions for one-off style values instead of temporary local `...ClassName` constants used only once or twice in JSX.
 - Use cards only when the content needs a distinct visual container; do not wrap broad sections, routine forms, or whole pages in cards by default.
 - Include two blank lines between function definitions
+- Keep Python and JavaScript function definitions on one line when the full signature fits within the configured line length.
 - Do not add new helper functions unless they are explicitly needed.
-- Python functions must have docstrings, and non-trivial logic blocks must have preceding `# ...` comments.
+- Python functions must have docstrings, and any logic blocks must have preceding `# ...` comments.
 - Python files must not start with module-level triple-quoted docstrings; use comments only when a file header is needed.
 - Do not add `__all__` unless a concrete public star-import contract requires it.
 - JavaScript functions must have JSDoc comments, and non-trivial logic blocks must have preceding `// ...` comments.

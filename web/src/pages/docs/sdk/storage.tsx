@@ -22,9 +22,10 @@ export const content = (
             <A href="https://filesystem-spec.readthedocs.io/en/latest/">fsspec</A> filesystem.
         </P>
         <P>
-            In production, the platform injects <Code>LONGLINK_STORAGE_URL</Code>, <Code>LONGLINK_STORAGE_BUCKET</Code>,
-            and <Code>LONGLINK_STORAGE_SHARED_BUCKET</Code> for the backend connection, app bucket, and organization
-            shared bucket.
+            In production, the platform injects <Code>LONGLINK_STORAGE_ENDPOINT_URL</Code>,{' '}
+            <Code>LONGLINK_STORAGE_USERNAME</Code>, <Code>LONGLINK_STORAGE_PASSWORD</Code>,{' '}
+            <Code>LONGLINK_STORAGE_BUCKET</Code>, and <Code>LONGLINK_STORAGE_SHARED_BUCKET</Code> for the backend
+            connection, app bucket, and organization shared bucket.
         </P>
         <P>
             Runtime storage credentials are scoped before deployment: apps can read and write their own bucket, and can

@@ -1,6 +1,18 @@
 from abc import ABC, abstractmethod
-from tenant.models import User
+from uuid import UUID
+from typing import TypedDict
 from .types import DatabaseTableData, DatabaseSchemaUsage
+from tenant.models import User
+
+
+class DatabaseRuntimeConnection(TypedDict):
+    """Describe database connection settings safe to inject into one application runtime."""
+
+    host: str
+    port: int
+    password: str
+    username: str
+    database_name: str
 
 
 class Database(ABC):
@@ -29,11 +41,25 @@ class Database(ABC):
         """Synchronize shared organization users."""
 
     @abstractmethod
-    async def schema(self, organization: str, application: str) -> str:
-        """Create or replace the schema for one application and return a connection DSN."""
+    async def schema(
+        self,
+        organization: str,
+        application: str,
+        *,
+        organization_id: UUID,
+        application_id: UUID,
+    ) -> DatabaseRuntimeConnection:
+        """Create or replace the schema for one application and return runtime connection settings."""
 
     @abstractmethod
-    async def delete_schema(self, organization: str, application: str) -> None:
+    async def delete_schema(
+        self,
+        organization: str,
+        application: str,
+        *,
+        organization_id: UUID,
+        application_id: UUID,
+    ) -> None:
         """Delete the schema and runtime login role for one application."""
 
     @abstractmethod

@@ -37,9 +37,13 @@ class _FakeEngine:
     """Minimal async engine stub for session tests."""
 
     def __init__(self, log: list[tuple[str, object]]) -> None:
+        """Store the shared call log."""
+
         self.log = log
 
     def connect(self):
+        """Return a fake async connection and record the connection attempt."""
+
         self.log.append(("connect", None))
         return _FakeConnection(self.log)
 
@@ -54,6 +58,8 @@ async def test_get_session_normalizes_mysql_urls_to_aiomysql(monkeypatch) -> Non
     monkeypatch.setattr(env, "DATABASE_URL", "mysql://longlink:secret@db.longlink.internal:3306/longlink")
 
     def fake_create_async_engine(url, **kwargs):
+        """Capture the normalized URL used to build the async engine."""
+
         log.append(("engine", (str(url), kwargs)))
         return _FakeEngine(log)
 

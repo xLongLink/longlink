@@ -29,13 +29,13 @@ def test_local_storage_uses_environment_filesystem(
 
     monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem)
 
-    storage_base.create_fs(Envs(ENV=environment))
+    storage_base.create_fs(Envs(ENV=environment), "")
 
     assert captured == {"protocol": expected_protocol, "kwargs": {}}
 
 
-def test_production_storage_url_builds_s3_filesystem_options(monkeypatch) -> None:
-    """Parse a LongLink storage URL into fsspec S3 options."""
+def test_production_storage_settings_build_s3_filesystem_options(monkeypatch) -> None:
+    """Pass platform storage connection settings into fsspec S3 options."""
 
     captured: dict[str, object] = {}
 
@@ -51,8 +51,11 @@ def test_production_storage_url_builds_s3_filesystem_options(monkeypatch) -> Non
     storage_base.create_fs(
         Envs(
             ENV="production",
-            STORAGE_URL="s3+http://access%2Fkey:secret%40key@storage.runtime.longlink.internal:19000",
-        )
+            STORAGE_ENDPOINT_URL="http://storage.runtime.longlink.internal:19000",
+            STORAGE_PASSWORD="secret@key",
+            STORAGE_USERNAME="access/key",
+        ),
+        "",
     )
 
     assert captured == {
@@ -66,18 +69,17 @@ def test_production_storage_url_builds_s3_filesystem_options(monkeypatch) -> Non
 
 
 @pytest.mark.parametrize(
-    ("factory_name", "expected_bucket"),
+    "expected_bucket",
     [
-        ("create_fs", "longlink-acme-dashboard"),
-        ("create_shared_fs", "longlink-acme-shared"),
+        "longlink-acme-dashboard",
+        "longlink-acme-shared",
     ],
 )
 def test_production_storage_scopes_paths_to_configured_bucket(
     monkeypatch,
-    factory_name: str,
     expected_bucket: str,
 ) -> None:
-    """Scope production storage paths to the configured app or shared bucket."""
+    """Scope production storage paths to the configured bucket."""
 
     class FakeFileSystem:
         """Minimal fsspec implementation used by DirFileSystem in this test."""
@@ -99,13 +101,14 @@ def test_production_storage_scopes_paths_to_configured_bucket(
 
     monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem_factory)
 
-    filesystem = getattr(storage_base, factory_name)(
+    filesystem = storage_base.create_fs(
         Envs(
             ENV="production",
-            STORAGE_URL="s3+http://access%2Fkey:secret%40key@storage.runtime.longlink.internal:19000",
-            STORAGE_BUCKET="longlink-acme-dashboard",
-            STORAGE_SHARED_BUCKET="longlink-acme-shared",
-        )
+            STORAGE_ENDPOINT_URL="http://storage.runtime.longlink.internal:19000",
+            STORAGE_PASSWORD="secret@key",
+            STORAGE_USERNAME="access/key",
+        ),
+        expected_bucket,
     )
 
     assert isinstance(filesystem, storage_base.DirFileSystem)

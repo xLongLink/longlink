@@ -253,10 +253,7 @@ async def get(
                         "created_by": application.created_by,
                         "updated_by": application.updated_by,
                         "deleted_by": application.deleted_by,
-                        "gateway_url": gateway.application_url(
-                            application.id,
-                            application.compute_registry.ingress_host,
-                        )
+                        "gateway_url": gateway.application_url(application.id)
                         if application.compute_registry is not None
                         else None,
                         "role": application_roles.get(application.id),
@@ -280,12 +277,7 @@ async def membership_role(organization_id: UUID, user_id: UUID) -> OrganizationR
         return result.scalar_one_or_none()
 
 
-async def update_member_role(
-    organization_id: UUID,
-    member_id: UUID,
-    role: OrganizationRoles,
-    user: User,
-) -> bool:
+async def update_member_role(organization_id: UUID, member_id: UUID, role: OrganizationRoles, user: User) -> bool:
     """Update one active organization member role."""
 
     async with session_scope() as session:

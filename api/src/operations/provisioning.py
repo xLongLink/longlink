@@ -2,7 +2,7 @@ from src import compute as compute_runtime
 from src import adapters
 from uuid import UUID
 from datetime import UTC, datetime
-from src.utils import url, urls, names, images, buckets
+from src.utils import names, images, buckets
 from src.errors import ConflictError
 from src.logger import logger
 from src.constants import APP_SERVICE_PORT
@@ -20,18 +20,26 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 PLATFORM_ENVIRONMENT_NAMES = {
+    "LONGLINK_DATABASE_HOST",
+    "LONGLINK_DATABASE_NAME",
+    "LONGLINK_DATABASE_PASSWORD",
+    "LONGLINK_DATABASE_PORT",
     "LONGLINK_DATABASE_SCHEMA",
-    "LONGLINK_DATABASE_URL",
+    "LONGLINK_DATABASE_USERNAME",
     "LONGLINK_ENV",
     "LONGLINK_STORAGE_BUCKET",
+    "LONGLINK_STORAGE_ENDPOINT_URL",
+    "LONGLINK_STORAGE_PASSWORD",
     "LONGLINK_STORAGE_SHARED_BUCKET",
-    "LONGLINK_STORAGE_URL",
+    "LONGLINK_STORAGE_USERNAME",
 }
 PLATFORM_ENVIRONMENT_PREFIX = "LONGLINK_"
 PLATFORM_STORAGE_ENVIRONMENT_NAMES = {
     "LONGLINK_STORAGE_BUCKET",
+    "LONGLINK_STORAGE_ENDPOINT_URL",
+    "LONGLINK_STORAGE_PASSWORD",
     "LONGLINK_STORAGE_SHARED_BUCKET",
-    "LONGLINK_STORAGE_URL",
+    "LONGLINK_STORAGE_USERNAME",
 }
 
 
@@ -91,9 +99,7 @@ async def latest_storage_registry(location_id: UUID) -> StorageRegistry | None:
     )
 
 
-async def application_image_metadata(
-    payload: ApplicationCreate,
-) -> LongLinkMetadata:
+async def application_image_metadata(payload: ApplicationCreate) -> LongLinkMetadata:
     """Inspect image metadata and validate required environment values."""
 
     image_metadata = await images.metadata(payload.image)
@@ -173,9 +179,7 @@ async def organization_storage_registry(
     return await latest_storage_registry(organization.location_id)
 
 
-async def application_storage_registry(
-    application: Application,
-) -> StorageRegistry | None:
+async def application_storage_registry(application: Application) -> StorageRegistry | None:
     """Return the storage registry used by an application."""
 
     if application.storage_registry_id is not None:
@@ -232,7 +236,12 @@ async def remove_application_runtime(
         database_registry = await database.get(application.database_registry_id, include_deleted=True)
         if database_registry is not None:
             db_client = adapters.database(database_registry)
-            await db_client.delete_schema(organization.slug, application.slug)
+            await db_client.delete_schema(
+                organization.slug,
+                application.slug,
+                organization_id=organization.id,
+                application_id=application.id,
+            )
 
     storage_registry = await application_storage_registry(application)
     if storage_registry is not None and application.storage_bucket_name is not None:
@@ -281,20 +290,9 @@ async def remove_organization_runtime(
         await storage_client.delete_bucket(organization.shared_storage_bucket_name)
 
 
-def runtime_storage_url(storage_registry: StorageRegistry, credentials: adapters.StorageRuntimeCredentials) -> str:
-    """Return a storage URL compatible with the SDK runtime."""
-
-    endpoint_url = storage_registry.runtime_endpoint_url or storage_registry.endpoint_url
-    return urls.storage_url_with_credentials(
-        endpoint_url,
-        credentials["access_key_id"],
-        credentials["secret_access_key"],
-    )
-
-
 def runtime_environment(
     application_slug: str,
-    database_url: str,
+    database_connection: adapters.DatabaseRuntimeConnection,
     storage_registry: StorageRegistry | None,
     storage_bucket_name: str | None = None,
     shared_storage_bucket_name: str | None = None,
@@ -304,8 +302,12 @@ def runtime_environment(
 
     environment = {
         "LONGLINK_ENV": "production",
-        "LONGLINK_DATABASE_URL": url.database(database_url),
+        "LONGLINK_DATABASE_HOST": database_connection["host"],
+        "LONGLINK_DATABASE_NAME": database_connection["database_name"],
+        "LONGLINK_DATABASE_PASSWORD": database_connection["password"],
+        "LONGLINK_DATABASE_PORT": str(database_connection["port"]),
         "LONGLINK_DATABASE_SCHEMA": application_slug,
+        "LONGLINK_DATABASE_USERNAME": database_connection["username"],
     }
 
     if storage_registry is not None:
@@ -316,9 +318,13 @@ def runtime_environment(
 
         environment.update(
             {
-                "LONGLINK_STORAGE_URL": runtime_storage_url(storage_registry, storage_credentials),
                 "LONGLINK_STORAGE_BUCKET": storage_bucket_name,
+                "LONGLINK_STORAGE_ENDPOINT_URL": (
+                    storage_registry.runtime_endpoint_url or storage_registry.endpoint_url
+                ),
+                "LONGLINK_STORAGE_PASSWORD": storage_credentials["secret_access_key"],
                 "LONGLINK_STORAGE_SHARED_BUCKET": shared_storage_bucket_name,
+                "LONGLINK_STORAGE_USERNAME": storage_credentials["access_key_id"],
             }
         )
 
@@ -379,10 +385,15 @@ async def provision_application_runtime_resources(
             await other_application_storage_buckets(organization.id, application_id),
         )
 
-    database_url = await db_client.schema(organization.slug, application_slug)
+    database_connection = await db_client.schema(
+        organization.slug,
+        application_slug,
+        organization_id=organization.id,
+        application_id=application_id,
+    )
     runtime_envs = runtime_environment(
         application_slug,
-        database_url,
+        database_connection,
         storage_registry,
         application_bucket_name,
         shared_storage_bucket(organization),
@@ -590,9 +601,7 @@ async def sync_application_runtime(
     return updated_application
 
 
-async def create_organization_namespace(
-    organization: Organization | OrganizationSummary,
-) -> None:
+async def create_organization_namespace(organization: Organization | OrganizationSummary) -> None:
     """Best-effort create the organization namespace on the active compute registry."""
 
     registry = await latest_compute_registry(organization.location_id)
@@ -605,9 +614,7 @@ async def create_organization_namespace(
         logger.exception("Failed to create namespace for organization '%s'", organization.slug)
 
 
-async def create_organization_database(
-    organization: Organization | OrganizationSummary,
-) -> None:
+async def create_organization_database(organization: Organization | OrganizationSummary) -> None:
     """Best-effort create the organization database on the active database registry."""
 
     registry = await latest_database_registry(organization.location_id)
@@ -622,9 +629,7 @@ async def create_organization_database(
         logger.exception("Failed to create database for organization '%s'", organization.slug)
 
 
-async def create_organization_storage(
-    organization: Organization | OrganizationSummary,
-) -> None:
+async def create_organization_storage(organization: Organization | OrganizationSummary) -> None:
     """Best-effort create the assigned shared bucket on the active storage registry."""
 
     registry = await latest_storage_registry(organization.location_id)

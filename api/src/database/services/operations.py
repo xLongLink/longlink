@@ -20,7 +20,9 @@ AUTHORIZATION_SECRET_PATTERN = re.compile(
 ASSIGNED_SECRET_PATTERN = re.compile(
     r"(?i)((?<![a-z0-9_-])[\"']?"
     r"(?:secret_access_key|secret-access-key|access_key_id|access-key-id|client_key_data|client-key-data|"
-    r"client_certificate_data|client-certificate-data|database_url|database-url|storage_url|storage-url|"
+    r"client_certificate_data|client-certificate-data|database_password|database-password|database_url|database-url|"
+    r"longlink_database_password|longlink-database-password|longlink_storage_password|longlink-storage-password|"
+    r"storage_password|storage-password|storage_url|storage-url|"
     r"access_key|access-key|secret_key|secret-key|password|secret|token|dsn)"
     r"[\"']?\s*[:=]\s*[\"']?)[^\s'\",}]+([\"']?)"
 )

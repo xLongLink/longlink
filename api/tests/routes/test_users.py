@@ -52,9 +52,7 @@ async def test_get_me_returns_authenticated_user_profile_and_org_memberships(
     assert response.json()["organizations"][0]["slug"] == "acme"
 
 
-async def test_get_me_returns_the_active_account_profile(
-    users: tuple[User, User, User],
-) -> None:
+async def test_get_me_returns_the_active_account_profile(users: tuple[User, User, User]) -> None:
     """Return the active account profile for the session."""
 
     # Arrange
@@ -73,9 +71,7 @@ async def test_get_me_returns_the_active_account_profile(
     assert response.json() == UserProfile.model_validate(current_profile.model_dump()).model_dump(mode="json")
 
 
-async def test_logout_clears_the_active_account(
-    users: tuple[User, User, User],
-) -> None:
+async def test_logout_clears_the_active_account(users: tuple[User, User, User]) -> None:
     """Clear the active account from the session."""
 
     # Arrange

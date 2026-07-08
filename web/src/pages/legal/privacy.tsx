@@ -88,7 +88,7 @@ export const content = (
                 </Li>
                 <Li>
                     Infrastructure registry data: location, compute, database, storage, Kubernetes, PostgreSQL, and
-                    S3-compatible storage configuration, including endpoints, runtime hosts, credentials, kubeconfigs,
+                    S3-compatible storage configuration, including endpoints, runtime endpoints, credentials, kubeconfigs,
                     proxy secrets, access keys, bucket names, database names, schema names, table metadata, object
                     metadata, usage information, and related audit records.
                 </Li>

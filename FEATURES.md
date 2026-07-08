@@ -15,9 +15,9 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                   | Supported behavior                                                                                                                          |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hosted platform API       | Manages authentication, users, organizations, infrastructure registries, application deployment, operations, logs, and gateway authorization. |
+| Hosted platform API       | Manages authentication, users, organizations, infrastructure registries, application deployment, operations, logs, and application proxying. |
 | Python SDK                | Provides a FastAPI app runtime, CLI, database helpers, storage helpers, XML page discovery, metadata, scaffolding, and image packaging.     |
-| API-mode frontend         | Serves public pages, docs, authenticated control-plane pages, organization pages, admin pages, and gateway-backed app views.                |
+| API-mode frontend         | Serves public pages, docs, authenticated control-plane pages, organization pages, admin pages, and proxy-backed app views.                |
 | SDK-mode frontend         | Serves a local embedded app runtime that renders XML pages from `/metadata.json` with deterministic local users.                            |
 | Declarative XML app model | Supports XML-defined pages with setup state, data queries, actions, expressions, translations, form bindings, and registered UI components. |
 | Local-first workflow      | Supports local services, SDK app scaffolding, image build/push, migrations, seeding, local API server, and local Vite web server.           |
@@ -38,7 +38,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Control database sessions   | Provides cached async SQLAlchemy sessions, connection verification, and database URL normalization.                                                                            |
 | Control database migrations | Migrates users, organizations, applications, registries, memberships, invitations, and operations, supports percent-encoded database URLs, and applies pending migrations on local SQLite development starts. |
 | Local seed script           | Seeds local location, registries, organization, app metadata, and runtime data through public API routes.                                                                      |
-| Local runtime endpoints     | Separates host-facing endpoints from pod-facing runtime endpoints for PostgreSQL and S3-compatible storage.                                                                    |
+| Local runtime endpoints     | Separates host-facing endpoints from pod-facing runtime endpoints for S3-compatible storage.                                                                                   |
 
 ### Authentication and Access
 
@@ -64,7 +64,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Location providers       | Supports `local`, `infomaniak`, `ovh`, `scaleway`, `hetzner`, and `exoscale`.                                                                                 |
 | Compute registries       | Creates dedicated Kubernetes compute registries with kubeconfig, gateway host, optional LoadBalancer IP, and production TLS material; lists, gets, and deletes unused registries for support/admin users. |
 | Compute inspection       | Inspects total and allocatable cluster resources, managed namespaces, managed-namespace pods, and pod usage when metrics are available.                       |
-| Database registries      | Creates PostgreSQL registries with control-plane and optional runtime connection details; lists, gets, and deletes unused registries for support/admin users. |
+| Database registries      | Creates PostgreSQL registries with a single connection endpoint; lists, gets, and deletes unused registries for support/admin users.                         |
 | Database inspection      | Inspects managed organization databases, managed database schemas, and aggregate non-system database storage usage.                                           |
 | Storage registries       | Creates S3-compatible storage registries with control-plane and optional runtime endpoints; administrators can delete unused registries.                      |
 | Storage secret redaction | Exposes storage access key IDs without exposing secret access keys.                                                                                           |
@@ -101,10 +101,10 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Application verification            | Marks apps running when the current Deployment rollout is ready and failed when current rollout pods crash, hit terminal image/config wait reasons, or exceed the verification timeout. |
 | Global application listing          | Lets platform administrators list all active applications.                                                                              |
 | Application logs                    | Lets application maintainers/admins and elevated organization members fetch recent plain-text logs from the newest application pod.     |
-| Application gateway                 | Routes runtime traffic through per-cluster Envoy gateways exposed by production LoadBalancer services or local development Ingress and authorizes requests against the control plane before internal service forwarding. |
+| Application gateway                 | Routes runtime traffic through the API proxy, which authorizes users and forwards requests to secret-protected per-cluster Envoy gateways before internal service forwarding. |
 | Application access roles            | Uses application membership roles for runtime access, with method-level role enforcement and elevated organization roles allowed to manage application lifecycle actions. |
 | Application member management       | Lets organization members view application permission rows and lets permitted app/org managers set or remove app roles up to their own role rank for org members. |
-| Gateway header policy               | Requires compute gateway secrets stored in Kubernetes Secrets for authorization, rejects unavailable apps with no-store 503, strips spoofable identity headers at the gateway, and injects trusted `x-user-id` and `x-user-role`. |
+| Gateway header policy               | Requires compute gateway secrets stored in Kubernetes Secrets, rejects unavailable apps with no-store 503, and injects trusted `x-user-id` and `x-user-role` from the API proxy. |
 | Registry selection                  | Uses newest active compute registries and keeps database/storage registries consistent for all apps in an organization.                 |
 | Managed resource naming             | Generates slugs with library-backed normalization and validates managed Kubernetes/PostgreSQL/S3 resource names before provisioning.     |
 
@@ -120,7 +120,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Application delete cleanup operation      | Supports `application.delete` step `remove` for deleting managed app runtime resources.                                  |
 | Organization delete cleanup operation     | Supports `organization.delete` step `remove` for deleting managed organization runtime resources.                        |
 | Kubernetes provisioning                   | Creates managed namespaces, gateway-only app ingress policies, one exact Secret, health-probed restricted Deployment, and ClusterIP Service per app, while refusing unmanaged namespace collisions. |
-| Kubernetes gateway                        | Installs and synchronizes a per-cluster Envoy gateway with Secret-backed authorization, optional TLS termination, health probes, access logs, local rate limits, a production LoadBalancer Service or development Ingress, and routes to managed ClusterIP app services. |
+| Kubernetes gateway                        | Installs and synchronizes a per-cluster Envoy gateway with Secret-backed route access, optional TLS termination, health probes, access logs, local rate limits, a production LoadBalancer Service or development Ingress, and routes to managed ClusterIP app services. |
 | PostgreSQL provisioning                   | Creates organization databases, migrates the shared schema, creates app schemas, runtime login roles, and read/write app plus read-only shared grants. |
 | PostgreSQL resource inspection            | Inspects databases, schemas, usage, tables, and preview rows.                                                            |
 | S3-compatible provisioning                | Creates or reuses assigned shared/app buckets, persists assignments, and validates runtime credentials for app read/write, shared read-only, and cross-app denial before injection. |
@@ -173,8 +173,8 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | Database facade               | Exposes `Table` and async `get_session()`.                                                                   |
 | Table base model              | Adds audit timestamps, soft-delete fields, user foreign keys, and user relationships.                        |
-| Database environment URLs     | Uses in-memory SQLite for testing, `./dev.db` for development, and normalized `DATABASE_URL` for production. |
-| Database URL normalization    | Converts PostgreSQL URLs to asyncpg, strips `sslmode`, and preserves unrelated query parameters.             |
+| Database environment settings | Uses in-memory SQLite for testing, `./dev.db` for development, and control-plane database components for production. |
+| Production database URL build | Builds the asyncpg runtime URL from separate database host, port, name, username, and password settings.     |
 | SQLite autocreate and seed    | Auto-creates SQLModel tables and seeds deterministic local users for SQLite.                                 |
 | Local user roles              | Provides deterministic local/test users for `read`, `write`, `maintain`, `admin`, and `owner`.               |
 | Audit header scope            | Reads `x-user-id` as UUID and binds it for request audit attribution.                                        |
@@ -182,10 +182,10 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | App Alembic migrations        | Discovers app models, excludes shared `users`, skips empty revisions, and applies app migrations.            |
 | Production schema search path | Uses app schema plus `shared` when `DATABASE_SCHEMA` is set.                                                 |
 | SDK auth boundary             | Provides request-scoped `get_user()`, local users, audit attribution, and method-level `/api` role enforcement without owning login. |
-| Environment storage backends  | Uses fsspec memory FS for testing, local file FS for development, and parsed `STORAGE_URL` for production.   |
-| S3 endpoint URL parsing       | Creates an S3 filesystem from `s3+http://key:secret@endpoint` style URLs.                                    |
-| App bucket scope              | Scopes app paths to `STORAGE_BUCKET` with `DirFileSystem`.                                                   |
-| Shared bucket scope           | Exposes `shared_fs` and `create_shared_fs()` scoped to `STORAGE_SHARED_BUCKET` when configured.              |
+| Environment storage backends  | Uses fsspec memory FS for testing, local file FS for development, and platform S3 storage for production.    |
+| S3 endpoint configuration     | Creates an S3 filesystem from separate control-plane endpoint URL, username, and password settings.          |
+| App bucket scope              | Exposes `fs` and `create_fs(env, bucket)` scoped to `STORAGE_BUCKET` when configured.                        |
+| Shared bucket scope           | Exposes `shared_fs` through `create_fs(env, bucket)` scoped to `STORAGE_SHARED_BUCKET` when configured.      |
 | Organization assets           | Exposes `longlink.assets.logo()` using shared `tenant.storage.assets` definitions, SDK static fallback locally, and shared storage in production. |
 
 ### XML Utilities and Scaffold
@@ -240,7 +240,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Organization shell            | Resolves organization slug and renders applications, people, database, storage, and settings sections.                                        |
 | Organization applications UI  | Lists organization applications and links to proxied app views.                                                                               |
 | Organization people UI        | Shows members/invitations, supports invitations, and supports member role changes for allowed roles.                                          |
-| Organization settings UI      | Shows organization details, apps, app permission management, resources, logs, and app creation.                                               |
+| Organization settings UI      | Shows organization details, apps, app permission management, resources, logs, and role-gated app creation.                                    |
 | Organization database browser | Lists database resources, browses shared/app schemas, and previews table rows.                                                                |
 | Organization storage browser  | Lists storage resources and bucket details.                                                                                                   |
 | Admin shell                   | Provides support/admin tabs for users, apps, organizations, locations, database, storage, compute, and operations.                            |

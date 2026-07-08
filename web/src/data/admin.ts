@@ -5,7 +5,7 @@ import {
     apiLocationSchema,
     apiOperationSchema,
     apiOrganizationSummarySchema,
-    apiUserSummarySchema,
+    apiUserListItemSchema,
     parseApiCollection,
 } from '@/lib/api-schemas';
 import type {
@@ -14,7 +14,7 @@ import type {
     ApiLocation,
     ApiOperation,
     ApiOrganizationSummary,
-    ApiUserSummary,
+    ApiUserListItem,
 } from '@/lib/types';
 
 /** Fetches the application list for admin views. */
@@ -61,7 +61,7 @@ export function useOrganizations() {
 
 /** Fetches the full user list for admin views. */
 export function useUsers() {
-    return useCollectionQuery<ApiUserSummary>('/api/users', {
-        parse: (value) => parseApiCollection(apiUserSummarySchema, value),
+    return useCollectionQuery<ApiUserListItem>('/api/users', {
+        parse: (value) => parseApiCollection(apiUserListItemSchema, value),
     });
 }

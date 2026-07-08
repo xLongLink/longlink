@@ -147,12 +147,7 @@ class KubernetesResources:
         ):
             return None
 
-    async def _delete(
-        self,
-        resource_class: type[APIObject],
-        name: str,
-        namespace: str | None = None,
-    ) -> None:
+    async def _delete(self, resource_class: type[APIObject], name: str, namespace: str | None = None) -> None:
         """Delete one resource and tolerate missing objects."""
 
         body: dict[str, Any] = {"metadata": {"name": name}}

@@ -76,13 +76,12 @@ export const content = (
             Access And Gateway
         </Heading>
         <P>
-            Users access applications through the per-cluster LongLink gateway. The gateway asks the control plane to
-            authorize each request before it forwards traffic to the internal application service.
+            Users access applications through the LongLink API proxy. The API authorizes each request, then forwards it
+            to the secret-protected per-cluster gateway before traffic reaches the internal application service.
         </P>
         <P>
-            LongLink checks access, rejects unavailable applications with a no-store <Code>503</Code>, strips spoofable
-            runtime identity headers at the gateway, and forwards the current user id and effective runtime role as{' '}
-            <Code>x-user-id</Code> and <Code>x-user-role</Code>.
+            LongLink checks access, rejects unavailable applications with a no-store <Code>503</Code>, and forwards the
+            current user id and effective runtime role as <Code>x-user-id</Code> and <Code>x-user-role</Code>.
         </P>
         <P>
             Runtime requests are role-gated by method: <Code>read</Code> can use read methods, <Code>write</Code> can

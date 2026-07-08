@@ -1,13 +1,14 @@
 import pytest
 from uuid import UUID
 from datetime import UTC, datetime
-from tenant.models import User as TenantUser
 from sqlalchemy import text
 from docker.errors import DockerException
+from tenant.models import User as TenantUser
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.engine import URL
+from sqlalchemy.ext.asyncio import create_async_engine
 from testcontainers.postgres import PostgresContainer
 from src.adapters.database.postgres import Postgres
-from sqlalchemy.ext.asyncio import create_async_engine
 
 pytestmark = pytest.mark.no_db
 
@@ -49,7 +50,22 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         )
         await adapter.sync_users("acme", [active_user])
 
-        runtime_url = await adapter.schema("acme", "dashboard")
+        organization_id = UUID("33333333-3333-3333-3333-333333333333")
+        application_id = UUID("44444444-4444-4444-4444-444444444444")
+        runtime_connection = await adapter.schema(
+            "acme",
+            "dashboard",
+            organization_id=organization_id,
+            application_id=application_id,
+        )
+        runtime_url = URL.create(
+            "postgresql+psycopg",
+            username=runtime_connection["username"],
+            password=runtime_connection["password"],
+            host=runtime_connection["host"],
+            port=runtime_connection["port"],
+            database=runtime_connection["database_name"],
+        )
         runtime_engine = create_async_engine(runtime_url)
         async with runtime_engine.begin() as conn:
             await conn.execute(text("CREATE TABLE runtime_items (id integer PRIMARY KEY, name text)"))
@@ -94,13 +110,19 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
 
         await runtime_engine.dispose()
         runtime_engine = None
-        await adapter.delete_schema("acme", "dashboard")
+        await adapter.delete_schema(
+            "acme",
+            "dashboard",
+            organization_id=organization_id,
+            application_id=application_id,
+        )
         schemas_after_delete = await adapter.schemas("longlink_acme")
         await adapter.delete_database("acme")
         databases_after_delete = await adapter.databases()
 
         assert "longlink_acme" in database_url
-        assert "longlink_acme_dashboard" in runtime_url
+        assert runtime_connection["username"].startswith("longlink_")
+        assert len(runtime_connection["username"]) <= 63
         assert shared_user == {"email": "owner@example.com", "role_name": "owner"}
         assert deleted_at is not None
         assert [table["name"] for table in tables] == ["runtime_items"]
@@ -114,6 +136,11 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
     finally:
         if runtime_engine is not None:
             await runtime_engine.dispose()
-        await adapter.delete_schema("acme", "dashboard")
+        await adapter.delete_schema(
+            "acme",
+            "dashboard",
+            organization_id=organization_id,
+            application_id=application_id,
+        )
         await adapter.delete_database("acme")
         container.stop()

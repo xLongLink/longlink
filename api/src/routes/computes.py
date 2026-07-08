@@ -14,18 +14,6 @@ from src.database.models.users import User
 router = APIRouter()
 
 
-def _hostname(value: str) -> str | None:
-    """Return the hostname from an absolute or host-only gateway value."""
-
-    return urls.hostname(value)
-
-
-def _cookie_domain_matches(host: str, cookie_domain: str) -> bool:
-    """Return whether one cookie domain covers the provided host exactly or as a parent domain."""
-
-    return host == cookie_domain or host.endswith(f".{cookie_domain}")
-
-
 def _validate_production_gateway_settings(payload: ComputeRegistryCreate) -> None:
     """Reject compute settings that cannot support production gateway traffic."""
 
@@ -34,9 +22,7 @@ def _validate_production_gateway_settings(payload: ComputeRegistryCreate) -> Non
 
     errors: list[str] = []
     gateway_scheme = urls.absolute_url_scheme(payload.ingress_host)
-    gateway_host = _hostname(payload.ingress_host)
-    control_plane_host = _hostname(env.CONTROL_PLANE_URL)
-    cookie_domain = (env.SESSION_COOKIE_DOMAIN or "").lstrip(".").lower()
+    gateway_host = urls.hostname(payload.ingress_host)
     if not (payload.gateway_tls_certificate or "").strip() or not (payload.gateway_tls_key or "").strip():
         errors.append("gateway TLS certificate and key are required")
 
@@ -46,26 +32,12 @@ def _validate_production_gateway_settings(payload: ComputeRegistryCreate) -> Non
     if gateway_host is None:
         errors.append("gateway host is invalid")
 
-    if control_plane_host is None:
-        errors.append("CONTROL_PLANE_URL host is invalid")
-
-    if gateway_host and control_plane_host and gateway_host != control_plane_host:
-        if not cookie_domain:
-            errors.append("SESSION_COOKIE_DOMAIN is required when the gateway host differs from the control plane host")
-        elif not _cookie_domain_matches(gateway_host, cookie_domain) or not _cookie_domain_matches(
-            control_plane_host,
-            cookie_domain,
-        ):
-            errors.append("SESSION_COOKIE_DOMAIN must cover both gateway and control-plane hosts")
-
     if errors:
         raise ConflictError("Invalid production gateway settings: " + "; ".join(errors))
 
 
 @router.get("/api/computes", response_model=list[ComputeRegistryResponse])
-async def list_compute_registries(
-    _user: User = Depends(authsupport),
-) -> list[ComputeRegistryResponse]:
+async def list_compute_registries(_user: User = Depends(authsupport)) -> list[ComputeRegistryResponse]:
     """Return all registered compute backends."""
 
     registries = await compute.fetch_all()

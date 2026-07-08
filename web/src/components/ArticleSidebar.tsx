@@ -139,10 +139,7 @@ function renderArticleNavigationItem(
 
 
 /** Returns whether an article navigation item or descendant matches the current route. */
-function articleNavigationItemIsActive(
-    item: ArticleNavigationItem,
-    currentPath: string
-): boolean {
+function articleNavigationItemIsActive(item: ArticleNavigationItem, currentPath: string): boolean {
     if (currentPath === item.path) {
         return true;
     }

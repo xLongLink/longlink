@@ -34,11 +34,7 @@ def container_status(
     return SimpleNamespace(ready=ready, state=state)
 
 
-def pod_status(
-    created_at: datetime,
-    phase: str,
-    containers: list[SimpleNamespace],
-) -> SimpleNamespace:
+def pod_status(created_at: datetime, phase: str, containers: list[SimpleNamespace]) -> SimpleNamespace:
     """Build a minimal Kubernetes pod double."""
 
     return SimpleNamespace(
@@ -106,9 +102,7 @@ def test_application_pods_startup_state_marks_current_crashloop_dead() -> None:
     assert startup_state == ApplicationStartupState.dead
 
 
-async def test_execute_application_create_operation_completes_running_application(
-    monkeypatch,
-) -> None:
+async def test_execute_application_create_operation_completes_running_application(monkeypatch) -> None:
     """Complete an application.create operation once the application is alive."""
 
     # Arrange
@@ -163,9 +157,7 @@ async def test_execute_application_create_operation_completes_running_applicatio
     assert refreshed.stopped_at is not None
 
 
-async def test_execute_application_create_operation_marks_failed_when_dead(
-    monkeypatch,
-) -> None:
+async def test_execute_application_create_operation_marks_failed_when_dead(monkeypatch) -> None:
     """Fail an application.create operation when the application crashes during startup."""
 
     # Arrange
@@ -220,9 +212,7 @@ async def test_execute_application_create_operation_marks_failed_when_dead(
     assert refreshed.stopped_at is not None
 
 
-async def test_execute_application_create_operation_releases_when_not_ready(
-    monkeypatch,
-) -> None:
+async def test_execute_application_create_operation_releases_when_not_ready(monkeypatch) -> None:
     """Release application.create verification when the application is still starting."""
 
     # Arrange

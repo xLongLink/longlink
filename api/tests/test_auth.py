@@ -1,10 +1,12 @@
 import pytest
 from src import auth as auth_module
+from src import permissions as permissions_module
 from uuid import UUID
 from types import SimpleNamespace
 from src.errors import NotFoundError, ForbiddenError, UnauthorizedError, UnavailableError
 from src.routes import auth as auth_routes
 from src.routes import users as users_routes
+from src.routes import organizations as organizations_routes
 from src.models.auth import OidcUserInfo
 from src.models.roles import PlatformRoles
 from src.models.users import UserUpdate, UserProfile
@@ -148,9 +150,7 @@ def user_profile(profile_user: User) -> UserProfile:
     )
 
 
-async def test_auth_oidc_upserts_activates_and_redirects(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_auth_oidc_upserts_activates_and_redirects(monkeypatch: pytest.MonkeyPatch) -> None:
     """Complete OIDC callback by validating userinfo and activating the account."""
 
     oidc_client = OidcCallbackClientStub(
@@ -183,9 +183,7 @@ async def test_auth_oidc_upserts_activates_and_redirects(
     assert [userinfo.sub for userinfo in upserts] == ["callback-subject"]
 
 
-async def test_upsert_oidc_user_syncs_organization_databases(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_upsert_oidc_user_syncs_organization_databases(monkeypatch: pytest.MonkeyPatch) -> None:
     """Upsert normalized provider claims and resync organization shared users."""
 
     created_user = user("oidc-upsert")
@@ -270,9 +268,7 @@ def test_session_accounts_activate_deactivate_and_remove() -> None:
     assert session_accounts.list() == ["second"]
 
 
-async def test_platform_role_dependencies_allow_only_elevated_roles(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_platform_role_dependencies_allow_only_elevated_roles(monkeypatch: pytest.MonkeyPatch) -> None:
     """Allow support/admin access while rejecting ordinary users."""
 
     active_user = user("active", PlatformRoles.support)
@@ -296,9 +292,7 @@ async def test_platform_role_dependencies_allow_only_elevated_roles(
         await auth_module.authsupport(RequestStub({"oidc": active_user.oidc}))
 
 
-async def test_patch_me_updates_profile_and_resyncs_organizations(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_patch_me_updates_profile_and_resyncs_organizations(monkeypatch: pytest.MonkeyPatch) -> None:
     """Update mutable profile fields and resync shared organization users."""
 
     current_user = user("patch-user")
@@ -340,24 +334,22 @@ async def test_patch_me_updates_profile_and_resyncs_organizations(
     assert sync_calls == [updated_user]
 
 
-async def test_organization_access_hides_missing_memberships(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_organization_access_hides_missing_memberships(monkeypatch: pytest.MonkeyPatch) -> None:
     """Return not-found errors for organization non-members."""
 
     organization_id = UUID("22222222-2222-2222-2222-222222222222")
     current_user = user("member-check")
 
-    async def fake_get_member(organization_id: UUID, user_id: UUID):
+    async def fake_get_member_access(organization_id: UUID, user_id: UUID):
         """Return no organization for a missing active membership."""
 
         assert user_id == current_user.id
         return None
 
-    monkeypatch.setattr(auth_module.organizations, "get_member", fake_get_member)
+    monkeypatch.setattr(permissions_module.organizations, "get_member_access", fake_get_member_access)
 
     with pytest.raises(NotFoundError, match=f"Organization '{organization_id}' not found"):
-        await auth_module.organization_access(organization_id, current_user)
+        await organizations_routes.get_organization(organization_id, current_user)
 
 
 @pytest.mark.parametrize(
