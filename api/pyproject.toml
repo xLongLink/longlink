@@ -15,7 +15,7 @@ dependencies = [
     'authlib==1.7.2',
     'botocore==1.40.61',
     'email-validator==2.3.0',
-    'fastapi==0.138.0',
+    'fastapi==0.139.0',
     'httpx2==2.3.0',
     'itsdangerous==2.2.0',
     'aiomysql==0.3.2',
