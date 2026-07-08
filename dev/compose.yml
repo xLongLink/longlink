@@ -21,7 +21,7 @@ services:
       - "19001:9001"
 
   registry:
-    image: registry:2
+    image: registry:3
     restart: unless-stopped
     ports:
       - "15000:5000"
