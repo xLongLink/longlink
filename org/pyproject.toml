@@ -9,10 +9,10 @@ description = "LongLink tenant-scoped shared resources"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "alembic==1.18.5",
-    "pydantic==2.13.4",
-    "sqlalchemy==2.0.51",
-    "sqlmodel==0.0.39",
+    "alembic>=1.18.5,<2",
+    "pydantic>=2.13.4,<3",
+    "sqlalchemy>=2.0.51,<2.1",
+    "sqlmodel>=0.0.39,<0.0.40",
 ]
 
 [project.optional-dependencies]

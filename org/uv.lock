@@ -382,15 +382,15 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "alembic", specifier = "==1.18.5" },
+    { name = "alembic", specifier = ">=1.18.5,<2" },
     { name = "isort", marker = "extra == 'dev'", specifier = "==8.0.1" },
-    { name = "pydantic", specifier = "==2.13.4" },
+    { name = "pydantic", specifier = ">=2.13.4,<3" },
     { name = "pyright", marker = "extra == 'dev'", specifier = "==1.1.411" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==9.1.1" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = "==1.4.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==7.1.0" },
-    { name = "sqlalchemy", specifier = "==2.0.51" },
-    { name = "sqlmodel", specifier = "==0.0.39" },
+    { name = "sqlalchemy", specifier = ">=2.0.51,<2.1" },
+    { name = "sqlmodel", specifier = ">=0.0.39,<0.0.40" },
 ]
 provides-extras = ["dev"]
 

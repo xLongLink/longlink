@@ -6,19 +6,19 @@ build-backend = "setuptools.build_meta"
 name = "longlink"
 dynamic = ["version"]
 dependencies = [
-    "alembic==1.18.4",
-    "click==8.3.3",
-    "lxml==6.1.0",
-    "uvicorn==0.46.0",
-    "pydantic==2.13.3",
-    "pydantic-settings==2.14.0",
-    "fsspec==2026.4.0",
-    "s3fs==2026.4.0",
-    "fastapi==0.138.0",
-    "aiosqlite==0.22.1",
-    "asyncpg==0.31.0",
-    "sqlmodel==0.0.38",
-    "tenant==0.0.0",
+    "alembic>=1.18.5,<2",
+    "click>=8.3.3,<9",
+    "lxml>=6.1.0,<7",
+    "uvicorn>=0.46.0,<0.47",
+    "pydantic>=2.13.4,<3",
+    "pydantic-settings>=2.14.0,<3",
+    "fsspec>=2026.4.0,<2027",
+    "s3fs>=2026.4.0,<2027",
+    "fastapi>=0.138.0,<0.139",
+    "aiosqlite>=0.22.1,<0.23",
+    "asyncpg>=0.31.0,<0.32",
+    "sqlmodel>=0.0.39,<0.0.40",
+    "tenant>=0.0.0,<0.1.0",
 ]
 requires-python = ">=3.14"
 authors = [
@@ -43,8 +43,8 @@ tenant = { path = "../org", editable = true }
 
 [project.optional-dependencies]
 cli = [
-  "rich==15.0.0",
-  "click==8.3.3",
+  "rich>=15.0.0,<16",
+  "click>=8.3.3,<9",
 ]
 dev = [
     "pytest==8.4.2",
