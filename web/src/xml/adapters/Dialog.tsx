@@ -53,7 +53,10 @@ export function DialogTrigger({ props, nodes }: Props) {
         const text = anchorChild.params?.i18n ? resolveTranslation(anchorChild.params, ctx) : childContent;
         const active = resolveXmlString(anchorChild.params ?? {}, 'active', ctx);
         const href = anchorChild.params?.href
-            ? resolveAnchorUrl(String(ctx.navigationBaseUrl ?? ''), String(evaluate(anchorChild.params.href, ctx) ?? ''))
+            ? resolveAnchorUrl(
+                  String(ctx.navigationBaseUrl ?? ''),
+                  String(evaluate(anchorChild.params.href, ctx) ?? '')
+              )
             : '';
 
         return (
@@ -79,7 +82,7 @@ export function DialogTrigger({ props, nodes }: Props) {
 }
 
 /** Renders the dialog content surface. */
-export function DialogContent({ props, nodes }: Props) {
+export function DialogContent({ nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <UIDialogContent>{renderNode(nodes, ctx)}</UIDialogContent>;

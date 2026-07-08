@@ -40,7 +40,7 @@ export function Avatar({ props, nodes }: Props) {
 }
 
 /** Renders the avatar image slot. */
-export function AvatarImage({ props, nodes }: Props) {
+export function AvatarImage({ props }: Props) {
     const { ctx } = useXmlContext();
     const baseUrl = useUrl('');
     const alt = resolveXmlString(props, 'alt', ctx);

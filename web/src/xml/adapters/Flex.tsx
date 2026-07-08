@@ -10,20 +10,21 @@ export function Flex({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const space = resolveXmlString(props, 'space', ctx);
 
-    // Map the XML space values to the matching justify-content utility.
-    const justifyClass =
-        space === 'center'
-            ? 'justify-center'
-            : space === 'around'
-              ? 'justify-around'
-              : space === 'evenly'
-                ? 'justify-evenly'
-                : space === 'between'
-                  ? 'justify-between'
-                  : '';
-
     return (
-        <div data-slot="flex" className={`flex items-center gap-4 ${justifyClass}`.trim()}>
+        <div
+            data-slot="flex"
+            className={`flex items-center gap-4 ${
+                space === 'center'
+                    ? 'justify-center'
+                    : space === 'around'
+                      ? 'justify-around'
+                      : space === 'evenly'
+                        ? 'justify-evenly'
+                        : space === 'between'
+                          ? 'justify-between'
+                          : ''
+            }`.trim()}
+        >
             {renderNode(nodes, ctx)}
         </div>
     );

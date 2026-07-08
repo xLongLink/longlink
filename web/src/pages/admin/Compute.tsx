@@ -1,5 +1,5 @@
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
 import { Link } from 'react-router';
@@ -12,17 +12,16 @@ import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmatio
 import { useLocations } from '@/data/admin';
 import { useComputes } from '@/data/compute';
 import { useUserProfile } from '@/hooks/use-user';
-import { apiComputeResourcesSchema, parseApiResponse } from '@/lib/api-schemas';
-import { fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
-import { computeResourcesQueryKey, computesQueryKey } from '@/lib/query-keys';
-import type { ApiComputeRegistry, ApiComputeResources, ApiLocation } from '@/lib/types';
-import { formatBytes, useDeleteDialog } from '@/lib/utils';
+import { computesQueryKey } from '@/lib/query-keys';
+import type { ApiComputeRegistry, ApiLocation } from '@/lib/types';
+import { useDeleteDialog } from '@/lib/utils';
 
 /** Returns localized admin compute table columns. */
 function createComputeColumnsBase(
     t: TFunction
-): Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation; resources?: ApiComputeResources }>> {
+): Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation }>> {
     return [
         {
             accessorKey: 'kind',
@@ -58,33 +57,6 @@ function createComputeColumnsBase(
             },
             meta: { className: 'min-w-56' },
         },
-        {
-            id: 'resources',
-            header: t('columns.resources'),
-            cell: ({ row }) => {
-                const r = row.original.resources;
-                if (!r) return <span className="text-muted-foreground">—</span>;
-                const ramPct = Math.round((r.ram_allocatable / r.ram_total) * 100);
-                const cpuPct = Math.round((r.cpu_allocatable / r.cpu_total) * 100);
-                return (
-                    <div className="min-w-0 space-y-0.5">
-                        <div className="flex items-center gap-1.5">
-                            <div className="truncate font-medium text-foreground">{formatBytes(r.ram_total)}</div>
-                            <div className="shrink-0 text-xs text-muted-foreground">
-                                ({t('resources.allocatablePercent', { percent: ramPct })})
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="truncate font-medium text-foreground">{r.cpu_total} vCPU</div>
-                            <div className="shrink-0 text-xs text-muted-foreground">
-                                ({t('resources.allocatablePercent', { percent: cpuPct })})
-                            </div>
-                        </div>
-                    </div>
-                );
-            },
-            meta: { className: 'w-48' },
-        },
     ];
 }
 
@@ -109,30 +81,12 @@ export default function AdminCompute() {
 
     const { items: computes, error: computesError, isLoading: computesIsLoading } = useComputes();
     const { items: locations, error: locationsError, isLoading: locationsIsLoading } = useLocations();
-    const resourcesQueries = useQueries({
-        queries: computes.map((c) => ({
-            queryKey: computeResourcesQueryKey(c.id),
-            queryFn: async ({ signal }) =>
-                fetchApiJson(`/api/computes/${c.id}/resources`, { signal }, (value) =>
-                    parseApiResponse(apiComputeResourcesSchema, value)
-                ),
-            retry: false,
-        })),
-    });
-
-    const resourcesById = new Map<string, ApiComputeResources>();
-    computes.forEach((c, i) => {
-        const data = resourcesQueries[i]?.data;
-        if (data) resourcesById.set(c.id, data);
-    });
 
     const locationById = new Map(locations.map((l) => [l.id, l]));
-    const computeRows: Array<ApiComputeRegistry & { location?: ApiLocation; resources?: ApiComputeResources }> =
-        computes.map((row) => ({
-            ...row,
-            location: locationById.get(row.location_id),
-            resources: resourcesById.get(row.id),
-        }));
+    const computeRows: Array<ApiComputeRegistry & { location?: ApiLocation }> = computes.map((row) => ({
+        ...row,
+        location: locationById.get(row.location_id),
+    }));
     const deleteDialog = useDeleteDialog({
         title: t('admin.deleteComputeTitle'),
         mutation: deleteCompute,
@@ -165,9 +119,7 @@ export default function AdminCompute() {
                       );
                   },
               },
-          ] satisfies Array<
-              ColumnDef<ApiComputeRegistry & { location?: ApiLocation; resources?: ApiComputeResources }>
-          >)
+          ] satisfies Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation }>>)
         : computeColumnsBase;
 
     return (

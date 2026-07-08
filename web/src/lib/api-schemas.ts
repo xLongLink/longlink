@@ -4,13 +4,11 @@ import type {
     ApiApplicationMember,
     ApiComputeNamespace,
     ApiComputePod,
-    ApiComputeResources,
     ApiComputeRegistry,
     ApiCountryOption,
     ApiDatabaseInstance,
     ApiDatabaseRegistry,
     ApiDatabaseSchema,
-    ApiDatabaseUsage,
     ApiImageMetadata,
     ApiInvitation,
     ApiLocation,
@@ -287,10 +285,6 @@ export const apiDatabaseSchemaSchema = z.object({
     name: z.string(),
 }) satisfies z.ZodType<ApiDatabaseSchema>;
 
-export const apiDatabaseUsageSchema = z.object({
-    space_used: z.number(),
-}) satisfies z.ZodType<ApiDatabaseUsage>;
-
 export const apiStorageBucketSchema = z.object({
     name: z.string(),
 }) satisfies z.ZodType<ApiStorageBucket>;
@@ -305,13 +299,6 @@ export const apiStorageObjectSchema = z.object({
 export const apiComputeNamespaceSchema = z.object({
     name: z.string(),
 }) satisfies z.ZodType<ApiComputeNamespace>;
-
-export const apiComputeResourcesSchema = z.object({
-    cpu_total: z.number(),
-    cpu_allocatable: z.number(),
-    ram_total: z.number(),
-    ram_allocatable: z.number(),
-}) satisfies z.ZodType<ApiComputeResources>;
 
 export const apiComputePodResourcesSchema = z.object({
     cpu_limit: z.number(),

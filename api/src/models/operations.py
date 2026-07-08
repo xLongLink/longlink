@@ -41,6 +41,6 @@ class OperationResponse(BaseModel):
 
     # Audit
     created_at: datetime
-    scheduled_at: datetime | None = None
     started_at: datetime | None = None
     stopped_at: datetime | None = None
+    scheduled_at: datetime | None = None

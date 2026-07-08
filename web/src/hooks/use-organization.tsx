@@ -2,13 +2,13 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { useApiQuery } from '@/hooks/use-api';
 import { useUserProfile } from '@/hooks/use-user';
+import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import {
     apiApplicationResponseSchema,
     apiOrganizationDetailsSchema,
     apiOrganizationSummarySchema,
     parseApiResponse,
 } from '@/lib/api-schemas';
-import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { applicationsQueryKey, organizationsQueryKey } from '@/lib/query-keys';
 import { canCreateOrganizationInvitation, canManageOrganizationMembers, type Role } from '@/lib/roles';
 import type {
@@ -17,7 +17,6 @@ import type {
     ApiOrganizationApplication,
     ApiOrganizationDetails,
     ApiOrganizationMemberSummary,
-    ApiOrganizationSummary,
     ApiUserOrganizationMembership,
 } from '@/lib/types';
 

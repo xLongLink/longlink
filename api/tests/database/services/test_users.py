@@ -110,7 +110,7 @@ async def test_profile_returns_created_organization_membership() -> None:
     )
     location = await db.locations.create("local", "Local testing", user, "CH")
     organization = await db.organizations.create(
-        "test", location.id, user, avatar="https://example.com/organizations/test.png"
+        "test", "test", location.id, user, avatar="https://example.com/organizations/test.png"
     )
 
     profile = await db.users.profile(user.id)
@@ -123,6 +123,7 @@ async def test_profile_returns_created_organization_membership() -> None:
             name="test",
             slug=organization.slug,
             avatar="https://example.com/organizations/test.png",
+            country="CH",
             location=LocationResponse.model_validate(location),
             role=OrganizationRoles.owner,
         )

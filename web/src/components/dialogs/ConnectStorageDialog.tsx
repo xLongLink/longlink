@@ -102,7 +102,7 @@ export default function ConnectStorageDialog() {
             description={t('dialogs.connectStorageDescription')}
             open={open}
             error={error}
-            canSubmit={form.formState.isValid}
+            canSubmit={open && form.formState.isValid}
             isPending={connectStorage.isPending}
             pendingLabel={t('actions.connecting')}
             onOpenChange={(nextOpen) => {

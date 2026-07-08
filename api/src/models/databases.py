@@ -72,6 +72,7 @@ class OrganizationDatabaseApplicationResponse(BaseModel):
     # State
     status: ApplicationStatus
 
+
 class OrganizationDatabaseResourceResponse(BaseModel):
     """Represent one database resource owned by an organization."""
 

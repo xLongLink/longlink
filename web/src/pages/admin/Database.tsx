@@ -1,4 +1,4 @@
-import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { type ColumnDef } from '@tanstack/react-table';
@@ -13,18 +13,17 @@ import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmatio
 import { useLocations } from '@/data/admin';
 import { useDatabases } from '@/data/database';
 import { useUserProfile } from '@/hooks/use-user';
-import { apiDatabaseUsageSchema, parseApiResponse } from '@/lib/api-schemas';
-import { fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
-import { databaseUsageQueryKey, databasesQueryKey } from '@/lib/query-keys';
-import type { ApiDatabaseRegistry, ApiDatabaseUsage, ApiLocation } from '@/lib/types';
-import { formatBytes, useDeleteDialog } from '@/lib/utils';
+import { databasesQueryKey } from '@/lib/query-keys';
+import type { ApiDatabaseRegistry, ApiLocation } from '@/lib/types';
+import { useDeleteDialog } from '@/lib/utils';
 import { PostgreSQL } from '@/svg/PostgreSQL';
 
 /** Returns localized admin database table columns. */
 function createDatabaseColumnsBase(
     t: TFunction
-): Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation; usage?: ApiDatabaseUsage }>> {
+): Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation }>> {
     return [
         {
             id: 'database',
@@ -59,22 +58,6 @@ function createDatabaseColumnsBase(
             },
             meta: { className: 'min-w-56' },
         },
-        {
-            id: 'usage',
-            header: t('columns.usage'),
-            cell: ({ row }) => {
-                const usage = row.original.usage;
-                if (!usage) return <span className="text-muted-foreground">—</span>;
-
-                return (
-                    <div className="min-w-0">
-                        <div className="truncate font-medium text-foreground">{formatBytes(usage.space_used)}</div>
-                        <div className="text-xs text-muted-foreground">{t('common.used')}</div>
-                    </div>
-                );
-            },
-            meta: { className: 'w-48' },
-        },
     ];
 }
 
@@ -99,30 +82,12 @@ export default function AdminDatabase() {
 
     const { items: databases, error: databasesError, isLoading: databasesIsLoading } = useDatabases();
     const { items: locations, error: locationsError, isLoading: locationsIsLoading } = useLocations();
-    const usageQueries = useQueries({
-        queries: databases.map((registry) => ({
-            queryKey: databaseUsageQueryKey(registry.id),
-            queryFn: async ({ signal }) =>
-                fetchApiJson(`/api/databases/${registry.id}/usage`, { signal }, (value) =>
-                    parseApiResponse(apiDatabaseUsageSchema, value)
-                ),
-            retry: false,
-        })),
-    });
-
-    const usageById = new Map<string, ApiDatabaseUsage>();
-    databases.forEach((registry, index) => {
-        const data = usageQueries[index]?.data;
-        if (data) usageById.set(registry.id, data);
-    });
 
     const locationById = new Map(locations.map((location) => [location.id, location]));
-    const databaseTableRows: Array<ApiDatabaseRegistry & { location?: ApiLocation; usage?: ApiDatabaseUsage }> =
-        databases.map((row) => ({
-            ...row,
-            location: locationById.get(row.location_id),
-            usage: usageById.get(row.id),
-        }));
+    const databaseTableRows: Array<ApiDatabaseRegistry & { location?: ApiLocation }> = databases.map((row) => ({
+        ...row,
+        location: locationById.get(row.location_id),
+    }));
     const deleteDialog = useDeleteDialog({
         title: t('admin.deleteDatabaseTitle'),
         mutation: deleteDatabase,
@@ -153,7 +118,7 @@ export default function AdminDatabase() {
                       );
                   },
               },
-          ] satisfies Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation; usage?: ApiDatabaseUsage }>>)
+          ] satisfies Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation }>>)
         : databaseColumnsBase;
 
     return (

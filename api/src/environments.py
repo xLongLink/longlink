@@ -44,6 +44,7 @@ def resolve_cors_origins(development: bool, configured_origins: tuple[str, ...])
 class Env(BaseSettings):
     """Environment-backed API configuration loaded at startup."""
 
+    # Runtime mode
     DEVELOPMENT: bool = _development_enabled()
 
     # Session cookies
@@ -60,23 +61,23 @@ class Env(BaseSettings):
     DATABASE_SSLMODE: str = "require"
 
     # OIDC bridge credentials
-    OIDC_CLIENT_ID: str
-    OIDC_CLIENT_SECRET: str
     OIDC_ISSUER: str
+    OIDC_CLIENT_ID: str
     OIDC_REDIRECT_URI: str
+    OIDC_CLIENT_SECRET: str
 
     # Email sender configuration
     EMAIL_ENABLED: bool = False
-    EMAIL_FROM_ADDRESS: str | None = None
     EMAIL_FROM_NAME: str | None = None
-    EMAIL_MJML_COMMAND: str | None = None
     EMAIL_SMTP_HOST: str | None = None
     EMAIL_SMTP_PORT: int | None = None
-    EMAIL_SMTP_TIMEOUT_SECONDS: int | None = None
-    EMAIL_SMTP_USERNAME: str | None = None
-    EMAIL_SMTP_PASSWORD: str | None = None
+    EMAIL_FROM_ADDRESS: str | None = None
+    EMAIL_MJML_COMMAND: str | None = None
     EMAIL_SMTP_USE_SSL: bool | None = None
     EMAIL_SMTP_USE_TLS: bool | None = None
+    EMAIL_SMTP_PASSWORD: str | None = None
+    EMAIL_SMTP_USERNAME: str | None = None
+    EMAIL_SMTP_TIMEOUT_SECONDS: int | None = None
 
     # Development CORS
     CORS_ORIGINS: tuple[str, ...] = ()

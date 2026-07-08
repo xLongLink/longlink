@@ -50,13 +50,7 @@ def retryable_migration_error(exc: BaseException) -> bool:
     return False
 
 
-def include_object(
-    _object: object,
-    name: str | None,
-    type_: str,
-    _reflected: bool,
-    _compare_to: object | None,
-) -> bool:
+def include_object(_object: object, name: str | None, type_: str, _reflected: bool, _compare_to: object | None) -> bool:
     """Return whether Alembic should manage one metadata object."""
 
     # The platform owns shared organization users; app migrations manage app-owned tables only.
@@ -124,9 +118,7 @@ def make_migrations() -> bool:
     cfg.set_main_option("version_locations", str(migrations_path))
     migration_created = True
 
-    def _skip_empty_revision(
-        _context: object, _revision: object, directives: list[Any]
-    ) -> None:
+    def _skip_empty_revision(_context: object, _revision: object, directives: list[Any]) -> None:
         """Skip writing a migration script when autogenerate finds no changes."""
         nonlocal migration_created
         if not directives:

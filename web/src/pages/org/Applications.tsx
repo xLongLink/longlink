@@ -6,15 +6,18 @@ import { DataTable } from '@/components/DataTable';
 import { Icon } from '@/components/ui/icon';
 import type { ApiOrganizationApplication } from '@/lib/types';
 
-type ApplicationsProps = {
+/** Renders the organization applications table. */
+export default function Applications({
+    organization,
+    applications,
+    isLoading,
+    error,
+}: {
     organization: string;
     applications: ApiOrganizationApplication[];
     isLoading: boolean;
     error: Error | null;
-};
-
-/** Renders the organization applications table. */
-export default function Applications({ organization, applications, isLoading, error }: ApplicationsProps) {
+}) {
     const { t } = useTranslation();
     const applicationsError = error ? new Error(t('errors.loadApplications')) : null;
 

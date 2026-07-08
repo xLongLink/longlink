@@ -1,11 +1,13 @@
 from uuid import UUID, uuid4
-from typing import ClassVar, Optional
+from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum, Column
 from src.models.storages import StorageKind
-from src.database.models.users import User
-from src.database.models.locations import Location
+
+if TYPE_CHECKING:
+    from src.database.models.users import User
+    from src.database.models.locations import Location
 
 
 class StorageRegistry(SQLModel, table=True):

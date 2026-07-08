@@ -66,6 +66,36 @@ jobs:
         working-directory: sdk
         run: uv run --group dev pyright
 
+  # The org package owns shared tenant database primitives used by runtimes.
+  org-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        working-directory: org
+        run: uv sync --extra dev
+
+      - name: Run tests
+        working-directory: org
+        run: uv run pytest --cov=tenant --cov-report=term-missing tests
+
+      - name: Run Pyright
+        working-directory: org
+        run: uv run --extra dev pyright
+
   # The web package uses Bun, so run its test suite separately.
   web-tests:
     runs-on: ubuntu-latest

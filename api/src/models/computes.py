@@ -68,14 +68,18 @@ class ComputeRegistryResponse(BaseModel):
 class NamespaceResponse(BaseModel):
     """Represent a compute namespace."""
 
+    # Metadata
     name: str
 
 
 class PodResourcesResponse(BaseModel):
     """Resource limits and actual usage for a pod."""
 
+    # Limits
     cpu_limit: float = 0
     ram_limit: int = 0
+
+    # Usage
     cpu_usage: float = 0
     ram_usage: int = 0
 
@@ -83,10 +87,17 @@ class PodResourcesResponse(BaseModel):
 class PodResponse(BaseModel):
     """Represent a pod in a namespace."""
 
+    # Metadata
     name: str
-    status: str
     node: str | None = None
+
+    # State
+    status: str
+
+    # Audit
     created_at: str | None = None
+
+    # Resources
     resources: PodResourcesResponse | None = None
 
 

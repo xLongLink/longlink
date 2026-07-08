@@ -35,6 +35,7 @@ class OrganizationStorageApplicationResponse(BaseModel):
     # State
     status: ApplicationStatus
 
+
 class StorageRegistryCreate(BaseModel):
     """Request body for creating a storage registry."""
 

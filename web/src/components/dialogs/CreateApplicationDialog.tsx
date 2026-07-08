@@ -1,4 +1,3 @@
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { Icon } from '@/components/ui/icon';
@@ -9,18 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useApiQuery } from '@/hooks/use-api';
 import { useOrganizationActions } from '@/hooks/use-organization';
 import { useUserProfile } from '@/hooks/use-user';
-import { apiIconsSchema, apiImageMetadataSchema, parseApiResponse } from '@/lib/api-schemas';
 import { fetchApiJson } from '@/lib/api';
+import { apiIconsSchema, apiImageMetadataSchema, parseApiResponse } from '@/lib/api-schemas';
 import { useTranslation } from '@/lib/i18n';
 import { canCreateApplication } from '@/lib/roles';
 import type { ApiImageMetadata } from '@/lib/types';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-
-type CreateApplicationDialogProps = {
-    organization: string;
-};
 
 const platformEnvironmentNames = new Set([
     'LONGLINK_DATABASE_HOST',
@@ -61,7 +57,7 @@ const defaultCreateApplicationValues = {
 } satisfies CreateApplicationInput;
 
 /** Renders the create-application dialog for an organization. */
-export default function CreateApplicationDialog({ organization }: CreateApplicationDialogProps) {
+export default function CreateApplicationDialog({ organization }: { organization: string }) {
     const { t } = useTranslation();
     const { organizations } = useUserProfile();
     const { createApplication, isCreatingApplication } = useOrganizationActions(organization);
@@ -81,7 +77,8 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
         staleTime: Infinity,
     });
     const iconOptions: string[] = iconCatalog ?? [];
-    const visibleIconOptions = values.icon && !iconOptions.includes(values.icon) ? [values.icon, ...iconOptions] : iconOptions;
+    const visibleIconOptions =
+        values.icon && !iconOptions.includes(values.icon) ? [values.icon, ...iconOptions] : iconOptions;
     const configurableEnvironments =
         imageMetadata?.environments.filter((env) => !platformEnvironmentNames.has(env.name)) ?? [];
     const organizationMembership = organizations.find((item) => item.slug === organization);
@@ -106,10 +103,8 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
 
         try {
             const query = new URLSearchParams({ image: payload.image });
-            const metadata = await fetchApiJson(
-                `/api/image?${query.toString()}`,
-                undefined,
-                (value) => parseApiResponse(apiImageMetadataSchema, value)
+            const metadata = await fetchApiJson(`/api/image?${query.toString()}`, undefined, (value) =>
+                parseApiResponse(apiImageMetadataSchema, value)
             );
 
             setImageMetadata(metadata);
@@ -313,7 +308,9 @@ export default function CreateApplicationDialog({ organization }: CreateApplicat
                                         </Button>
                                         <Button
                                             type="button"
-                                            disabled={values.name.trim().length === 0 || values.image.trim().length === 0}
+                                            disabled={
+                                                values.name.trim().length === 0 || values.image.trim().length === 0
+                                            }
                                             onClick={() => setStep('envs')}
                                         >
                                             {t('actions.next')}

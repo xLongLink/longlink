@@ -1,6 +1,7 @@
 from src import compute as compute_runtime
 from src import adapters
 from uuid import UUID
+from typing import cast
 from datetime import UTC, datetime
 from src.utils import names, images, buckets
 from src.errors import ConflictError
@@ -249,9 +250,7 @@ async def remove_application_runtime(
         await storage_client.delete_bucket(application.storage_bucket_name)
 
 
-async def remove_organization_runtime(
-    organization: Organization | OrganizationDetails | OrganizationSummary,
-) -> None:
+async def remove_organization_runtime(organization: Organization | OrganizationDetails | OrganizationSummary) -> None:
     """Remove runtime resources for one organization and its applications."""
 
     names.knames(organization.slug, "Organization")
@@ -422,10 +421,8 @@ async def create_application_runtime(
     logger.info("Provisioning application %s/%s", organization.slug, application_slug)
 
     image_metadata = await application_image_metadata(payload)
-    digest = image_metadata.digest
-    runtime_image = image_metadata.image
-    assert digest is not None
-    assert runtime_image is not None
+    digest = cast(str, image_metadata.digest)
+    runtime_image = cast(str, image_metadata.image)
 
     compute_registry = await latest_compute_registry(organization.location_id)
     if compute_registry is None:
@@ -532,10 +529,8 @@ async def sync_application_runtime(
     shared_storage_bucket(organization)
     application_bucket_name = application_storage_bucket(application)
     image_metadata = await application_image_metadata(payload)
-    digest = image_metadata.digest
-    runtime_image = image_metadata.image
-    assert digest is not None
-    assert runtime_image is not None
+    digest = cast(str, image_metadata.digest)
+    runtime_image = cast(str, image_metadata.image)
 
     compute_registry = await application_compute_registry(application, organization.location_id)
     if compute_registry is None:

@@ -248,9 +248,9 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Admin applications UI         | Lists all applications with organization, status, image, and location context.                                                                |
 | Admin organizations UI        | Lists organizations and lifecycle users.                                                                                                      |
 | Admin locations UI            | Lists locations and supports administrator-only location creation.                                                                            |
-| Admin database UI             | Manages database registries and browses usage, managed databases, and managed schemas.                                                         |
+| Admin database UI             | Manages database registries and browses managed databases and managed schemas.                                                                 |
 | Admin storage UI              | Manages storage registries and browses managed buckets and object metadata.                                                                    |
-| Admin compute UI              | Manages compute registries and browses resources, managed namespaces, pods, and pod usage.                                                     |
+| Admin compute UI              | Manages compute registries and browses managed namespaces, pods, and pod usage.                                                                |
 | Admin operations UI           | Lists scheduled, active, completed, and failed operations with timestamps, step, resource ids, and errors.                                    |
 
 ### Clients, Hooks, and Components
@@ -268,7 +268,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Create application dialog     | Supports schema-backed image inspection, metadata review, icon selection, env entry, and app creation.                                                |
 | Registry connection dialogs   | Create database, storage, and compute registries with location selection and schema-backed client validation.                                         |
 | Create location dialog        | Supports administrator-only schema-backed location creation.                                                                                          |
-| Create organization dialog    | Supports schema-backed organization creation with name, avatar URL, and location.                                                                     |
+| Create organization dialog    | Supports schema-backed organization creation with name, avatar URL, country, and location.                                                            |
 | Logs dialog                   | Fetches application logs only while open and displays logs/errors.                                                                                    |
 | Delete confirmation dialog    | Provides reusable destructive confirmation UI for supported destructive resource actions.                                                             |
 | Data table component          | Wraps TanStack Table with loading, empty, error, and column class support.                                                                            |

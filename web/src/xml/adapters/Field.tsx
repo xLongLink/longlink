@@ -30,7 +30,7 @@ export function Field({ props, nodes }: Props) {
 }
 
 /** Renders the field content slot. */
-export function FieldContent({ props, nodes }: Props) {
+export function FieldContent({ nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return <UIFieldContent>{renderNode(nodes, ctx)}</UIFieldContent>;

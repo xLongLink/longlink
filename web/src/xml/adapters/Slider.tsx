@@ -5,7 +5,7 @@ import { getVersion, useSnapshot } from 'valtio';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Renders a shadcn-backed slider with optional reactive state binding. */
-export function Slider({ props, nodes }: Props) {
+export function Slider({ props }: Props) {
     const { ctx } = useXmlContext();
     const defaultValue = resolveXmlValue(props, 'defaultValue', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);

@@ -25,19 +25,9 @@ export function databasesQueryKey() {
     return apiQueryKey('/api/databases');
 }
 
-/** Builds the database usage query key. */
-export function databaseUsageQueryKey(databaseId: string) {
-    return apiQueryKey(`/api/databases/${databaseId}/usage`);
-}
-
 /** Builds the computes list query key. */
 export function computesQueryKey() {
     return apiQueryKey('/api/computes');
-}
-
-/** Builds the compute resources query key. */
-export function computeResourcesQueryKey(computeId: string) {
-    return apiQueryKey(`/api/computes/${computeId}/resources`);
 }
 
 /** Builds the storages list query key. */

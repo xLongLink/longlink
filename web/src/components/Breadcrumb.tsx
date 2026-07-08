@@ -18,6 +18,7 @@ type BreadcrumbTrailItem = {
 
 const hiddenSegments = new Set(['orgs', 'apps']);
 
+/** Decodes one URL path segment without failing breadcrumb rendering. */
 function decodeSegment(segment: string): string {
     try {
         return decodeURIComponent(segment);
@@ -26,7 +27,7 @@ function decodeSegment(segment: string): string {
     }
 }
 
-
+/** Builds breadcrumbs for organization and application routes. */
 function buildOrganizationCrumbs(segments: string[]): BreadcrumbTrailItem[] {
     const organization = segments[1] ?? '';
     const application = segments[2] === 'apps' ? segments[3] : null;
@@ -49,7 +50,7 @@ function buildOrganizationCrumbs(segments: string[]): BreadcrumbTrailItem[] {
     ];
 }
 
-
+/** Builds generic breadcrumbs by hiding routing-only path segments. */
 function buildDefaultCrumbs(segments: string[]): BreadcrumbTrailItem[] {
     return segments.flatMap((segment, index) => {
         if (hiddenSegments.has(segment)) {
@@ -74,12 +75,11 @@ export function Breadcrumb() {
     const isAdminSection = segments[0] === 'admin';
     const isOrganizationSection = segments[0] === 'orgs' && segments.length >= 2;
 
-    const crumbs =
-        isAdminSection
-            ? [{ href: '/admin', label: 'Admin' }]
-            : isOrganizationSection
-              ? buildOrganizationCrumbs(segments)
-              : buildDefaultCrumbs(segments);
+    const crumbs = isAdminSection
+        ? [{ href: '/admin', label: 'Admin' }]
+        : isOrganizationSection
+          ? buildOrganizationCrumbs(segments)
+          : buildDefaultCrumbs(segments);
 
     return (
         <UIBreadcrumb>

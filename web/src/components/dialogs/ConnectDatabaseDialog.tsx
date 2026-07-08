@@ -98,7 +98,7 @@ export default function ConnectDatabaseDialog() {
             description={t('dialogs.connectDatabaseDescription')}
             open={open}
             error={error}
-            canSubmit={form.formState.isValid}
+            canSubmit={open && form.formState.isValid}
             isPending={connectDatabase.isPending}
             pendingLabel={t('actions.connecting')}
             onOpenChange={(nextOpen) => {

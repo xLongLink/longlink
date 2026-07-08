@@ -45,10 +45,7 @@ async def request_get_endpoint(request_id: int) -> PurchaseRequestRead:
 
 
 @router.patch("/requests/{request_id}/status", response_model=PurchaseRequestRead)
-async def request_status_patch_endpoint(
-    request_id: int,
-    payload: PurchaseRequestStatusUpdate,
-) -> PurchaseRequestRead:
+async def request_status_patch_endpoint(request_id: int, payload: PurchaseRequestStatusUpdate) -> PurchaseRequestRead:
     """Update one purchase request workflow status."""
 
     request = await requests.update_request_status(request_id, payload.status)
@@ -78,10 +75,7 @@ async def request_attachments_get_endpoint(request_id: int) -> list[RequestAttac
 
 
 @router.post("/requests/{request_id}/attachments", response_model=RequestAttachmentRead)
-async def request_attachments_post_endpoint(
-    request_id: int,
-    file: UploadFile = File(...),
-) -> RequestAttachmentRead:
+async def request_attachments_post_endpoint(request_id: int, file: UploadFile = File(...)) -> RequestAttachmentRead:
     """Upload one file attachment for a purchase request."""
 
     await _require_request(request_id)

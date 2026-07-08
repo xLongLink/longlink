@@ -1,7 +1,7 @@
 import httpx2
 from src import compute as compute_runtime
-from src import permissions
 from uuid import UUID
+from dataclasses import dataclass
 from collections.abc import Mapping
 from fastapi import Depends, Request, Response, APIRouter
 from datetime import UTC, datetime, timedelta
@@ -12,11 +12,13 @@ from src.operations import provisioning
 from src.models.statuses import ApplicationStatus
 from src.models.roles import role, ApplicationRoles, OrganizationRoles
 from src.compute.constants import GATEWAY_SECRET_HEADER, GATEWAY_IDENTITY_HEADERS
-from src.database.services import operations, applications
+from src.database.services import operations, applications, organizations
 from src.models.operations import OperationKind
 from src.models.applications import (ApplicationCreate, ApplicationResponse, ApplicationMemberUpdate,
                                      ApplicationMemberResponse)
 from src.database.models.users import User
+from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 
 APPLICATION_DELETE_DELAY_DAYS = 0
 APPLICATION_PROXY_METHODS = ["DELETE", "GET", "PATCH", "POST", "PUT"]
@@ -60,6 +62,17 @@ APPLICATION_PROXY_RESPONSE_EXCLUDED_HEADERS = {
 }
 
 router = APIRouter()
+
+
+@dataclass(frozen=True)
+class ApplicationAccess:
+    """Represent authenticated access to one application."""
+
+    user: User
+    application_role: ApplicationRoles | None
+    application: Application
+    organization: Organization
+    organization_role: OrganizationRoles
 
 
 def _application_proxy_request_url(application_id: UUID, ingress_host: str, path: str, query: str) -> str:
@@ -110,6 +123,30 @@ def _application_proxy_response_headers(headers: Mapping[str, str]) -> dict[str,
     }
 
 
+async def application_access(application_id: UUID, user: User = Depends(authuser)) -> ApplicationAccess:
+    """Return the current user's application and organization access context."""
+
+    # App routes start from application id, so resolve the application before checking organization access.
+    application = await applications.get_reference(application_id)
+    if application is None:
+        raise NotFoundError("Application", application_id)
+
+    # Organization membership grants the base right to see the application route.
+    member_access = await organizations.get_member_access(application.organization_id, user.id)
+    if member_access is None:
+        raise NotFoundError("Organization", application.organization_id)
+
+    organization, organization_role = member_access
+    application_role = await applications.membership_role(application.id, user.id)
+    return ApplicationAccess(
+        user=user,
+        application_role=application_role,
+        application=application,
+        organization=organization,
+        organization_role=organization_role,
+    )
+
+
 @router.get("/api/applications", response_model=list[ApplicationResponse])
 async def list_applications(user: User = Depends(authadmin)) -> list[ApplicationResponse]:
     """Return all applications for administrator views."""
@@ -119,34 +156,42 @@ async def list_applications(user: User = Depends(authadmin)) -> list[Application
 
 @router.post("/api/organizations/{organization_id}/applications", response_model=ApplicationResponse)
 async def create_application(
+    organization_id: UUID,
     payload: ApplicationCreate,
-    member_access: permissions.OrganizationAccess = Depends(permissions.organization_access),
+    user: User = Depends(authuser),
 ) -> ApplicationResponse:
     """Register a new application in the database and deploy it on the compute cluster."""
 
+    # Resolve access inside the handler so body validation can reject malformed payloads first.
+    member_access = await organizations.get_member_access(organization_id, user.id)
+    if member_access is None:
+        raise NotFoundError("Organization", organization_id)
+
+    organization, organization_role = member_access
+
     # Application creation provisions runtime resources, so it requires elevated organization permissions.
-    if not role.atleast(member_access.role, OrganizationRoles.maintain):
+    if not role.atleast(organization_role, OrganizationRoles.maintain):
         raise ForbiddenError("Application creation permissions required")
 
     # Validate all derived infrastructure names before any provisioning side effects happen.
     try:
         application_slug = names.slugify(payload.name, "Application name")
-        names.knames(member_access.organization.slug, "Organization")
+        names.knames(organization.slug, "Organization")
         names.knames(application_slug, "Application name")
-        names.k8name(member_access.organization.slug)
-        names.dbname(member_access.organization.slug)
-        provisioning.shared_storage_bucket(member_access.organization)
-        buckets.application(member_access.organization.slug, application_slug)
+        names.k8name(organization.slug)
+        names.dbname(organization.slug)
+        provisioning.shared_storage_bucket(organization)
+        buckets.application(organization.slug, application_slug)
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
 
     # Provision runtime resources and convert infrastructure failures into API availability errors.
     try:
         application = await provisioning.create_application_runtime(
-            member_access.organization,
+            organization,
             application_slug,
             payload,
-            member_access.user,
+            user,
         )
     except RuntimeError as exc:
         raise UnavailableError(str(exc)) from exc
@@ -160,8 +205,8 @@ async def create_application(
         {
             **reloaded_application.model_dump(),
             "organization": reloaded_application.organization,
-            "created_by": reloaded_application.created_by or member_access.user,
-            "updated_by": reloaded_application.updated_by or reloaded_application.created_by or member_access.user,
+            "created_by": reloaded_application.created_by or user,
+            "updated_by": reloaded_application.updated_by or reloaded_application.created_by or user,
             "deleted_by": reloaded_application.deleted_by,
             "gateway_url": applications.response_gateway_url(reloaded_application),
         }
@@ -169,33 +214,25 @@ async def create_application(
 
 
 @router.get("/api/applications/{application_id}/logs")
-async def get_application_logs(application_id: UUID, user: User = Depends(authuser)) -> Response:
+async def get_application_logs(access: ApplicationAccess = Depends(application_access)) -> Response:
     """Return recent pod logs for one managed application."""
 
-    # Validate the application and organization before connecting to the active cluster.
-    application = await applications.get_reference(application_id)
-    if application is None:
-        raise NotFoundError("Application", application_id)
-
-    organization_access = await permissions.organization_access(application.organization_id, user)
-    application_role = await applications.membership_role(application.id, user.id)
-    if not role.atleast(application_role, ApplicationRoles.maintain) and not role.atleast(
-        organization_access.role,
+    can_manage_application = role.atleast(access.application_role, ApplicationRoles.maintain) or role.atleast(
+        access.organization_role,
         OrganizationRoles.maintain,
-    ):
+    )
+    if not can_manage_application:
         raise ForbiddenError("Application log permissions required")
 
-    registry = await provisioning.application_compute_registry(application, organization_access.organization.location_id)
+    registry = await provisioning.application_compute_registry(access.application, access.organization.location_id)
     if registry is None:
-        raise UnavailableError(
-            f"No compute cluster configured for location '{organization_access.organization.location_id}'"
-        )
+        raise UnavailableError(f"No compute cluster configured for location '{access.organization.location_id}'")
 
     compute_client = compute_runtime.kubernetes(registry)
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
-        logs = await compute_client.logs(organization_access.organization.slug, application.slug)
+        logs = await compute_client.logs(access.organization.slug, access.application.slug)
     except ValueError as exc:
         raise UnavailableError(str(exc)) from exc
 
@@ -204,56 +241,45 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
 @router.get("/api/applications/{application_id}/members", response_model=list[ApplicationMemberResponse])
 async def list_application_members(
-    application_id: UUID, user: User = Depends(authuser)
+    access: ApplicationAccess = Depends(application_access),
 ) -> list[ApplicationMemberResponse]:
     """Return organization members and their application-specific roles."""
 
-    application = await applications.get_reference(application_id)
-    if application is None:
-        raise NotFoundError("Application", application_id)
-
-    await permissions.organization_access(application.organization_id, user)
-    return await applications.list_members(application.id, application.organization_id)
+    return await applications.list_members(access.application.id, access.application.organization_id)
 
 
 @router.patch("/api/applications/{application_id}/members/{member_id}", status_code=204)
 async def update_application_member(
-    application_id: UUID,
     member_id: UUID,
     payload: ApplicationMemberUpdate,
-    user: User = Depends(authuser),
+    access: ApplicationAccess = Depends(application_access),
 ) -> Response:
     """Update one member's application-specific role."""
 
-    application = await applications.get_reference(application_id)
-    if application is None:
-        raise NotFoundError("Application", application_id)
-
-    organization_access = await permissions.organization_access(application.organization_id, user)
-    application_role = await applications.membership_role(application.id, user.id)
-    if not role.atleast(application_role, ApplicationRoles.maintain) and not role.atleast(
-        organization_access.role,
+    can_manage_application = role.atleast(access.application_role, ApplicationRoles.maintain) or role.atleast(
+        access.organization_role,
         OrganizationRoles.maintain,
-    ):
+    )
+    if not can_manage_application:
         raise ForbiddenError("Application member management permissions required")
 
     # Managers may only change roles that are not stronger than their own effective authority.
-    caller_role_rank = role.rank(application_role)
-    if role.atleast(organization_access.role, OrganizationRoles.maintain):
-        caller_role_rank = max(caller_role_rank, role.rank(organization_access.role))
+    caller_role_rank = role.rank(access.application_role)
+    if role.atleast(access.organization_role, OrganizationRoles.maintain):
+        caller_role_rank = max(caller_role_rank, role.rank(access.organization_role))
 
-    member_application_role = await applications.membership_role(application.id, member_id)
+    member_application_role = await applications.membership_role(access.application.id, member_id)
     if role.rank(member_application_role) > caller_role_rank:
         raise ForbiddenError("Application role management permissions required")
     if role.rank(payload.role) > caller_role_rank:
         raise ForbiddenError("Application role management permissions required")
 
     updated = await applications.set_member_role(
-        application.id,
-        application.organization_id,
+        access.application.id,
+        access.application.organization_id,
         member_id,
         payload.role,
-        user,
+        access.user,
     )
     if not updated:
         raise NotFoundError("Organization member", member_id)
@@ -262,32 +288,27 @@ async def update_application_member(
 
 
 @router.delete("/api/applications/{application_id}", status_code=204)
-async def delete_application(application_id: UUID, user: User = Depends(authuser)) -> Response:
+async def delete_application(access: ApplicationAccess = Depends(application_access)) -> Response:
     """Soft-delete one application and queue runtime resource removal."""
 
-    application = await applications.get_reference(application_id)
-    if application is None:
-        raise NotFoundError("Application", application_id)
-
-    organization_access = await permissions.organization_access(application.organization_id, user)
-    application_role = await applications.membership_role(application.id, user.id)
-    if not role.atleast(application_role, ApplicationRoles.maintain) and not role.atleast(
-        organization_access.role,
+    can_manage_application = role.atleast(access.application_role, ApplicationRoles.maintain) or role.atleast(
+        access.organization_role,
         OrganizationRoles.maintain,
-    ):
+    )
+    if not can_manage_application:
         raise ForbiddenError("Application deletion permissions required")
 
-    deleted = await applications.soft_delete(application_id, user)
+    deleted = await applications.soft_delete(access.application.id, access.user)
     if deleted is None:
-        raise NotFoundError("Application", application_id)
+        raise NotFoundError("Application", access.application.id)
 
     # Runtime cleanup is asynchronous so the delete request is not blocked by cluster calls.
     await operations.create(
         OperationKind.application_delete,
-        application_id=application_id,
+        application_id=access.application.id,
         scheduled_at=datetime.now(UTC) + timedelta(days=APPLICATION_DELETE_DELAY_DAYS),
         step="remove",
-        user=user,
+        user=access.user,
     )
     return Response(status_code=204)
 
@@ -303,28 +324,19 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
     include_in_schema=False,
 )
 async def proxy_application_request(
-    application_id: UUID,
     request: Request,
     path: str = "",
-    user: User = Depends(authuser),
+    access: ApplicationAccess = Depends(application_access),
 ) -> Response:
     """Authenticate and forward one application runtime request through the cluster gateway."""
 
-    application = await applications.get_reference(application_id)
-    if application is None:
-        raise NotFoundError("Application", application_id)
-
-    # Resolve the caller's organization and application roles before creating trusted runtime headers.
-    organization_access = await permissions.organization_access(application.organization_id, user)
-    organization = organization_access.organization
-    application_role = await applications.membership_role(application.id, user.id)
     runtime_roles: list[ApplicationRoles | OrganizationRoles] = []
 
     # Application roles grant normal runtime access; elevated organization roles can open apps too.
-    if application_role is not None:
-        runtime_roles.append(application_role)
-    if role.atleast(organization_access.role, OrganizationRoles.maintain):
-        runtime_roles.append(organization_access.role)
+    if access.application_role is not None:
+        runtime_roles.append(access.application_role)
+    if role.atleast(access.organization_role, OrganizationRoles.maintain):
+        runtime_roles.append(access.organization_role)
 
     if not runtime_roles:
         raise ForbiddenError("Application access required")
@@ -336,27 +348,27 @@ async def proxy_application_request(
     if not role.atleast(runtime_role, required_role):
         raise ForbiddenError(f"Application {required_role} access required")
 
-    names.knames(organization.slug, "Organization")
-    names.knames(application.slug, "Application name")
+    names.knames(access.organization.slug, "Organization")
+    names.knames(access.application.slug, "Application name")
 
     # Let the web runtime show a loading state while deployment verification is still pending.
-    if application.status != ApplicationStatus.running:
+    if access.application.status != ApplicationStatus.running:
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
     # Use the app's assigned compute registry so the proxy targets the correct cluster gateway.
-    registry = await provisioning.application_compute_registry(application, organization.location_id)
+    registry = await provisioning.application_compute_registry(access.application, access.organization.location_id)
     if registry is None:
-        raise UnavailableError(f"No compute cluster configured for location '{organization.location_id}'")
+        raise UnavailableError(f"No compute cluster configured for location '{access.organization.location_id}'")
 
     # Build the authenticated upstream request that only the API is allowed to send.
-    upstream_url = _application_proxy_request_url(application.id, registry.ingress_host, path, request.url.query)
+    upstream_url = _application_proxy_request_url(access.application.id, registry.ingress_host, path, request.url.query)
     runtime_headers = {
-        "x-user-id": str(user.id),
+        "x-user-id": str(access.user.id),
         "x-user-role": runtime_role,
-        "x-longlink-application-id": str(application.id),
-        "x-longlink-application-slug": application.slug,
-        "x-longlink-organization-id": str(organization.id),
-        "x-longlink-organization-slug": organization.slug,
+        "x-longlink-application-id": str(access.application.id),
+        "x-longlink-application-slug": access.application.slug,
+        "x-longlink-organization-id": str(access.organization.id),
+        "x-longlink-organization-slug": access.organization.slug,
     }
     request_headers = _application_proxy_request_headers(request, registry.proxy_secret, runtime_headers)
 

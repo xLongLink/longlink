@@ -7,6 +7,7 @@ from pydantic import BaseModel
 class Metadata(BaseModel):
     """Project metadata loaded from `pyproject.toml` with sane defaults."""
 
+    # Metadata
     name: str = "longlink-app"
     title: str | None = None
     version: str = "0.0.0"
@@ -17,10 +18,7 @@ class Metadata(BaseModel):
     terms_of_service: str | None = None
 
     @staticmethod
-    def metadata_from_pyproject(
-        pyproject_data: dict[str, Any],
-        defaults: dict[str, Any],
-    ) -> dict[str, Any]:
+    def metadata_from_pyproject(pyproject_data: dict[str, Any], defaults: dict[str, Any]) -> dict[str, Any]:
         """Extract metadata fields from parsed pyproject payload."""
 
         # Read LongLink tool section first, then fall back to standard PEP 621 fields.

@@ -66,11 +66,11 @@ class ApplicationResponse(BaseModel):
     organization_id: UUID
 
     # Metadata
+    sdk: str | None = None
     name: str
     slug: str
     icon: Icon | None = None
     image: str
-    sdk: str | None = None
     digest: str | None = None
     version: str | None = None
     description: str | None = None
@@ -87,6 +87,7 @@ class ApplicationResponse(BaseModel):
     updated_by: UserSummary
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
+
 
 class ApplicationMemberUpdate(BaseModel):
     """Validate application member role updates."""

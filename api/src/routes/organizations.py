@@ -1,5 +1,6 @@
-from src import adapters, permissions
+from src import adapters
 from uuid import UUID
+from dataclasses import dataclass
 from fastapi import Depends, Response, APIRouter
 from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authsupport
@@ -7,6 +8,7 @@ from src.utils import names, buckets
 from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.logger import logger
 from src.operations import provisioning
+from src.adapters.storage.base import StorageBucketUsage
 from tenant.database import SHARED_SCHEMA
 from src.models.roles import role, PlatformRoles, OrganizationRoles
 from src.models.storages import (OrganizationStorageResourceKind, OrganizationStorageResourceResponse,
@@ -29,6 +31,27 @@ TABLE_PREVIEW_LIMIT = 100
 ORGANIZATION_DELETE_DELAY_DAYS = 0
 
 
+@dataclass(frozen=True)
+class OrganizationAccess:
+    """Represent authenticated access to one organization."""
+
+    user: User
+    role: OrganizationRoles
+    organization: Organization
+
+
+async def organization_access(organization_id: UUID, user: User = Depends(authuser)) -> OrganizationAccess:
+    """Return the current user's organization and membership role."""
+
+    # Load the membership row and organization together so all callers use one access path.
+    member_access = await organizations.get_member_access(organization_id, user.id)
+    if member_access is None:
+        raise NotFoundError("Organization", organization_id)
+
+    organization, organization_role = member_access
+    return OrganizationAccess(user=user, role=organization_role, organization=organization)
+
+
 @router.get("/api/organizations", response_model=list[OrganizationSummary])
 async def list_organizations(_user: User = Depends(authsupport)) -> list[OrganizationSummary]:
     """Return all organizations for support and administrator views."""
@@ -41,7 +64,7 @@ async def list_organizations(_user: User = Depends(authsupport)) -> list[Organiz
 async def get_organization(organization_id: UUID, user: User = Depends(authuser)) -> OrganizationDetails:
     """Return one organization and its metadata."""
 
-    await permissions.organization_access(organization_id, user)
+    await organization_access(organization_id, user)
     organization = await organizations.get(organization_id, application_user_id=user.id)
     if organization is None:
         raise NotFoundError("Organization", organization_id)
@@ -54,7 +77,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     response_model=list[ApplicationResponse],
 )
 async def list_organization_applications(
-    member_access: permissions.OrganizationAccess = Depends(permissions.organization_access),
+    member_access: OrganizationAccess = Depends(organization_access),
 ) -> list[ApplicationResponse]:
     """Return the applications for one organization."""
 
@@ -70,7 +93,7 @@ async def list_organization_applications(
     response_model=list[OrganizationDatabaseResourceResponse],
 )
 async def list_organization_database_resources(
-    member_access: permissions.OrganizationAccess = Depends(permissions.organization_access),
+    member_access: OrganizationAccess = Depends(organization_access),
 ) -> list[OrganizationDatabaseResourceResponse]:
     """Return database schemas for one organization."""
 
@@ -91,7 +114,7 @@ async def list_organization_database_resources(
     response_model=list[OrganizationStorageResourceResponse],
 )
 async def list_organization_storage_resources(
-    member_access: permissions.OrganizationAccess = Depends(permissions.organization_access),
+    member_access: OrganizationAccess = Depends(organization_access),
 ) -> list[OrganizationStorageResourceResponse]:
     """Return storage buckets for one organization."""
 
@@ -114,7 +137,7 @@ async def list_organization_storage_resources(
 async def list_organization_database_resource_tables(
     resource_kind: OrganizationDatabaseResourceKind,
     resource_name: str,
-    member_access: permissions.OrganizationAccess = Depends(permissions.organization_access),
+    member_access: OrganizationAccess = Depends(organization_access),
 ) -> list[OrganizationDatabaseTableResponse]:
     """Return tables, columns, and preview rows for one organization database resource."""
 
@@ -155,7 +178,7 @@ async def list_organization_database_resource_tables(
 @router.post("/api/organizations/{organization_id}/invitations", status_code=204)
 async def create_organization_invitation(
     payload: OrganizationInvitationCreate,
-    member_access: permissions.OrganizationAccess = Depends(permissions.organization_access),
+    member_access: OrganizationAccess = Depends(organization_access),
 ) -> Response:
     """Create one invitation for an organization member."""
 
@@ -173,7 +196,7 @@ async def create_organization_invitation(
 async def update_organization_member(
     member_id: UUID,
     payload: OrganizationMemberUpdate,
-    member_access: permissions.OrganizationAccess = Depends(permissions.organization_access),
+    member_access: OrganizationAccess = Depends(organization_access),
 ) -> Response:
     """Update one organization member role."""
 
@@ -328,81 +351,6 @@ async def _storage_resource_rows(
     try:
         storage_client = adapters.storage(registry)
         bucket_names = set(await storage_client.buckets())
-        expected_bucket_names: set[str] = set()
-        rows: list[OrganizationStorageResourceResponse] = []
-        shared_bucket_name = organization.shared_storage_bucket_name
-
-        if shared_bucket_name is not None:
-            expected_bucket_names.add(shared_bucket_name)
-
-        if shared_bucket_name is not None and shared_bucket_name in bucket_names:
-            usage = await storage_client.bucket_usage(shared_bucket_name)
-            rows.append(
-                OrganizationStorageResourceResponse(
-                    kind=OrganizationStorageResourceKind.shared_bucket,
-                    name="shared",
-                    bucket_name=shared_bucket_name,
-                    application=None,
-                    storage_registry_id=registry.id,
-                    storage_registry_name=registry.name,
-                    space_used=usage["space_used"],
-                    object_count=usage["object_count"],
-                )
-            )
-
-        # Compare expected app buckets against the backend listing so only existing resources are visible.
-        for application in sorted(active_applications, key=lambda item: item.name):
-            if application.storage_bucket_name is None:
-                continue
-
-            expected_bucket_names.add(application.storage_bucket_name)
-            if application.storage_bucket_name not in bucket_names:
-                continue
-
-            usage = await storage_client.bucket_usage(application.storage_bucket_name)
-            rows.append(
-                OrganizationStorageResourceResponse(
-                    kind=OrganizationStorageResourceKind.application_bucket,
-                    name=application.slug,
-                    bucket_name=application.storage_bucket_name,
-                    application=OrganizationStorageApplicationResponse.model_validate(
-                        {
-                            "id": application.id,
-                            "name": application.name,
-                            "slug": application.slug,
-                            "icon": application.icon,
-                            "description": application.description,
-                            "status": application.status,
-                        }
-                    ),
-                    storage_registry_id=registry.id,
-                    storage_registry_name=registry.name,
-                    space_used=usage["space_used"],
-                    object_count=usage["object_count"],
-                )
-        )
-
-        # Keep stale managed buckets visible as orphaned resources.
-        managed_bucket_prefix = buckets.prefix(organization.slug)
-        for listed_bucket_name in sorted(bucket_names):
-            if listed_bucket_name in expected_bucket_names or not listed_bucket_name.startswith(managed_bucket_prefix):
-                continue
-
-            usage = await storage_client.bucket_usage(listed_bucket_name)
-            rows.append(
-                OrganizationStorageResourceResponse(
-                    kind=OrganizationStorageResourceKind.application_bucket,
-                    name=listed_bucket_name.removeprefix(managed_bucket_prefix),
-                    bucket_name=listed_bucket_name,
-                    application=None,
-                    storage_registry_id=registry.id,
-                    storage_registry_name=registry.name,
-                    space_used=usage["space_used"],
-                    object_count=usage["object_count"],
-                )
-            )
-
-        return rows
     except Exception as exc:
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",
@@ -411,6 +359,108 @@ async def _storage_resource_rows(
             exc,
         )
         raise UnavailableError("Storage resources unavailable") from exc
+
+    expected_bucket_names: set[str] = set()
+    rows: list[OrganizationStorageResourceResponse] = []
+    bucket_names_requiring_usage: list[str] = []
+    shared_bucket_name = organization.shared_storage_bucket_name
+    visible_application_buckets: list[tuple[Application, str]] = []
+
+    if shared_bucket_name is not None:
+        expected_bucket_names.add(shared_bucket_name)
+
+    if shared_bucket_name is not None and shared_bucket_name in bucket_names:
+        bucket_names_requiring_usage.append(shared_bucket_name)
+
+    # Compare expected app buckets against the backend listing so only existing resources are visible.
+    for application in sorted(active_applications, key=lambda item: item.name):
+        if application.storage_bucket_name is None:
+            continue
+
+        expected_bucket_names.add(application.storage_bucket_name)
+        if application.storage_bucket_name not in bucket_names:
+            continue
+
+        visible_application_buckets.append((application, application.storage_bucket_name))
+        bucket_names_requiring_usage.append(application.storage_bucket_name)
+
+    # Keep stale managed buckets visible as orphaned resources.
+    managed_bucket_prefix = buckets.prefix(organization.slug)
+    orphaned_bucket_names = [
+        listed_bucket_name
+        for listed_bucket_name in sorted(bucket_names)
+        if listed_bucket_name not in expected_bucket_names and listed_bucket_name.startswith(managed_bucket_prefix)
+    ]
+    bucket_names_requiring_usage.extend(orphaned_bucket_names)
+
+    bucket_usage_by_name: dict[str, StorageBucketUsage] = {}
+    try:
+        for bucket_name in bucket_names_requiring_usage:
+            bucket_usage_by_name[bucket_name] = await storage_client.bucket_usage(bucket_name)
+    except Exception as exc:
+        logger.warning(
+            "Storage resources unavailable for organization '%s' through registry '%s': %s",
+            organization.slug,
+            registry.name,
+            exc,
+        )
+        raise UnavailableError("Storage resources unavailable") from exc
+
+    if shared_bucket_name is not None and shared_bucket_name in bucket_names:
+        usage = bucket_usage_by_name[shared_bucket_name]
+        rows.append(
+            OrganizationStorageResourceResponse(
+                kind=OrganizationStorageResourceKind.shared_bucket,
+                name="shared",
+                bucket_name=shared_bucket_name,
+                application=None,
+                storage_registry_id=registry.id,
+                storage_registry_name=registry.name,
+                space_used=usage["space_used"],
+                object_count=usage["object_count"],
+            )
+        )
+
+    for application, application_bucket_name in visible_application_buckets:
+        usage = bucket_usage_by_name[application_bucket_name]
+        rows.append(
+            OrganizationStorageResourceResponse(
+                kind=OrganizationStorageResourceKind.application_bucket,
+                name=application.slug,
+                bucket_name=application_bucket_name,
+                application=OrganizationStorageApplicationResponse.model_validate(
+                    {
+                        "id": application.id,
+                        "name": application.name,
+                        "slug": application.slug,
+                        "icon": application.icon,
+                        "description": application.description,
+                        "status": application.status,
+                    }
+                ),
+                storage_registry_id=registry.id,
+                storage_registry_name=registry.name,
+                space_used=usage["space_used"],
+                object_count=usage["object_count"],
+            )
+        )
+
+    for orphaned_bucket_name in orphaned_bucket_names:
+        usage = bucket_usage_by_name[orphaned_bucket_name]
+        rows.append(
+            OrganizationStorageResourceResponse(
+                kind=OrganizationStorageResourceKind.application_bucket,
+                name=orphaned_bucket_name.removeprefix(managed_bucket_prefix),
+                bucket_name=orphaned_bucket_name,
+                application=None,
+                storage_registry_id=registry.id,
+                storage_registry_name=registry.name,
+                space_used=usage["space_used"],
+                object_count=usage["object_count"],
+            )
+        )
+
+    return rows
 
 
 @router.post("/api/organizations", response_model=OrganizationSummary)

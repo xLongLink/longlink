@@ -172,6 +172,10 @@ Keep both web build modes working. API mode builds the authenticated control-pla
 
 ## Contributing model
 
+- Keep things in one function unless composable or reusable
+- Do not extract single-use helpers preemptively. Inline the logic at the call site unless the helper is reused, hides a genuinely complex boundary, or has a clear independent name that improves the caller.
+- Avoid try/catch where possible
+- Avoid using the any type
 - Keep changes small and clear
 - Reduce complexity and remove dead code
 - Enforce project conventions, normalize naming, improve readability
@@ -184,7 +188,7 @@ Keep both web build modes working. API mode builds the authenticated control-pla
 - Keep Python and JavaScript function definitions on one line when the full signature fits within the configured line length.
 - Do not add new helper functions unless they are explicitly needed.
 - Python functions must have docstrings, and any logic blocks must have preceding `# ...` comments.
-- Python files must not start with module-level triple-quoted docstrings; use comments only when a file header is needed.
+- Python files must not start with module-level triple-quoted docstrings; use comments only when a file header is needed. Alembic revision files may keep their generated revision header docstring.
 - Do not add `__all__` unless a concrete public star-import contract requires it.
 - JavaScript functions must have JSDoc comments, and non-trivial logic blocks must have preceding `// ...` comments.
 - Keep `FEATURES.md` updated when supported behavior is added, removed, renamed, or materially changed.
@@ -197,3 +201,6 @@ Keep both web build modes working. API mode builds the authenticated control-pla
 - Prefer namespaced module APIs for related factories and facades instead of long function names imported directly. For example, use `from src import adapters` with `adapters.compute(registry)`, `adapters.database(registry)`, and `adapters.storage(registry)` rather than importing provider-specific constructors or verbose factory names into callers.
 - Do NOT add any new test case unless the user specifically instruct you to do so.
 - When asked to make a list of improvements, always returns a numeric for easy reference
+- Avoid mocks as much as possible, you shouldn't be using globalThis.* at all unless it's the only option.
+- Test actual implementation, do not duplicate logic into tests
+- This project uses Python 3+. You should not use the __future__ module.

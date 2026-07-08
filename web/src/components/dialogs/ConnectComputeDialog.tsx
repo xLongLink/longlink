@@ -111,7 +111,7 @@ export default function ConnectComputeDialog() {
             description={t('dialogs.connectComputeDescription')}
             open={open}
             error={error}
-            canSubmit={form.formState.isValid}
+            canSubmit={open && form.formState.isValid}
             isPending={connectCompute.isPending}
             pendingLabel={t('actions.connecting')}
             onOpenChange={(nextOpen) => {

@@ -29,11 +29,7 @@ def audit_user_scope(user_id: UUID | None) -> Generator[None]:
 
 
 @event.listens_for(SyncSession, "before_flush")
-def apply_audit_fields(
-    session: SyncSession,
-    flush_context: Any,
-    instances: Any,
-) -> None:
+def apply_audit_fields(session: SyncSession, flush_context: Any, instances: Any) -> None:
     """
     Automatically apply audit fields before SQLModel flushes changes.
 

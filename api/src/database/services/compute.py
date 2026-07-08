@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from uuid import UUID
 import secrets
 from datetime import UTC, datetime

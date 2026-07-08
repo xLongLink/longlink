@@ -2,6 +2,7 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
+/** Renders a card container. */
 function Card({ className, size = 'default', ...props }: React.ComponentProps<'div'> & { size?: 'default' | 'sm' }) {
     return (
         <div
@@ -16,6 +17,7 @@ function Card({ className, size = 'default', ...props }: React.ComponentProps<'d
     );
 }
 
+/** Renders a card title. */
 function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
     return (
         <div
@@ -26,10 +28,12 @@ function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
     );
 }
 
+/** Renders secondary card description text. */
 function CardDescription({ className, ...props }: React.ComponentProps<'div'>) {
     return <div data-slot="card-description" className={cn('text-sm text-muted-foreground', className)} {...props} />;
 }
 
+/** Renders an action area for card controls. */
 function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
     return (
         <div
@@ -40,6 +44,7 @@ function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
     );
 }
 
+/** Renders the main card body. */
 function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
     return (
         <div

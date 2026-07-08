@@ -1,6 +1,5 @@
 import pytest
 from src import auth as auth_module
-from src import permissions as permissions_module
 from uuid import UUID
 from types import SimpleNamespace
 from src.errors import NotFoundError, ForbiddenError, UnauthorizedError, UnavailableError
@@ -346,7 +345,7 @@ async def test_organization_access_hides_missing_memberships(monkeypatch: pytest
         assert user_id == current_user.id
         return None
 
-    monkeypatch.setattr(permissions_module.organizations, "get_member_access", fake_get_member_access)
+    monkeypatch.setattr(organizations_routes.organizations, "get_member_access", fake_get_member_access)
 
     with pytest.raises(NotFoundError, match=f"Organization '{organization_id}' not found"):
         await organizations_routes.get_organization(organization_id, current_user)

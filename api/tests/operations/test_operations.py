@@ -148,6 +148,7 @@ def organization_details(actor: User | None = None) -> OrganizationDetails:
         name="Acme",
         slug="acme",
         avatar="",
+        country="CH",
         location=location,
         location_id=location.id,
         created_at=datetime.fromisoformat("2026-07-01T08:00:00+00:00"),

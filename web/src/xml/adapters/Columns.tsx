@@ -5,7 +5,7 @@ import type { Props } from '@/xml/types';
 import { resolveXmlString } from './props';
 
 /** Renders a full-width columns row. */
-export function Columns({ props, nodes }: Props) {
+export function Columns({ nodes }: Props) {
     const { ctx } = useXmlContext();
     const columnNodes = nodes;
     const widths = columnNodes

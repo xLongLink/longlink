@@ -94,11 +94,11 @@ class OrganizationApplicationResponse(BaseModel):
     id: UUID
 
     # Metadata
+    sdk: str | None = None
     name: str
     slug: str
     icon: Icon | None = None
     image: str
-    sdk: str | None = None
     digest: str | None = None
     version: str | None = None
     description: str | None = None

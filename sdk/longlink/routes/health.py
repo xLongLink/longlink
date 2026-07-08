@@ -7,6 +7,7 @@ router = APIRouter()
 class HealthResponse(BaseModel):
     """Runtime health response."""
 
+    # State
     ok: bool
 
 

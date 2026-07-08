@@ -4,7 +4,7 @@ import type { Props } from '@/xml/types';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
 
 /** Renders a shadcn-backed switch. */
-export function Switch({ props, nodes }: Props) {
+export function Switch({ props }: Props) {
     const { ctx } = useXmlContext();
     const checked = resolveXmlValue(props, 'checked', ctx);
     const defaultChecked = resolveXmlBoolean(props, 'defaultChecked', ctx);

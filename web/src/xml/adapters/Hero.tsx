@@ -1,4 +1,8 @@
-import { Hero as HeroShell, HeroDescription as HeroShellDescription, HeroTitle as HeroShellTitle } from '@/components/ui/hero';
+import {
+    Hero as HeroShell,
+    HeroDescription as HeroShellDescription,
+    HeroTitle as HeroShellTitle,
+} from '@/components/ui/hero';
 import { useXmlContext } from '@/xml/core/context';
 import { resolveTranslation } from '@/xml/core/i18n';
 import { renderNode } from '@/xml/core/node';
@@ -40,7 +44,7 @@ export function HeroDescription({ props, nodes }: Props) {
 }
 
 /** Renders the hero action slot. */
-export function HeroAction({ props, nodes }: Props) {
+export function HeroAction({ nodes }: Props) {
     const { ctx } = useXmlContext();
 
     return (

@@ -40,10 +40,8 @@ def default_source_directory(route_path: str) -> Path:
     source_directory = (Path.cwd() / "src").resolve()
     route_directory = (source_directory / normalize_mount_path(route_path).strip("/")).resolve()
 
-    try:
-        route_directory.relative_to(source_directory)
-    except ValueError as exc:
-        raise ValueError("Mount path must stay inside the src directory") from exc
+    if not route_directory.is_relative_to(source_directory):
+        raise ValueError("Mount path must stay inside the src directory")
 
     return route_directory
 

@@ -1,8 +1,8 @@
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { useOrganization } from '@/hooks/use-organization';
 import { useUserProfile } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
 import { useTranslation } from '@/lib/i18n';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { LayoutGrid, Settings2 } from 'lucide-react';
 import { Navigate, useLocation, useParams } from 'react-router';
 import NotFound from './NotFound';
@@ -13,12 +13,8 @@ import OrganizationStorage from './org/Storage';
 
 type OrganizationSection = 'applications' | 'database' | 'settings' | 'storage';
 
-type OrganizationProps = {
-    sectionName?: OrganizationSection;
-};
-
 /** Renders the organization page shell and tab-specific hero content. */
-export default function Organization({ sectionName }: OrganizationProps) {
+export default function Organization({ sectionName }: { sectionName?: OrganizationSection }) {
     const { t } = useTranslation();
     const { organization: routeOrganization = '' } = useParams();
     const { pathname } = useLocation();
@@ -26,9 +22,7 @@ export default function Organization({ sectionName }: OrganizationProps) {
     const organization = routeOrganization || organizations[0]?.slug || '';
     const pathSection = pathname.split('/')[3] ?? '';
     const pathSectionIsOrganizationSection =
-        pathSection === 'database' ||
-        pathSection === 'storage' ||
-        pathSection === 'settings';
+        pathSection === 'database' || pathSection === 'storage' || pathSection === 'settings';
 
     // Direct organization routes infer the active section from the path when one was not passed explicitly.
     const section =

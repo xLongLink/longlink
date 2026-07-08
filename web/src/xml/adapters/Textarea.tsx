@@ -6,7 +6,7 @@ import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 import { useBindableValue } from './binding';
 
 /** Renders a shadcn-backed textarea with optional reactive state binding. */
-export function Textarea({ props, nodes }: Props) {
+export function Textarea({ props }: Props) {
     const { ctx } = useXmlContext();
     const cols = resolveXmlString(props, 'cols', ctx);
     const disabled = resolveXmlBoolean(props, 'disabled', ctx);

@@ -205,10 +205,6 @@ export type ApiOrganizationStorageResource = {
     object_count: number | null;
 };
 
-export type ApiDatabaseUsage = {
-    space_used: number;
-};
-
 export type ApiDatabaseRegistry = {
     id: string;
     kind: string;
@@ -272,13 +268,6 @@ export type ApiComputeRegistry = {
 
 export type ApiComputeNamespace = {
     name: string;
-};
-
-export type ApiComputeResources = {
-    cpu_total: number;
-    cpu_allocatable: number;
-    ram_total: number;
-    ram_allocatable: number;
 };
 
 export type ApiComputePodResources = {

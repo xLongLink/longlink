@@ -3,18 +3,21 @@ import { Accordion as AccordionPrimitive } from '@base-ui/react/accordion';
 import { cn } from '@/lib/utils';
 import { ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 
+/** Renders an accordion root. */
 function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
     return (
         <AccordionPrimitive.Root data-slot="accordion" className={cn('flex w-full flex-col', className)} {...props} />
     );
 }
 
+/** Renders an accordion item. */
 function AccordionItem({ className, ...props }: AccordionPrimitive.Item.Props) {
     return (
         <AccordionPrimitive.Item data-slot="accordion-item" className={cn('not-last:border-b', className)} {...props} />
     );
 }
 
+/** Renders an accordion trigger with open and closed indicators. */
 function AccordionTrigger({ className, children, ...props }: AccordionPrimitive.Trigger.Props) {
     return (
         <AccordionPrimitive.Header className="flex">
@@ -40,6 +43,7 @@ function AccordionTrigger({ className, children, ...props }: AccordionPrimitive.
     );
 }
 
+/** Renders an accordion content panel. */
 function AccordionContent({ className, children, ...props }: AccordionPrimitive.Panel.Props) {
     return (
         <AccordionPrimitive.Panel

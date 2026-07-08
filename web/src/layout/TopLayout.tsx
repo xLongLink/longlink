@@ -2,13 +2,13 @@ import type { HTMLAttributes, ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
 
-type TopLayoutProps = HTMLAttributes<HTMLDivElement> & {
-    header: ReactNode;
-    children: ReactNode;
-};
-
 /** Renders the shared top layout shell. */
-function TopLayout({ className, header, children, ...props }: TopLayoutProps) {
+function TopLayout({
+    className,
+    header,
+    children,
+    ...props
+}: HTMLAttributes<HTMLDivElement> & { header: ReactNode; children: ReactNode }) {
     return (
         <div className={cn('min-h-screen bg-background text-foreground', className)} {...props}>
             <div className="flex min-h-screen flex-col">
