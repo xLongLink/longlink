@@ -4,7 +4,7 @@
 
 A platform for workflows, data, and validation
 
-[Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://docs.longlink.dev) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
+<a href="https://longlink.dev" target="_blank" rel="noopener noreferrer">Website</a> &nbsp; - &nbsp; <a href="https://docs.longlink.dev" target="_blank" rel="noopener noreferrer">Docs</a> &nbsp; - &nbsp; <a href="https://github.com/xLongLink/longlink/issues" target="_blank" rel="noopener noreferrer">Issues</a>
 
 </div>
 
@@ -48,7 +48,7 @@ make sdk
 <div align="center">
 LongLink 2026
 
-[License](./LICENSE) &nbsp; - &nbsp; [Contributing](./CONTRIBUTING.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.ch)
+<a href="./LICENSE" target="_blank" rel="noopener noreferrer">License</a> &nbsp; - &nbsp; <a href="./CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contributing</a> &nbsp; - &nbsp; <a href="mailto:info@longlink.ch" target="_blank" rel="noopener noreferrer">Contact</a>
 
 </div>
 
