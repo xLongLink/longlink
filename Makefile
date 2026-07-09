@@ -243,6 +243,18 @@ api:
 
 # Start the local stack, build and push the SDK app image, then run migrations and seed data.
 seed: up
+	docker compose -f dev/compose.yml up -d --force-recreate keycloak
+	@printf "Waiting for Keycloak...\n"
+	@attempt=1; \
+	while ! curl --fail --silent --output /dev/null http://localhost:18080/realms/dev/.well-known/openid-configuration; do \
+		if [ "$$attempt" -ge 60 ]; then \
+			printf "Keycloak did not become ready after %s attempts.\n" "$$attempt"; \
+			exit 1; \
+		fi; \
+		attempt=$$((attempt + 1)); \
+		sleep 2; \
+	done
+	@printf "Keycloak is ready.\n"
 	cd api && uv sync --extra dev
 	if [ ! -d sdk/dev ]; then cd sdk && uv run longlink init --folder dev; fi
 	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'

@@ -44,7 +44,7 @@ const organizationRoles = [
 ] as const;
 
 export const metadata = {
-    lastUpdated: '2026-07-02',
+    lastUpdated: '2026-07-09',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/organizations.tsx',
 };
 
@@ -69,8 +69,8 @@ export const content = (
         </P>
         <P>
             During creation, LongLink initializes the organization infrastructure when configured backends are
-            available. This includes a compute namespace, an organization database with a shared schema, and a
-            shared storage bucket.
+            available. This includes a compute namespace, an organization database with a shared schema, and a shared
+            storage bucket.
         </P>
         <Heading id="roles" level="h2">
             Roles
@@ -108,7 +108,7 @@ export const content = (
             </Table>
         </div>
         <Heading id="members-and-invitations" level="h2">
-            Members And Invitations
+            Members and Invitations
         </Heading>
         <P>
             Organization members are active users with one organization role. Invitations are pending email-based

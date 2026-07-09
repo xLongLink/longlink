@@ -8,7 +8,7 @@ import { Stack } from '@/components/ui/stack';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-05-25',
+    lastUpdated: '2026-07-09',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/storage.tsx',
 };
 
@@ -18,8 +18,9 @@ export const content = (
             Storage
         </Heading>
         <P>
-            LongLink SDK exposes a native <Code>fs</Code> object. You can use it like a standard{' '}
-            <A href="https://filesystem-spec.readthedocs.io/en/latest/">fsspec</A> filesystem.
+            The SDK exposes an application-scoped <Code>fs</Code> object backed by{' '}
+            <A href="https://filesystem-spec.readthedocs.io/en/latest/">fsspec</A>. Application code uses the same
+            filesystem interface in local development, tests, and production.
         </P>
         <P>
             In production, the platform injects <Code>LONGLINK_STORAGE_ENDPOINT_URL</Code>,{' '}

@@ -6,7 +6,7 @@ import { Stack } from '@/components/ui/stack';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-07',
+    lastUpdated: '2026-07-09',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/self-hosted.tsx',
 };
 
@@ -15,7 +15,11 @@ export const content = (
         <Heading id="self-hosted-control-plane" level="h1">
             Self-hosted Control Plane
         </Heading>
-        <P>Use self-hosted mode when you run the LongLink control plane in your own infrastructure.</P>
+        <P>
+            Self-hosted mode runs the LongLink control plane and managed application workloads on infrastructure you
+            operate. You provide Kubernetes, PostgreSQL, S3-compatible object storage, OIDC, and public origins;
+            LongLink registers those backends and provisions organization and application resources through them.
+        </P>
         <Heading id="infrastructure" level="h2">
             Infrastructure
         </Heading>
@@ -43,8 +47,8 @@ export const content = (
                 <Code>SESSION_KEY</Code> is a random signing secret with at least 32 characters.
             </Li>
             <Li>
-                <Code>CONTROL_PLANE_URL</Code> is the public API origin that per-cluster gateways call for request
-                authorization.
+                <Code>CONTROL_PLANE_URL</Code> is the public control-plane API origin retained for deployment
+                configuration.
             </Li>
             <Li>
                 <Code>SESSION_COOKIE_DOMAIN</Code> can share the session cookie with app gateway subdomains when the
@@ -122,10 +126,11 @@ export const content = (
         <Heading id="deployment-model" level="h2">
             Deployment Model
         </Heading>
-        <P>Deploy the control plane outside or inside the compute clusters.</P>
+        <P>The control plane can run outside the compute clusters or inside one of the clusters you operate.</P>
         <P>
-            Application traffic enters each compute cluster through its LongLink gateway. The gateway calls the public
-            control-plane API for authorization, then forwards approved requests to internal ClusterIP services.
+            Runtime traffic reaches the API proxy first. After access checks pass, the API forwards the request to the
+            selected LongLink gateway with a registry secret; the gateway rejects direct unauthenticated traffic and
+            forwards approved requests to internal ClusterIP services.
         </P>
     </Stack>
 );

@@ -13,7 +13,6 @@ import {
 } from '@/pages/docs/api/self-hosted';
 import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/pages/docs/index';
 import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/pages/docs/sdk/building';
-import { content as docsSdkCliContent, metadata as docsSdkCliMetadata } from '@/pages/docs/sdk/cli';
 import {
     content as docsSdkComponentsContent,
     metadata as docsSdkComponentsMetadata,
@@ -99,7 +98,6 @@ function docPage(group: DocGroupTitle, { children, ...page }: DocPageOptions): D
     };
 }
 
-
 /** Builds one docs sidebar section from page definitions. */
 function docSection(title: DocGroupTitle, items: DocPageOptions[]): DocSection {
     return {
@@ -107,7 +105,6 @@ function docSection(title: DocGroupTitle, items: DocPageOptions[]): DocSection {
         items: items.map((item) => docPage(title, item)),
     };
 }
-
 
 /** Flattens sidebar pages into the route catalog. */
 function flattenDocPages(items: DocNavigationPage[]): GroupedDocPage[] {
@@ -124,7 +121,6 @@ function flattenDocPages(items: DocNavigationPage[]): GroupedDocPage[] {
     return pages;
 }
 
-
 /** Converts a docs page into a sidebar navigation item. */
 function navigationItem(page: DocNavigationPage): ArticleNavigationItem {
     const item: ArticleNavigationItem = {
@@ -139,7 +135,6 @@ function navigationItem(page: DocNavigationPage): ArticleNavigationItem {
 
     return item;
 }
-
 
 const DOC_SECTIONS: DocSection[] = [
     docSection('Overview', [
@@ -188,13 +183,6 @@ const DOC_SECTIONS: DocSection[] = [
             icon: Blocks,
             content: docsSdkIndexContent,
             metadata: docsSdkIndexMetadata,
-        },
-        {
-            title: 'CLI Reference',
-            path: '/docs/sdk/cli',
-            icon: FileCode2,
-            content: docsSdkCliContent,
-            metadata: docsSdkCliMetadata,
         },
         {
             title: 'Environments',

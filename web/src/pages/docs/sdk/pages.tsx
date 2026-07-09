@@ -9,7 +9,7 @@ import { Stack } from '@/components/ui/stack';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-02',
+    lastUpdated: '2026-07-09',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/pages.tsx',
 };
 
@@ -104,7 +104,7 @@ export const content = (
         </Stack>
         <Stack className="gap-3">
             <Heading id="longlink-page-and-i18n-mounts" level="h2">
-                LongLink Page And I18n Mounts
+                LongLink Page and I18n Mounts
             </Heading>
             <P>
                 <Code>LongLink()</Code> registers XML pages and translation catalogs from conventional source folders.

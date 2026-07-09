@@ -23,7 +23,8 @@ const applicationRoles = [
     {
         name: 'maintain',
         description: 'Write access plus manage application operations and access.',
-        capabilities: 'Fetch logs, update application member roles, delete the application, and use DELETE runtime methods.',
+        capabilities:
+            'Fetch logs, update application member roles, delete the application, and use DELETE runtime methods.',
         icon: PenLine,
     },
     {
@@ -62,7 +63,7 @@ export const content = (
             development mode explicitly allows the configured local registry.
         </P>
         <Heading id="creation-and-deployment" level="h2">
-            Creation And Deployment
+            Creation and Deployment
         </Heading>
         <P>
             Organization members with <Code>maintain</Code>, <Code>admin</Code>, or <Code>owner</Code> access can create
@@ -70,7 +71,10 @@ export const content = (
         </P>
         <P>When an application is created, LongLink:</P>
         <Ul>
-            <Li>inspects the image metadata, resolves the image digest, and validates supported icons and managed resource names.</Li>
+            <Li>
+                inspects the image metadata, resolves the image digest, and validates supported icons and managed
+                resource names.
+            </Li>
             <Li>requires image-declared environment values unless the platform manages them.</Li>
             <Li>selects active compute, database, and storage registries for the organization's location.</Li>
             <Li>provisions Kubernetes, PostgreSQL, and storage resources for the application.</Li>
@@ -102,15 +106,17 @@ export const content = (
             </Li>
         </Ul>
         <Heading id="access-and-gateway" level="h2">
-            Access And Gateway
+            Access and Gateway
         </Heading>
         <P>
-            Users access applications through the LongLink API proxy. The API authorizes each request, then forwards it
-            to the secret-protected per-cluster gateway before traffic reaches the internal application service.
+            Users open applications through the LongLink web shell. Runtime requests use the application proxy endpoint,
+            where the API resolves access, verifies application status, enforces method-level runtime roles, and builds
+            a secret-authenticated request to the selected cluster gateway.
         </P>
         <P>
-            LongLink checks access, rejects unavailable applications with a no-store <Code>503</Code>, and forwards the
-            current user id and effective runtime role as <Code>x-user-id</Code> and <Code>x-user-role</Code>.
+            The gateway accepts only traffic signed with the registry secret, strips the secret before forwarding, and
+            routes the request to the internal application service. LongLink forwards the current user id and effective
+            runtime role as <Code>x-user-id</Code> and <Code>x-user-role</Code>.
         </P>
         <P>
             Runtime requests are role-gated by method: <Code>read</Code> can use read methods, <Code>write</Code> can

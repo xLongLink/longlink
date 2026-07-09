@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-02',
+    lastUpdated: '2026-07-09',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/building.tsx',
 };
 
@@ -17,19 +17,33 @@ export const content = (
         <Heading id="building" level="h1">
             Building
         </Heading>
-        <Ul>
-            <Li>Applications can be built using Docker.</Li>
-            <Li>
-                <Code>longlink build</Code> builds the image from a temporary Docker context and leaves no build files
-                in the app folder.
-            </Li>
-            <Li>Once containerized, applications can be pushed to any registry.</Li>
-            <Li>
-                <Code>longlink build --registry localhost:15000 --push --tag dev</Code> builds and pushes a reusable
-                local development image tag.
-            </Li>
-            <Li>Applications can be connected to the control plane and deployed.</Li>
-        </Ul>
+        <P>
+            Building turns a local SDK application into a container image that the control plane can inspect, register,
+            and deploy. The image carries LongLink metadata labels for application identity, SDK version, app version,
+            display text, and declared environment requirements.
+        </P>
+        <P>
+            <Code>longlink build</Code> builds from a temporary Docker context and leaves the application folder
+            untouched. Push the resulting image to a registry the control plane can reach before creating the
+            application.
+        </P>
+        <Heading id="build-command" level="h2">
+            Build Command
+        </Heading>
+        <Tabs defaultValue="pip">
+            <TabsList>
+                <TabsTrigger value="pip">pip</TabsTrigger>
+                <TabsTrigger value="uv">uv</TabsTrigger>
+            </TabsList>
+            <TabsContent value="pip">
+                <CodeBlock language="bash">longlink build</CodeBlock>
+            </TabsContent>
+            <TabsContent value="uv">
+                <CodeBlock language="bash">uv run longlink build</CodeBlock>
+            </TabsContent>
+        </Tabs>
+        <P>For a reusable local development tag, build and push to a local registry:</P>
+        <CodeBlock language="bash">longlink build --registry localhost:15000 --push --tag dev</CodeBlock>
         <Stack className="gap-2">
             <Heading id="application-metadata" level="h2">
                 Application Metadata
@@ -123,17 +137,5 @@ name = "Private"`}</CodeBlock>
                 </Li>
             </Ul>
         </Stack>
-        <Tabs defaultValue="pip">
-            <TabsList>
-                <TabsTrigger value="pip">pip</TabsTrigger>
-                <TabsTrigger value="uv">uv</TabsTrigger>
-            </TabsList>
-            <TabsContent value="pip">
-                <CodeBlock language="bash">longlink build</CodeBlock>
-            </TabsContent>
-            <TabsContent value="uv">
-                <CodeBlock language="bash">uv run longlink build</CodeBlock>
-            </TabsContent>
-        </Tabs>
     </Stack>
 );

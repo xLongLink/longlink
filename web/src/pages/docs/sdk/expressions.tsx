@@ -7,7 +7,7 @@ import { Stack } from '@/components/ui/stack';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-05',
+    lastUpdated: '2026-07-09',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/expressions.tsx',
 };
 
@@ -88,8 +88,8 @@ export const content = (
                     Logical expressions: <Code>&amp;&amp;</Code>, <Code>||</Code>, <Code>??</Code>, and <Code>!</Code>.
                 </Li>
                 <Li>
-                    Membership: <Code>status in [&apos;open&apos;, &apos;pending&apos;]</Code> checks strings, arrays, and object
-                    keys.
+                    Membership: <Code>status in [&apos;open&apos;, &apos;pending&apos;]</Code> checks strings, arrays,
+                    and object keys.
                 </Li>
                 <Li>
                     Conditional values: <Code>condition ? yes : no</Code>.
@@ -105,10 +105,11 @@ export const content = (
         </Stack>
         <Stack className="gap-3">
             <Heading id="arrays-objects-and-templates" level="h2">
-                Arrays, Objects, And Templates
+                Arrays, Objects, and Templates
             </Heading>
             <P>Wrapped expressions preserve typed values, so arrays and objects can be sent directly to actions.</P>
-            <CodeBlock language="xml">{`<Action
+            <CodeBlock language="xml">
+                {`<Action
   action="/api/tasks"
   invalidate="\${['tasks']}"
   json="\${{ title: draft.title, priority: Number(draft.priority) }}"
@@ -116,7 +117,10 @@ export const content = (
   <Button i18n="tasks.create" />
 </Action>
 
-<P value="\${` + '`Task ${task.id}: ${task.title}`' + `}" />`}</CodeBlock>
+<P value="\${` +
+                    '`Task ${task.id}: ${task.title}`' +
+                    `}" />`}
+            </CodeBlock>
         </Stack>
         <Stack className="gap-3">
             <Heading id="safe-calls" level="h2">
@@ -125,7 +129,8 @@ export const content = (
             <P>Only whitelisted global helpers can be called from expressions.</P>
             <Ul>
                 <Li>
-                    Type helpers: <Code>String(value)</Code>, <Code>Number(value)</Code>, and <Code>Boolean(value)</Code>.
+                    Type helpers: <Code>String(value)</Code>, <Code>Number(value)</Code>, and{' '}
+                    <Code>Boolean(value)</Code>.
                 </Li>
                 <Li>
                     Array helper: <Code>Array.isArray(value)</Code>.
@@ -170,9 +175,7 @@ export const content = (
                 <Li>
                     Use <Code>&amp;amp;&amp;amp;</Code> for logical and.
                 </Li>
-                <Li>
-                    Quote XML attributes with single quotes when the expression contains many double quotes.
-                </Li>
+                <Li>Quote XML attributes with single quotes when the expression contains many double quotes.</Li>
             </Ul>
             <CodeBlock language="xml">{`<P if="\${amount &lt; 100}" i18n="orders.small" />
 <P if="\${ready &amp;&amp; tasks.length > 0}" i18n="tasks.ready" />`}</CodeBlock>

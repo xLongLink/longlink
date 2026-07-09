@@ -8,7 +8,7 @@ import { Stack } from '@/components/ui/stack';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-06-10',
+    lastUpdated: '2026-07-09',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/environments.tsx',
 };
 
@@ -18,15 +18,14 @@ export const content = (
             Environments
         </Heading>
         <P>
-            The <Code>Environments</Code> class defines and validates environment variables for an application.
+            Application configuration is declared with an <Code>Environments</Code> model. The SDK loads this model at
+            startup, validates values before request handling begins, and exposes declared requirements to the build
+            metadata used by the control plane.
         </P>
         <P>
-            The class is a wrapper around{' '}
-            <A href="https://pydantic.dev/docs/validation/latest/concepts/pydantic_settings/">Pydantic Settings</A>.
-            LongLink loads and validates all environment variables at application startup.
-        </P>
-        <P>
-            This ensures that configuration errors are detected early, before the application starts handling requests.
+            The class wraps{' '}
+            <A href="https://pydantic.dev/docs/validation/latest/concepts/pydantic_settings/">Pydantic Settings</A>, so
+            required values, defaults, descriptions, and type validation stay close to application code.
         </P>
         <Heading id="usage" level="h2">
             Usage

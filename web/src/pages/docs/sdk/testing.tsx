@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-05-26',
+    lastUpdated: '2026-07-09',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/testing.tsx',
 };
 
@@ -19,8 +19,7 @@ export const content = (
             Testing
         </Heading>
         <P>
-            Applications built with the LongLink SDK can be tested using standard{' '}
-            <A href="https://docs.pytest.org/en/stable/">pytest</A> and{' '}
+            Test LongLink applications with standard <A href="https://docs.pytest.org/en/stable/">pytest</A> and{' '}
             <A href="https://pytest-asyncio.readthedocs.io/en/stable/">pytest-asyncio</A> workflows. When a project is
             generated, these tools are already included as development dependencies in the <Code>pyproject.toml</Code>{' '}
             file.
@@ -50,9 +49,7 @@ uv run longlink test tests/test_app.py -q`}</CodeBlock>
         <Heading id="example" level="h2">
             Example
         </Heading>
-        <P>
-            Illustrative snippet: asynchronous testing with <Code>pytest</Code>
-        </P>
+        <P>Async pytest example:</P>
         <CodeBlock language="python">{`import pytest
 
 
@@ -62,8 +59,7 @@ async def test_healthcheck(client):
 
     assert response.status_code == 200`}</CodeBlock>
         <P>
-            Illustrative snippet: testing with FastAPI{' '}
-            <A href="https://fastapi.tiangolo.com/tutorial/testing/">TestClient</A>
+            FastAPI <A href="https://fastapi.tiangolo.com/tutorial/testing/">TestClient</A> example:
         </P>
         <CodeBlock language="python">{`from app import app
 from fastapi.testclient import TestClient

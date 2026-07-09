@@ -14,19 +14,26 @@ const descriptionsByPath: Record<string, string> = {
     '/docs/api': 'Understand the LongLink control plane for organizations, applications, locations, and operations.',
     '/docs/api/organizations': 'Learn how LongLink organizations, memberships, and access boundaries work.',
     '/docs/api/applications': 'Learn how LongLink registers, deploys, routes, and manages business applications.',
-    '/docs/api/self-hosted': 'Run the LongLink control plane with self-hosted infrastructure and required environment settings.',
-    '/docs/sdk': 'Build LongLink applications locally with the Python SDK, XML pages, routes, storage, and database tools.',
-    '/docs/sdk/cli': 'Use the LongLink CLI to initialize, develop, test, and build application projects.',
-    '/docs/sdk/environments': 'Configure LongLink applications for local development, testing, and production environments.',
+    '/docs/api/self-hosted':
+        'Run the LongLink control plane with self-hosted infrastructure and required environment settings.',
+    '/docs/sdk':
+        'Build LongLink applications locally with the Python SDK, XML pages, routes, storage, and database tools.',
+    '/docs/sdk/environments':
+        'Configure LongLink applications for local development, testing, and production environments.',
     '/docs/sdk/routes': 'Add FastAPI routes to LongLink applications for APIs, actions, and process-specific behavior.',
-    '/docs/sdk/storage': 'Use LongLink storage abstractions across local filesystems, tests, and production object storage.',
+    '/docs/sdk/storage':
+        'Use LongLink storage abstractions across local filesystems, tests, and production object storage.',
     '/docs/sdk/database': 'Use LongLink database helpers and migrations for application-owned data models.',
     '/docs/sdk/testing': 'Test LongLink applications with isolated runtime configuration and Python testing workflows.',
-    '/docs/sdk/building': 'Package LongLink applications into deployable images with metadata and environment requirements.',
+    '/docs/sdk/building':
+        'Package LongLink applications into deployable images with metadata and environment requirements.',
     '/docs/sdk/pages': 'Build LongLink application pages with XML components, data bindings, and runtime metadata.',
-    '/docs/sdk/pages/expressions': 'Use expressions in LongLink XML pages for bindings, conditionals, loops, and actions.',
-    '/docs/sdk/pages/layout': 'Compose LongLink XML pages with layout components for readable business application screens.',
-    '/docs/sdk/pages/components': 'Use LongLink XML components for forms, tables, actions, navigation, and application interfaces.',
+    '/docs/sdk/pages/expressions':
+        'Use expressions in LongLink XML pages for bindings, conditionals, loops, and actions.',
+    '/docs/sdk/pages/layout':
+        'Compose LongLink XML pages with layout components for readable business application screens.',
+    '/docs/sdk/pages/components':
+        'Use LongLink XML components for forms, tables, actions, navigation, and application interfaces.',
     '/terms': 'Read the LongLink terms of service.',
     '/privacy': 'Read the LongLink privacy policy.',
     '/impressum': 'Read the LongLink legal notice and company information.',
@@ -51,7 +58,6 @@ function articleSeoPage(page: { path: string; title: string }): PublicSeoPage {
         description: descriptionsByPath[page.path] ?? `Read ${page.title} on LongLink.`,
     };
 }
-
 
 export const publicSeoPages: PublicSeoPage[] = [
     {

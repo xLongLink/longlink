@@ -2,14 +2,12 @@ import { CodeBlock } from '@/components/CodeBlock';
 import { A } from '@/components/ui/a';
 import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
-import { Li } from '@/components/ui/li';
 import { P } from '@/components/ui/p';
 import { Stack } from '@/components/ui/stack';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-05-25',
+    lastUpdated: '2026-07-09',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/index.tsx',
 };
 
@@ -19,18 +17,23 @@ export const content = (
             Application SDK
         </Heading>
         <P>
-            The LongLink SDK is a thin integration layer built on top of the standard Python backend ecosystem. It does
-            not introduce a new framework or replace existing tools. Instead, it provides a structured way to compose
-            and connect them within the LongLink platform.
+            The Application SDK is the runtime and tooling layer for building LongLink applications as normal Python
+            services. It provides the application factory, route registration, database helpers, storage access, XML
+            page discovery, metadata endpoint, testing defaults, and image labels expected by the control plane.
         </P>
-        <P>Applications follow a simple model:</P>
-        <Ul>
-            <Li>Business logic lives in the application code</Li>
-            <Li>Structured data is stored in a relational database</Li>
-            <Li>Unstructured data is stored in S3-compatible object storage</Li>
-        </Ul>
-        <Heading id="getting-started" level="h2">
-            Getting Started
+        <P>
+            Process-specific behavior stays in application code. Developers define data models, validation, workflows,
+            actions, API routes, integrations, and XML pages using the Python ecosystem; LongLink provides the runtime
+            contract that lets the platform run the application consistently across local development, tests, and
+            production.
+        </P>
+        <P>
+            The packaged container image is the handoff from the SDK to the control plane. Local development uses the
+            SDK runtime and local services, while production receives platform-managed database, storage, routing,
+            identity, and deployment configuration.
+        </P>
+        <Heading id="create-a-project" level="h2">
+            Create a Project
         </Heading>
         <Heading id="install" level="h3">
             Install
@@ -63,11 +66,11 @@ export const content = (
             </TabsContent>
         </Tabs>
         <Heading id="applications" level="h2">
-            Applications
+            Application Structure
         </Heading>
         <P>
-            <Code>longlink init</Code> creates a minimal application scaffold that <Code>longlink dev</Code> can run
-            immediately:
+            <Code>longlink init</Code> creates a project scaffold with separate locations for API routes, data models,
+            XML pages, typed schemas, environment declarations, and tests:
         </P>
         <CodeBlock language="text">
             {
@@ -75,7 +78,7 @@ export const content = (
             }
         </CodeBlock>
         <Heading id="local-development" level="h2">
-            Local Development
+            Local Runtime
         </Heading>
         <P>Install development dependencies:</P>
         <Tabs defaultValue="pip">
@@ -90,7 +93,9 @@ export const content = (
                 <CodeBlock language="bash">uv sync --extra dev</CodeBlock>
             </TabsContent>
         </Tabs>
-        <P>Run the development server against the scaffolded app:</P>
+        <P>
+            Run the development server against <Code>main:app</Code> with the embedded SDK web bundle:
+        </P>
         <Tabs defaultValue="pip">
             <TabsList>
                 <TabsTrigger value="pip">pip</TabsTrigger>
@@ -104,21 +109,8 @@ export const content = (
             </TabsContent>
         </Tabs>
         <P>
-            For a complete minimal application, see the{' '}
+            For a small working application, see the{' '}
             <A href="https://github.com/xLongLink/sample">LongLink sample repository</A>.
         </P>
-        <Heading id="resources" level="h2">
-            Resources
-        </Heading>
-        <Ul>
-            <Li>
-                <A href="https://github.com/xLongLink/sample">LongLink Sample Application</A>
-            </Li>
-            <Li>
-                <A href="https://github.com/fastapi/full-stack-fastapi-template/tree/master/backend">
-                    Official FastAPI Backend Template
-                </A>
-            </Li>
-        </Ul>
     </Stack>
 );

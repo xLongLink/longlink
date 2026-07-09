@@ -8,7 +8,7 @@ import { Stack } from '@/components/ui/stack';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-08',
+    lastUpdated: '2026-07-09',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/routes.tsx',
 };
 
@@ -17,8 +17,15 @@ export const content = (
         <Heading id="endpoints" level="h1">
             Endpoints
         </Heading>
-        <P>LongLink SDK wraps FastAPI.</P>
-        <P>You define endpoint handlers on the wrapped FastAPI app.</P>
+        <P>
+            SDK applications use FastAPI routes for process-specific APIs, actions, and integrations. LongLink keeps
+            FastAPI visible while providing <Code>Router</Code> and <Code>LongLink</Code> so routes participate in the
+            SDK runtime and are exposed under <Code>/api</Code>.
+        </P>
+        <P>
+            Use routes for business behavior that XML pages call through <Code>Query</Code> and <Code>Action</Code>, or
+            for application-specific endpoints used by external systems.
+        </P>
         <Heading id="usage" level="h2">
             Usage
         </Heading>
@@ -34,8 +41,10 @@ class SampleResponse(BaseModel):
 
 
 @router.get("/sample", response_model=SampleResponse)
-async def sample() -> SampleResponse:
-    return SampleResponse(id=1, name="Example")
+async def sample() -> dict[str, int | str]:
+    """Return one sample object."""
+
+    return {"id": 1, "name": "Example"}
 
 
 app = LongLink()
