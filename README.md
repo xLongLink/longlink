@@ -2,8 +2,6 @@
 
 <img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
 
-A platform for workflows, data, and validation
-
 [Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://docs.longlink.dev) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
 
 </div>

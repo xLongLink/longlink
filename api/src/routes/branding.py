@@ -27,9 +27,15 @@ async def get_logo(theme: Literal["dark", "light", "system"] = "system") -> Resp
     <style>
         {theme_style}
     </style>
-    <text x="24" y="64" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="54" font-weight="700" letter-spacing="-3.4">
-        <tspan fill="{accent_color}">LONG</tspan><tspan class="logo-theme">LINK</tspan>
-    </text>
+    <text
+        x="192"
+        y="64"
+        text-anchor="middle"
+        font-family="Inter, ui-sans-serif, system-ui, sans-serif"
+        font-size="54"
+        font-weight="700"
+        letter-spacing="-3.4"
+    ><tspan fill="{accent_color}">LONG</tspan><tspan class="logo-theme">LINK</tspan></text>
 </svg>
 """
 
