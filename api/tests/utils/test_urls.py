@@ -1,6 +1,6 @@
 import pytest
 import urllib.parse
-import src.utils.url as url
+from src.utils import urls
 
 pytestmark = pytest.mark.no_db
 
@@ -26,7 +26,7 @@ pytestmark = pytest.mark.no_db
 def test_database_url_normalization(source: str, expected: str) -> None:
     """Normalize database URLs for async SQLAlchemy usage."""
 
-    assert url.database(source) == expected
+    assert urls.database(source) == expected
 
 
 @pytest.mark.parametrize(
@@ -48,7 +48,7 @@ def test_database_url_strips_sslmode_and_preserves_other_query_params(
 ) -> None:
     """Remove SSL mode parameters while preserving unrelated PostgreSQL query options."""
 
-    normalized = url.database(source)
+    normalized = urls.database(source)
     parsed_query = urllib.parse.parse_qsl(urllib.parse.urlsplit(normalized).query)
 
     assert normalized.startswith("postgresql+asyncpg://")

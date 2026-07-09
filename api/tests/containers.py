@@ -77,6 +77,7 @@ class DockerRuntimeContainer:
             raise RuntimeError("Container has not been started")
 
         parsed_url = urllib.parse.urlsplit(self._client.api.base_url)
+
         # Local Docker daemons publish ports on loopback for test clients.
         if parsed_url.hostname in {None, "localhost"}:
             return "127.0.0.1"
@@ -125,6 +126,7 @@ def wait_for_container_log(container: DockerRuntimeContainer, text: str, timeout
     """Wait until a container emits a log line containing text."""
 
     deadline = time.monotonic() + timeout
+
     # Poll logs directly to avoid deprecated testcontainers wait helpers.
     while time.monotonic() < deadline:
         logs = container.logs()

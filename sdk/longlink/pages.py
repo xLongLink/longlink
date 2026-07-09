@@ -41,6 +41,7 @@ def extract_longlink_metadata(xml_content: str) -> tuple[str | None, str | None]
     """Return optional `name` and `icon` metadata from a `<longlink>` root node."""
 
     try:
+
         # Metadata parsing must not resolve external resources from local app XML.
         parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
         root = etree.fromstring(xml_content.encode("utf-8"), parser=parser)

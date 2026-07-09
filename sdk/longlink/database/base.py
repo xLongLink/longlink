@@ -176,6 +176,7 @@ def create_engine(env: Envs) -> AsyncEngine:
         engine_kwargs["pool_use_lifo"] = True
 
     if env.DATABASE_SCHEMA and dburl.startswith("postgresql+asyncpg"):
+
         # PostgreSQL production apps write unqualified tables to their app schema
         # while still resolving the shared organization users table from shared.
         engine_kwargs["connect_args"] = {

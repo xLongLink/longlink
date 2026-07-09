@@ -67,6 +67,7 @@ def test_build_reports_missing_project_file_before_docker() -> None:
     runner = CliRunner()
 
     with runner.isolated_filesystem():
+
         # Act
         result = runner.invoke(build_command)
 

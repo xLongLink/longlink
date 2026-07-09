@@ -66,6 +66,7 @@ async def reset_active() -> None:
 
     async with session_scope() as session:
         now = datetime.now(UTC)
+
         # Only expired leases are reset so healthy workers keep ownership while the API scales out.
         statement = (
             update(Operation)
@@ -152,6 +153,7 @@ async def defer(operation_id: UUID, lease_token: str, delay_seconds: int | None 
     """Make one active operation claimable later without changing its step."""
 
     async with session_scope() as session:
+
         # A waiting step should be retried later without blocking the worker.
         now = datetime.now(UTC)
         retry_delay_seconds = env.OPERATION_RETRY_DELAY_SECONDS if delay_seconds is None else delay_seconds
@@ -187,6 +189,7 @@ async def claim_next() -> Operation | None:
 
     async with session_scope() as session:
         now = datetime.now(UTC)
+
         # Select the oldest claimable row so work is processed in submission order.
         statement = (
             select(Operation)
@@ -248,6 +251,7 @@ async def complete(operation_id: UUID, lease_token: str) -> Operation | None:
     """Mark one active operation as completed."""
 
     async with session_scope() as session:
+
         # Finalize the row once after successful execution.
         now = datetime.now(UTC)
         statement = (
@@ -279,6 +283,7 @@ async def fail(operation_id: UUID, error: str, lease_token: str) -> Operation | 
     """Mark one active operation as failed and capture the error message."""
 
     async with session_scope() as session:
+
         # Persist the failure exactly once so the row remains a reliable audit trail.
         now = datetime.now(UTC)
         sanitized_error = sanitize_operation_error(error)

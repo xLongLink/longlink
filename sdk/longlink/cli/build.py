@@ -342,6 +342,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     )
 
     if repo_root is not None:
+
         # Preserve only the VCS metadata needed for version resolution, not local Git config or hooks.
         try:
             git_target = build_context / repo_root.relative_to(source_root) / ".git"
@@ -424,6 +425,7 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
         image_id_path = build_context / "image-id.txt"
 
         try:
+
             # Build from a context that includes local path dependencies referenced by uv.
             subprocess.run(
                 [

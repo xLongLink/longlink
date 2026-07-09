@@ -9,9 +9,11 @@ import { resolveTranslation } from '@/xml/core/i18n';
 import { renderNode } from '@/xml/core/node';
 import { evaluate } from '@/xml/expressions';
 import type { ASTNode, Props } from '@/xml/types';
-import { Fragment } from 'react';
+import { Fragment, type ComponentProps } from 'react';
 import { Icon } from './Icon';
 import { requireXmlString, resolveXmlString } from './props';
+
+type TabsOrientation = NonNullable<ComponentProps<typeof UITabs>['orientation']>;
 
 type TabNode = {
     key: number;
@@ -25,12 +27,12 @@ type TabNode = {
 export function Tabs({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const defaultValue = resolveXmlString(props, 'defaultValue', ctx);
-    const orientation = resolveXmlString(props, 'orientation', ctx, 'horizontal');
+    const orientation = resolveTabsOrientation(resolveXmlString(props, 'orientation', ctx, 'horizontal'));
     const { tabs, passthroughNodes, initialValue } = collectTabNodes(nodes, ctx);
     const resolvedDefaultValue = defaultValue.trim() ? defaultValue : initialValue;
 
     return (
-        <UITabs defaultValue={resolvedDefaultValue} orientation={orientation as never}>
+        <UITabs defaultValue={resolvedDefaultValue} orientation={orientation}>
             {tabs.length > 0 && (
                 <UITabsList>
                     {tabs.map((tab) => (
@@ -55,6 +57,18 @@ export function Tabs({ props, nodes }: Props) {
             ))}
         </UITabs>
     );
+}
+
+
+/** Resolves a validated XML tabs orientation. */
+function resolveTabsOrientation(value: string): TabsOrientation {
+    switch (value) {
+        case 'horizontal':
+        case 'vertical':
+            return value;
+        default:
+            throw new Error(`Unsupported Tabs orientation '${value}'`);
+    }
 }
 
 /** Renders a tab panel when used standalone. */

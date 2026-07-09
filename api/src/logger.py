@@ -8,6 +8,7 @@ class ColorFormatter(logging.Formatter):
         """Render INFO logs with a green level label."""
 
         original_levelname = record.levelname
+
         # Temporarily rewrite the level name so the parent formatter can colorize INFO output.
         if record.levelno == logging.INFO:
             record.levelname = "\x1b[32mINFO\x1b[0m"
@@ -20,6 +21,7 @@ class ColorFormatter(logging.Formatter):
 
 
 logger = logging.getLogger("longlink.operations")
+
 # Install the shared stream handler once so repeated imports do not duplicate log lines.
 if not logger.handlers:
     handler = logging.StreamHandler()

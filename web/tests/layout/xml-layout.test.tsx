@@ -5,17 +5,11 @@ import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
+import { withGlobalValue } from '../helpers/globals';
 
 describe('XmlLayout', () => {
-    it('uses explicit tab active state when provided', () => {
-        const previousWindow = globalThis.window;
-
-        Object.defineProperty(globalThis, 'window', {
-            configurable: true,
-            value: { location: { origin: 'http://localhost' } },
-        });
-
-        try {
+    it('uses explicit tab active state when provided', async () => {
+        await withGlobalValue('window', { location: { origin: 'http://localhost' } }, () => {
             const queryClient = new QueryClient();
             const output = renderToStaticMarkup(
                 createElement(
@@ -38,11 +32,6 @@ describe('XmlLayout', () => {
 
             expect(output).toContain('aria-current="page"');
             expect(output).toContain('Issues');
-        } finally {
-            Object.defineProperty(globalThis, 'window', {
-                configurable: true,
-                value: previousWindow,
-            });
-        }
+        });
     });
 });

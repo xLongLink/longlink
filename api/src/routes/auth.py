@@ -108,6 +108,7 @@ async def auth_oidc(request: Request) -> RedirectResponse:
         raise UnauthorizedError("OIDC callback could not be validated") from exc
 
     raw_userinfo: Any = getattr(token, "userinfo", None)
+
     # Fall back to the userinfo endpoint when the token payload does not include profile claims.
     if raw_userinfo is None:
         if isinstance(token, dict):

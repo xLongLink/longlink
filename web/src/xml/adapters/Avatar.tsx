@@ -10,7 +10,10 @@ import { renderNode } from '@/xml/core/node';
 import { isAppRelativeUrl, resolveUrl, useUrl } from '@/xml/core/url';
 import type { Props } from '@/xml/types';
 import { hasProtocol } from 'ufo';
+import type { ComponentProps } from 'react';
 import { resolveXmlString } from './props';
+
+type AvatarSize = NonNullable<ComponentProps<typeof UIAvatar>['size']>;
 
 /** Returns a safe browser image URL for an XML avatar source. */
 function resolveAvatarImageSource(baseUrl: string, src: string): string | undefined {
@@ -34,9 +37,22 @@ function resolveAvatarImageSource(baseUrl: string, src: string): string | undefi
 /** Renders the avatar shell used for a single user or record. */
 export function Avatar({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const size = resolveXmlString(props, 'size', ctx, 'default');
+    const size = resolveAvatarSize(resolveXmlString(props, 'size', ctx, 'default'));
 
-    return <UIAvatar size={size as never}>{renderNode(nodes, ctx)}</UIAvatar>;
+    return <UIAvatar size={size}>{renderNode(nodes, ctx)}</UIAvatar>;
+}
+
+
+/** Resolves a validated XML avatar size. */
+function resolveAvatarSize(value: string): AvatarSize {
+    switch (value) {
+        case 'default':
+        case 'sm':
+        case 'lg':
+            return value;
+        default:
+            throw new Error(`Unsupported Avatar size '${value}'`);
+    }
 }
 
 /** Renders the avatar image slot. */

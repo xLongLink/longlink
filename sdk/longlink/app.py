@@ -85,6 +85,7 @@ class LongLink(FastAPI):
         self.state.page_registry = page_registry
 
         if environments.ENV == "production":
+
             # Built app containers run plain uvicorn, so attach the SDK access filter here.
             access_logger = logging.getLogger("uvicorn.access")
             if not any(isinstance(item, ApiAccessFilter) for item in access_logger.filters):

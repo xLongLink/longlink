@@ -68,6 +68,7 @@ async def get_member_access(organization_id: UUID, user_id: UUID) -> tuple[Organ
     """Return one active organization and member role for an active member."""
 
     async with session_scope() as session:
+
         # Join membership in the access check so non-members and missing organizations look identical.
         statement = (
             select(Organization, UserOrganization.role_name)
@@ -108,8 +109,10 @@ async def database_users(organization_id: UUID) -> list[TenantUser]:
         rows = result.all()
 
         database_users: list[TenantUser] = []
+
         # Convert each membership row to the tenant-facing user snapshot.
         for user, role_name, created_at, updated_at, membership_deleted_at in rows:
+
             # A shared user becomes inactive when either the account or organization membership is inactive.
             deleted_at = user.deleted_at
             if membership_deleted_at is not None and (deleted_at is None or membership_deleted_at > deleted_at):
@@ -348,6 +351,7 @@ async def create(
             location_id=location_id,
             shared_storage_bucket_name=shared_storage_bucket_name,
         )
+
         # Attach the creator as the initial owner for every organization.
         organization.created_id = user.id
         organization.updated_id = user.id
@@ -365,6 +369,7 @@ async def create(
         try:
             await session.commit()
         except IntegrityError as exc:
+
             # Keep name collisions at the service boundary as an API conflict.
             await session.rollback()
             raise ConflictError("Organization already exists") from exc

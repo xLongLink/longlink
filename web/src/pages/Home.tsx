@@ -222,27 +222,38 @@ const foundationVisualColumns = [
 const cliWorkflowSteps = [
     {
         command: 'init',
-        result: 'scaffold',
         icon: Terminal,
-        className: 'left-1/2 top-[8%] -translate-x-1/2',
+        className: 'left-[20px] top-[12px]',
     },
     {
         command: 'dev',
-        result: 'local',
         icon: Play,
-        className: 'right-[3%] top-1/2 -translate-y-1/2',
+        className: 'left-[76px] top-[46px]',
     },
     {
         command: 'migrate',
-        result: 'schema',
         icon: Database,
-        className: 'bottom-[8%] left-1/2 -translate-x-1/2',
+        className: 'left-[132px] top-[80px]',
     },
     {
         command: 'build',
-        result: 'image',
         icon: PackageCheck,
-        className: 'left-[3%] top-1/2 -translate-y-1/2',
+        className: 'left-[188px] top-[114px]',
+    },
+] as const;
+
+const cliWorkflowConnectors = [
+    {
+        key: 'init-dev',
+        className: 'left-[26px] top-[31px]',
+    },
+    {
+        key: 'dev-migrate',
+        className: 'left-[82px] top-[65px]',
+    },
+    {
+        key: 'migrate-build',
+        className: 'left-[138px] top-[99px]',
     },
 ] as const;
 
@@ -324,36 +335,61 @@ function FoundationCardVisual() {
 function CliCardVisual() {
     return (
         <div aria-hidden="true" className="relative h-40 overflow-hidden">
-            <div className="absolute left-1/2 top-1/2 size-32 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-[#d9b469]/30 transition-transform duration-700 group-hover:rotate-45" />
-            <div className="absolute left-1/2 top-1/2 size-24 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#8d713d]/28 bg-[#d9b469]/6" />
-            <div className="absolute left-1/2 top-1/2 size-32 -translate-x-1/2 -translate-y-1/2 group-hover:animate-[spin_4s_linear_infinite]">
-                <span className="absolute left-1/2 top-0 size-2 -translate-x-1/2 rounded-full bg-[#f4c878] shadow-[0_0_18px_rgba(244,200,120,0.65)]" />
-            </div>
+            <div className="absolute left-1/2 top-0 h-40 w-[280px] -translate-x-1/2">
+                <div className="absolute left-1/2 top-1/2 h-28 w-60 -translate-x-1/2 -translate-y-1/2 rounded-[28px] bg-[#d9b469]/5 shadow-[0_0_42px_rgba(217,180,105,0.08)] transition-transform duration-500 group-hover:scale-[1.03]" />
+                {cliWorkflowConnectors.map(({ key, className }) => (
+                    <svg
+                        key={key}
+                        className={`absolute h-11 w-[58px] overflow-visible ${className}`}
+                        viewBox="0 0 58 44"
+                    >
+                        <defs>
+                            <marker
+                                id={`cli-workflow-arrow-${key}`}
+                                markerHeight="7"
+                                markerWidth="7"
+                                orient="auto"
+                                refX="6"
+                                refY="3.5"
+                            >
+                                <path d="M0 0 7 3.5 0 7Z" fill="#d9b469" opacity="0.85" />
+                            </marker>
+                        </defs>
+                        <path
+                            d="M10 2 C2 17 4 30 20 30 H50"
+                            fill="none"
+                            stroke="#f4c878"
+                            strokeLinecap="round"
+                            strokeWidth="5"
+                            className="opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-20"
+                        />
+                        <path
+                            d="M10 2 C2 17 4 30 20 30 H50"
+                            fill="none"
+                            markerEnd={`url(#cli-workflow-arrow-${key})`}
+                            stroke="#d9b469"
+                            strokeLinecap="round"
+                            strokeWidth="1.4"
+                            className="opacity-55 transition-opacity duration-300 group-hover:opacity-85"
+                        />
+                    </svg>
+                ))}
 
-            <div className="absolute left-1/2 top-1/2 z-20 flex size-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-full border border-[#6a5430] bg-[#2a2114]/95 text-[#f4c878] shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_16px_36px_rgba(0,0,0,0.38),0_0_28px_rgba(215,171,89,0.18)]">
-                <Terminal
-                    className="size-4 transition-transform duration-300 group-hover:scale-110"
-                    strokeWidth={1.8}
-                />
-                <span className="mt-1 font-mono text-[9px] leading-none text-[#f1d79b]">longlink</span>
-                <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/10 to-transparent" />
-            </div>
-
-            {cliWorkflowSteps.map(({ command, result, icon: StepIcon, className }) => (
-                <div
-                    key={command}
-                    className={`absolute z-20 flex min-w-[76px] items-center gap-1.5 rounded-full border border-[#4b3d25] bg-[#18130d]/95 px-2.5 py-1.5 shadow-[0_10px_28px_rgba(0,0,0,0.32),0_0_20px_rgba(215,171,89,0.12)] ${className}`}
-                >
-                    <StepIcon
-                        className="size-3.5 shrink-0 text-[#f4c878] transition-transform duration-300 group-hover:scale-110"
-                        strokeWidth={1.8}
-                    />
-                    <div className="min-w-0">
-                        <div className="font-mono text-[10px] leading-3 text-[#f1d79b]">{command}</div>
-                        <div className="text-[9px] leading-3 text-muted-foreground">{result}</div>
+                {cliWorkflowSteps.map(({ command, icon: StepIcon, className }) => (
+                    <div
+                        key={command}
+                        className={`absolute z-20 flex w-20 items-center gap-1.5 rounded-full border border-[#4b3d25] bg-[#18130d]/95 px-2.5 py-2 shadow-[0_10px_28px_rgba(0,0,0,0.32),0_0_20px_rgba(215,171,89,0.12)] ${className}`}
+                    >
+                        <StepIcon
+                            className="size-3.5 shrink-0 text-[#f4c878] transition-transform duration-300 group-hover:scale-110"
+                            strokeWidth={1.8}
+                        />
+                        <div className="min-w-0">
+                            <div className="font-mono text-[10px] leading-3 text-[#f1d79b]">{command}</div>
+                        </div>
                     </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     );
 }

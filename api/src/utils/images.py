@@ -50,6 +50,7 @@ async def metadata(image: str) -> LongLinkMetadata | None:
 
     async with httpx2.AsyncClient(verify=registry_url.startswith("https://"), follow_redirects=False, timeout=5.0) as client:
         try:
+
             # LongLink labels are stored in the image config blob, reached through the image manifest.
             manifest_result = await _fetch_manifest(
                 client,

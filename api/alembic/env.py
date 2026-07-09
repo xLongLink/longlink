@@ -5,7 +5,7 @@ from sqlmodel import SQLModel
 from sqlalchemy import pool, engine_from_config
 from src.environments import env
 from sqlalchemy.engine import Connection, make_url
-import src.utils.url as url
+from src.utils import urls
 from src.database.models import (
     users,
     computes,
@@ -90,7 +90,7 @@ def run_migrations_online() -> None:
     if configured_url is None:
         raise RuntimeError("Alembic sqlalchemy.url is not configured")
 
-    database_url = make_url(url.database(configured_url))
+    database_url = make_url(urls.database(configured_url))
 
     # Async drivers need Alembic's async engine path, while sync drivers can use the classic runner.
     if database_url.drivername.endswith(("aiosqlite", "aiomysql", "asyncpg")):

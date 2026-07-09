@@ -5,8 +5,8 @@
     "type": "module",
     "scripts": {
         "typecheck": "tsc -b",
-        "build:api": "tsc -b && vite build --mode api",
-        "build:api:bundle": "vite build --mode api",
+        "build:api": "tsc -b && vite build --mode api && bun scripts/prerender-public-pages.ts",
+        "build:api:bundle": "vite build --mode api && bun scripts/prerender-public-pages.ts",
         "build:sdk": "tsc -b && vite build --mode sdk",
         "build:sdk:bundle": "vite build --mode sdk",
         "lint": "eslint . --fix",

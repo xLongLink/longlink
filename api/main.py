@@ -24,7 +24,7 @@ from alembic.config import Config
 from src.operations.worker import run_operation_scheduler
 from collections.abc import AsyncIterator
 from src.environments import env, resolve_cors_origins, validate_production_settings
-import src.utils.url as url
+from src.utils import urls
 from sqlalchemy.engine import make_url
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -33,7 +33,7 @@ from starlette.middleware.sessions import SessionMiddleware
 async def migrate_development_sqlite_database() -> None:
     """Apply Alembic migrations for local SQLite development databases."""
 
-    database_url = make_url(url.database(env.DATABASE_URL))
+    database_url = make_url(urls.database(env.DATABASE_URL))
     if not env.DEVELOPMENT or not database_url.drivername.startswith("sqlite"):
         return
 

@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 os.environ.setdefault("SESSION_KEY", "test-session-key-that-is-long-enough")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./dev.db")
 os.environ.setdefault("DATABASE_SSLMODE", "disable")
+
 # Keep TestClient session cookies non-secure while letting adapters detect tests.
 os.environ["DEVELOPMENT"] = "true"
 os.environ["ENVIRONMENT"] = "testing"

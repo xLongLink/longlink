@@ -8,13 +8,12 @@ import {
     fetchApiVoid,
 } from '@/lib/api';
 import { afterEach, describe, expect, it } from 'bun:test';
+import { withGlobalValue } from '../helpers/globals';
 
-const originalFetch = globalThis.fetch;
 const originalMode = import.meta.env.MODE;
 const originalApiUrl = import.meta.env.VITE_API_URL;
 
 afterEach(() => {
-    globalThis.fetch = originalFetch;
     import.meta.env.MODE = originalMode;
     import.meta.env.VITE_API_URL = originalApiUrl;
 });
@@ -69,38 +68,46 @@ describe('fetchApiResponse', () => {
 describe('fetchApiJson', () => {
     /* Failed API requests should preserve the HTTP status for route-level handling. */
     it('throws ApiError with response status', async () => {
-        globalThis.fetch = (async () =>
-            new Response(JSON.stringify({ detail: 'Missing organization' }), {
-                headers: { 'Content-Type': 'application/json' },
-                status: 404,
-            })) as unknown as typeof fetch;
-
-        await expect(fetchApiJson('/api/orgs/missing')).rejects.toMatchObject({
-            message: 'Missing organization',
-            status: 404,
-        });
+        await withGlobalValue(
+            'fetch',
+            async () =>
+                new Response(JSON.stringify({ detail: 'Missing organization' }), {
+                    headers: { 'Content-Type': 'application/json' },
+                    status: 404,
+                }),
+            async () => {
+                await expect(fetchApiJson('/api/orgs/missing')).rejects.toMatchObject({
+                    message: 'Missing organization',
+                    status: 404,
+                });
+            }
+        );
     });
 
     /* Malformed error responses should still expose a useful status-aware error. */
     it('falls back to status message for invalid error payloads', async () => {
-        globalThis.fetch = (async () => new Response('not json', { status: 500 })) as unknown as typeof fetch;
-
-        await expect(fetchApiJson('/api/broken')).rejects.toEqual(new ApiError('API request failed (500)', 500));
+        await withGlobalValue(
+            'fetch',
+            async () => new Response('not json', { status: 500 }),
+            async () => {
+                await expect(fetchApiJson('/api/broken')).rejects.toEqual(new ApiError('API request failed (500)', 500));
+            }
+        );
     });
 });
 
 describe('fetchApiText', () => {
     it('returns response text for successful requests', async () => {
-        globalThis.fetch = (async () => new Response('plain logs')) as unknown as typeof fetch;
-
-        await expect(fetchApiText('/api/applications/app-1/logs')).resolves.toBe('plain logs');
+        await withGlobalValue('fetch', async () => new Response('plain logs'), async () => {
+            await expect(fetchApiText('/api/applications/app-1/logs')).resolves.toBe('plain logs');
+        });
     });
 });
 
 describe('fetchApiVoid', () => {
     it('accepts empty successful responses', async () => {
-        globalThis.fetch = (async () => new Response(null, { status: 204 })) as unknown as typeof fetch;
-
-        await expect(fetchApiVoid('/api/empty')).resolves.toBeUndefined();
+        await withGlobalValue('fetch', async () => new Response(null, { status: 204 }), async () => {
+            await expect(fetchApiVoid('/api/empty')).resolves.toBeUndefined();
+        });
     });
 });

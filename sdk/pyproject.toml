@@ -115,6 +115,12 @@ length_sort = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
+[tool.coverage.run]
+omit = [
+    "longlink/__main__.py",
+    "longlink/database/env.py",
+]
+
 [tool.pyright]
 typeCheckingMode = "basic"
 pythonVersion = "3.14"

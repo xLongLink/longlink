@@ -59,6 +59,7 @@ def collect_translation_keys(xml_files: list[Path], app_root: Path) -> set[str]:
 
     for path in xml_files:
         try:
+
             # Wrap fragments so mixed top-level XML snippets still parse cleanly.
             content = path.read_text(encoding="utf-8")
             parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
@@ -123,6 +124,7 @@ def build_translation_catalog(keys: set[str], existing_catalog: dict[str, object
     catalog: dict[str, object] = {}
 
     for key in sorted(keys):
+
         # Reuse the stored translation string or initialize a blank leaf.
         value = existing_catalog.get(key, "")
         assign_translation_value(catalog, key.split("."), value)
@@ -142,6 +144,7 @@ def assign_translation_value(target: dict[str, object], segments: list[str], val
     current = target
 
     for segment in segments[:-1]:
+
         # Reject namespace collisions like `items` versus `items.count`.
         entry = current.get(segment)
 

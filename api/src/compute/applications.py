@@ -33,6 +33,7 @@ class KubernetesApplications(KubernetesCluster):
 
         namespace = names.k8name(names.knames(organization, "Organization"))
         name = names.knames(application, "Application name")
+
         # Read the live Deployment so rollout status reflects the Kubernetes controller state.
         try:
             deployment = await self._read(Deployment, name, namespace)
@@ -42,6 +43,7 @@ class KubernetesApplications(KubernetesCluster):
         metadata = deployment.metadata
         spec = deployment.spec
         status = deployment.status
+
         # Missing deployment sections mean Kubernetes has not reported readiness yet.
         if metadata is None or spec is None or status is None:
             return False
@@ -49,6 +51,7 @@ class KubernetesApplications(KubernetesCluster):
         expected_replicas = spec.get("replicas") or 1
         observed_generation = status.get("observedGeneration")
         generation = metadata.get("generation")
+
         # A rollout without generation tracking cannot be proven ready.
         if observed_generation is None or generation is None:
             return False
@@ -129,8 +132,10 @@ class KubernetesApplications(KubernetesCluster):
             (Service, "Service"),
             (Secret, "Secret"),
         )
+
         # Delete all named workload resources owned by the application.
         for resource_class, kind in delete_calls:
+
             # Surface Kubernetes deletion failures with resource context.
             try:
                 await self._delete(resource_class, name, namespace)
@@ -144,6 +149,7 @@ class KubernetesApplications(KubernetesCluster):
 
         namespace = names.k8name(names.knames(organization, "Organization"))
         name = names.knames(application, "Application name")
+
         # List pods before selecting the most recent log source.
         try:
             pods = await self._pods(organization, application)
@@ -163,19 +169,23 @@ class KubernetesApplications(KubernetesCluster):
         pod = max(pods, key=pod_creation_time)
 
         pod_status = pod.raw.get("status", {})
+
         # Count all container restarts so logs include the previous crash when available.
         restart_count = sum(
             container.get("restartCount") or 0
             for container in pod_status.get("containerStatuses", [])
         )
         previous_logs = ""
+
         # Include previous container logs only when Kubernetes reports a restart.
         if restart_count > 0:
+
             # Previous logs are best effort because old container logs may already be gone.
             try:
                 previous_logs = "\n".join([line async for line in cast(Any, pod).logs(tail_lines=lines, previous=True)])
             except kr8s.ServerError as exc:
                 response = getattr(exc, "response", None)
+
                 # Kubernetes returns 400 or 404 when no previous container logs exist.
                 if getattr(response, "status_code", None) not in {400, 404}:
                     raise ValueError(f"Failed reading previous logs for '{namespace}/{name}'") from exc

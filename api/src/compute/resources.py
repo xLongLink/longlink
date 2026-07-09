@@ -53,6 +53,7 @@ class KubernetesResources:
         # Lazily create the Kubernetes client so unused registries do not open connections.
         if self._api_client is None:
             kubeconfig = yaml.safe_load(self._kubeconfig)
+
             # A registry kubeconfig must be authoritative; do not fall back to the API pod service account.
             self._api_client = await kr8s.asyncio.api(kubeconfig=cast(Any, kubeconfig), serviceaccount=cast(Any, False))
 
@@ -87,6 +88,7 @@ class KubernetesResources:
 
         api = await self._client()
         resource_namespace = namespace if resource_class.namespaced else None
+
         # Call the API endpoint directly to avoid extra discovery calls and retry waits.
         async with api.call_api(
             "GET",
@@ -105,6 +107,7 @@ class KubernetesResources:
         """List Kubernetes resources through an explicit kr8s resource class."""
 
         api = await self._client()
+
         # Materialize the async resource stream so callers receive a normal list.
         return [
             cast(KubernetesResource, resource)
@@ -119,10 +122,12 @@ class KubernetesResources:
         """Create a resource when missing, otherwise patch the live object."""
 
         resource = await self._resource(body)
+
         # Prefer patching existing resources and fall back to create only for missing objects.
         try:
             await resource.patch(body)
         except (kr8s.NotFoundError, kr8s.ServerError) as exc:
+
             # Non-404 failures should surface as update failures.
             if not self._not_found(exc):
                 raise ValueError(f"Failed updating {body['kind']} '{resource.name}'") from exc
@@ -141,6 +146,7 @@ class KubernetesResources:
         try:
             existing = await self._read(resource_class, resource.name, namespace)
         except kr8s.ServerError as exc:
+
             # Create missing resources instead of issuing a replace with no resource version.
             if not self._not_found(exc):
                 raise ValueError(f"Failed reading {body['kind']} '{resource.name}'") from exc
@@ -149,6 +155,7 @@ class KubernetesResources:
             return None
 
         body["metadata"]["resourceVersion"] = existing.metadata.resourceVersion
+
         # Use PUT so omitted fields are removed from resources such as Secrets.
         async with api.call_api(
             "PUT",
@@ -163,6 +170,7 @@ class KubernetesResources:
         """Delete one resource and tolerate missing objects."""
 
         body: dict[str, Any] = {"metadata": {"name": name}}
+
         # Namespaced resource objects need their namespace in the deletion body.
         if resource_class.namespaced:
             body["metadata"]["namespace"] = namespace
@@ -171,6 +179,7 @@ class KubernetesResources:
         try:
             await resource_class(body, api=await self._client()).delete()
         except (kr8s.NotFoundError, kr8s.ServerError) as exc:
+
             # Preserve unexpected Kubernetes failures for the higher-level adapter.
             if not self._not_found(exc):
                 raise
@@ -179,6 +188,7 @@ class KubernetesResources:
         """Raise when one namespace is not owned by LongLink."""
 
         labels = namespace_object.metadata.get("labels", {})
+
         # Prevent accidental mutation or deletion of namespaces not created by LongLink.
         if labels.get("managed-by") != "longlink":
             raise ValueError(f"Namespace '{namespace}' is not managed by LongLink")

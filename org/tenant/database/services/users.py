@@ -16,8 +16,10 @@ class UsersService:
             return
 
         rows = []
+
         # Convert API user models to the shared table column names.
         for user in users:
+
             # The Python model exposes `role`; the shared table stores the historical `role_name` column.
             row = user.model_dump(exclude={"role"})
             row["role_name"] = user.role

@@ -114,6 +114,7 @@ def validate_production_settings(settings: Env) -> None:
         return
 
     errors: list[str] = []
+
     # OIDC traffic carries authentication secrets, so production endpoints must be HTTPS.
     for field_name in ("OIDC_ISSUER", "OIDC_REDIRECT_URI"):
         value = str(getattr(settings, field_name)).strip()

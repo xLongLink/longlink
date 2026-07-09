@@ -3,6 +3,7 @@ import type { ASTNode, ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { withGlobalValue } from '../helpers/globals';
 
 describe('renderNode', () => {
     it('resolves localized text through XML adapters', () => {
@@ -27,13 +28,10 @@ describe('renderNode', () => {
         ).toContain('Count 7');
     });
 
-    it('waits for translations before browser renders localized XML', () => {
-        const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'document');
+    it('waits for translations before browser renders localized XML', async () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
 
-        Object.defineProperty(globalThis, 'document', { configurable: true, value: {} });
-
-        try {
+        await withGlobalValue('document', {}, () => {
             expect(
                 renderToStaticMarkup(
                     createElement(
@@ -43,13 +41,7 @@ describe('renderNode', () => {
                     )
                 )
             ).toBe('<div></div>');
-        } finally {
-            if (descriptor) {
-                Object.defineProperty(globalThis, 'document', descriptor);
-            } else {
-                delete (globalThis as { document?: unknown }).document;
-            }
-        }
+        });
     });
 
     it('skips nodes when if condition is false', () => {

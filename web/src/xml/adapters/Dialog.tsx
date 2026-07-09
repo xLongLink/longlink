@@ -12,6 +12,7 @@ import { renderNode } from '@/xml/core/node';
 import { resolveAnchorUrl } from '@/xml/core/url';
 import { evaluate } from '@/xml/expressions';
 import type { Props } from '@/xml/types';
+import { resolveButtonSize, resolveButtonVariant } from './Button';
 import { resolveXmlBoolean, resolveXmlString } from './props';
 
 /** Renders a dialog root that groups trigger and content slots. */
@@ -34,13 +35,15 @@ export function DialogTrigger({ props, nodes }: Props) {
         // Reuse the XML button's label as the trigger content while keeping the button shell.
         const childContent = renderNode(buttonChild.children ?? [], ctx);
         const text = buttonChild.params?.i18n ? resolveTranslation(buttonChild.params, ctx) : childContent;
-        const variant = buttonChild.params?.variant
-            ? String(evaluate(buttonChild.params.variant, ctx) ?? 'default')
-            : 'default';
-        const size = buttonChild.params?.size ? String(evaluate(buttonChild.params.size, ctx) ?? 'default') : 'default';
+        const variant = resolveButtonVariant(
+            buttonChild.params?.variant ? String(evaluate(buttonChild.params.variant, ctx) ?? 'default') : 'default'
+        );
+        const size = resolveButtonSize(
+            buttonChild.params?.size ? String(evaluate(buttonChild.params.size, ctx) ?? 'default') : 'default'
+        );
 
         return (
-            <UIDialogTrigger render={<UIButton type="button" variant={variant as never} size={size as never} />}>
+            <UIDialogTrigger render={<UIButton type="button" variant={variant} size={size} />}>
                 {buttonChild.params?.i18n ? childContent : null}
                 {text}
             </UIDialogTrigger>

@@ -14,6 +14,7 @@ def test_init_copies_bundled_new_project_scaffold() -> None:
     runner = CliRunner()
 
     with runner.isolated_filesystem():
+
         # Act
         result = runner.invoke(init_command, ["--folder", "sample-app"])
 
@@ -31,6 +32,7 @@ def test_init_adds_github_ci_files_when_requested() -> None:
     runner = CliRunner()
 
     with runner.isolated_filesystem():
+
         # Act
         result = runner.invoke(init_command, ["--folder", "sample-app", "--ci", "github"])
 

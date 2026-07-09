@@ -162,6 +162,7 @@ class S3(Storage):
             "access_key_id": self._access_key_id,
             "secret_access_key": self._secret_access_key,
         }
+
         # Local MinIO uses one admin key for provisioning and runtime during seed/dev flows.
         if env.DEVELOPMENT and os.getenv("ENVIRONMENT", "").strip().lower() != "testing":
             return credentials
@@ -169,6 +170,7 @@ class S3(Storage):
         check_key = f".longlink/access-check-{secrets.token_urlsafe(8)}"
 
         async with self._client(credentials["access_key_id"], credentials["secret_access_key"]) as runtime_client:
+
             # Prove the runtime can read and write its own application bucket.
             application_check_created = False
             try:
@@ -242,6 +244,7 @@ class S3(Storage):
         """Create one assigned bucket and return its name."""
 
         async with self._client() as client:
+
             # S3-compatible services disagree on repeated creates, so verify access when a bucket exists.
             try:
                 await client.create_bucket(Bucket=bucket_name)

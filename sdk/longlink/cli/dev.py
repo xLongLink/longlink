@@ -41,6 +41,7 @@ def _open_browser(server_url: str) -> None:
         if sys.platform[:3] == "win":
             browser_process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         else:
+
             # Match webbrowser.BackgroundBrowser on POSIX while piping child output into the logger.
             browser_process = subprocess.Popen(
                 command,
@@ -86,6 +87,7 @@ def dev_command() -> None:
         """Read shortcut commands from stdin until the server stops."""
 
         while not stop_event.is_set():
+
             # Poll stdin so Ctrl+C shutdown is not blocked by input().
             readable_streams, _, _ = select.select([sys.stdin], [], [], 0.2)
             if not readable_streams:

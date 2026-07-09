@@ -1,6 +1,7 @@
 import { createContext, setupContext } from '@/xml/core/context';
 import type { ASTNode } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
+import { withGlobalValue } from '../../helpers/globals';
 
 describe('core/context', () => {
     it('creates a blank runtime context', () => {
@@ -33,24 +34,23 @@ describe('core/context', () => {
 
     it('evaluates query paths against route params', async () => {
         const ctx = createContext();
-        const originalFetch = globalThis.fetch;
         const ast: ASTNode[] = [{ name: 'Query', params: { id: 'issue', path: '/api/issues/${params.issue}' } }];
         let requestedUrl = '';
 
         ctx.params = { issue: '123' };
-        globalThis.fetch = (async (input: RequestInfo | URL) => {
-            requestedUrl = String(input);
+        await withGlobalValue(
+            'fetch',
+            async (input: RequestInfo | URL) => {
+                requestedUrl = String(input);
 
-            return new Response(JSON.stringify({ id: '123' }), {
-                headers: { 'content-type': 'application/json' },
-            });
-        }) as unknown as typeof fetch;
-
-        try {
-            await setupContext(ast, ctx, '/proxy');
-        } finally {
-            globalThis.fetch = originalFetch;
-        }
+                return new Response(JSON.stringify({ id: '123' }), {
+                    headers: { 'content-type': 'application/json' },
+                });
+            },
+            async () => {
+                await setupContext(ast, ctx, '/proxy');
+            }
+        );
 
         expect(requestedUrl).toBe('/proxy/api/issues/123');
         expect(ctx.values.issue).toEqual({ id: '123' });

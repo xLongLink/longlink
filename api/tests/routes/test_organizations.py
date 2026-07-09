@@ -625,6 +625,7 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
 
             assert database_name == "longlink_acme"
             assert limit == 100
+
             # The route requests each schema separately, so mirror different backend rows per schema.
             if schema_name == "shared":
                 return [

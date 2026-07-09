@@ -119,6 +119,7 @@ async def list_responses(organization_id: UUID, user_id: UUID, user: User) -> li
     """Return organization applications as API payloads."""
 
     async with session_scope() as session:
+
         # Join the membership row so the caller can render the app role in one query.
         statement = (
             select(Application, UserApplication.role_name)
@@ -248,6 +249,7 @@ async def list_members(application_id: UUID, organization_id: UUID) -> list[Appl
     """Return organization members with their application roles."""
 
     async with session_scope() as session:
+
         # Start from organization memberships so users without app access are visible.
         statement = (
             select(User, UserOrganization.role_name, UserApplication.role_name)

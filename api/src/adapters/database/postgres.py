@@ -31,6 +31,7 @@ class Postgres(Database):
             username: PostgreSQL username.
             password: PostgreSQL password.
         """
+
         # Store registry connection settings and adapter-local migration state.
         self._host = host
         self._port = port
@@ -87,11 +88,13 @@ class Postgres(Database):
         engine: AsyncEngine = create_async_engine(self.url(database, search_path=search_path), **engine_kwargs)
 
         try:
+
             # Use explicit connections for autocommit operations and transactions for normal operations.
             connection_context = engine.connect() if autocommit else engine.begin()
             async with connection_context as conn:
                 yield conn
         finally:
+
             # Dispose the per-operation engine even when SQL execution raises.
             await engine.dispose()
 
@@ -104,6 +107,7 @@ class Postgres(Database):
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
             result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": database_name})
             if result.scalar_one_or_none() is None:
+
                 # CREATE DATABASE needs a quoted identifier, so compile it with SQLAlchemy's dialect preparer.
                 quoted_database_name = self.quote(conn, database_name)
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
@@ -322,6 +326,7 @@ class Postgres(Database):
 
         # Keep inspection and preview queries on the same database connection.
         async with self._connection(database_name) as conn:
+
             # Include materialized views because they are queryable like tables for previews.
             table_names = await conn.run_sync(
                 lambda sync_conn: sorted(
@@ -332,6 +337,7 @@ class Postgres(Database):
 
             tables: list[DatabaseTableData] = []
             for table_name in table_names:
+
                 # Load column metadata before reading preview rows so the response is self-describing.
                 columns: list[DatabaseTableColumn] = await conn.run_sync(
                     lambda sync_conn: [
@@ -355,9 +361,11 @@ class Postgres(Database):
                 )
                 rows: list[dict[str, DatabaseCellValue]] = []
                 for row in rows_result.mappings().all():
+
                     # Convert every preview row to JSON-safe values while preserving column names.
                     values: dict[str, DatabaseCellValue] = {}
                     for key, value in row.items():
+
                         # Table previews must be JSON-safe without leaking driver-specific objects.
                         if value is None or isinstance(value, str | int | float | bool):
                             values[key] = value

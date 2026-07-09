@@ -38,6 +38,7 @@ async def profile(user_id: UUID) -> UserProfile | None:
     """Return one user profile with membership roles included."""
 
     async with session_scope() as session:
+
         # Preload the organization locations so response serialization does not trigger lazy IO.
         user_result = await session.execute(select(User).where(User.id == user_id))
         user = user_result.scalars().first()
@@ -129,6 +130,7 @@ async def upsert(
         return existing_user
 
     async with session_scope() as session:
+
         # Bootstrap the very first user as admin so the instance starts with one owner.
         user_result = await session.execute(select(func.count()).select_from(User))
         is_admin = user_result.scalar_one() == 0

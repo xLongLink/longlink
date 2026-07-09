@@ -1,6 +1,6 @@
 import contextlib
 from collections.abc import AsyncIterator
-import src.utils.url as url
+from src.utils import urls
 from src.environments import env
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
@@ -16,7 +16,7 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
     if Session is not None:
         return Session
 
-    database_url = make_url(url.database(env.DATABASE_URL))
+    database_url = make_url(urls.database(env.DATABASE_URL))
 
     engine_kwargs = {
         "pool_pre_ping": True,

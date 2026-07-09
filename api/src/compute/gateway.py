@@ -32,6 +32,7 @@ class KubernetesGateway(KubernetesResources):
         try:
             namespace = await self._read(Namespace, GATEWAY_NAMESPACE)
         except kr8s.ServerError as exc:
+
             # Non-404 failures mean Kubernetes could not confirm gateway namespace state.
             if not self._not_found(exc):
                 raise ValueError(f"Failed reading namespace '{GATEWAY_NAMESPACE}'") from exc
@@ -61,6 +62,7 @@ class KubernetesGateway(KubernetesResources):
 
         value = self._ingress_host.strip().rstrip("/")
         parsed_url = urllib.parse.urlsplit(value)
+
         # Full URL values should keep their host and optional port only.
         if parsed_url.scheme in {"http", "https"} and parsed_url.netloc:
             return parsed_url.netloc
@@ -87,6 +89,7 @@ class KubernetesGateway(KubernetesResources):
         # Build routes for each managed organization namespace except the gateway namespace.
         for namespace_object in namespaces:
             namespace = namespace_object.name
+
             # The gateway namespace hosts infrastructure, not application services.
             if namespace == GATEWAY_NAMESPACE:
                 continue
@@ -100,10 +103,12 @@ class KubernetesGateway(KubernetesResources):
                 ),
                 key=lambda item: item.name,
             )
+
             # Add one route pair and one cluster for each routable application service.
             for service in services:
                 application_id = service.labels.get(APPLICATION_ID_LABEL)
                 service_ports = service.spec.get("ports", [])
+
                 # Services without platform identity or ports cannot be proxied safely.
                 if application_id is None or not service_ports:
                     continue
@@ -410,12 +415,15 @@ class KubernetesGateway(KubernetesResources):
 
         # Apply all rendered manifests, with a development-only Service type recreation fallback.
         for manifest in self._gateway_manifests(envoy_config):
+
             # Service type changes are immutable, so local development needs a recreation path.
             if manifest["kind"] == "Service":
+
                 # Upsert first because production should only need normal patch/create behavior.
                 try:
                     await self._upsert(manifest)
                 except ValueError as exc:
+
                     # Production must not silently recreate the externally exposed gateway Service.
                     if not env.DEVELOPMENT:
                         raise ValueError(f"Failed updating Service '{manifest['metadata']['name']}'") from exc
