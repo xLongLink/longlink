@@ -39,6 +39,7 @@ const SAFE_MATH_CALLS: Record<string, SafeExpressionCall> = {
 function parseExpression(expression: string): ExpressionNode {
     const cachedNode = expressionNodeCache.get(expression);
 
+    // Reuse cached parses for repeated expressions.
     if (cachedNode) {
         return cachedNode;
     }
@@ -62,24 +63,29 @@ function readSafeFunction(calls: Record<string, SafeExpressionCall>, key: string
 
 /** Resolves a whitelisted global helper call without exposing runtime objects. */
 function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined {
+    // Unwrap optional chains before resolving the callee.
     if (callee.type === 'ChainExpression') {
         return resolveSafeCall(callee.expression);
     }
 
+    // Allow direct calls to whitelisted helpers.
     if (callee.type === 'Identifier') {
         return readSafeFunction(SAFE_IDENTIFIER_CALLS, callee.name);
     }
 
+    // Allow selected static helper namespaces.
     if (
         callee.type === 'MemberExpression' &&
         !callee.computed &&
         callee.object.type === 'Identifier' &&
         callee.property.type === 'Identifier'
     ) {
+        // Resolve safe Array helpers.
         if (callee.object.name === 'Array') {
             return readSafeFunction(SAFE_ARRAY_CALLS, callee.property.name);
         }
 
+        // Resolve safe Math helpers.
         if (callee.object.name === 'Math') {
             return readSafeFunction(SAFE_MATH_CALLS, callee.property.name);
         }
@@ -90,6 +96,7 @@ function resolveSafeCall(callee: ExpressionNode): SafeExpressionCall | undefined
 
 /** Finds the closing brace for one `${...}` segment using Acorn expression parsing. */
 function readInterpolationSegment(input: string, start: number): InterpolationSegment {
+    // Parse the interpolation body to find its boundary.
     try {
         const node = parseExpressionAt(input, start + 2, {
             ecmaVersion: 'latest',
@@ -97,16 +104,19 @@ function readInterpolationSegment(input: string, start: number): InterpolationSe
         }) as unknown as ExpressionNode & { end: number };
         let end = node.end;
 
+        // Skip whitespace before the closing brace.
         while (end < input.length && /\s/.test(input[end])) {
             end += 1;
         }
 
+        // Require the interpolation to close at this point.
         if (input[end] !== '}') {
             throw new Error('Unclosed XML expression interpolation');
         }
 
         const expression = input.slice(start + 2, node.end).trim();
 
+        // Reject empty interpolation bodies.
         if (!expression) {
             throw new Error('Unclosed XML expression interpolation');
         }
@@ -121,6 +131,7 @@ function readInterpolationSegment(input: string, start: number): InterpolationSe
 
 /** Returns one standalone expression when the entire value is wrapped in `${...}`. */
 function readStandaloneExpression(input: string): string | null {
+    // Only wrapped values can be standalone expressions.
     if (!input.startsWith('${')) return null;
 
     const segment = readInterpolationSegment(input, 0);
@@ -132,7 +143,9 @@ function readStandaloneExpression(input: string): string | null {
 function readInterpolationSegments(input: string): InterpolationSegment[] {
     const segments: InterpolationSegment[] = [];
 
+    // Scan the string for interpolation starts.
     for (let index = 0; index < input.length; index += 1) {
+        // Ignore characters that do not start an interpolation.
         if (input[index] !== '$' || input[index + 1] !== '{') continue;
 
         const segment = readInterpolationSegment(input, index);
@@ -148,12 +161,15 @@ export function prepareEvaluation(expr: string): void {
     const input = expr.trim();
     const standaloneExpression = readStandaloneExpression(input);
 
+    // Parse standalone expressions immediately.
     if (standaloneExpression != null) {
         parseExpression(standaloneExpression);
         return;
     }
 
+    // Pre-parse mixed interpolation expressions.
     if (input.includes('${') && !isReference(input)) {
+        // Cache each interpolation expression.
         for (const segment of readInterpolationSegments(input)) {
             parseExpression(segment.expression);
         }
@@ -162,6 +178,7 @@ export function prepareEvaluation(expr: string): void {
 
 /** Evaluates a supported AST node against the current scope. */
 function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {}): unknown {
+    // Dispatch by supported AST node type.
     switch (node.type) {
         case 'Literal':
             return node.value;
@@ -175,14 +192,17 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
         case 'MemberExpression': {
             const object = evaluateNode(node.object, scope);
 
+            // Stop property reads on nullish objects.
             if (object == null) return undefined;
 
+            // Resolve computed property keys through the evaluator.
             if (node.computed) {
                 const key = evaluateNode(node.property, scope);
 
                 return key == null ? undefined : readSafeProperty(object, String(key));
             }
 
+            // Only identifier properties are allowed for direct access.
             if (node.property.type !== 'Identifier') {
                 return undefined;
             }
@@ -194,6 +214,7 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
             const left = evaluateNode(node.left, scope);
             const right = evaluateNode(node.right, scope);
 
+            // Apply only allowed binary operators.
             switch (node.operator) {
                 case '+':
                     return (left as any) + (right as any);
@@ -243,10 +264,12 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
                         return right.includes(String(left ?? ''));
                     }
 
+                    // Check array membership directly.
                     if (Array.isArray(right)) {
                         return right.includes(left);
                     }
 
+                    // Check object membership through safe keys.
                     if (right != null && typeof right === 'object') {
                         const key = String(left);
 
@@ -264,8 +287,13 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
         case 'LogicalExpression': {
             const left = evaluateNode(node.left, scope);
 
+            // Evaluate logical AND lazily.
             if (node.operator === '&&') return left ? evaluateNode(node.right, scope) : left;
+
+            // Evaluate logical OR lazily.
             if (node.operator === '||') return left ? left : evaluateNode(node.right, scope);
+
+            // Evaluate nullish coalescing lazily.
             if (node.operator === '??') return left ?? evaluateNode(node.right, scope);
 
             throw new Error('Operator not allowed');
@@ -274,8 +302,13 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
         case 'UnaryExpression': {
             const value = evaluateNode(node.argument, scope);
 
+            // Negate truthiness for bang expressions.
             if (node.operator === '!') return !value;
+
+            // Coerce unary plus to a number.
             if (node.operator === '+') return Number(value);
+
+            // Apply numeric negation.
             if (node.operator === '-') return -Number(value);
 
             throw new Error('Operator not allowed');
@@ -289,7 +322,9 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
         case 'CallExpression': {
             const callback = resolveSafeCall(node.callee);
 
+            // Reject calls outside the allowlist.
             if (!callback) {
+                // Optional calls resolve to undefined when missing.
                 if (node.optional) return undefined;
 
                 throw new Error('Function call not allowed');
@@ -304,6 +339,7 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
         case 'ObjectExpression':
             return node.properties.reduce<Record<string, unknown>>(
                 (result, property) => {
+                    // Ignore entries that are not plain properties.
                     if (property.type !== 'Property') return result;
 
                     const key =
@@ -324,9 +360,11 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
         case 'TemplateLiteral': {
             let output = '';
 
+            // Stitch cooked template chunks with evaluated expressions.
             for (let index = 0; index < node.quasis.length; index += 1) {
                 output += node.quasis[index]?.value.cooked ?? '';
 
+                // Insert the matching evaluated expression between chunks.
                 if (index < node.expressions.length) {
                     const expression = node.expressions[index];
 
@@ -353,28 +391,30 @@ export function evaluate(expr: string, ctx: ExecutionContext): unknown {
         return evaluateNode(parseExpression(expression), currentValues);
     }
 
+    // Preserve empty attribute values.
     if (input === '') return '';
 
-    /* Treat values that are fully wrapped in `${...}` as typed expressions. */
+    // Treat values that are fully wrapped in `${...}` as typed expressions.
     if (standaloneExpression != null) {
         return run(standaloneExpression, values);
     }
 
-    /* Resolve `$` references directly through the runtime scope. */
+    // Resolve `$` references directly through the runtime scope.
     if (isReference(input)) {
         return resolvePath(ctx, input.slice(1).split('.').filter(Boolean));
     }
 
-    /* Resolve dotted paths like `user.name` against the runtime scope. */
+    // Resolve dotted paths like `user.name` against the runtime scope.
     if (/^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)+$/.test(input)) {
         return resolvePath(ctx, input.split('.'));
     }
 
-    /* Interpolate `${...}` expressions inside mixed text values. */
+    // Interpolate `${...}` expressions inside mixed text values.
     if (input.includes('${') && !isReference(input)) {
         let output = '';
         let cursor = 0;
 
+        // Append each literal chunk and evaluated segment.
         for (const segment of readInterpolationSegments(expr)) {
             output += expr.slice(cursor, segment.start);
             output += String(run(segment.expression, values) ?? '');

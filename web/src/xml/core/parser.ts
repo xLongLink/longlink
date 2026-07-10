@@ -38,6 +38,7 @@ const parser = new XMLParser({
  *   ]
  */
 export function parseXML(xml: string): ASTNode[] {
+    // Reject XML constructs outside the supported subset.
     if (UNSUPPORTED_XML_MARKUP_PATTERN.test(xml)) {
         throw new Error('XML DOCTYPE, ENTITY, and CDATA constructs are not supported');
     }
@@ -45,6 +46,7 @@ export function parseXML(xml: string): ASTNode[] {
     // Validate first because the preserve-order parser can otherwise recover from malformed tags.
     const validationResult = XMLValidator.validate(xml) as true | XMLValidationFailure;
 
+    // Surface parser validation errors with location details.
     if (validationResult !== true) {
         const validationError = validationResult.err;
         const location =
@@ -74,15 +76,17 @@ export function parseXML(xml: string): ASTNode[] {
  *   ]
  */
 function toNodes(input: unknown): ASTNode[] {
-    /* Arrays are flattened so preserve-order parser output becomes a normal sibling AST list. */
+    // Flatten preserve-order arrays into sibling nodes.
     if (Array.isArray(input)) {
         return input.flatMap((item) => toNodes(item));
     }
 
+    // Treat empty parser output as no nodes.
     if (!input) return [];
 
-    /* Visible character data is not part of the XML surface; use i18n attributes instead. */
+    // Ignore whitespace-only text nodes.
     if (typeof input === 'string') {
+        // Reject visible literal text.
         if (input.trim()) {
             throw new Error('Literal text is not supported in XML; use i18n attributes instead');
         }
@@ -90,17 +94,20 @@ function toNodes(input: unknown): ASTNode[] {
         return [];
     }
 
+    // Ignore unsupported primitive parser values.
     if (typeof input !== 'object') return [];
 
     const record = input as Record<string, unknown>;
     const attributes = collectParams(record[':@']);
 
-    /* Preserve the source order of sibling tags while stripping parser-only metadata. */
+    // Preserve sibling order while stripping parser metadata.
     return Object.entries(record).flatMap(([key, value]) => {
+        // Skip attributes and parser metadata.
         if (key === ':@' || key.startsWith('?') || key.startsWith('!')) {
             return [];
         }
 
+        // Reprocess text wrappers through the same rules.
         if (key === '#text') {
             return toNodes(value);
         }
@@ -119,20 +126,23 @@ function toNodes(input: unknown): ASTNode[] {
 
 /** Collects parser attributes into plain XML params. */
 function collectParams(input: unknown): Record<string, string> {
+    // Ignore malformed attribute containers.
     if (!input || typeof input !== 'object' || Array.isArray(input)) {
         return {};
     }
 
     const record = input as Record<string, unknown>;
 
-    /* Preserve the wrapper shape emitted by the preserve-order parser. */
+    // Unwrap parser attribute metadata.
     if (':@' in record) {
         return collectParams(record[':@']);
     }
 
     const params: Record<string, string> = {};
 
+    // Copy string attributes without parser prefixes.
     for (const [key, entry] of Object.entries(record)) {
+        // Keep only literal string attributes.
         if (typeof entry === 'string') {
             params[key.replace(/^@_/, '')] = entry;
         }

@@ -48,10 +48,10 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     reloaded = await db.organizations.get(organization.id)
     assert reloaded is not None
-    assert reloaded.name == "acme"
-    assert reloaded.slug == "acme"
-    assert reloaded.country == "DE"
-    assert [member.id for member in reloaded.users] == [owner.id]
+    assert reloaded["name"] == "acme"
+    assert reloaded["slug"] == "acme"
+    assert reloaded["country"] == "DE"
+    assert [member["id"] for member in reloaded["users"]] == [owner.id]
 
     Session = await get_session()
     async with Session() as session:
@@ -88,7 +88,7 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
 
     # Assert
     assert reloaded is not None
-    assert {user.id for user in reloaded.users} == {owner.id, member.id}
+    assert {user["id"] for user in reloaded["users"]} == {owner.id, member.id}
 
 
 async def test_fetch_all_and_list_by_user_ignore_deleted_organizations(users: tuple[User, User, User]) -> None:
@@ -263,9 +263,9 @@ async def test_get_includes_application_role_for_requested_user(users: tuple[Use
 
     # Assert
     assert details is not None
-    assert len(details.applications) == 1
-    assert details.applications[0].id == application.id
-    assert details.applications[0].role == ApplicationRoles.read
+    assert len(details["applications"]) == 1
+    assert details["applications"][0]["id"] == application.id
+    assert details["applications"][0]["role"] == ApplicationRoles.read
 
 
 async def test_create_rejects_duplicate_organization_names(users: tuple[User, User, User]) -> None:
@@ -384,11 +384,11 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert deleted.deleted_id == owner.id
     assert active_organization is None
     assert deleted_organization is not None
-    assert deleted_organization.deleted_by is not None
-    assert deleted_organization.deleted_by.id == owner.id
-    assert deleted_organization.users == []
-    assert deleted_organization.invitations == []
-    assert deleted_organization.applications == []
+    assert deleted_organization["deleted_by"] is not None
+    assert deleted_organization["deleted_by"].id == owner.id
+    assert deleted_organization["users"] == []
+    assert deleted_organization["invitations"] == []
+    assert deleted_organization["applications"] == []
     assert active_application is None
     assert deleted_application is not None
     assert deleted_application.deleted_id == owner.id

@@ -22,6 +22,7 @@ export function Action({ props, nodes }: Props) {
 
     /** Sends the configured request and shows a minimal toast result. */
     async function handleAction() {
+        // Surface action failures through the UI.
         try {
             await executeAction(props, ctx, baseUrl, fetch, toast);
         } catch (error: unknown) {
@@ -46,6 +47,7 @@ export async function executeAction(
     let jsonValue: unknown;
     let method = 'POST';
 
+    // Resolve action inputs before building the request.
     try {
         invalidate = resolveXmlStringArray(props, 'invalidate', ctx);
         const form = resolveXmlExpression(props, 'form');
@@ -65,12 +67,14 @@ export async function executeAction(
     const normalizedMethod = method.trim().toUpperCase();
     const headers = new Headers();
 
+    // Allow invalidation-only actions.
     if (!actionUrl) {
         await invalidateRuntime(invalidate);
 
         return;
     }
 
+    // Reject methods outside the supported action set.
     if (!ALLOWED_ACTION_METHODS.has(normalizedMethod)) {
         toastApi.error(`Unsupported action method ${normalizedMethod}`);
         return;
@@ -78,6 +82,7 @@ export async function executeAction(
 
     const normalizedActionUrl = actionUrl.trim();
 
+    // Keep actions scoped to the current application.
     if (!isAppRelativeUrl(normalizedActionUrl)) {
         toastApi.error('Action URL must be app-relative');
         return;
@@ -86,17 +91,21 @@ export async function executeAction(
     const requestUrl = resolveUrl(baseUrl, normalizedActionUrl);
     const init: RequestInit = { method: normalizedMethod };
 
+    // Avoid ambiguous payload configuration.
     if (formValue !== undefined && jsonValue !== undefined) {
         toastApi.error('Action cannot send both form and json payloads');
         return;
     }
 
+    // Disallow request bodies for GET actions.
     if (normalizedMethod === 'GET' && (formValue !== undefined || jsonValue !== undefined)) {
         toastApi.error('GET actions cannot send payloads');
         return;
     }
 
+    // Build the request body from the resolved payload.
     try {
+        // Send form expressions as multipart data.
         if (formValue !== undefined) {
             init.body = createActionFormData(formValue);
         } else if (jsonValue !== undefined) {
@@ -112,6 +121,7 @@ export async function executeAction(
 
     let response: Response;
 
+    // Send the action request through the API client.
     try {
         response = await fetchApiResponse(requestUrl, init, fetchImpl);
     } catch (error: unknown) {
@@ -119,6 +129,7 @@ export async function executeAction(
         return;
     }
 
+    // Treat non-2xx responses as action failures.
     if (!response.ok) {
         toastApi.error(`Request failed with status ${response.status}`);
         return;
@@ -131,14 +142,17 @@ export async function executeAction(
 
 /** Builds multipart form data from an XML action form expression. */
 function createActionFormData(value: unknown): FormData {
+    // Preserve prebuilt form data payloads.
     if (typeof FormData !== 'undefined' && value instanceof FormData) return value;
 
+    // Require object-shaped form expressions.
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
         throw new Error('form must evaluate to an object');
     }
 
     const formData = new FormData();
 
+    // Append each object entry to the multipart payload.
     for (const [key, entry] of Object.entries(value as Record<string, unknown>)) {
         appendActionFormValue(formData, key, entry);
     }
@@ -148,9 +162,12 @@ function createActionFormData(value: unknown): FormData {
 
 /** Appends one XML action form value to a multipart payload. */
 function appendActionFormValue(formData: FormData, key: string, value: unknown): void {
+    // Ignore empty optional form values.
     if (value == null) return;
 
+    // Expand arrays into repeated form keys.
     if (Array.isArray(value)) {
+        // Append each array item under the same key.
         for (const entry of value) {
             appendActionFormValue(formData, key, entry);
         }
@@ -158,11 +175,13 @@ function appendActionFormValue(formData: FormData, key: string, value: unknown):
         return;
     }
 
+    // Preserve browser file and binary values.
     if (typeof Blob !== 'undefined' && value instanceof Blob) {
         formData.append(key, value);
         return;
     }
 
+    // Encode nested objects as JSON strings.
     if (typeof value === 'object') {
         formData.append(key, JSON.stringify(value));
         return;

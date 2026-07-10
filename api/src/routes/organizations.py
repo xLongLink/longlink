@@ -46,6 +46,8 @@ async def organization_access(organization_id: UUID, user: User = Depends(authus
 
     # Load the membership row and organization together so all callers use one access path.
     member_access = await organizations.get_member_access(organization_id, user.id)
+
+    # Hide organizations that the user cannot access.
     if member_access is None:
         raise NotFoundError("Organization", organization_id)
 
@@ -62,11 +64,13 @@ async def list_organizations(_user: User = Depends(authsupport)) -> list[Organiz
 
 
 @router.get("/api/organizations/{organization_id}", response_model=OrganizationDetails)
-async def get_organization(organization_id: UUID, user: User = Depends(authuser)) -> OrganizationDetails:
+async def get_organization(organization_id: UUID, user: User = Depends(authuser)) -> dict[str, object]:
     """Return one organization and its metadata."""
 
     await organization_access(organization_id, user)
     organization = await organizations.get(organization_id, application_user_id=user.id)
+
+    # Guard against deleted or missing organizations.
     if organization is None:
         raise NotFoundError("Organization", organization_id)
 
@@ -79,7 +83,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
 )
 async def list_organization_applications(
     member_access: OrganizationAccess = Depends(organization_access),
-) -> list[ApplicationResponse]:
+) -> list[dict[str, object]]:
     """Return the applications for one organization."""
 
     return await applications.list_responses(
@@ -99,10 +103,14 @@ async def list_organization_database_resources(
     """Return database schemas for one organization."""
 
     organization = member_access.organization
+
+    # Restrict database inspection to maintainers.
     if not role.atleast(member_access.role, OrganizationRoles.maintain):
         raise ForbiddenError("Database resource inspection permissions required")
 
     registry = await registries.organization_database_registry(organization)
+
+    # Skip resources when no database registry is assigned.
     if registry is None:
         return []
 
@@ -120,10 +128,14 @@ async def list_organization_storage_resources(
     """Return storage buckets for one organization."""
 
     organization = member_access.organization
+
+    # Restrict storage inspection to maintainers.
     if not role.atleast(member_access.role, OrganizationRoles.maintain):
         raise ForbiddenError("Storage resource inspection permissions required")
 
     registry = await registries.organization_storage_registry(organization)
+
+    # Skip resources when no storage registry is assigned.
     if registry is None:
         return []
 
@@ -143,17 +155,24 @@ async def list_organization_database_resource_tables(
     """Return tables, columns, and preview rows for one organization database resource."""
 
     organization = member_access.organization
+
+    # Restrict table inspection to maintainers.
     if not role.atleast(member_access.role, OrganizationRoles.maintain):
         raise ForbiddenError("Database resource inspection permissions required")
 
     registry = await registries.organization_database_registry(organization)
+
+    # Require an assigned database registry for table inspection.
     if registry is None:
         raise NotFoundError("Database resource", resource_name)
 
     database_adapter = adapters.database(registry)
     database_name = names.dbname(organization.slug)
 
+    # Inspect adapter tables and normalize backend failures.
     try:
+
+        # Hide internal PostgreSQL schemas from resource inspection.
         if resource_name in {
             "information_schema",
             "pg_catalog",
@@ -163,8 +182,12 @@ async def list_organization_database_resource_tables(
             raise NotFoundError("Database resource", resource_name)
 
         tables = await database_adapter.tables(database_name, resource_name, limit=TABLE_PREVIEW_LIMIT)
+
+    # Preserve explicit not-found errors.
     except NotFoundError:
         raise
+
+    # Convert unexpected adapter failures to availability errors.
     except Exception as exc:
         logger.exception(
             "Failed to inspect database resource '%s' for organization '%s'",
@@ -183,8 +206,11 @@ async def create_organization_invitation(
 ) -> Response:
     """Create one invitation for an organization member."""
 
+    # Require maintainers to create invitations.
     if not role.atleast(member_access.role, OrganizationRoles.maintain):
         raise ForbiddenError("Invitation permissions required")
+
+    # Prevent inviting roles above the caller's role.
     if role.rank(payload.role) > role.rank(member_access.role):
         raise ForbiddenError("Invitation role permissions required")
 
@@ -202,24 +228,34 @@ async def update_organization_member(
     """Update one organization member role."""
 
     organization = member_access.organization
+
+    # Require organization administrators to manage members.
     if not role.atleast(member_access.role, OrganizationRoles.admin):
         raise ForbiddenError("Member management permissions required")
 
     can_manage_owner_role = role.atleast(member_access.role, OrganizationRoles.owner)
+
+    # Allow only owners to grant owner access.
     if payload.role == OrganizationRoles.owner and not can_manage_owner_role:
         raise ForbiddenError("Owner management permissions required")
 
     target_role = await organizations.membership_role(organization.id, member_id)
+
+    # Allow only owners to change existing owners.
     if target_role == OrganizationRoles.owner and not can_manage_owner_role:
         raise ForbiddenError("Owner management permissions required")
 
     updated = await organizations.update_member_role(organization.id, member_id, payload.role, member_access.user)
 
+    # Report missing active organization members.
     if not updated:
         raise NotFoundError("Organization member", member_id)
 
+    # Synchronize tenant users after role changes.
     try:
         await bootstrap.sync_organization_users(organization)
+
+    # Surface synchronization failures as unavailable.
     except Exception as exc:
         raise UnavailableError("Failed to synchronize organization members") from exc
 
@@ -230,20 +266,29 @@ async def update_organization_member(
 async def delete_organization(organization_id: UUID, user: User = Depends(authuser)) -> Response:
     """Soft-delete one organization and queue runtime resource removal."""
 
+    # Let platform administrators delete any organization.
     if user.role == PlatformRoles.administrator:
-        organization = await organizations.get(organization_id)
+        organization = await organizations.get_record(organization_id)
+
+        # Report missing organizations before removal.
         if organization is None:
             raise NotFoundError("Organization", organization_id)
     else:
         member_access = await organizations.get_member_access(organization_id, user.id)
+
+        # Hide organizations the caller cannot access.
         if member_access is None:
             raise NotFoundError("Organization", organization_id)
 
         _, membership_role = member_access
+
+        # Require organization owners to delete organizations.
         if not role.atleast(membership_role, OrganizationRoles.owner):
             raise ForbiddenError("Organization deletion permissions required")
 
     deleted = await organizations.soft_delete(organization_id, user)
+
+    # Treat already-deleted organizations as missing.
     if deleted is None:
         raise NotFoundError("Organization", organization_id)
 
@@ -267,9 +312,12 @@ async def _database_resource_rows(
     database_name = names.dbname(organization.slug)
     application_by_schema = {application.slug: application for application in active_applications}
 
+    # Inspect backend schema usage for the organization database.
     try:
         database_adapter = adapters.database(registry)
         schema_usage = await database_adapter.schema_usage(database_name)
+
+    # Convert database inspection failures to availability errors.
     except Exception as exc:
         logger.exception(
             "Failed to inspect database resources for organization '%s'",
@@ -287,6 +335,8 @@ async def _database_resource_rows(
 
     usage_by_schema = {item["name"]: item for item in schema_usage}
     shared_usage = usage_by_schema.get(SHARED_SCHEMA)
+
+    # Include the shared schema when it exists in the backend.
     if shared_usage is not None:
         rows.append(
             {
@@ -299,8 +349,11 @@ async def _database_resource_rows(
             }
         )
 
+    # List active application schemas before orphaned schemas.
     for application in sorted(active_applications, key=lambda item: item.name):
         usage = usage_by_schema.get(application.slug)
+
+        # Skip applications whose schema is not present.
         if usage is None:
             continue
 
@@ -322,7 +375,10 @@ async def _database_resource_rows(
             }
         )
 
+    # Include unmanaged schemas that still exist in the database.
     for usage in sorted(schema_usage, key=lambda item: item["name"]):
+
+        # Skip schemas already represented by managed resources.
         if usage["name"] in application_by_schema or usage["name"] == SHARED_SCHEMA:
             continue
 
@@ -347,9 +403,12 @@ async def _storage_resource_rows(
 ) -> list[dict[str, object]]:
     """Inspect one storage backend and return managed organization bucket rows."""
 
+    # List backend buckets before building resource rows.
     try:
         storage_client = adapters.storage(registry)
         bucket_names = set(await storage_client.buckets())
+
+    # Convert storage listing failures to availability errors.
     except Exception as exc:
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",
@@ -365,18 +424,24 @@ async def _storage_resource_rows(
     shared_bucket_name = organization.shared_storage_bucket_name
     visible_application_buckets: list[tuple[Application, str]] = []
 
+    # Track the expected shared bucket when configured.
     if shared_bucket_name is not None:
         expected_bucket_names.add(shared_bucket_name)
 
+    # Inspect usage only for shared buckets that exist.
     if shared_bucket_name is not None and shared_bucket_name in bucket_names:
         bucket_names_requiring_usage.append(shared_bucket_name)
 
     # Compare expected app buckets against the backend listing so only existing resources are visible.
     for application in sorted(active_applications, key=lambda item: item.name):
+
+        # Ignore applications without managed storage.
         if application.storage_bucket_name is None:
             continue
 
         expected_bucket_names.add(application.storage_bucket_name)
+
+        # Only show application buckets present in the backend.
         if application.storage_bucket_name not in bucket_names:
             continue
 
@@ -393,9 +458,15 @@ async def _storage_resource_rows(
     bucket_names_requiring_usage.extend(orphaned_bucket_names)
 
     bucket_usage_by_name: dict[str, StorageBucketUsage] = {}
+
+    # Fetch usage for every visible managed bucket.
     try:
+
+        # Collect usage by bucket name for row construction.
         for bucket_name in bucket_names_requiring_usage:
             bucket_usage_by_name[bucket_name] = await storage_client.bucket_usage(bucket_name)
+
+    # Convert storage usage failures to availability errors.
     except Exception as exc:
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",
@@ -405,6 +476,7 @@ async def _storage_resource_rows(
         )
         raise UnavailableError("Storage resources unavailable") from exc
 
+    # Include the shared bucket when it is visible.
     if shared_bucket_name is not None and shared_bucket_name in bucket_names:
         usage = bucket_usage_by_name[shared_bucket_name]
         rows.append(
@@ -420,6 +492,7 @@ async def _storage_resource_rows(
             }
         )
 
+    # Add visible application buckets with usage details.
     for application, application_bucket_name in visible_application_buckets:
         usage = bucket_usage_by_name[application_bucket_name]
         rows.append(
@@ -442,6 +515,7 @@ async def _storage_resource_rows(
             }
         )
 
+    # Add stale managed buckets as orphaned resources.
     for orphaned_bucket_name in orphaned_bucket_names:
         usage = bucket_usage_by_name[orphaned_bucket_name]
         rows.append(
@@ -464,14 +538,18 @@ async def _storage_resource_rows(
 async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)) -> Organization:
     """Create a new organization."""
 
+    # Require a valid deployment location.
     if await locations.get(payload.location_id) is None:
         raise NotFoundError("Location", payload.location_id)
 
+    # Validate derived resource names before creating the organization.
     try:
         slug = names.slugify(payload.name, "Organization")
         names.k8name(slug)
         names.dbname(slug)
         buckets.shared(slug)
+
+    # Return invalid names as request conflicts.
     except ValueError as exc:
         raise ConflictError(str(exc)) from exc
 

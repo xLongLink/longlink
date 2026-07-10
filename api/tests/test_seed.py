@@ -55,6 +55,11 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         calls["user"] = seed.LOCAL_ADMIN_OIDC
         return user
 
+    def local_database_host() -> str:
+        """Return the fake local database host."""
+
+        return "172.19.0.1"
+
     async def fetch_no_locations() -> list[object]:
         """Return no existing locations."""
 
@@ -139,6 +144,7 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         calls["bootstrap"] = args
 
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
+    monkeypatch.setattr(seed, "local_database_host", local_database_host)
     monkeypatch.setattr(seed, "seed_local_administrator", seed_administrator)
     monkeypatch.setattr(seed.location_service, "fetch_all", fetch_no_locations)
     monkeypatch.setattr(seed.location_service, "create", create_location)
@@ -151,7 +157,7 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
     monkeypatch.setattr(seed.compute_runtime, "kubernetes", lambda registry: fake_kubernetes)
     monkeypatch.setattr(seed.organization_service, "fetch_all", fetch_no_organizations)
     monkeypatch.setattr(seed.organization_service, "create", create_organization)
-    monkeypatch.setattr(seed.organization_service, "get", load_organization)
+    monkeypatch.setattr(seed.organization_service, "get_record", load_organization)
     monkeypatch.setattr(seed.application_service, "get", fetch_no_application)
     monkeypatch.setattr(seed.resources, "create_application_runtime", create_application_runtime)
     monkeypatch.setattr(seed.resources, "sync_application_runtime", sync_application_runtime)
@@ -166,8 +172,8 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         "kind": seed.DatabaseKind.postgresql,
         "name": "local",
         "slug": "local",
-        "host": "localhost",
-        "port": 15432,
+        "host": "172.19.0.1",
+        "port": seed.LOCAL_DATABASE_PORT,
         "username": "admin",
         "password": "admin",
         "location_id": location.id,
@@ -225,6 +231,11 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
 
         return user
 
+    def local_database_host() -> str:
+        """Return the fake local database host."""
+
+        return "172.19.0.1"
+
     async def fetch_locations() -> list[object]:
         """Return the existing local location."""
 
@@ -233,7 +244,7 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
     async def fetch_database_registries() -> list[object]:
         """Return the existing local database registry."""
 
-        return [fake_resource(name="local")]
+        return [fake_resource(name="local", host="172.19.0.1", port=seed.LOCAL_DATABASE_PORT)]
 
     async def fetch_storage_registries() -> list[object]:
         """Return the existing local storage registry."""
@@ -284,13 +295,14 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
         return application
 
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
+    monkeypatch.setattr(seed, "local_database_host", local_database_host)
     monkeypatch.setattr(seed, "seed_local_administrator", seed_administrator)
     monkeypatch.setattr(seed.location_service, "fetch_all", fetch_locations)
     monkeypatch.setattr(seed.database_service, "fetch_all", fetch_database_registries)
     monkeypatch.setattr(seed.storage_service, "fetch_all", fetch_storage_registries)
     monkeypatch.setattr(seed.compute_service, "fetch_all", fetch_compute_registries)
     monkeypatch.setattr(seed.organization_service, "fetch_all", fetch_organizations)
-    monkeypatch.setattr(seed.organization_service, "get", load_organization)
+    monkeypatch.setattr(seed.organization_service, "get_record", load_organization)
     monkeypatch.setattr(seed, "ensure_local_organization_owner", ensure_owner)
     monkeypatch.setattr(seed.bootstrap, "sync_organization_users", sync_organization_users)
     monkeypatch.setattr(seed.application_service, "get", fetch_application)

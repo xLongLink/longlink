@@ -66,6 +66,7 @@ def _application_proxy_request_url(application_id: UUID, ingress_host: str, path
     if path:
         url = f"{url}{path.lstrip('/')}"
 
+    # Preserve the query string after the app-relative path.
     if query:
         url = f"{url}?{query}"
 
@@ -79,6 +80,8 @@ def _application_proxy_hop_by_hop_headers(headers: Mapping[str, str]) -> set[str
 
     # The Connection header can name additional hop-by-hop headers for this specific request or response.
     connection_header = headers.get("connection")
+
+    # Respect per-message hop-by-hop header declarations.
     if connection_header:
         blocked_headers.update(name.strip().lower() for name in connection_header.split(",") if name.strip())
 
@@ -143,11 +146,15 @@ async def application_access(application_id: UUID, user: User = Depends(authuser
 
     # App routes start from application id, so resolve the application before checking organization access.
     application = await applications.get_reference(application_id)
+
+    # Missing applications should not expose downstream access details.
     if application is None:
         raise NotFoundError("Application", application_id)
 
     # Organization membership grants the base right to see the application route.
     member_access = await organizations.get_member_access(application.organization_id, user.id)
+
+    # Missing organization access hides the tenant boundary.
     if member_access is None:
         raise NotFoundError("Organization", application.organization_id)
 
@@ -163,7 +170,7 @@ async def application_access(application_id: UUID, user: User = Depends(authuser
 
 
 @router.get("/api/applications", response_model=list[ApplicationResponse])
-async def list_applications(user: User = Depends(authadmin)) -> list[ApplicationResponse]:
+async def list_applications(user: User = Depends(authadmin)) -> list[dict[str, object]]:
     """Return all applications for administrator views."""
 
     return await applications.fetch_all_responses(user)
@@ -179,6 +186,8 @@ async def create_application(
 
     # Resolve access inside the handler so body validation can reject malformed payloads first.
     member_access = await organizations.get_member_access(organization_id, user.id)
+
+    # Missing organization access returns the same not-found shape.
     if member_access is None:
         raise NotFoundError("Organization", organization_id)
 
@@ -195,6 +204,8 @@ async def create_application(
         names.knames(application_slug, "Application name")
         names.k8name(organization.slug)
         names.dbname(organization.slug)
+
+        # Shared storage must exist before app bucket names can be derived.
         if organization.shared_storage_bucket_name is None:
             raise ValueError("Organization has no assigned shared storage bucket")
         buckets.application(organization.slug, application_slug)
@@ -214,6 +225,8 @@ async def create_application(
 
     # Reload the row so response serialization includes relationships populated by the service layer.
     reloaded_application = await applications.get_by_id(application.id)
+
+    # Treat unexpected reload failure as a missing application.
     if reloaded_application is None:
         raise NotFoundError("Application", application.id)
 
@@ -235,10 +248,14 @@ async def get_application_logs(access: ApplicationAccess = Depends(application_a
         access.organization_role,
         OrganizationRoles.maintain,
     )
+
+    # Only application or organization maintainers can read logs.
     if not can_manage_application:
         raise ForbiddenError("Application log permissions required")
 
     registry = await registries.application_compute_registry(access.application, access.organization.location_id)
+
+    # Logs require a configured compute registry.
     if registry is None:
         raise UnavailableError(f"No compute cluster configured for location '{access.organization.location_id}'")
 
@@ -274,17 +291,25 @@ async def update_application_member(
         access.organization_role,
         OrganizationRoles.maintain,
     )
+
+    # Only application or organization maintainers can manage members.
     if not can_manage_application:
         raise ForbiddenError("Application member management permissions required")
 
     # Managers may only change roles that are not stronger than their own effective authority.
     caller_role_rank = role.rank(access.application_role)
+
+    # Organization maintainers inherit organization-level rank.
     if role.atleast(access.organization_role, OrganizationRoles.maintain):
         caller_role_rank = max(caller_role_rank, role.rank(access.organization_role))
 
     member_application_role = await applications.membership_role(access.application.id, member_id)
+
+    # Managers cannot modify roles above their authority.
     if role.rank(member_application_role) > caller_role_rank:
         raise ForbiddenError("Application role management permissions required")
+
+    # Managers cannot assign roles above their authority.
     if role.rank(payload.role) > caller_role_rank:
         raise ForbiddenError("Application role management permissions required")
 
@@ -295,6 +320,8 @@ async def update_application_member(
         payload.role,
         access.user,
     )
+
+    # The service reports false when the target member is absent.
     if not updated:
         raise NotFoundError("Organization member", member_id)
 
@@ -309,10 +336,14 @@ async def delete_application(access: ApplicationAccess = Depends(application_acc
         access.organization_role,
         OrganizationRoles.maintain,
     )
+
+    # Only application or organization maintainers can delete applications.
     if not can_manage_application:
         raise ForbiddenError("Application deletion permissions required")
 
     deleted = await applications.soft_delete(access.application.id, access.user)
+
+    # Missing rows are reported as a normal not-found response.
     if deleted is None:
         raise NotFoundError("Application", access.application.id)
 
@@ -341,9 +372,12 @@ async def proxy_application_request(
     # Application roles grant normal runtime access; elevated organization roles can open apps too.
     if access.application_role is not None:
         runtime_roles.append(access.application_role)
+
+    # Organization maintainers can access runtimes without app membership.
     if role.atleast(access.organization_role, OrganizationRoles.maintain):
         runtime_roles.append(access.organization_role)
 
+    # Require at least one role before deriving runtime headers.
     if not runtime_roles:
         raise ForbiddenError("Application access required")
 
@@ -351,6 +385,8 @@ async def proxy_application_request(
 
     # Enforce method-level runtime access in the API before any request can reach Kubernetes.
     required_role = APPLICATION_PROXY_METHOD_REQUIRED_ROLES.get(request.method.upper(), "maintain")
+
+    # Reject methods that exceed the caller's effective runtime role.
     if not role.atleast(runtime_role, required_role):
         raise ForbiddenError(f"Application {required_role} access required")
 
@@ -363,6 +399,8 @@ async def proxy_application_request(
 
     # Use the app's assigned compute registry so the proxy targets the correct cluster gateway.
     registry = await registries.application_compute_registry(access.application, access.organization.location_id)
+
+    # Proxying requires a configured compute registry.
     if registry is None:
         raise UnavailableError(f"No compute cluster configured for location '{access.organization.location_id}'")
 
@@ -380,6 +418,8 @@ async def proxy_application_request(
 
     # The cluster gateway is the only public Kubernetes entry point and requires the registry secret.
     try:
+
+        # Reuse one HTTP client for the upstream exchange.
         async with httpx2.AsyncClient(follow_redirects=False, timeout=APPLICATION_PROXY_TIMEOUT_SECONDS) as client:
             upstream_response = await client.request(
                 request.method,

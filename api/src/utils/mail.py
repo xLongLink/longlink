@@ -41,10 +41,14 @@ def render_mjml(mjml_content: str) -> str:
     """Compile MJML markup to HTML using the configured MJML CLI."""
 
     command = (env.EMAIL_MJML_COMMAND or "").strip()
+
+    # Require an explicit MJML command before rendering.
     if not command:
         raise MailTemplateError("EMAIL_MJML_COMMAND is not set")
 
     resolved_command = shutil.which(command)
+
+    # Fail early when the configured command is unavailable.
     if resolved_command is None:
         raise MailTemplateError(
             f"MJML command '{command}' is not available. Install '@mjml/cli' and set EMAIL_MJML_COMMAND accordingly."
@@ -58,11 +62,13 @@ def render_mjml(mjml_content: str) -> str:
         check=False,
     )
 
+    # Surface MJML compiler failures as template errors.
     if result.returncode != 0:
         raise MailTemplateError(
             f"MJML rendering failed ({result.returncode}): {result.stderr.strip() or 'unknown error'}"
         )
 
+    # Reject empty compiler output before callers build emails.
     if not result.stdout.strip():
         raise MailTemplateError("MJML rendering returned an empty payload")
 
@@ -78,12 +84,15 @@ def render_mjml_template(template_path: str | Path, context: Mapping[str, object
 def _format_sender(sender_name: str | None) -> str:
     """Build a sender address with optional display name."""
 
+    # Sending requires a configured from address.
     if env.EMAIL_FROM_ADDRESS is None:
         raise MailDeliveryError("EMAIL_FROM_ADDRESS is required before sending mail")
 
+    # Use the configured default sender name when none is provided.
     if sender_name is None:
         sender_name = env.EMAIL_FROM_NAME
 
+    # Format display names according to email header rules.
     if sender_name:
         return email.utils.formataddr((sender_name, env.EMAIL_FROM_ADDRESS))
 
@@ -114,9 +123,11 @@ def _authenticate_client(client: SMTP | SMTP_SSL) -> None:
     username = env.EMAIL_SMTP_USERNAME
     password = env.EMAIL_SMTP_PASSWORD
 
+    # Skip authentication when credentials are completely absent.
     if username is None and password is None:
         return
 
+    # Reject partially configured credentials before logging in.
     if username is None or password is None:
         raise MailDeliveryError("SMTP username and password must be configured together")
 
@@ -127,27 +138,43 @@ def _send_message(message: EmailMessage) -> None:
     """Send one prepared email message over SMTP."""
 
     smtp_host = env.EMAIL_SMTP_HOST
+
+    # Sending requires a configured SMTP host.
     if smtp_host is None:
         raise MailDeliveryError("EMAIL_SMTP_HOST is required before sending mail")
 
     smtp_port = env.EMAIL_SMTP_PORT
+
+    # Sending requires a configured SMTP port.
     if smtp_port is None:
         raise MailDeliveryError("EMAIL_SMTP_PORT is required before sending mail")
 
     timeout = float(env.EMAIL_SMTP_TIMEOUT_SECONDS) if env.EMAIL_SMTP_TIMEOUT_SECONDS is not None else None
     ssl_context = ssl.create_default_context()
 
+    # Use implicit TLS when configured for the SMTP server.
     if env.EMAIL_SMTP_USE_SSL:
+
+        # Let smtplib use its default timeout when none is configured.
         if timeout is None:
             smtp_client = SMTP_SSL(smtp_host, smtp_port, context=ssl_context)
+
+        # Pass the configured timeout to the SSL client.
         else:
             smtp_client = SMTP_SSL(smtp_host, smtp_port, timeout=timeout, context=ssl_context)
+
+    # Use plain SMTP without an explicit timeout when none is configured.
     elif timeout is None:
         smtp_client = SMTP(smtp_host, smtp_port)
+
+    # Use plain SMTP with the configured timeout.
     else:
         smtp_client = SMTP(smtp_host, smtp_port, timeout=timeout)
 
+    # Ensure the SMTP connection is closed after sending.
     with smtp_client as client:
+
+        # Upgrade plain SMTP connections when STARTTLS is enabled.
         if env.EMAIL_SMTP_USE_TLS and not env.EMAIL_SMTP_USE_SSL:
             client.starttls(context=ssl_context)
         _authenticate_client(client)
@@ -165,6 +192,7 @@ async def send_templated_email(
 ) -> None:
     """Render templates and send one email, honoring the EMAIL_ENABLED switch."""
 
+    # Respect the global email delivery switch.
     if not is_email_enabled():
         logger.debug("Email sending disabled: set EMAIL_ENABLED=true and SMTP settings to enable")
         return

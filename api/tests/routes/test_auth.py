@@ -179,7 +179,7 @@ async def test_activate_account_switches_the_active_session_account(users: tuple
     assert me_response.status_code == 200
     current_profile = await users_service.profile(user_two.id)
     assert current_profile is not None
-    assert me_response.json() == UserProfile.model_validate(current_profile.model_dump()).model_dump(mode="json")
+    assert me_response.json() == UserProfile.model_validate(current_profile).model_dump(mode="json")
 
 
 async def test_activate_account_rejects_account_not_saved_in_session(users: tuple[User, User, User]) -> None:

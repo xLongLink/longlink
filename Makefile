@@ -1,4 +1,4 @@
-.PHONY: up down local-services build api\:build sdk\:build seed clean api\:clean sdk\:clean org\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format org\:format web\:format api web sdk install api\:install sdk\:install org\:install web\:install tests tests\:all api\:tests sdk\:tests org\:tests web\:tests pyright api\:pyright sdk\:pyright org\:pyright
+.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean org\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format org\:format web\:format api web sdk install api\:install sdk\:install org\:install web\:install tests tests\:all api\:tests sdk\:tests org\:tests web\:tests pyright api\:pyright sdk\:pyright org\:pyright
 
 LOCAL_SDK_IMAGE := localhost:15000/longlink-app:dev
 LOCAL_SDK_IMAGE_LABEL := longlink.name=longlink-app
@@ -164,8 +164,8 @@ web\:clean:
 	rm -rf web/dist web/dist-ssr web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite
 
 
-# Start local services, registry, Keycloak, and cluster, then wait for service readiness.
-up: local-services
+# Start local services, registry, Keycloak, and cluster, then wait for Keycloak readiness.
+up:
 	docker compose -f dev/compose.yml up -d
 	@if k3d cluster list compute >/dev/null 2>&1; then \
 		printf "k3d cluster compute already exists.\n"; \
@@ -173,17 +173,6 @@ up: local-services
 		k3d cluster create compute --api-port 0.0.0.0:8001 -p "8080:80@loadbalancer" -p "8443:443@loadbalancer" --registry-config dev/registries.yml; \
 	fi
 	k3d kubeconfig get compute > api/kubeconfig.yaml
-	@printf "Waiting for registry...\n"
-	@attempt=1; \
-	while ! curl --fail --silent --output /dev/null http://localhost:15000/v2/; do \
-		if [ "$$attempt" -ge 60 ]; then \
-			printf "Registry did not become ready after %s attempts.\n" "$$attempt"; \
-			exit 1; \
-		fi; \
-		attempt=$$((attempt + 1)); \
-		sleep 1; \
-	done
-	@printf "Registry is ready.\n"
 	@printf "Waiting for Keycloak...\n"
 	@attempt=1; \
 	while ! curl --fail --silent --output /dev/null http://localhost:18080/realms/dev/.well-known/openid-configuration; do \
@@ -195,33 +184,6 @@ up: local-services
 		sleep 2; \
 	done
 	@printf "Keycloak is ready.\n"
-
-
-# Start local services required by migrations and seeded app runtime resources.
-local-services:
-	docker compose -f dev/compose.yml up -d postgres minio
-	@printf "Waiting for Postgres...\n"
-	@attempt=1; \
-	while ! docker compose -f dev/compose.yml exec -T postgres pg_isready -U admin >/dev/null 2>&1; do \
-		if [ "$$attempt" -ge 60 ]; then \
-			printf "Postgres did not become ready after %s attempts.\n" "$$attempt"; \
-			exit 1; \
-		fi; \
-		attempt=$$((attempt + 1)); \
-		sleep 1; \
-	done
-	@printf "Postgres is ready.\n"
-	@printf "Waiting for MinIO...\n"
-	@attempt=1; \
-	while ! curl --fail --silent --output /dev/null http://localhost:19000/minio/health/ready; do \
-		if [ "$$attempt" -ge 60 ]; then \
-			printf "MinIO did not become ready after %s attempts.\n" "$$attempt"; \
-			exit 1; \
-		fi; \
-		attempt=$$((attempt + 1)); \
-		sleep 1; \
-	done
-	@printf "MinIO is ready.\n"
 
 
 # Stop local services, remove the cluster, and clean Python caches.
@@ -241,20 +203,8 @@ api:
 	cd api && DEVELOPMENT=true uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 
-# Start the local stack, build and push the SDK app image, then run migrations and seed data.
-seed: up
-	docker compose -f dev/compose.yml up -d --force-recreate keycloak
-	@printf "Waiting for Keycloak...\n"
-	@attempt=1; \
-	while ! curl --fail --silent --output /dev/null http://localhost:18080/realms/dev/.well-known/openid-configuration; do \
-		if [ "$$attempt" -ge 60 ]; then \
-			printf "Keycloak did not become ready after %s attempts.\n" "$$attempt"; \
-			exit 1; \
-		fi; \
-		attempt=$$((attempt + 1)); \
-		sleep 2; \
-	done
-	@printf "Keycloak is ready.\n"
+# Build and push the SDK app image, then run migrations and seed data after `make up`.
+seed:
 	cd api && uv sync --extra dev
 	if [ ! -d sdk/dev ]; then cd sdk && uv run longlink init --folder dev; fi
 	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'

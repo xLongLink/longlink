@@ -8,7 +8,7 @@ from src.models.statuses import ApplicationStatus
 from src.utils import gateway
 from src.utils import buckets
 from src.database.session import session_scope
-from src.models.applications import ApplicationResponse, ApplicationMemberResponse
+from src.models.applications import ApplicationMemberResponse
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.applications import Application
@@ -18,6 +18,7 @@ from src.database.models.organizations import Organization
 def response_gateway_url(application: Application) -> str | None:
     """Return the API proxy URL exposed for one application response."""
 
+    # Applications without compute registries have no gateway.
     if application.compute_registry is None:
         return None
 
@@ -27,6 +28,7 @@ def response_gateway_url(application: Application) -> str | None:
 async def fetch_all() -> list[Application]:
     """Return all registered applications for admin views."""
 
+    # Load active applications with related response data.
     async with session_scope() as session:
         statement = (
             select(Application)
@@ -49,9 +51,10 @@ async def fetch_all() -> list[Application]:
         return result.scalars().all()
 
 
-async def fetch_all_responses(user: User) -> list[ApplicationResponse]:
+async def fetch_all_responses(user: User) -> list[dict[str, object]]:
     """Return all registered applications as API payloads."""
 
+    # Load active applications for response shaping.
     async with session_scope() as session:
         statement = (
             select(Application)
@@ -72,17 +75,15 @@ async def fetch_all_responses(user: User) -> list[ApplicationResponse]:
         )
         result = await session.execute(statement)
         return [
-            ApplicationResponse.model_validate(
-                {
-                    **application.model_dump(),
-                    "organization": application.organization,
-                    "created_by": application.created_by or user,
-                    "updated_by": application.updated_by or application.created_by or user,
-                    "deleted_by": application.deleted_by,
-                    "gateway_url": response_gateway_url(application),
-                    "role": None,
-                }
-            )
+            {
+                **application.model_dump(),
+                "organization": application.organization,
+                "created_by": application.created_by or user,
+                "updated_by": application.updated_by or application.created_by or user,
+                "deleted_by": application.deleted_by,
+                "gateway_url": response_gateway_url(application),
+                "role": None,
+            }
             for application in result.scalars().all()
         ]
 
@@ -90,8 +91,11 @@ async def fetch_all_responses(user: User) -> list[ApplicationResponse]:
 async def list_by_organization(organization_id: UUID, include_deleted: bool = False) -> list[Application]:
     """Return all active applications for one organization."""
 
+    # Query organization applications in one session.
     async with session_scope() as session:
         conditions = [Application.organization_id == organization_id]
+
+        # Include deleted rows only when requested.
         if not include_deleted:
             conditions.append(Application.deleted_at.is_(None))
 
@@ -115,9 +119,10 @@ async def list_by_organization(organization_id: UUID, include_deleted: bool = Fa
         return result.scalars().all()
 
 
-async def list_responses(organization_id: UUID, user_id: UUID, user: User) -> list[ApplicationResponse]:
+async def list_responses(organization_id: UUID, user_id: UUID, user: User) -> list[dict[str, object]]:
     """Return organization applications as API payloads."""
 
+    # Load applications with caller membership roles.
     async with session_scope() as session:
 
         # Join the membership row so the caller can render the app role in one query.
@@ -150,17 +155,15 @@ async def list_responses(organization_id: UUID, user_id: UUID, user: User) -> li
         )
         result = await session.execute(statement)
         return [
-            ApplicationResponse.model_validate(
-                {
-                    **application.model_dump(),
-                    "organization": application.organization,
-                    "created_by": application.created_by or user,
-                    "updated_by": application.updated_by or application.created_by or user,
-                    "deleted_by": application.deleted_by,
-                    "gateway_url": response_gateway_url(application),
-                    "role": role_name,
-                }
-            )
+            {
+                **application.model_dump(),
+                "organization": application.organization,
+                "created_by": application.created_by or user,
+                "updated_by": application.updated_by or application.created_by or user,
+                "deleted_by": application.deleted_by,
+                "gateway_url": response_gateway_url(application),
+                "role": role_name,
+            }
             for application, role_name in result.all()
         ]
 
@@ -168,6 +171,7 @@ async def list_responses(organization_id: UUID, user_id: UUID, user: User) -> li
 async def get(organization_id: UUID, slug: str) -> Application | None:
     """Return a registered application by organization and slug."""
 
+    # Load one active application by slug.
     async with session_scope() as session:
         statement = (
             select(Application)
@@ -195,8 +199,11 @@ async def get(organization_id: UUID, slug: str) -> Application | None:
 async def get_by_id(application_id: UUID, include_deleted: bool = False) -> Application | None:
     """Return a registered application by id."""
 
+    # Load one application by id.
     async with session_scope() as session:
         conditions = [Application.id == application_id]
+
+        # Exclude deleted applications unless requested.
         if not include_deleted:
             conditions.append(Application.deleted_at.is_(None))
 
@@ -222,8 +229,11 @@ async def get_by_id(application_id: UUID, include_deleted: bool = False) -> Appl
 async def get_reference(application_id: UUID, include_deleted: bool = False) -> Application | None:
     """Return a registered application by id without eager-loaded relationships."""
 
+    # Load a lightweight application reference by id.
     async with session_scope() as session:
         conditions = [Application.id == application_id]
+
+        # Exclude deleted applications unless requested.
         if not include_deleted:
             conditions.append(Application.deleted_at.is_(None))
 
@@ -235,6 +245,7 @@ async def get_reference(application_id: UUID, include_deleted: bool = False) -> 
 async def membership_role(application_id: UUID, user_id: UUID) -> ApplicationRoles | None:
     """Return one application membership role for one user."""
 
+    # Query the active membership role.
     async with session_scope() as session:
         statement = select(UserApplication.role_name).where(
             UserApplication.application_id == application_id,
@@ -248,6 +259,7 @@ async def membership_role(application_id: UUID, user_id: UUID) -> ApplicationRol
 async def list_members(application_id: UUID, organization_id: UUID) -> list[ApplicationMemberResponse]:
     """Return organization members with their application roles."""
 
+    # Query organization members and app roles together.
     async with session_scope() as session:
 
         # Start from organization memberships so users without app access are visible.
@@ -293,6 +305,7 @@ async def set_member_role(
 ) -> bool:
     """Set or remove one organization member's application role."""
 
+    # Update membership rows in one transaction.
     async with session_scope() as session:
         membership_result = await session.execute(
             select(UserOrganization)
@@ -305,6 +318,8 @@ async def set_member_role(
             )
         )
         organization_membership = membership_result.scalar_one_or_none()
+
+        # Require an active organization membership first.
         if organization_membership is None:
             return False
 
@@ -318,7 +333,10 @@ async def set_member_role(
         )
         now = datetime.now(UTC)
 
+        # Remove application access when no role is provided.
         if role is None:
+
+            # Soft-delete an existing active application membership.
             if application_membership is not None and application_membership.deleted_at is None:
                 application_membership.deleted_at = now
                 application_membership.deleted_id = user.id
@@ -327,6 +345,7 @@ async def set_member_role(
             await session.commit()
             return True
 
+        # Create a membership when none exists.
         if application_membership is None:
             application_membership = UserApplication(
                 application_id=application_id,
@@ -367,8 +386,11 @@ async def create(
 ) -> Application:
     """Add a new application to the database for one organization."""
 
+    # Create the application and owner membership transactionally.
     async with session_scope() as session:
         organization = await session.get(Organization, organization_id)
+
+        # Require the owning organization to exist.
         if organization is None:
             raise NotFoundError("Organization", organization_id)
 
@@ -378,6 +400,8 @@ async def create(
             Application.slug == slug,
         )
         slug_result = await session.execute(slug_statement)
+
+        # Prevent duplicate application slugs within the organization.
         if slug_result.scalar_one_or_none() is not None:
             raise ConflictError("Application slug already exists")
 
@@ -437,8 +461,11 @@ async def create(
 async def set_status(application_id: UUID, status: ApplicationStatus) -> Application | None:
     """Update one application status and return the refreshed row."""
 
+    # Update the status inside one session.
     async with session_scope() as session:
         application = await session.get(Application, application_id)
+
+        # Ignore missing applications for status updates.
         if application is None:
             return None
 
@@ -464,8 +491,11 @@ async def update_runtime(
 ) -> Application | None:
     """Update one existing application's runtime metadata."""
 
+    # Update runtime metadata in one session.
     async with session_scope() as session:
         application = await session.get(Application, application_id)
+
+        # Ignore missing or deleted applications.
         if application is None or application.deleted_at is not None:
             return None
 
@@ -489,8 +519,11 @@ async def update_runtime(
 async def soft_delete(application_id: UUID, user: User) -> Application | None:
     """Soft-delete one application and its application memberships."""
 
+    # Soft-delete the application and memberships together.
     async with session_scope() as session:
         application = await session.get(Application, application_id)
+
+        # Ignore missing or already-deleted applications.
         if application is None or application.deleted_at is not None:
             return None
 
@@ -506,6 +539,8 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
                 UserApplication.deleted_at.is_(None),
             )
         )
+
+        # Mark active application memberships as deleted.
         for membership in memberships.scalars().all():
             membership.deleted_at = now
             membership.deleted_id = user.id

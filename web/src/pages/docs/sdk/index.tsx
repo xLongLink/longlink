@@ -5,9 +5,62 @@ import { Heading } from '@/components/ui/heading';
 import { P } from '@/components/ui/p';
 import { Stack } from '@/components/ui/stack';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+    AppWindow,
+    ArrowLeftRight,
+    Code2,
+    Database,
+    HardDrive,
+    Languages,
+    Palette,
+    PanelTop,
+    UserRound,
+} from 'lucide-react';
+
+/** Renders the local SDK runtime request flow diagram. */
+function LocalRuntimeDiagram() {
+    return (
+        <div className="rounded-md border bg-muted/10 p-4">
+            <div className="grid gap-4 lg:grid-cols-[13.5rem_7rem_13.5rem] lg:items-center lg:justify-center">
+                <div className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-md border bg-muted/40 px-3 py-4 text-center">
+                    <div className="flex size-9 items-center justify-center text-muted-foreground">
+                        <UserRound aria-hidden={true} className="size-5" />
+                    </div>
+                    <div>
+                        <div className="font-medium text-foreground">User</div>
+                        <div className="mt-1 text-sm text-muted-foreground">Browser</div>
+                    </div>
+                    <div className="flex items-center justify-center gap-3 pt-1 text-muted-foreground">
+                        <Languages aria-label="Languages" className="size-4" />
+                        <Palette aria-label="Theming" className="size-4" />
+                        <PanelTop aria-label="App shell" className="size-4" />
+                    </div>
+                </div>
+                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                    <ArrowLeftRight aria-hidden={true} className="size-5" />
+                    <div className="mt-1 text-xs tabular-nums">localhost:1707</div>
+                </div>
+                <div className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-md border bg-muted/40 px-3 py-4 text-center">
+                    <div className="flex size-9 items-center justify-center text-muted-foreground">
+                        <AppWindow aria-hidden={true} className="size-5" />
+                    </div>
+                    <div>
+                        <div className="font-medium text-foreground">Application</div>
+                        <div className="mt-1 text-sm text-muted-foreground">Runtime</div>
+                    </div>
+                    <div className="flex items-center justify-center gap-3 pt-1 text-muted-foreground">
+                        <Code2 aria-label="Business logic" className="size-4" />
+                        <Database aria-label="Database logic" className="size-4" />
+                        <HardDrive aria-label="File storage" className="size-4" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export const metadata = {
-    lastUpdated: '2026-07-09',
+    lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/index.tsx',
 };
 
@@ -32,6 +85,7 @@ export const content = (
             SDK runtime and local services, while production receives platform-managed database, storage, routing,
             identity, and deployment configuration.
         </P>
+        <LocalRuntimeDiagram />
         <Heading id="create-a-project" level="h2">
             Create a Project
         </Heading>

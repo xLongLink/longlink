@@ -47,7 +47,7 @@ async def test_get_me_returns_authenticated_user_profile_and_org_memberships(
     profile = await db.users.profile(user.id)
     assert profile is not None
 
-    expected_payload = UserProfile.model_validate(profile.model_dump()).model_dump(mode="json")
+    expected_payload = UserProfile.model_validate(profile).model_dump(mode="json")
     assert response.json() == expected_payload
     assert response.json()["organizations"][0]["slug"] == "acme"
 
@@ -68,7 +68,7 @@ async def test_get_me_returns_the_active_account_profile(users: tuple[User, User
     current_profile = await db.users.profile(user_one.id)
     assert current_profile is not None
 
-    assert response.json() == UserProfile.model_validate(current_profile.model_dump()).model_dump(mode="json")
+    assert response.json() == UserProfile.model_validate(current_profile).model_dump(mode="json")
 
 
 async def test_logout_clears_the_active_account(users: tuple[User, User, User]) -> None:
@@ -134,5 +134,5 @@ async def test_patch_me_updates_authenticated_user_profile(
     updated_profile = await db.users.profile(user.id)
     assert updated_profile is not None
 
-    expected_payload = UserProfile.model_validate(updated_profile.model_dump()).model_dump(mode="json")
+    expected_payload = UserProfile.model_validate(updated_profile).model_dump(mode="json")
     assert response.json() == expected_payload

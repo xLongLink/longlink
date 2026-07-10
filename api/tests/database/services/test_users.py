@@ -2,8 +2,7 @@ import pytest
 from uuid import uuid4
 from types import SimpleNamespace
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.users import Theme, Accent, Radius, Language, UserOrganizationMembership
-from src.models.locations import LocationResponse
+from src.models.users import Theme, Accent, Radius, Language
 from src.database.models.users import User
 from src.database.services import users
 from src.database.services import compute
@@ -117,17 +116,14 @@ async def test_profile_returns_created_organization_membership() -> None:
 
     # Assert
     assert profile is not None
-    assert profile.organizations == [
-        UserOrganizationMembership(
-            id=organization.id,
-            name="test",
-            slug=organization.slug,
-            avatar="https://example.com/organizations/test.png",
-            country="CH",
-            location=LocationResponse.model_validate(location),
-            role=OrganizationRoles.owner,
-        )
-    ]
+    profile_organization = profile["organizations"][0]
+    assert profile_organization["id"] == organization.id
+    assert profile_organization["name"] == "test"
+    assert profile_organization["slug"] == organization.slug
+    assert profile_organization["avatar"] == "https://example.com/organizations/test.png"
+    assert profile_organization["country"] == "CH"
+    assert profile_organization["location"].id == location.id
+    assert profile_organization["role"] == OrganizationRoles.owner
 
 
 async def test_upsert_does_not_mark_second_user_as_admin() -> None:

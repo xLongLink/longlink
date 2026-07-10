@@ -308,7 +308,7 @@ async def create_application_runtime(
 
 async def sync_application_runtime(
     application: Application,
-    organization: OrganizationDetails,
+    organization: Organization | OrganizationDetails | OrganizationSummary,
     payload: ApplicationCreate,
     user: User,
 ) -> Application:

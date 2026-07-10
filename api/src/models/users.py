@@ -149,6 +149,7 @@ class UserSummary(BaseModel):
 class UserListItem(UserSummary):
     """Represent one user in admin list responses."""
 
+    # Identity
     oidc: str
 
 

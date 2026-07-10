@@ -8,11 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.roles import OrganizationRoles
 from src.models.countries import DEFAULT_COUNTRY
-from src.models.users import UserSummary
 from src.database.session import session_scope
-from src.models.locations import LocationResponse
-from src.models.organizations import (OrganizationDetails, OrganizationMemberSummary, OrganizationInvitationResponse,
-                                      OrganizationApplicationResponse)
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -23,6 +19,7 @@ from src.database.models.organizations import Organization
 async def fetch_all() -> list[Organization]:
     """Return all organizations in the database."""
 
+    # Load active organizations with audit users.
     async with session_scope() as session:
         statement = (
             select(Organization)
@@ -40,6 +37,7 @@ async def fetch_all() -> list[Organization]:
 async def list_by_user(user_id: UUID) -> list[Organization]:
     """Return active organizations that contain current or historical user membership."""
 
+    # Load organizations joined through user memberships.
     async with session_scope() as session:
         statement = (
             select(Organization)
@@ -58,6 +56,8 @@ async def get_member(organization_id: UUID, user_id: UUID) -> Organization | Non
     """Return one active organization for an active member without details."""
 
     member_access = await get_member_access(organization_id, user_id)
+
+    # Return none when the access check fails.
     if member_access is None:
         return None
 
@@ -67,6 +67,7 @@ async def get_member(organization_id: UUID, user_id: UUID) -> Organization | Non
 async def get_member_access(organization_id: UUID, user_id: UUID) -> tuple[Organization, OrganizationRoles] | None:
     """Return one active organization and member role for an active member."""
 
+    # Check organization membership in one query.
     async with session_scope() as session:
 
         # Join membership in the access check so non-members and missing organizations look identical.
@@ -82,6 +83,8 @@ async def get_member_access(organization_id: UUID, user_id: UUID) -> tuple[Organ
         )
         result = await session.execute(statement)
         row = result.one_or_none()
+
+        # Hide missing organizations and inactive memberships.
         if row is None:
             return None
 
@@ -89,9 +92,26 @@ async def get_member_access(organization_id: UUID, user_id: UUID) -> tuple[Organ
         return organization, role
 
 
+async def get_record(organization_id: UUID, include_deleted: bool = False) -> Organization | None:
+    """Return one organization row for runtime callers that need attributes."""
+
+    # Load one organization record.
+    async with session_scope() as session:
+        conditions = [Organization.id == organization_id]
+
+        # Exclude deleted organizations unless requested.
+        if not include_deleted:
+            conditions.append(Organization.deleted_at.is_(None))
+
+        statement = select(Organization).where(*conditions)
+        result = await session.execute(statement)
+        return result.scalar_one_or_none()
+
+
 async def database_users(organization_id: UUID) -> list[TenantUser]:
     """Return organization user state for shared user synchronization."""
 
+    # Load memberships for tenant user synchronization.
     async with session_scope() as session:
         statement = (
             select(
@@ -115,11 +135,15 @@ async def database_users(organization_id: UUID) -> list[TenantUser]:
 
             # A shared user becomes inactive when either the account or organization membership is inactive.
             deleted_at = user.deleted_at
+
+            # Use the newest deletion timestamp for the tenant row.
             if membership_deleted_at is not None and (deleted_at is None or membership_deleted_at > deleted_at):
                 deleted_at = membership_deleted_at
 
             # The tenant row should advance when profile, membership, or deactivation state changes.
             tenant_updated_at = max(user.updated_at, updated_at)
+
+            # Include deletion changes in the tenant update timestamp.
             if deleted_at is not None and deleted_at > tenant_updated_at:
                 tenant_updated_at = deleted_at
 
@@ -143,11 +167,14 @@ async def get(
     organization_id: UUID,
     include_deleted: bool = False,
     application_user_id: UUID | None = None,
-) -> OrganizationDetails | None:
-    """Return one organization by id."""
+) -> dict[str, object] | None:
+    """Return one organization details payload by id."""
 
+    # Load organization details and related payload data.
     async with session_scope() as session:
         conditions = [Organization.id == organization_id]
+
+        # Exclude deleted organizations unless requested.
         if not include_deleted:
             conditions.append(Organization.deleted_at.is_(None))
 
@@ -163,6 +190,8 @@ async def get(
         )
         result = await session.execute(statement)
         organization = result.scalar_one_or_none()
+
+        # Return none for missing organizations.
         if organization is None:
             return None
 
@@ -183,6 +212,8 @@ async def get(
         active_applications = applications_result.scalars().all()
         application_roles = {}
         caller_organization_role = None
+
+        # Load caller roles when rendering user-specific data.
         if application_user_id is not None:
             role_result = await session.execute(
                 select(UserOrganization.role_name).where(
@@ -202,6 +233,8 @@ async def get(
             application_roles = dict(roles_result.all())
 
         active_invitations = []
+
+        # Show invitations only to organization managers.
         if application_user_id is None or caller_organization_role in {
             OrganizationRoles.admin,
             OrganizationRoles.maintain,
@@ -226,59 +259,52 @@ async def get(
             )
         )
         members = [
-            OrganizationMemberSummary(
-                id=user.id,
-                name=user.name,
-                email=user.email,
-                avatar=user.avatar,
-                role=role_name,
-                last_access_at=updated_at,
-            )
+            {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "avatar": user.avatar,
+                "role": role_name,
+                "last_access_at": updated_at,
+            }
             for user, role_name, updated_at in memberships_result.all()
         ]
 
-        return OrganizationDetails(
-            id=organization.id,
-            name=organization.name,
-            slug=organization.slug,
-            avatar=organization.avatar,
-            country=organization.country,
-            location=LocationResponse.model_validate(organization.location),
-            location_id=organization.location_id,
-            shared_storage_bucket_name=organization.shared_storage_bucket_name,
-            created_at=organization.created_at,
-            updated_at=organization.updated_at,
-            created_by=UserSummary.model_validate(organization.created_by),
-            updated_by=UserSummary.model_validate(organization.updated_by),
-            deleted_at=organization.deleted_at,
-            deleted_by=UserSummary.model_validate(organization.deleted_by)
-            if organization.deleted_by is not None
-            else None,
-            users=members,
-            invitations=[
-                OrganizationInvitationResponse.model_validate(invitation) for invitation in active_invitations
-            ],
-            applications=[
-                OrganizationApplicationResponse.model_validate(
-                    {
-                        **application.model_dump(),
-                        "created_by": application.created_by,
-                        "updated_by": application.updated_by,
-                        "deleted_by": application.deleted_by,
-                        "gateway_url": gateway.application_url(application.id)
-                        if application.compute_registry is not None
-                        else None,
-                        "role": application_roles.get(application.id),
-                    }
-                )
+        return {
+            "id": organization.id,
+            "name": organization.name,
+            "slug": organization.slug,
+            "avatar": organization.avatar,
+            "country": organization.country,
+            "location": organization.location,
+            "location_id": organization.location_id,
+            "shared_storage_bucket_name": organization.shared_storage_bucket_name,
+            "created_at": organization.created_at,
+            "updated_at": organization.updated_at,
+            "created_by": organization.created_by,
+            "updated_by": organization.updated_by,
+            "deleted_at": organization.deleted_at,
+            "deleted_by": organization.deleted_by,
+            "users": members,
+            "invitations": active_invitations,
+            "applications": [
+                {
+                    **application.model_dump(),
+                    "created_by": application.created_by,
+                    "updated_by": application.updated_by,
+                    "deleted_by": application.deleted_by,
+                    "gateway_url": gateway.application_url(application.id) if application.compute_registry is not None else None,
+                    "role": application_roles.get(application.id),
+                }
                 for application in active_applications
             ],
-        )
+        }
 
 
 async def membership_role(organization_id: UUID, user_id: UUID) -> OrganizationRoles | None:
     """Return one member role for an organization."""
 
+    # Query one active organization membership role.
     async with session_scope() as session:
         statement = select(UserOrganization.role_name).where(
             UserOrganization.organization_id == organization_id,
@@ -292,6 +318,7 @@ async def membership_role(organization_id: UUID, user_id: UUID) -> OrganizationR
 async def update_member_role(organization_id: UUID, member_id: UUID, role: OrganizationRoles, user: User) -> bool:
     """Update one active organization member role."""
 
+    # Update the member role inside one transaction.
     async with session_scope() as session:
         statement = (
             select(UserOrganization)
@@ -305,9 +332,12 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
         )
         result = await session.execute(statement)
         membership = result.scalar_one_or_none()
+
+        # Require an active organization membership.
         if membership is None:
             return False
 
+        # Protect organizations from losing their last owner.
         if membership.role_name == OrganizationRoles.owner and role != OrganizationRoles.owner:
             owner_statement = (
                 select(UserOrganization)
@@ -319,6 +349,8 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
                 .with_for_update()
             )
             owner_result = await session.execute(owner_statement)
+
+            # Reject demotion when this is the only owner.
             if len(owner_result.scalars().all()) <= 1:
                 raise ConflictError("Organization must have at least one owner")
 
@@ -342,6 +374,8 @@ async def create(
     names.k8name(slug)
     names.dbname(slug)
     shared_storage_bucket_name = buckets.shared(slug)
+
+    # Create the organization and owner membership together.
     async with session_scope() as session:
         organization = Organization(
             name=name,
@@ -366,11 +400,12 @@ async def create(
         )
         session.add(organization)
 
+        # Commit creation and translate unique conflicts.
         try:
             await session.commit()
-        except IntegrityError as exc:
 
-            # Keep name collisions at the service boundary as an API conflict.
+        # Keep name collisions at the service boundary as an API conflict.
+        except IntegrityError as exc:
             await session.rollback()
             raise ConflictError("Organization already exists") from exc
 
@@ -392,8 +427,11 @@ async def create(
 async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
     """Soft-delete an organization and all nested access rows."""
 
+    # Soft-delete organization data in one transaction.
     async with session_scope() as session:
         organization = await session.get(Organization, organization_id)
+
+        # Ignore missing or already-deleted organizations.
         if organization is None or organization.deleted_at is not None:
             return None
 
@@ -409,6 +447,8 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
                 Application.deleted_at.is_(None),
             )
         )
+
+        # Mark active applications as deleted.
         for application in applications_result.scalars().all():
             application.deleted_at = now
             application.deleted_id = user.id
@@ -421,6 +461,8 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
                 UserApplication.deleted_at.is_(None),
             )
         )
+
+        # Mark application memberships as deleted.
         for membership in user_applications_result.scalars().all():
             membership.deleted_at = now
             membership.deleted_id = user.id
@@ -433,6 +475,8 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
                 UserOrganization.deleted_at.is_(None),
             )
         )
+
+        # Mark organization memberships as deleted.
         for membership in user_organizations_result.scalars().all():
             membership.deleted_at = now
             membership.deleted_id = user.id
@@ -445,6 +489,8 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
                 OrganizationInvitation.deleted_at.is_(None),
             )
         )
+
+        # Mark active invitations as deleted.
         for invitation in invitations_result.scalars().all():
             invitation.deleted_at = now
             invitation.deleted_id = user.id

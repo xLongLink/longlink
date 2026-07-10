@@ -15,22 +15,26 @@ export function readXmlProp(props: ASTProps, name: string): string | undefined {
 export function requireXmlString(props: ASTProps, name: string, ctx: ExecutionContext, componentName: string): string {
     const rawValue = readXmlProp(props, name);
 
+    // Required string attributes must be present before evaluation.
     if (rawValue == null) {
         throw new Error(`${componentName} requires a string ${name}`);
     }
 
     const value = evaluate(rawValue, ctx);
 
+    // Evaluated nullish values are treated as missing strings.
     if (value == null) {
         throw new Error(`${componentName} requires a string ${name}`);
     }
 
+    // XML string props cannot accept structured values.
     if (typeof value === 'object' || typeof value === 'function') {
         throw new Error(`${componentName} requires a string ${name}`);
     }
 
     const stringValue = String(value);
 
+    // Whitespace-only values should fail like missing values.
     if (!stringValue.trim()) {
         throw new Error(`${componentName} requires a string ${name}`);
     }
@@ -42,6 +46,7 @@ export function requireXmlString(props: ASTProps, name: string, ctx: ExecutionCo
 export function resolveXmlString(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue = ''): any {
     const rawValue = readXmlProp(props, name);
 
+    // Missing attributes keep the caller-provided default.
     if (rawValue == null) return defaultValue;
 
     const value = evaluate(rawValue, ctx);
@@ -53,12 +58,18 @@ export function resolveXmlString(props: ASTProps, name: string, ctx: ExecutionCo
 export function resolveXmlBoolean(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue?: boolean): any {
     const rawValue = readXmlProp(props, name);
 
+    // Missing attributes keep the caller-provided default.
     if (rawValue == null) return defaultValue;
 
     const value = evaluate(rawValue, ctx);
 
+    // Preserve explicit XML boolean literals before falling back to truthiness.
     if (value === true || value === 'true') return true;
+
+    // Preserve explicit false values instead of coercing them through truthiness.
     if (value === false || value === 'false') return false;
+
+    // Nullish or empty values keep the caller-provided default.
     if (value == null || value === '') return defaultValue;
 
     return Boolean(value);
@@ -68,6 +79,7 @@ export function resolveXmlBoolean(props: ASTProps, name: string, ctx: ExecutionC
 export function resolveXmlNumber(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue?: number): any {
     const rawValue = readXmlProp(props, name);
 
+    // Missing attributes keep the caller-provided default.
     if (rawValue == null) return defaultValue;
 
     const value = evaluate(rawValue, ctx);
@@ -85,10 +97,12 @@ export function resolveXmlStringArray(
 ): any {
     const rawValue = readXmlProp(props, name);
 
+    // Missing attributes keep the caller-provided default.
     if (rawValue == null) return defaultValue;
 
     const value = evaluate(rawValue, ctx);
 
+    // Array props must stay arrays so callers can rely on list semantics.
     if (!Array.isArray(value)) {
         throw new Error(`${name} must evaluate to an array`);
     }
@@ -105,6 +119,7 @@ export function resolveXmlValue(
 ): any {
     const rawValue = readXmlProp(props, name);
 
+    // Missing attributes keep the caller-provided default.
     if (rawValue == null) return defaultValue;
 
     const value = evaluate(rawValue, ctx);
@@ -116,6 +131,7 @@ export function resolveXmlValue(
 export function resolveXmlExpression(props: ASTProps, name: string): any {
     const rawValue = readXmlProp(props, name);
 
+    // Missing expression props do not produce deferred evaluators.
     if (rawValue == null) return undefined;
 
     return compile(rawValue);

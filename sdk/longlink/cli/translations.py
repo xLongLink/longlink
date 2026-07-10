@@ -46,6 +46,7 @@ translations_command.add_command(generate_command)
 def discover_xml_files(pages_directory: Path) -> list[Path]:
     """Return XML source files that can contribute translation keys."""
 
+    # Treat missing page directories as empty applications.
     if not pages_directory.exists():
         return []
 
@@ -57,7 +58,10 @@ def collect_translation_keys(xml_files: list[Path], app_root: Path) -> set[str]:
 
     keys: set[str] = set()
 
+    # Parse each XML page and merge its declared keys.
     for path in xml_files:
+
+        # Parse fragments without loading external resources.
         try:
 
             # Wrap fragments so mixed top-level XML snippets still parse cleanly.
@@ -68,9 +72,11 @@ def collect_translation_keys(xml_files: list[Path], app_root: Path) -> set[str]:
             display_path = path.relative_to(app_root) if path.is_relative_to(app_root) else path
             raise click.ClickException(f"Invalid XML in {display_path}: {error}") from error
 
+        # Visit every XML element because keys may appear at any depth.
         for element in root.iter():
             key = element.get("i18n")
 
+            # Ignore elements that do not declare translation keys.
             if key:
                 normalized_key = key.strip()
 
@@ -89,9 +95,11 @@ def collect_translation_keys(xml_files: list[Path], app_root: Path) -> set[str]:
 def load_translation_catalog(path: Path, app_root: Path) -> dict[str, object]:
     """Load the existing translation catalog, if one is already present."""
 
+    # Start from an empty catalog when no translation file exists.
     if not path.exists():
         return {}
 
+    # Load the existing JSON so unchanged translations are preserved.
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as error:
@@ -102,6 +110,7 @@ def load_translation_catalog(path: Path, app_root: Path) -> dict[str, object]:
 def flatten_translation_catalog(value: object, prefix: str = "") -> dict[str, object]:
     """Flatten a nested translation tree into dotted keys."""
 
+    # Preserve scalar leaves under their accumulated dotted key.
     if not is_translation_branch(value):
         return {prefix: value} if prefix else {}
 
@@ -111,6 +120,7 @@ def flatten_translation_catalog(value: object, prefix: str = "") -> dict[str, ob
 
     flattened: dict[str, object] = {}
 
+    # Recurse through nested namespaces to produce dotted keys.
     for key, entry in value.items():
         next_prefix = f"{prefix}.{key}" if prefix else key
         flattened.update(flatten_translation_catalog(entry, next_prefix))
@@ -123,6 +133,7 @@ def build_translation_catalog(keys: set[str], existing_catalog: dict[str, object
 
     catalog: dict[str, object] = {}
 
+    # Emit keys in stable order for deterministic catalog output.
     for key in sorted(keys):
 
         # Reuse the stored translation string or initialize a blank leaf.
@@ -143,14 +154,18 @@ def assign_translation_value(target: dict[str, object], segments: list[str], val
 
     current = target
 
+    # Walk or create the parent namespaces for the leaf value.
     for segment in segments[:-1]:
 
         # Reject namespace collisions like `items` versus `items.count`.
         entry = current.get(segment)
 
+        # Create a namespace when this segment is new.
         if entry is None:
             entry = {}
             current[segment] = entry
+
+        # Existing entries must be reusable translation namespaces.
         elif not is_translation_branch(entry) or is_plural_catalog(entry):
             raise click.ClickException(f"Translation key collision at {segment}")
 
@@ -159,6 +174,7 @@ def assign_translation_value(target: dict[str, object], segments: list[str], val
     leaf = segments[-1]
     entry = current.get(leaf)
 
+    # Reject replacing a namespace with a scalar translation.
     if is_translation_branch(entry) and not is_plural_catalog(entry):
         raise click.ClickException(f"Translation key collision at {'.'.join(segments)}")
 
@@ -174,10 +190,14 @@ def is_translation_branch(value: object) -> TypeGuard[dict[str, object]]:
 def is_plural_catalog(value: dict[str, object]) -> bool:
     """Return true when a translation leaf uses plural categories."""
 
+    # Empty objects are namespaces, not plural leaves.
     if not value:
         return False
 
+    # Every plural entry must use a known category and string value.
     for key, entry in value.items():
+
+        # Reject unknown plural categories or non-string values.
         if key not in PLURAL_KEYS or not isinstance(entry, str):
             return False
 

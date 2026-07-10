@@ -204,7 +204,7 @@ async def inspect_application_startup(
     if application is None:
         return ApplicationStartupState.pending
 
-    organization = await organizations.get(application.organization_id)
+    organization = await organizations.get_record(application.organization_id)
 
     # Missing organizations are treated as pending for the same retry behavior.
     if organization is None:
@@ -325,7 +325,7 @@ async def execute_application_delete(operation: Operation) -> Operation:
         completed = await operations.complete(operation.id, operation.lease_token)
         return completed or operation
 
-    organization = await organizations.get(application.organization_id, include_deleted=True)
+    organization = await organizations.get_record(application.organization_id, include_deleted=True)
 
     # Missing organizations imply the namespace-level resources are already gone.
     if organization is None:
@@ -361,7 +361,7 @@ async def execute_organization_delete(operation: Operation) -> Operation:
     if operation.step != RESOURCE_REMOVE_STEP:
         raise ValueError(f"Unsupported organization delete step '{operation.step}'")
 
-    organization = await organizations.get(organization_id, include_deleted=True)
+    organization = await organizations.get_record(organization_id, include_deleted=True)
 
     # Missing organizations have no runtime resources to remove.
     if organization is None:

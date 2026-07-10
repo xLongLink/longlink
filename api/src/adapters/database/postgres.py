@@ -56,6 +56,8 @@ class Postgres(Database):
 
         # Attach PostgreSQL driver options after URL creation so credentials stay structured.
         query = {"sslmode": self._sslmode}
+
+        # Forward an explicit schema search path when callers request one.
         if search_path is not None:
             query["options"] = f"-csearch_path={search_path}"
 
@@ -81,21 +83,26 @@ class Postgres(Database):
 
         # Keep connection behavior consistent while allowing CREATE/DROP DATABASE autocommit operations.
         engine_kwargs: dict[str, object] = {"pool_pre_ping": True}
+
+        # Enable autocommit only for PostgreSQL database lifecycle statements.
         if autocommit:
             engine_kwargs["isolation_level"] = "AUTOCOMMIT"
 
         # Build a short-lived engine per operation to avoid leaking connection pools across adapter calls.
         engine: AsyncEngine = create_async_engine(self.url(database, search_path=search_path), **engine_kwargs)
 
+        # Ensure the operation-scoped engine is disposed after use.
         try:
 
             # Use explicit connections for autocommit operations and transactions for normal operations.
             connection_context = engine.connect() if autocommit else engine.begin()
+
+            # Yield the selected connection context to the caller.
             async with connection_context as conn:
                 yield conn
-        finally:
 
-            # Dispose the per-operation engine even when SQL execution raises.
+        # Dispose the per-operation engine even when SQL execution raises.
+        finally:
             await engine.dispose()
 
     async def _prepare_organization_database(self, organization: str) -> str:
@@ -106,6 +113,8 @@ class Postgres(Database):
         # Create the organization database from the maintenance database when it is missing.
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
             result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": database_name})
+
+            # Create the database only when PostgreSQL does not already list it.
             if result.scalar_one_or_none() is None:
 
                 # CREATE DATABASE needs a quoted identifier, so compile it with SQLAlchemy's dialect preparer.
@@ -173,9 +182,11 @@ class Postgres(Database):
 
             password_literal = password_processor(role_password)
 
-            # Existing roles are rotated to the newly generated password on redeploy.
+            # Create new roles and rotate existing roles with fresh credentials.
             if result.scalar_one_or_none() is None:
                 await conn.exec_driver_sql(f"CREATE ROLE {role} LOGIN PASSWORD {password_literal}")
+
+            # Rotate credentials for existing runtime roles.
             else:
                 await conn.exec_driver_sql(f"ALTER ROLE {role} LOGIN PASSWORD {password_literal}")
 
@@ -217,6 +228,8 @@ class Postgres(Database):
         # Skip cleanup when the organization database was already removed.
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
             result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": database_name})
+
+            # Stop once PostgreSQL confirms the organization database is absent.
             if result.scalar_one_or_none() is None:
                 return
 
@@ -336,6 +349,8 @@ class Postgres(Database):
             )
 
             tables: list[DatabaseTableData] = []
+
+            # Build one preview payload for each queryable table.
             for table_name in table_names:
 
                 # Load column metadata before reading preview rows so the response is self-describing.
@@ -360,19 +375,27 @@ class Postgres(Database):
                     {"limit": limit},
                 )
                 rows: list[dict[str, DatabaseCellValue]] = []
-                for row in rows_result.mappings().all():
 
-                    # Convert every preview row to JSON-safe values while preserving column names.
+                # Convert every preview row to JSON-safe values while preserving column names.
+                for row in rows_result.mappings().all():
                     values: dict[str, DatabaseCellValue] = {}
+
+                    # Convert each cell while preserving its column name.
                     for key, value in row.items():
 
                         # Table previews must be JSON-safe without leaking driver-specific objects.
                         if value is None or isinstance(value, str | int | float | bool):
                             values[key] = value
+
+                        # Preserve decimals as JSON numeric values.
                         elif isinstance(value, Decimal):
                             values[key] = float(value)
+
+                        # Represent dates, datetimes, and UUIDs as strings.
                         elif isinstance(value, date | datetime | UUID):
                             values[key] = str(value)
+
+                        # Fall back to a stable string representation for unknown values.
                         else:
                             values[key] = str(value)
 

@@ -1,12 +1,12 @@
+import { A } from '@/components/ui/a';
 import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
-import { Li } from '@/components/ui/li';
 import { P } from '@/components/ui/p';
 import { Stack } from '@/components/ui/stack';
-import { Ul } from '@/components/ui/ul';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export const metadata = {
-    lastUpdated: '2026-07-09',
+    lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/self-hosted.tsx',
 };
 
@@ -20,117 +20,111 @@ export const content = (
             operate. You provide Kubernetes, PostgreSQL, S3-compatible object storage, OIDC, and public origins;
             LongLink registers those backends and provisions organization and application resources through them.
         </P>
-        <Heading id="infrastructure" level="h2">
-            Infrastructure
-        </Heading>
-        <P>Provide these systems before you deploy LongLink:</P>
-        <Ul>
-            <Li>A Kubernetes cluster for the control plane and application workloads</Li>
-            <Li>A PostgreSQL server for organization databases and application schemas</Li>
-            <Li>S3-compatible object storage for files and artifacts</Li>
-        </Ul>
-        <Heading id="required-environment-variables" level="h2">
-            Required Environment Variables
+        <P>
+            The LongLink control-plane container is published at{' '}
+            <A href="https://github.com/xLongLink/longlink/pkgs/container/longlink">ghcr.io/xlonglink/longlink</A>.
+        </P>
+        <Heading id="api-environment-variables" level="h2">
+            API Environment Variables
         </Heading>
         <P>
-            Configure the API container with session, database, and OIDC settings. Database, storage, and compute
-            backends are registered through the API after startup.
+            Configure the API container with these environment variables. Required values are marked in the variable
+            column; all other values show their API default.
         </P>
-        <Heading id="api-runtime" level="h3">
-            API Runtime
-        </Heading>
-        <Ul>
-            <Li>
-                <Code>DATABASE_URL</Code> points to the control-plane database.
-            </Li>
-            <Li>
-                <Code>SESSION_KEY</Code> is a random signing secret with at least 32 characters.
-            </Li>
-            <Li>
-                <Code>CONTROL_PLANE_URL</Code> is the public control-plane API origin retained for deployment
-                configuration.
-            </Li>
-            <Li>
-                <Code>SESSION_COOKIE_DOMAIN</Code> can share the session cookie with app gateway subdomains when the
-                gateway and control plane use sibling hosts.
-            </Li>
-            <Li>
-                <Code>DEVELOPMENT</Code> must be unset or <Code>false</Code> in production.
-            </Li>
-            <Li>
-                <Code>DATABASE_SSLMODE</Code> defaults to <Code>require</Code> for PostgreSQL backend connections.
-            </Li>
-        </Ul>
-        <Heading id="oidc" level="h3">
-            OIDC
-        </Heading>
-        <Ul>
-            <Li>
-                <Code>OIDC_CLIENT_ID</Code> identifies the LongLink API client.
-            </Li>
-            <Li>
-                <Code>OIDC_CLIENT_SECRET</Code> stores the OIDC client secret.
-            </Li>
-            <Li>
-                <Code>OIDC_ISSUER</Code> must be an HTTPS issuer URL outside development.
-            </Li>
-            <Li>
-                <Code>OIDC_REDIRECT_URI</Code> must be an HTTPS callback URL outside development.
-            </Li>
-        </Ul>
-        <Heading id="cors" level="h3">
-            CORS
-        </Heading>
-        <Ul>
-            <Li>
-                <Code>CORS_ORIGINS</Code> is optional and should only include trusted frontend origins when the web
-                bundle is served from a separate origin.
-            </Li>
-        </Ul>
-        <Heading id="database" level="h3">
-            Database
-        </Heading>
-        <P>
-            Register database backends after startup. Their connection details live in the control plane database, not
-            in API env vars.
-        </P>
-        <Heading id="storage" level="h3">
-            Storage
-        </Heading>
-        <P>
-            Register storage backends after startup. The API uses the control-plane endpoint for bucket provisioning and
-            passes the runtime endpoint and scoped credentials to application pods through separate LongLink-managed
-            storage environment variables.
-        </P>
-        <Heading id="compute" level="h3">
-            Compute
-        </Heading>
-        <P>
-            Register dedicated compute clusters after startup. The API stores the registered kubeconfig, gateway host,
-            optional LoadBalancer IP, and gateway TLS certificate material, installs a per-cluster Envoy gateway, and
-            keeps gateway routes synchronized with managed application services.
-        </P>
-        <P>
-            Production compute registrations require gateway TLS certificate material. If the gateway host and control
-            plane host differ, <Code>SESSION_COOKIE_DOMAIN</Code> must cover both hosts so browser sessions reach the
-            authorization endpoint.
-        </P>
-        <Heading id="startup-validation" level="h2">
-            Startup Validation
-        </Heading>
-        <P>
-            When development mode is off, the API fails startup for placeholder session keys, short session keys,
-            non-HTTPS control-plane URLs, or non-HTTPS OIDC issuer and redirect URLs. Keep local HTTP values only in
-            development mode.
-        </P>
-        <Heading id="deployment-model" level="h2">
-            Deployment Model
-        </Heading>
-        <P>The control plane can run outside the compute clusters or inside one of the clusters you operate.</P>
-        <P>
-            Runtime traffic reaches the API proxy first. After access checks pass, the API forwards the request to the
-            selected LongLink gateway with a registry secret; the gateway rejects direct unauthenticated traffic and
-            forwards approved requests to internal ClusterIP services.
-        </P>
+        <div className="overflow-hidden rounded-md border">
+            <Table>
+                <TableHeader className="bg-muted/50">
+                    <TableRow>
+                        <TableHead className="bg-muted/50">Variable</TableHead>
+                        <TableHead className="bg-muted/50">Purpose</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow>
+                        <TableCell className="space-y-2">
+                            <div>
+                                <Code>SESSION_KEY</Code>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Required</div>
+                        </TableCell>
+                        <TableCell className="whitespace-normal text-muted-foreground">
+                            Secret key used to sign LongLink browser sessions. Use a high-entropy deployment secret;
+                            rotating it invalidates existing sessions.
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="space-y-2">
+                            <div>
+                                <Code>DATABASE_URL</Code>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Required</div>
+                        </TableCell>
+                        <TableCell className="whitespace-normal text-muted-foreground">
+                            Control-plane database URL used by the API and Alembic migrations.
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="space-y-2">
+                            <div>
+                                <Code>DATABASE_SSLMODE</Code>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                                Default: <Code>require</Code>
+                            </div>
+                        </TableCell>
+                        <TableCell className="whitespace-normal text-muted-foreground">
+                            PostgreSQL SSL mode used by registered database backends when the API provisions
+                            organization databases and application schemas.
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="space-y-2">
+                            <div>
+                                <Code>OIDC_CLIENT_ID</Code>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Required</div>
+                        </TableCell>
+                        <TableCell className="whitespace-normal text-muted-foreground">
+                            Client ID for the LongLink API client in the OIDC provider.
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="space-y-2">
+                            <div>
+                                <Code>OIDC_CLIENT_SECRET</Code>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Required</div>
+                        </TableCell>
+                        <TableCell className="whitespace-normal text-muted-foreground">
+                            Secret for the LongLink API client in the OIDC provider. Store it as a deployment secret,
+                            not in the image.
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="space-y-2">
+                            <div>
+                                <Code>OIDC_ISSUER</Code>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Required</div>
+                        </TableCell>
+                        <TableCell className="whitespace-normal text-muted-foreground">
+                            Issuer URL for the OIDC realm or tenant used for login. Must be HTTPS outside development.
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="space-y-2">
+                            <div>
+                                <Code>OIDC_REDIRECT_URI</Code>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Required</div>
+                        </TableCell>
+                        <TableCell className="whitespace-normal text-muted-foreground">
+                            Callback URL registered with the OIDC provider for LongLink login. Must be HTTPS outside
+                            development.
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+        </div>
     </Stack>
 );

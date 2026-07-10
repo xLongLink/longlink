@@ -106,6 +106,7 @@ function isMenuSubSectionElement(child: React.ReactNode): child is React.ReactEl
 /** Parses nested menu sections and subsection content from children. */
 function parseMenuSections(children?: React.ReactNode): ResolvedMenuSection[] {
     return React.Children.toArray(children).flatMap((child) => {
+        // Ignore non-section children.
         if (!isMenuSectionElement(child)) {
             return [];
         }
@@ -135,6 +136,7 @@ function parseMenuSections(children?: React.ReactNode): ResolvedMenuSection[] {
 function getInitialValue(sections: ResolvedMenuSection[]): string | undefined {
     const firstSection = sections.find((section) => !section.disabled);
 
+    // Return no default when every section is disabled.
     if (!firstSection) {
         return undefined;
     }
@@ -146,16 +148,19 @@ function getInitialValue(sections: ResolvedMenuSection[]): string | undefined {
 
 /** Reads the current browser hash without the leading marker. */
 function getCurrentHashValue(): string | undefined {
+    // Skip browser hash reads during SSR.
     if (typeof window === 'undefined') {
         return undefined;
     }
 
     const hash = window.location.hash.replace(/^#/, '');
 
+    // Treat an empty hash as absent.
     if (!hash) {
         return undefined;
     }
 
+    // Decode URL-escaped hash values when possible.
     try {
         return decodeURIComponent(hash);
     } catch {
@@ -165,17 +170,21 @@ function getCurrentHashValue(): string | undefined {
 
 /** Returns a selectable section or subsection value matching the candidate. */
 function getSelectableMenuValue(sections: ResolvedMenuSection[], candidate?: string): string | undefined {
+    // Ignore missing candidates.
     if (!candidate) {
         return undefined;
     }
 
+    // Check roots and nested items for a match.
     for (const section of sections) {
+        // Match enabled root sections directly.
         if (section.value === candidate) {
             return section.disabled ? undefined : section.value;
         }
 
         const subSection = section.subSections.find((item) => item.value === candidate);
 
+        // Match enabled nested items only under enabled roots.
         if (subSection) {
             return section.disabled || subSection.disabled ? undefined : subSection.value;
         }
@@ -197,12 +206,14 @@ function getInitialActiveValue(
 
 /** Replaces the current browser hash without adding a history entry. */
 function replaceLocationHash(value: string) {
+    // Skip hash updates during SSR.
     if (typeof window === 'undefined') {
         return;
     }
 
     const nextHash = `#${encodeURIComponent(value)}`;
 
+    // Avoid rewriting an unchanged hash.
     if (window.location.hash === nextHash) {
         return;
     }
@@ -225,10 +236,12 @@ function findActiveSection(sections: ResolvedMenuSection[], value: string): Reso
 function getActiveContent(sections: ResolvedMenuSection[], value: string): React.ReactNode[] {
     const activeSection = findActiveSection(sections, value);
 
+    // Return empty content when nothing owns the value.
     if (!activeSection) {
         return [];
     }
 
+    // Root selections show root content.
     if (activeSection.value === value) {
         return activeSection.content;
     }
@@ -270,6 +283,7 @@ export function Menu({
     const activeContent = activeValue ? getActiveContent(sections, activeValue) : [];
 
     const [expandedSectionIds, setExpandedSectionIds] = React.useState<Set<string>>(() => {
+        // Start collapsed when no item is active.
         if (!activeValue) {
             return new Set();
         }
@@ -280,21 +294,25 @@ export function Menu({
     });
 
     React.useEffect(() => {
+        // Let controlled callers own value updates.
         if (isControlled) {
             return;
         }
 
+        // Restore a default when nothing is selected.
         if (!internalValue) {
             setInternalValue(getInitialActiveValue(sections, defaultValue, hashNavigation));
             return;
         }
 
+        // Replace values that no longer exist.
         if (!getSelectableMenuValue(sections, internalValue)) {
             setInternalValue(getInitialActiveValue(sections, defaultValue, hashNavigation));
         }
     }, [defaultValue, hashNavigation, internalValue, isControlled, sections]);
 
     React.useEffect(() => {
+        // Only sync hash state in the browser.
         if (!hashNavigation || typeof window === 'undefined') {
             return;
         }
@@ -303,11 +321,14 @@ export function Menu({
         function syncValueFromHash() {
             const nextValue = getSelectableMenuValue(sections, getCurrentHashValue());
 
+            // Apply valid hash selections.
             if (nextValue) {
+                // Avoid duplicate change notifications.
                 if (nextValue === activeValue) {
                     return;
                 }
 
+                // Update local state for uncontrolled menus.
                 if (!isControlled) {
                     setInternalValue(nextValue);
                 }
@@ -316,6 +337,7 @@ export function Menu({
                 return;
             }
 
+            // Write the active value when the hash is invalid.
             if (activeValue) {
                 replaceLocationHash(activeValue);
             }
@@ -328,17 +350,20 @@ export function Menu({
     }, [activeValue, hashNavigation, isControlled, onValueChange, sections]);
 
     React.useEffect(() => {
+        // Nothing to expand without an active value.
         if (!activeValue) {
             return;
         }
 
         const activeSection = findActiveSection(sections, activeValue);
 
+        // Expand only sections with nested items.
         if (!activeSection || !activeSection.subSections.length) {
             return;
         }
 
         setExpandedSectionIds((previous) => {
+            // Preserve the existing set when already expanded.
             if (previous.has(activeSection.value)) {
                 return previous;
             }
@@ -351,10 +376,12 @@ export function Menu({
 
     /** Commits the next active value. */
     function commitValue(nextValue: string) {
+        // Update local state for uncontrolled menus.
         if (!isControlled) {
             setInternalValue(nextValue);
         }
 
+        // Keep the URL hash aligned with selection.
         if (hashNavigation) {
             replaceLocationHash(nextValue);
         }
@@ -368,6 +395,7 @@ export function Menu({
             event.currentTarget.querySelectorAll<HTMLElement>('[data-menu-item="true"]:not([disabled])')
         );
 
+        // Ignore keyboard navigation when no items are focusable.
         if (!items.length) {
             return;
         }
@@ -381,6 +409,7 @@ export function Menu({
             target?.focus();
         };
 
+        // Handle roving focus keys.
         if (event.key === 'ArrowDown') {
             event.preventDefault();
             moveTo(Math.min(currentIndex + 1, items.length - 1));
@@ -399,12 +428,14 @@ export function Menu({
     /** Toggles expanded state for a root section. */
     function toggleExpanded(sectionValue: string, options: { preserveIfExpanded?: boolean } = {}) {
         setExpandedSectionIds((previous) => {
+            // Leave expanded sections open when requested.
             if (options.preserveIfExpanded && previous.has(sectionValue)) {
                 return previous;
             }
 
             const next = new Set(previous);
 
+            // Toggle the requested section id.
             if (next.has(sectionValue)) {
                 next.delete(sectionValue);
             } else {
@@ -441,6 +472,7 @@ export function Menu({
                                     onClick={() => {
                                         commitValue(section.value);
 
+                                        // Open nested navigation when present.
                                         if (hasSubSections) {
                                             toggleExpanded(section.value, { preserveIfExpanded: !sectionIsActive });
                                         }

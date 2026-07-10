@@ -1,6 +1,5 @@
 from types import SimpleNamespace
 from datetime import UTC, datetime, timedelta
-from src.environments import env
 from src.models.operations import OperationKind
 from src.database.session import get_session
 from src.database.models.operations import Operation
@@ -281,7 +280,7 @@ async def test_operations_service_resets_active_operations(monkeypatch) -> None:
     """Reset interrupted active operations during startup."""
 
     # Arrange
-    monkeypatch.setattr(env, "OPERATION_LEASE_SECONDS", -1)
+    monkeypatch.setattr(operations, "OPERATION_LEASE_SECONDS", -1)
     user = await db.users.upsert(oidc="ops-oidc-4", email="ops4@longlink.dev", name="Ops User 4", avatar="")
     location = await db.locations.create("local", "Local testing", user, "CH")
     organization = await db.organizations.create("acme", "acme", location.id, user)
@@ -314,7 +313,7 @@ async def test_operations_service_reset_active_keeps_unexpired_leases(monkeypatc
     """Keep active operations with healthy leases assigned."""
 
     # Arrange
-    monkeypatch.setattr(env, "OPERATION_LEASE_SECONDS", 60)
+    monkeypatch.setattr(operations, "OPERATION_LEASE_SECONDS", 60)
     owner = users[0]
     operation = await db.operations.create(OperationKind.organization_delete, step="remove", user=owner)
     claimed = await db.operations.claim(operation.id)

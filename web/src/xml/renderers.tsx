@@ -28,6 +28,7 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
     const [setupError, setSetupError] = useState<unknown>(null);
     const [version, setVersion] = useState(0);
 
+    // Reset translations when the active locale changes.
     if (runtimeCtx.locale !== undefined && runtimeCtx.locale !== runtimeLocale) {
         runtimeCtx.translations = undefined;
     }
@@ -36,6 +37,8 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
     runtimeCtx.locale = runtimeLocale;
 
     let setupValidationError: Error | null = null;
+
+    // Validate setup nodes before effects run.
     try {
         validateSetupNodes(ast);
     } catch (error: unknown) {
@@ -48,17 +51,21 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
 
         /** Subscribes the renderer to every Valtio-backed state slot in the current page context. */
         function subscribeToStateValues() {
+            // Remove previous subscriptions before rebuilding them.
             for (const unsubscribe of unsubscribers) {
                 unsubscribe();
             }
 
             unsubscribers = [];
 
+            // Subscribe to reactive state values in the context.
             for (const value of Object.values(runtimeCtx.values)) {
+                // Skip non-reactive context values.
                 if (!value || typeof value !== 'object' || getVersion(value) === undefined) continue;
 
                 unsubscribers.push(
                     subscribe(value, () => {
+                        // Refresh only while this renderer is mounted.
                         if (mounted) setVersion((current) => current + 1);
                     })
                 );
@@ -77,6 +84,7 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
                 cache: 'no-cache',
             })
                 .catch((error: unknown) => {
+                    // Let missing English catalogs fail visibly.
                     if (locale === 'en') {
                         throw error;
                     }
@@ -87,12 +95,14 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
                     });
                 })
                 .then((translations) => {
+                    // Ignore translations after cleanup.
                     if (!mounted) return;
 
                     runtimeCtx.translations = translations;
                     setVersion((current) => current + 1);
                 })
                 .catch((error: unknown) => {
+                    // Ignore translation errors after cleanup.
                     if (!mounted) return;
 
                     setSetupError(error instanceof Error ? error : new Error('Failed to load XML translations'));
@@ -103,9 +113,11 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
         runtimeCtx.invalidate = async (ids) => {
             const list = Array.isArray(ids) ? ids : [ids];
 
+            // Refresh each requested setup value.
             for (const id of list) {
                 const setup = runtimeCtx.setups[id];
 
+                // Skip unknown invalidation targets.
                 if (!setup) continue;
 
                 delete runtimeCtx.values[id];
@@ -120,23 +132,27 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
             await setupContext(ast, runtimeCtx, baseUrl);
             subscribeToStateValues();
 
+            // Publish initialized AST only while mounted.
             if (mounted) {
                 setInitializedAst(ast);
                 setVersion((current) => current + 1);
             }
         })().catch((error) => {
+            // Report setup failures only while mounted.
             if (mounted) setSetupError(error);
         });
 
         return () => {
             mounted = false;
 
+            // Remove state subscriptions on unmount.
             for (const unsubscribe of unsubscribers) {
                 unsubscribe();
             }
         };
     }, [ast, runtimeCtx, baseUrl, waitsForTranslations, runtimeLocale]);
 
+    // Show setup failures before rendering XML nodes.
     if (setupValidationError || setupError) {
         const visibleError = setupValidationError ?? setupError;
 
@@ -149,7 +165,10 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
         );
     }
 
+    // Wait for setup before rendering dependent nodes.
     if (requiresSetup && initializedAst !== ast) return null;
+
+    // Wait for translations before localized nodes render.
     if (waitsForTranslations && runtimeCtx.translations === undefined) return null;
 
     return (
@@ -163,8 +182,12 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
 
 /** Returns whether the AST contains localized copy. */
 function hasTranslationNodes(nodes: ASTNode[]): boolean {
+    // Walk the tree until localized copy is found.
     for (const node of nodes) {
+        // Detect localized attributes on this node.
         if (node.params?.i18n) return true;
+
+        // Search nested nodes for localized copy.
         if (hasTranslationNodes(node.children ?? [])) return true;
     }
 
@@ -173,8 +196,12 @@ function hasTranslationNodes(nodes: ASTNode[]): boolean {
 
 /** Returns whether the AST contains setup-only runtime declarations. */
 function hasSetupNodes(nodes: ASTNode[]): boolean {
+    // Walk the tree until setup nodes are found.
     for (const node of nodes) {
+        // Detect state and query setup declarations.
         if (node.name === 'State' || node.name === 'Query') return true;
+
+        // Search nested nodes for setup declarations.
         if (hasSetupNodes(node.children ?? [])) return true;
     }
 

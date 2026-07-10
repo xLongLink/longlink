@@ -1,12 +1,14 @@
 import { Heading } from '@/components/ui/heading';
-import { Li } from '@/components/ui/li';
 import { P } from '@/components/ui/p';
 import { Stack } from '@/components/ui/stack';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Ul } from '@/components/ui/ul';
+import { Wordmark } from '@/components/Wordmark';
 import {
     Activity,
+    AppWindow,
+    ArrowLeftRight,
     Building2,
+    Code2,
     Database,
     HardDrive,
     KeyRound,
@@ -16,7 +18,9 @@ import {
     PanelTop,
     Rocket,
     Route,
+    ServerCog,
     ShieldCheck,
+    UserRound,
 } from 'lucide-react';
 
 const sharedFoundationItems = [
@@ -51,6 +55,11 @@ const sharedFoundationItems = [
         icon: PanelTop,
     },
     {
+        name: 'Business logic',
+        description: 'Application-owned rules, workflows, validation, APIs, and pages.',
+        icon: Code2,
+    },
+    {
         name: 'Databases',
         description: 'Organization databases, shared schemas, and application schemas.',
         icon: Database,
@@ -82,8 +91,80 @@ const sharedFoundationItems = [
     },
 ] as const;
 
+/** Renders the production request flow diagram. */
+function ControlPlaneFlowDiagram() {
+    return (
+        <div className="rounded-md border bg-muted/10 p-4">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_3rem_minmax(0,1fr)_3rem_minmax(0,1fr)] lg:items-center">
+                <div className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-md border bg-muted/40 px-3 py-4 text-center">
+                    <div className="flex size-9 items-center justify-center text-muted-foreground">
+                        <UserRound aria-hidden={true} className="size-5" />
+                    </div>
+                    <div>
+                        <div className="font-medium text-foreground">User</div>
+                        <div className="mt-1 text-sm text-muted-foreground">Browser</div>
+                    </div>
+                    <div className="flex items-center justify-center gap-3 pt-1 text-muted-foreground">
+                        <Languages aria-label="Languages" className="size-4" />
+                        <Palette aria-label="Theming" className="size-4" />
+                        <PanelTop aria-label="App shell" className="size-4" />
+                    </div>
+                </div>
+                <div className="flex items-center justify-center text-muted-foreground">
+                    <ArrowLeftRight aria-hidden={true} className="size-5" />
+                </div>
+                <div className="flex min-h-32 flex-col items-center justify-center rounded-md border bg-muted/40 p-4 text-center">
+                    <div className="mb-4 flex flex-col items-center gap-2">
+                        <div className="flex size-9 items-center justify-center text-muted-foreground">
+                            <ServerCog aria-hidden={true} className="size-5" />
+                        </div>
+                        <div>
+                            <div className="font-medium text-foreground">
+                                <Wordmark />
+                            </div>
+                            <div className="text-sm text-muted-foreground">Control Plane</div>
+                        </div>
+                    </div>
+                    <div className="grid gap-2 text-muted-foreground">
+                        <div className="flex items-center justify-center gap-3">
+                            <KeyRound aria-label="Authentication and identity" className="size-4" />
+                            <Building2 aria-label="Organizations and permissions" className="size-4" />
+                        </div>
+                        <div className="flex items-center justify-center gap-3">
+                            <ShieldCheck aria-label="Policies and access control" className="size-4" />
+                            <Route aria-label="Routing and access control" className="size-4" />
+                            <Rocket aria-label="Deployment" className="size-4" />
+                        </div>
+                        <div className="flex items-center justify-center gap-3">
+                            <Logs aria-label="Logs" className="size-4" />
+                            <Activity aria-label="Logs, status, and operations" className="size-4" />
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center justify-center text-muted-foreground">
+                    <ArrowLeftRight aria-hidden={true} className="size-5" />
+                </div>
+                <div className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-md border bg-muted/40 px-3 py-4 text-center">
+                    <div className="flex size-9 items-center justify-center text-muted-foreground">
+                        <AppWindow aria-hidden={true} className="size-5" />
+                    </div>
+                    <div>
+                        <div className="font-medium text-foreground">Application</div>
+                        <div className="mt-1 text-sm text-muted-foreground">Runtime</div>
+                    </div>
+                    <div className="flex items-center justify-center gap-3 pt-1 text-muted-foreground">
+                        <Code2 aria-label="Business logic" className="size-4" />
+                        <Database aria-label="Database logic" className="size-4" />
+                        <HardDrive aria-label="File storage" className="size-4" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export const metadata = {
-    lastUpdated: '2026-07-09',
+    lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/index.tsx',
 };
 
@@ -107,6 +188,10 @@ export const content = (
             user and forwards approved requests with trusted runtime headers; the gateway accepts only authenticated
             proxy traffic and routes it to the internal application service.
         </P>
+        <Heading id="how-it-works" level="h2">
+            How It Works
+        </Heading>
+        <ControlPlaneFlowDiagram />
         <Heading id="shared-foundation" level="h2">
             Shared Foundation
         </Heading>
@@ -138,30 +223,5 @@ export const content = (
                 </TableBody>
             </Table>
         </div>
-        <Heading id="infrastructure" level="h2">
-            Infrastructure
-        </Heading>
-        <P>
-            The control plane connects to location-scoped infrastructure registries instead of hard-coding one provider:
-        </P>
-        <Ul>
-            <Li>Compute registries manage Kubernetes namespaces, workloads, services, and the per-cluster gateway.</Li>
-            <Li>Database registries provision organization databases, the shared schema, and application schemas.</Li>
-            <Li>Storage registries provision S3-compatible organization and application buckets.</Li>
-            <Li>OIDC identity providers supply login, sessions, and current-user context.</Li>
-        </Ul>
-        <Heading id="request-flow-permissioning" level="h2">
-            Request Flow &amp; Permissioning
-        </Heading>
-        <P>
-            Users open application routes from the LongLink web shell. Runtime requests reach the API proxy first, where
-            LongLink resolves the application, checks organization and application access, enforces method-level runtime
-            roles, verifies that the application is running, and attaches trusted identity headers.
-        </P>
-        <P>
-            Approved requests are forwarded to the selected compute gateway with a registry secret. The gateway rejects
-            direct traffic that does not carry that secret, removes the secret before the request reaches application
-            code, rewrites the path, and forwards the request to the internal application service.
-        </P>
     </Stack>
 );

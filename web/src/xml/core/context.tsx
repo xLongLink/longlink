@@ -25,6 +25,7 @@ export function ContextProvider({ value, children }: { value: ExecutionContext; 
 export function useXmlContext(): { ctx: ExecutionContext } {
     const runtime = useReactContext(Context);
 
+    // Fail fast when XML runtime state is unavailable.
     if (!runtime) {
         throw new Error('useXmlContext must be used inside a rendered XML component');
     }
@@ -37,6 +38,7 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
     const setups = ctx.setups;
 
     async function walk(nodes: ASTNode[]): Promise<void> {
+        // Visit setup declarations in document order.
         for (const node of nodes) {
             // If we reach a "For" component, we stop the walk since the content of "For" has a different context.
             if (node.name === 'For') continue;
@@ -51,18 +53,22 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
 
                 // Preserve local state across renderer refreshes; invalidation deletes the slot before setup runs.
                 setups[id] = () => {
+                    // Only seed state that is not already present.
                     if (!(id in ctx.values)) {
                         // Seed a proxied object from all attributes except `id`.
                         const initialValue: Record<string, unknown> = {};
 
+                        // Copy declared attributes into the initial state object.
                         for (const [key, rawValue] of entries) {
                             const input = rawValue.trim();
 
+                            // Preserve empty literal attributes.
                             if (input === '') {
                                 initialValue[key] = '';
                                 continue;
                             }
 
+                            // Prefer JSON literals before evaluating expressions.
                             try {
                                 initialValue[key] = JSON.parse(input);
                                 continue;
@@ -77,6 +83,7 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
                 await setups[id]();
             }
 
+            // Seed query data before rendering the component tree.
             if (node.name === 'Query') {
                 validateSetupNode(node);
 
@@ -109,9 +116,11 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
 
 /** Validates setup-only runtime declarations before they are initialized. */
 export function validateSetupNodes(nodes: ASTNode[]): void {
+    // Validate each declaration before checking descendants.
     for (const node of nodes) {
         validateSetupNode(node);
 
+        // Skip nested loop content because it has its own scope.
         if (node.name !== 'For') {
             validateSetupNodes(node.children ?? []);
         }
@@ -125,31 +134,50 @@ function validateSetupNode(node: ASTNode): void {
         const params = node.params ?? {};
         const unsupported = Object.keys(params).filter((name) => name !== 'name' && name !== 'icon');
 
+        // Reject unknown root metadata.
         if (unsupported.length) {
             throw new Error(`Unsupported longlink attributes: ${unsupported.join(', ')}`);
         }
     }
 
+    // Validate state declarations.
     if (node.name === 'State') {
+        // Require a declared state key.
         if (!node.params?.id) throw new Error('State requires a string id');
+
+        // Keep state keys static.
         if (!isText(node.params.id)) throw new Error('State id must be literal text');
+
+        // Prevent unsafe state property names.
         if (!node.params.id.trim() || !isSafePropertyName(node.params.id.trim())) {
             throw new Error('State id must be a safe property name');
         }
 
         const unsafeAttributes = Object.keys(node.params).filter((name) => name !== 'id' && !isSafePropertyName(name));
+        // Reject unsafe state attribute names.
         if (unsafeAttributes.length) {
             throw new Error(`State attributes must be safe property names: ${unsafeAttributes.join(', ')}`);
         }
 
+        // Keep State declarations leaf-only.
         if ((node.children ?? []).length > 0) throw new Error('State cannot have children');
     }
 
+    // Validate query declarations.
     if (node.name === 'Query') {
+        // Require a declared query key.
         if (!node.params?.id) throw new Error('Query requires a string id');
+
+        // Require a query source path.
         if (!node.params?.path) throw new Error('Query requires a string path');
+
+        // Keep Query declarations leaf-only.
         if ((node.children ?? []).length > 0) throw new Error('Query cannot have children');
+
+        // Keep query keys static.
         if (!isText(node.params.id)) throw new Error('Query id must be literal text');
+
+        // Prevent unsafe query property names.
         if (!node.params.id.trim() || !isSafePropertyName(node.params.id.trim())) {
             throw new Error('Query id must be a safe property name');
         }

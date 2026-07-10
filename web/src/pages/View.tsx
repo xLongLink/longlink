@@ -123,6 +123,7 @@ export function findPageRouteMatch(pages: MetadataPage[] | undefined, path: stri
     const routePath = normalizePath(path);
     const [match] = matchRoutes(routes, `/${routePath}`) ?? [];
 
+    // Stop when no metadata route matches the path.
     if (!match) return null;
 
     return {
@@ -136,6 +137,7 @@ export function findPageRouteMatch(pages: MetadataPage[] | undefined, path: stri
 
 /** Finds the preferred page for one tab, preferring static pages over dynamic detail pages. */
 export function findPageTabMatch(pages: MetadataPage[] | undefined, tab: string | null): MetadataPage | undefined {
+    // Skip tab lookup when no tab is selected.
     if (!tab) {
         return undefined;
     }
@@ -155,6 +157,7 @@ function resolveApplicationHref(routePath: string, organization?: string, applic
               ? generatePath('/orgs/:organization', { organization })
               : '';
 
+    // Use the application root for empty routes.
     if (!normalizedRoutePath) {
         return basePath || '/';
     }
@@ -181,11 +184,14 @@ function resolveTemplate(template: string, params: Record<string, string | undef
 function createPageRuntimeContext(runtimeContext?: ExecutionContext): ExecutionContext {
     const pageRuntimeContext = createXmlContext();
 
+    // Start with an empty context when none is supplied.
     if (!runtimeContext) {
         return pageRuntimeContext;
     }
 
+    // Copy only caller-provided shared context values.
     for (const [key, value] of Object.entries(runtimeContext)) {
+        // Keep page-owned runtime slots isolated.
         if (key === 'invalidate' || key === 'setups' || key === 'values') {
             continue;
         }
@@ -229,6 +235,7 @@ function createPageState(
 
 /** Parses page XML once so route rendering does not throw on malformed application XML. */
 function parsePageContent(content: string): PageParseResult {
+    // Parse XML defensively so render can show errors.
     try {
         return { ast: fromXml(content), parseError: null };
     } catch (unknownError) {
@@ -283,6 +290,7 @@ export default function View({
     let activeRoutePath = normalizedRoutePath;
     let activeRouteParams = emptyRouteParams;
 
+    // Use route params only when the matched page is active.
     if (activeRouteMatch && activeRouteMatch.page === activePage) {
         activeRoutePath = activeRouteMatch.path;
         activeRouteParams = activeRouteMatch.params;
@@ -314,6 +322,7 @@ export default function View({
 
     // Make the first page explicit in the URL when the app loads without a selected view.
     useEffect(() => {
+        // Skip redirects when the view is already selected.
         if (!metadataDocument?.pages?.length || selectedTab || normalizedRoutePath) {
             return;
         }
@@ -321,6 +330,7 @@ export default function View({
         const firstPage = metadataDocument.pages[0];
         const firstPageRoute = pageRoutePattern(firstPage);
 
+        // Prefer route navigation for static metadata routes.
         if (firstPage.route != null && firstPageRoute && !pageRouteIsDynamic(firstPage)) {
             navigate(resolveApplicationHref(firstPageRoute, organization, application), { replace: true });
             return;
@@ -343,6 +353,7 @@ export default function View({
             }
         >();
 
+        // Build one visible navigation target per tab.
         for (const page of metadataDocument?.pages ?? []) {
             const label = page.name?.trim() || startCase(page.tab);
             const iconName = page.icon?.trim();
@@ -382,6 +393,7 @@ export default function View({
 
     /* Load each XML page once for the active route instance. */
     useEffect(() => {
+        // Skip page loading until an XML page can render.
         if (
             shouldShowLogs ||
             applicationIsLoading ||
@@ -395,6 +407,7 @@ export default function View({
         const pageKey = `${pageCacheKey}\u0000${activePageStateKey}`;
         const existingPageState = pageStatesRef.current[activePageStateKey];
 
+        // Reuse completed page state for matching route instances.
         if (
             existingPageState?.cacheKey === pageCacheKey &&
             existingPageState.path === activePagePath &&
@@ -406,6 +419,7 @@ export default function View({
             return;
         }
 
+        // Avoid duplicate requests for the same page state.
         if (
             existingPageState?.cacheKey === pageCacheKey &&
             existingPageState.path === activePagePath &&
@@ -467,12 +481,14 @@ export default function View({
             signal: controller.signal,
         })
             .then((content) => {
+                // Ignore responses after the effect is cleaned up.
                 if (!controller.signal.aborted) {
                     const { ast, parseError } = parsePageContent(content);
 
                     setPageStates((current) => {
                         const currentPageState = current[activePageStateKey];
 
+                        // Keep stale responses from replacing newer page state.
                         if (
                             currentPageState?.cacheKey !== pageCacheKey ||
                             currentPageState.path !== activePagePath ||
@@ -500,6 +516,7 @@ export default function View({
                 }
             })
             .catch((fetchError: unknown) => {
+                // Ignore aborts from route changes or cleanup.
                 if (controller.signal.aborted) {
                     return;
                 }
@@ -507,6 +524,7 @@ export default function View({
                 setPageStates((current) => {
                     const currentPageState = current[activePageStateKey];
 
+                    // Keep stale failures from replacing newer page state.
                     if (
                         currentPageState?.cacheKey !== pageCacheKey ||
                         currentPageState.path !== activePagePath ||
@@ -553,6 +571,7 @@ export default function View({
 
     // Fetch logs when the current user is allowed to inspect an unavailable application runtime.
     useEffect(() => {
+        // Clear logs when logs are not visible.
         if (!shouldShowLogs || !applicationId) {
             setLogsState(emptyLogsState);
             return;
@@ -564,11 +583,13 @@ export default function View({
 
         void fetchApiText(`/api/applications/${applicationId}/logs`, { signal: controller.signal })
             .then((content) => {
+                // Ignore log responses after cleanup.
                 if (!controller.signal.aborted) {
                     setLogsState({ ...emptyLogsState, content });
                 }
             })
             .catch((fetchError: unknown) => {
+                // Ignore aborts from logs cleanup.
                 if (controller.signal.aborted) {
                     return;
                 }
@@ -582,6 +603,7 @@ export default function View({
         return () => controller.abort();
     }, [applicationId, shouldShowLogs]);
 
+    // Show deployment loading before rendering runtime pages.
     if ((applicationIsLoading || metadataLoading) && !shouldShowLogs) {
         return (
             <XML tabs={tabs}>
@@ -592,6 +614,7 @@ export default function View({
         );
     }
 
+    // Show runtime logs instead of unavailable page content.
     if (shouldShowLogs) {
         return (
             <XML tabs={tabs}>
@@ -607,6 +630,7 @@ export default function View({
         );
     }
 
+    // Surface metadata loading failures in the shell.
     if (error) {
         return (
             <XML tabs={tabs}>
@@ -622,11 +646,13 @@ export default function View({
         );
     }
 
+    // Delegate unknown app routes to the shared 404 page.
     if (isNotFound) {
         return <NotFound />;
     }
 
     const renderedPagePanels = Object.values(pageStates).map((pageState) => {
+        // Render only valid page panels from the current cache.
         if (!pageState.ast || pageState.cacheKey !== pageCacheKey || pageState.error || pageState.parseError) {
             return null;
         }
@@ -649,6 +675,7 @@ export default function View({
 
     let activeFallback: ReactNode = null;
 
+    // Choose the visible fallback for the active page.
     if (!activePage) {
         activeFallback = (
             <ErrorState
@@ -707,6 +734,7 @@ export default function View({
 function LoadingState({ status }: LoadingStateProps) {
     const { t } = useTranslation();
 
+    // Hide the loading shell when status is unresolved.
     if (status === 'loading') return null;
 
     return (

@@ -204,7 +204,7 @@ async def test_operation_claim_sets_lease_token_and_expiry(monkeypatch: pytest.M
         "src.database.services.operations.secrets.token_urlsafe",
         lambda length: "lease-token",
     )
-    monkeypatch.setattr("src.database.services.operations.env.OPERATION_LEASE_SECONDS", 60)
+    monkeypatch.setattr("src.database.services.operations.OPERATION_LEASE_SECONDS", 60)
 
     claimed = await operation_routes.operations.claim(operation.id)
 
@@ -347,7 +347,7 @@ async def test_application_and_organization_delete_handlers_remove_runtime(monke
         return completed
 
     monkeypatch.setattr(application_operations.applications, "get_by_id", fake_get_application)
-    monkeypatch.setattr(application_operations.organizations, "get", fake_get_organization)
+    monkeypatch.setattr(application_operations.organizations, "get_record", fake_get_organization)
     monkeypatch.setattr(
         application_operations.resources,
         "remove_application_runtime",

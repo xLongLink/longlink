@@ -28,7 +28,10 @@ class Element:
     def content(self) -> str:
         """Return the raw XML payload."""
 
+        # Cache disk content after the first read.
         if self._content is None:
+
+            # Read XML as text so parse errors can report the original content.
             with self.path.open("r", encoding="utf-8") as handler:
                 self._content = handler.read()
         return self._content
@@ -40,11 +43,13 @@ class Element:
         schema_doc = etree.parse(str(self._schema_file_path()), parser)
         schema = etree.XMLSchema(schema_doc)
 
+        # Parse user XML with external entities and network access disabled.
         try:
             xml_doc = etree.XML(self.content.encode("utf-8"), parser)
         except etree.XMLSyntaxError as error:
             raise ValueError(f"XML syntax is invalid: {error}") from error
 
+        # Surface schema validation details instead of a generic lxml failure.
         if not schema.validate(xml_doc):
             error_log: Any = schema.error_log
             messages = [f"Line {error.line}: {error.message}" for error in error_log]
@@ -53,9 +58,11 @@ class Element:
     def _schema_file_path(self) -> Path:
         """Resolve the XSD file path for validation."""
 
+        # In-memory XML can opt out of schema validation.
         if self.schema_path is None:
             raise ValueError("No XSD schema path configured")
 
+        # Absolute schema paths are already resolved by the caller.
         if self.schema_path.is_absolute():
             return self.schema_path
 

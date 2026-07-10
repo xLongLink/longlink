@@ -203,6 +203,7 @@ export default function Settings({
                 queryKey: apiQueryKey(`/api/applications/${variables.applicationId}/members`),
             });
 
+            // Refresh organization details when the route context exists.
             if (organizationDetailsPath !== null) {
                 await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationDetailsPath) });
             }
@@ -213,16 +214,19 @@ export default function Settings({
     function handleSettingsSectionChange(nextSection: string): void {
         setApplicationRoleError(null);
 
+        // Route the settings overview to its base path.
         if (nextSection === 'organization') {
             navigate(`/orgs/${organization}/settings`);
             return;
         }
 
+        // Route top-level resource sections directly.
         if (nextSection === 'applications' || nextSection === 'database' || nextSection === 'storage') {
             navigate(`/orgs/${organization}/settings/${nextSection}`);
             return;
         }
 
+        // Route people subsections through their hash anchors.
         if (nextSection === 'people' || nextSection === 'members' || nextSection === 'invitations') {
             const section = nextSection === 'people' || nextSection === 'members' ? 'members' : 'invitations';
 
@@ -277,6 +281,7 @@ export default function Settings({
                     platformRole === 'administrator' || canViewApplicationLogs(organizationRole, application.role);
                 const canDelete = canManageApplication(organizationRole, application.role);
 
+                // Hide the action menu when no actions are available.
                 if (!canReadLogs && !canDelete) {
                     return <span className="text-muted-foreground">—</span>;
                 }
@@ -368,18 +373,22 @@ export default function Settings({
                     <Select
                         value={value}
                         onValueChange={async (nextValue) => {
+                            // Ignore changes without an active application.
                             if (selectedApplication === null) {
                                 return;
                             }
 
                             const nextRole =
                                 nextValue === 'none' || nextValue === null ? null : (nextValue as ApplicationRole);
+
+                            // Skip updates when the role is unchanged.
                             if (nextRole === member.application_role) {
                                 return;
                             }
 
                             setApplicationRoleError(null);
 
+                            // Persist the selected application role.
                             try {
                                 await changeApplicationMemberRole.mutateAsync({
                                     applicationId: selectedApplication.id,
@@ -453,6 +462,8 @@ export default function Settings({
             header: t('columns.owner'),
             cell: ({ row }) => {
                 const application = row.original.application;
+
+                // Show organization ownership for the shared schema.
                 if (row.original.name === 'shared') {
                     return (
                         <div className="flex items-start gap-3">
@@ -468,6 +479,7 @@ export default function Settings({
                     );
                 }
 
+                // Mark orphaned resources without an active application.
                 if (application === null) {
                     return <span className="text-muted-foreground">{t('organizationSettings.noActiveApp')}</span>;
                 }
@@ -533,6 +545,7 @@ export default function Settings({
             cell: ({ row }) => {
                 const application = row.original.application;
 
+                // Show organization ownership for the shared bucket.
                 if (row.original.kind === 'shared_bucket') {
                     return (
                         <div className="flex items-start gap-3">
@@ -548,6 +561,7 @@ export default function Settings({
                     );
                 }
 
+                // Mark orphaned resources without an active application.
                 if (application === null) {
                     return <span className="text-muted-foreground">{t('organizationSettings.noActiveApp')}</span>;
                 }
@@ -860,6 +874,7 @@ export default function Settings({
                     applicationName={logsTarget.name}
                     open={logsTarget !== null}
                     onOpenChange={(open) => {
+                        // Clear the selected log target when closing.
                         if (!open) {
                             setLogsTarget(null);
                         }
@@ -871,6 +886,7 @@ export default function Settings({
             <Dialog
                 open={deleteTargetId !== null}
                 onOpenChange={(open) => {
+                    // Reset delete dialog state when closing.
                     if (!open) {
                         setDeleteTargetId(null);
                         setDeleteError(null);
@@ -908,14 +924,18 @@ export default function Settings({
                                 variant="destructive"
                                 disabled={isDeletingApplication || deleteTargetId === null}
                                 onClick={async () => {
+                                    // Ignore submits without a selected target.
                                     if (deleteTargetId === null) {
                                         return;
                                     }
 
                                     const id = deleteTargetId;
 
+                                    // Delete the application and clear local dialog state.
                                     try {
                                         await deleteApplication(id);
+
+                                        // Leave the detail view if it was deleted.
                                         if (selectedApplication?.id === id) {
                                             setApplicationRoleError(null);
                                             navigate(`/orgs/${organization}/settings/applications`);

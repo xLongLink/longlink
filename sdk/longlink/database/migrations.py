@@ -27,6 +27,8 @@ def iter_exception_chain(exc: BaseException) -> list[BaseException]:
     exceptions: list[BaseException] = []
     seen: set[int] = set()
     current: BaseException | None = exc
+
+    # Walk each linked exception once.
     while current is not None and id(current) not in seen:
         exceptions.append(current)
         seen.add(id(current))
@@ -38,12 +40,18 @@ def iter_exception_chain(exc: BaseException) -> list[BaseException]:
 def retryable_migration_error(exc: BaseException) -> bool:
     """Return whether a migration failure looks like transient database connectivity."""
 
+    # Inspect every linked exception for retryable database failures.
     for chained_exception in iter_exception_chain(exc):
+
+        # Retry standard transient connection failures.
         if isinstance(chained_exception, (ConnectionError, TimeoutError, socket.gaierror)):
             return True
 
+        # Check SQLAlchemy connection failures for known transient messages.
         if isinstance(chained_exception, OperationalError):
             message = str(chained_exception).lower()
+
+            # Match backend-specific transient connectivity text.
             if any(fragment in message for fragment in _RETRYABLE_MIGRATION_ERROR_FRAGMENTS):
                 return True
 
@@ -70,7 +78,10 @@ def iter_application_model_files() -> list[Path]:
         root / "src" / "models",
     )
 
+    # Collect model modules from supported application layouts.
     for model_path in nested_model_paths:
+
+        # Ignore layouts that are not present in this application.
         if not model_path.exists():
             continue
 
@@ -87,13 +98,19 @@ def load_application_models() -> None:
     """Load application model modules so metadata includes table definitions."""
 
     root = Path.cwd()
+
+    # Load each discovered model module exactly once.
     for py_file in iter_application_model_files():
         module_name = ".".join(py_file.with_suffix("").relative_to(root).parts)
+
+        # Skip modules already loaded by the application.
         if module_name in sys.modules:
             continue
 
         # Import from file paths so migrations work even without package __init__.py files.
         spec = importlib.util.spec_from_file_location(module_name, py_file)
+
+        # Ignore files that cannot produce an importable module spec.
         if spec is None or spec.loader is None:
             continue
 
@@ -121,6 +138,8 @@ def make_migrations() -> bool:
     def _skip_empty_revision(_context: object, _revision: object, directives: list[Any]) -> None:
         """Skip writing a migration script when autogenerate finds no changes."""
         nonlocal migration_created
+
+        # Treat missing directives as no generated migration.
         if not directives:
             migration_created = False
             return
@@ -151,11 +170,17 @@ def apply_migrations() -> None:
     cfg = Config()
     cfg.set_main_option("script_location", str(CURRENT_FILE.parent))
     cfg.set_main_option("version_locations", str(migrations_path))
+
+    # Retry startup while the database becomes reachable.
     for attempt in range(1, MIGRATION_RETRY_ATTEMPTS + 1):
+
+        # Attempt the migration before deciding whether to wait.
         try:
             command.upgrade(cfg, "head")
             return
         except Exception as exc:
+
+            # Stop retrying on final attempts or non-transient errors.
             if attempt == MIGRATION_RETRY_ATTEMPTS or not retryable_migration_error(exc):
                 raise
 
@@ -168,5 +193,6 @@ def apply_migrations() -> None:
             time.sleep(MIGRATION_RETRY_DELAY_SECONDS)
 
 
+# Run migrations when invoked as a script.
 if __name__ == "__main__":
     apply_migrations()

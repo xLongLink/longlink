@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 @router.get("/api/me", response_model=UserProfile)
-async def get_me(user: User = Depends(authuser)) -> UserProfile:
+async def get_me(user: User = Depends(authuser)) -> dict[str, object]:
     """Return the authenticated user's details."""
 
     profile = await users.profile(user.id)
@@ -29,7 +29,7 @@ async def list_users(_: User = Depends(authsupport)) -> list[User]:
 
 
 @router.patch("/api/me", response_model=UserProfile)
-async def patch_me(payload: UserUpdate, user: User = Depends(authuser)) -> UserProfile:
+async def patch_me(payload: UserUpdate, user: User = Depends(authuser)) -> dict[str, object]:
     """Update the authenticated user's details."""
 
     params = payload.model_dump(exclude_unset=True)

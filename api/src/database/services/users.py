@@ -2,16 +2,8 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 from src.models.roles import PlatformRoles
-from src.models.users import (
-    Theme,
-    Accent,
-    Radius,
-    Language,
-    UserProfile,
-    UserOrganizationMembership,
-)
+from src.models.users import Theme, Accent, Radius, Language
 from src.database.session import session_scope
-from src.models.locations import LocationResponse
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
@@ -20,6 +12,7 @@ from src.database.models.organizations import Organization
 async def fetch_all() -> list[User]:
     """Return all users in the database."""
 
+    # Read users through a managed database session.
     async with session_scope() as session:
         result = await session.execute(select(User))
         return result.scalars().all()
@@ -28,20 +21,24 @@ async def fetch_all() -> list[User]:
 async def get_by_id(user_id: UUID) -> User | None:
     """Return one user by id."""
 
+    # Read the user through a managed database session.
     async with session_scope() as session:
         statement = select(User).where(User.id == user_id)
         result = await session.execute(statement)
         return result.scalar_one_or_none()
 
 
-async def profile(user_id: UUID) -> UserProfile | None:
+async def profile(user_id: UUID) -> dict[str, object] | None:
     """Return one user profile with membership roles included."""
 
+    # Load the profile data through one managed session.
     async with session_scope() as session:
 
         # Preload the organization locations so response serialization does not trigger lazy IO.
         user_result = await session.execute(select(User).where(User.id == user_id))
         user = user_result.scalars().first()
+
+        # Return nothing when the user does not exist.
         if user is None:
             return None
 
@@ -59,30 +56,30 @@ async def profile(user_id: UUID) -> UserProfile | None:
             )
         )
 
-        return UserProfile(
-            id=user.id,
-            name=user.name,
-            email=user.email,
-            avatar=user.avatar,
-            role=user.role,
-            theme=user.theme,
-            accent=user.accent,
-            radius=user.radius,
-            language=user.language,
-            oidc=user.oidc,
-            organizations=[
-                UserOrganizationMembership(
-                    id=organization.id,
-                    name=organization.name,
-                    slug=organization.slug,
-                    avatar=organization.avatar,
-                    country=organization.country,
-                    location=LocationResponse.model_validate(organization.location),
-                    role=role_name,
-                )
+        return {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "avatar": user.avatar,
+            "role": user.role,
+            "theme": user.theme,
+            "accent": user.accent,
+            "radius": user.radius,
+            "language": user.language,
+            "oidc": user.oidc,
+            "organizations": [
+                {
+                    "id": organization.id,
+                    "name": organization.name,
+                    "slug": organization.slug,
+                    "avatar": organization.avatar,
+                    "country": organization.country,
+                    "location": organization.location,
+                    "role": role_name,
+                }
                 for organization, role_name in organization_result.all()
             ],
-        )
+        }
 
 
 async def upsert(
@@ -103,25 +100,42 @@ async def upsert(
 
     # Patch the current record in place when the subject already exists.
     if existing_user is not None:
+
+        # Refresh email when supplied.
         if email is not None:
             existing_user.email = email
+
+        # Refresh name when supplied.
         if name is not None:
             existing_user.name = name
+
+        # Refresh avatar when supplied.
         if avatar is not None:
             existing_user.avatar = avatar or ""
+
+        # Refresh platform role when supplied.
         if role is not None:
             existing_user.role = role
+
+        # Refresh theme when supplied.
         if theme is not None:
             existing_user.theme = theme
+
+        # Refresh accent when supplied.
         if accent is not None:
             existing_user.accent = accent
+
+        # Refresh radius when supplied.
         if radius is not None:
             existing_user.radius = radius
+
+        # Refresh language when supplied.
         if language is not None:
             existing_user.language = language
 
         existing_user.oidc = oidc
 
+        # Persist the existing user changes in one transaction.
         async with session_scope() as session:
             session.add(existing_user)
             await session.commit()
@@ -129,6 +143,7 @@ async def upsert(
 
         return existing_user
 
+    # Create new users inside one managed session.
     async with session_scope() as session:
 
         # Bootstrap the very first user as admin so the instance starts with one owner.
@@ -142,8 +157,12 @@ async def upsert(
         # Resolve the platform role from explicit input or the bootstrap default.
         if role is not None:
             resolved_role = role
+
+        # Promote the first created user to administrator.
         elif is_admin:
             resolved_role = PlatformRoles.administrator
+
+        # Use the standard platform role for later users.
         else:
             resolved_role = PlatformRoles.user
 
@@ -169,8 +188,11 @@ async def upsert(
 async def get(oidc: str, include_deleted: bool = False) -> User | None:
     """Retrieve a user by OIDC subject."""
 
+    # Read the user through a managed database session.
     async with session_scope() as session:
         statement = select(User).where(User.oidc == oidc)
+
+        # Hide soft-deleted users unless explicitly requested.
         if not include_deleted:
             statement = statement.where(User.deleted_at.is_(None))
 

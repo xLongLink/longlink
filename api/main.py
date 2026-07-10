@@ -89,12 +89,11 @@ app.add_middleware(
     SessionMiddleware,
     secret_key=env.SESSION_KEY,
     session_cookie="longlink_session",
-    domain=env.SESSION_COOKIE_DOMAIN,
     same_site="lax",
     https_only=not env.DEVELOPMENT,
 )
 
-cors_origins = configure_cors(app, resolve_cors_origins(env.DEVELOPMENT, env.CORS_ORIGINS))
+cors_origins = configure_cors(app, resolve_cors_origins(env.DEVELOPMENT))
 
 # Register API routes after importing the endpoint modules so their decorators run.
 app.include_router(auth.router)

@@ -24,9 +24,12 @@ def normalize_mount_path(path: str) -> str:
     """Normalize an SDK-managed mount path."""
 
     normalized_path = path.strip()
+
+    # Blank mount paths cannot be routed.
     if not normalized_path:
         raise ValueError("Mount path is required")
 
+    # Mount paths are stored as absolute routes.
     if not normalized_path.startswith("/"):
         normalized_path = f"/{normalized_path}"
 
@@ -39,6 +42,7 @@ def default_source_directory(route_path: str) -> Path:
     source_directory = (Path.cwd() / "src").resolve()
     route_directory = (source_directory / normalize_mount_path(route_path).strip("/")).resolve()
 
+    # Prevent mounts from escaping the application source tree.
     if not route_directory.is_relative_to(source_directory):
         raise ValueError("Mount path must stay inside the src directory")
 
@@ -49,9 +53,12 @@ def user_api_path(path: str) -> str:
     """Return a user API path under the SDK API prefix."""
 
     normalized_path = normalize_mount_path(path)
+
+    # Preserve paths already scoped to the API prefix.
     if normalized_path == API_PREFIX or normalized_path.startswith(f"{API_PREFIX}/"):
         return normalized_path
 
+    # The root API path maps directly to the API prefix.
     if normalized_path == "/":
         return API_PREFIX
 
@@ -61,6 +68,7 @@ def user_api_path(path: str) -> str:
 def user_router_prefix(prefix: str) -> str:
     """Return the include-router prefix for user-defined API routes."""
 
+    # Empty router prefixes attach at the API root.
     if not prefix:
         return API_PREFIX
 
@@ -84,13 +92,17 @@ class LongLink(FastAPI):
         page_registry: list[PageDefinition] = []
         self.state.page_registry = page_registry
 
+        # Production containers attach API access filtering here.
         if environments.ENV == "production":
 
             # Built app containers run plain uvicorn, so attach the SDK access filter here.
             access_logger = logging.getLogger("uvicorn.access")
+
+            # Avoid installing the access filter more than once.
             if not any(isinstance(item, ApiAccessFilter) for item in access_logger.filters):
                 access_logger.addFilter(ApiAccessFilter())
 
+        # Mount SDK-managed routes before user-facing assets.
         for router in routes:
             super().include_router(router)
 
@@ -98,6 +110,7 @@ class LongLink(FastAPI):
 
         frontend_directory = ROOT / ".static" / "web"
 
+        # Optional translation mounts can be disabled.
         if i18n is not None:
             i18n_path = normalize_mount_path(i18n)
             translations_directory = default_source_directory(i18n_path)
@@ -106,13 +119,16 @@ class LongLink(FastAPI):
             if translations_directory.exists():
                 self.mount(i18n_path, StaticFiles(directory=translations_directory), name="translations")
 
+        # Optional page discovery can be disabled.
         if pages is not None:
             pages_path = normalize_mount_path(pages)
             pages_directory = default_source_directory(pages_path)
 
+            # Register pages only when the source directory exists.
             if pages_directory.exists():
                 self.register_page_directory(pages_path, pages_directory)
 
+        # Serve the embedded frontend when the bundle is available.
         if frontend_directory.exists():
             self.frontend("/", directory=frontend_directory)
 
@@ -217,6 +233,7 @@ class LongLink(FastAPI):
             page for page in registered_pages if page.path not in stale_page_paths
         ]
 
+        # Discover XML page files in deterministic order.
         for page_file in sorted(pages_directory.rglob("*.xml")):
             relative_path = page_file.relative_to(pages_directory).as_posix()
             route_path = f"{normalized_prefix}/{relative_path}"

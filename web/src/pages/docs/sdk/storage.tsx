@@ -2,10 +2,8 @@ import { CodeBlock } from '@/components/CodeBlock';
 import { A } from '@/components/ui/a';
 import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
-import { Li } from '@/components/ui/li';
 import { P } from '@/components/ui/p';
 import { Stack } from '@/components/ui/stack';
-import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
     lastUpdated: '2026-07-09',
@@ -39,16 +37,5 @@ export const content = (
 
 with fs.open("reports/example.txt", "wb") as f:
     f.write(b"hello")`}</CodeBlock>
-        <Heading id="resources" level="h2">
-            Resources
-        </Heading>
-        <Ul>
-            <Li>
-                <A href="https://filesystem-spec.readthedocs.io/en/latest/">fsspec Documentation</A>
-            </Li>
-            <Li>
-                <A href="https://github.com/fsspec/filesystem_spec">fsspec GitHub</A>
-            </Li>
-        </Ul>
     </Stack>
 );

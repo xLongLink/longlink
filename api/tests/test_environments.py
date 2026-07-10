@@ -15,7 +15,6 @@ def production_settings(**overrides: object) -> Env:
 
     settings = {
         "DEVELOPMENT": False,
-        "CONTROL_PLANE_URL": "https://app.example",
         "DATABASE_URL": "sqlite+aiosqlite:///./dev.db",
         "SESSION_KEY": "production-session-key-that-is-long-enough",
         "OIDC_CLIENT_ID": "longlink-api",
@@ -59,19 +58,12 @@ def test_development_flag_disables_development_defaults(monkeypatch) -> None:
 def test_cors_defaults_are_development_only() -> None:
     """Do not enable localhost credentialed CORS outside development by default."""
 
-    assert resolve_cors_origins(False, ()) == ()
-    assert resolve_cors_origins(True, ()) == (
+    assert resolve_cors_origins(False) == ()
+    assert resolve_cors_origins(True) == (
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:8000",
     )
-
-
-def test_explicit_cors_origins_override_development_defaults() -> None:
-    """Respect configured production CORS origins when they are provided."""
-
-    assert resolve_cors_origins(False, ("https://app.example",)) == ("https://app.example",)
-    assert resolve_cors_origins(True, ("https://app.example",)) == ("https://app.example",)
 
 
 def test_validate_production_settings_accepts_secure_values() -> None:

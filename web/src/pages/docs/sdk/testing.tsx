@@ -2,11 +2,9 @@ import { CodeBlock } from '@/components/CodeBlock';
 import { A } from '@/components/ui/a';
 import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
-import { Li } from '@/components/ui/li';
 import { P } from '@/components/ui/p';
 import { Stack } from '@/components/ui/stack';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
     lastUpdated: '2026-07-09',
@@ -71,25 +69,5 @@ def test_healthcheck():
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}`}</CodeBlock>
-        <Heading id="resources" level="h2">
-            Resources
-        </Heading>
-        <Ul>
-            <Li>
-                <A href="https://fastapi.tiangolo.com/tutorial/testing/">FastAPI TestClient</A>
-            </Li>
-            <Li>
-                <A href="https://docs.pytest.org/">pytest Documentation</A>
-            </Li>
-            <Li>
-                <A href="https://github.com/pytest-dev/pytest">pytest GitHub</A>
-            </Li>
-            <Li>
-                <A href="https://pytest-asyncio.readthedocs.io/en/stable/">pytest-asyncio Documentation</A>
-            </Li>
-            <Li>
-                <A href="https://github.com/pytest-dev/pytest-asyncio">pytest-asyncio GitHub</A>
-            </Li>
-        </Ul>
     </Stack>
 );

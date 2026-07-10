@@ -165,11 +165,11 @@ async def test_response_list_services_include_expected_application_roles() -> No
 
     # Assert
     assert len(all_responses) == 1
-    assert all_responses[0].id == application.id
-    assert all_responses[0].role is None
+    assert all_responses[0]["id"] == application.id
+    assert all_responses[0]["role"] is None
     assert len(organization_responses) == 1
-    assert organization_responses[0].id == application.id
-    assert organization_responses[0].role == ApplicationRoles.admin
+    assert organization_responses[0]["id"] == application.id
+    assert organization_responses[0]["role"] == ApplicationRoles.admin
 
 
 async def test_list_members_includes_organization_members_with_optional_application_roles(

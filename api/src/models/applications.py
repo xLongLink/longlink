@@ -56,6 +56,8 @@ class ApplicationCreate(BaseModel):
 
 
 class ApplicationResponse(BaseModel):
+    """Represent one application in API responses."""
+
     model_config = ConfigDict(from_attributes=True)
 
     # Identifier

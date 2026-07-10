@@ -1,10 +1,36 @@
 from fastapi import Request, APIRouter
+from pydantic import BaseModel
 from longlink.utils.metadata import load_metadata
 
 router = APIRouter()
 
 
-@router.get("/metadata.json")
+class MetadataPageResponse(BaseModel):
+    """Represent one SDK page in runtime metadata."""
+
+    # Metadata
+    tab: str
+    icon: str | None = None
+    name: str | None = None
+    path: str
+    route: str
+
+
+class MetadataResponse(BaseModel):
+    """Represent SDK runtime metadata."""
+
+    # Metadata
+    name: str
+    title: str | None = None
+    summary: str | None = None
+    version: str
+    description: str | None = None
+
+    # Relationships
+    pages: list[MetadataPageResponse]
+
+
+@router.get("/metadata.json", response_model=MetadataResponse, response_model_exclude_unset=True)
 async def get_metadata(request: Request) -> dict[str, object]:
     """Return basic application metadata for the current SDK project."""
 
@@ -20,9 +46,11 @@ async def get_metadata(request: Request) -> dict[str, object]:
             "route": page.route,
         }
 
+        # Include optional display text only when the page declares it.
         if page.name:
             entry["name"] = page.name
 
+        # Include optional icon metadata only when the page declares it.
         if page.icon:
             entry["icon"] = page.icon
 

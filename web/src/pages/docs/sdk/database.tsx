@@ -21,8 +21,9 @@ export const content = (
         </Heading>
         <P>
             The SDK exposes a small database API for application-owned relational data. Use <Code>db.Table</Code> to
-            define SQLModel tables with LongLink audit fields, and use <Code>await db.get_session()</Code> to open an
-            async database session.
+            define <A href="https://sqlmodel.tiangolo.com/">SQLModel</A> tables with LongLink audit fields, and use{' '}
+            <Code>await db.get_session()</Code> to open an async <A href="https://www.sqlalchemy.org/">SQLAlchemy</A>{' '}
+            database session.
         </P>
         <P>
             In production, the control plane provisions the organization database, shared user schema, and application
@@ -46,7 +47,10 @@ async def create_project() -> None:
     async with session_maker() as session:
         session.add(Project(name="Launch", owner="ops"))
         await session.commit()`}</CodeBlock>
-        <P>After you add or change models, run migrations to keep the database schema aligned:</P>
+        <P>
+            After you add or change models, run <A href="https://alembic.sqlalchemy.org/en/latest/">Alembic</A>{' '}
+            migrations to keep the database schema aligned:
+        </P>
         <Tabs defaultValue="pip">
             <TabsList>
                 <TabsTrigger value="pip">pip</TabsTrigger>
@@ -121,29 +125,6 @@ async def create_project() -> None:
             <Li>
                 Hard deletes of <Code>db.Table</Code> rows are converted into soft deletes by setting{' '}
                 <Code>deleted_at</Code> and <Code>deleted_id</Code>.
-            </Li>
-        </Ul>
-        <Heading id="resources" level="h2">
-            Resources
-        </Heading>
-        <Ul>
-            <Li>
-                <A href="https://github.com/fastapi/sqlmodel">SQLModel GitHub</A>
-            </Li>
-            <Li>
-                <A href="https://sqlmodel.tiangolo.com/">SQLModel Documentation</A>
-            </Li>
-            <Li>
-                <A href="https://github.com/sqlalchemy/sqlalchemy">SQLAlchemy GitHub</A>
-            </Li>
-            <Li>
-                <A href="https://www.sqlalchemy.org/">SQLAlchemy Documentation</A>
-            </Li>
-            <Li>
-                <A href="https://alembic.sqlalchemy.org/en/latest/">Alembic Documentation</A>
-            </Li>
-            <Li>
-                <A href="https://github.com/sqlalchemy/alembic">Alembic GitHub</A>
             </Li>
         </Ul>
     </Stack>

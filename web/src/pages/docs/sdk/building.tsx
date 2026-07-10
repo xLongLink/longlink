@@ -93,49 +93,5 @@ name = "Private"`}</CodeBlock>
                 </Li>
             </Ul>
         </Stack>
-        <Stack className="gap-2">
-            <Heading id="docker-labels" level="h2">
-                Docker Labels
-            </Heading>
-            <P>The build command writes these labels into the image metadata when values are available:</P>
-            <CodeBlock language="text">
-                {
-                    'longlink.name=<app-name>\nlonglink.sdk=<installed-longlink-version>\nlonglink.version=<app-pyproject-version>\nlonglink.description=<app-description>\nlonglink.environments=<json-environment-list>\nlonglink.title=<app-title>\nlonglink.summary=<app-summary>\nlonglink.terms_of_service=<terms-url>\nlonglink.contact=<contact-metadata>\nlonglink.license_info=<license-metadata>'
-                }
-            </CodeBlock>
-            <Ul>
-                <Li>
-                    <Code>longlink.name</Code> is the application name.
-                </Li>
-                <Li>
-                    <Code>longlink.sdk</Code> is the installed LongLink SDK version.
-                </Li>
-                <Li>
-                    <Code>longlink.version</Code> is the application version from <Code>pyproject.toml</Code>.
-                </Li>
-                <Li>
-                    <Code>longlink.description</Code> is the optional application description.
-                </Li>
-                <Li>
-                    <Code>longlink.environments</Code> lists the app environment variables when <Code>src/envs.py</Code>{' '}
-                    exists.
-                </Li>
-                <Li>
-                    <Code>longlink.title</Code> is the optional application title.
-                </Li>
-                <Li>
-                    <Code>longlink.summary</Code> is the optional short summary.
-                </Li>
-                <Li>
-                    <Code>longlink.terms_of_service</Code> is the optional terms-of-service URL.
-                </Li>
-                <Li>
-                    <Code>longlink.contact</Code> is the optional contact metadata.
-                </Li>
-                <Li>
-                    <Code>longlink.license_info</Code> is the optional license metadata.
-                </Li>
-            </Ul>
-        </Stack>
     </Stack>
 );

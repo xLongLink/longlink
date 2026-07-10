@@ -1,6 +1,5 @@
 import os
 from src.utils import urls
-from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEVELOPMENT_CORS_ORIGINS = (
@@ -29,11 +28,8 @@ def _environment_files() -> tuple[str, ...]:
     return (".env",)
 
 
-def resolve_cors_origins(development: bool, configured_origins: tuple[str, ...]) -> tuple[str, ...]:
-    """Return explicit CORS origins, adding localhost defaults only in development."""
-
-    if configured_origins:
-        return configured_origins
+def resolve_cors_origins(development: bool) -> tuple[str, ...]:
+    """Return localhost CORS origins only in development."""
 
     if development:
         return DEVELOPMENT_CORS_ORIGINS
@@ -49,10 +45,6 @@ class Env(BaseSettings):
 
     # Session cookies
     SESSION_KEY: str
-    SESSION_COOKIE_DOMAIN: str | None = None
-
-    # Optional public control-plane origin retained for deployment configuration.
-    CONTROL_PLANE_URL: str = "http://localhost:8000"
 
     # Control plane database URL
     DATABASE_URL: str
@@ -78,28 +70,6 @@ class Env(BaseSettings):
     EMAIL_SMTP_PASSWORD: str | None = None
     EMAIL_SMTP_USERNAME: str | None = None
     EMAIL_SMTP_TIMEOUT_SECONDS: int | None = None
-
-    # Development CORS
-    CORS_ORIGINS: tuple[str, ...] = ()
-
-    # Development image registry
-    LOCAL_APPLICATION_IMAGE: str = "localhost:15000/longlink-app:dev"
-
-    # Operation leases
-    OPERATION_LEASE_SECONDS: int = 120
-    OPERATION_HEARTBEAT_SECONDS: int = 30
-    OPERATION_RETRY_DELAY_SECONDS: int = 5
-
-    @field_validator("SESSION_COOKIE_DOMAIN", mode="before")
-    @classmethod
-    def normalize_session_cookie_domain(cls, value: object) -> object:
-        """Treat a blank cookie domain as unset so session cookies remain host-only."""
-
-        if isinstance(value, str):
-            stripped_value = value.strip()
-            return stripped_value or None
-
-        return value
 
     model_config = SettingsConfigDict(
         env_file=_environment_files(),
