@@ -148,7 +148,7 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
                             <div className="min-w-0 px-4 lg:px-6">
                                 <div className="mx-auto flex h-full w-full max-w-[60rem] items-center">
                                     <div className="mx-auto w-full max-w-3xl">
-                                        <UIBreadcrumb>
+                                        <UIBreadcrumb className="hidden lg:block">
                                             <BreadcrumbList>
                                                 {page.breadcrumbs.map((item, index) => {
                                                     const isLast = index === page.breadcrumbs.length - 1;

@@ -18,6 +18,34 @@ LongLink provides that foundation. It turns real-world processes into production
 Specific workflows can be customized like software, built quickly like modern AI-assisted applications, and maintained with the discipline of proper engineering. LongLink brings software-development principles to the broader world of work, making valuable processes structured, deployable, reviewable, and cheap to maintain over time.
 
 
+<br />
+
+## Get Started
+
+Requirements: `Python 3.14` or newer.
+
+```bash
+uvx longlink init --folder <folder>
+cd <folder>
+uv sync
+uv run longlink dev
+```
+
+<details>
+<summary>What about classic pip?</summary>
+
+```bash
+python -m pip install longlink
+longlink init --folder <folder>
+cd <folder>
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e .
+longlink dev
+```
+
+</details>
+
 
 <br />
 

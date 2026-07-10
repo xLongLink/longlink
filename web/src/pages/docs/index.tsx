@@ -8,17 +8,20 @@ import { Stack } from '@/components/ui/stack';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export const metadata = {
-    lastUpdated: '2026-07-09',
+    lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/index.tsx',
 };
 
 export const content = (
     <Stack>
-        <Heading className="flex items-center" id="introduction" level="h1">
+        <Heading className="flex items-center justify-center" id="introduction" level="h1">
             <Wordmark className="text-[2.5rem] leading-[1.08] sm:text-[3.25rem] sm:leading-[1.05]" />
         </Heading>
         <P>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim
+            Across industries and geographies, there are hundreds of millions of distinct operational contexts. Each has
+            its own regulations, roles, data requirements, approval paths, integrations, terminology, and exceptions.
+            Even similar businesses rarely operate in exactly the same way, creating a vast number of processes that may
+            require dedicated software.
         </P>
 
         <div className="grid gap-8 rounded-md border bg-muted/10 px-4 py-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center">
@@ -31,7 +34,7 @@ export const content = (
                         <span className="font-medium text-foreground">Sector -</span>
                         <A
                             className="font-semibold tabular-nums"
-                            href="https://unstats.un.org/unsd/classifications/Econ/Download/In%20Text/ISIC_Rev_5_english_structure.csv"
+                            href="https://unstats.un.org/unsd/publication/seriesm/seriesm_4rev4e.pdf"
                         >
                             22
                         </A>
@@ -43,7 +46,7 @@ export const content = (
                         <span className="font-medium text-foreground">Division -</span>
                         <A
                             className="font-semibold tabular-nums"
-                            href="https://unstats.un.org/unsd/classifications/Econ/Download/In%20Text/ISIC_Rev_5_english_structure.csv"
+                            href="https://unstats.un.org/unsd/publication/seriesm/seriesm_4rev4e.pdf"
                         >
                             87
                         </A>
@@ -55,7 +58,7 @@ export const content = (
                         <span className="font-medium text-foreground">Industry group -</span>
                         <A
                             className="font-semibold tabular-nums"
-                            href="https://unstats.un.org/unsd/classifications/Econ/Download/In%20Text/ISIC_Rev_5_english_structure.csv"
+                            href="https://unstats.un.org/unsd/publication/seriesm/seriesm_4rev4e.pdf"
                         >
                             258
                         </A>
@@ -67,7 +70,7 @@ export const content = (
                         <span className="font-medium text-foreground">Industry classification -</span>
                         <A
                             className="font-semibold tabular-nums"
-                            href="https://unstats.un.org/unsd/classifications/Econ/Download/In%20Text/ISIC_Rev_5_english_structure.csv"
+                            href="https://unstats.un.org/unsd/publication/seriesm/seriesm_4rev4e.pdf"
                         >
                             463
                         </A>
@@ -123,37 +126,16 @@ export const content = (
         </div>
 
         <P>
-            LongLink is open-source and designed to be extended. It provides a shared foundation and guardrails
-            for building business-process applications as maintainable code instead of isolated one-off systems,
-            handling authentication, organizations, permissions, deployment, databases, storage, routing, logs, status,
-            and a consistent application shell while each application remains a normal Python service that owns its
-            specific logic, data model, validation, workflow, integrations, APIs, and pages.
-        </P>
-        <P>
-            Python gives business users and developers a shared surface. Business requirements can be expressed as
-            readable data models, validation rules, workflows, and screens, while developers keep the application inside
-            a standard ecosystem for testing, review, deployment, and long-term maintenance.
-        </P>
-
-        <Heading id="why" level="h2">
-            Why
-        </Heading>
-
-        <P>
-            AI has changed the cost structure of software creation. As applications become faster and cheaper to build,
-            more workflows, approvals, procurement flows, onboarding processes, compliance cases, operations, and
-            structured data processes can be expressed directly in code.
-        </P>
-        <P>
-            Companies already use several setups for this work, but each one breaks down in a different way when the
-            process becomes specific, regulated, or long-lived.
+            Today, companies manage these processes through combinations of different SaaS products, spreadsheets,
+            forms, dashboards, email, enterprise platforms, and custom software, resulting in a fragmented and often
+            poorly documented ecosystem.
         </P>
         <div className="overflow-hidden rounded-md border">
             <Table>
                 <TableHeader className="bg-muted/50">
                     <TableRow>
                         <TableHead className="bg-muted/50">Approach</TableHead>
-                        <TableHead className="bg-muted/50">Problem</TableHead>
+                        <TableHead className="bg-muted/50"></TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -167,8 +149,7 @@ export const content = (
                             </div>
                         </TableCell>
                         <TableCell className="whitespace-normal text-muted-foreground">
-                            The setup is fragile and manual, so the process depends on coordination outside the system
-                            and becomes hard to scale or govern.
+                            What happens when the person leaves?
                         </TableCell>
                     </TableRow>
                     <TableRow>
@@ -181,8 +162,7 @@ export const content = (
                             </div>
                         </TableCell>
                         <TableCell className="whitespace-normal text-muted-foreground">
-                            The setup is too rigid, forcing teams to change the process while business rules move into
-                            workarounds and disconnected tools.
+                            Just write to the support, not even AI understand the documentation. 
                         </TableCell>
                     </TableRow>
                     <TableRow>
@@ -195,8 +175,7 @@ export const content = (
                             </div>
                         </TableCell>
                         <TableCell className="whitespace-normal text-muted-foreground">
-                            The setup fits one domain, but vendor-defined workflows still push specific rules into
-                            workarounds, exports, and parallel systems.
+                            Wait untill you see the invoice.
                         </TableCell>
                     </TableRow>
                     <TableRow>
@@ -209,8 +188,7 @@ export const content = (
                             </div>
                         </TableCell>
                         <TableCell className="whitespace-normal text-muted-foreground">
-                            The setup is quick to start, but becomes fragile over time as complexity grows faster than
-                            the platform model can absorb.
+                            Not sure, an intern has set this up a few years ago. 
                         </TableCell>
                     </TableRow>
                     <TableRow>
@@ -219,12 +197,11 @@ export const content = (
                                 <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
                                     <Bot aria-hidden={true} className="size-4" />
                                 </div>
-                                <span className="font-medium text-foreground">One-shot / Vibecoded Solutions</span>
+                                <span className="font-medium text-foreground">Vibecoded Solutions</span>
                             </div>
                         </TableCell>
                         <TableCell className="whitespace-normal text-muted-foreground">
-                            The setup is fast to produce, but often lacks architecture, tests, permissions, deployment
-                            discipline, and a clear path for maintenance.
+                            Move the button on the top right. Wait ... where did the database go?
                         </TableCell>
                     </TableRow>
                     <TableRow>
@@ -237,8 +214,7 @@ export const content = (
                             </div>
                         </TableCell>
                         <TableCell className="whitespace-normal text-muted-foreground">
-                            The setup solves fit, but it is expensive and slow because every application rebuilds the
-                            same operational foundation.
+                            Yes we know, someone has opened a Jira ticket a few years ago.
                         </TableCell>
                     </TableRow>
                 </TableBody>
@@ -246,23 +222,37 @@ export const content = (
         </div>
 
         <P>
-            LongLink exists for the large set of processes that are too specific for off-the-shelf tools but too common
-            to justify starting from an empty stack. It lets teams build each process as a deployable Python application
-            while the platform owns identity, access, infrastructure, routing, deployment, storage, logs, and status.
+            AI has changed the economics of software creation. Applications can now be built faster, at a lower cost,
+            and with less engineering effort. This makes it practical to turn a much larger number of specific business
+            processes into dedicated software.
         </P>
         <P>
-            Process software also needs explicit structure. Industries, geographies, roles, workflow states, validation
-            rules, and operational actions should be represented in code and governed by the platform, not scattered
-            across dashboards, spreadsheets, and private conventions.
+            However, faster development does not automatically produce reliable or maintainable systems. Every
+            application still requires a common foundation: authentication, organizations, permissions, databases,
+            storage, deployment, routing, logs, monitoring, and a consistent operating environment. Rebuilding this layer
+            for every application creates costs that are ultimately reflected in the final price.
         </P>
         <P>
-            This makes applications faster to build, easier to understand, and cheaper to maintain. It also gives teams
-            better visibility and control, because applications run inside one coordinated platform instead of being
-            scattered across separate tools and one-off systems.
+            LongLink provides this foundation, allowing teams to build and operate business-process applications as
+            normal software. It manages the infrastructure common to every application, while each application owns its
+            specific data model, rules, workflows, integrations, interfaces, and business logic.
         </P>
         <P>
-            The result is a shared operating layer for reusable business-process applications: normal code where the
-            process is specific, platform-managed infrastructure where every application would otherwise repeat itself.
+            This approach brings the way businesses define their operations closer to software-engineering practices.
+            Processes become explicit models, states, rules, actions, and interfaces, creating systems that are more
+            modular, structured, and less prone to error, as well as easier to test, review, audit, document, extend, and
+            maintain.
+        </P>
+        <P>
+            Python is central to this model. It provides a practical bridge between business knowledge, professional
+            software development, and AI-assisted creation. Its syntax keeps process logic understandable, while its
+            ecosystem supports the validation, data modelling, APIs, databases, testing, and engineering practices
+            required for production software. LongLink is built with widely used Python libraries whose deep
+            representation in AI training data and development workflows improves the quality and precision of
+            AI-assisted development.
+        </P>
+        <P>
+            And, of course, is open source.
         </P>
     </Stack>
 );
