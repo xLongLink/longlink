@@ -56,6 +56,7 @@ export default function Storage({ organization, organizationDetails, isLoading }
         meta: { className: 'min-w-40' },
     };
 
+    // Render the selected bucket detail view.
     if (isDetailPage) {
         const storageDetailColumns: Array<ColumnDef<ApiOrganizationStorageResource>> = [
             {
@@ -135,6 +136,7 @@ export default function Storage({ organization, organizationDetails, isLoading }
             cell: ({ row }) => {
                 const application = row.original.application;
 
+                // Show organization ownership for shared buckets.
                 if (row.original.kind === 'shared_bucket') {
                     return (
                         <div className="flex items-start gap-3">
@@ -150,6 +152,7 @@ export default function Storage({ organization, organizationDetails, isLoading }
                     );
                 }
 
+                // Mark storage resources without an active application.
                 if (application === null) {
                     return <span className="text-muted-foreground">{t('resources.noActiveApp')}</span>;
                 }

@@ -108,10 +108,12 @@ function Calendar({
                     return <div data-slot="calendar" ref={rootRef} className={cn(className)} {...props} />;
                 },
                 Chevron: ({ className, orientation, ...props }) => {
+                    // Render the previous-month chevron.
                     if (orientation === 'left') {
                         return <ChevronLeftIcon className={cn('size-4', className)} {...props} />;
                     }
 
+                    // Render the next-month chevron.
                     if (orientation === 'right') {
                         return <ChevronRightIcon className={cn('size-4', className)} {...props} />;
                     }
@@ -146,6 +148,7 @@ function CalendarDayButton({
 
     const ref = React.useRef<HTMLButtonElement>(null);
     React.useEffect(() => {
+        // Move focus onto the active day button.
         if (modifiers.focused) ref.current?.focus();
     }, [modifiers.focused]);
 

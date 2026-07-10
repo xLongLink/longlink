@@ -20,6 +20,7 @@ export function Textarea({ props }: Props) {
     const resolvedRows = typeof rows === 'string' ? Number(rows) : rows;
     const binding = useBindableValue(props, 'value', ctx);
 
+    // Render bound textareas as controlled fields.
     if (binding.bound) {
         return (
             <UITextarea

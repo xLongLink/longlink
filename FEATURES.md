@@ -145,6 +145,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | SDK frontend entrypoint   | Serves the bundled SDK web app at `/` and falls back to it for browser routes without shadowing API routes. |
 | SDK development CORS      | Allows localhost origins `3000`, `5173`, and `8000` in development mode.                               |
 | SDK router compatibility  | Provides a thin FastAPI `APIRouter` wrapper whose included routes are exposed under `/api`.            |
+| SDK testing client        | Provides a FastAPI-compatible `longlink.testing.TestClient` facade for SDK application tests.          |
 | SDK dev log filter        | Hides noisy frontend GET logs while keeping mutating, `/api/`, and `/auth/` logs.                      |
 | App metadata loading      | Loads metadata from `[tool.longlink]`, then PEP 621 `[project]`, with defaults.                        |
 | Runtime metadata endpoint | Returns app name, title, summary, description, version, and discovered pages.                          |
@@ -163,7 +164,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Docker image build             | Builds a Docker image in a temporary context, validates generated image tags, optionally pushes, and reports image details.             |
 | Generated Docker runtime       | Runs app migrations as a non-root user before starting `uvicorn main:app` on port 8000.                                                |
 | Image metadata labels          | Writes LongLink app metadata and environment metadata into image labels.                                                               |
-| Environment metadata labels    | Reads annotated `src/envs.py` fields and emits typed required/optional environment definitions.                                        |
+| Environment metadata labels    | Reads annotated fields from the `[tool.longlink].environment` class, defaulting to `src.envs:Env`, and emits typed required/optional environment definitions. |
 | Build context filtering        | Excludes local secrets, local databases, caches, generated directories, and `node_modules`.                                            |
 | XML component docs CLI         | Renders component docs from XSD.                                                                                                       |
 | Translation catalog generation | Scans strict dotted XML `i18n` keys, preserves existing/plural translations, rejects invalid keys and collisions, and writes catalogs. |
@@ -172,7 +173,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                       | Supported behavior                                                                                           |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Database facade               | Exposes `Table` and async `get_session()`.                                                                   |
+| Database facade               | Exposes `Table`, `get_session()` as an async session context manager, and `get_session_maker()` for the async session factory. |
 | Table base model              | Adds audit timestamps, soft-delete fields, user foreign keys, and user relationships.                        |
 | Database environment settings | Uses in-memory SQLite for testing, `./dev.db` for development, and control-plane database components for production. |
 | Production database URL build | Builds the asyncpg runtime URL from separate database host, port, name, username, and password settings.     |
@@ -201,7 +202,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Scaffold organization assets | New apps include an organization logo route and dashboard avatar that demonstrate consuming the SDK-managed `longlink.assets.logo()`.                                                                                             |
 | Scaffold XML app             | New apps include dashboard, purchase-request list/detail, and settings XML pages covering navigation tabs, actions, queries, translations, local state, form controls, tables, menus, dialogs, files, and dynamic routes.       |
 | Scaffold initial migration   | New apps include an initial purchase-request Alembic migration.                                                                                                                                                                 |
-| Scaffold testing mode        | New app tests use `LONGLINK_ENV=testing`, in-memory database settings, and a smoke test.                                                                                                                                        |
+| Scaffold testing mode        | New app tests use `LONGLINK_ENV=testing`, in-memory database settings, `longlink.testing.TestClient`, and a smoke test.                                                                                                        |
 
 ## Web Frontend
 
@@ -231,6 +232,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Pricing page                  | Exposes `/pricing` with Free, Team, and Scale pricing options.                                                                                |
 | Legal pages                   | Exposes impressum, privacy, and terms pages with minimal legal content.                                                                       |
 | Documentation catalog         | Exposes docs pages for API, self-hosting, SDK, environments, routes, storage, database, testing, building, XML pages, layout, and components. |
+| Documentation topic icons     | Uses one explicit icon assignment per documentation topic.                                                                                   |
 | XML docs reference            | Documents XML state, query, loops, conditions, i18n, expressions, invalidation, layout tags, and component tags.                              |
 | Docs heading anchors          | Auto-slugs headings and renders hover anchor links.                                                                                           |
 | Organizations page            | Shows sign-in for anonymous users; authenticated users list memberships and create organizations.                                             |
@@ -250,6 +252,27 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Admin storage UI              | Manages storage registries and browses managed buckets and object metadata.                                                                    |
 | Admin compute UI              | Manages compute registries and browses managed namespaces, pods, and pod usage.                                                                |
 | Admin operations UI           | Lists scheduled, active, completed, and failed operations with timestamps, step, resource ids, and errors.                                    |
+
+### Documentation Topic Icons
+
+| Topic | Icon |
+| ----- | ---- |
+| Introduction | `BookOpen` |
+| Control Plane Overview | `ShieldCheck` |
+| Organizations | `Building2` |
+| Applications | `AppWindow` |
+| Self-hosted | `ServerCog` |
+| Application SDK Overview | `Package` |
+| Environments | `Globe` |
+| Routes | `Waypoints` |
+| Storage | `HardDrive` |
+| Database | `Database` |
+| Testing | `FlaskConical` |
+| Building | `Rocket` |
+| Pages | `FileCode2` |
+| Expressions | `Braces` |
+| Layout | `LayoutTemplate` |
+| Components | `Component` |
 
 ### Clients, Hooks, and Components
 

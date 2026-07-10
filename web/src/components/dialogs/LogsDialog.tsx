@@ -29,12 +29,14 @@ export default function LogsDialog({
     const dialogOpen = isControlled ? open : internalOpen;
 
     const handleOpenChange = (nextOpen: boolean) => {
+        // Mirror open state only for uncontrolled usage.
         if (!isControlled) {
             setInternalOpen(nextOpen);
         }
 
         onOpenChange?.(nextOpen);
 
+        // Clear logs when the dialog closes.
         if (!nextOpen) {
             setLogsContent('');
             setLogsError(null);
@@ -44,6 +46,7 @@ export default function LogsDialog({
 
     // Fetch the selected application's pod logs only while the dialog is open.
     useEffect(() => {
+        // Skip log fetching while closed.
         if (!dialogOpen) {
             return;
         }
@@ -55,17 +58,21 @@ export default function LogsDialog({
         setLogsContent('');
 
         void (async () => {
+            // Fetch logs for the selected application.
             try {
                 const text = await fetchApiText(`/api/applications/${applicationId}/logs`);
 
+                // Ignore successful responses after cleanup.
                 if (!cancelled) {
                     setLogsContent(text);
                 }
             } catch (mutationError) {
+                // Ignore errors after cleanup.
                 if (!cancelled) {
                     setLogsError(mutationError instanceof Error ? mutationError.message : t('appView.loadLogsFailed'));
                 }
             } finally {
+                // Stop loading only while still mounted.
                 if (!cancelled) {
                     setLogsLoading(false);
                 }

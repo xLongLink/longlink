@@ -10,6 +10,7 @@ from src.database.models.databases import DatabaseRegistry
 def database(registry: DatabaseRegistry) -> Database:
     """Build the database adapter for one registry record."""
 
+    # Select the PostgreSQL adapter for supported database registries.
     if registry.kind == DatabaseKind.postgresql:
         return Postgres(
             registry.host,
@@ -24,6 +25,7 @@ def database(registry: DatabaseRegistry) -> Database:
 def storage(registry: StorageRegistry) -> Storage:
     """Build the storage adapter for one registry record."""
 
+    # Select the S3 adapter for supported storage registries.
     if registry.kind == StorageKind.s3:
         return S3(
             registry.protocol,

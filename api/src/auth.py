@@ -33,6 +33,8 @@ class SessionAccountsService:
         """Return the current active OIDC subject from the session."""
 
         active_account = self.request.session.get("oidc")
+
+        # Accept only string OIDC subjects from session data.
         if isinstance(active_account, str):
             return active_account
 
@@ -63,6 +65,7 @@ class SessionAccountsService:
         active_account = self.active()
         accounts = self.list()
 
+        # Remove the active account from the saved account list when present.
         if active_account in accounts:
             accounts.remove(active_account)
             self.request.session["oidc_accounts"] = accounts
@@ -79,10 +82,14 @@ async def authuser(request: Request) -> User:
     """Authenticate a user from session and return the User object."""
 
     oidc = SessionAccountsService(request).active()
+
+    # Reject requests without an active session account.
     if oidc is None:
         raise UnauthorizedError("Not authenticated")
 
     user = await users.get(oidc)
+
+    # Reject sessions whose user record no longer exists.
     if not user:
         raise UnauthorizedError("Not authenticated")
     return user
@@ -105,6 +112,7 @@ async def authsupport(request: Request) -> User:
 
     user = await authuser(request)
 
+    # Only support-capable accounts can continue past this check.
     if not role.atleast(user.role, PlatformRoles.support):
         raise ForbiddenError("Support access required")
 

@@ -98,10 +98,12 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
 
     const inviteMemberMutation = useMutation({
         mutationFn: async ({ email, role }: { email: string; role: Role }) => {
+            // Require a resolved organization before mutating.
             if (organizationPath === null) {
                 throw new Error('Organization not found');
             }
 
+            // Enforce invitation permissions locally.
             if (!canInviteMembers) {
                 throw new Error('Invitation permissions required');
             }
@@ -113,6 +115,7 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
             });
         },
         onSuccess: async () => {
+            // Skip cache work when the organization is unresolved.
             if (organizationPath === null) {
                 return;
             }
@@ -136,6 +139,7 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
             icon?: string | null;
             envs: Record<string, string>;
         }) => {
+            // Require a resolved organization before creating apps.
             if (organizationPath === null) {
                 throw new Error('Organization not found');
             }
@@ -151,6 +155,7 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
             );
         },
         onSuccess: async () => {
+            // Skip cache work when the organization is unresolved.
             if (organizationPath === null) {
                 return;
             }
@@ -162,10 +167,12 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
 
     const changeMemberRoleMutation = useMutation({
         mutationFn: async ({ memberId, role }: { memberId: string; role: Role }) => {
+            // Require a resolved organization before mutating.
             if (organizationPath === null) {
                 throw new Error('Organization not found');
             }
 
+            // Enforce member management permissions locally.
             if (!canManageMembers) {
                 throw new Error('Member management permissions required');
             }
@@ -177,6 +184,7 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
             });
         },
         onSuccess: async () => {
+            // Skip cache work when the organization is unresolved.
             if (organizationPath === null) {
                 return;
             }
@@ -189,6 +197,7 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
 
     const deleteApplicationMutation = useMutation({
         mutationFn: async (applicationId: string) => {
+            // Require a resolved organization before deleting apps.
             if (organizationPath === null) {
                 throw new Error('Organization not found');
             }
@@ -254,6 +263,7 @@ export function useDeleteOrganization() {
 
     return useMutation({
         mutationFn: async (organizationId: string) => {
+            // Require an organization identifier before deleting.
             if (!organizationId) {
                 throw new Error('Organization not found');
             }

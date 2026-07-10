@@ -5,12 +5,14 @@ import { buttonVariants } from '@/components/ui/button';
 
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
+import { useTranslation } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 
 /** Renders the public landing page navigation. */
 export function Navbar() {
+    const { t } = useTranslation();
     const { user, organizations } = useUserProfile();
-    const loginHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
+    const getStartedHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
 
     return (
         <header className="relative z-20 px-4 py-5">
@@ -58,13 +60,13 @@ export function Navbar() {
                     </ul>
 
                     <Link
-                        to={loginHref}
+                        to={getStartedHref}
                         className={cn(
                             buttonVariants({ size: 'sm' }),
                             'h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90'
                         )}
                     >
-                        Login
+                        {t('actions.getStarted')}
                     </Link>
                 </nav>
             </div>

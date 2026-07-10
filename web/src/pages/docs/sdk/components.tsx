@@ -1,4 +1,5 @@
 import { CodeBlock } from '@/components/CodeBlock';
+import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
 import { Li } from '@/components/ui/li';
 import { P } from '@/components/ui/p';
@@ -6,7 +7,7 @@ import { Stack } from '@/components/ui/stack';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-06',
+    lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/components.tsx',
 };
 
@@ -27,7 +28,9 @@ export const content = (
             <Stack className="gap-2">
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
-                    <Li>name: required Lucide icon name, usually kebab-case.</Li>
+                    <Li>
+                        <Code>name</Code>: required Lucide icon name, usually kebab-case.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Icon name="settings" />`}</CodeBlock>
@@ -40,8 +43,13 @@ export const content = (
             <Stack className="gap-2">
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
-                    <Li>variant: optional default, outline, ghost, destructive, or link.</Li>
-                    <Li>value: optional expression value used as badge text when translation is omitted.</Li>
+                    <Li>
+                        <Code>variant</Code>: optional <Code>default</Code>, <Code>outline</Code>, <Code>ghost</Code>,{' '}
+                        <Code>destructive</Code>, or <Code>link</Code>.
+                    </Li>
+                    <Li>
+                        <Code>value</Code>: optional expression value used as badge text.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Badge variant="outline" value="$order.status" />`}</CodeBlock>
@@ -52,11 +60,23 @@ export const content = (
             </Heading>
             <P>Avatar shell for user or record imagery with image, fallback, and badge slots.</P>
             <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+                <P className="font-medium text-foreground">Avatar Parameters</P>
                 <Ul>
-                    <Li>Avatar size: optional avatar size. Defaults to default.</Li>
-                    <Li>AvatarImage src: optional image URL.</Li>
-                    <Li>AvatarImage alt: optional accessible image label.</Li>
+                    <Li>
+                        <Code>size</Code>: optional <Code>default</Code>, <Code>sm</Code>, or <Code>lg</Code>. Defaults
+                        to <Code>default</Code>.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">AvatarImage Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>src</Code>: optional image URL.
+                    </Li>
+                    <Li>
+                        <Code>alt</Code>: optional accessible image label.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Avatar size="lg">
@@ -73,11 +93,23 @@ export const content = (
             <Stack className="gap-2">
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
-                    <Li>variant: optional default, outline, ghost, destructive, or link.</Li>
-                    <Li>size: optional button size.</Li>
-                    <Li>submit: optional boolean. When true, renders type submit.</Li>
-                    <Li>disabled: optional boolean expression.</Li>
-                    <Li>append and item: optional helper that appends an item into a target array state path.</Li>
+                    <Li>
+                        <Code>variant</Code>: optional <Code>default</Code>, <Code>outline</Code>, <Code>ghost</Code>,{' '}
+                        <Code>destructive</Code>, or <Code>link</Code>.
+                    </Li>
+                    <Li>
+                        <Code>size</Code>: optional button size.
+                    </Li>
+                    <Li>
+                        <Code>submit</Code>: optional boolean. When <Code>true</Code>, renders type submit.
+                    </Li>
+                    <Li>
+                        <Code>disabled</Code>: optional boolean expression.
+                    </Li>
+                    <Li>
+                        <Code>append</Code> and <Code>item</Code>: optional helper that appends an item into a target
+                        array state path.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Button variant="outline" disabled="form.saving" i18n="..." />`}</CodeBlock>
@@ -88,10 +120,21 @@ export const content = (
             </Heading>
             <P>Groups related buttons, inputs, text segments, and separators into one joined control.</P>
             <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+                <P className="font-medium text-foreground">ButtonGroup Parameters</P>
                 <Ul>
-                    <Li>ButtonGroup orientation: optional horizontal or vertical. Defaults to horizontal.</Li>
-                    <Li>ButtonGroupSeparator orientation: optional vertical or horizontal. Defaults to vertical.</Li>
+                    <Li>
+                        <Code>orientation</Code>: optional <Code>horizontal</Code> or <Code>vertical</Code>. Defaults to{' '}
+                        <Code>horizontal</Code>.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">ButtonGroupSeparator Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>orientation</Code>: optional <Code>vertical</Code> or <Code>horizontal</Code>. Defaults to{' '}
+                        <Code>vertical</Code>.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<ButtonGroup>
@@ -111,12 +154,29 @@ export const content = (
                 legends.
             </P>
             <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+                <P className="font-medium text-foreground">Field Parameters</P>
                 <Ul>
-                    <Li>Field orientation: optional vertical or horizontal. Defaults to vertical.</Li>
-                    <Li>FieldLegend variant: optional legend variant. Defaults to legend.</Li>
-                    <Li>FieldContent: no parameters.</Li>
-                    <Li>FieldLabel htmlFor: optional id of the associated control.</Li>
+                    <Li>
+                        <Code>orientation</Code>: optional <Code>vertical</Code> or <Code>horizontal</Code>. Defaults to{' '}
+                        <Code>vertical</Code>.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">FieldLegend Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>variant</Code>: optional <Code>legend</Code> or <Code>label</Code>. Defaults to{' '}
+                        <Code>legend</Code>.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">FieldLabel Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>htmlFor</Code>: optional id of the associated control.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Field>
@@ -137,7 +197,9 @@ export const content = (
             <Stack className="gap-2">
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
-                    <Li>htmlFor: optional id of the associated control.</Li>
+                    <Li>
+                        <Code>htmlFor</Code>: optional id of the associated control.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Label htmlFor="search" i18n="..." />`}</CodeBlock>
@@ -150,14 +212,30 @@ export const content = (
             <Stack className="gap-2">
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
-                    <Li>id: optional control id.</Li>
-                    <Li>label: optional accessible label.</Li>
-                    <Li>placeholder: optional placeholder text.</Li>
-                    <Li>value: optional value or writable binding.</Li>
-                    <Li>type: optional input type.</Li>
-                    <Li>disabled: optional boolean.</Li>
-                    <Li>autoComplete: optional browser autocomplete value.</Li>
-                    <Li>aria-invalid: optional invalid state.</Li>
+                    <Li>
+                        <Code>id</Code>: optional control id.
+                    </Li>
+                    <Li>
+                        <Code>label</Code>: optional accessible label.
+                    </Li>
+                    <Li>
+                        <Code>placeholder</Code>: optional placeholder text.
+                    </Li>
+                    <Li>
+                        <Code>value</Code>: optional value or writable binding.
+                    </Li>
+                    <Li>
+                        <Code>type</Code>: optional input type.
+                    </Li>
+                    <Li>
+                        <Code>disabled</Code>: optional boolean.
+                    </Li>
+                    <Li>
+                        <Code>autoComplete</Code>: optional browser autocomplete value.
+                    </Li>
+                    <Li>
+                        <Code>aria-invalid</Code>: optional invalid state.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Input id="quantity" type="number" value="$form.quantity" />`}</CodeBlock>
@@ -170,12 +248,24 @@ export const content = (
             <Stack className="gap-2">
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
-                    <Li>id: optional control id.</Li>
-                    <Li>label: optional accessible label.</Li>
-                    <Li>placeholder: optional placeholder text.</Li>
-                    <Li>value: optional value or writable binding.</Li>
-                    <Li>disabled: optional boolean.</Li>
-                    <Li>cols and rows: optional numeric dimensions.</Li>
+                    <Li>
+                        <Code>id</Code>: optional control id.
+                    </Li>
+                    <Li>
+                        <Code>label</Code>: optional accessible label.
+                    </Li>
+                    <Li>
+                        <Code>placeholder</Code>: optional placeholder text.
+                    </Li>
+                    <Li>
+                        <Code>value</Code>: optional value or writable binding.
+                    </Li>
+                    <Li>
+                        <Code>disabled</Code>: optional boolean.
+                    </Li>
+                    <Li>
+                        <Code>cols</Code> and <Code>rows</Code>: optional numeric dimensions.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Textarea id="notes" rows="4" value="$form.notes" />`}</CodeBlock>
@@ -189,19 +279,48 @@ export const content = (
                 behavior, and InputGroupTextarea matches Textarea behavior.
             </P>
             <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+                <P className="font-medium text-foreground">InputGroupAddon Parameters</P>
                 <Ul>
-                    <Li>InputGroup: no parameters.</Li>
-                    <Li>InputGroupAddon align: optional inline-start or inline-end. Defaults to inline-start.</Li>
-                    <Li>InputGroupButton type: optional button type. Defaults to button.</Li>
-                    <Li>InputGroupButton size: optional size. Defaults to xs.</Li>
-                    <Li>InputGroupButton variant: optional variant. Defaults to ghost.</Li>
-                    <Li>InputGroupButton disabled: optional boolean.</Li>
                     <Li>
-                        InputGroupInput: id, label, placeholder, value, type, disabled, autoComplete, and aria-invalid
-                        match Input.
+                        <Code>align</Code>: optional <Code>inline-start</Code> or <Code>inline-end</Code>. Defaults to{' '}
+                        <Code>inline-start</Code>.
                     </Li>
-                    <Li>InputGroupTextarea: id, label, placeholder, value, disabled, cols, and rows match Textarea.</Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">InputGroupButton Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>type</Code>: optional button type. Defaults to <Code>button</Code>.
+                    </Li>
+                    <Li>
+                        <Code>size</Code>: optional size. Defaults to <Code>xs</Code>.
+                    </Li>
+                    <Li>
+                        <Code>variant</Code>: optional variant. Defaults to <Code>ghost</Code>.
+                    </Li>
+                    <Li>
+                        <Code>disabled</Code>: optional boolean.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">InputGroupInput Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>id</Code>, <Code>label</Code>, <Code>placeholder</Code>, <Code>value</Code>,{' '}
+                        <Code>type</Code>, <Code>disabled</Code>, <Code>autoComplete</Code>, and{' '}
+                        <Code>aria-invalid</Code>: match Input.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">InputGroupTextarea Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>id</Code>, <Code>label</Code>, <Code>placeholder</Code>, <Code>value</Code>,{' '}
+                        <Code>disabled</Code>, <Code>cols</Code>, and <Code>rows</Code>: match Textarea.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<InputGroup>
@@ -219,10 +338,18 @@ export const content = (
             <Stack className="gap-2">
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
-                    <Li>checked: optional controlled value or writable binding.</Li>
-                    <Li>defaultChecked: optional initial checked value.</Li>
-                    <Li>disabled: optional boolean.</Li>
-                    <Li>id: optional control id.</Li>
+                    <Li>
+                        <Code>checked</Code>: optional controlled value or writable binding.
+                    </Li>
+                    <Li>
+                        <Code>defaultChecked</Code>: optional initial checked value.
+                    </Li>
+                    <Li>
+                        <Code>disabled</Code>: optional boolean.
+                    </Li>
+                    <Li>
+                        <Code>id</Code>: optional control id.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<State id="accepted" value="false" />
@@ -236,11 +363,21 @@ export const content = (
             <Stack className="gap-2">
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
-                    <Li>checked: optional controlled value or writable binding.</Li>
-                    <Li>defaultChecked: optional initial checked value.</Li>
-                    <Li>disabled: optional boolean.</Li>
-                    <Li>id: optional control id.</Li>
-                    <Li>size: optional switch size. Defaults to default.</Li>
+                    <Li>
+                        <Code>checked</Code>: optional controlled value or writable binding.
+                    </Li>
+                    <Li>
+                        <Code>defaultChecked</Code>: optional initial checked value.
+                    </Li>
+                    <Li>
+                        <Code>disabled</Code>: optional boolean.
+                    </Li>
+                    <Li>
+                        <Code>id</Code>: optional control id.
+                    </Li>
+                    <Li>
+                        <Code>size</Code>: optional switch size. Defaults to <Code>default</Code>.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<State id="notifications" value="true" />
@@ -254,12 +391,25 @@ export const content = (
             <Stack className="gap-2">
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
-                    <Li>value: optional controlled value or writable binding.</Li>
-                    <Li>defaultValue: optional initial value.</Li>
-                    <Li>min: optional minimum. Defaults to 0.</Li>
-                    <Li>max: optional maximum. Defaults to 100.</Li>
-                    <Li>step: optional step. Defaults to 1.</Li>
-                    <Li>disabled, id, name, and orientation are optional.</Li>
+                    <Li>
+                        <Code>value</Code>: optional controlled value or writable binding.
+                    </Li>
+                    <Li>
+                        <Code>defaultValue</Code>: optional initial value.
+                    </Li>
+                    <Li>
+                        <Code>min</Code>: optional minimum. Defaults to <Code>0</Code>.
+                    </Li>
+                    <Li>
+                        <Code>max</Code>: optional maximum. Defaults to <Code>100</Code>.
+                    </Li>
+                    <Li>
+                        <Code>step</Code>: optional step. Defaults to <Code>1</Code>.
+                    </Li>
+                    <Li>
+                        <Code>disabled</Code>, <Code>id</Code>, <Code>name</Code>, and <Code>orientation</Code>:
+                        optional.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<State id="budget" value="50" />
@@ -273,11 +423,21 @@ export const content = (
             <Stack className="gap-2">
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
-                    <Li>pressed: optional controlled value or writable binding.</Li>
-                    <Li>defaultPressed: optional initial pressed value.</Li>
-                    <Li>disabled: optional boolean.</Li>
-                    <Li>id: optional control id.</Li>
-                    <Li>size and variant are optional.</Li>
+                    <Li>
+                        <Code>pressed</Code>: optional controlled value or writable binding.
+                    </Li>
+                    <Li>
+                        <Code>defaultPressed</Code>: optional initial pressed value.
+                    </Li>
+                    <Li>
+                        <Code>disabled</Code>: optional boolean.
+                    </Li>
+                    <Li>
+                        <Code>id</Code>: optional control id.
+                    </Li>
+                    <Li>
+                        <Code>size</Code> and <Code>variant</Code>: optional.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<State id="enabled" value="false" />
@@ -289,14 +449,33 @@ export const content = (
             </Heading>
             <P>Group of related ToggleGroupItem choices with single or multiple selection.</P>
             <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+                <P className="font-medium text-foreground">ToggleGroup Parameters</P>
                 <Ul>
-                    <Li>ToggleGroup value: optional controlled value.</Li>
-                    <Li>ToggleGroup defaultValue: optional initial value.</Li>
-                    <Li>ToggleGroup type: optional single or multiple. Defaults to single.</Li>
-                    <Li>ToggleGroup disabled, loopFocus, orientation, size, spacing, and variant are optional.</Li>
-                    <Li>ToggleGroupItem value: required item value.</Li>
-                    <Li>ToggleGroupItem size and variant are optional overrides.</Li>
+                    <Li>
+                        <Code>value</Code>: optional controlled value.
+                    </Li>
+                    <Li>
+                        <Code>defaultValue</Code>: optional initial value.
+                    </Li>
+                    <Li>
+                        <Code>type</Code>: optional <Code>single</Code> or <Code>multiple</Code>. Defaults to{' '}
+                        <Code>single</Code>.
+                    </Li>
+                    <Li>
+                        <Code>disabled</Code>, <Code>loopFocus</Code>, <Code>orientation</Code>, <Code>size</Code>,{' '}
+                        <Code>spacing</Code>, and <Code>variant</Code>: optional.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">ToggleGroupItem Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>value</Code>: required item value.
+                    </Li>
+                    <Li>
+                        <Code>size</Code> and <Code>variant</Code>: optional overrides.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<ToggleGroup type="single" defaultValue="list">
@@ -310,13 +489,29 @@ export const content = (
             </Heading>
             <P>Mutually exclusive option group made from labeled RadioGroupItem choices.</P>
             <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+                <P className="font-medium text-foreground">RadioGroup Parameters</P>
                 <Ul>
-                    <Li>RadioGroup value: optional controlled value.</Li>
-                    <Li>RadioGroup defaultValue: optional initial value.</Li>
-                    <Li>RadioGroup disabled, form, name, readOnly, and required are optional.</Li>
-                    <Li>RadioGroupItem value: required item value.</Li>
-                    <Li>RadioGroupItem disabled, readOnly, and required are optional.</Li>
+                    <Li>
+                        <Code>value</Code>: optional controlled value.
+                    </Li>
+                    <Li>
+                        <Code>defaultValue</Code>: optional initial value.
+                    </Li>
+                    <Li>
+                        <Code>disabled</Code>, <Code>form</Code>, <Code>name</Code>, <Code>readOnly</Code>, and{' '}
+                        <Code>required</Code>: optional.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">RadioGroupItem Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>value</Code>: required item value.
+                    </Li>
+                    <Li>
+                        <Code>disabled</Code>, <Code>readOnly</Code>, and <Code>required</Code>: optional.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<RadioGroup name="priority" defaultValue="medium">
@@ -333,14 +528,33 @@ export const content = (
                 Writable value bindings use a state object with a value field.
             </P>
             <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+                <P className="font-medium text-foreground">Select Parameters</P>
                 <Ul>
-                    <Li>Select value: optional controlled value or writable binding.</Li>
-                    <Li>Select defaultValue: optional initial selected value.</Li>
-                    <Li>Select open and defaultOpen are optional.</Li>
-                    <Li>SelectTrigger, SelectContent, SelectGroup, and SelectSeparator: no parameters.</Li>
-                    <Li>SelectValue placeholder: optional fallback text.</Li>
-                    <Li>SelectItem value: required option value.</Li>
+                    <Li>
+                        <Code>value</Code>: optional controlled value or writable binding.
+                    </Li>
+                    <Li>
+                        <Code>defaultValue</Code>: optional initial selected value.
+                    </Li>
+                    <Li>
+                        <Code>open</Code> and <Code>defaultOpen</Code>: optional.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">SelectValue Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>placeholder</Code>: optional fallback text.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">SelectItem Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>value</Code>: required option value.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<State id="department" value="sales" />
@@ -364,18 +578,24 @@ export const content = (
                 Use text nodes for structured copy, headings, inline markup, code formatting, links, and simple spacing.
             </P>
             <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+                <P className="font-medium text-foreground">A Parameters</P>
                 <Ul>
-                    <Li>H1, H2, H3, H4, and P: optional value fallback.</Li>
-                    <Li>A: optional to, href, and active.</Li>
-                    <Li>B, U, S, Sup, Sub, and Code: no component-specific parameters.</Li>
-                    <Li>Pre: optional lang.</Li>
-                    <Li>Br and Hr have no parameters.</Li>
+                    <Li>
+                        <Code>to</Code>, <Code>href</Code>, and <Code>active</Code>: optional.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">Pre Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>lang</Code>: optional.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<H1 i18n="..." />
 <H2 i18n="..." />
-<H3 value="$warehouse.name" />
+<H3 i18n="..." />
 <H4 i18n="..." />
 <P i18n="..." />
 <A to="/issues/\${issue.id}" i18n="..." />
@@ -394,15 +614,8 @@ export const content = (
                 List
             </Heading>
             <P>
-                Ul and Ol render unordered or ordered list containers. Li renders one translated item inside either list.
+                Ul and Ol render unordered or ordered list containers. Li renders one item inside either list.
             </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>Ul and Ol: no parameters.</Li>
-                    <Li>Li: no component-specific parameters.</Li>
-                </Ul>
-            </Stack>
             <CodeBlock language="xml">{`<Ul>
   <Li i18n="..." />
   <Li i18n="..." />
@@ -422,29 +635,60 @@ export const content = (
                 defines aligned columns, while DataHeader and DataCell provide custom header and row content slots.
             </P>
             <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+                <P className="font-medium text-foreground">DataTable Parameters</P>
                 <Ul>
                     <Li>
-                        DataTable data: required expression resolving to an array, usually a Query id such as $orders.
+                        <Code>data</Code>: required expression resolving to an array, usually a Query id such as{' '}
+                        <Code>$orders</Code>.
                     </Li>
-                    <Li>DataTable as: optional row variable name exposed to DataCell children. Defaults to row.</Li>
-                    <Li>DataTable empty: optional empty-state message. Defaults to No results.</Li>
-                    <Li>DataColumn field: optional dotted row field used for shorthand cells and column id.</Li>
-                    <Li>DataColumn header: optional shorthand header text.</Li>
-                    <Li>DataColumn id: optional stable column id.</Li>
-                    <Li>DataHeader value: optional expression value.</Li>
-                    <Li>DataCell value: optional expression value.</Li>
+                    <Li>
+                        <Code>as</Code>: optional row variable name exposed to DataCell children. Defaults to{' '}
+                        <Code>row</Code>.
+                    </Li>
+                    <Li>
+                        <Code>empty</Code>: optional empty-state message. Defaults to <Code>No results.</Code>
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">DataColumn Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>field</Code>: optional dotted row field used for shorthand cells and column id.
+                    </Li>
+                    <Li>
+                        <Code>header</Code>: optional shorthand header text.
+                    </Li>
+                    <Li>
+                        <Code>id</Code>: optional stable column id.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">DataHeader Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>value</Code>: optional expression value.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">DataCell Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>value</Code>: optional expression value.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Query id="orders" path="/api/orders" />
 <DataTable data="$orders" as="order" empty="No orders found.">
-  <DataColumn field="number" header="Order" />
+  <DataColumn field="number" i18n="..." />
   <DataColumn>
     <DataHeader>
       <Flex><P i18n="..." /><Badge i18n="..." /></Flex>
     </DataHeader>
     <DataCell>
-      <Flex><P value="$order.customer.name" /><Badge value="$order.status" /></Flex>
+      <Flex><P i18n="..." name="$order.customer.name" /><Badge value="$order.status" /></Flex>
     </DataCell>
   </DataColumn>
 </DataTable>`}</CodeBlock>

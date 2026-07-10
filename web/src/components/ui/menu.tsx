@@ -19,21 +19,18 @@ type MenuSectionProps = {
     value: string;
     label?: string;
     icon?: LucideIcon;
-    disabled?: boolean;
     children?: React.ReactNode;
 };
 
 type MenuSubSectionProps = {
     value: string;
     label?: string;
-    disabled?: boolean;
     children?: React.ReactNode;
 };
 
 type ResolvedMenuSubSection = {
     value: string;
     label: string;
-    disabled?: boolean;
     content: React.ReactNode[];
 };
 
@@ -41,13 +38,12 @@ type ResolvedMenuSection = {
     value: string;
     label: string;
     icon?: LucideIcon;
-    disabled?: boolean;
     content: React.ReactNode[];
     subSections: ResolvedMenuSubSection[];
 };
 
 const menuItemVariants = cva(
-    'group/menu-item focus-visible:ring-ring/50 relative inline-flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors focus-visible:ring-[3px] focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50',
+    'group/menu-item focus-visible:ring-ring/50 relative inline-flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors focus-visible:ring-[3px] focus-visible:outline-none',
     {
         variants: {
             active: {
@@ -119,12 +115,10 @@ function parseMenuSections(children?: React.ReactNode): ResolvedMenuSection[] {
                 value: child.props.value,
                 label: child.props.label ?? prettifyValue(child.props.value),
                 icon: child.props.icon,
-                disabled: child.props.disabled,
                 content,
                 subSections: sectionChildren.filter(isMenuSubSectionElement).map((subSectionNode) => ({
                     value: subSectionNode.props.value,
                     label: subSectionNode.props.label ?? prettifyValue(subSectionNode.props.value),
-                    disabled: subSectionNode.props.disabled,
                     content: React.Children.toArray(subSectionNode.props.children),
                 })),
             },
@@ -132,18 +126,16 @@ function parseMenuSections(children?: React.ReactNode): ResolvedMenuSection[] {
     });
 }
 
-/** Resolves the first enabled root or nested item. */
+/** Resolves the first root or nested item. */
 function getInitialValue(sections: ResolvedMenuSection[]): string | undefined {
-    const firstSection = sections.find((section) => !section.disabled);
+    const firstSection = sections[0];
 
-    // Return no default when every section is disabled.
+    // Return no default when the menu has no sections.
     if (!firstSection) {
         return undefined;
     }
 
-    const firstSubSection = firstSection.subSections.find((subSection) => !subSection.disabled);
-
-    return firstSubSection?.value ?? firstSection.value;
+    return firstSection.subSections[0]?.value ?? firstSection.value;
 }
 
 /** Reads the current browser hash without the leading marker. */
@@ -177,16 +169,16 @@ function getSelectableMenuValue(sections: ResolvedMenuSection[], candidate?: str
 
     // Check roots and nested items for a match.
     for (const section of sections) {
-        // Match enabled root sections directly.
+        // Match root sections directly.
         if (section.value === candidate) {
-            return section.disabled ? undefined : section.value;
+            return section.value;
         }
 
         const subSection = section.subSections.find((item) => item.value === candidate);
 
-        // Match enabled nested items only under enabled roots.
+        // Match nested items.
         if (subSection) {
-            return section.disabled || subSection.disabled ? undefined : subSection.value;
+            return subSection.value;
         }
     }
 
@@ -392,7 +384,7 @@ export function Menu({
     /** Moves focus through rendered menu items. */
     function onKeyDown(event: React.KeyboardEvent<HTMLElement>) {
         const items = Array.from(
-            event.currentTarget.querySelectorAll<HTMLElement>('[data-menu-item="true"]:not([disabled])')
+            event.currentTarget.querySelectorAll<HTMLElement>('[data-menu-item="true"]')
         );
 
         // Ignore keyboard navigation when no items are focusable.
@@ -467,7 +459,6 @@ export function Menu({
                                     data-expanded={isExpanded}
                                     aria-expanded={hasSubSections ? isExpanded : undefined}
                                     aria-current={sectionIsActive ? 'page' : undefined}
-                                    disabled={section.disabled}
                                     className={menuItemVariants({ active: sectionIsActive })}
                                     onClick={() => {
                                         commitValue(section.value);
@@ -510,7 +501,6 @@ export function Menu({
                                                         data-menu-item="true"
                                                         data-state={subSectionIsActive ? 'active' : 'inactive'}
                                                         aria-current={subSectionIsActive ? 'page' : undefined}
-                                                        disabled={subSection.disabled}
                                                         className={menuItemVariants({
                                                             active: subSectionIsActive,
                                                             level: 'sub',

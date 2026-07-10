@@ -21,6 +21,7 @@ export function Badge({ props, nodes }: Props) {
 
 /** Resolves a validated XML badge variant. */
 function resolveBadgeVariant(value: string): BadgeVariant {
+    // Accept only badge variants supported by the UI component.
     switch (value) {
         case 'default':
         case 'destructive':

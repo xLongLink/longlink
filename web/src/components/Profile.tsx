@@ -33,6 +33,7 @@ export function UserProfile() {
     const { t } = useTranslation();
     const { user, signOut, switchAccount } = useUser();
 
+    // Hide the profile menu until a user is loaded.
     if (!user) {
         return null;
     }

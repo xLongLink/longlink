@@ -7,6 +7,7 @@ from sqlalchemy import Column, String, text
 from src.models.countries import DEFAULT_COUNTRY
 from src.models.locations import LocationProvider
 
+# Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.users import User
 

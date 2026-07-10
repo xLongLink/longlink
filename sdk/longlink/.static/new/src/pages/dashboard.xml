@@ -36,12 +36,12 @@
                     <P i18n="dashboard.metrics.budget.label" />
                     <Icon name="banknote" />
                 </Flex>
-                <P value="${`CHF ${limits.monthlyBudget}`}" />
+                <P i18n="dashboard.metrics.budget.value" amount="$limits.monthlyBudget" />
                 <Flex space="between">
                     <P i18n="dashboard.metrics.target.label" />
                     <Icon name="timer" />
                 </Flex>
-                <P value="${`${limits.approvalTarget} days`}" />
+                <P i18n="dashboard.metrics.target.value" days="$limits.approvalTarget" />
             </Stack>
         </Card>
     </Grid>
@@ -59,9 +59,9 @@
                                     <A to="/requests/${request.id}" i18n="dashboard.recent.open">
                                         <Icon name="arrow-right" />
                                     </A>
-                                    <P value="${`${request.vendor} - CHF ${request.amount}`}" />
+                                    <P i18n="dashboard.recent.summary" vendor="$request.vendor" amount="$request.amount" />
                                 </Stack>
-                                <P value="$request.status" />
+                                <P i18n="dashboard.recent.status" status="$request.status" />
                             </Flex>
                         </For>
                     </Stack>

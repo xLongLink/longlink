@@ -36,6 +36,7 @@ export default function Organization({ sectionName }: { sectionName?: Organizati
         error,
     } = useOrganization(organization);
 
+    // Redirect stale organization slugs to the canonical URL.
     if (organizationDetails && routeOrganization && organizationDetails.slug !== routeOrganization) {
         return (
             <Navigate

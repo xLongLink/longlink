@@ -22,6 +22,7 @@ export default function Organizations() {
     const nextPath = new URLSearchParams(location.search).get('next');
     const redirectTo = sanitizeRedirectPath(nextPath);
 
+    // Show sign-in prompt for anonymous visitors.
     if (!user) {
         return (
             <Layout brandOnly brandHref="/">

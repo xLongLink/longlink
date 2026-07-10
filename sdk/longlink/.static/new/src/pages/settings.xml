@@ -25,7 +25,7 @@
                         <Avatar>
                             <AvatarImage src="$reviewer.avatarUrl" alt="$reviewer.name" />
                             <AvatarFallback>
-                                <P value="$reviewer.initials" />
+                                <P i18n="settings.application.initials" initials="$reviewer.initials" />
                             </AvatarFallback>
                         </Avatar>
                         <P i18n="settings.application.reviewer" />
@@ -104,7 +104,7 @@
                     <Field>
                         <FieldLabel htmlFor="budget-limit" i18n="settings.preferences.limit" />
                         <Slider id="budget-limit" min="500" max="10000" step="500" value="$budgetLimit" />
-                        <P value="${`Auto-approve up to CHF ${budgetLimit.value}`}" />
+                        <P i18n="settings.preferences.limitValue" limit="$budgetLimit.value" />
                     </Field>
 
                     <Toggle pressed="$pinned">

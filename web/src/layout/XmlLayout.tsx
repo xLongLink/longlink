@@ -107,6 +107,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
         </>
     );
 
+    // Use a taller content container in SDK mode.
     if (isSdkMode) {
         return (
             <TopLayout header={header}>

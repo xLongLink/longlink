@@ -27,6 +27,7 @@ const ChartContext = React.createContext<ChartContextProps | null>(null);
 function useChart() {
     const context = React.useContext(ChartContext);
 
+    // Ensure chart consumers are rendered within context.
     if (!context) {
         throw new Error('useChart must be used within a <ChartContainer />');
     }
@@ -79,6 +80,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
             ? `[data-chart=${CSS.escape(id)}]`
             : `[data-chart=${JSON.stringify(id)}]`;
 
+    // Skip injecting styles when no colors are configured.
     if (!colorConfig.length) {
         return null;
     }
@@ -132,6 +134,7 @@ function ChartTooltipContent({
     const { config } = useChart();
 
     const tooltipLabel = React.useMemo(() => {
+        // Avoid rendering labels when disabled or empty.
         if (hideLabel || !payload?.length) {
             return null;
         }
@@ -141,10 +144,12 @@ function ChartTooltipContent({
         const itemConfig = getPayloadConfigFromPayload(config, item, key);
         const value = !labelKey && typeof label === 'string' ? (config[label]?.label ?? label) : itemConfig?.label;
 
+        // Let callers format the label when supplied.
         if (labelFormatter) {
             return <div className={cn('font-medium', labelClassName)}>{labelFormatter(value, payload)}</div>;
         }
 
+        // Hide empty tooltip labels.
         if (!value) {
             return null;
         }
@@ -152,6 +157,7 @@ function ChartTooltipContent({
         return <div className={cn('font-medium', labelClassName)}>{value}</div>;
     }, [label, labelFormatter, payload, hideLabel, labelClassName, config, labelKey]);
 
+    // Do not render inactive or empty tooltips.
     if (!active || !payload?.length) {
         return null;
     }
@@ -254,6 +260,7 @@ function ChartLegendContent({
 } & RechartsPrimitive.DefaultLegendContentProps) {
     const { config } = useChart();
 
+    // Hide the legend when there is nothing to show.
     if (!payload?.length) {
         return null;
     }
@@ -298,6 +305,7 @@ function ChartLegendContent({
 }
 
 function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key: string) {
+    // Ignore primitive payload values.
     if (typeof payload !== 'object' || payload === null) {
         return undefined;
     }
@@ -309,6 +317,7 @@ function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key:
 
     let configLabelKey: string = key;
 
+    // Prefer direct payload label overrides.
     if (key in payload && typeof payload[key as keyof typeof payload] === 'string') {
         configLabelKey = payload[key as keyof typeof payload] as string;
     } else if (

@@ -31,6 +31,7 @@ const CarouselContext = React.createContext<CarouselContextProps | null>(null);
 function useCarousel() {
     const context = React.useContext(CarouselContext);
 
+    // Ensure carousel consumers are inside the provider.
     if (!context) {
         throw new Error('useCarousel must be used within a <Carousel />');
     }
@@ -58,6 +59,7 @@ function Carousel({
     const [canScrollNext, setCanScrollNext] = React.useState(false);
 
     const onSelect = React.useCallback((api: CarouselApi) => {
+        // Ignore selection updates before the API is ready.
         if (!api) return;
         setCanScrollPrev(api.canScrollPrev());
         setCanScrollNext(api.canScrollNext());
@@ -73,6 +75,7 @@ function Carousel({
 
     const handleKeyDown = React.useCallback(
         (event: React.KeyboardEvent<HTMLDivElement>) => {
+            // Move to the previous slide from the keyboard.
             if (event.key === 'ArrowLeft') {
                 event.preventDefault();
                 scrollPrev();
@@ -85,11 +88,13 @@ function Carousel({
     );
 
     React.useEffect(() => {
+        // Wait until both the API and callback are available.
         if (!api || !setApi) return;
         setApi(api);
     }, [api, setApi]);
 
     React.useEffect(() => {
+        // Wait for the carousel API before binding events.
         if (!api) return;
         onSelect(api);
         api.on('reInit', onSelect);

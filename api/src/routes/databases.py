@@ -32,6 +32,8 @@ async def get_database_registry(registry_id: UUID, _: User = Depends(authsupport
     """Return one database backend registration."""
 
     registry = await database.get(registry_id)
+
+    # Require an existing active registry.
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 
@@ -44,6 +46,7 @@ async def delete_database_registry(registry_id: UUID, user: User = Depends(autha
 
     deleted = await database.delete(registry_id, user)
 
+    # Report missing registries as not found.
     if not deleted:
         raise NotFoundError("Database registry", registry_id)
 
@@ -56,6 +59,7 @@ async def create_database_registry(
 ) -> DatabaseRegistry:
     """Create one database backend registration."""
 
+    # Build a stable slug from the submitted name.
     try:
         slug = names.slugify(payload.name)
     except ValueError as exc:
@@ -74,10 +78,14 @@ async def list_database_databases(registry_id: UUID, _: User = Depends(authsuppo
     """List all databases on a database backend."""
 
     registry = await database.get(registry_id)
+
+    # Require an existing active registry.
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 
     database_adapter = adapters.database(registry)
+
+    # Inspect backend databases through the adapter.
     try:
         database_names = await database_adapter.databases()
     except Exception as exc:
@@ -99,10 +107,14 @@ async def list_database_schemas(
     """List all schemas in a database on a database backend."""
 
     registry = await database.get(registry_id)
+
+    # Require an existing active registry.
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 
     database_adapter = adapters.database(registry)
+
+    # Inspect backend schemas through the adapter.
     try:
         schema_names = await database_adapter.schemas(database_name)
     except Exception as exc:
@@ -121,10 +133,14 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
     """Return total and free storage for one database backend."""
 
     registry = await database.get(registry_id)
+
+    # Require an existing active registry.
     if registry is None:
         raise NotFoundError("Database registry", registry_id)
 
     database_adapter = adapters.database(registry)
+
+    # Inspect backend usage through the adapter.
     try:
         data = await database_adapter.usage()
     except Exception as exc:

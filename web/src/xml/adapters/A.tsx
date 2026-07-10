@@ -17,6 +17,7 @@ export function A({ props, nodes }: Props) {
     const resolvedHref = useAnchorUrl(href);
     const resolvedTo = to && isAppRelativeUrl(to) ? resolveUrl(String(ctx.navigationBaseUrl ?? ''), to) : '';
 
+    // Use router links for safe app-relative destinations.
     if (to && resolvedTo) {
         return (
             <Link

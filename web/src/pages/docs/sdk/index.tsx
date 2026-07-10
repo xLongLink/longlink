@@ -1,10 +1,10 @@
 import { CodeBlock } from '@/components/CodeBlock';
+import { CodeTabs } from '@/components/CodeTabs';
 import { A } from '@/components/ui/a';
 import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
 import { P } from '@/components/ui/p';
 import { Stack } from '@/components/ui/stack';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     AppWindow,
     ArrowLeftRight,
@@ -89,79 +89,52 @@ export const content = (
         <Heading id="create-a-project" level="h2">
             Create a Project
         </Heading>
-        <Heading id="install" level="h3">
-            Install
-        </Heading>
-        <Tabs defaultValue="pip">
-            <TabsList>
-                <TabsTrigger value="pip">pip</TabsTrigger>
-                <TabsTrigger value="uv">uv</TabsTrigger>
-            </TabsList>
-            <TabsContent value="pip">
-                <CodeBlock language="bash">pip install longlink</CodeBlock>
-            </TabsContent>
-            <TabsContent value="uv">
-                <CodeBlock language="bash">uv add longlink</CodeBlock>
-            </TabsContent>
-        </Tabs>
-        <Heading id="initialize-a-project" level="h3">
-            Initialize a Project
-        </Heading>
-        <Tabs defaultValue="pip">
-            <TabsList>
-                <TabsTrigger value="pip">pip</TabsTrigger>
-                <TabsTrigger value="uv">uv</TabsTrigger>
-            </TabsList>
-            <TabsContent value="pip">
-                <CodeBlock language="bash">longlink init</CodeBlock>
-            </TabsContent>
-            <TabsContent value="uv">
-                <CodeBlock language="bash">uv run longlink init</CodeBlock>
-            </TabsContent>
-        </Tabs>
-        <Heading id="applications" level="h2">
-            Application Structure
-        </Heading>
+        <P>Install LongLink:</P>
+        <CodeTabs
+            defaultValue="pip"
+            items={[
+                { code: 'pip install longlink', label: 'pip', value: 'pip' },
+                { code: 'uv add longlink', label: 'uv', value: 'uv' },
+            ]}
+        />
+        <P>Create the application scaffold:</P>
+        <CodeTabs
+            defaultValue="pip"
+            items={[
+                { code: 'longlink init', label: 'pip', value: 'pip' },
+                { code: 'uv run longlink init', label: 'uv', value: 'uv' },
+            ]}
+        />
         <P>
-            <Code>longlink init</Code> creates a project scaffold with separate locations for API routes, data models,
-            XML pages, typed schemas, environment declarations, and tests:
+            <Code>longlink init</Code> creates an application scaffold with separate locations for routes, schemas,
+            database models and services, XML pages, translations, migrations, environment declarations, and tests:
         </P>
         <CodeBlock language="text">
             {
-                '├── src/\n│   ├── api/          # Route registration\n│   ├── models/       # Database models\n│   ├── pages/        # Page definitions\n│   ├── types/        # Data schemas\n│   └── envs.py       # Configuration\n├── tests/\n│   ├── api/          # API tests\n│   └── conftest.py   # Test setup\n├── main.py           # Entry point\n├── Dockerfile        # Container build definition\n├── pyproject.toml    # Project configuration\n├── .env.sample       # Environment template\n├── AGENTS.md         # Platform metadata\n└── README.md'
+                '├── src/\n│   ├── database/         # Database models and services\n│   ├── i18n/             # Translation catalogs\n│   ├── pages/            # XML page definitions\n│   ├── routes/           # FastAPI route modules\n│   ├── schemas/          # Pydantic request and response schemas\n│   └── envs.py           # Environment settings\n├── migrations/           # Alembic application migrations\n├── tests/                # Application tests\n├── main.py               # Application entry point\n├── pyproject.toml        # Project configuration\n├── .env.sample           # Environment template\n├── .gitignore\n├── AGENTS.md             # Application agent guide\n└── README.md'
             }
         </CodeBlock>
         <Heading id="local-development" level="h2">
             Local Runtime
         </Heading>
         <P>Install development dependencies:</P>
-        <Tabs defaultValue="pip">
-            <TabsList>
-                <TabsTrigger value="pip">pip</TabsTrigger>
-                <TabsTrigger value="uv">uv</TabsTrigger>
-            </TabsList>
-            <TabsContent value="pip">
-                <CodeBlock language="bash">pip install .[dev]</CodeBlock>
-            </TabsContent>
-            <TabsContent value="uv">
-                <CodeBlock language="bash">uv sync --extra dev</CodeBlock>
-            </TabsContent>
-        </Tabs>
+        <CodeTabs
+            defaultValue="pip"
+            items={[
+                { code: 'pip install .[dev]', label: 'pip', value: 'pip' },
+                { code: 'uv sync --extra dev', label: 'uv', value: 'uv' },
+            ]}
+        />
         <P>
             Run the development server against <Code>main:app</Code> with the embedded SDK web bundle:
         </P>
-        <Tabs defaultValue="pip">
-            <TabsList>
-                <TabsTrigger value="pip">pip</TabsTrigger>
-                <TabsTrigger value="uv">uv</TabsTrigger>
-            </TabsList>
-            <TabsContent value="pip">
-                <CodeBlock language="bash">longlink dev</CodeBlock>
-            </TabsContent>
-            <TabsContent value="uv">
-                <CodeBlock language="bash">uv run longlink dev</CodeBlock>
-            </TabsContent>
-        </Tabs>
+        <CodeTabs
+            defaultValue="pip"
+            items={[
+                { code: 'longlink dev', label: 'pip', value: 'pip' },
+                { code: 'uv run longlink dev', label: 'uv', value: 'uv' },
+            ]}
+        />
         <P>
             For a small working application, see the{' '}
             <A href="https://github.com/xLongLink/sample">LongLink sample repository</A>.

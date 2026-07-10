@@ -39,11 +39,12 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
     const [activeTocHref, setActiveTocHref] = useState('');
     const [pageToc, setPageToc] = useState<PageTocItem[]>([]);
     const { content, metadata } = page;
-    const loginHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
+    const getStartedHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
 
     useEffect(() => {
         const contentElement = contentRef.current;
 
+        // Clear the table of contents until content is mounted.
         if (!contentElement) {
             setPageToc([]);
             return;
@@ -72,6 +73,7 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
     }, [location.pathname, content]);
 
     useEffect(() => {
+        // Reset the active item when there are no headings.
         if (!pageToc.length) {
             setActiveTocHref('');
             return;
@@ -89,6 +91,7 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
 
             // Keep the previous heading active until the next heading passes under the header.
             for (const heading of headingElements) {
+                // Stop before headings that are still below the header.
                 if (heading.getBoundingClientRect().top > activeOffset) {
                     break;
                 }
@@ -104,6 +107,7 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
             setActiveTocHref((currentHref) => (currentHref === nextActiveHref ? currentHref : nextActiveHref));
         }
 
+        // Respect a hash that targets a known heading.
         if (location.hash && pageToc.some((item) => item.href === location.hash)) {
             setNextActiveHeading(location.hash);
         } else {
@@ -120,6 +124,7 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
             }
         );
 
+        // Observe each heading used by the generated table of contents.
         for (const heading of headingElements) {
             observer.observe(heading);
         }
@@ -135,7 +140,8 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
 
             <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
                 <div className="flex h-full w-full flex-col shadow-sm">
-                    <div className="pointer-events-auto relative shrink-0 border-b border-border bg-card">
+                    <div className="pointer-events-auto relative shrink-0 bg-card">
+                        <div className="pointer-events-none absolute right-2 bottom-0 left-2 h-px bg-border" />
                         <SidebarTrigger className="absolute top-1/2 left-4 z-10 shrink-0 -translate-y-1/2 cursor-pointer active:!-translate-y-1/2 lg:left-6" />
 
                         <div className="grid h-14 lg:grid-cols-[minmax(0,1fr)_14rem]">
@@ -176,13 +182,13 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
                             </div>
 
                             <Link
-                                to={loginHref}
+                                to={getStartedHref}
                                 className={cn(
                                     buttonVariants({ size: 'sm' }),
                                     'absolute top-0 bottom-0 right-4 z-10 my-auto h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 lg:right-6'
                                 )}
                             >
-                                {t('actions.login')}
+                                {t('actions.getStarted')}
                             </Link>
                         </div>
                     </div>

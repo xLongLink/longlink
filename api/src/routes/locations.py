@@ -23,6 +23,8 @@ async def get_location(location_id: UUID, _: User = Depends(authsupport)) -> Loc
     """Return one location."""
 
     location = await locations.get(location_id)
+
+    # Require an existing active location.
     if location is None:
         raise NotFoundError("Location", location_id)
 
@@ -34,6 +36,8 @@ async def delete_location(location_id: UUID, user: User = Depends(authadmin)) ->
     """Soft-delete one location."""
 
     deleted = await locations.delete(location_id, user)
+
+    # Report missing locations as not found.
     if not deleted:
         raise NotFoundError("Location", location_id)
 
@@ -44,6 +48,7 @@ async def delete_location(location_id: UUID, user: User = Depends(authadmin)) ->
 async def create_location(payload: LocationCreate, user: User = Depends(authadmin)) -> Location:
     """Create one location."""
 
+    # Build a stable slug from the submitted name.
     try:
         slug = names.slugify(payload.name)
     except ValueError as exc:

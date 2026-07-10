@@ -12,8 +12,8 @@ export const metadata = {
 
 export const content = (
     <Stack>
-        <Heading id="self-hosted-control-plane" level="h1">
-            Self-hosted Control Plane
+        <Heading id="self-hosted" level="h1">
+            Self-hosted
         </Heading>
         <P>
             Self-hosted mode runs the LongLink control plane and managed application workloads on infrastructure you
@@ -27,10 +27,6 @@ export const content = (
         <Heading id="api-environment-variables" level="h2">
             API Environment Variables
         </Heading>
-        <P>
-            Configure the API container with these environment variables. Required values are marked in the variable
-            column; all other values show their API default.
-        </P>
         <div className="overflow-hidden rounded-md border">
             <Table>
                 <TableHeader className="bg-muted/50">

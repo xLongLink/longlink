@@ -5,6 +5,7 @@ from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum, Column
 from src.models.roles import OrganizationRoles
 
+# Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.users import User
     from src.database.models.organizations import Organization

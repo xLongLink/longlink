@@ -7,6 +7,8 @@ def migrate_command() -> None:
     """Generate and apply database migrations for the current app."""
     apply_migrations()
     migration_created = make_migrations()
+
+    # Apply the generated migration only when Alembic detected schema changes.
     if migration_created:
         apply_migrations()
         click.echo("Migrations generated and applied successfully.")

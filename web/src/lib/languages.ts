@@ -16,6 +16,7 @@ const supportedLanguages = new Set<string>(LANGUAGE_OPTIONS.map((option) => opti
 export function resolveSupportedLanguage(language: UserLanguage | null | undefined): Language {
     const normalizedLanguage = language?.trim().toLowerCase();
 
+    // Default when the user has not selected a language.
     if (!normalizedLanguage) {
         return DEFAULT_LANGUAGE;
     }
@@ -23,7 +24,9 @@ export function resolveSupportedLanguage(language: UserLanguage | null | undefin
     const baseLanguage = normalizedLanguage.split(/[-_]/)[0];
     const languageCandidates = [normalizedLanguage, baseLanguage];
 
+    // Prefer exact matches before falling back to the base language.
     for (const languageCandidate of languageCandidates) {
+        // Return the first supported language candidate.
         if (languageCandidate && supportedLanguages.has(languageCandidate)) {
             return languageCandidate as Language;
         }

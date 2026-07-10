@@ -39,16 +39,22 @@ class ApplicationCreate(BaseModel):
     def validate_environment_variables(cls, envs: dict[str, str]) -> dict[str, str]:
         """Validate application environment names and bounded value sizes."""
 
+        # Limit the number of environment values accepted per application.
         if len(envs) > APPLICATION_ENVIRONMENT_COUNT_MAX:
             raise ValueError(f"Application environment variables must be at most {APPLICATION_ENVIRONMENT_COUNT_MAX}")
 
+        # Validate each environment name and value independently.
         for name, value in envs.items():
+
+            # Bound environment variable names to the supported label size.
             if len(name) > APPLICATION_ENVIRONMENT_NAME_MAX_LENGTH:
                 raise ValueError(f"Environment variable '{name}' is too long")
 
+            # Environment names must be shell-compatible identifiers.
             if not APPLICATION_ENVIRONMENT_NAME_PATTERN.fullmatch(name):
                 raise ValueError(f"Environment variable '{name}' is invalid")
 
+            # Bound environment values to avoid oversized runtime secrets.
             if len(value) > APPLICATION_ENVIRONMENT_VALUE_MAX_LENGTH:
                 raise ValueError(f"Environment variable '{name}' value is too long")
 

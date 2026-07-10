@@ -14,6 +14,8 @@ async def get_me(user: User = Depends(authuser)) -> dict[str, object]:
     """Return the authenticated user's details."""
 
     profile = await users.profile(user.id)
+
+    # Require the authenticated user profile to exist.
     if profile is None:
         raise NotFoundError("User", user.id)
 
@@ -34,12 +36,16 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser)) -> dict[
 
     params = payload.model_dump(exclude_unset=True)
     updated_user = await users.upsert(oidc=user.oidc, **params)
+
+    # Keep organization mirrors in sync after profile changes.
     try:
         await bootstrap.sync_user_organizations(updated_user)
     except Exception as exc:
         raise UnavailableError("Failed to synchronize user profile") from exc
 
     profile = await users.profile(updated_user.id)
+
+    # Require the refreshed user profile to exist.
     if profile is None:
         raise NotFoundError("User", updated_user.id)
 

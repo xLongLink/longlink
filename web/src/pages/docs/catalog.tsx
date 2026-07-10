@@ -35,16 +35,18 @@ import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } 
 
 import type { ArticleBreadcrumb, ArticleNavigationGroup, ArticleNavigationItem, ArticlePage } from '@/pages/catalog';
 import {
-    Blocks,
+    AppWindow,
     BookOpen,
-    Boxes,
+    Braces,
     Building2,
+    Component,
     Database,
     FileCode2,
     FlaskConical,
     Globe,
     HardDrive,
     LayoutTemplate,
+    Package,
     Rocket,
     ServerCog,
     ShieldCheck,
@@ -88,6 +90,7 @@ function docPage(group: DocGroupTitle, { children, ...page }: DocPageOptions): D
             : [...groupBreadcrumbs, { title: page.title, path: page.path }];
     const articlePage = { ...page, group, breadcrumbs };
 
+    // Return leaf pages without nested navigation.
     if (!children?.length) {
         return articlePage;
     }
@@ -110,9 +113,11 @@ function docSection(title: DocGroupTitle, items: DocPageOptions[]): DocSection {
 function flattenDocPages(items: DocNavigationPage[]): GroupedDocPage[] {
     const pages: GroupedDocPage[] = [];
 
+    // Visit every page in the navigation tree.
     for (const item of items) {
         pages.push(item);
 
+        // Recurse into nested pages.
         if (item.children?.length) {
             pages.push(...flattenDocPages(item.children));
         }
@@ -129,6 +134,7 @@ function navigationItem(page: DocNavigationPage): ArticleNavigationItem {
         icon: page.icon,
     };
 
+    // Preserve nested pages in sidebar items.
     if (page.children?.length) {
         item.children = page.children.map(navigationItem);
     }
@@ -164,7 +170,7 @@ const DOC_SECTIONS: DocSection[] = [
         {
             title: 'Applications',
             path: '/docs/api/applications',
-            icon: Boxes,
+            icon: AppWindow,
             content: docsApiApplicationsContent,
             metadata: docsApiApplicationsMetadata,
         },
@@ -180,7 +186,7 @@ const DOC_SECTIONS: DocSection[] = [
         {
             title: 'Overview',
             path: '/docs/sdk',
-            icon: Blocks,
+            icon: Package,
             content: docsSdkIndexContent,
             metadata: docsSdkIndexMetadata,
         },
@@ -236,7 +242,7 @@ const DOC_SECTIONS: DocSection[] = [
                 {
                     title: 'Expressions',
                     path: '/docs/sdk/pages/expressions',
-                    icon: FileCode2,
+                    icon: Braces,
                     content: docsSdkExpressionsContent,
                     metadata: docsSdkExpressionsMetadata,
                 },
@@ -250,7 +256,7 @@ const DOC_SECTIONS: DocSection[] = [
                 {
                     title: 'Components',
                     path: '/docs/sdk/pages/components',
-                    icon: Blocks,
+                    icon: Component,
                     content: docsSdkComponentsContent,
                     metadata: docsSdkComponentsMetadata,
                 },

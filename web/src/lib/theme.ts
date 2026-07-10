@@ -154,6 +154,7 @@ export const THEME_PRESETS: Record<Exclude<Theme, 'system'>, Omit<ThemeConfig, '
 
 /** Resolves the selected theme to a concrete light or dark mode. */
 export function resolveTheme(theme: Theme): Exclude<Theme, 'system'> {
+    // Concrete themes do not need media-query resolution.
     if (theme !== 'system') {
         return theme;
     }

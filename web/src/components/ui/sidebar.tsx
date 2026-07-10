@@ -34,6 +34,7 @@ const SidebarContext = React.createContext<SidebarContextProps | null>(null);
 
 function useSidebar() {
     const context = React.useContext(SidebarContext);
+    // Ensure sidebar consumers are inside the provider.
     if (!context) {
         throw new Error('useSidebar must be used within a SidebarProvider.');
     }
@@ -64,6 +65,7 @@ function SidebarProvider({
     const setOpen = React.useCallback(
         (value: boolean | ((value: boolean) => boolean)) => {
             const openState = typeof value === 'function' ? value(open) : value;
+            // Notify controlled callers before falling back to local state.
             if (setOpenProp) {
                 setOpenProp(openState);
             } else {
@@ -84,6 +86,7 @@ function SidebarProvider({
     // Adds a keyboard shortcut to toggle the sidebar.
     React.useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
+            // Toggle only for the configured command shortcut.
             if (event.key === SIDEBAR_KEYBOARD_SHORTCUT && (event.metaKey || event.ctrlKey)) {
                 event.preventDefault();
                 toggleSidebar();
@@ -149,6 +152,7 @@ function Sidebar({
 }) {
     const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
 
+    // Render static sidebars without collapse behavior.
     if (collapsible === 'none') {
         return (
             <div
@@ -161,6 +165,7 @@ function Sidebar({
         );
     }
 
+    // Use the sheet variant on mobile screens.
     if (isMobile) {
         return (
             <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
@@ -496,10 +501,12 @@ function SidebarMenuButton({
         },
     });
 
+    // Return the raw button when no tooltip is needed.
     if (!tooltip) {
         return comp;
     }
 
+    // Normalize string tooltips into content props.
     if (typeof tooltip === 'string') {
         tooltip = {
             children: tooltip,

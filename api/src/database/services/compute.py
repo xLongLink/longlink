@@ -16,6 +16,7 @@ from src.database.models.applications import Application
 async def fetch_all() -> list[ComputeRegistry]:
     """Return all registered compute backends."""
 
+    # Read registries within one scoped session.
     async with session_scope() as session:
         statement = (
             select(ComputeRegistry)
@@ -33,8 +34,11 @@ async def fetch_all() -> list[ComputeRegistry]:
 async def get(registry_id: UUID, include_deleted: bool = False) -> ComputeRegistry | None:
     """Return one compute backend by id."""
 
+    # Build the lookup within one scoped session.
     async with session_scope() as session:
         conditions = [ComputeRegistry.id == registry_id]
+
+        # Deleted registries are hidden unless requested.
         if not include_deleted:
             conditions.append(ComputeRegistry.deleted_at.is_(None))
 
@@ -54,6 +58,7 @@ async def get(registry_id: UUID, include_deleted: bool = False) -> ComputeRegist
 async def get_by_proxy_secret(proxy_secret: str) -> ComputeRegistry | None:
     """Return one active compute backend by its gateway proxy secret."""
 
+    # Resolve proxy secrets within one scoped session.
     async with session_scope() as session:
         statement = (
             select(ComputeRegistry)
@@ -85,8 +90,11 @@ async def create(
 ) -> ComputeRegistry:
     """Create one compute backend registration."""
 
+    # Create the registry within one scoped session.
     async with session_scope() as session:
         result = await session.execute(select(ComputeRegistry.id).where(ComputeRegistry.name == name))
+
+        # Fail early when the name already exists.
         if result.scalar_one_or_none() is not None:
             raise ConflictError("Compute registry already exists")
 
@@ -109,6 +117,7 @@ async def create(
         compute.updated_id = user.id
         session.add(compute)
 
+        # Commit while translating uniqueness races.
         try:
             await session.commit()
         except IntegrityError as exc:
@@ -132,8 +141,11 @@ async def create(
 async def delete(registry_id: UUID, user: User) -> bool:
     """Soft-delete one compute registry when no active app uses it."""
 
+    # Load the registry within one scoped session.
     async with session_scope() as session:
         registry = await session.get(ComputeRegistry, registry_id)
+
+        # Missing or deleted registries are already inactive.
         if registry is None or registry.deleted_at is not None:
             return False
 
@@ -143,6 +155,8 @@ async def delete(registry_id: UUID, user: User) -> bool:
                 Application.deleted_at.is_(None),
             )
         )
+
+        # Active applications keep their compute backend registered.
         if active_application.scalar_one_or_none() is not None:
             raise ConflictError("Compute registry is used by active applications")
 

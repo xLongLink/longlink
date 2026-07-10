@@ -82,7 +82,7 @@
                     <A to="/requests/${request.id}" i18n="requests.table.open">
                         <Icon name="arrow-right" />
                     </A>
-                    <P value="$request.title" />
+                    <P i18n="requests.table.title" title="$request.title" />
                 </Stack>
             </DataCell>
         </DataColumn>

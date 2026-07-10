@@ -18,11 +18,15 @@ def database(database_url: str) -> str:
 
     # Control-plane database access is async, so PostgreSQL connections use asyncpg.
     if parsed_url.drivername in POSTGRESQL_DRIVER_NAMES:
+
+        # Normalize PostgreSQL aliases to the async driver.
         if parsed_url.drivername != "postgresql+asyncpg":
             parsed_url = parsed_url.set(drivername="postgresql+asyncpg")
 
         # sslmode is a libpq/psycopg option; asyncpg receives it as an invalid kwarg.
         sslmode_query_keys = [key for key in parsed_url.query if key.lower() == "sslmode"]
+
+        # Remove unsupported sslmode query parameters.
         if sslmode_query_keys:
             parsed_url = parsed_url.difference_update_query(sslmode_query_keys)
 
@@ -42,17 +46,22 @@ def database(database_url: str) -> str:
 def safe_local_path(value: object, fallback: str) -> str:
     """Return a same-origin local path or the fallback path."""
 
+    # Only string values can be safe redirect paths.
     if not isinstance(value, str):
         return fallback
 
+    # Local paths must be rooted and not protocol-relative.
     if not value.startswith("/") or value.startswith("//") or "\\" in value:
         return fallback
 
+    # Control characters are never valid path content.
     if any(ord(character) < 32 or ord(character) == 127 for character in value):
         return fallback
 
     # Use URL parsing so protocol-relative paths cannot be confused with local paths.
     parsed_path = urllib.parse.urlsplit(value)
+
+    # Reject parsed absolute URLs after normalization.
     if parsed_path.scheme or parsed_path.netloc:
         return fallback
 
@@ -72,6 +81,7 @@ def origin(value: str) -> str:
     stripped_value = value.strip().rstrip("/")
     url = URL(stripped_value if "://" in stripped_value else f"https://{stripped_value}")
 
+    # Absolute URL inputs can return their parsed origin.
     if url.scheme and url.netloc:
         return f"{url.scheme}://{url.netloc}"
 
@@ -83,9 +93,12 @@ def hostname(value: str) -> str | None:
 
     stripped_value = value.strip()
     parsed_value = urllib.parse.urlsplit(stripped_value)
+
+    # Scheme-only HTTP URLs do not contain hostnames.
     if parsed_value.scheme in {"http", "https"} and not parsed_value.netloc:
         return None
 
+    # Parsed hostnames are normalized for comparisons.
     if parsed_value.hostname is not None:
         return parsed_value.hostname.lower()
 
@@ -96,6 +109,8 @@ def absolute_url_scheme(value: str) -> str | None:
     """Return the scheme when a value is an absolute URL."""
 
     parsed_value = urllib.parse.urlsplit(value.strip())
+
+    # Absolute URLs require both scheme and host.
     if parsed_value.scheme and parsed_value.netloc:
         return parsed_value.scheme
 

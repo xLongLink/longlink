@@ -55,12 +55,16 @@ class Operation(SQLModel, table=True):
     def status(self) -> OperationStatus:
         """Return the derived operation lifecycle state."""
 
+        # Stopped operations are terminal.
         if self.stopped_at is not None:
+
+            # Preserve error states as failed terminal operations.
             if self.error is not None:
                 return OperationStatus.failed
 
             return OperationStatus.completed
 
+        # Started operations are active until they stop.
         if self.started_at is not None:
             return OperationStatus.active
 

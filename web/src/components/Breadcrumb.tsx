@@ -20,6 +20,7 @@ const hiddenSegments = new Set(['orgs', 'apps']);
 
 /** Decodes one URL path segment without failing breadcrumb rendering. */
 function decodeSegment(segment: string): string {
+    // Decode readable labels when possible.
     try {
         return decodeURIComponent(segment);
     } catch {
@@ -37,6 +38,7 @@ function buildOrganizationCrumbs(segments: string[]): BreadcrumbTrailItem[] {
         href: `/orgs/${organization}`,
     };
 
+    // Keep organization routes to a single crumb.
     if (!application) {
         return [organizationCrumb];
     }
@@ -53,6 +55,7 @@ function buildOrganizationCrumbs(segments: string[]): BreadcrumbTrailItem[] {
 /** Builds generic breadcrumbs by hiding routing-only path segments. */
 function buildDefaultCrumbs(segments: string[]): BreadcrumbTrailItem[] {
     return segments.flatMap((segment, index) => {
+        // Drop routing-only segments from default trails.
         if (hiddenSegments.has(segment)) {
             return [];
         }

@@ -9,10 +9,14 @@ dependencies = [
   "python-multipart",
 ]
 
+[tool.longlink]
+environment = "src.envs:Env"
+
 [dependency-groups]
 dev = [
   "pytest",
   "pytest-asyncio",
+  "httpx",
   "isort",
 ]
 

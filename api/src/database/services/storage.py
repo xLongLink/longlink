@@ -14,6 +14,7 @@ from src.database.models.applications import Application
 async def fetch_all() -> list[StorageRegistry]:
     """Return all registered storage backends."""
 
+    # Open a session for the registry list query.
     async with session_scope() as session:
         statement = (
             select(StorageRegistry)
@@ -31,8 +32,11 @@ async def fetch_all() -> list[StorageRegistry]:
 async def get(registry_id: UUID, include_deleted: bool = False) -> StorageRegistry | None:
     """Return one storage backend by id."""
 
+    # Open a session for the registry lookup.
     async with session_scope() as session:
         conditions = [StorageRegistry.id == registry_id]
+
+        # Hide soft-deleted registries unless explicitly requested.
         if not include_deleted:
             conditions.append(StorageRegistry.deleted_at.is_(None))
 
@@ -63,9 +67,12 @@ async def create(
 ) -> StorageRegistry:
     """Create one storage backend registration."""
 
+    # Use one session for duplicate checks and creation.
     async with session_scope() as session:
         result = await session.execute(select(StorageRegistry).where(StorageRegistry.name == name))
         storage = result.scalar_one_or_none()
+
+        # Reject duplicate registry names before insert.
         if storage is not None:
             raise ConflictError("Storage registry already exists")
 
@@ -84,6 +91,7 @@ async def create(
         storage.updated_id = user.id
         session.add(storage)
 
+        # Commit so uniqueness violations surface consistently.
         try:
             await session.commit()
         except IntegrityError as exc:
@@ -107,8 +115,11 @@ async def create(
 async def delete(registry_id: UUID, user: User) -> bool:
     """Soft-delete one storage registry when no active app uses it."""
 
+    # Open a session for the deletion check.
     async with session_scope() as session:
         registry = await session.get(StorageRegistry, registry_id)
+
+        # Treat missing or deleted registries as no-ops.
         if registry is None or registry.deleted_at is not None:
             return False
 
@@ -118,6 +129,8 @@ async def delete(registry_id: UUID, user: User) -> bool:
                 Application.deleted_at.is_(None),
             )
         )
+
+        # Block deletion while active applications depend on it.
         if active_application.scalar_one_or_none() is not None:
             raise ConflictError("Storage registry is used by active applications")
 

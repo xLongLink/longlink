@@ -19,6 +19,7 @@ const translationResources = {
     },
 } satisfies Resource;
 
+// Initialize i18next once for the browser bundle.
 if (!i18next.isInitialized) {
     void i18next.use(initReactI18next).init({
         defaultNS: defaultNamespace,
@@ -35,6 +36,7 @@ if (!i18next.isInitialized) {
 
 /** Loads a JSON translation catalog into i18next when the language is selected. */
 async function loadTranslationCatalog(language: Language): Promise<void> {
+    // Skip the default language and already-loaded catalogs.
     if (language === DEFAULT_LANGUAGE || i18next.hasResourceBundle(language, defaultNamespace)) {
         return;
     }
@@ -57,11 +59,13 @@ export function ApiI18nProvider({ children, language }: { children: ReactNode; l
         // Lazy catalogs need to be registered before i18next switches to the selected language.
         void loadTranslationCatalog(resolvedLanguage)
             .then(() => {
+                // Apply the selected language only while the provider is mounted.
                 if (!wasCancelled && i18next.language !== resolvedLanguage) {
                     return i18next.changeLanguage(resolvedLanguage);
                 }
             })
             .catch(() => {
+                // Fall back to the default language when lazy loading fails.
                 if (!wasCancelled) {
                     document.documentElement.lang = DEFAULT_LANGUAGE;
                     void i18next.changeLanguage(DEFAULT_LANGUAGE);

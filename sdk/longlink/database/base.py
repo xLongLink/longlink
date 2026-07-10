@@ -2,6 +2,8 @@ import re
 from uuid import UUID
 from typing import Any, ClassVar
 from datetime import datetime
+from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
 from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel
 from sqlalchemy import Uuid, Column, String, DateTime
@@ -47,6 +49,7 @@ class User(Base, table=True):
 def validate_database_schema(database_schema: str) -> str:
     """Return a database schema name after rejecting unsafe search path input."""
 
+    # Reject schema names that could alter the search path.
     if not DATABASE_SCHEMA_PATTERN.fullmatch(database_schema):
         raise ValueError(
             "Database schema must be 1-63 letters, numbers, underscores, or hyphens, "
@@ -135,19 +138,27 @@ def create_engine(env: Envs) -> AsyncEngine:
     """Create and cache the async SQLModel engine for the current environment."""
     global _engine
 
+    # Reuse the cached engine once initialized.
     if _engine is not None:
         return _engine
 
+    # Testing uses an isolated in-memory SQLite database.
     if env.ENV == "testing":
         dburl = "sqlite+aiosqlite:///:memory:"
+
+    # Development keeps data in a local SQLite file.
     elif env.ENV == "development":
         dburl = "sqlite+aiosqlite:///./dev.db"
+
+    # Production builds the URL from injected database settings.
     else:
         database_host = env.DATABASE_HOST
         database_name = env.DATABASE_NAME
         database_port = env.DATABASE_PORT
         database_password = env.DATABASE_PASSWORD
         database_username = env.DATABASE_USERNAME
+
+        # Require all production connection settings before building the URL.
         if (
             database_host is None
             or database_name is None
@@ -172,9 +183,11 @@ def create_engine(env: Envs) -> AsyncEngine:
         "pool_recycle": 20,
     }
 
+    # Enable LIFO pooling for network database connections.
     if not dburl.startswith("sqlite+"):
         engine_kwargs["pool_use_lifo"] = True
 
+    # Scope PostgreSQL connections to the configured app schema.
     if env.DATABASE_SCHEMA and dburl.startswith("postgresql+asyncpg"):
 
         # PostgreSQL production apps write unqualified tables to their app schema
@@ -189,13 +202,25 @@ def create_engine(env: Envs) -> AsyncEngine:
     return _engine
 
 
-async def get_session() -> async_sessionmaker[AsyncSession]:
+@asynccontextmanager
+async def get_session() -> AsyncIterator[AsyncSession]:
+    """Yield a SQLModel async session."""
+
+    # Open one session from the lazily initialized session factory.
+    session_maker = await get_session_maker()
+    async with session_maker() as session:
+        yield session
+
+
+async def get_session_maker() -> async_sessionmaker[AsyncSession]:
     """Return a SQLModel async sessionmaker instance."""
     global Session, _engine
 
+    # Reuse the cached session factory once initialized.
     if Session is not None:
         return Session
 
+    # Initialize the engine lazily when sessions are requested first.
     if _engine is None:
         _engine = create_engine(Envs())
 
@@ -207,6 +232,7 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
 
     # Auto-create tables for SQLite only.
     if str(_engine.url).startswith("sqlite+"):
+        # Create tables through a transactional SQLite connection.
         async with _engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.create_all)
 

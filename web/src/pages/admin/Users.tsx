@@ -100,6 +100,7 @@ function createUserColumns(t: TFunction): Array<ColumnDef<ApiUserListItem>> {
                                     className="cursor-pointer"
                                     disabled={!user.oidc}
                                     onClick={() => {
+                                        // Skip copying OIDC when the value is absent.
                                         if (!user.oidc) {
                                             return;
                                         }

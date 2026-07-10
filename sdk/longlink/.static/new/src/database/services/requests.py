@@ -8,9 +8,7 @@ from src.database.models.requests import PurchaseRequest
 async def list_requests() -> list[PurchaseRequestRead]:
     """Return purchase requests with their platform-managed audit users."""
 
-    session_maker = await db.get_session()
-
-    async with session_maker() as session:
+    async with db.get_session() as session:
         # Load audit relationships from LongLink's shared organization users for display.
         statement = (
             select(PurchaseRequest)
@@ -29,9 +27,7 @@ async def list_requests() -> list[PurchaseRequestRead]:
 async def get_request(request_id: int) -> PurchaseRequestRead | None:
     """Return one purchase request with its platform-managed audit users."""
 
-    session_maker = await db.get_session()
-
-    async with session_maker() as session:
+    async with db.get_session() as session:
         # Load audit relationships from LongLink's shared organization users for display.
         statement = (
             select(PurchaseRequest)
@@ -53,7 +49,6 @@ async def get_request(request_id: int) -> PurchaseRequestRead | None:
 async def create_request(title: str, amount: float, vendor: str, justification: str) -> PurchaseRequestRead:
     """Persist a purchase request and return it with its audit users."""
 
-    session_maker = await db.get_session()
     request = PurchaseRequest(
         title=title,
         amount=amount,
@@ -62,7 +57,7 @@ async def create_request(title: str, amount: float, vendor: str, justification: 
         justification=justification,
     )
 
-    async with session_maker() as session:
+    async with db.get_session() as session:
         session.add(request)
         await session.commit()
         await session.refresh(request)
@@ -78,8 +73,7 @@ async def create_request(title: str, amount: float, vendor: str, justification: 
 async def update_request_status(request_id: int, status: str) -> PurchaseRequestRead | None:
     """Update one purchase request workflow status."""
 
-    session_maker = await db.get_session()
-    async with session_maker() as session:
+    async with db.get_session() as session:
         request = await session.get(PurchaseRequest, request_id)
         if request is None:
             return None

@@ -55,6 +55,11 @@ class Element:
             messages = [f"Line {error.line}: {error.message}" for error in error_log]
             raise ValueError("XML is invalid: " + "; ".join(messages))
 
+        # Paragraphs use i18n placeholders for dynamic text, not a value fallback.
+        for paragraph in xml_doc.iter("P"):
+            if paragraph.get("value") is not None:
+                raise ValueError(f"XML is invalid: Line {paragraph.sourceline}: P does not support the value attribute")
+
     def _schema_file_path(self) -> Path:
         """Resolve the XSD file path for validation."""
 

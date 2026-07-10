@@ -32,6 +32,8 @@ class ComputeRegistryCreate(BaseModel):
 
         has_certificate = bool((self.gateway_tls_certificate or "").strip())
         has_key = bool((self.gateway_tls_key or "").strip())
+
+        # Gateway TLS material must be complete or omitted.
         if has_certificate != has_key:
             raise ValueError("Gateway TLS certificate and key must be provided together")
 

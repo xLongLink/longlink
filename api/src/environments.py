@@ -13,6 +13,8 @@ def _development_enabled() -> bool:
     """Return whether local development configuration should be enabled."""
 
     development = os.getenv("DEVELOPMENT")
+
+    # Prefer the explicit development flag when it is set.
     if development is not None:
         return development.strip().lower() in {"1", "true", "yes", "on", "y"}
 
@@ -22,6 +24,7 @@ def _development_enabled() -> bool:
 def _environment_files() -> tuple[str, ...]:
     """Load sample values in development, so local `.env` values remain overridable."""
 
+    # Include sample defaults only during local development.
     if _development_enabled():
         return (".env.sample", ".env")
 
@@ -31,6 +34,7 @@ def _environment_files() -> tuple[str, ...]:
 def resolve_cors_origins(development: bool) -> tuple[str, ...]:
     """Return localhost CORS origins only in development."""
 
+    # Development mode accepts local frontend origins.
     if development:
         return DEVELOPMENT_CORS_ORIGINS
 
@@ -80,6 +84,7 @@ class Env(BaseSettings):
 def validate_production_settings(settings: Env) -> None:
     """Fail fast when production settings are unsafe."""
 
+    # Local development may use plain HTTP endpoints.
     if settings.DEVELOPMENT:
         return
 
@@ -88,9 +93,12 @@ def validate_production_settings(settings: Env) -> None:
     # OIDC traffic carries authentication secrets, so production endpoints must be HTTPS.
     for field_name in ("OIDC_ISSUER", "OIDC_REDIRECT_URI"):
         value = str(getattr(settings, field_name)).strip()
+
+        # Collect every unsafe endpoint before raising.
         if not urls.is_https_url(value):
             errors.append(f"{field_name} must be an HTTPS URL outside development")
 
+    # Raise one combined configuration error.
     if errors:
         raise RuntimeError(f"Invalid production configuration: {'; '.join(errors)}")
 

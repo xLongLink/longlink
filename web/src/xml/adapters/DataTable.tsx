@@ -16,6 +16,7 @@ export function DataTable({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const baseUrl = useUrl('');
 
+    // Require an explicit row data source.
     if (readXmlProp(props, 'data') == null) {
         throw new Error('DataTable requires a data attribute');
     }
@@ -28,6 +29,7 @@ export function DataTable({ props, nodes }: Props) {
         .filter((node) => node.name === 'DataColumn' && isVisibleNode(node, ctx))
         .map((node, index) => buildDataColumn(node, index, ctx, as, baseUrl));
 
+    // Require at least one visible data column.
     if (columns.length === 0) {
         throw new Error('DataTable requires at least one DataColumn');
     }
@@ -137,7 +139,10 @@ function renderDataSlotContent(node: ASTNode, ctx: ExecutionContext): ReactNode 
     const slotProps = node.params ?? {};
     const value = slotProps.i18n ? undefined : resolveXmlValue(slotProps, 'value', ctx);
 
+    // Prefer explicit slot values when provided.
     if (value != null) return String(value);
+
+    // Resolve localized slot labels before rendering children.
     if (slotProps.i18n) return resolveTranslation(slotProps, ctx);
 
     return renderNode(node.children ?? [], ctx);
@@ -150,6 +155,7 @@ function selectVisibleNode(nodes: ASTNode[], name: string, ctx: ExecutionContext
 
 /** Evaluates XML conditional rendering for manually consumed slot nodes. */
 function isVisibleNode(node: ASTNode, ctx: ExecutionContext): boolean {
+    // Treat nodes without conditions as visible.
     if (node.params?.if == null) return true;
 
     return Boolean(evaluate(node.params.if, ctx));
@@ -158,6 +164,7 @@ function isVisibleNode(node: ASTNode, ctx: ExecutionContext): boolean {
 /** Resolves a dotted field path against a data row. */
 function resolveFieldValue(row: DataTableRow, field: string): unknown {
     return field.split('.').reduce<unknown>((current, segment) => {
+        // Stop field traversal on nullish or scalar values.
         if (current == null || typeof current !== 'object') return undefined;
 
         return readSafeProperty(current, segment);

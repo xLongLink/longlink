@@ -40,6 +40,8 @@ async def get_storage_registry(registry_id: UUID, _: User = Depends(authsupport)
     """Return one storage backend registration."""
 
     registry = await storage.get(registry_id)
+
+    # Require an existing active registry.
     if registry is None:
         raise NotFoundError("Storage registry", registry_id)
 
@@ -52,6 +54,7 @@ async def delete_storage_registry(registry_id: UUID, user: User = Depends(authad
 
     deleted = await storage.delete(registry_id, user)
 
+    # Report missing registries as not found.
     if not deleted:
         raise NotFoundError("Storage registry", registry_id)
 
@@ -64,6 +67,7 @@ async def create_storage_registry(
 ) -> StorageRegistry:
     """Create one storage backend registration."""
 
+    # Build a stable slug from the submitted name.
     try:
         slug = names.slugify(payload.name)
     except ValueError as exc:
@@ -79,10 +83,14 @@ async def list_storage_buckets(registry_id: UUID, _: User = Depends(authsupport)
     """List all buckets on a storage backend."""
 
     registry = await storage.get(registry_id)
+
+    # Require an existing active registry.
     if registry is None:
         raise NotFoundError("Storage registry", registry_id)
 
     storage_adapter = adapters.storage(registry)
+
+    # Inspect backend buckets through the adapter.
     try:
         names = [name for name in await storage_adapter.buckets() if _managed_storage_bucket(name)]
     except Exception as exc:
@@ -104,13 +112,18 @@ async def list_storage_bucket_objects(
     """List object metadata for one storage bucket."""
 
     registry = await storage.get(registry_id)
+
+    # Require an existing active registry.
     if registry is None:
         raise NotFoundError("Storage registry", registry_id)
 
+    # Only expose LongLink-managed buckets.
     if not _managed_storage_bucket(bucket_name):
         raise NotFoundError("Storage bucket", bucket_name)
 
     storage_adapter = adapters.storage(registry)
+
+    # Inspect backend objects through the adapter.
     try:
         objects = await storage_adapter.objects(bucket_name, limit=STORAGE_OBJECT_LIST_LIMIT)
     except Exception as exc:

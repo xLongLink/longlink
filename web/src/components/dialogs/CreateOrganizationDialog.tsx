@@ -50,6 +50,7 @@ export default function CreateOrganizationDialog() {
 
     const selectedLocationName = locations.find((location) => location.id === values.locationId)?.name;
 
+    // Hide organization creation from support users.
     if (role === 'support') {
         return null;
     }
@@ -70,6 +71,7 @@ export default function CreateOrganizationDialog() {
                 open={open}
                 onOpenChange={(nextOpen) => {
                     setOpen(nextOpen);
+                    // Clear form state when the dialog closes.
                     if (!nextOpen) {
                         resetDialogState();
                     }

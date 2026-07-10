@@ -1,4 +1,5 @@
 import { CodeBlock } from '@/components/CodeBlock';
+import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
 import { Li } from '@/components/ui/li';
 import { P } from '@/components/ui/p';
@@ -6,7 +7,7 @@ import { Stack } from '@/components/ui/stack';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-06',
+    lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/layout.tsx',
 };
 
@@ -18,17 +19,18 @@ export const content = (
         <P>Layout elements organize XML page content into responsive sections, cards, dialogs, tabs, and menus.</P>
         <Stack className="gap-3">
             <Heading id="columns" level="h2">
-                Columns and Column
+                Columns
             </Heading>
             <P>
                 Creates a responsive horizontal layout from immediate Column children. Widths are relative, so sibling
                 widths should usually add up to 100.
             </P>
             <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+                <P className="font-medium text-foreground">Column Parameters</P>
                 <Ul>
-                    <Li>Columns: no parameters.</Li>
-                    <Li>Column width: optional relative width. Defaults to 100 when omitted.</Li>
+                    <Li>
+                        <Code>width</Code>: optional relative width. Defaults to <Code>100</Code> when omitted.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Columns>
@@ -44,7 +46,10 @@ export const content = (
             <Stack className="gap-2">
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
-                    <Li>columns: optional number of equal columns or a CSS grid-template-columns value.</Li>
+                    <Li>
+                        <Code>columns</Code>: optional number of equal columns or a CSS{' '}
+                        <Code>grid-template-columns</Code> value.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Grid columns="3">
@@ -58,12 +63,6 @@ export const content = (
                 Stack
             </Heading>
             <P>Stacks child elements vertically with consistent spacing.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>No parameters.</Li>
-                </Ul>
-            </Stack>
             <CodeBlock language="xml">{`<Stack>
   ...
   ...
@@ -77,7 +76,10 @@ export const content = (
             <Stack className="gap-2">
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
-                    <Li>space: optional center, around, evenly, or between.</Li>
+                    <Li>
+                        <Code>space</Code>: optional <Code>center</Code>, <Code>around</Code>, <Code>evenly</Code>, or{' '}
+                        <Code>between</Code>.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Flex space="between">
@@ -90,13 +92,7 @@ export const content = (
                 Card
             </Heading>
             <P>Groups related content in a bordered card surface.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>size: optional card spacing size. Defaults to default.</Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Card size="sm">
+            <CodeBlock language="xml">{`<Card>
   ...
 </Card>`}</CodeBlock>
         </Stack>
@@ -106,12 +102,11 @@ export const content = (
             </Heading>
             <P>Creates a prominent page introduction with optional icon, title, description, and action slots.</P>
             <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+                <P className="font-medium text-foreground">Hero Parameters</P>
                 <Ul>
-                    <Li>Hero icon: optional Lucide icon name rendered near the title.</Li>
-                    <Li>HeroTitle i18n: optional translation key for localized title text.</Li>
-                    <Li>HeroDescription i18n: optional translation key for localized description text.</Li>
-                    <Li>HeroAction: no parameters. Place buttons or links inside it.</Li>
+                    <Li>
+                        <Code>icon</Code>: optional Lucide icon name rendered near the title.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Hero icon="layout-grid">
@@ -124,20 +119,32 @@ export const content = (
         </Stack>
         <Stack className="gap-3">
             <Heading id="tabs" level="h2">
-                Tabs and Tab
+                Tabs
             </Heading>
             <P>
                 Switches between related panels collected from immediate Tab children. A Tab can also render its
                 children directly when used outside Tabs.
             </P>
             <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+                <P className="font-medium text-foreground">Tabs Parameters</P>
                 <Ul>
-                    <Li>Tabs defaultValue: optional initially selected tab value.</Li>
-                    <Li>Tab value: required inside Tabs.</Li>
-                    <Li>Tab label or i18n: required inside Tabs for trigger text.</Li>
-                    <Li>Tab icon: optional Lucide icon name.</Li>
-                    <Li>Tab if: optional condition to hide the tab.</Li>
+                    <Li>
+                        <Code>defaultValue</Code>: optional initially selected tab value.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">Tab Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>value</Code>: required inside Tabs.
+                    </Li>
+                    <Li>
+                        <Code>label</Code>: optional trigger text.
+                    </Li>
+                    <Li>
+                        <Code>icon</Code>: optional Lucide icon name.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Tabs defaultValue="overview">
@@ -158,15 +165,12 @@ export const content = (
                 DialogContent renders the panel, and DialogTitle plus DialogDescription provide accessible text.
             </P>
             <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+                <P className="font-medium text-foreground">Dialog Parameters</P>
                 <Ul>
                     <Li>
-                        Dialog open: optional controlled open state expression. Omit it for trigger-managed dialogs.
+                        <Code>open</Code>: optional controlled open state expression. Omit it for trigger-managed
+                        dialogs.
                     </Li>
-                    <Li>
-                        DialogTrigger: no parameters. Single Button or A children are wired as the trigger element.
-                    </Li>
-                    <Li>DialogContent, DialogTitle, and DialogDescription: no parameters.</Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Dialog>
@@ -174,8 +178,8 @@ export const content = (
     ...
   </DialogTrigger>
   <DialogContent>
-    <DialogTitle>...</DialogTitle>
-    <DialogDescription>...</DialogDescription>
+    <DialogTitle i18n="..." />
+    <DialogDescription i18n="..." />
   </DialogContent>
 </Dialog>`}</CodeBlock>
         </Stack>
@@ -188,25 +192,47 @@ export const content = (
                 selectable panels inside a MenuSection.
             </P>
             <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+                <P className="font-medium text-foreground">Menu Parameters</P>
                 <Ul>
-                    <Li>Menu defaultValue: optional initial section value.</Li>
-                    <Li>Menu value: optional controlled active section value.</Li>
-                    <Li>MenuSection value: required section id.</Li>
-                    <Li>MenuSection label or i18n: optional visible label.</Li>
-                    <Li>MenuSection icon: optional Lucide icon name.</Li>
-                    <Li>MenuSection disabled: optional boolean.</Li>
-                    <Li>MenuSubSection value: required subsection id.</Li>
-                    <Li>MenuSubSection label or i18n: optional visible label.</Li>
-                    <Li>MenuSubSection disabled: optional boolean.</Li>
+                    <Li>
+                        <Code>defaultValue</Code>: optional initial section value.
+                    </Li>
+                    <Li>
+                        <Code>value</Code>: optional controlled active section value.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">MenuSection Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>value</Code>: required section id.
+                    </Li>
+                    <Li>
+                        <Code>label</Code>: optional visible label.
+                    </Li>
+                    <Li>
+                        <Code>icon</Code>: optional Lucide icon name.
+                    </Li>
+                </Ul>
+            </Stack>
+            <Stack className="gap-2">
+                <P className="font-medium text-foreground">MenuSubSection Parameters</P>
+                <Ul>
+                    <Li>
+                        <Code>value</Code>: required subsection id.
+                    </Li>
+                    <Li>
+                        <Code>label</Code>: optional visible label.
+                    </Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<Menu defaultValue="overview">
-  <MenuSection value="overview" label="Overview" icon="layout-grid">
+  <MenuSection value="overview" i18n="..." icon="layout-grid">
     ...
   </MenuSection>
-  <MenuSection value="orders" label="Orders" icon="clipboard-list">
-    <MenuSubSection value="open" label="Open orders">
+  <MenuSection value="orders" i18n="..." icon="clipboard-list">
+    <MenuSubSection value="open" i18n="...">
       ...
     </MenuSubSection>
   </MenuSection>

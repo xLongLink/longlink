@@ -19,9 +19,11 @@ class ColorFormatter(logging.Formatter):
         if record.levelno == logging.INFO:
             record.levelname = "\x1b[32mINFO\x1b[0m"
 
-        # Restore the original level label even if formatting raises.
+        # Delegate formatting after any temporary level-name rewrite.
         try:
             return super().format(record)
+
+        # Restore the original level label even if formatting raises.
         finally:
             record.levelname = original_levelname
 
@@ -35,15 +37,18 @@ class ApiAccessFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         """Return True when the request should remain visible in access logs."""
 
+        # Keep non-HTTP access records visible because their structure is unknown.
         if not isinstance(record.args, tuple) or len(record.args) < 3:
             return True
 
         method = str(record.args[1]).upper()
         path = str(record.args[2]).split("?", 1)[0]
 
+        # Always show mutating requests because they are operationally important.
         if method in self._allowed_methods:
             return True
 
+        # Hide frontend and asset requests so access logs stay focused on application APIs.
         if not path.startswith(self._allowed_prefixes):
             return False
 
@@ -61,6 +66,8 @@ log_config["formatters"]["access"] = {
 log_config.setdefault("filters", {})["api_access"] = {"()": ApiAccessFilter}
 log_config["handlers"]["access"]["filters"] = ["api_access"]
 
+
+# Install a fallback handler only when the package logger has not already been configured.
 if not logger.handlers:
     handler = logging.StreamHandler()
     handler.setFormatter(ColorFormatter("%(levelname)s:     %(message)s"))

@@ -35,10 +35,12 @@ interface DataTableProps<TData, TValue> {
 
 /** Returns visible page numbers and ellipses for compact data table pagination. */
 function getPaginationItems(currentPage: number, pageCount: number): PaginationItemValue[] {
+    // Show every page when the range is already short.
     if (pageCount <= LEADING_PAGINATION_PAGE_COUNT + 1) {
         return Array.from({ length: pageCount }, (_, index) => index + 1);
     }
 
+    // Keep the first pages expanded near the beginning.
     if (currentPage <= LEADING_PAGINATION_PAGE_COUNT) {
         return [1, 2, 3, 4, 5, 'end-ellipsis', pageCount];
     }
@@ -80,15 +82,18 @@ export function DataTable<TData, TValue>({
     const resolvedEmptyMessage = emptyMessage ?? t('common.noResults');
 
     useEffect(() => {
+        // Clamp the selected page after data size changes.
         if (currentPage > pageCount) {
             setCurrentPage(pageCount);
         }
     }, [currentPage, pageCount]);
 
+    // Avoid showing an empty table while initial data loads.
     if (isLoading && data.length === 0) {
         return null;
     }
 
+    // Surface errors when there is no data to show.
     if (error && data.length === 0) {
         return <div className="rounded-md border p-4 text-sm text-destructive">{error.message}</div>;
     }

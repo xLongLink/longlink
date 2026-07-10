@@ -14,27 +14,35 @@ export function renderNode(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 
         // Handle conditional rendering with "if" parameter.
         if (node.params?.if != null) {
+            // Skip nodes when their XML condition is false.
             if (!evaluate(node.params.if, ctx)) {
                 return <Fragment key={index} />;
             }
         }
 
+        // Suppress setup-only nodes during render.
         if (node.name === 'State' || node.name === 'Query') {
             return <Fragment key={index} />;
         }
 
         const RegisteredComponent = xmlComponentRegistry[node.name];
+
+        // Render registered XML components directly.
         if (RegisteredComponent) {
             return <RegisteredComponent key={index} props={node.params ?? {}} nodes={node.children ?? []} />;
         }
 
+        // Delegate loop nodes to the scoped For adapter.
         if (node.name === 'For') {
-            // Ensure that the parameters are defined
+            // Require a loop item alias.
             if (!node.params?.as) throw new Error(`For requires an "as" parameter`);
+
+            // Require a loop source expression.
             if (!node.params?.each) throw new Error(`For requires an "each" parameter`);
 
             const each = evaluate(node.params.each, ctx);
 
+            // Skip loop rendering when the source is not an array.
             if (!Array.isArray(each)) return <Fragment key={index} />;
             return <For key={index} props={node.params} nodes={node.children ?? []} />;
         }

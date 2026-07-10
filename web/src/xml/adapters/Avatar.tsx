@@ -19,9 +19,12 @@ type AvatarSize = NonNullable<ComponentProps<typeof UIAvatar>['size']>;
 function resolveAvatarImageSource(baseUrl: string, src: string): string | undefined {
     const value = src.trim();
 
+    // Drop empty, protocol-relative, and backslash-containing sources.
     if (!value || value.startsWith('//') || value.includes('\\')) return undefined;
 
+    // Validate absolute avatar URLs before using them.
     if (hasProtocol(value)) {
+        // Parse absolute URLs with the platform URL implementation.
         try {
             const url = new URL(value);
 
@@ -45,6 +48,7 @@ export function Avatar({ props, nodes }: Props) {
 
 /** Resolves a validated XML avatar size. */
 function resolveAvatarSize(value: string): AvatarSize {
+    // Accept only avatar sizes supported by the UI component.
     switch (value) {
         case 'default':
         case 'sm':

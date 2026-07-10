@@ -26,11 +26,13 @@ export function Button({ props, nodes }: Props) {
     function handleClick() {
         appendButtonItem(props, ctx, appendTarget);
 
+        // Run the nearest action after append behavior.
         if (actionHandler) {
             void actionHandler();
         }
     }
 
+    // Render submit buttons with form-submit semantics.
     if (submit) {
         return (
             <UIButton
@@ -63,6 +65,7 @@ export function Button({ props, nodes }: Props) {
 
 /** Resolves a validated XML button size. */
 export function resolveButtonSize(value: string): ButtonSize {
+    // Accept only button sizes supported by the UI component.
     switch (value) {
         case 'default':
         case 'xs':
@@ -81,6 +84,7 @@ export function resolveButtonSize(value: string): ButtonSize {
 
 /** Resolves a validated XML button variant. */
 export function resolveButtonVariant(value: string): ButtonVariant {
+    // Accept only button variants supported by the UI component.
     switch (value) {
         case 'default':
         case 'outline':
@@ -101,18 +105,23 @@ export function appendButtonItem(
 ) {
     const targetPath = appendTarget ?? resolveXmlString(props, 'append', ctx);
 
+    // Skip buttons with no append target.
     if (!targetPath) return;
 
     const target = resolvePath(ctx, targetPath.split('.').filter(Boolean));
+
+    // Require an object or array append target.
     if (!target || typeof target !== 'object') return;
 
     const item = resolveXmlValue(props, 'item', ctx);
 
+    // Append directly to array state targets.
     if (Array.isArray(target)) {
         target.push(item);
         return;
     }
 
+    // Append to value arrays on object state targets.
     if ('value' in target && Array.isArray(target.value)) {
         target.value.push(item);
     }

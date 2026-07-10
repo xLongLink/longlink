@@ -49,6 +49,7 @@ SAFE_GIT_DIRECTORY_NAMES = frozenset({"objects", "refs"})
 SAFE_GIT_FILE_NAMES = frozenset({"HEAD", "packed-refs", "shallow"})
 DOCKER_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
 DOCKER_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
+DEFAULT_ENVIRONMENT_IMPORT = "src.envs:Env"
 
 DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.14-bookworm AS builder
 
@@ -124,25 +125,67 @@ def _validate_docker_image_path(image_path: str) -> None:
 
 
 def read_env_spec(root: Path) -> dict[str, list[dict[str, object]]]:
-    """Parse `src/envs.py` and return environment specs."""
+    """Parse the configured environment class and return environment specs."""
 
-    envs_path = root / "src" / "envs.py"
     empty_spec: dict[str, list[dict[str, object]]] = {"environments": []}
+    environment_import = DEFAULT_ENVIRONMENT_IMPORT
 
-    # Treat missing env files as no requirements.
-    if not envs_path.exists():
-        return empty_spec
+    # Read an explicit environment class location from project configuration.
+    if (root / "pyproject.toml").is_file():
+        pyproject_data = read_pyproject(root)
+        tool_data = pyproject_data.get("tool", {})
+
+        # Ignore malformed tool tables.
+        if not isinstance(tool_data, dict):
+            tool_data = {}
+
+        longlink_data = tool_data.get("longlink", {})
+
+        # Ignore malformed LongLink tables.
+        if not isinstance(longlink_data, dict):
+            longlink_data = {}
+
+        configured_environment = longlink_data.get("environment")
+
+        # Use the configured environment import string when provided.
+        if configured_environment is not None:
+            if not isinstance(configured_environment, str) or not configured_environment.strip():
+                raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
+
+            environment_import = configured_environment.strip()
+
+    module_name, separator, class_name = environment_import.partition(":")
+    module_name = module_name.strip()
+    class_name = class_name.strip()
+    module_parts = module_name.split(".")
+
+    # Require a normal Python import string without importing application code.
+    if separator != ":" or not all(part.isidentifier() for part in module_parts) or not class_name.isidentifier():
+        raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
+
+    module_path = root.joinpath(*module_parts)
+    envs_path = module_path.with_suffix(".py")
+
+    # Support package modules as well as file modules.
+    if not envs_path.is_file():
+        package_path = module_path / "__init__.py"
+
+        # Treat missing env modules as no requirements.
+        if not package_path.is_file():
+            return empty_spec
+
+        envs_path = package_path
 
     module = ast.parse(envs_path.read_text())
-    class_node = next((node for node in module.body if isinstance(node, ast.ClassDef)), None)
+    class_node = next((node for node in module.body if isinstance(node, ast.ClassDef) and node.name == class_name), None)
 
-    # Treat files without settings classes as no requirements.
+    # Treat files without the configured settings class as no requirements.
     if class_node is None:
         return empty_spec
 
     environments: list[dict[str, object]] = []
 
-    # Read annotated settings fields from the first class.
+    # Read annotated settings fields from the configured class.
     for statement in class_node.body:
 
         # Ignore non-field statements.

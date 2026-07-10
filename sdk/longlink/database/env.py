@@ -32,6 +32,7 @@ def run_migrations_offline() -> None:
         **migration_context_options,
     )
 
+    # Wrap offline migration output in Alembic's transaction context.
     with context.begin_transaction():
         context.run_migrations()
 
@@ -43,19 +44,25 @@ def do_run_migrations(connection: Connection) -> None:
         **migration_context_options,
     )
 
+    # Wrap online migration work in Alembic's transaction context.
     with context.begin_transaction():
         context.run_migrations()
 
 
 async def run_migrations_online() -> None:
     """Run Alembic migrations in online mode."""
+
+    # Run synchronous Alembic work through the async database connection.
     async with engine.connect() as connection:
         await connection.run_sync(do_run_migrations)
 
     await engine.dispose()
 
 
+# Use Alembic's offline path when the migration context requests it.
 if context.is_offline_mode():
     run_migrations_offline()
+
+# Otherwise run migrations through the configured async engine.
 else:
     asyncio.run(run_migrations_online())

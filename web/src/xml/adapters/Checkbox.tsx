@@ -12,6 +12,7 @@ export function Checkbox({ props }: Props) {
     const id = resolveXmlString(props, 'id', ctx);
     const { state, snapshot } = useXmlValueSnapshot(checked);
 
+    // Render bound checkboxes as controlled inputs.
     if (state) {
         const currentValue =
             snapshot && typeof snapshot === 'object' && 'value' in snapshot ? snapshot.value : snapshot;
@@ -22,12 +23,14 @@ export function Checkbox({ props }: Props) {
                 disabled={disabled}
                 id={id}
                 onCheckedChange={(nextChecked) => {
+                    // Write checked changes back to the bound state.
                     if ('value' in state) state.value = nextChecked;
                 }}
             />
         );
     }
 
+    // Render explicit checked values as controlled inputs.
     if (checked !== undefined) {
         return <UICheckbox checked={Boolean(checked)} disabled={disabled} id={id} onCheckedChange={() => {}} />;
     }

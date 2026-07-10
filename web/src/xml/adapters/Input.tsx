@@ -20,6 +20,7 @@ export function Input({ props, nodes }: Props) {
     const placeholderText = String(placeholder ?? label ?? '');
     const binding = useBindableValue(props, 'value', ctx, type);
 
+    // Use file input handling for file controls.
     if (type === 'file') {
         return (
             <UIInput
@@ -41,6 +42,7 @@ export function Input({ props, nodes }: Props) {
         );
     }
 
+    // Render bound inputs as controlled fields.
     if (binding.bound) {
         return (
             <UIInput

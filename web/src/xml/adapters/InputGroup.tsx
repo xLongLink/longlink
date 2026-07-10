@@ -68,6 +68,7 @@ export function InputGroupInput({ props, nodes }: Props) {
     const placeholderText = String(placeholder ?? label ?? '');
     const binding = useBindableValue(props, 'value', ctx, type);
 
+    // Use file input handling for file controls.
     if (type === 'file') {
         return (
             <UIInputGroupInput
@@ -89,6 +90,7 @@ export function InputGroupInput({ props, nodes }: Props) {
         );
     }
 
+    // Render bound inputs as controlled fields.
     if (binding.bound) {
         return (
             <UIInputGroupInput
@@ -131,6 +133,7 @@ export function InputGroupTextarea({ props, nodes }: Props) {
     const placeholderText = String(placeholder ?? label ?? '');
     const binding = useBindableValue(props, 'value', ctx);
 
+    // Render bound textareas as controlled fields.
     if (binding.bound) {
         return (
             <UIInputGroupTextarea

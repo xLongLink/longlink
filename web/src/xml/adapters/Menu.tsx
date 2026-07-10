@@ -7,25 +7,22 @@ import { evaluate } from '@/xml/expressions';
 import type { ASTNode, ASTProps, ExecutionContext, Props } from '@/xml/types';
 import type { LucideIcon } from 'lucide-react';
 import { Fragment, type ReactNode, useEffect, useState } from 'react';
-import { requireXmlString, resolveXmlBoolean, resolveXmlString } from './props';
+import { requireXmlString, resolveXmlString } from './props';
 
 type MenuSectionAttributes = {
     value: string;
     label?: string;
     icon?: LucideIcon;
-    disabled?: boolean;
 };
 
 type MenuSubSectionAttributes = {
     value: string;
     label?: string;
-    disabled?: boolean;
 };
 
 type MenuAttributeOptions = {
     requireValue?: boolean;
     emptyLabelFallback?: boolean;
-    astBoolean?: boolean;
 };
 
 /** Renders the sidebar-style menu shell. */
@@ -37,6 +34,7 @@ export function Menu({ props, nodes }: Props) {
 
     // Keep the XML wrapper in sync with an explicit menu value when one is provided.
     useEffect(() => {
+        // Reflect controlled value changes.
         if (value !== undefined) {
             setActiveValue(value);
         }
@@ -58,12 +56,7 @@ export function MenuSection({ props, nodes }: Props) {
     });
 
     return (
-        <UIMenuSection
-            disabled={attributes.disabled}
-            icon={attributes.icon}
-            label={attributes.label}
-            value={attributes.value}
-        >
+        <UIMenuSection icon={attributes.icon} label={attributes.label} value={attributes.value}>
             {renderNode(nodes, ctx)}
         </UIMenuSection>
     );
@@ -78,7 +71,7 @@ export function MenuSubSection({ props, nodes }: Props) {
     });
 
     return (
-        <UIMenuSubSection disabled={attributes.disabled} label={attributes.label} value={attributes.value}>
+        <UIMenuSubSection label={attributes.label} value={attributes.value}>
             {renderNode(nodes, ctx)}
         </UIMenuSubSection>
     );
@@ -98,7 +91,6 @@ function resolveMenuSectionAttributes(
     return {
         value,
         label: resolveMenuLabel(props, ctx, options.emptyLabelFallback ? '' : undefined),
-        disabled: resolveMenuDisabled(props, ctx, options.astBoolean),
         icon: iconName ? resolveIconComponent(iconName) : undefined,
     };
 }
@@ -116,38 +108,22 @@ function resolveMenuSubSectionAttributes(
     return {
         value,
         label: resolveMenuLabel(props, ctx, options.emptyLabelFallback ? '' : undefined),
-        disabled: resolveMenuDisabled(props, ctx, options.astBoolean),
     };
 }
 
 /** Resolves a menu label from a translation key or direct label prop. */
 function resolveMenuLabel(props: ASTProps, ctx: ExecutionContext, defaultValue?: string): string | undefined {
+    // Prefer translated menu labels.
     if (props.i18n) {
         return resolveTranslation(props, ctx);
     }
 
+    // Fall back when no explicit label exists.
     if (props.label == null) {
         return defaultValue;
     }
 
     return String(evaluate(props.label, ctx) ?? defaultValue ?? '');
-}
-
-/** Resolves disabled state with the same boolean rules as each rendering path. */
-function resolveMenuDisabled(props: ASTProps, ctx: ExecutionContext, astBoolean?: boolean): boolean | undefined {
-    if (astBoolean) {
-        return booleanAttribute(props.disabled ? evaluate(props.disabled, ctx) : undefined);
-    }
-
-    return resolveXmlBoolean(props, 'disabled', ctx);
-}
-
-/** Coerces XML boolean-like attributes into React boolean props. */
-function booleanAttribute(value: unknown): boolean | undefined {
-    if (value === false || value === 'false') return false;
-    if (value == null) return undefined;
-
-    return true;
 }
 
 /** Resolves a Lucide icon component from an XML icon name. */
@@ -158,24 +134,20 @@ function resolveIconComponent(name: string) {
 /** Renders top-level menu section markers for the UI menu parser. */
 function renderMenuNodes(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
     return nodes.map((node, index) => {
+        // Skip nodes hidden by XML conditions.
         if (node.params?.if != null && !evaluate(node.params.if, ctx)) {
             return <Fragment key={index} />;
         }
 
+        // Render non-section nodes normally.
         if (node.name !== 'MenuSection') {
             return <Fragment key={index}>{renderNode([node], ctx)}</Fragment>;
         }
 
-        const attributes = resolveMenuSectionAttributes(node.params ?? {}, ctx, { astBoolean: true });
+        const attributes = resolveMenuSectionAttributes(node.params ?? {}, ctx);
 
         return (
-            <UIMenuSection
-                key={index}
-                disabled={attributes.disabled}
-                icon={attributes.icon}
-                label={attributes.label}
-                value={attributes.value}
-            >
+            <UIMenuSection key={index} icon={attributes.icon} label={attributes.label} value={attributes.value}>
                 {renderMenuSectionChildren(node.children ?? [], ctx)}
             </UIMenuSection>
         );
@@ -185,23 +157,20 @@ function renderMenuNodes(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
 /** Renders nested menu section children while preserving subsection markers. */
 function renderMenuSectionChildren(nodes: ASTNode[], ctx: ExecutionContext): ReactNode {
     return nodes.map((node, index) => {
+        // Skip nodes hidden by XML conditions.
         if (node.params?.if != null && !evaluate(node.params.if, ctx)) {
             return <Fragment key={index} />;
         }
 
+        // Render non-subsection nodes normally.
         if (node.name !== 'MenuSubSection') {
             return <Fragment key={index}>{renderNode([node], ctx)}</Fragment>;
         }
 
-        const attributes = resolveMenuSubSectionAttributes(node.params ?? {}, ctx, { astBoolean: true });
+        const attributes = resolveMenuSubSectionAttributes(node.params ?? {}, ctx);
 
         return (
-            <UIMenuSubSection
-                key={index}
-                disabled={attributes.disabled}
-                label={attributes.label}
-                value={attributes.value}
-            >
+            <UIMenuSubSection key={index} label={attributes.label} value={attributes.value}>
                 {renderNode(node.children ?? [], ctx)}
             </UIMenuSubSection>
         );

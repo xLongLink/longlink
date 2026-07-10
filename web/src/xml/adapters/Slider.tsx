@@ -48,6 +48,7 @@ export function Slider({ props }: Props) {
                 onValueChange={(nextValue) => {
                     const nextValues = Array.isArray(nextValue) ? nextValue : [nextValue];
 
+                    // Mutate array state in place when the binding target is an array.
                     if (Array.isArray(state)) {
                         state.splice(0, state.length, ...nextValues);
                     } else if ('value' in state) {

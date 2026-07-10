@@ -1,5 +1,10 @@
-from .base import User, Table, get_session, create_engine
+from .base import User, Table, create_engine
+from .base import get_session as create_session
+from .base import get_session_maker as create_session_maker
 from longlink.utils.settings import Envs
+
+get_session = create_session
+get_session_maker = create_session_maker
 
 
 class Database:
@@ -8,10 +13,16 @@ class Database:
     Table = Table
 
     @staticmethod
-    async def get_session():
+    def get_session():
+        """Return an async context manager for one database session."""
+
+        return create_session()
+
+    @staticmethod
+    async def get_session_maker():
         """Return the configured async session factory."""
 
-        return await get_session()
+        return await create_session_maker()
 
 
 def create_db(env: Envs):

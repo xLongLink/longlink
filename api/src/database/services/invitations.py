@@ -13,6 +13,7 @@ from src.database.models.organizations import Organization
 async def list_by_organization(organization_id: UUID) -> list[OrganizationInvitation]:
     """Return all active invitations for one organization."""
 
+    # Open a session for the invitation list query.
     async with session_scope() as session:
         statement = (
             select(OrganizationInvitation)
@@ -31,15 +32,17 @@ async def create(organization_id: UUID, email: str, role_name: OrganizationRoles
 
     normalized_email = email.strip().lower()
 
+    # Use one session for validation and invitation creation.
     async with session_scope() as session:
         organization_statement = select(Organization.id).where(
             Organization.id == organization_id,
             Organization.deleted_at.is_(None),
         )
+
+        # Require an active target organization.
         if (await session.execute(organization_statement)).scalar_one_or_none() is None:
             raise NotFoundError("Organization", organization_id)
 
-        # Reject invitations for emails that already belong to the organization.
         member_statement = (
             select(User.id)
             .join(UserOrganization, UserOrganization.user_id == User.id)
@@ -49,15 +52,18 @@ async def create(organization_id: UUID, email: str, role_name: OrganizationRoles
                 func.lower(User.email) == normalized_email,
             )
         )
+
+        # Reject emails that already belong to the organization.
         if (await session.execute(member_statement)).scalar_one_or_none() is not None:
             raise ConflictError("User is already a member")
 
-        # Keep one pending invitation per email address in an organization.
         invitation_statement = select(OrganizationInvitation.id).where(
             OrganizationInvitation.organization_id == organization_id,
             OrganizationInvitation.deleted_at.is_(None),
             func.lower(OrganizationInvitation.email) == normalized_email,
         )
+
+        # Keep one pending invitation per email address.
         if (await session.execute(invitation_statement)).scalar_one_or_none() is not None:
             raise ConflictError("Invitation already exists")
 
@@ -70,6 +76,7 @@ async def create(organization_id: UUID, email: str, role_name: OrganizationRoles
         invitation.updated_id = user.id
         session.add(invitation)
 
+        # Commit so uniqueness violations surface consistently.
         try:
             await session.commit()
         except IntegrityError as exc:

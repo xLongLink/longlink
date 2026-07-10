@@ -4,11 +4,10 @@ import { Heading } from '@/components/ui/heading';
 import { Li } from '@/components/ui/li';
 import { P } from '@/components/ui/p';
 import { Stack } from '@/components/ui/stack';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-09',
+    lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/building.tsx',
 };
 
@@ -27,23 +26,18 @@ export const content = (
             untouched. Push the resulting image to a registry the control plane can reach before creating the
             application.
         </P>
-        <Heading id="build-command" level="h2">
-            Build Command
-        </Heading>
-        <Tabs defaultValue="pip">
-            <TabsList>
-                <TabsTrigger value="pip">pip</TabsTrigger>
-                <TabsTrigger value="uv">uv</TabsTrigger>
-            </TabsList>
-            <TabsContent value="pip">
-                <CodeBlock language="bash">longlink build</CodeBlock>
-            </TabsContent>
-            <TabsContent value="uv">
-                <CodeBlock language="bash">uv run longlink build</CodeBlock>
-            </TabsContent>
-        </Tabs>
-        <P>For a reusable local development tag, build and push to a local registry:</P>
-        <CodeBlock language="bash">longlink build --registry localhost:15000 --push --tag dev</CodeBlock>
+        <CodeBlock language="bash">longlink build [--tag dev] [--registry localhost:15000] [--push]</CodeBlock>
+        <P>
+            Use <Code>--tag</Code> to set the image version tag, <Code>--registry</Code> to prefix the image with a
+            registry, and <Code>--push</Code> to push the image after the local Docker build completes.
+        </P>
+        <P>
+            Point <Code>longlink build</Code> at the environment class from <Code>pyproject.toml</Code>. The build command
+            parses the class statically for image metadata, without importing application code or requiring real secret
+            values.
+        </P>
+        <CodeBlock>{`[tool.longlink]
+environment = "src.envs:Env"`}</CodeBlock>
         <Stack className="gap-2">
             <Heading id="application-metadata" level="h2">
                 Application Metadata
@@ -51,17 +45,17 @@ export const content = (
             <P>
                 LongLink loads application metadata from <Code>pyproject.toml</Code>. Values in{' '}
                 <Code>[tool.longlink]</Code> override standard <Code>[project]</Code> values where both are supported.
-                The SDK exposes the loaded metadata and registered XML pages through <Code>/metadata.json</Code>, and{' '}
-                <Code>longlink build</Code> writes the same app metadata into Docker labels for control-plane
-                application creation.
+                The same section can also point <Code>longlink build</Code> at the user-defined environment class used
+                for generated image metadata.
             </P>
-            <CodeBlock language="toml">{`[project]
+            <CodeBlock>{`[project]
 name = "orders"
 version = "1.2.0"
 description = "Order workflow service"
 
 [tool.longlink]
 title = "Orders"
+environment = "src.envs:Env"
 summary = "Review, assign, and complete orders"
 description = "Operational order management for warehouse teams"
 terms_of_service = "https://example.com/terms"
@@ -90,6 +84,10 @@ name = "Private"`}</CodeBlock>
                 <Li>
                     <Code>contact</Code>, <Code>license_info</Code>, and <Code>terms_of_service</Code> are optional
                     metadata objects or URLs passed through to the runtime and image labels.
+                </Li>
+                <Li>
+                    <Code>environment</Code> is a <Code>module:Class</Code> import string for the user environment
+                    class. It defaults to <Code>src.envs:Env</Code>.
                 </Li>
             </Ul>
         </Stack>

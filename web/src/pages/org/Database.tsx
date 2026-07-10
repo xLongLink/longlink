@@ -57,6 +57,7 @@ export default function Database({ organization, organizationDetails, isLoading 
             ? new Error(t('resources.databaseTableNotFound', { name: selectedTableName }))
             : null);
 
+    // Render schema and table detail pages before the root list.
     if (isDetailPage) {
         const databaseTableColumns: Array<ColumnDef<ApiOrganizationDatabaseTable>> = [
             {
@@ -157,6 +158,7 @@ export default function Database({ organization, organizationDetails, isLoading 
                 const databaseResource = row.original;
                 const application = databaseResource.application;
 
+                // Show organization ownership for the shared schema.
                 if (databaseResource.name === 'shared') {
                     return (
                         <div className="flex items-start gap-3">
@@ -172,6 +174,7 @@ export default function Database({ organization, organizationDetails, isLoading 
                     );
                 }
 
+                // Mark database resources without an active application.
                 if (application === null) {
                     return <span className="text-muted-foreground">{t('resources.noActiveApp')}</span>;
                 }

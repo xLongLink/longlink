@@ -13,6 +13,7 @@ export function Switch({ props }: Props) {
     const size = resolveXmlString(props, 'size', ctx, 'default');
     const { state, snapshot } = useXmlValueSnapshot(checked);
 
+    // Render bound switches as controlled inputs.
     if (state) {
         const currentValue =
             snapshot && typeof snapshot === 'object' && 'value' in snapshot ? snapshot.value : snapshot;
@@ -23,6 +24,7 @@ export function Switch({ props }: Props) {
                 disabled={disabled}
                 id={id}
                 onCheckedChange={(nextChecked) => {
+                    // Write checked changes back to the bound state.
                     if ('value' in state) state.value = nextChecked;
                 }}
                 size={size}
@@ -30,6 +32,7 @@ export function Switch({ props }: Props) {
         );
     }
 
+    // Render explicit checked values as controlled inputs.
     if (checked !== undefined) {
         return (
             <UISwitch checked={Boolean(checked)} disabled={disabled} id={id} onCheckedChange={() => {}} size={size} />

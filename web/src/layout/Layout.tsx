@@ -53,6 +53,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
 
     /** Normalizes a pathname for deterministic active tab matching. */
     function normalizePathname(pathname: string) {
+        // Preserve the root path as-is.
         if (pathname === '/') {
             return '/';
         }
@@ -62,6 +63,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
 
     /** Returns whether a tab pathname is active for the current path. */
     function isTabPathActive(tabPathname: string, pathname: string): boolean {
+        // Exact tab matches are always active.
         if (tabPathname === pathname) {
             return true;
         }

@@ -70,6 +70,7 @@ export function formatBytes(bytes: number): string {
     let value = bytes;
     let unit = 0;
 
+    // Scale bytes until they fit the current unit.
     while (value >= 1024 && unit < units.length - 1) {
         value /= 1024;
         unit++;
@@ -81,16 +82,19 @@ export function formatBytes(bytes: number): string {
 /** Returns compact avatar initials for a display name. */
 export function getInitials(value: string | null | undefined): string {
     const name = value?.trim() ?? '';
+    // Fall back when no display name is available.
     if (!name) return '--';
 
     const words = name.split(/\s+/).filter(Boolean);
     const segmenter =
         typeof Intl.Segmenter === 'function' ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
 
+    // Use up to two words when available.
     if (words.length > 1) {
         return words
             .slice(0, 2)
             .map((word) => {
+                // Use grapheme segmentation when the browser supports it.
                 if (segmenter) {
                     const [first] = segmenter.segment(word);
 
@@ -143,15 +147,18 @@ export function useDeleteDialog<TItem>({
             error,
             isPending: mutation.isPending,
             onOpenChange: (open: boolean) => {
+                // Closing the dialog clears its selected item.
                 if (!open) {
                     close();
                 }
             },
             onConfirm: async () => {
+                // Ignore confirmations without a selected target.
                 if (targetId === null) {
                     return;
                 }
 
+                // Run the delete mutation and capture any failure.
                 try {
                     await mutation.mutateAsync(targetId);
                     close();

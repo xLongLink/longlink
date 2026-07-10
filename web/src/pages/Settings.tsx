@@ -34,10 +34,12 @@ export default function Settings() {
 
     // Keep the editable fields aligned with the authenticated user record.
     useEffect(() => {
+        // Wait until the profile has loaded.
         if (!user) {
             return;
         }
 
+        // Avoid overwriting edits while the user is typing.
         if (!isNameFocused) {
             setName(user.name);
         }
@@ -50,19 +52,23 @@ export default function Settings() {
     const saveAccountName = async () => {
         setAccountError(null);
 
+        // Ignore saves when the user is not available.
         if (!user) {
             return;
         }
 
+        // Require a non-empty account name.
         if (!accountName) {
             setAccountError(t('settings.usernameRequired'));
             return;
         }
 
+        // Skip unchanged account names.
         if (accountName === user.name) {
             return;
         }
 
+        // Persist the account name and surface any failure.
         try {
             await updateUser({ name: accountName });
             toast.success(t('settings.usernameSaved'));
@@ -112,6 +118,7 @@ export default function Settings() {
             header: t('columns.actions'),
             meta: { className: 'w-44 text-right' },
             cell: ({ row }) => {
+                // Only owners can delete organizations from settings.
                 if (row.original.role !== 'owner') {
                     return null;
                 }

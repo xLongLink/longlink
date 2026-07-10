@@ -51,6 +51,7 @@ function InputGroupAddon({
             data-align={align}
             className={cn(inputGroupAddonVariants({ align }), className)}
             onClick={(e) => {
+                // Let nested buttons handle their own clicks.
                 if ((e.target as HTMLElement).closest('button')) {
                     return;
                 }

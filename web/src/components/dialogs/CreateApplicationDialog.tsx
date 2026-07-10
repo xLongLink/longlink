@@ -83,6 +83,7 @@ export default function CreateApplicationDialog({ organization }: { organization
         imageMetadata?.environments.filter((env) => !platformEnvironmentNames.has(env.name)) ?? [];
     const organizationMembership = organizations.find((item) => item.slug === organization);
 
+    // Hide creation for roles without application access.
     if (!canCreateApplication(organizationMembership?.role)) {
         return null;
     }
@@ -101,6 +102,7 @@ export default function CreateApplicationDialog({ organization }: { organization
         setError(null);
         setIsInspecting(true);
 
+        // Fetch image metadata before showing editable fields.
         try {
             const query = new URLSearchParams({ image: payload.image });
             const metadata = await fetchApiJson(`/api/image?${query.toString()}`, undefined, (value) =>
@@ -124,6 +126,7 @@ export default function CreateApplicationDialog({ organization }: { organization
         setError(null);
 
         const application = createApplicationSubmitSchema.safeParse(payload);
+        // Stop before submission when required fields are invalid.
         if (!application.success) {
             setError(t('dialogs.createApplicationFailed'));
             return;
@@ -132,6 +135,7 @@ export default function CreateApplicationDialog({ organization }: { organization
         const envs: Record<string, string> = {};
         // Collect configured environment values while skipping optional empty fields.
         for (const [key, value] of Object.entries(application.data.envs)) {
+            // Skip optional empty environment values.
             if (value.length === 0) {
                 continue;
             }
@@ -165,6 +169,7 @@ export default function CreateApplicationDialog({ organization }: { organization
                 open={open}
                 onOpenChange={(nextOpen) => {
                     setOpen(nextOpen);
+                    // Reset transient form state when the dialog closes.
                     if (!nextOpen) {
                         resetDialogState();
                     }
@@ -230,6 +235,7 @@ export default function CreateApplicationDialog({ organization }: { organization
                                 className="space-y-4"
                                 onSubmit={(event) => {
                                     event.preventDefault();
+                                    // Advance only after required metadata is present.
                                     if (values.name.trim().length > 0 && values.image.trim().length > 0) {
                                         setStep('envs');
                                     }

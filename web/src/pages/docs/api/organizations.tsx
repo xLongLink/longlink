@@ -55,9 +55,6 @@ function OrganizationResourcesDiagram() {
                     </div>
                     <div>
                         <div className="font-medium text-foreground">Organization</div>
-                        <div className="mt-1 text-sm text-muted-foreground">
-                            Boundary for users, applications, database, and storage
-                        </div>
                     </div>
                 </div>
                 <div className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-md border bg-muted/40 px-3 py-4 text-center">
@@ -123,7 +120,6 @@ export const content = (
         <Heading id="roles" level="h2">
             Roles
         </Heading>
-        <P>Organization roles are ordered from least access to most access:</P>
         <div className="overflow-hidden rounded-md border">
             <Table>
                 <TableHeader className="bg-muted/50">

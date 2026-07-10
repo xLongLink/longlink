@@ -140,6 +140,7 @@ function renderArticleNavigationItem(
 
 /** Returns whether an article navigation item or descendant matches the current route. */
 function articleNavigationItemIsActive(item: ArticleNavigationItem, currentPath: string): boolean {
+    // Match direct routes before checking descendants.
     if (currentPath === item.path) {
         return true;
     }

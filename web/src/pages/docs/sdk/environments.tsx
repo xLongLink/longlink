@@ -6,7 +6,7 @@ import { P } from '@/components/ui/p';
 import { Stack } from '@/components/ui/stack';
 
 export const metadata = {
-    lastUpdated: '2026-07-09',
+    lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/environments.tsx',
 };
 
@@ -16,9 +16,8 @@ export const content = (
             Environments
         </Heading>
         <P>
-            Application configuration is declared with an <Code>Environments</Code> model. The SDK loads this model at
-            startup, validates values before request handling begins, and exposes declared requirements to the build
-            metadata used by the control plane.
+            Application configuration is declared with an <Code>Environments</Code> model so required deployment values
+            stay explicit in application code.
         </P>
         <P>
             The class wraps{' '}
@@ -29,12 +28,13 @@ export const content = (
             Usage
         </Heading>
         <P>
-            Use required fields for values that must be present at startup, and optional fields for settings that can
-            fall back to a default.
+            Use required fields for values that must be provided by the deployment, and optional fields for settings
+            that can fall back to a default. Create <Code>Env()</Code> in your own application code when you need to read
+            values; the <Code>LongLink</Code> app object does not need the user environment instance.
         </P>
         <CodeBlock language="python">
             {
-                'from longlink import Environments, LongLink\nfrom pydantic import Field\n\n\nclass Env(Environments):\n    """Project-specific environment model."""\n\n    REQUIRED: str = Field(\n        description="Required example environment value",\n    )\n    OPTIONAL: str = Field(\n        default="optional",\n        description="Optional example environment value",\n    )\n\n\nenv = Env()\napp = LongLink(env=env)'
+                'from longlink import Environments\nfrom pydantic import Field\n\nclass Env(Environments):\n    """Project-specific environment model."""\n\n    REQUIRED: str = Field(description="Required value")\n    OPTIONAL: str = Field(default="optional", description="Optional value")'
             }
         </CodeBlock>
     </Stack>

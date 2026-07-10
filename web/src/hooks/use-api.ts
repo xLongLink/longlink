@@ -26,6 +26,7 @@ export function useApiQuery<TQueryFnData, TData = TQueryFnData>(
         enabled,
         queryKey: path !== null ? apiQueryKey(path) : ['api', 'disabled'],
         queryFn: async ({ signal }) => {
+            // Normalize known API errors before React Query stores them.
             try {
                 return await fetchApiJson<TQueryFnData>(path!, request ? { ...request, signal } : { signal }, parse);
             } catch (error) {
@@ -34,6 +35,7 @@ export function useApiQuery<TQueryFnData, TData = TQueryFnData>(
                     queryClient.setQueryData(apiQueryKey('/api/me'), null);
                 }
 
+                // Allow callers to supply an explicit 404 fallback.
                 if (error instanceof ApiError && error.status === 404 && 'notFound' in options) {
                     return notFound as TQueryFnData;
                 }

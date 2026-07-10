@@ -13,6 +13,7 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
     """Return a SQLAlchemy sessionmaker instance."""
     global Session, _engine
 
+    # Reuse the initialized session factory.
     if Session is not None:
         return Session
 
@@ -23,6 +24,7 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
         "pool_recycle": 20,
     }
 
+    # Enable LIFO pooling for network database connections.
     if not database_url.drivername.startswith("sqlite+"):
         engine_kwargs["pool_use_lifo"] = True
 
@@ -42,5 +44,7 @@ async def session_scope() -> AsyncIterator[AsyncSession]:
     """Yield one SQLAlchemy session from the shared session factory."""
 
     Session = await get_session()
+
+    # Open one session for the caller's scoped work.
     async with Session() as session:
         yield session

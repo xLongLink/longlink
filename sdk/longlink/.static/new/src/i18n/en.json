@@ -2,7 +2,8 @@
     "dashboard": {
         "metrics": {
             "budget": {
-                "label": "Monthly budget"
+                "label": "Monthly budget",
+                "value": "CHF {{amount}}"
             },
             "requests": {
                 "count": {
@@ -12,7 +13,8 @@
                 "label": "Open work"
             },
             "target": {
-                "label": "Review target"
+                "label": "Review target",
+                "value": "{{days}} days"
             }
         },
         "checklist": {
@@ -53,6 +55,8 @@
         "recent": {
             "empty": "No requests yet. Create the first one from the Requests tab.",
             "open": "Open request",
+            "status": "{{status}}",
+            "summary": "{{vendor}} - CHF {{amount}}",
             "title": "Recent requests"
         },
         "tabs": {
@@ -92,9 +96,14 @@
             "approvedNote": "This request is approved and ready for procurement.",
             "back": "Back to requests",
             "description": "Review the request, update its workflow status, and manage attachments.",
+            "createdBy": "Created by {{name}}",
+            "justification": "{{justification}}",
             "rejectedNote": "This request is rejected. Add context before reopening it.",
+            "requestStatus": "{{status}}",
+            "requestTitle": "{{title}}",
             "summary": "Request summary",
-            "title": "Purchase request detail"
+            "title": "Purchase request detail",
+            "vendorAmount": "{{vendor}} - CHF {{amount}}"
         },
         "fields": {
             "amount": "Amount",
@@ -110,6 +119,7 @@
             "open": "Open",
             "request": "Request",
             "status": "Status",
+            "title": "{{title}}",
             "vendor": "Vendor"
         },
         "title": "Purchase requests"
@@ -120,6 +130,7 @@
             "code": "PATCH /requests/{id}/status",
             "costCenter": "Cost center",
             "description": "Edit the sample application's local owner, cost-center, and reviewer note fields.",
+            "initials": "{{initials}}",
             "legend": "Application profile",
             "lookup": "Lookup",
             "note": "Approval note",
@@ -151,6 +162,7 @@
             "emailHelp": "Send a digest when request status changes.",
             "legend": "Preferences",
             "limit": "Auto-approval limit",
+            "limitValue": "Auto-approve up to CHF {{limit}}",
             "notifications": "In-app notifications",
             "notificationsHelp": "Show reminders for stale requests.",
             "pin": "Pin policy"

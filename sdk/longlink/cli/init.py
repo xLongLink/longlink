@@ -22,9 +22,11 @@ def init_command(folder: str, ci_provider: str | None) -> None:
 
     # Refuse unsafe targets so scaffold generation cannot silently merge with user files.
     if target.exists():
+        # Reject file targets because the scaffold must be a directory.
         if not target.is_dir():
             raise click.ClickException(f"Target already exists and is not a directory: {target}")
 
+        # Reject non-empty directories to avoid overwriting user files.
         if any(target.iterdir()):
             raise click.ClickException(f"Target folder is not empty: {target}")
 

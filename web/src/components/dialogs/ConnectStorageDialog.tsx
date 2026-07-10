@@ -92,6 +92,7 @@ export default function ConnectStorageDialog() {
         },
     });
 
+    // Restrict registry changes to administrators.
     if (role !== 'administrator') {
         return null;
     }
@@ -107,12 +108,14 @@ export default function ConnectStorageDialog() {
             pendingLabel={t('actions.connecting')}
             onOpenChange={(nextOpen) => {
                 setOpen(nextOpen);
+                // Clear sensitive form state when the dialog closes.
                 if (!nextOpen) {
                     resetDialogState();
                 }
             }}
             onSubmit={form.handleSubmit(async (payload) => {
                 setError(null);
+                // Submit the registry connection.
                 try {
                     await connectStorage.mutateAsync(payload);
                 } catch (mutationError) {

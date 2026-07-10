@@ -12,10 +12,12 @@ export function Auth({ children, requiredRole }: { children: ReactElement; requi
     const { user, role, isLoading } = useUserProfile();
     const location = useLocation();
 
+    // Wait for profile loading before deciding access.
     if (isLoading) {
         return null;
     }
 
+    // Show sign-in UI for unauthenticated users.
     if (!user) {
         return (
             <Layout brandOnly brandHref="/">
@@ -26,7 +28,9 @@ export function Auth({ children, requiredRole }: { children: ReactElement; requi
         );
     }
 
+    // Check role requirements only when a route declares one.
     if (requiredRole) {
+        // Hide routes from users without the required role.
         if (!hasMinimumRole(role, requiredRole)) {
             return <NotFound />;
         }

@@ -59,13 +59,19 @@ export function Footer() {
 
                     <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-medium text-muted-foreground sm:justify-end">
                         <li className="transition-colors hover:text-accent">
-                            <Link to="/">Home</Link>
+                            <Link to="/" onClick={() => window.scrollTo({ left: 0, top: 0 })}>
+                                Home
+                            </Link>
                         </li>
                         <li className="transition-colors hover:text-accent">
-                            <Link to="/docs">Documentation</Link>
+                            <Link to="/docs" onClick={() => window.scrollTo({ left: 0, top: 0 })}>
+                                Documentation
+                            </Link>
                         </li>
                         <li className="transition-colors hover:text-accent">
-                            <Link to="/pricing">Pricing</Link>
+                            <Link to="/pricing" onClick={() => window.scrollTo({ left: 0, top: 0 })}>
+                                Pricing
+                            </Link>
                         </li>
                     </ul>
                 </div>
@@ -74,13 +80,19 @@ export function Footer() {
                     <p>LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}</p>
                     <ul className="flex items-center gap-4">
                         <li className="transition-colors hover:text-accent">
-                            <Link to="/impressum">Impressum</Link>
+                            <Link to="/impressum" onClick={() => window.scrollTo({ left: 0, top: 0 })}>
+                                Impressum
+                            </Link>
                         </li>
                         <li className="transition-colors hover:text-accent">
-                            <Link to="/terms">Terms</Link>
+                            <Link to="/terms" onClick={() => window.scrollTo({ left: 0, top: 0 })}>
+                                Terms
+                            </Link>
                         </li>
                         <li className="transition-colors hover:text-accent">
-                            <Link to="/privacy">Privacy</Link>
+                            <Link to="/privacy" onClick={() => window.scrollTo({ left: 0, top: 0 })}>
+                                Privacy
+                            </Link>
                         </li>
                     </ul>
                 </div>

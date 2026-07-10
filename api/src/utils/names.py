@@ -7,9 +7,11 @@ def slugify(value: str, label: str = "Value", max_length: int = 63) -> str:
 
     slug = text_slugify(value, lowercase=True, regex_pattern=r"[^a-z0-9]+", separator="-").strip("-")
 
+    # Reject values that normalize to an empty slug.
     if not slug:
         raise ValueError(f"{label} must contain at least one lowercase letter or number")
 
+    # Keep generated slugs within target length limits.
     if len(slug) > max_length:
         raise ValueError(f"{label} must be at most {max_length} characters")
 
@@ -19,12 +21,15 @@ def slugify(value: str, label: str = "Value", max_length: int = 63) -> str:
 def knames(value: str, label: str = "Value") -> str:
     """Validate one Kubernetes DNS label value and return it unchanged."""
 
+    # Kubernetes names must be non-empty.
     if not value:
         raise ValueError(f"{label} must not be empty")
 
+    # Kubernetes DNS labels are limited to 63 characters.
     if len(value) > 63:
         raise ValueError(f"{label} must be at most 63 characters")
 
+    # Enforce the DNS label character and boundary rules.
     if not re.fullmatch(r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", value):
         raise ValueError(f"{label} must contain only lowercase letters, numbers, and hyphens")
 
@@ -36,6 +41,8 @@ def dbname(value: str) -> str:
 
     knames(value, "Database source name")
     database_name = f"longlink_{value}"
+
+    # PostgreSQL identifiers must stay within 63 characters.
     if len(database_name) > 63:
         raise ValueError("Database name must be at most 63 characters")
 

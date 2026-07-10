@@ -20,6 +20,7 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
 
     /** Activates one saved account and returns to the requested page. */
     async function handleAccountSelect(oidc: string) {
+        // Activate the saved account before redirecting.
         try {
             await activateAccount(oidc);
             navigate(safeRedirectTo, { replace: true });

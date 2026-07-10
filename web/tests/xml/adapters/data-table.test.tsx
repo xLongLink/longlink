@@ -31,14 +31,14 @@ describe('DataTable', () => {
         const ctx: ExecutionContext = {
             setups: {},
             invalidate: async () => {},
-            translations: { inventory: { item: 'Item', sku: 'SKU' } },
+            translations: { inventory: { item: 'Item', name: '{{name}}', sku: 'SKU' } },
             values: {
                 items: [{ sku: 'SKU-001', name: 'Warehouse Widget' }],
             },
         };
         const output = renderXmlToMarkup(
             parseXML(
-                '<DataTable data="$items" as="item"><DataColumn><DataHeader><Flex><P i18n="inventory.item" /><Badge variant="outline" i18n="inventory.sku" /></Flex></DataHeader><DataCell><Flex><P value="$item.name" /><Badge variant="outline" value="$item.sku" /></Flex></DataCell></DataColumn></DataTable>'
+                '<DataTable data="$items" as="item"><DataColumn><DataHeader><Flex><P i18n="inventory.item" /><Badge variant="outline" i18n="inventory.sku" /></Flex></DataHeader><DataCell><Flex><P i18n="inventory.name" name="$item.name" /><Badge variant="outline" value="$item.sku" /></Flex></DataCell></DataColumn></DataTable>'
             ),
             ctx
         );

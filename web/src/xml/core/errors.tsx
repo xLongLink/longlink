@@ -20,6 +20,7 @@ export class XmlErrorBoundary extends Component<XmlErrorBoundaryProps, XmlErrorB
 
     /** Clears a previous XML error when the rendered XML node changes. */
     componentDidUpdate(previousProps: XmlErrorBoundaryProps) {
+        // Clear the stored error when the reset key changes.
         if (previousProps.resetKey !== this.props.resetKey && this.state.error) {
             this.setState({ error: null });
         }
@@ -27,6 +28,7 @@ export class XmlErrorBoundary extends Component<XmlErrorBoundaryProps, XmlErrorB
 
     /** Renders the XML error message or the protected XML subtree. */
     render() {
+        // Render the captured XML error instead of children.
         if (this.state.error) {
             return (
                 <div>

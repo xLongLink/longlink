@@ -80,8 +80,12 @@ class Role:
 
         # Runtime roles are received as strings from trusted proxy headers.
         if type(value) is str:
+
+            # Resolve trusted runtime role names through the runtime rank map.
             try:
                 return RuntimeRoleRanks[value.strip().lower()].value
+
+            # Unknown runtime role strings are not accepted.
             except KeyError:
                 raise ValueError(f"Unknown role '{value}'")
 
@@ -89,9 +93,11 @@ class Role:
         if type(value) is PlatformRoles:
             return PlatformRoleRanks[value.name].value
 
+        # Organization roles resolve through organization ranks.
         if type(value) is OrganizationRoles:
             return OrganizationRoleRanks[value.name].value
 
+        # Application roles resolve through application ranks.
         if type(value) is ApplicationRoles:
             return ApplicationRoleRanks[value.name].value
 
@@ -100,9 +106,11 @@ class Role:
     def atleast(self, value: RoleName | None, required_role: RoleName) -> bool:
         """Return whether one role is at least as privileged as the required role."""
 
+        # Missing current roles never satisfy requirements.
         if value is None:
             return False
 
+        # Compare roles only within the same scope.
         if type(value) is not type(required_role):
             return False
 

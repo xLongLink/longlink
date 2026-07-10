@@ -260,6 +260,7 @@ function OrganizationApplicationView() {
     const canViewLogs = platformRole === 'administrator' || canViewApplicationLogs(organizationRole, applicationRole);
     const applicationGatewayUrl = organizationApplication?.gateway_url ?? '';
 
+    // Show the shell while organization/application access is still resolving.
     if (isLoading) {
         return <View applicationStatus="loading" metadata="" />;
     }

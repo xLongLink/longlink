@@ -188,14 +188,10 @@ export const content = (
             user and forwards approved requests with trusted runtime headers; the gateway accepts only authenticated
             proxy traffic and routes it to the internal application service.
         </P>
-        <Heading id="how-it-works" level="h2">
-            How It Works
-        </Heading>
         <ControlPlaneFlowDiagram />
         <Heading id="shared-foundation" level="h2">
             Shared Foundation
         </Heading>
-        <P>The control plane provides the common platform layer that every business-process application needs:</P>
         <div className="overflow-hidden rounded-md border">
             <Table>
                 <TableHeader className="bg-muted/50">

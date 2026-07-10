@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 /** Builds a stable heading id from translated XML heading text. */
 export function headingId(value: ReactNode): string | undefined {
+    // Only string headings can produce stable ids.
     if (typeof value !== 'string') {
         return undefined;
     }

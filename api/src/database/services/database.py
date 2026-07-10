@@ -14,6 +14,7 @@ from src.database.models.applications import Application
 async def fetch_all() -> list[DatabaseRegistry]:
     """Return all registered database backends."""
 
+    # Open a session for the registry list query.
     async with session_scope() as session:
         statement = (
             select(DatabaseRegistry)
@@ -31,8 +32,11 @@ async def fetch_all() -> list[DatabaseRegistry]:
 async def get(registry_id: UUID, include_deleted: bool = False) -> DatabaseRegistry | None:
     """Return one database backend by id."""
 
+    # Open a session for the registry lookup.
     async with session_scope() as session:
         conditions = [DatabaseRegistry.id == registry_id]
+
+        # Hide soft-deleted registries unless explicitly requested.
         if not include_deleted:
             conditions.append(DatabaseRegistry.deleted_at.is_(None))
 
@@ -62,9 +66,12 @@ async def create(
 ) -> DatabaseRegistry:
     """Create one database backend registration."""
 
+    # Use one session for duplicate checks and creation.
     async with session_scope() as session:
         result = await session.execute(select(DatabaseRegistry).where(DatabaseRegistry.name == name))
         database = result.scalar_one_or_none()
+
+        # Reject duplicate registry names before insert.
         if database is not None:
             raise ConflictError("Database registry already exists")
 
@@ -82,6 +89,7 @@ async def create(
         database.updated_id = user.id
         session.add(database)
 
+        # Commit so uniqueness violations surface consistently.
         try:
             await session.commit()
         except IntegrityError as exc:
@@ -106,8 +114,11 @@ async def create(
 async def delete(registry_id: UUID, user: User) -> bool:
     """Soft-delete one database registry when no active app uses it."""
 
+    # Open a session for the deletion check.
     async with session_scope() as session:
         registry = await session.get(DatabaseRegistry, registry_id)
+
+        # Treat missing or deleted registries as no-ops.
         if registry is None or registry.deleted_at is not None:
             return False
 
@@ -117,6 +128,8 @@ async def delete(registry_id: UUID, user: User) -> bool:
                 Application.deleted_at.is_(None),
             )
         )
+
+        # Block deletion while active applications depend on it.
         if active_application.scalar_one_or_none() is not None:
             raise ConflictError("Database registry is used by active applications")
 

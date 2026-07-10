@@ -8,6 +8,7 @@ from src.models.roles import PlatformRoles
 from src.models.users import Theme, Accent, Radius, Language
 from src.database.models.association import UserApplication, UserOrganization
 
+# Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.applications import Application
     from src.database.models.organizations import Organization

@@ -16,6 +16,7 @@ from src.database.models.organizations import Organization
 async def fetch_all() -> list[Location]:
     """Return all registered locations."""
 
+    # Open a session for the location list query.
     async with session_scope() as session:
         statement = select(Location).where(Location.deleted_at.is_(None))
         result = await session.execute(statement)
@@ -25,6 +26,7 @@ async def fetch_all() -> list[Location]:
 async def get(location_id: UUID) -> Location | None:
     """Return one location by id."""
 
+    # Open a session for the location lookup.
     async with session_scope() as session:
         statement = select(Location).where(Location.id == location_id, Location.deleted_at.is_(None))
         result = await session.execute(statement)
@@ -40,12 +42,14 @@ async def create(
 ) -> Location:
     """Create one location."""
 
+    # Use one session for creating the location.
     async with session_scope() as session:
         location = Location(name=name, slug=slug, country=country, provider=provider)
         location.created_id = user.id
         location.updated_id = user.id
         session.add(location)
 
+        # Commit so uniqueness violations surface consistently.
         try:
             await session.commit()
         except IntegrityError as exc:
@@ -59,8 +63,11 @@ async def create(
 async def delete(location_id: UUID, user: User) -> bool:
     """Soft-delete one location when no active resource depends on it."""
 
+    # Open a session for dependency checks and deletion.
     async with session_scope() as session:
         location = await session.get(Location, location_id)
+
+        # Treat missing or deleted locations as no-ops.
         if location is None or location.deleted_at is not None:
             return False
 
@@ -70,6 +77,8 @@ async def delete(location_id: UUID, user: User) -> bool:
             (DatabaseRegistry, "active database registries"),
             (StorageRegistry, "active storage registries"),
         )
+
+        # Check each resource type that can pin a location.
         for model, label in dependency_checks:
             result = await session.execute(
                 select(model.id).where(
@@ -77,6 +86,8 @@ async def delete(location_id: UUID, user: User) -> bool:
                     model.deleted_at.is_(None),
                 )
             )
+
+            # Block deletion when active resources still depend on it.
             if result.scalar_one_or_none() is not None:
                 raise ConflictError(f"Location is used by {label}")
 

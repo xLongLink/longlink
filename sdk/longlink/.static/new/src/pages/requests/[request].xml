@@ -16,12 +16,12 @@
         <Stack>
             <H2 i18n="requests.detail.summary" />
             <Flex space="between">
-                <P value="$request.title" />
-                <P value="$request.status" />
+                <P i18n="requests.detail.requestTitle" title="$request.title" />
+                <P i18n="requests.detail.requestStatus" status="$request.status" />
             </Flex>
-            <P value="${`${request.vendor} - CHF ${request.amount}`}" />
-            <P value="$request.justification" />
-            <P value="${`Created by ${request.created_by.name}`}" />
+            <P i18n="requests.detail.vendorAmount" vendor="$request.vendor" amount="$request.amount" />
+            <P i18n="requests.detail.justification" justification="$request.justification" />
+            <P i18n="requests.detail.createdBy" name="$request.created_by.name" />
             <P if="${request.status in ['approved']}" i18n="requests.detail.approvedNote" />
             <P if="${request.status in ['rejected']}" i18n="requests.detail.rejectedNote" />
 

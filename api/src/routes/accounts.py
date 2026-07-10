@@ -14,9 +14,12 @@ async def activate_account(oidc: str, request: Request) -> dict[str, object]:
     """Switch the active account within the current browser session."""
 
     session_accounts = SessionAccountsService(request)
+
+    # Only activate accounts saved in this session.
     if oidc not in session_accounts.list():
         raise ForbiddenError("Account is not saved in this session")
 
+    # Require the saved account to still exist.
     if await users.get(oidc) is None:
         raise NotFoundError("Account", oidc)
 
@@ -38,8 +41,12 @@ async def list_accounts(request: Request) -> list[User]:
     """Return the saved session accounts for the login screen."""
 
     accounts: list[User] = []
+
+    # Load each saved session account.
     for oidc in SessionAccountsService(request).list():
         user = await users.get(oidc)
+
+        # Skip stale session account references.
         if user is None:
             continue
 

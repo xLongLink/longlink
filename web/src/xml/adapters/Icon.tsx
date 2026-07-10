@@ -16,6 +16,7 @@ export function Icon({ props }: Props) {
         throw new Error('Icon requires a string name');
     }
 
+    // Use a button shell when the icon triggers an action.
     if (actionHandler) {
         return (
             <button

@@ -123,11 +123,11 @@ def test_create_engine_sets_production_schema_search_path(monkeypatch) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_session_autocreates_sqlite_tables(monkeypatch) -> None:
-    """Auto-create SQLModel tables for SQLite engines."""
+async def test_get_session_opens_context_and_autocreates_sqlite_tables(monkeypatch) -> None:
+    """Open a SQLModel session context and auto-create SQLite tables."""
 
     calls: list[tuple[str, Any]] = []
-    expected_session_maker = object()
+    expected_session = object()
 
     class FakeConnection:
         """Minimal async connection context manager."""
@@ -145,6 +145,28 @@ async def test_get_session_autocreates_sqlite_tables(monkeypatch) -> None:
 
             calls.append(("run_sync", callback))
 
+    class FakeSessionContext:
+        """Minimal async session context manager."""
+
+        async def __aenter__(self) -> object:
+            """Enter the fake session context."""
+
+            calls.append(("session_enter", None))
+            return expected_session
+
+        async def __aexit__(self, *_exc_info: object) -> None:
+            """Exit the fake session context."""
+
+            calls.append(("session_exit", None))
+
+    class FakeSessionMaker:
+        """Minimal async session factory."""
+
+        def __call__(self) -> FakeSessionContext:
+            """Return the fake session context manager."""
+
+            return FakeSessionContext()
+
     class FakeEngine:
         """Minimal async engine used by get_session."""
 
@@ -160,6 +182,8 @@ async def test_get_session_autocreates_sqlite_tables(monkeypatch) -> None:
 
             return FakeConnection()
 
+    expected_session_maker = FakeSessionMaker()
+
     def fake_async_sessionmaker(*args: object, **kwargs: object) -> object:
         """Capture async sessionmaker construction."""
 
@@ -171,10 +195,15 @@ async def test_get_session_autocreates_sqlite_tables(monkeypatch) -> None:
     monkeypatch.setattr(database_base, "async_sessionmaker", fake_async_sessionmaker)
 
     try:
-        session_maker = await database_base.get_session()
+        async with database_base.get_session() as session:
+            assert session is expected_session
+
+        session_maker = await database_base.get_session_maker()
 
         assert session_maker is expected_session_maker
         assert [call[0] for call in calls].count("run_sync") == 2
+        assert [call[0] for call in calls].count("session_enter") == 1
+        assert [call[0] for call in calls].count("session_exit") == 1
         assert any(call[0] == "sessionmaker" for call in calls)
     finally:
         database_base.Session = None

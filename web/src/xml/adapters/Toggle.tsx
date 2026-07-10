@@ -15,6 +15,7 @@ export function Toggle({ props, nodes }: Props) {
     const variant = resolveXmlString(props, 'variant', ctx, 'default');
     const { state, snapshot } = useXmlValueSnapshot(pressed);
 
+    // Render bound toggles as controlled inputs.
     if (state) {
         const currentValue =
             snapshot && typeof snapshot === 'object' && 'value' in snapshot ? snapshot.value : snapshot;
@@ -24,6 +25,7 @@ export function Toggle({ props, nodes }: Props) {
                 disabled={disabled}
                 id={id}
                 onPressedChange={(nextPressed) => {
+                    // Write pressed changes back to the bound state.
                     if ('value' in state) state.value = nextPressed;
                 }}
                 pressed={Boolean(currentValue)}
@@ -35,6 +37,7 @@ export function Toggle({ props, nodes }: Props) {
         );
     }
 
+    // Render explicit pressed values as controlled inputs.
     if (pressed !== undefined) {
         return (
             <UIToggle

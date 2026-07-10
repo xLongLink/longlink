@@ -15,7 +15,9 @@ def create_fs(env: Envs, bucket: str) -> AbstractFileSystem:
     elif env.ENV == "development":
         filesystem = fsspec.filesystem("file")
 
+    # Production uses remote object storage supplied by the platform.
     else:
+        # Require all production storage credentials before constructing the backend.
         if env.STORAGE_ENDPOINT_URL is None or env.STORAGE_USERNAME is None or env.STORAGE_PASSWORD is None:
             raise ValueError("Production storage settings require endpoint URL, username, and password")
 

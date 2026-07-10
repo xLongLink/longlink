@@ -9,7 +9,6 @@ from longlink.utils import Envs
 from collections.abc import Callable
 from longlink.routes import routes
 from longlink.logger import ApiAccessFilter
-from pydantic_settings import BaseSettings
 from longlink.constants import ROOT
 from longlink.utils.xml import Longlink as LonglinkXml
 from fastapi.staticfiles import StaticFiles
@@ -80,7 +79,7 @@ class LongLink(FastAPI):
 
     def __init__(
         self,
-        env: BaseSettings | None = None,
+        env: Envs | None = None,
         i18n: str | None = "/i18n",
         pages: str | None = "/pages",
         **kwargs: Any,

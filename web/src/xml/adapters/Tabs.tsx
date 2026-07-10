@@ -62,6 +62,7 @@ export function Tabs({ props, nodes }: Props) {
 
 /** Resolves a validated XML tabs orientation. */
 function resolveTabsOrientation(value: string): TabsOrientation {
+    // Accept only orientations supported by the UI component.
     switch (value) {
         case 'horizontal':
         case 'vertical':
@@ -97,6 +98,7 @@ function collectTabNodes(
             return;
         }
 
+        // Skip tabs hidden by XML conditions.
         if (node.params?.if != null && !evaluate(node.params.if, ctx)) {
             return;
         }

@@ -247,6 +247,7 @@ export default function People({ organization, people, invitations, activeSectio
             <AlertDialog
                 open={roleChangeTarget !== null}
                 onOpenChange={(nextOpen) => {
+                    // Reset pending role changes when the dialog closes.
                     if (!nextOpen) {
                         setRoleChangeTarget(null);
                         setRoleChangeError(null);
@@ -279,10 +280,12 @@ export default function People({ organization, people, invitations, activeSectio
                             type="button"
                             disabled={isChangingMemberRole || roleChangeTarget === null}
                             onClick={async () => {
+                                // Ignore submissions without a selected role change.
                                 if (roleChangeTarget === null) {
                                     return;
                                 }
 
+                                // Persist the selected organization role.
                                 try {
                                     await changeMemberRole({
                                         memberId: roleChangeTarget.user.id,
@@ -315,6 +318,7 @@ export default function People({ organization, people, invitations, activeSectio
                 open={inviteOpen}
                 onOpenChange={(nextOpen) => {
                     setInviteOpen(nextOpen);
+                    // Clear invitation errors when the dialog closes.
                     if (!nextOpen) {
                         setInviteError(null);
                     }
@@ -336,6 +340,7 @@ export default function People({ organization, people, invitations, activeSectio
                                 event.preventDefault();
                                 setInviteError(null);
 
+                                // Submit the invitation and surface any failure.
                                 try {
                                     await inviteMember({
                                         email: inviteEmail.trim(),

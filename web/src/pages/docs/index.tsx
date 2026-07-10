@@ -14,8 +14,8 @@ export const metadata = {
 
 export const content = (
     <Stack>
-        <Heading className="flex items-center" id="longlink" level="h1">
-            <Wordmark className="text-4xl" />
+        <Heading className="flex items-center" id="introduction" level="h1">
+            <Wordmark className="text-[2.5rem] leading-[1.08] sm:text-[3.25rem] sm:leading-[1.05]" />
         </Heading>
         <P>
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim

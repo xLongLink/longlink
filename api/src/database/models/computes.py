@@ -5,6 +5,7 @@ from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum, Text, Column
 from src.models.computes import ComputeKind
 
+# Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.users import User
     from src.database.models.locations import Location

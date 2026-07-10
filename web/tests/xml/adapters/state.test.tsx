@@ -11,9 +11,9 @@ describe('State', () => {
     /* State object fields should be visible to sibling nodes after initialization. */
     it('renders state values for sibling nodes', async () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        ctx.translations = { state: { value: '{{value}}' } };
+        ctx.translations = { state: { value: '{{text}}' } };
         const ast = parseXML(
-            '<longlink><State id="filter" value="day" /><P i18n="state.value" value="${filter.value}" /></longlink>'
+            '<longlink><State id="filter" value="day" /><P i18n="state.value" text="${filter.value}" /></longlink>'
         );
         await setupContext(ast, ctx, '');
         const renderedTree = createElement(ContextProvider, { value: ctx, children: renderNode(ast, ctx) });
@@ -38,9 +38,9 @@ describe('State', () => {
     /* Multiple state attributes should seed a proxied object slot. */
     it('renders multi-field state values', async () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        ctx.translations = { state: { summary: '{{value}} {{score}} {{size}}' } };
+        ctx.translations = { state: { summary: '{{name}} {{score}} {{size}}' } };
         const ast = parseXML(
-            '<longlink><State id="state1" value1="first value" score="10" list="[]" /><P i18n="state.summary" value="${state1.value1}" score="${state1.score}" size="${state1.list.length}" /></longlink>'
+            '<longlink><State id="state1" value1="first value" score="10" list="[]" /><P i18n="state.summary" name="${state1.value1}" score="${state1.score}" size="${state1.list.length}" /></longlink>'
         );
 
         await setupContext(ast, ctx, '');

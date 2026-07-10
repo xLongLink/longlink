@@ -69,6 +69,7 @@ export default function CreateLocationDialog() {
         },
     });
 
+    // Restrict location creation to administrators.
     if (role !== 'administrator') {
         return null;
     }
@@ -89,6 +90,7 @@ export default function CreateLocationDialog() {
                 open={open}
                 onOpenChange={(nextOpen) => {
                     setOpen(nextOpen);
+                    // Clear form state when the dialog closes.
                     if (!nextOpen) {
                         resetDialogState();
                     }
@@ -106,6 +108,7 @@ export default function CreateLocationDialog() {
                             onSubmit={form.handleSubmit(async (payload) => {
                                 setError(null);
 
+                                // Submit the location and let success handlers close the dialog.
                                 try {
                                     await createLocation.mutateAsync(payload);
                                 } catch (mutationError) {

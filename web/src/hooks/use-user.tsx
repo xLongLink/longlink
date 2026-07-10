@@ -83,6 +83,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const user = useUserQuery();
 
     useEffect(() => {
+        // Defer preference application until the user query settles.
         if (user.isLoading) {
             return;
         }
@@ -91,6 +92,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
         applyUserPreferences(preferences);
 
+        // System theme listeners are only needed for system preference.
         if (preferences.theme !== 'system') {
             return;
         }
@@ -116,12 +118,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 export function useUserProfile(): UserProfileState {
     const context = useContext(UserContext);
 
+    // Fail fast when the provider is missing.
     if (context === undefined) {
         throw new Error('useUserProfile must be used within a UserProvider');
     }
 
     const { data: user, error, isLoading } = context;
 
+    // Return anonymous defaults when no authenticated user is loaded.
     if (!user) {
         return {
             user: null,

@@ -23,12 +23,16 @@ class LazyCommandGroup(click.Group):
         """Import and return a command by name on demand."""
 
         command_path = COMMANDS.get(cmd_name)
+
+        # Unknown command names are delegated back to Click.
         if command_path is None:
             return None
 
         module_name, command_name = command_path.split(":", 1)
         module = __import__(module_name, fromlist=[command_name])
         command = getattr(module, command_name)
+
+        # Guard the lazy registry against accidentally pointing at non-command objects.
         if not isinstance(command, click.Command):
             raise RuntimeError(f"{command_path} did not resolve to a click command")
 

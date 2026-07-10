@@ -31,6 +31,7 @@ export function DialogTrigger({ props, nodes }: Props) {
         triggerChildren.length === 1 && triggerChildren[0]?.name === 'Button' ? triggerChildren[0] : null;
     const anchorChild = triggerChildren.length === 1 && triggerChildren[0]?.name === 'A' ? triggerChildren[0] : null;
 
+    // Special-case button triggers to preserve button styling.
     if (buttonChild) {
         // Reuse the XML button's label as the trigger content while keeping the button shell.
         const childContent = renderNode(buttonChild.children ?? [], ctx);
@@ -50,6 +51,7 @@ export function DialogTrigger({ props, nodes }: Props) {
         );
     }
 
+    // Special-case anchor triggers to preserve link styling.
     if (anchorChild) {
         // Reuse the XML anchor's label and href for a link-style trigger.
         const childContent = renderNode(anchorChild.children ?? [], ctx);

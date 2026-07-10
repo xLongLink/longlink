@@ -1,13 +1,13 @@
 import { CodeBlock } from '@/components/CodeBlock';
+import { CodeTabs } from '@/components/CodeTabs';
 import { A } from '@/components/ui/a';
 import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';
 import { P } from '@/components/ui/p';
 import { Stack } from '@/components/ui/stack';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const metadata = {
-    lastUpdated: '2026-07-09',
+    lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/testing.tsx',
 };
 
@@ -18,23 +18,17 @@ export const content = (
         </Heading>
         <P>
             Test LongLink applications with standard <A href="https://docs.pytest.org/en/stable/">pytest</A> and{' '}
-            <A href="https://pytest-asyncio.readthedocs.io/en/stable/">pytest-asyncio</A> workflows. When a project is
-            generated, these tools are already included as development dependencies in the <Code>pyproject.toml</Code>{' '}
-            file.
+            <A href="https://pytest-asyncio.readthedocs.io/en/stable/">pytest-asyncio</A> workflows. Generated projects
+            also include the dependencies needed by <Code>longlink.testing.TestClient</Code>.
         </P>
         <P>To install the development dependencies, run:</P>
-        <Tabs defaultValue="pip">
-            <TabsList>
-                <TabsTrigger value="pip">pip</TabsTrigger>
-                <TabsTrigger value="uv">uv</TabsTrigger>
-            </TabsList>
-            <TabsContent value="pip">
-                <CodeBlock language="bash">pip install .[dev]</CodeBlock>
-            </TabsContent>
-            <TabsContent value="uv">
-                <CodeBlock language="bash">uv sync --extra dev</CodeBlock>
-            </TabsContent>
-        </Tabs>
+        <CodeTabs
+            defaultValue="pip"
+            items={[
+                { code: 'pip install .[dev]', label: 'pip', value: 'pip' },
+                { code: 'uv sync --extra dev', label: 'uv', value: 'uv' },
+            ]}
+        />
         <Heading id="usage" level="h2">
             Usage
         </Heading>
@@ -47,27 +41,20 @@ uv run longlink test tests/test_app.py -q`}</CodeBlock>
         <Heading id="example" level="h2">
             Example
         </Heading>
-        <P>Async pytest example:</P>
-        <CodeBlock language="python">{`import pytest
-
-
-@pytest.mark.asyncio
-async def test_healthcheck(client):
-    response = await client.get('/health')
-
-    assert response.status_code == 200`}</CodeBlock>
         <P>
-            FastAPI <A href="https://fastapi.tiangolo.com/tutorial/testing/">TestClient</A> example:
+            LongLink apps are FastAPI apps, and <Code>longlink.testing.TestClient</Code> is a compatible facade over{' '}
+            FastAPI's <A href="https://fastapi.tiangolo.com/tutorial/testing/">TestClient</A>. Use async pytest tests
+            for lower-level async services when needed.
         </P>
-        <CodeBlock language="python">{`from app import app
-from fastapi.testclient import TestClient
+        <CodeBlock language="python">{`from main import app
+from longlink.testing import TestClient
 
 client = TestClient(app)
 
-
-def test_healthcheck():
+def test_healthcheck() -> None:
+    """Return the LongLink runtime health payload."""
     response = client.get("/health")
-    assert response.status_code == 200
-    assert response.json() == {"status": "ok"}`}</CodeBlock>
+
+    assert response.status_code == 200`}</CodeBlock>
     </Stack>
 );

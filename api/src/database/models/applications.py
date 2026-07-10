@@ -7,6 +7,7 @@ from sqlalchemy import Column, UniqueConstraint
 from src.models.statuses import ApplicationStatus
 from src.database.models.association import UserApplication
 
+# Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.users import User
     from src.database.models.computes import ComputeRegistry

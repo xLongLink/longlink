@@ -9,7 +9,7 @@ import { Stack } from '@/components/ui/stack';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-09',
+    lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/pages.tsx',
 };
 
@@ -99,7 +99,8 @@ export const content = (
             </P>
             <CodeBlock language="xml">{`<longlink>
   <Query id="issue" path="/api/issues/\${params.issue}" />
-  <H1 value="$issue.title" />
+  <H1 i18n="issues.detailTitle" />
+  <P i18n="issues.detailSummary" title="$issue.title" />
 </longlink>`}</CodeBlock>
         </Stack>
         <Stack className="gap-3">
@@ -108,18 +109,13 @@ export const content = (
             </Heading>
             <P>
                 <Code>LongLink()</Code> registers XML pages and translation catalogs from conventional source folders.
-                The scaffolded app uses the defaults through <Code>LongLink(env=env)</Code>, which is equivalent to
-                mounting pages from <Code>src/pages</Code> at <Code>/pages</Code> and translations from{' '}
-                <Code>src/i18n</Code> at <Code>/i18n</Code>.
+                The scaffolded app uses the defaults through <Code>LongLink()</Code>, which is equivalent to mounting
+                pages from <Code>src/pages</Code> at <Code>/pages</Code> and translations from <Code>src/i18n</Code> at{' '}
+                <Code>/i18n</Code>.
             </P>
             <CodeBlock language="python">{`from longlink import LongLink
 
-from src.envs import Env
-
-
-env = Env()
 app = LongLink(
-    env=env,
     pages="/pages",
     i18n="/i18n",
 )`}</CodeBlock>
@@ -247,7 +243,6 @@ app = LongLink(
                 <Ul>
                     <Li>each: required expression that must resolve to an array.</Li>
                     <Li>as: required local variable name for each item.</Li>
-                    <Li>if: optional global condition for rendering the loop.</Li>
                 </Ul>
             </Stack>
             <CodeBlock language="xml">{`<For each="$orders.items" as="order">

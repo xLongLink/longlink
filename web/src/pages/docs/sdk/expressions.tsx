@@ -67,7 +67,7 @@ export const content = (
             </Ul>
             <CodeBlock language="xml">{`<Query id="tasks" path="/api/tasks" />
 <For each="$tasks" as="task">
-  <P value="\${index + 1}. \${task.title}" />
+  <P i18n="tasks.row" index="\${index + 1}" title="$task.title" />
 </For>`}</CodeBlock>
         </Stack>
         <Stack className="gap-3">
@@ -99,9 +99,9 @@ export const content = (
                 </Li>
             </Ul>
             <CodeBlock language="xml">{`<Button disabled="\${!draft.title || saving}" i18n="tasks.create" />
-<P if="\${task.status === 'open'}" value="$task.title" />
+<P if="\${task.status === 'open'}" i18n="tasks.title" title="$task.title" />
 <Badge value="\${task.priority >= 5 ? 'High' : 'Normal'}" />
-<P value="\${task.owner?.name ?? 'Unassigned'}" />`}</CodeBlock>
+<P i18n="tasks.owner" name="\${task.owner?.name ?? 'Unassigned'}" />`}</CodeBlock>
         </Stack>
         <Stack className="gap-3">
             <Heading id="arrays-objects-and-templates" level="h2">
@@ -117,7 +117,7 @@ export const content = (
   <Button i18n="tasks.create" />
 </Action>
 
-<P value="\${` +
+<P i18n="tasks.summary" summary="\${` +
                     '`Task ${task.id}: ${task.title}`' +
                     `}" />`}
             </CodeBlock>
@@ -140,9 +140,9 @@ export const content = (
                     <Code>Math.max</Code>, <Code>Math.min</Code>, <Code>Math.round</Code>, and <Code>Math.trunc</Code>.
                 </Li>
             </Ul>
-            <CodeBlock language="xml">{`<P value="\${String(task.id)}" />
+            <CodeBlock language="xml">{`<P i18n="tasks.id" id="\${String(task.id)}" />
 <P if="\${Array.isArray(tasks) &amp;&amp; tasks.length > 0}" i18n="tasks.ready" />
-<P value="\${Math.round(total)}" />`}</CodeBlock>
+<P i18n="tasks.total" total="\${Math.round(total)}" />`}</CodeBlock>
         </Stack>
         <Stack className="gap-3">
             <Heading id="bindings" level="h2">
@@ -158,7 +158,7 @@ export const content = (
 <Input value="$draft.title" />
 
 <!-- read-only expression result -->
-<P value="\${draft.title || 'Untitled'}" />`}</CodeBlock>
+<P i18n="tasks.draftTitle" title="\${draft.title || 'Untitled'}" />`}</CodeBlock>
         </Stack>
         <Stack className="gap-3">
             <Heading id="xml-escaping" level="h2">
@@ -191,9 +191,9 @@ export const content = (
                 <Li>Inherited properties and unsafe prototype names are not readable.</Li>
             </Ul>
             <CodeBlock language="xml">{`<!-- blocked -->
-<P value="\${task.title.toUpperCase()}" />
-<P value="\${new Date()}" />
-<P value="\${task.__proto__}" />`}</CodeBlock>
+<P i18n="tasks.title" title="\${task.title.toUpperCase()}" />
+<P i18n="tasks.created" created="\${new Date()}" />
+<P i18n="tasks.unsafe" unsafe="\${task.__proto__}" />`}</CodeBlock>
         </Stack>
     </Stack>
 );

@@ -19,13 +19,17 @@ export function readSafeProperty(value: unknown, key: string): unknown {
 
 /** Resolves a raw value from the current XML runtime scope chain. */
 function resolveRawValue(ctx: ExecutionContext | null | undefined, key: string): unknown {
+    // Block unsafe top-level scope lookups.
     if (!isSafePropertyName(key)) return undefined;
 
+    // Walk lexical scopes from child to parent.
     for (let scope = ctx; scope; scope = scope.parent) {
         const values = scope.values ?? {};
 
+        // Prefer values stored in the scope.
         if (hasSafeProperty(values, key)) return readSafeProperty(values, key);
 
+        // Fall back to direct scope properties.
         if (hasSafeProperty(scope, key)) return readSafeProperty(scope, key);
     }
 
@@ -34,6 +38,7 @@ function resolveRawValue(ctx: ExecutionContext | null | undefined, key: string):
 
 /** Resolves a value from the current XML runtime scope chain. */
 export function resolveValue(ctx: ExecutionContext | null | undefined, key: string): unknown {
+    // Missing contexts cannot resolve values.
     if (!ctx) return undefined;
 
     return resolveRawValue(ctx, key);
@@ -57,6 +62,7 @@ export function createScopeProxy(ctx: ExecutionContext): Record<string, unknown>
 
 /** Resolves a dotted or `$` reference path against the current XML runtime scope chain. */
 export function resolvePath(ctx: ExecutionContext, parts: string[]): unknown {
+    // Empty paths do not resolve to a value.
     if (parts.length === 0) return undefined;
 
     let current = resolveRawValue(ctx, parts[0]);

@@ -24,6 +24,7 @@ export default function ComputePods() {
             header: t('columns.resources'),
             cell: ({ row }) => {
                 const r = row.original.resources;
+                // Show an empty value when resource metrics are unavailable.
                 if (!r) return <span className="text-muted-foreground">—</span>;
                 return (
                     <div className="min-w-0 space-y-0.5">

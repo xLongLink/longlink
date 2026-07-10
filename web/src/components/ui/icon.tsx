@@ -78,6 +78,7 @@ export function normalizeIconName(name: string): string {
 export function createLucideIconComponent(name: string): LucideIcon | null {
     const normalizedName = normalizeIconName(name);
 
+    // Ignore empty icon names.
     if (!normalizedName) {
         return null;
     }
@@ -92,6 +93,7 @@ export function createLucideIconComponent(name: string): LucideIcon | null {
 export function Icon({ className, name, ...props }: LucideProps & { name: string }) {
     const normalizedName = normalizeIconName(name);
 
+    // Reject empty icon names before rendering.
     if (!normalizedName) {
         throw new Error(`Unknown icon "${name}"`);
     }

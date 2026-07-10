@@ -3,13 +3,12 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 /** Renders a card container. */
-function Card({ className, size = 'default', ...props }: React.ComponentProps<'div'> & { size?: 'default' | 'sm' }) {
+function Card({ className, ...props }: React.ComponentProps<'div'>) {
     return (
         <div
             data-slot="card"
-            data-size={size}
             className={cn(
-                'group/card flex h-full flex-col gap-4 overflow-hidden rounded-xl bg-card py-4 text-sm text-card-foreground ring-1 ring-foreground/10 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl',
+                'group/card flex h-full flex-col gap-4 overflow-hidden rounded-xl bg-card py-4 text-sm text-card-foreground ring-1 ring-foreground/10 has-[>img:first-child]:pt-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl',
                 className
             )}
             {...props}
@@ -22,7 +21,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
     return (
         <div
             data-slot="card-title"
-            className={cn('text-base leading-snug font-medium group-data-[size=sm]/card:text-sm', className)}
+            className={cn('text-base leading-snug font-medium', className)}
             {...props}
         />
     );
@@ -49,7 +48,7 @@ function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
     return (
         <div
             data-slot="card-content"
-            className={cn('flex-1 px-4 group-data-[size=sm]/card:px-3', className)}
+            className={cn('flex-1 px-4', className)}
             {...props}
         />
     );

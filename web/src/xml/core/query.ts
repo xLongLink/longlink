@@ -7,7 +7,7 @@ import { resolveRequestUrl } from './url';
 export async function query(ctx: ExecutionContext, id: string, path: string, baseUrl = ''): Promise<void> {
     const values = ctx.values;
 
-    /* Start the request during render and suspend until it resolves. */
+    // Start the request during render and suspend until it resolves.
     try {
         const url = resolveRequestUrl(baseUrl, path);
 

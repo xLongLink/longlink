@@ -26,13 +26,16 @@ export function apiQueryKey(path: string): [string, string] {
 export function apiUrl(path: string): string {
     const baseUrl = import.meta.env.VITE_API_URL || DEFAULT_API_URL;
 
+    // Reject path separators that could bypass URL checks.
     if (path.includes('\\')) {
         throw new Error('API path must not contain backslashes');
     }
 
+    // Validate absolute API URLs before using them.
     if (hasProtocol(path)) {
         const url = new URL(path);
 
+        // Only browser HTTP(S) URLs are allowed.
         if (url.protocol !== 'http:' && url.protocol !== 'https:') {
             throw new Error('API URL must use HTTP(S)');
         }
@@ -40,10 +43,12 @@ export function apiUrl(path: string): string {
         return path;
     }
 
+    // Reject protocol-relative URLs.
     if (path.startsWith('//')) {
         throw new Error('API path must be relative or absolute HTTP(S)');
     }
 
+    // Keep relative paths unchanged when no API origin is configured.
     if (!baseUrl) {
         return path;
     }
@@ -71,6 +76,7 @@ export async function fetchApiResponse(
 ): Promise<Response> {
     const headers = createApiHeaders(init?.headers);
 
+    // Request JSON by default unless callers override Accept.
     if (!headers.has('Accept')) {
         headers.set('Accept', 'application/json');
     }
@@ -86,6 +92,7 @@ export async function fetchApiResponse(
 async function requestApi(path: string, init?: RequestInit): Promise<Response> {
     const response = await fetchApiResponse(path, init);
 
+    // Convert failed responses into typed API errors.
     if (!response.ok) {
         throw new ApiError(await readApiError(response), response.status);
     }

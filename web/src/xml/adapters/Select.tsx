@@ -23,6 +23,7 @@ export function Select({ props, nodes }: Props) {
     const open = resolveXmlBoolean(props, 'open', ctx);
     const binding = useBindableValue(props, 'value', ctx);
 
+    // Render bound selects as controlled fields.
     if (binding.bound) {
         return (
             <UISelect

@@ -51,6 +51,8 @@ class KubernetesCluster(KubernetesGateway):
         # Reuse an existing managed namespace or create it when Kubernetes reports it missing.
         try:
             existing_namespace = await self._read(Namespace, namespace)
+
+        # Handle namespace read failures by checking whether Kubernetes reported a miss.
         except kr8s.ServerError as exc:
 
             # Non-404 failures indicate Kubernetes could not confirm namespace state.
@@ -75,6 +77,8 @@ class KubernetesCluster(KubernetesGateway):
         # Read the namespace first so unmanaged namespaces cannot be deleted accidentally.
         try:
             existing_namespace = await self._read(Namespace, namespace)
+
+        # Handle namespace lookup failures before attempting deletion.
         except kr8s.ServerError as exc:
 
             # Missing namespaces are already deleted from the cluster perspective.
@@ -88,6 +92,8 @@ class KubernetesCluster(KubernetesGateway):
         # Delete only after ownership validation succeeds.
         try:
             await self._delete(Namespace, namespace)
+
+        # Report Kubernetes delete failures with namespace context.
         except kr8s.ServerError as exc:
             raise ValueError(f"Failed deleting namespace '{namespace}'") from exc
 
@@ -130,6 +136,8 @@ class KubernetesCluster(KubernetesGateway):
 
         # Fetch actual usage from the metrics API when available.
         metrics_by_pod: dict[str, dict[str, int | float]] = {}
+
+        # Query metrics only when the optional metrics API responds.
         try:
             api = await self._client()
 
@@ -151,6 +159,8 @@ class KubernetesCluster(KubernetesGateway):
                     "cpu_usage": cpu_usage,
                     "ram_usage": ram_usage,
                 }
+
+        # Metrics are optional, so unavailable metrics leave usage values empty.
         except kr8s.ServerError as exc:
             logger.info("Kubernetes metrics API unavailable for namespace '%s': %s", namespace, exc)
 
