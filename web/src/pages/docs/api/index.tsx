@@ -170,7 +170,7 @@ export const metadata = {
 
 export const content = (
     <Stack>
-        <Heading id="control-plane" level="h1">
+        <Heading id="control-plane" level="h2">
             Control Plane
         </Heading>
         <P>

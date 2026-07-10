@@ -21,7 +21,7 @@ export const metadata = {
 
 export const content = (
     <Stack>
-        <Heading id="database" level="h1">
+        <Heading id="database" level="h2">
             Database
         </Heading>
         <P>

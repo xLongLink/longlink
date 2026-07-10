@@ -13,7 +13,7 @@ export const metadata = {
 
 export const content = (
     <Stack>
-        <Heading id="layout" level="h1">
+        <Heading id="layout" level="h2">
             Layout
         </Heading>
         <P>Layout elements organize XML page content into responsive sections, cards, dialogs, tabs, and menus.</P>

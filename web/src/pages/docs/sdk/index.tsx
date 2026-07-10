@@ -66,7 +66,7 @@ export const metadata = {
 
 export const content = (
     <Stack>
-        <Heading id="application-sdk" level="h1">
+        <Heading id="application-sdk" level="h2">
             Application SDK
         </Heading>
         <P>

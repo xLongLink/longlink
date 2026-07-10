@@ -14,8 +14,8 @@ export const metadata = {
 
 export const content = (
     <Stack>
-        <Heading className="flex items-center justify-center" id="introduction" level="h1">
-            <Wordmark className="text-[2.5rem] leading-[1.08] sm:text-[3.25rem] sm:leading-[1.05]" />
+        <Heading id="introduction" level="h2">
+            Introduction
         </Heading>
         <P>
             Across industries and geographies, there are hundreds of millions of distinct operational contexts. Each has

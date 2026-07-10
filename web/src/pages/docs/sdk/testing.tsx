@@ -13,7 +13,7 @@ export const metadata = {
 
 export const content = (
     <Stack>
-        <Heading id="testing" level="h1">
+        <Heading id="testing" level="h2">
             Testing
         </Heading>
         <P>
