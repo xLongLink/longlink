@@ -3,7 +3,8 @@ from typing import cast
 from datetime import UTC, datetime
 from src.utils import names
 from src.logger import logger
-from src.runtime import Kubernetes, bootstrap, environments
+from src.runtime import bootstrap, environments
+from src.runtime.kubernetes import Kubernetes
 from src.models.statuses import ApplicationStatus
 from src.database.services import operations, registries, applications
 from src.models.applications import ApplicationCreate

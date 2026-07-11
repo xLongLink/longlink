@@ -80,18 +80,6 @@ class ComputeRegistryResponse(BaseModel):
     deleted_by: UserSummary | None = None
 
 
-class PodResourcesResponse(BaseModel):
-    """Resource limits and actual usage for a pod."""
-
-    # Limits
-    cpu_limit: float = 0
-    ram_limit: int = 0
-
-    # Usage
-    cpu_usage: float = 0
-    ram_usage: int = 0
-
-
 class PodResponse(BaseModel):
     """Represent a pod in a namespace."""
 
@@ -101,21 +89,3 @@ class PodResponse(BaseModel):
 
     # State
     status: str
-
-    # Audit
-    created_at: str | None = None
-
-    # Resources
-    resources: PodResourcesResponse | None = None
-
-
-class ComputeResourcesResponse(BaseModel):
-    """Cluster resource totals and allocatable amounts."""
-
-    # CPU
-    cpu_total: float
-    cpu_allocatable: float
-
-    # RAM
-    ram_total: int
-    ram_allocatable: int

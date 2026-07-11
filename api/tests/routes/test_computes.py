@@ -31,11 +31,11 @@ async def test_compute_registry_endpoint_supports_create_and_list(
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
 
-        async def setup(self) -> None:
-            """Capture cluster setup calls."""
+        async def sync_gateway(self) -> None:
+            """Capture gateway sync calls."""
 
-            setup_calls = captured.get("setup_calls")
-            captured["setup_calls"] = setup_calls + 1 if isinstance(setup_calls, int) else 1
+            sync_calls = captured.get("sync_calls")
+            captured["sync_calls"] = sync_calls + 1 if isinstance(sync_calls, int) else 1
 
     monkeypatch.setattr("src.routes.computes.Kubernetes", FakeCompute)
 
@@ -69,4 +69,4 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     assert get_response.status_code == 404
     assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"
     assert captured["proxy_secret"]
-    assert captured["setup_calls"] == 1
+    assert captured["sync_calls"] == 1

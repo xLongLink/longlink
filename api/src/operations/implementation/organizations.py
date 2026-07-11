@@ -1,6 +1,6 @@
 from src import adapters
 from uuid import UUID
-from src.runtime import Kubernetes
+from src.runtime.kubernetes import Kubernetes
 from src.operations import outcomes as outcome
 from src.operations import registry
 from src.database.services import database, registries, organizations

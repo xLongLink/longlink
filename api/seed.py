@@ -4,10 +4,10 @@ from uuid import UUID
 from pathlib import Path
 from datetime import UTC, datetime
 from src.utils import names
-from src.runtime import Kubernetes
 from src.runtime import bootstrap
 from src.routes import organizations as organization_routes
 from src.runtime import provisioning as resources
+from src.runtime.kubernetes import Kubernetes
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import StorageKind
 from src.database.session import session_scope
@@ -213,7 +213,7 @@ async def seed_local_development() -> None:
             location_id=location.id,
             user=admin_user,
         )
-        await Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret).setup()
+        await Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret).sync_gateway()
 
     # Reused registries may need their gateway URL refreshed after port changes.
     elif compute_registry.gateway_url != LOCAL_COMPUTE_GATEWAY_URL:

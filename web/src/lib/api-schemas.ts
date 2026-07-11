@@ -229,19 +229,10 @@ export const apiStorageObjectSchema = z.object({
     etag: z.string().nullable(),
 });
 
-export const apiComputePodResourcesSchema = z.object({
-    cpu_limit: z.number(),
-    ram_limit: z.number(),
-    cpu_usage: z.number(),
-    ram_usage: z.number(),
-});
-
 export const apiComputePodSchema = z.object({
     name: z.string(),
     status: z.string(),
     node: z.string().nullable(),
-    created_at: z.string().nullable(),
-    resources: apiComputePodResourcesSchema.nullable(),
 });
 
 const apiOrganizationDatabaseApplicationSchema = z.object({

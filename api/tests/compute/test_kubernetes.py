@@ -2,9 +2,8 @@ import time
 import base64
 import pytest
 import asyncio
-from typing import Any, cast
 from containers import DockerRuntimeContainer, wait_for_container_log
-from src.runtime import Kubernetes
+from src.runtime.kubernetes import Kubernetes
 from docker.errors import DockerException
 from collections.abc import Iterator
 from src.runtime.library import Secret, Ingress, Service, ConfigMap, NetworkPolicy
@@ -122,7 +121,6 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         gateway_ingress = await compute._read(Ingress, "longlink-gateway", "longlink-system")
         logs = await compute.logs(application_id, lines=50)
         namespaces = await compute.namespaces()
-        cluster_resources = await compute.resources()
         namespace_pods = await compute.pods("acme")
 
         assert route == f"/acme/{application_id}/"
@@ -138,16 +136,9 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         assert gateway_ingress.spec.rules[0].http.paths[0].backend.service.name == "longlink-gateway"
         assert gateway_policy.spec.podSelector.matchLabels == {"app": "longlink-gateway"}
         assert isinstance(logs, str)
-        assert cluster_resources["ram_total"] > 0
-        assert cluster_resources["cpu_total"] > 0
         application_pod = next((pod for pod in namespace_pods if pod["name"] == ready_pod_name), None)
         assert application_pod is not None
         assert application_pod["status"] == "Running"
-        application_pod_resources = cast(dict[str, Any], application_pod["resources"])
-        assert application_pod_resources["cpu_limit"] == 0.5
-        assert application_pod_resources["ram_limit"] == 256 * 1024 * 1024
-        assert application_pod_resources["cpu_usage"] >= 0.0
-        assert application_pod_resources["ram_usage"] >= 0
     finally:
         await compute.delete(application_id)
         await compute.delete_namespace("acme")

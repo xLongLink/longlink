@@ -50,18 +50,45 @@ def atleast(value: RoleName | None, required_role: RoleName, raise_error: bool =
 
 
 @overload
-def access(user: User, resource: UUID, scope: Literal["organization"]) -> UserOrganization: ...
+def access(user: User, resource: UUID, scope: Literal["organization"], raise_error: Literal[True] = True) -> UserOrganization: ...
 
 
 @overload
-def access(user: User, resource: UUID, scope: Literal["application"]) -> UserOrganization | UserApplication: ...
+def access(user: User, resource: UUID, scope: Literal["organization"], raise_error: Literal[False]) -> UserOrganization | None: ...
 
 
 @overload
-def access(user: User, resource: UUID, scope: None = None) -> UserOrganization | UserApplication: ...
+def access(
+    user: User,
+    resource: UUID,
+    scope: Literal["application"],
+    raise_error: Literal[True] = True,
+) -> UserOrganization | UserApplication: ...
 
 
-def access(user: User, resource: UUID, scope: Literal["organization", "application"] | None = None) -> UserOrganization | UserApplication:
+@overload
+def access(
+    user: User,
+    resource: UUID,
+    scope: Literal["application"],
+    raise_error: Literal[False],
+) -> UserOrganization | UserApplication | None: ...
+
+
+@overload
+def access(user: User, resource: UUID, scope: None = None, raise_error: Literal[True] = True) -> UserOrganization | UserApplication: ...
+
+
+@overload
+def access(user: User, resource: UUID, scope: None = None, raise_error: Literal[False] = False) -> UserOrganization | UserApplication | None: ...
+
+
+def access(
+    user: User,
+    resource: UUID,
+    scope: Literal["organization", "application"] | None = None,
+    raise_error: bool = True,
+) -> UserOrganization | UserApplication | None:
     """Return the loaded membership that grants access to one organization or application."""
 
     # Organization memberships grant access to organization resources.
@@ -89,4 +116,7 @@ def access(user: User, resource: UUID, scope: Literal["organization", "applicati
                 if application.deleted_at is None and application.id == resource:
                     return membership
 
-    raise HTTPException(status_code=403, detail="Access required")
+    if raise_error:
+        raise HTTPException(status_code=403, detail="Access required")
+
+    return None

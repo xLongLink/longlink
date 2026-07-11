@@ -2,7 +2,6 @@ import type { z } from 'zod';
 import type {
     apiApplicationMemberSchema,
     apiApplicationResponseSchema,
-    apiComputePodResourcesSchema,
     apiComputePodSchema,
     apiComputeRegistrySchema,
     apiCountryOptionSchema,
@@ -57,7 +56,6 @@ export type ApiDatabaseRegistry = z.infer<typeof apiDatabaseRegistrySchema>;
 export type ApiStorageRegistry = z.infer<typeof apiStorageRegistrySchema>;
 export type ApiStorageObject = z.infer<typeof apiStorageObjectSchema>;
 export type ApiComputeRegistry = z.infer<typeof apiComputeRegistrySchema>;
-export type ApiComputePodResources = z.infer<typeof apiComputePodResourcesSchema>;
 export type ApiComputePod = z.infer<typeof apiComputePodSchema>;
 export type ApiOperationStatus = z.infer<typeof apiOperationSchema>['status'];
 export type ApiApplicationResponse = z.infer<typeof apiApplicationResponseSchema>;

@@ -1,5 +1,4 @@
 from types import SimpleNamespace
-from datetime import datetime
 from src.operations import execute
 from src.database.services import users, compute, database, locations, operations, applications, organizations
 from src.models.operations import OperationKind
@@ -16,30 +15,23 @@ db = SimpleNamespace(
 )
 
 
-def container_status(
-    ready: bool = False,
-    waiting_reason: str | None = None,
-    terminated_exit_code: int | None = None,
-) -> SimpleNamespace:
+def container_status(ready: bool = False, waiting_reason: str | None = None, terminated_exit_code: int | None = None) -> dict[str, object]:
     """Build a minimal Kubernetes container status double."""
 
-    state = SimpleNamespace(waiting=None, terminated=None)
+    state: dict[str, object] = {}
     if waiting_reason is not None:
-        state.waiting = SimpleNamespace(reason=waiting_reason)
+        state["waiting"] = {"reason": waiting_reason}
 
     if terminated_exit_code is not None:
-        state.terminated = SimpleNamespace(exit_code=terminated_exit_code)
+        state["terminated"] = {"exitCode": terminated_exit_code}
 
-    return SimpleNamespace(ready=ready, state=state)
+    return {"ready": ready, "state": state}
 
 
-def pod_status(created_at: datetime, phase: str, containers: list[SimpleNamespace]) -> SimpleNamespace:
+def pod_status(phase: str, containers: list[dict[str, object]]) -> SimpleNamespace:
     """Build a minimal Kubernetes pod double."""
 
-    return SimpleNamespace(
-        metadata=SimpleNamespace(creation_timestamp=created_at),
-        status=SimpleNamespace(phase=phase, container_statuses=containers),
-    )
+    return SimpleNamespace(raw={"status": {"phase": phase, "containerStatuses": containers}})
 
 
 async def test_execute_application_verify_operation_completes_running_application(monkeypatch) -> None:
@@ -160,7 +152,7 @@ async def test_execute_application_verify_operation_marks_failed_when_dead(monke
             """Return the current pod in a terminal startup state."""
 
             calls.append("startup-check")
-            return pod_status(operation.created_at, "Pending", [container_status(waiting_reason="ImagePullBackOff")])
+            return pod_status("Pending", [container_status(waiting_reason="ImagePullBackOff")])
 
 
     monkeypatch.setattr(

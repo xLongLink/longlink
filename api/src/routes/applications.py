@@ -4,8 +4,8 @@ from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from datetime import UTC, datetime
 from src.auth import authuser, authadmin
 from src.utils import names, roles
-from src.runtime import Kubernetes
 from src.runtime import provisioning as resources
+from src.runtime.kubernetes import Kubernetes
 from src.constants import GATEWAY_USER_HEADER, GATEWAY_SECRET_HEADER, GATEWAY_APPLICATION_HEADER
 from src.models.roles import (APPLICATION_PROXY_METHODS, ApplicationRoles, OrganizationRoles, ApplicationRoleRanks,
                               ApplicationProxyMethodRanks)
@@ -70,24 +70,22 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
     # Load application access before exposing logs.
     membership = roles.access(user, application_id, "application")
-    organization = membership.organization
 
     # Direct application memberships provide application role access.
     if isinstance(membership, UserApplication):
         application = membership.application
-        application_role = membership.role
-        organization_role = next(
-            (item.role for item in user.organization_memberships if item.organization_id == membership.organization_id),
-            None,
-        )
-    else:
-        application = next(item for item in organization.applications if item.id == application_id)
-        application_role = None
-        organization_role = membership.role
+        organization = membership.organization
+        organization_membership = roles.access(user, membership.organization_id, "organization", raise_error=False)
+        organization_role = organization_membership.role if organization_membership is not None else None
 
-    # Only application or organization maintainers can read logs.
-    if not roles.atleast(application_role, ApplicationRoles.maintain, raise_error=False):
-        roles.atleast(organization_role, OrganizationRoles.maintain)
+        if not roles.atleast(membership.role, ApplicationRoles.maintain, raise_error=False):
+            roles.atleast(organization_role, OrganizationRoles.maintain)
+    else:
+        organization = membership.organization
+        application = next(item for item in organization.applications if item.id == application_id)
+
+        # Organization memberships must satisfy the organization role requirement.
+        roles.atleast(membership.role, OrganizationRoles.maintain)
 
     registry = await registries.application_compute(application, organization.location_id)
     if registry is None:
@@ -147,10 +145,8 @@ async def update_application_member(
     if isinstance(membership, UserApplication):
         application = membership.application
         application_role = membership.role
-        organization_role = next(
-            (item.role for item in user.organization_memberships if item.organization_id == membership.organization_id),
-            None,
-        )
+        organization_membership = roles.access(user, membership.organization_id, "organization", raise_error=False)
+        organization_role = organization_membership.role if organization_membership is not None else None
     else:
         application = next(item for item in membership.organization.applications if item.id == application_id)
         application_role = None
@@ -198,19 +194,16 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
     # Direct application memberships provide application role access.
     if isinstance(membership, UserApplication):
         application = membership.application
-        application_role = membership.role
-        organization_role = next(
-            (item.role for item in user.organization_memberships if item.organization_id == membership.organization_id),
-            None,
-        )
+        organization_membership = roles.access(user, membership.organization_id, "organization", raise_error=False)
+        organization_role = organization_membership.role if organization_membership is not None else None
+
+        if not roles.atleast(membership.role, ApplicationRoles.maintain, raise_error=False):
+            roles.atleast(organization_role, OrganizationRoles.maintain)
     else:
         application = next(item for item in membership.organization.applications if item.id == application_id)
-        application_role = None
-        organization_role = membership.role
 
-    # Only application or organization maintainers can delete applications.
-    if not roles.atleast(application_role, ApplicationRoles.maintain, raise_error=False):
-        roles.atleast(organization_role, OrganizationRoles.maintain)
+        # Organization memberships must satisfy the organization role requirement.
+        roles.atleast(membership.role, OrganizationRoles.maintain)
 
     deleted = await applications.soft_delete(application.id, user)
     if deleted is None:
@@ -227,29 +220,28 @@ async def proxy_application_request(request: Request, application_id: UUID, path
 
     # Load application access before proxying runtime traffic.
     membership = roles.access(user, application_id, "application")
-    organization = membership.organization
+    required_role_rank = ApplicationProxyMethodRanks[request.method.upper()].value
+    required_application_role = ApplicationRoles[ApplicationRoleRanks(required_role_rank).name]
 
     # Direct application memberships provide application role access.
     if isinstance(membership, UserApplication):
         application = membership.application
-        application_role = membership.role
-        organization_role = next(
-            (item.role for item in user.organization_memberships if item.organization_id == membership.organization_id),
-            None,
-        )
+        organization = membership.organization
+        organization_membership = roles.access(user, membership.organization_id, "organization", raise_error=False)
+        organization_role = organization_membership.role if organization_membership is not None else None
+        has_application_access = roles.atleast(membership.role, required_application_role, raise_error=False)
+        has_organization_access = roles.atleast(organization_role, OrganizationRoles.maintain, raise_error=False)
     else:
+        organization = membership.organization
         application = next(item for item in organization.applications if item.id == application_id)
-        application_role = None
-        organization_role = membership.role
-
-    required_role_rank = ApplicationProxyMethodRanks[request.method.upper()].value
-    has_organization_access = roles.atleast(organization_role, OrganizationRoles.maintain, raise_error=False)
+        has_application_access = False
+        has_organization_access = roles.atleast(membership.role, OrganizationRoles.maintain, raise_error=False)
 
     # Enforce method-level runtime access in the API before any request can reach Kubernetes.
-    if not has_organization_access and roles.rank(application_role) < required_role_rank:
+    if not has_organization_access and not has_application_access:
         raise HTTPException(
             status_code=403,
-            detail=f"Application {ApplicationRoleRanks(required_role_rank).name} access required",
+            detail=f"Application {required_application_role.value} access required",
         )
 
     # Let the web runtime show a loading state while deployment verification is still pending.

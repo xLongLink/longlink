@@ -5,7 +5,8 @@ from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authsupport
 from src.utils import names, roles
 from src.logger import logger
-from src.runtime import Kubernetes, bootstrap
+from src.runtime import bootstrap
+from src.runtime.kubernetes import Kubernetes
 from tenant.database import SHARED_SCHEMA
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
