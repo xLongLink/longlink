@@ -1,67 +1,52 @@
 from src import adapters
 from uuid import UUID
-from fastapi import Depends, Response, APIRouter, HTTPException
+from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin, authsupport
-from src.utils import names, buckets
+from src.utils import names
 from src.logger import logger
 from src.models.storages import StorageBucketResponse, StorageObjectResponse, StorageRegistryCreate, StorageRegistryResponse
 from src.database.services import storage
-from src.adapters.storage.base import StorageObjectData
 from src.database.models.users import User
-from src.database.models.storages import StorageRegistry
 
 router = APIRouter()
-MANAGED_STORAGE_BUCKET_PREFIX = f"{buckets.STORAGE_BUCKET_PREFIX}-"
 STORAGE_OBJECT_LIST_LIMIT = 1000
 
 
-def _managed_storage_bucket(bucket_name: str) -> bool:
-    """Return whether a bucket name follows the LongLink managed bucket convention."""
-
-    return bucket_name.startswith(MANAGED_STORAGE_BUCKET_PREFIX)
-
-
 @router.get("/api/storages", response_model=list[StorageRegistryResponse])
-async def list_storage_registries(_: User = Depends(authsupport)) -> list[StorageRegistry]:
+async def list_storage_registries(_: User = Depends(authsupport)):
     """Return all registered storage backends."""
 
-    registries = await storage.fetch_all()
-    return registries
+    return await storage.fetch()
 
 
 @router.get("/api/storages/{registry_id}", response_model=StorageRegistryResponse)
-async def get_storage_registry(registry_id: UUID, _: User = Depends(authsupport)) -> StorageRegistry:
+async def get_storage_registry(registry_id: UUID, _: User = Depends(authsupport)):
     """Return one storage backend registration."""
 
     registry = await storage.get(registry_id)
     if registry is None:
-        raise HTTPException(status_code=404, detail=f"Storage registry '{registry_id}' not found")
+        raise HTTPException(status_code=404, detail="Storage registry not found")
 
     return registry
 
 
 @router.delete("/api/storages/{registry_id}", status_code=204)
-async def delete_storage_registry(registry_id: UUID, user: User = Depends(authadmin)) -> Response:
+async def delete_storage_registry(registry_id: UUID, user: User = Depends(authadmin)):
     """Soft-delete one storage backend registration."""
 
     deleted = await storage.delete(registry_id, user)
     if not deleted:
-        raise HTTPException(status_code=404, detail=f"Storage registry '{registry_id}' not found")
-
-    return Response(status_code=204)
+        raise HTTPException(status_code=404, detail="Storage registry not found")
 
 
 @router.post("/api/storages", response_model=StorageRegistryResponse)
 async def create_storage_registry(
     payload: StorageRegistryCreate, user: User = Depends(authadmin)
-) -> StorageRegistry:
+):
     """Create one storage backend registration."""
 
     # Build a stable slug from the submitted name.
-    try:
-        slug = names.slugify(payload.name)
-    except ValueError as exc:
-        raise HTTPException(status_code=409, detail="Invalid storage registry name") from exc
+    slug = names.slugify(payload.name)
 
     registry = await storage.create(**payload.model_dump(), slug=slug, user=user)
 
@@ -69,23 +54,23 @@ async def create_storage_registry(
 
 
 @router.get("/api/storages/{registry_id}/buckets", response_model=list[StorageBucketResponse])
-async def list_storage_buckets(registry_id: UUID, _: User = Depends(authsupport)) -> list[dict[str, str]]:
+async def list_storage_buckets(registry_id: UUID, _: User = Depends(authsupport)):
     """List all buckets on a storage backend."""
 
     registry = await storage.get(registry_id)
     if registry is None:
-        raise HTTPException(status_code=404, detail=f"Storage registry '{registry_id}' not found")
+        raise HTTPException(status_code=404, detail="Storage registry not found")
 
     storage_adapter = adapters.storage(registry)
 
     # Inspect backend buckets through the adapter.
     try:
-        names = [name for name in await storage_adapter.buckets() if _managed_storage_bucket(name)]
+        bucket_names = await storage_adapter.buckets()
     except Exception as exc:
         logger.exception("Failed to inspect storage buckets for registry '%s'", registry_id)
         raise HTTPException(status_code=503, detail="Storage buckets unavailable") from exc
 
-    return [{"name": name} for name in names]
+    return [{"name": bucket_name} for bucket_name in bucket_names]
 
 
 @router.get(
@@ -96,16 +81,12 @@ async def list_storage_bucket_objects(
     registry_id: UUID,
     bucket_name: str,
     _: User = Depends(authsupport),
-) -> list[StorageObjectData]:
+):
     """List object metadata for one storage bucket."""
 
     registry = await storage.get(registry_id)
     if registry is None:
-        raise HTTPException(status_code=404, detail=f"Storage registry '{registry_id}' not found")
-
-    # Only expose LongLink-managed buckets.
-    if not _managed_storage_bucket(bucket_name):
-        raise HTTPException(status_code=404, detail=f"Storage bucket '{bucket_name}' not found")
+        raise HTTPException(status_code=404, detail="Storage registry not found")
 
     storage_adapter = adapters.storage(registry)
 

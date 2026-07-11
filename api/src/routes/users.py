@@ -43,28 +43,28 @@ def user_profile_payload(profile: tuple[User, list[tuple[Organization, UserOrgan
 
 
 @router.get("/api/me", response_model=UserProfile)
-async def get_me(user: User = Depends(authuser)) -> dict[str, object]:
+async def get_me(user: User = Depends(authuser)):
     """Return the authenticated user's details."""
 
     profile = await users.profile(user.id)
 
     # Require the authenticated user profile to exist.
     if profile is None:
-        raise HTTPException(status_code=404, detail=f"User '{user.id}' not found")
+        raise HTTPException(status_code=404, detail="User not found")
 
     return user_profile_payload(profile)
 
 
 @router.get("/api/users", response_model=list[UserListItem])
-async def list_users(_: User = Depends(authsupport)) -> list[User]:
+async def list_users(_: User = Depends(authsupport)):
     """Return all user summaries for support and administrator views."""
 
-    records = await users.fetch_all()
+    records = await users.fetch()
     return records
 
 
 @router.patch("/api/me", response_model=UserProfile)
-async def patch_me(payload: UserUpdate, user: User = Depends(authuser)) -> dict[str, object]:
+async def patch_me(payload: UserUpdate, user: User = Depends(authuser)):
     """Update the authenticated user's details."""
 
     params = payload.model_dump(exclude_unset=True)
@@ -80,6 +80,6 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser)) -> dict[
 
     # Require the refreshed user profile to exist.
     if profile is None:
-        raise HTTPException(status_code=404, detail=f"User '{updated_user.id}' not found")
+        raise HTTPException(status_code=404, detail="User not found")
 
     return user_profile_payload(profile)

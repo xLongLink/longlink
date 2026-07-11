@@ -15,18 +15,11 @@ import { useTranslation } from '@/lib/i18n';
 import { computesQueryKey } from '@/lib/query-keys';
 import type { ApiComputeRegistry } from '@/lib/types';
 
-const computeConnectionSchema = z
-    .object({
-        kubeconfig: z.string().refine((value) => value.trim().length > 0),
-        ingressHost: z.string().trim().min(1),
-        gatewayLoadBalancerIp: z.string().trim(),
-        gatewayTlsCertificate: z.string().trim(),
-        gatewayTlsKey: z.string().trim(),
-        locationId: z.string().min(1),
-    })
-    .refine((value) => Boolean(value.gatewayTlsKey) === Boolean(value.gatewayTlsCertificate), {
-        path: ['gatewayTlsKey'],
-    });
+const computeConnectionSchema = z.object({
+    kubeconfig: z.string().refine((value) => value.trim().length > 0),
+    ingressHost: z.string().trim().min(1),
+    locationId: z.string().min(1),
+});
 
 type ComputeConnectionInput = z.input<typeof computeConnectionSchema>;
 type ComputeConnectionValues = z.output<typeof computeConnectionSchema>;
@@ -34,9 +27,6 @@ type ComputeConnectionValues = z.output<typeof computeConnectionSchema>;
 const defaultComputeConnectionValues = {
     kubeconfig: '',
     ingressHost: '',
-    gatewayLoadBalancerIp: '',
-    gatewayTlsCertificate: '',
-    gatewayTlsKey: '',
     locationId: '',
 } satisfies ComputeConnectionInput;
 
@@ -74,15 +64,6 @@ export default function ConnectCompute() {
                     body: JSON.stringify({
                         kubeconfig: payload.kubeconfig,
                         ingress_host: payload.ingressHost,
-                        ...(payload.gatewayLoadBalancerIp
-                            ? { gateway_load_balancer_ip: payload.gatewayLoadBalancerIp }
-                            : {}),
-                        ...(payload.gatewayTlsCertificate && payload.gatewayTlsKey
-                            ? {
-                                  gateway_tls_certificate: payload.gatewayTlsCertificate,
-                                  gateway_tls_key: payload.gatewayTlsKey,
-                              }
-                            : {}),
                         location_id: payload.locationId,
                     }),
                 },
@@ -144,38 +125,8 @@ export default function ConnectCompute() {
                 <Input
                     id="compute-ingress-host"
                     {...form.register('ingressHost')}
-                    placeholder="apps.example.com"
+                    placeholder="https://apps.example.com"
                     autoComplete="off"
-                />
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="compute-gateway-load-balancer-ip">{t('labels.gatewayLoadBalancerIp')}</Label>
-                <Input
-                    id="compute-gateway-load-balancer-ip"
-                    {...form.register('gatewayLoadBalancerIp')}
-                    placeholder="203.0.113.10"
-                    autoComplete="off"
-                />
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="compute-gateway-tls-certificate">{t('labels.gatewayTlsCertificate')}</Label>
-                <Textarea
-                    id="compute-gateway-tls-certificate"
-                    {...form.register('gatewayTlsCertificate')}
-                    placeholder="-----BEGIN CERTIFICATE-----"
-                    className="min-h-28 max-w-full overflow-auto resize-y [field-sizing:fixed]"
-                />
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="compute-gateway-tls-key">{t('labels.gatewayTlsKey')}</Label>
-                <Textarea
-                    id="compute-gateway-tls-key"
-                    {...form.register('gatewayTlsKey')}
-                    placeholder="-----BEGIN PRIVATE KEY-----"
-                    className="min-h-28 max-w-full overflow-auto resize-y [field-sizing:fixed]"
                 />
             </div>
 

@@ -30,9 +30,6 @@ class ComputeRegistry(SQLModel, table=True):
     kubeconfig: str = Field(sa_column=Column(Text, nullable=False))
     ingress_host: str = Field(max_length=255)
     proxy_secret: str = Field(max_length=255, index=True)
-    gateway_tls_key: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
-    gateway_tls_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
-    gateway_load_balancer_ip: str | None = Field(default=None, max_length=255)
 
     # Audit
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

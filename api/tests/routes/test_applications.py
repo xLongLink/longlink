@@ -805,7 +805,7 @@ async def test_delete_application_soft_deletes_and_queues_removal(
     deleted = await db.applications.get_by_id(app.id, include_deleted=True)
     assert deleted is not None
     assert deleted.deleted_id == user.id
-    recorded_operations = await db.operations.fetch_all()
+    recorded_operations = await db.operations.fetch()
     assert len(recorded_operations) == 1
     assert recorded_operations[0].kind == OperationKind.application_delete
     assert recorded_operations[0].step == "remove"

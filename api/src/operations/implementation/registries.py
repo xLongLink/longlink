@@ -12,7 +12,7 @@ async def latest_compute_registry(location_id: UUID) -> ComputeRegistry | None:
     """Return the newest compute registry for one location."""
 
     return max(
-        (registry for registry in await compute.fetch_all() if registry.location_id == location_id),
+        (registry for registry in await compute.fetch() if registry.location_id == location_id),
         key=lambda item: item.created_at,
         default=None,
     )
@@ -22,7 +22,7 @@ async def latest_database_registry(location_id: UUID) -> DatabaseRegistry | None
     """Return the newest database registry for one location."""
 
     return max(
-        (registry for registry in await database.fetch_all() if registry.location_id == location_id),
+        (registry for registry in await database.fetch() if registry.location_id == location_id),
         key=lambda item: item.created_at,
         default=None,
     )
@@ -32,7 +32,7 @@ async def latest_storage_registry(location_id: UUID) -> StorageRegistry | None:
     """Return the newest storage registry for one location."""
 
     return max(
-        (registry for registry in await storage.fetch_all() if registry.location_id == location_id),
+        (registry for registry in await storage.fetch() if registry.location_id == location_id),
         key=lambda item: item.created_at,
         default=None,
     )

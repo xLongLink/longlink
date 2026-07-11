@@ -9,7 +9,7 @@ router = APIRouter()
 
 
 @router.post("/auth/accounts/{oidc}/activate", response_model=SuccessResponse, include_in_schema=False)
-async def activate_account(oidc: str, request: Request) -> dict[str, object]:
+async def activate_account(oidc: str, request: Request):
     """Switch the active account within the current browser session."""
 
     session_accounts = SessionAccountsService(request)
@@ -20,14 +20,14 @@ async def activate_account(oidc: str, request: Request) -> dict[str, object]:
 
     # Require the saved account to still exist.
     if await users.get(oidc) is None:
-        raise HTTPException(status_code=404, detail=f"Account '{oidc}' not found")
+        raise HTTPException(status_code=404, detail="Account not found")
 
     session_accounts.activate(oidc)
     return {}
 
 
 @router.post("/auth/accounts/deactivate", response_model=list[UserListItem], include_in_schema=False)
-async def deactivate_account(request: Request) -> list[User]:
+async def deactivate_account(request: Request):
     """Clear the active account without removing saved accounts."""
 
     SessionAccountsService(request).deactivate()
@@ -36,7 +36,7 @@ async def deactivate_account(request: Request) -> list[User]:
 
 
 @router.get("/auth/accounts", response_model=list[UserListItem], include_in_schema=False)
-async def list_accounts(request: Request) -> list[User]:
+async def list_accounts(request: Request):
     """Return the saved session accounts for the login screen."""
 
     accounts: list[User] = []

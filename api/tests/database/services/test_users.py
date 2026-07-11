@@ -18,14 +18,14 @@ db = SimpleNamespace(
 )
 
 
-async def test_fetch_all_get_by_id_and_get_return_persisted_users(users: tuple[User, User, User]) -> None:
+async def test_fetch_get_by_id_and_get_return_persisted_users(users: tuple[User, User, User]) -> None:
     """Return persisted users through all user read services."""
 
     # Arrange
     first_user, second_user, third_user = users
 
     # Act
-    fetched = await db.users.fetch_all()
+    fetched = await db.users.fetch()
     by_id = await db.users.get_by_id(second_user.id)
     by_oidc = await db.users.get(third_user.oidc)
 
@@ -87,7 +87,7 @@ async def test_upsert_requires_identity_fields_for_new_user() -> None:
 
     # Assert
     assert str(exc.value) == "Missing user fields"
-    assert await db.users.fetch_all() == []
+    assert await db.users.fetch() == []
 
 
 async def test_profile_returns_created_organization_membership() -> None:

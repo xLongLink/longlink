@@ -13,7 +13,7 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def fetch_all() -> list[Application]:
+async def fetch() -> list[Application]:
     """Return all registered applications for admin views."""
 
     # Load active applications with related response data.

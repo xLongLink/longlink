@@ -16,7 +16,7 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def fetch_all() -> list[Organization]:
+async def fetch() -> list[Organization]:
     """Return all organizations in the database."""
 
     # Load active organizations with audit users.

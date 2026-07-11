@@ -14,7 +14,7 @@ db = SimpleNamespace(
 )
 
 
-async def test_create_get_and_fetch_all_return_active_storage_registries(users: tuple[User, User, User]) -> None:
+async def test_create_get_and_fetch_return_active_storage_registries(users: tuple[User, User, User]) -> None:
     """Persist a storage registry and return it through read services."""
 
     # Arrange
@@ -33,7 +33,7 @@ async def test_create_get_and_fetch_all_return_active_storage_registries(users: 
         location.id,
         owner,
     )
-    fetched = await db.storage.fetch_all()
+    fetched = await db.storage.fetch()
     reloaded = await db.storage.get(registry.id)
 
     # Assert
@@ -149,7 +149,7 @@ async def test_delete_soft_deletes_storage_registry_and_include_deleted_can_relo
     assert active is None
     assert deleted_registry is not None
     assert deleted_registry.deleted_id == owner.id
-    assert await db.storage.fetch_all() == []
+    assert await db.storage.fetch() == []
 
 
 async def test_delete_rejects_storage_registry_used_by_active_applications(users: tuple[User, User, User]) -> None:

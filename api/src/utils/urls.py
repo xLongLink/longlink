@@ -86,32 +86,3 @@ def origin(value: str) -> str:
         return f"{url.scheme}://{url.netloc}"
 
     return f"https://{stripped_value}"
-
-
-def hostname(value: str) -> str | None:
-    """Return the hostname from an absolute or host-only URL value."""
-
-    stripped_value = value.strip()
-    parsed_value = urllib.parse.urlsplit(stripped_value)
-
-    # Scheme-only HTTP URLs do not contain hostnames.
-    if parsed_value.scheme in {"http", "https"} and not parsed_value.netloc:
-        return None
-
-    # Parsed hostnames are normalized for comparisons.
-    if parsed_value.hostname is not None:
-        return parsed_value.hostname.lower()
-
-    return stripped_value.split(":", 1)[0].lower() or None
-
-
-def absolute_url_scheme(value: str) -> str | None:
-    """Return the scheme when a value is an absolute URL."""
-
-    parsed_value = urllib.parse.urlsplit(value.strip())
-
-    # Absolute URLs require both scheme and host.
-    if parsed_value.scheme and parsed_value.netloc:
-        return parsed_value.scheme
-
-    return None

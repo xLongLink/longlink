@@ -11,7 +11,7 @@ from src.database.models.computes import ComputeRegistry
 from src.database.models.applications import Application
 
 
-async def fetch_all() -> list[ComputeRegistry]:
+async def fetch() -> list[ComputeRegistry]:
     """Return all registered compute backends."""
 
     # Read registries within one scoped session.
@@ -87,9 +87,6 @@ async def create(
     ingress_host: str,
     location_id: UUID,
     user: User,
-    gateway_tls_key: str | None = None,
-    gateway_tls_certificate: str | None = None,
-    gateway_load_balancer_ip: str | None = None,
 ) -> ComputeRegistry:
     """Create one compute backend registration."""
 
@@ -110,9 +107,6 @@ async def create(
             kubeconfig=kubeconfig,
             ingress_host=ingress_host,
             proxy_secret=proxy_secret_value,
-            gateway_tls_key=gateway_tls_key,
-            gateway_tls_certificate=gateway_tls_certificate,
-            gateway_load_balancer_ip=gateway_load_balancer_ip,
             location_id=location_id,
         )
         compute.created_id = user.id

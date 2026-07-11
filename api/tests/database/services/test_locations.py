@@ -18,7 +18,7 @@ db = SimpleNamespace(
 )
 
 
-async def test_create_get_and_fetch_all_return_active_locations(users: tuple[User, User, User]) -> None:
+async def test_create_get_and_fetch_return_active_locations(users: tuple[User, User, User]) -> None:
     """Persist a location and return it through read services."""
 
     # Arrange
@@ -26,7 +26,7 @@ async def test_create_get_and_fetch_all_return_active_locations(users: tuple[Use
 
     # Act
     location = await db.locations.create("primary", "Primary", owner, "CH", LocationProvider.hetzner)
-    fetched = await db.locations.fetch_all()
+    fetched = await db.locations.fetch()
     reloaded = await db.locations.get(location.id)
 
     # Assert
@@ -74,7 +74,7 @@ async def test_delete_soft_deletes_location_and_read_services_ignore_it(users: t
     assert second_delete is False
     assert missing_delete is False
     assert await db.locations.get(location.id) is None
-    assert await db.locations.fetch_all() == []
+    assert await db.locations.fetch() == []
 
 
 async def test_delete_rejects_location_used_by_active_organizations(users: tuple[User, User, User]) -> None:

@@ -31,12 +31,3 @@ class CountryOption(BaseModel):
     # Metadata
     code: str
     name: str
-
-
-def country_options() -> list[CountryOption]:
-    """Return selectable countries sorted by display name."""
-
-    return [
-        CountryOption(code=country.alpha_2, name=getattr(country, "common_name", country.name))
-        for country in sorted(pycountry.countries, key=lambda item: getattr(item, "common_name", item.name))
-    ]

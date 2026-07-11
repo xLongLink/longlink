@@ -13,26 +13,25 @@ from src.models.applications import ApplicationCreate, ApplicationResponse, Appl
 from src.operations.constants import RESOURCE_REMOVE_STEP
 from src.database.models.users import User
 from src.operations.implementation import resources, registries
-from src.database.models.applications import Application
 
 router = APIRouter()
 
 
 @router.get("/api/applications", response_model=list[ApplicationResponse])
-async def list_applications(_user: User = Depends(authadmin)) -> list[Application]:
+async def list_applications(_user: User = Depends(authadmin)):
     """Return all applications for administrator views."""
 
-    return await applications.fetch_all()
+    return await applications.fetch()
 
 
 @router.post("/api/organizations/{organization_id}/applications", response_model=ApplicationResponse)
-async def create_application(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)) -> Application:
+async def create_application(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)):
     """Register a new application in the database and deploy it on the compute cluster."""
 
     # Resolve access inside the handler so body validation can reject malformed payloads first.
     member_access = await organizations.get_member_access(organization_id, user.id)
     if member_access is None:
-        raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
+        raise HTTPException(status_code=404, detail="Organization not found")
 
     organization, organization_role = member_access
 
@@ -56,7 +55,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     # Reload the row so response serialization includes relationships populated by the service layer.
     reloaded_application = await applications.get_by_id(application.id)
     if reloaded_application is None:
-        raise HTTPException(status_code=404, detail=f"Application '{application.id}' not found")
+        raise HTTPException(status_code=404, detail="Application not found")
 
     return reloaded_application
 
@@ -68,12 +67,12 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     # App routes start from application id, so resolve the application before checking organization access.
     application = await applications.get_reference(application_id)
     if application is None:
-        raise HTTPException(status_code=404, detail=f"Application '{application_id}' not found")
+        raise HTTPException(status_code=404, detail="Application not found")
 
     # Organization membership grants the base right to see the application route.
     member_access = await organizations.get_member_access(application.organization_id, user.id)
     if member_access is None:
-        raise HTTPException(status_code=404, detail=f"Organization '{application.organization_id}' not found")
+        raise HTTPException(status_code=404, detail="Organization not found")
 
     organization, organization_role = member_access
     application_role = await applications.membership_role(application.id, user.id)
@@ -87,7 +86,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
     registry = await registries.application_compute_registry(application, organization.location_id)
     if registry is None:
-        raise HTTPException(status_code=503, detail=f"No compute cluster configured for location '{organization.location_id}'")
+        raise HTTPException(status_code=503, detail="No compute cluster configured")
 
     compute_client = compute_runtime.kubernetes(registry)
 
@@ -101,18 +100,18 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
 
 @router.get("/api/applications/{application_id}/members", response_model=list[ApplicationMemberResponse])
-async def list_application_members(application_id: UUID, user: User = Depends(authuser)) -> list[dict[str, object]]:
+async def list_application_members(application_id: UUID, user: User = Depends(authuser)):
     """Return organization members and their application-specific roles."""
 
     # App routes start from application id, so resolve the application before checking organization access.
     application = await applications.get_reference(application_id)
     if application is None:
-        raise HTTPException(status_code=404, detail=f"Application '{application_id}' not found")
+        raise HTTPException(status_code=404, detail="Application not found")
 
     # Organization membership grants the base right to see the application route.
     member_access = await organizations.get_member_access(application.organization_id, user.id)
     if member_access is None:
-        raise HTTPException(status_code=404, detail=f"Organization '{application.organization_id}' not found")
+        raise HTTPException(status_code=404, detail="Organization not found")
 
     member_rows = await applications.list_members(application.id, application.organization_id)
     return [
@@ -134,18 +133,18 @@ async def update_application_member(
     member_id: UUID,
     payload: ApplicationMemberUpdate,
     user: User = Depends(authuser),
-) -> Response:
+):
     """Update one member's application-specific role."""
 
     # App routes start from application id, so resolve the application before checking organization access.
     application = await applications.get_reference(application_id)
     if application is None:
-        raise HTTPException(status_code=404, detail=f"Application '{application_id}' not found")
+        raise HTTPException(status_code=404, detail="Application not found")
 
     # Organization membership grants the base right to see the application route.
     member_access = await organizations.get_member_access(application.organization_id, user.id)
     if member_access is None:
-        raise HTTPException(status_code=404, detail=f"Organization '{application.organization_id}' not found")
+        raise HTTPException(status_code=404, detail="Organization not found")
 
     _organization, organization_role = member_access
     application_role = await applications.membership_role(application.id, user.id)
@@ -182,24 +181,22 @@ async def update_application_member(
         user,
     )
     if not updated:
-        raise HTTPException(status_code=404, detail=f"Organization member '{member_id}' not found")
-
-    return Response(status_code=204)
+        raise HTTPException(status_code=404, detail="Organization member not found")
 
 
 @router.delete("/api/applications/{application_id}", status_code=204)
-async def delete_application(application_id: UUID, user: User = Depends(authuser)) -> Response:
+async def delete_application(application_id: UUID, user: User = Depends(authuser)):
     """Soft-delete one application and queue runtime resource removal."""
 
     # App routes start from application id, so resolve the application before checking organization access.
     application = await applications.get_reference(application_id)
     if application is None:
-        raise HTTPException(status_code=404, detail=f"Application '{application_id}' not found")
+        raise HTTPException(status_code=404, detail="Application not found")
 
     # Organization membership grants the base right to see the application route.
     member_access = await organizations.get_member_access(application.organization_id, user.id)
     if member_access is None:
-        raise HTTPException(status_code=404, detail=f"Organization '{application.organization_id}' not found")
+        raise HTTPException(status_code=404, detail="Organization not found")
 
     _organization, organization_role = member_access
     application_role = await applications.membership_role(application.id, user.id)
@@ -213,7 +210,7 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
 
     deleted = await applications.soft_delete(application.id, user)
     if deleted is None:
-        raise HTTPException(status_code=404, detail=f"Application '{application.id}' not found")
+        raise HTTPException(status_code=404, detail="Application not found")
 
     # Runtime cleanup is asynchronous so the delete request is not blocked by cluster calls.
     await operations.create(
@@ -223,7 +220,6 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
         step=RESOURCE_REMOVE_STEP,
         user=user,
     )
-    return Response(status_code=204)
 
 
 @router.api_route("/api/applications/{application_id}/proxy", methods=list(ApplicationProxyMethodRanks.__members__), include_in_schema=False)
@@ -238,12 +234,12 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     # App routes start from application id, so resolve the application before checking organization access.
     application = await applications.get_reference(application_id)
     if application is None:
-        raise HTTPException(status_code=404, detail=f"Application '{application_id}' not found")
+        raise HTTPException(status_code=404, detail="Application not found")
 
     # Organization membership grants the base right to see the application route.
     member_access = await organizations.get_member_access(application.organization_id, user.id)
     if member_access is None:
-        raise HTTPException(status_code=404, detail=f"Organization '{application.organization_id}' not found")
+        raise HTTPException(status_code=404, detail="Organization not found")
 
     organization, organization_role = member_access
     application_role = await applications.membership_role(application.id, user.id)
@@ -273,7 +269,7 @@ async def proxy_application_request(request: Request, application_id: UUID, path
 
     # Proxying requires a configured compute registry.
     if registry is None:
-        raise HTTPException(status_code=503, detail=f"No compute cluster configured for location '{organization.location_id}'")
+        raise HTTPException(status_code=503, detail="No compute cluster configured")
 
     # The gateway receives the same API path on the app's assigned compute origin.
     upstream_path = request.url.path

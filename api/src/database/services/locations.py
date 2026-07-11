@@ -13,7 +13,7 @@ from src.database.models.locations import Location
 from src.database.models.organizations import Organization
 
 
-async def fetch_all() -> list[Location]:
+async def fetch() -> list[Location]:
     """Return all registered locations."""
 
     # Open a session for the location list query.

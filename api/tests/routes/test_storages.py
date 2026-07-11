@@ -107,7 +107,7 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
 
     # Assert
     assert response.status_code == 200
-    assert [bucket["name"] for bucket in response.json()] == ["longlink-acme-shared", "longlink-acme-dashboard"]
+    assert [bucket["name"] for bucket in response.json()] == ["alpha", "longlink-acme-shared", "longlink-acme-dashboard"]
 
 
 async def test_storage_object_endpoint_returns_bucket_objects(
@@ -148,7 +148,7 @@ async def test_storage_object_endpoint_returns_bucket_objects(
         async def objects(self, bucket_name: str, *, limit: int = 1000) -> list[dict[str, object]]:
             """Return fake object metadata for one bucket."""
 
-            assert bucket_name == "longlink-acme-dashboard"
+            assert bucket_name == "alpha"
             assert limit == 1000
             return [
                 {
@@ -170,7 +170,7 @@ async def test_storage_object_endpoint_returns_bucket_objects(
     )
 
     # Act
-    response = client.get(f"/api/storages/{registry_id}/buckets/longlink-acme-dashboard/objects")
+    response = client.get(f"/api/storages/{registry_id}/buckets/alpha/objects")
 
     # Assert
     assert response.status_code == 200

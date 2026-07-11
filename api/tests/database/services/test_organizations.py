@@ -85,7 +85,7 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
     assert {user.id for user, _ in memberships} == {owner.id, member.id}
 
 
-async def test_fetch_all_and_list_by_user_ignore_deleted_organizations(users: tuple[User, User, User]) -> None:
+async def test_fetch_and_list_by_user_ignore_deleted_organizations(users: tuple[User, User, User]) -> None:
     """Return only active organizations from collection services."""
 
     # Arrange
@@ -96,7 +96,7 @@ async def test_fetch_all_and_list_by_user_ignore_deleted_organizations(users: tu
     await db.organizations.soft_delete(deleted_organization.id, owner)
 
     # Act
-    fetched = await db.organizations.fetch_all()
+    fetched = await db.organizations.fetch()
     user_organizations = await db.organizations.list_by_user(owner.id)
 
     # Assert
@@ -294,7 +294,7 @@ async def test_create_rejects_organization_with_overlong_runtime_name(users: tup
         await db.organizations.create("a" * 48, "a" * 48, location.id, owner)
 
     # Assert
-    assert await db.organizations.fetch_all() == []
+    assert await db.organizations.fetch() == []
 
 
 async def test_create_invitation_persists_pending_invitation(users: tuple[User, User, User]) -> None:

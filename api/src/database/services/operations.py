@@ -45,7 +45,7 @@ def sanitize_operation_error(error: str) -> str:
     )
 
 
-async def fetch_all() -> list[Operation]:
+async def fetch() -> list[Operation]:
     """Return all operations ordered by newest first."""
 
     # Read operations through a managed database session.

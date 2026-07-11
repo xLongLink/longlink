@@ -13,7 +13,7 @@ db = SimpleNamespace(
 )
 
 
-async def test_create_get_and_fetch_all_return_active_compute_registries(users: tuple[User, User, User]) -> None:
+async def test_create_get_and_fetch_return_active_compute_registries(users: tuple[User, User, User]) -> None:
     """Persist a compute registry and return it through read services."""
 
     # Arrange
@@ -29,7 +29,7 @@ async def test_create_get_and_fetch_all_return_active_compute_registries(users: 
         location.id,
         owner,
     )
-    fetched = await db.compute.fetch_all()
+    fetched = await db.compute.fetch()
     reloaded = await db.compute.get(registry.id)
 
     # Assert
@@ -109,7 +109,7 @@ async def test_delete_soft_deletes_compute_registry_and_include_deleted_can_relo
     assert exc.value.status_code == 404
     assert exc.value.detail == f"Compute registry '{registry.id}' not found"
     assert deleted_registry.deleted_id == owner.id
-    assert await db.compute.fetch_all() == []
+    assert await db.compute.fetch() == []
 
 
 async def test_delete_rejects_compute_registry_used_by_active_applications(users: tuple[User, User, User]) -> None:

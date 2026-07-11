@@ -146,7 +146,7 @@ async def seed_local_development() -> None:
 
     # Location
     location_slug = names.slugify("local")
-    locations = await location_service.fetch_all()
+    locations = await location_service.fetch()
     location = next((location for location in locations if location.slug == location_slug), None)
 
     # Create the local location when the development database is empty.
@@ -161,7 +161,7 @@ async def seed_local_development() -> None:
 
     # Database registry
     database_host = local_database_host()
-    database_registries = await database_service.fetch_all()
+    database_registries = await database_service.fetch()
     database_registry = next((registry for registry in database_registries if registry.name == "local"), None)
 
     # Register the local database endpoint on first seed.
@@ -183,7 +183,7 @@ async def seed_local_development() -> None:
         await sync_local_database_host(database_registry.id, database_host)
 
     # Storage registry
-    storage_registries = await storage_service.fetch_all()
+    storage_registries = await storage_service.fetch()
 
     # Register local object storage when it is not already configured.
     if not any(registry.name == "local" for registry in storage_registries):
@@ -202,7 +202,7 @@ async def seed_local_development() -> None:
 
     # Compute registry
     kubeconfig = KUBECONFIG.read_text(encoding="utf-8")
-    compute_registries = await compute_service.fetch_all()
+    compute_registries = await compute_service.fetch()
     compute_registry = next(
         (
             registry
@@ -229,7 +229,7 @@ async def seed_local_development() -> None:
         await sync_local_compute_ingress_host(compute_registry.id)
 
     # Organization
-    organizations = await organization_service.fetch_all()
+    organizations = await organization_service.fetch()
     organization = next((organization for organization in organizations if organization.name == LOCAL_ORG), None)
 
     # Create and bootstrap the local organization on first seed.

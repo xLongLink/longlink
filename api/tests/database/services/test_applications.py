@@ -93,7 +93,7 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
     assert exc.value.detail == "Application slug already exists"
 
 
-async def test_fetch_all_and_list_by_organization_ignore_deleted_applications() -> None:
+async def test_fetch_and_list_by_organization_ignore_deleted_applications() -> None:
     """Return only active applications from collection read services."""
 
     # Arrange
@@ -108,7 +108,7 @@ async def test_fetch_all_and_list_by_organization_ignore_deleted_applications() 
     await db.applications.soft_delete(deleted_application.id, user)
 
     # Act
-    fetched = await db.applications.fetch_all()
+    fetched = await db.applications.fetch()
     listed = await db.applications.list_by_organization(organization.id)
     listed_with_deleted = await db.applications.list_by_organization(organization.id, include_deleted=True)
 
@@ -158,7 +158,7 @@ async def test_application_list_services_return_models_and_memberships() -> None
     user, organization, application = await create_application_context("responses")
 
     # Act
-    all_applications = await db.applications.fetch_all()
+    all_applications = await db.applications.fetch()
     organization_applications = await db.applications.list_by_organization(organization.id)
     memberships = await db.applications.list_user_memberships(organization.id, user.id)
 

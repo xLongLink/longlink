@@ -1,6 +1,6 @@
 from src import adapters
 from uuid import UUID
-from fastapi import Depends, Response, APIRouter, HTTPException
+from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin, authsupport
 from src.utils import names
 from src.logger import logger
@@ -8,52 +8,46 @@ from src.models.databases import (DatabaseUsageResponse, DatabaseRegistryCreate,
                                   DatabaseRegistryResponse)
 from src.database.services import database
 from src.database.models.users import User
-from src.database.models.databases import DatabaseRegistry
 
 router = APIRouter()
 
 
 @router.get("/api/databases", response_model=list[DatabaseRegistryResponse])
-async def list_database_registries(_user: User = Depends(authsupport)) -> list[DatabaseRegistry]:
+async def list_database_registries(_user: User = Depends(authsupport)):
     """Return all registered database backends."""
 
-    registries = await database.fetch_all()
+    registries = await database.fetch()
     return registries
 
 
 @router.get("/api/databases/{registry_id}", response_model=DatabaseRegistryResponse)
-async def get_database_registry(registry_id: UUID, _: User = Depends(authsupport)) -> DatabaseRegistry:
+async def get_database_registry(registry_id: UUID, _: User = Depends(authsupport)):
     """Return one database backend registration."""
 
     registry = await database.get(registry_id)
     if registry is None:
-        raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
+        raise HTTPException(status_code=404, detail="Database registry not found")
 
     return registry
 
 
 @router.delete("/api/databases/{registry_id}", status_code=204)
-async def delete_database_registry(registry_id: UUID, user: User = Depends(authadmin)) -> Response:
+async def delete_database_registry(registry_id: UUID, user: User = Depends(authadmin)):
     """Soft-delete one database backend registration."""
 
     deleted = await database.delete(registry_id, user)
     if not deleted:
-        raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
-
-    return Response(status_code=204)
+        raise HTTPException(status_code=404, detail="Database registry not found")
 
 
 @router.post("/api/databases", response_model=DatabaseRegistryResponse)
 async def create_database_registry(
     payload: DatabaseRegistryCreate, user: User = Depends(authadmin)
-) -> DatabaseRegistry:
+):
     """Create one database backend registration."""
 
     # Build a stable slug from the submitted name.
-    try:
-        slug = names.slugify(payload.name)
-    except ValueError as exc:
-        raise HTTPException(status_code=409, detail="Invalid database registry name") from exc
+    slug = names.slugify(payload.name)
 
     registry = await database.create(**payload.model_dump(), slug=slug, user=user)
 
@@ -64,12 +58,12 @@ async def create_database_registry(
     "/api/databases/{registry_id}/databases",
     response_model=list[DatabaseDatabaseResponse],
 )
-async def list_database_databases(registry_id: UUID, _: User = Depends(authsupport)) -> list[dict[str, str]]:
+async def list_database_databases(registry_id: UUID, _: User = Depends(authsupport)):
     """List all databases on a database backend."""
 
     registry = await database.get(registry_id)
     if registry is None:
-        raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
+        raise HTTPException(status_code=404, detail="Database registry not found")
 
     database_adapter = adapters.database(registry)
 
@@ -91,12 +85,12 @@ async def list_database_schemas(
     registry_id: UUID,
     database_name: str,
     _: User = Depends(authsupport),
-) -> list[dict[str, str]]:
+):
     """List all schemas in a database on a database backend."""
 
     registry = await database.get(registry_id)
     if registry is None:
-        raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
+        raise HTTPException(status_code=404, detail="Database registry not found")
 
     database_adapter = adapters.database(registry)
 
@@ -115,12 +109,12 @@ async def list_database_schemas(
 
 
 @router.get("/api/databases/{registry_id}/usage", response_model=DatabaseUsageResponse)
-async def get_database_usage(registry_id: UUID, _user: User = Depends(authsupport)) -> dict[str, int]:
+async def get_database_usage(registry_id: UUID, _user: User = Depends(authsupport)):
     """Return total and free storage for one database backend."""
 
     registry = await database.get(registry_id)
     if registry is None:
-        raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
+        raise HTTPException(status_code=404, detail="Database registry not found")
 
     database_adapter = adapters.database(registry)
 

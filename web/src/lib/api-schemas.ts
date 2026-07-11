@@ -230,7 +230,6 @@ export const apiComputeRegistrySchema = z.object({
     id: z.string(),
     slug: z.string(),
     ingress_host: z.string(),
-    gateway_load_balancer_ip: z.string().nullable(),
     location_id: z.string(),
     created_at: z.string(),
     created_by: nullableUserSummarySchema,

@@ -1,6 +1,6 @@
 from src import adapters
 from uuid import UUID
-from fastapi import Depends, Response, APIRouter, HTTPException
+from fastapi import Depends, APIRouter, HTTPException
 from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authsupport
 from src.utils import names, roles, buckets
@@ -18,7 +18,6 @@ from src.models.organizations import (OrganizationCreate, OrganizationDetails, O
 from src.operations.constants import RESOURCE_REMOVE_STEP
 from src.adapters.storage.base import StorageBucketUsage
 from src.database.models.users import User
-from src.adapters.database.types import DatabaseTableData
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.operations.implementation import bootstrap, registries
@@ -47,28 +46,28 @@ async def organization_access(organization_id: UUID, user: User = Depends(authus
 
     # Hide organizations that the user cannot access.
     if member_access is None:
-        raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
+        raise HTTPException(status_code=404, detail="Organization not found")
 
     organization, organization_role = member_access
     return OrganizationAccess(user=user, role=organization_role, organization=organization)
 
 
 @router.get("/api/organizations", response_model=list[OrganizationSummary])
-async def list_organizations(_user: User = Depends(authsupport)) -> list[Organization]:
+async def list_organizations(_user: User = Depends(authsupport)):
     """Return all organizations for support and administrator views."""
 
-    records = await organizations.fetch_all()
+    records = await organizations.fetch()
     return records
 
 
 @router.get("/api/organizations/{organization_id}", response_model=OrganizationDetails)
-async def get_organization(organization_id: UUID, user: User = Depends(authuser)) -> dict[str, object]:
+async def get_organization(organization_id: UUID, user: User = Depends(authuser)):
     """Return one organization and its metadata."""
 
     access = await organization_access(organization_id, user)
     organization = await organizations.get(organization_id)
     if organization is None:
-        raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
+        raise HTTPException(status_code=404, detail="Organization not found")
 
     active_applications = sorted(await applications.list_by_organization(organization.id), key=lambda item: item.name)
     application_memberships = await applications.list_user_memberships(organization.id, user.id)
@@ -126,7 +125,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
 )
 async def list_organization_applications(
     member_access: OrganizationAccess = Depends(organization_access),
-) -> list[dict[str, object]]:
+):
     """Return the applications for one organization."""
 
     active_applications = await applications.list_by_organization(member_access.organization.id)
@@ -155,7 +154,7 @@ async def list_organization_applications(
 )
 async def list_organization_database_resources(
     member_access: OrganizationAccess = Depends(organization_access),
-) -> list[dict[str, object]]:
+):
     """Return database schemas for one organization."""
 
     organization = member_access.organization
@@ -179,7 +178,7 @@ async def list_organization_database_resources(
 )
 async def list_organization_storage_resources(
     member_access: OrganizationAccess = Depends(organization_access),
-) -> list[dict[str, object]]:
+):
     """Return storage buckets for one organization."""
 
     organization = member_access.organization
@@ -205,7 +204,7 @@ async def list_organization_database_resource_tables(
     resource_kind: OrganizationDatabaseResourceKind,
     resource_name: str,
     member_access: OrganizationAccess = Depends(organization_access),
-) -> list[DatabaseTableData]:
+):
     """Return tables, columns, and preview rows for one organization database resource."""
 
     organization = member_access.organization
@@ -217,7 +216,7 @@ async def list_organization_database_resource_tables(
 
     # Require an assigned database registry for table inspection.
     if registry is None:
-        raise HTTPException(status_code=404, detail=f"Database resource '{resource_name}' not found")
+        raise HTTPException(status_code=404, detail="Database resource not found")
 
     database_adapter = adapters.database(registry)
     database_name = names.dbname(organization.slug)
@@ -232,7 +231,7 @@ async def list_organization_database_resource_tables(
             "pg_toast",
             "public",
         } or resource_name.startswith("pg_"):
-            raise HTTPException(status_code=404, detail=f"Database resource '{resource_name}' not found")
+            raise HTTPException(status_code=404, detail="Database resource not found")
 
         tables = await database_adapter.tables(database_name, resource_name, limit=TABLE_PREVIEW_LIMIT)
 
@@ -256,7 +255,7 @@ async def list_organization_database_resource_tables(
 async def create_organization_invitation(
     payload: OrganizationInvitationCreate,
     member_access: OrganizationAccess = Depends(organization_access),
-) -> Response:
+):
     """Create one invitation for an organization member."""
 
     # Require maintainers to create invitations.
@@ -268,15 +267,13 @@ async def create_organization_invitation(
 
     await invitations.create(member_access.organization.id, payload.email, payload.role, member_access.user)
 
-    return Response(status_code=204)
-
 
 @router.patch("/api/organizations/{organization_id}/members/{member_id}", status_code=204)
 async def update_organization_member(
     member_id: UUID,
     payload: OrganizationMemberUpdate,
     member_access: OrganizationAccess = Depends(organization_access),
-) -> Response:
+):
     """Update one organization member role."""
 
     organization = member_access.organization
@@ -298,7 +295,7 @@ async def update_organization_member(
 
     updated = await organizations.update_member_role(organization.id, member_id, payload.role, member_access.user)
     if not updated:
-        raise HTTPException(status_code=404, detail=f"Organization member '{member_id}' not found")
+        raise HTTPException(status_code=404, detail="Organization member not found")
 
     # Synchronize tenant users after role changes.
     try:
@@ -308,22 +305,20 @@ async def update_organization_member(
     except Exception as exc:
         raise HTTPException(status_code=503, detail="Failed to synchronize organization members") from exc
 
-    return Response(status_code=204)
-
 
 @router.delete("/api/organizations/{organization_id}", status_code=204)
-async def delete_organization(organization_id: UUID, user: User = Depends(authuser)) -> Response:
+async def delete_organization(organization_id: UUID, user: User = Depends(authuser)):
     """Soft-delete one organization and queue runtime resource removal."""
 
     # Let platform administrators delete any organization.
     if user.role == PlatformRoles.administrator:
         organization = await organizations.get_record(organization_id)
         if organization is None:
-            raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
+            raise HTTPException(status_code=404, detail="Organization not found")
     else:
         member_access = await organizations.get_member_access(organization_id, user.id)
         if member_access is None:
-            raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
+            raise HTTPException(status_code=404, detail="Organization not found")
 
         _, membership_role = member_access
 
@@ -332,7 +327,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
 
     deleted = await organizations.soft_delete(organization_id, user)
     if deleted is None:
-        raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
+        raise HTTPException(status_code=404, detail="Organization not found")
 
     await operations.create(
         OperationKind.organization_delete,
@@ -341,7 +336,6 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
         step=RESOURCE_REMOVE_STEP,
         user=user,
     )
-    return Response(status_code=204)
 
 
 async def _database_resource_rows(
@@ -577,12 +571,12 @@ async def _storage_resource_rows(
 
 
 @router.post("/api/organizations", response_model=OrganizationSummary)
-async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)) -> Organization:
+async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)):
     """Create a new organization."""
 
     # Require a valid deployment location.
     if await locations.get(payload.location_id) is None:
-        raise HTTPException(status_code=404, detail=f"Location '{payload.location_id}' not found")
+        raise HTTPException(status_code=404, detail="Location not found")
 
     # Validate derived resource names before creating the organization.
     try:

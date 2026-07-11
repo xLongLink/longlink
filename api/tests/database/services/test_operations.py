@@ -14,7 +14,7 @@ db = SimpleNamespace(
 )
 
 
-async def test_operations_service_fetch_all_returns_newest_operations_first(users) -> None:
+async def test_operations_service_fetch_returns_newest_operations_first(users) -> None:
     """Return operations ordered by creation time descending."""
 
     # Arrange
@@ -33,7 +33,7 @@ async def test_operations_service_fetch_all_returns_newest_operations_first(user
         await session.commit()
 
     # Act
-    fetched = await db.operations.fetch_all()
+    fetched = await db.operations.fetch()
     reloaded = await db.operations.get(older_operation.id)
 
     # Assert

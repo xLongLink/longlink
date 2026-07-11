@@ -9,7 +9,4 @@ def kubernetes(registry: ComputeRegistry) -> Kubernetes:
         registry.kubeconfig,
         registry.proxy_secret,
         registry.ingress_host,
-        gateway_tls_key=registry.gateway_tls_key,
-        gateway_tls_certificate=registry.gateway_tls_certificate,
-        gateway_load_balancer_ip=registry.gateway_load_balancer_ip,
     )

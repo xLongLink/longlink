@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 @router.get("/api/image", response_model=LongLinkMetadata)
-async def inspect_image(image: str, _: User = Depends(authuser)) -> LongLinkMetadata:
+async def inspect_image(image: str, _: User = Depends(authuser)):
     """Inspect a container image and return its LongLink metadata."""
 
     image_metadata = await images.metadata(image)

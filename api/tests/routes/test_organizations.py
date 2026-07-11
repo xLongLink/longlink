@@ -245,7 +245,7 @@ async def test_delete_organization_soft_deletes_and_queues_removal(
     assert deleted is not None
     assert deleted.deleted_at is not None
     assert await db.applications.list_by_organization(organization.id) == []
-    recorded_operations = await db.operations.fetch_all()
+    recorded_operations = await db.operations.fetch()
     assert len(recorded_operations) == 1
     assert recorded_operations[0].kind == OperationKind.organization_delete
     assert recorded_operations[0].step == "remove"

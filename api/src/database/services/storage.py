@@ -11,7 +11,7 @@ from src.database.models.storages import StorageRegistry
 from src.database.models.applications import Application
 
 
-async def fetch_all() -> list[StorageRegistry]:
+async def fetch() -> list[StorageRegistry]:
     """Return all registered storage backends."""
 
     # Open a session for the registry list query.

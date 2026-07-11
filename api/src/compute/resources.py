@@ -32,19 +32,12 @@ class KubernetesResources:
         kubeconfig: str,
         proxy_secret: str,
         ingress_host: str,
-        *,
-        gateway_tls_key: str | None = None,
-        gateway_tls_certificate: str | None = None,
-        gateway_load_balancer_ip: str | None = None,
     ) -> None:
         """Initialize the Kubernetes compute client."""
 
         self._kubeconfig = kubeconfig
         self._proxy_secret = proxy_secret
         self._ingress_host = ingress_host
-        self._gateway_tls_key = gateway_tls_key
-        self._gateway_tls_certificate = gateway_tls_certificate
-        self._gateway_load_balancer_ip = gateway_load_balancer_ip
         self._api_client: Any | None = None
 
     async def _client(self) -> Any:

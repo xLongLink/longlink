@@ -64,6 +64,7 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     assert create_payload["id"] == registry_id
     assert create_payload["name"] == "primary"
     assert create_payload["ingress_host"] == "apps.longlink.internal"
+    assert "gateway_load_balancer_ip" not in create_payload
     assert "kind" not in create_payload
     assert "kubeconfig" not in create_payload
     assert list_response.status_code == 200

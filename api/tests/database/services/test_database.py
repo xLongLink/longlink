@@ -14,7 +14,7 @@ db = SimpleNamespace(
 )
 
 
-async def test_create_get_and_fetch_all_return_active_database_registries(users: tuple[User, User, User]) -> None:
+async def test_create_get_and_fetch_return_active_database_registries(users: tuple[User, User, User]) -> None:
     """Persist a database registry and return it through read services."""
 
     # Arrange
@@ -33,7 +33,7 @@ async def test_create_get_and_fetch_all_return_active_database_registries(users:
         location.id,
         owner,
     )
-    fetched = await db.database.fetch_all()
+    fetched = await db.database.fetch()
     reloaded = await db.database.get(registry.id)
 
     # Assert
@@ -123,7 +123,7 @@ async def test_delete_soft_deletes_database_registry_and_include_deleted_can_rel
     assert active is None
     assert deleted_registry is not None
     assert deleted_registry.deleted_id == owner.id
-    assert await db.database.fetch_all() == []
+    assert await db.database.fetch() == []
 
 
 async def test_delete_rejects_database_registry_used_by_active_applications(users: tuple[User, User, User]) -> None:

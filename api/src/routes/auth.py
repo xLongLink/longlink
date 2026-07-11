@@ -155,7 +155,7 @@ async def auth_oidc(request: Request) -> RedirectResponse:
 
 
 @router.post("/auth/logout", response_model=SuccessResponse, include_in_schema=False)
-async def logout(request: Request) -> dict[str, object]:
+async def logout(request: Request):
     """Clear the user session and log out."""
 
     SessionAccountsService(request).remove()

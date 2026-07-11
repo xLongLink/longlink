@@ -80,6 +80,7 @@ longlink/
 - Prefer namespaced module APIs, such as `adapters.database(...)`, over directly importing many related factory functions.
 - Group Pydantic model fields into clearly commented sections and order fields from shortest name to longest name within each section.
 - Declare `response_model` on FastAPI routes and return raw ORM objects, dictionaries, lists, or primitive values without manually instantiating or validating response models.
+- Omit FastAPI route handler return annotations when the decorator already defines the response contract, such as routes with `response_model` or no-body `status_code=204` responses.
 - Test the actual implementation rather than duplicating production logic, and do not add new test cases unless explicitly requested.
 - Avoid mocks and global runtime-state modifications where practical, preferring real implementations and explicit dependency boundaries.
 - Prefer simple, maintainable, conventional solutions over clever hacks.

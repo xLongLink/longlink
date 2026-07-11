@@ -11,7 +11,7 @@ from src.database.models.databases import DatabaseRegistry
 from src.database.models.applications import Application
 
 
-async def fetch_all() -> list[DatabaseRegistry]:
+async def fetch() -> list[DatabaseRegistry]:
     """Return all registered database backends."""
 
     # Open a session for the registry list query.

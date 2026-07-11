@@ -9,7 +9,7 @@ from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
 
 
-async def fetch_all() -> list[User]:
+async def fetch() -> list[User]:
     """Return all users in the database."""
 
     # Read users through a managed database session.

@@ -254,7 +254,6 @@ export type ApiComputeRegistry = {
     id: string;
     slug: string;
     ingress_host: string;
-    gateway_load_balancer_ip: string | null;
     location_id: string;
     created_at: string;
     created_by: ApiUserSummary | null;

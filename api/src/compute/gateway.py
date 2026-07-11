@@ -52,11 +52,6 @@ class KubernetesGateway(KubernetesResources):
 
         return value.split("/", 1)[0]
 
-    def _gateway_uses_tls(self) -> bool:
-        """Return whether the gateway should terminate TLS itself."""
-
-        return bool((self._gateway_tls_key or "").strip() and (self._gateway_tls_certificate or "").strip())
-
     async def _gateway_routes(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """Return Envoy routes and clusters for all managed application services."""
 
@@ -255,23 +250,6 @@ class KubernetesGateway(KubernetesResources):
             ]
         }
 
-        # Add TLS termination only when production gateway certificate material is configured.
-        if self._gateway_uses_tls():
-            filter_chain["transport_socket"] = {
-                "name": "envoy.transport_sockets.tls",
-                "typed_config": {
-                    "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext",
-                    "common_tls_context": {
-                        "tls_certificates": [
-                            {
-                                "certificate_chain": {"filename": "/etc/longlink/tls/tls.crt"},
-                                "private_key": {"filename": "/etc/longlink/tls/tls.key"},
-                            }
-                        ]
-                    },
-                },
-            }
-
         config = {
             "admin": {
                 "access_log_path": "/tmp/envoy-admin.log",
@@ -299,8 +277,7 @@ class KubernetesGateway(KubernetesResources):
         """Return Kubernetes manifests for the per-cluster Envoy gateway."""
 
         config_hash = hashlib.sha256(envoy_config.encode("utf-8")).hexdigest()
-        gateway_uses_tls = self._gateway_uses_tls()
-        gateway_scheme = "HTTPS" if gateway_uses_tls else "HTTP"
+        gateway_scheme = "HTTP"
         volume_mounts: list[dict[str, Any]] = [
             {"name": "config", "mountPath": "/etc/envoy"},
             {"name": "tmp", "mountPath": "/tmp"},
@@ -311,16 +288,9 @@ class KubernetesGateway(KubernetesResources):
             {"name": "tmp", "emptyDir": {}},
         ]
 
-        # Mount TLS material only when Envoy terminates HTTPS itself.
-        if gateway_uses_tls:
-            volume_mounts.append(
-                {"name": "tls", "mountPath": "/etc/longlink/tls", "readOnly": True}
-            )
-            volumes.append({"name": "tls", "secret": {"secretName": "longlink-gateway-tls"}})
-
-        # Local development can use an Ingress on port 80; production exposes the gateway service directly.
-        use_development_ingress = env.DEVELOPMENT and not gateway_uses_tls
-        gateway_service_port = 80 if use_development_ingress else 443
+        # Local development can use an Ingress; managed clusters expose the gateway service directly.
+        use_development_ingress = env.DEVELOPMENT
+        gateway_service_port = 80
         service_spec: dict[str, Any] = {
             "type": "ClusterIP" if use_development_ingress else "LoadBalancer",
             "selector": {"app": "longlink-gateway"},
@@ -334,14 +304,6 @@ class KubernetesGateway(KubernetesResources):
             ],
         }
 
-        # Preserve static load balancer assignments when production infrastructure requires one.
-        if (
-            not use_development_ingress
-            and self._gateway_load_balancer_ip is not None
-            and self._gateway_load_balancer_ip.strip()
-        ):
-            service_spec["loadBalancerIP"] = self._gateway_load_balancer_ip.strip()
-
         template_context: dict[str, object] = {
             "config_hash": config_hash,
             "envoy_config": json.dumps(envoy_config),
@@ -353,20 +315,6 @@ class KubernetesGateway(KubernetesResources):
             "gateway_volumes": json.dumps(volumes),
         }
         manifests = templates.readyml_list(ROOT / "templates" / "gateway.yml", **template_context)
-
-        # Insert the TLS Secret before the ConfigMap so referenced certificate data exists with the deployment.
-        if gateway_uses_tls:
-            tls_manifests = templates.readyml_list(
-                ROOT / "templates" / "gateway_tls_secret.yml",
-                **template_context,
-                gateway_tls_certificate=base64.b64encode(
-                    (self._gateway_tls_certificate or "").encode("utf-8")
-                ).decode("ascii"),
-                gateway_tls_key=base64.b64encode(
-                    (self._gateway_tls_key or "").encode("utf-8")
-                ).decode("ascii"),
-            )
-            manifests[1:1] = tls_manifests
 
         # Development needs an Ingress resource because the local gateway service stays ClusterIP.
         if use_development_ingress:
@@ -399,7 +347,7 @@ class KubernetesGateway(KubernetesResources):
                     if not env.DEVELOPMENT:
                         raise ValueError(f"Failed updating Service '{manifest['metadata']['name']}'") from exc
 
-                    # Development may switch the local gateway between direct LoadBalancer and Traefik Ingress modes.
+                    # Development may replace old gateway Services left by earlier local configurations.
                     await self._delete(Service, manifest["metadata"]["name"], "longlink-system")
                     resource = await self._resource(manifest)
                     await resource.create()
