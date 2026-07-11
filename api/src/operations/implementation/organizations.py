@@ -43,26 +43,26 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
             computes.append(compute)
             seen.add(compute.id)
 
-    latest = await registries.latest_compute(organization.location_id)
+    current = await registries.compute(organization.location_id, include_deleted=True)
 
     # Include the current location registry for organizations created before any applications existed.
-    if latest is not None and latest.id not in seen:
-        computes.append(latest)
-        seen.add(latest.id)
+    if current is not None and current.id not in seen:
+        computes.append(current)
+        seen.add(current.id)
 
     # Namespace deletion removes shared gateway/runtime resources for the organization.
     for compute in computes:
         adapter = Kubernetes(compute.kubeconfig, compute.proxy_secret)
         await adapter.delete_namespace(organization.slug)
 
-    registry = await registries.organization_database(organization, include_deleted=True)
+    registry = await registries.database(organization.location_id, include_deleted=True)
 
     # Delete the tenant database after app schemas have been removed.
     if registry is not None:
         adapter = adapters.database(registry)
         await adapter.delete_database(organization.slug)
 
-    registry = await registries.organization_storage(organization, include_deleted=True)
+    registry = await registries.storage(organization.location_id, include_deleted=True)
 
     # Delete the shared bucket only when one was assigned.
     if registry is not None and organization.shared_storage_bucket_name is not None:

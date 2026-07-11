@@ -459,13 +459,12 @@ async def test_create_app_returns_app_response(
     assert application_secrets["LONGLINK_STORAGE_USERNAME"] == "storage-access"
 
 
-async def test_organization_storage_reuses_existing_app_registry(users: tuple[User, User, User]) -> None:
-    """Keep organization storage on the first registry already used by its apps."""
+async def test_location_storage_returns_location_registry(users: tuple[User, User, User]) -> None:
+    """Return the single storage registry assigned to a location."""
 
     # Arrange
     owner = users[0]
     location = await db.locations.create("local", "Local testing", owner, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
     primary = await db.storage.create(
         kind=StorageKind.s3,
         name="primary",
@@ -476,27 +475,9 @@ async def test_organization_storage_reuses_existing_app_registry(users: tuple[Us
         location_id=location.id,
         user=owner,
     )
-    await db.applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        storage_registry_id=primary.id,
-        user=owner,
-    )
-    await db.storage.create(
-        kind=StorageKind.s3,
-        name="secondary",
-        slug="secondary",
-        endpoint_url="http://storage-secondary.local",
-        access_key_id="secondary-access",
-        secret_access_key="secondary-secret",
-        location_id=location.id,
-        user=owner,
-    )
 
     # Act
-    selected = await registries.organization_storage(organization)
+    selected = await registries.storage(location.id)
 
     # Assert
     assert selected is not None
@@ -857,33 +838,6 @@ async def test_application_proxy_forwards_authenticated_request(
             "    client-key-data: a2V5\n"
         ),
         gateway_url="https://localhost:8443",
-        location_id=remote_location.id,
-        user=user,
-    )
-    await db.compute.create(
-        name="remote-extra",
-        slug="remote-extra",
-        kubeconfig=(
-            "apiVersion: v1\n"
-            "clusters:\n"
-            "- name: k3d-compute\n"
-            "  cluster:\n"
-            "    server: https://0.0.0.0:8001\n"
-            "contexts:\n"
-            "- name: k3d-compute\n"
-            "  context:\n"
-            "    cluster: k3d-compute\n"
-            "    user: admin@k3d-compute\n"
-            "current-context: k3d-compute\n"
-            "kind: Config\n"
-            "preferences: {}\n"
-            "users:\n"
-            "- name: admin@k3d-compute\n"
-            "  user:\n"
-            "    client-certificate-data: Y2VydA==\n"
-            "    client-key-data: a2V5\n"
-        ),
-        gateway_url="https://localhost:9443",
         location_id=remote_location.id,
         user=user,
     )

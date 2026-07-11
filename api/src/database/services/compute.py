@@ -53,6 +53,30 @@ async def get(registry_id: UUID, include_deleted: bool = False) -> ComputeRegist
         return result.scalar_one_or_none()
 
 
+async def location(location_id: UUID, include_deleted: bool = False) -> ComputeRegistry | None:
+    """Return the compute backend assigned to one location."""
+
+    # Query by location because each location owns at most one compute backend.
+    async with session_scope() as session:
+        conditions = [ComputeRegistry.location_id == location_id]
+
+        # Deleted registries are hidden unless requested.
+        if not include_deleted:
+            conditions.append(ComputeRegistry.deleted_at.is_(None))
+
+        statement = (
+            select(ComputeRegistry)
+            .options(
+                selectinload(ComputeRegistry.created_by),
+                selectinload(ComputeRegistry.updated_by),
+                selectinload(ComputeRegistry.deleted_by),
+            )
+            .where(*conditions)
+        )
+        result = await session.execute(statement)
+        return result.scalar_one_or_none()
+
+
 async def create(name: str, slug: str, kubeconfig: str, gateway_url: str, location_id: UUID, user: User) -> ComputeRegistry:
     """Create one compute backend registration."""
 
@@ -63,6 +87,12 @@ async def create(name: str, slug: str, kubeconfig: str, gateway_url: str, locati
         # Fail early when the name already exists.
         if result.scalar_one_or_none() is not None:
             raise HTTPException(status_code=409, detail="Compute registry already exists")
+
+        location_result = await session.execute(select(ComputeRegistry.id).where(ComputeRegistry.location_id == location_id))
+
+        # Each location owns a single compute backend.
+        if location_result.scalar_one_or_none() is not None:
+            raise HTTPException(status_code=409, detail="Compute registry already exists for location")
 
         # Registries are append-only once created.
         proxy_secret_value = secrets.token_urlsafe(32)

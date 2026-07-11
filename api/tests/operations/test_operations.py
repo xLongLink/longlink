@@ -349,29 +349,30 @@ async def test_application_and_organization_remove_handlers_remove_runtime(monke
         assert location_id == organization.location_id
         return compute_registry
 
-    async def fake_latest_compute(location_id: UUID) -> SimpleNamespace:
+    async def fake_compute(location_id: UUID, include_deleted: bool = False) -> SimpleNamespace:
         """Return the current organization location compute registry."""
 
         assert location_id == organization.location_id
+        assert include_deleted
         return compute_registry
 
-    async def fake_organization_database(
-        lookup_organization: OrganizationDetails,
+    async def fake_database(
+        location_id: UUID,
         include_deleted: bool = False,
     ) -> None:
         """Return no database registry for organization cleanup."""
 
-        assert lookup_organization.id == organization.id
+        assert location_id == organization.location_id
         assert include_deleted
         return None
 
-    async def fake_organization_storage(
-        lookup_organization: OrganizationDetails,
+    async def fake_storage(
+        location_id: UUID,
         include_deleted: bool = False,
     ) -> None:
         """Return no storage registry for organization cleanup."""
 
-        assert lookup_organization.id == organization.id
+        assert location_id == organization.location_id
         assert include_deleted
         return None
 
@@ -395,9 +396,9 @@ async def test_application_and_organization_remove_handlers_remove_runtime(monke
     monkeypatch.setattr(organization_operations.organizations, "applications", fake_organization_applications)
     monkeypatch.setattr(application_operations.provisioning, "remove_application_runtime", fake_remove_application_runtime)
     monkeypatch.setattr(organization_operations.registries, "application_compute", fake_application_compute)
-    monkeypatch.setattr(organization_operations.registries, "latest_compute", fake_latest_compute)
-    monkeypatch.setattr(organization_operations.registries, "organization_database", fake_organization_database)
-    monkeypatch.setattr(organization_operations.registries, "organization_storage", fake_organization_storage)
+    monkeypatch.setattr(organization_operations.registries, "compute", fake_compute)
+    monkeypatch.setattr(organization_operations.registries, "database", fake_database)
+    monkeypatch.setattr(organization_operations.registries, "storage", fake_storage)
     monkeypatch.setattr(organization_operations, "Kubernetes", FakeKubernetes)
 
     app_operation = leased_operation(OperationKind.application_remove)

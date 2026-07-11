@@ -1,11 +1,17 @@
 from uuid import UUID
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 from datetime import datetime
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum, Column, ForeignKeyConstraint
 from tenant.utils import utcnow
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from tenant.database.types import UTCDateTime
+
+# Import relationship targets only during type checking.
+if TYPE_CHECKING:
+    from src.database.models.users import User
+    from src.database.models.applications import Application
+    from src.database.models.organizations import Organization
 
 
 class UserOrganization(SQLModel, table=True):
@@ -32,6 +38,15 @@ class UserOrganization(SQLModel, table=True):
     deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 
+    # Relationships
+    user: "User" = Relationship(
+        back_populates="organization_memberships",
+        sa_relationship_kwargs={"foreign_keys": "UserOrganization.user_id", "overlaps": "organizations,users"},
+    )
+    organization: "Organization" = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "UserOrganization.organization_id", "overlaps": "organizations,users"}
+    )
+
 
 class UserApplication(SQLModel, table=True):
     """Represent one user's membership in an application."""
@@ -57,6 +72,22 @@ class UserApplication(SQLModel, table=True):
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
+
+    # Relationships
+    user: "User" = Relationship(
+        back_populates="application_memberships",
+        sa_relationship_kwargs={"foreign_keys": "UserApplication.user_id", "overlaps": "applications,users"},
+    )
+    organization: "Organization" = Relationship(
+        sa_relationship_kwargs={"foreign_keys": "UserApplication.organization_id", "overlaps": "applications,users"}
+    )
+    application: "Application" = Relationship(
+        sa_relationship_kwargs={
+            "primaryjoin": "and_(UserApplication.organization_id == Application.organization_id, UserApplication.application_id == Application.id)",
+            "foreign_keys": "[UserApplication.organization_id, UserApplication.application_id]",
+            "overlaps": "applications,users,organization",
+        }
+    )
 
     __table_args__ = (
         ForeignKeyConstraint(

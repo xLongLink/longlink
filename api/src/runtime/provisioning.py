@@ -132,16 +132,16 @@ async def create_application_runtime(
     image = cast(str, metadata.image)
 
     # Application runtime requires a compute backend in the organization location.
-    compute = await registries.latest_compute(organization.location_id)
+    compute = await registries.compute(organization.location_id)
     if compute is None:
         raise RuntimeError("No compute cluster configured")
 
     # Application runtime requires a tenant database backend.
-    db = await registries.organization_database(organization)
+    db = await registries.database(organization.location_id)
     if db is None:
         raise RuntimeError("No database configured")
 
-    storage = await registries.organization_storage(organization)
+    storage = await registries.storage(organization.location_id)
 
     app = await applications.create(
         organization.id,
@@ -246,14 +246,14 @@ async def sync_application_runtime(
         raise RuntimeError("No compute cluster configured")
 
     # Runtime sync requires the organization database backend.
-    db = await registries.organization_database(organization)
+    db = await registries.database(organization.location_id)
     if db is None:
         raise RuntimeError("No database configured")
 
     # Existing apps without assigned storage can adopt the organization storage backend.
     storage = await registries.application_storage(application)
     if storage is None:
-        storage = await registries.organization_storage(organization)
+        storage = await registries.storage(organization.location_id)
 
     # Stop if the application was deleted between loading and update.
     updated = await applications.update_runtime(

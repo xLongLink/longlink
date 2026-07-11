@@ -10,7 +10,7 @@ from src.constants import GATEWAY_USER_HEADER, GATEWAY_SECRET_HEADER, GATEWAY_AP
 from src.models.roles import (APPLICATION_PROXY_METHODS, ApplicationRoles, OrganizationRoles, ApplicationRoleRanks,
                               ApplicationProxyMethodRanks)
 from src.models.statuses import ApplicationStatus
-from src.database.services import operations, registries, applications, organizations
+from src.database.services import operations, registries, applications
 from src.models.applications import ApplicationCreate, ApplicationResponse, ApplicationMemberUpdate, ApplicationMemberResponse
 from src.database.models.users import User
 
@@ -29,9 +29,9 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     """Register a new application in the database and deploy it on the compute cluster."""
 
     # Resolve access inside the handler so body validation can reject malformed payloads first.
-    roles.access(user, organization_id)
-    organization = next(item for item in user.organizations if item.id == organization_id)
-    organization_role = await organizations.membership_role(organization.id, user.id)
+    membership = roles.access(user, organization_id)
+    organization = membership.organization
+    organization_role = membership.role
 
     # Application creation provisions runtime resources, so it requires elevated organization permissions.
     roles.atleast(organization_role, OrganizationRoles.maintain)
@@ -75,10 +75,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     application, organization, application_role, organization_role = access
 
     # Only application or organization maintainers can read logs.
-    if roles.rank(application_role) < roles.rank(ApplicationRoles.maintain) and roles.rank(organization_role) < roles.rank(
-        OrganizationRoles.maintain
-    ):
-        raise HTTPException(status_code=403, detail="Application log permissions required")
+    roles.atleast(application_role, ApplicationRoles.maintain, (organization_role, OrganizationRoles.maintain))
 
     registry = await registries.application_compute(application, organization.location_id)
     if registry is None:
@@ -136,10 +133,7 @@ async def update_application_member(
     application, _, application_role, organization_role = access
 
     # Only application or organization maintainers can manage members.
-    if roles.rank(application_role) < roles.rank(ApplicationRoles.maintain) and roles.rank(organization_role) < roles.rank(
-        OrganizationRoles.maintain
-    ):
-        raise HTTPException(status_code=403, detail="Application member management permissions required")
+    roles.atleast(application_role, ApplicationRoles.maintain, (organization_role, OrganizationRoles.maintain))
 
     # Managers may only change roles that are not stronger than their own effective authority.
     caller_role_rank = roles.rank(application_role)
@@ -181,10 +175,7 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
     application, _, application_role, organization_role = access
 
     # Only application or organization maintainers can delete applications.
-    if roles.rank(application_role) < roles.rank(ApplicationRoles.maintain) and roles.rank(organization_role) < roles.rank(
-        OrganizationRoles.maintain
-    ):
-        raise HTTPException(status_code=403, detail="Application deletion permissions required")
+    roles.atleast(application_role, ApplicationRoles.maintain, (organization_role, OrganizationRoles.maintain))
 
     deleted = await applications.soft_delete(application.id, user)
     if deleted is None:

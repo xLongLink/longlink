@@ -49,12 +49,29 @@ class User(SQLModel, table=True):
     language: Language = Field(default=Language.en, max_length=2)
 
     # Relationships
+    organization_memberships: list["UserOrganization"] = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={
+            "primaryjoin": "and_(User.id == UserOrganization.user_id, UserOrganization.deleted_at.is_(None))",
+            "foreign_keys": "UserOrganization.user_id",
+            "overlaps": "organizations,users",
+        },
+    )
+    application_memberships: list["UserApplication"] = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={
+            "primaryjoin": "and_(User.id == UserApplication.user_id, UserApplication.deleted_at.is_(None))",
+            "foreign_keys": "UserApplication.user_id",
+            "overlaps": "applications,users",
+        },
+    )
     organizations: list["Organization"] = Relationship(
         back_populates="users",
         sa_relationship_kwargs={
             "secondary": UserOrganization.__table__,
             "primaryjoin": "and_(User.id == UserOrganization.user_id, UserOrganization.deleted_at.is_(None))",
             "secondaryjoin": "and_(Organization.id == UserOrganization.organization_id, Organization.deleted_at.is_(None))",
+            "overlaps": "organization_memberships,user",
         },
     )
     applications: list["Application"] = Relationship(
@@ -63,5 +80,6 @@ class User(SQLModel, table=True):
             "secondary": UserApplication.__table__,
             "primaryjoin": "and_(User.id == UserApplication.user_id, UserApplication.deleted_at.is_(None))",
             "secondaryjoin": "and_(UserApplication.organization_id == Application.organization_id, UserApplication.application_id == Application.id, Application.deleted_at.is_(None))",
+            "overlaps": "application_memberships,user",
         },
     )

@@ -53,6 +53,30 @@ async def get(registry_id: UUID, include_deleted: bool = False) -> DatabaseRegis
         return result.scalar_one_or_none()
 
 
+async def location(location_id: UUID, include_deleted: bool = False) -> DatabaseRegistry | None:
+    """Return the database backend assigned to one location."""
+
+    # Query by location because each location owns at most one database backend.
+    async with session_scope() as session:
+        conditions = [DatabaseRegistry.location_id == location_id]
+
+        # Hide soft-deleted registries unless explicitly requested.
+        if not include_deleted:
+            conditions.append(DatabaseRegistry.deleted_at.is_(None))
+
+        statement = (
+            select(DatabaseRegistry)
+            .options(
+                selectinload(DatabaseRegistry.created_by),
+                selectinload(DatabaseRegistry.updated_by),
+                selectinload(DatabaseRegistry.deleted_by),
+            )
+            .where(*conditions)
+        )
+        result = await session.execute(statement)
+        return result.scalar_one_or_none()
+
+
 async def create(
     kind: DatabaseKind,
     name: str,
@@ -73,6 +97,12 @@ async def create(
         # Reject duplicate registry names before insert.
         if result.scalar_one_or_none() is not None:
             raise HTTPException(status_code=409, detail="Database registry already exists")
+
+        location_result = await session.execute(select(DatabaseRegistry.id).where(DatabaseRegistry.location_id == location_id))
+
+        # Each location owns a single database backend.
+        if location_result.scalar_one_or_none() is not None:
+            raise HTTPException(status_code=409, detail="Database registry already exists for location")
 
         database = DatabaseRegistry(
             kind=kind,

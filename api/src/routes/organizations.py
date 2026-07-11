@@ -40,8 +40,8 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     """Return one organization and its metadata."""
 
     # Load organization access before exposing organization details.
-    roles.access(user, organization_id)
-    organization_role = await organizations.membership_role(organization_id, user.id)
+    membership = roles.access(user, organization_id)
+    organization_role = membership.role
     organization = await organizations.get(organization_id)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -104,14 +104,14 @@ async def list_organization_applications(organization_id: UUID, user: User = Dep
     """Return the applications for one organization."""
 
     # Load organization access before listing applications.
-    roles.access(user, organization_id)
-    organization = next(item for item in user.organizations if item.id == organization_id)
+    membership = roles.access(user, organization_id)
+    organization = membership.organization
 
     active_applications = await organizations.applications(organization.id)
     application_memberships = await applications.list_user_memberships(
         organization.id,
         user.id,
-        )
+    )
     application_roles = {membership.application_id: membership.role for membership in application_memberships}
 
     return [
@@ -135,15 +135,15 @@ async def list_organization_database_resources(organization_id: UUID, user: User
     """Return database schemas for one organization."""
 
     # Load organization access before exposing database resources.
-    roles.access(user, organization_id)
-    organization = next(item for item in user.organizations if item.id == organization_id)
-    organization_role = await organizations.membership_role(organization.id, user.id)
+    membership = roles.access(user, organization_id)
+    organization = membership.organization
+    organization_role = membership.role
 
     # Restrict database inspection to maintainers.
     roles.atleast(organization_role, OrganizationRoles.maintain)
 
     # Skip resources when no database registry is assigned.
-    registry = await registries.organization_database(organization)
+    registry = await registries.database(organization.location_id)
     if registry is None:
         return []
 
@@ -159,15 +159,15 @@ async def list_organization_storage_resources(organization_id: UUID, user: User 
     """Return storage buckets for one organization."""
 
     # Load organization access before exposing storage resources.
-    roles.access(user, organization_id)
-    organization = next(item for item in user.organizations if item.id == organization_id)
-    organization_role = await organizations.membership_role(organization.id, user.id)
+    membership = roles.access(user, organization_id)
+    organization = membership.organization
+    organization_role = membership.role
 
     # Restrict storage inspection to maintainers.
     roles.atleast(organization_role, OrganizationRoles.maintain)
 
     # Skip resources when no storage registry is assigned.
-    registry = await registries.organization_storage(organization)
+    registry = await registries.storage(organization.location_id)
     if registry is None:
         return []
 
@@ -188,15 +188,15 @@ async def list_organization_database_resource_tables(
     """Return tables and columns for one organization database resource."""
 
     # Load organization access before exposing table metadata.
-    roles.access(user, organization_id)
-    organization = next(item for item in user.organizations if item.id == organization_id)
-    organization_role = await organizations.membership_role(organization.id, user.id)
+    membership = roles.access(user, organization_id)
+    organization = membership.organization
+    organization_role = membership.role
 
     # Restrict table inspection to maintainers.
     roles.atleast(organization_role, OrganizationRoles.maintain)
 
     # Require an assigned database registry for table inspection.
-    registry = await registries.organization_database(organization)
+    registry = await registries.database(organization.location_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Database resource not found")
 
@@ -242,15 +242,15 @@ async def list_organization_database_resource_table_rows(
     """Return preview rows for one organization database table."""
 
     # Load organization access before exposing table rows.
-    roles.access(user, organization_id)
-    organization = next(item for item in user.organizations if item.id == organization_id)
-    organization_role = await organizations.membership_role(organization.id, user.id)
+    membership = roles.access(user, organization_id)
+    organization = membership.organization
+    organization_role = membership.role
 
     # Restrict table inspection to maintainers.
     roles.atleast(organization_role, OrganizationRoles.maintain)
 
     # Require an assigned database registry for table inspection.
-    registry = await registries.organization_database(organization)
+    registry = await registries.database(organization.location_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Database resource not found")
 
@@ -297,9 +297,9 @@ async def create_organization_invitation(
     """Create one invitation for an organization member."""
 
     # Load organization access before creating invitations.
-    roles.access(user, organization_id)
-    organization = next(item for item in user.organizations if item.id == organization_id)
-    organization_role = await organizations.membership_role(organization.id, user.id)
+    membership = roles.access(user, organization_id)
+    organization = membership.organization
+    organization_role = membership.role
 
     # Require maintainers to create invitations.
     roles.atleast(organization_role, OrganizationRoles.maintain)
@@ -321,9 +321,9 @@ async def update_organization_member(
     """Update one organization member role."""
 
     # Load organization access before updating members.
-    roles.access(user, organization_id)
-    organization = next(item for item in user.organizations if item.id == organization_id)
-    organization_role = await organizations.membership_role(organization.id, user.id)
+    membership = roles.access(user, organization_id)
+    organization = membership.organization
+    organization_role = membership.role
 
     # Require organization administrators to manage members.
     roles.atleast(organization_role, OrganizationRoles.admin)
@@ -363,8 +363,8 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
         if organization is None:
             raise HTTPException(status_code=404, detail="Organization not found")
     else:
-        roles.access(user, organization_id)
-        membership_role = await organizations.membership_role(organization_id, user.id)
+        membership = roles.access(user, organization_id)
+        membership_role = membership.role
 
         # Require organization owners to delete organizations.
         roles.atleast(membership_role, OrganizationRoles.owner)

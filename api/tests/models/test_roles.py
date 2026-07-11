@@ -34,6 +34,7 @@ def test_role_atleast_allows_roles_inside_scope() -> None:
     assert roles.atleast(OrganizationRoles.admin, OrganizationRoles.maintain) is True
     assert roles.atleast(ApplicationRoles.admin, ApplicationRoles.maintain) is True
     assert roles.atleast(PlatformRoles.administrator, PlatformRoles.support) is True
+    assert roles.atleast(None, ApplicationRoles.maintain, (OrganizationRoles.maintain, OrganizationRoles.maintain)) is True
 
 
 @pytest.mark.parametrize(

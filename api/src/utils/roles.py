@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from src.models.roles import (RoleName, PlatformRoles, ApplicationRoles, OrganizationRoles, PlatformRoleRanks, ApplicationRoleRanks,
                               OrganizationRoleRanks)
 from src.database.models.users import User
+from src.database.models.association import UserApplication, UserOrganization
 
 
 def rank(value: RoleName | None) -> int:
@@ -27,40 +28,40 @@ def rank(value: RoleName | None) -> int:
     raise ValueError(f"Unknown role '{value}'")
 
 
-def atleast(value: RoleName | None, required_role: RoleName) -> bool:
-    """Raise unless one role is at least as privileged as the required role."""
+def atleast(value: RoleName | None, required_role: RoleName, *alternatives: tuple[RoleName | None, RoleName]) -> bool:
+    """Raise unless one role satisfies its required role."""
 
-    # Missing current roles never satisfy requirements.
-    if value is None:
-        raise HTTPException(status_code=403, detail="Permission required")
+    # Accept the first role requirement that matches scope and rank.
+    for current_role, minimum_role in ((value, required_role), *alternatives):
+        if current_role is None:
+            continue
 
-    # Compare roles only within the same scope.
-    if type(value) is not type(required_role):
-        raise HTTPException(status_code=403, detail="Permission required")
+        if type(current_role) is not type(minimum_role):
+            continue
 
-    # Enforce the minimum privilege rank.
-    if rank(value) < rank(required_role):
-        raise HTTPException(status_code=403, detail="Permission required")
+        if rank(current_role) >= rank(minimum_role):
+            return True
 
-    return True
+    raise HTTPException(status_code=403, detail="Permission required")
 
 
-def access(user: User, resource: UUID) -> bool:
-    """Raise unless the user has loaded access to one organization or application."""
+def access(user: User, resource: UUID) -> UserOrganization | UserApplication:
+    """Return the loaded membership that grants access to one organization or application."""
 
     # Organization memberships grant access to organization resources.
-    for organization in user.organizations:
-        if organization.deleted_at is None and organization.id == resource:
-            return True
-
-        # Organization membership grants base access to the organization's applications.
-        for application in organization.applications:
-            if application.deleted_at is None and application.id == resource:
-                return True
+    for membership in user.organization_memberships:
+        if membership.organization.deleted_at is None and membership.organization_id == resource:
+            return membership
 
     # Application memberships grant access to application resources.
-    for application in user.applications:
-        if application.deleted_at is None and application.id == resource:
-            return True
+    for membership in user.application_memberships:
+        if membership.application.deleted_at is None and membership.application_id == resource:
+            return membership
+
+    # Organization membership grants base access to the organization's applications.
+    for membership in user.organization_memberships:
+        for application in membership.organization.applications:
+            if application.deleted_at is None and application.id == resource:
+                return membership
 
     raise HTTPException(status_code=403, detail="Access required")

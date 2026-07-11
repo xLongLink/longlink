@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Enum, Text, Column
+from sqlalchemy import Enum, Text, Column, UniqueConstraint
 from tenant.utils import utcnow
 from tenant.database.types import UTCDateTime
 
@@ -16,6 +16,7 @@ class ComputeRegistry(SQLModel, table=True):
     """Represent a registered compute backend."""
 
     __tablename__: ClassVar[str] = "compute_registries"
+    __table_args__ = (UniqueConstraint("location_id", name="uq_compute_registries_location_id"),)
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)

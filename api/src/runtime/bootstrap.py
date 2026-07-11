@@ -14,7 +14,7 @@ async def sync_organization_users(
     """Synchronize organization members into the shared users schema."""
 
     # Organizations without a database registry do not have a tenant database to synchronize.
-    registry = registry or await registries.organization_database(organization)
+    registry = registry or await registries.database(organization.location_id)
     if registry is None:
         return
 
@@ -27,7 +27,7 @@ async def create_organization_namespace(organization: Organization | Organizatio
     """Best-effort create the organization namespace on the active compute registry."""
 
     # Locations without compute are allowed during partial local setup.
-    registry = await registries.latest_compute(organization.location_id)
+    registry = await registries.compute(organization.location_id)
     if registry is None:
         return
 
@@ -44,7 +44,7 @@ async def create_organization_database(organization: Organization | Organization
     """Best-effort create the organization database on the active database registry."""
 
     # Locations without a database are allowed during partial local setup.
-    registry = await registries.latest_database(organization.location_id)
+    registry = await registries.database(organization.location_id)
     if registry is None:
         return
 
@@ -61,7 +61,7 @@ async def create_organization_storage(organization: Organization | OrganizationS
     """Best-effort create the assigned shared bucket on the active storage registry."""
 
     # Locations without storage skip object-store bootstrap.
-    registry = await registries.latest_storage(organization.location_id)
+    registry = await registries.storage(organization.location_id)
     if registry is None:
         return
 

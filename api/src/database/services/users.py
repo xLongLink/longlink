@@ -6,7 +6,7 @@ from src.models.users import Theme, Accent, Radius
 from src.database.session import session_scope
 from tenant.models.languages import Language
 from src.database.models.users import User
-from src.database.models.association import UserOrganization
+from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.organizations import Organization
 
 
@@ -159,6 +159,9 @@ async def get(oidc: str, include_deleted: bool = False, include_access: bool = F
         # Eager-load resource relationships for request authentication when requested.
         if include_access:
             statement = statement.options(
+                selectinload(User.organization_memberships).selectinload(UserOrganization.organization),
+                selectinload(User.application_memberships).selectinload(UserApplication.application),
+                selectinload(User.application_memberships).selectinload(UserApplication.organization),
                 selectinload(User.organizations).selectinload(Organization.applications),
                 selectinload(User.applications),
             )
