@@ -1,37 +1,38 @@
 import re
+from fastapi import HTTPException
 from slugify import slugify as text_slugify
 
 
-def slugify(value: str, label: str = "Value", max_length: int = 63) -> str:
+def slugify(value: str, max_length: int = 63) -> str:
     """Convert a string to a URL-safe and K8s-safe slug."""
 
     slug = text_slugify(value, lowercase=True, regex_pattern=r"[^a-z0-9]+", separator="-").strip("-")
 
     # Reject values that normalize to an empty slug.
     if not slug:
-        raise ValueError(f"{label} must contain at least one lowercase letter or number")
+        raise HTTPException(status_code=409, detail="Invalid name")
 
     # Keep generated slugs within target length limits.
     if len(slug) > max_length:
-        raise ValueError(f"{label} must be at most {max_length} characters")
+        raise HTTPException(status_code=409, detail="Invalid name")
 
     return slug
 
 
-def knames(value: str, label: str = "Value") -> str:
+def knames(value: str) -> str:
     """Validate one Kubernetes DNS label value and return it unchanged."""
 
     # Kubernetes names must be non-empty.
     if not value:
-        raise ValueError(f"{label} must not be empty")
+        raise ValueError("Value must not be empty")
 
     # Kubernetes DNS labels are limited to 63 characters.
     if len(value) > 63:
-        raise ValueError(f"{label} must be at most 63 characters")
+        raise ValueError("Value must be at most 63 characters")
 
     # Enforce the DNS label character and boundary rules.
     if not re.fullmatch(r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", value):
-        raise ValueError(f"{label} must contain only lowercase letters, numbers, and hyphens")
+        raise ValueError("Value must contain only lowercase letters, numbers, and hyphens")
 
     return value
 
@@ -39,7 +40,7 @@ def knames(value: str, label: str = "Value") -> str:
 def dbname(value: str) -> str:
     """Return the managed PostgreSQL database name for one value."""
 
-    knames(value, "Database source name")
+    knames(value)
     database_name = f"longlink_{value}"
 
     # PostgreSQL identifiers must stay within 63 characters.
@@ -52,6 +53,6 @@ def dbname(value: str) -> str:
 def k8name(value: str) -> str:
     """Return the managed Kubernetes name for one value."""
 
-    knames(value, "Kubernetes source name")
+    knames(value)
     name = f"longlink-{value}"
-    return knames(name, "Kubernetes name")
+    return knames(name)

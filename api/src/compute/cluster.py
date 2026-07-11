@@ -2,7 +2,6 @@ from typing import Any
 from .gateway import KubernetesGateway
 from src.utils import names
 from src.logger import logger
-from .constants import GATEWAY_NAME, GATEWAY_NAMESPACE, GATEWAY_NAMESPACE_LABEL
 from .resources import parse_kubernetes_timestamp
 from kubernetes.utils.quantity import parse_quantity
 from .library import Pod, Node, APIObject, Namespace, kr8s
@@ -20,7 +19,6 @@ class KubernetesCluster(KubernetesGateway):
             "metadata": {
                 "name": "longlink-gateway-ingress",
                 "namespace": namespace,
-                "labels": {"managed-by": "longlink"},
             },
             "spec": {
                 "podSelector": {"matchLabels": {"compute-role": "application"}},
@@ -29,8 +27,8 @@ class KubernetesCluster(KubernetesGateway):
                     {
                         "from": [
                             {
-                                "namespaceSelector": {"matchLabels": {GATEWAY_NAMESPACE_LABEL: "true"}},
-                                "podSelector": {"matchLabels": {"app": GATEWAY_NAME}},
+                                "namespaceSelector": {"matchLabels": {"kubernetes.io/metadata.name": "longlink-system"}},
+                                "podSelector": {"matchLabels": {"app": "longlink-gateway"}},
                             }
                         ]
                     }
@@ -46,11 +44,11 @@ class KubernetesCluster(KubernetesGateway):
     async def namespace(self, organization: str) -> None:
         """Create the namespace for an organization if it does not exist."""
 
-        namespace = names.k8name(names.knames(organization, "Organization"))
+        namespace = names.k8name(names.knames(organization))
 
-        # Reuse an existing managed namespace or create it when Kubernetes reports it missing.
+        # Reuse an existing namespace or create it when Kubernetes reports it missing.
         try:
-            existing_namespace = await self._read(Namespace, namespace)
+            await self._read(Namespace, namespace)
 
         # Handle namespace read failures by checking whether Kubernetes reported a miss.
         except kr8s.ServerError as exc:
@@ -60,23 +58,22 @@ class KubernetesCluster(KubernetesGateway):
                 raise ValueError(f"Failed reading namespace '{namespace}'") from exc
 
             resource = await self._resource(
-                {"apiVersion": "v1", "kind": "Namespace", "metadata": {"name": namespace, "labels": {"managed-by": "longlink"}}}
+                {"apiVersion": "v1", "kind": "Namespace", "metadata": {"name": namespace}}
             )
             await resource.create()
             await self._apply_application_network_policy(namespace)
             return None
 
-        self._validate_managed_namespace(namespace, existing_namespace)
         await self._apply_application_network_policy(namespace)
 
     async def delete_namespace(self, organization: str) -> None:
         """Delete one managed organization namespace and tolerate missing namespaces."""
 
-        namespace = names.k8name(names.knames(organization, "Organization"))
+        namespace = names.k8name(names.knames(organization))
 
-        # Read the namespace first so unmanaged namespaces cannot be deleted accidentally.
+        # Read the namespace first so missing namespaces can be treated as already deleted.
         try:
-            existing_namespace = await self._read(Namespace, namespace)
+            await self._read(Namespace, namespace)
 
         # Handle namespace lookup failures before attempting deletion.
         except kr8s.ServerError as exc:
@@ -87,9 +84,7 @@ class KubernetesCluster(KubernetesGateway):
 
             raise ValueError(f"Failed reading namespace '{namespace}'") from exc
 
-        self._validate_managed_namespace(namespace, existing_namespace)
-
-        # Delete only after ownership validation succeeds.
+        # Delete the namespace after Kubernetes confirms it exists.
         try:
             await self._delete(Namespace, namespace)
 
@@ -100,10 +95,10 @@ class KubernetesCluster(KubernetesGateway):
         await self._sync_gateway()
 
     async def namespaces(self) -> list[str]:
-        """List all namespaces managed by the control plane."""
+        """List all organization namespaces in the connected cluster."""
 
-        # Exclude the dedicated gateway namespace from organization namespace lists.
-        return [ns.name for ns in await self._list(Namespace, label_selector={"managed-by": "longlink"}) if ns.name != GATEWAY_NAMESPACE]
+        # Organization namespaces use the standard LongLink Kubernetes name prefix.
+        return [ns.name for ns in await self._list(Namespace) if ns.name.startswith("longlink-") and ns.name != "longlink-system"]
 
     async def resources(self) -> dict[str, int | float]:
         """Return total and allocatable cluster resources."""

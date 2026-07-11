@@ -1,12 +1,10 @@
 import asyncio
 import inspect
-from typing import Any, cast
-from collections.abc import Callable
 
 # kr8s 0.20.15 vendors asyncache, which calls the deprecated asyncio helper
 # while decorators are evaluated during import on Python 3.14.
 original_iscoroutinefunction = asyncio.iscoroutinefunction
-asyncio.iscoroutinefunction = cast(Callable[[Any], bool], inspect.iscoroutinefunction)
+asyncio.iscoroutinefunction = inspect.iscoroutinefunction  # type: ignore[assignment]
 
 # Temporarily patch coroutine detection while importing kr8s.
 try:

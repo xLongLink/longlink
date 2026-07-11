@@ -39,8 +39,6 @@ async def get_storage_registry(registry_id: UUID, _: User = Depends(authsupport)
     """Return one storage backend registration."""
 
     registry = await storage.get(registry_id)
-
-    # Require an existing active registry.
     if registry is None:
         raise HTTPException(status_code=404, detail=f"Storage registry '{registry_id}' not found")
 
@@ -52,8 +50,6 @@ async def delete_storage_registry(registry_id: UUID, user: User = Depends(authad
     """Soft-delete one storage backend registration."""
 
     deleted = await storage.delete(registry_id, user)
-
-    # Report missing registries as not found.
     if not deleted:
         raise HTTPException(status_code=404, detail=f"Storage registry '{registry_id}' not found")
 
@@ -82,8 +78,6 @@ async def list_storage_buckets(registry_id: UUID, _: User = Depends(authsupport)
     """List all buckets on a storage backend."""
 
     registry = await storage.get(registry_id)
-
-    # Require an existing active registry.
     if registry is None:
         raise HTTPException(status_code=404, detail=f"Storage registry '{registry_id}' not found")
 
@@ -111,8 +105,6 @@ async def list_storage_bucket_objects(
     """List object metadata for one storage bucket."""
 
     registry = await storage.get(registry_id)
-
-    # Require an existing active registry.
     if registry is None:
         raise HTTPException(status_code=404, detail=f"Storage registry '{registry_id}' not found")
 

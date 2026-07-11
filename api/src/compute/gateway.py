@@ -5,12 +5,6 @@ import hashlib
 import urllib.parse
 from typing import Any
 from src.utils import templates
-from .constants import (GATEWAY_NAME, GATEWAY_IMAGE, GATEWAY_NAMESPACE, GATEWAY_CONFIG_NAME, APPLICATION_ID_LABEL,
-                        GATEWAY_SERVICE_PORT, GATEWAY_CONTAINER_PORT, GATEWAY_TLS_MOUNT_PATH, GATEWAY_NAMESPACE_LABEL,
-                        GATEWAY_TLS_SECRET_NAME, GATEWAY_AUTH_SECRET_NAME, GATEWAY_SECRET_HEADER,
-                        GATEWAY_CONFIG_MOUNT_PATH, GATEWAY_CONFIG_RENDER_IMAGE, GATEWAY_TEMPLATE_MOUNT_PATH,
-                        GATEWAY_ADMIN_CONTAINER_PORT, GATEWAY_MAX_REQUEST_HEADERS_KB, GATEWAY_AUTH_SECRET_PLACEHOLDER,
-                        GATEWAY_PER_CONNECTION_BUFFER_LIMIT_BYTES)
 from .resources import KubernetesResources
 from src.constants import ROOT
 from src.environments import env
@@ -28,34 +22,23 @@ class KubernetesGateway(KubernetesResources):
     async def _ensure_gateway_namespace(self) -> None:
         """Create the dedicated gateway namespace when it is missing."""
 
-        # Create the namespace if it is absent; otherwise only LongLink-managed namespaces may be reused.
+        # Create the gateway namespace if it is absent.
         try:
-            namespace = await self._read(Namespace, GATEWAY_NAMESPACE)
+            await self._read(Namespace, "longlink-system")
         except kr8s.ServerError as exc:
 
             # Non-404 failures mean Kubernetes could not confirm gateway namespace state.
             if not self._not_found(exc):
-                raise ValueError(f"Failed reading namespace '{GATEWAY_NAMESPACE}'") from exc
+                raise ValueError("Failed reading namespace 'longlink-system'") from exc
 
             resource = await self._resource(
                 {
                     "apiVersion": "v1",
                     "kind": "Namespace",
-                    "metadata": {
-                        "name": GATEWAY_NAMESPACE,
-                        "labels": {"managed-by": "longlink", GATEWAY_NAMESPACE_LABEL: "true"},
-                    },
+                    "metadata": {"name": "longlink-system"},
                 }
             )
             await resource.create()
-            return None
-
-        self._validate_managed_namespace(GATEWAY_NAMESPACE, namespace)
-        labels = namespace.metadata.get("labels", {})
-
-        # Keep the gateway namespace discoverable by network policy and gateway maintenance code.
-        if labels.get(GATEWAY_NAMESPACE_LABEL) != "true":
-            await namespace.patch({"metadata": {"labels": {**labels, GATEWAY_NAMESPACE_LABEL: "true"}}})
 
     def _gateway_domain(self) -> str:
         """Return the gateway Host header domain, including a custom port when configured."""
@@ -80,18 +63,18 @@ class KubernetesGateway(KubernetesResources):
         routes: list[dict[str, Any]] = []
         clusters: list[dict[str, Any]] = []
 
-        # Discover app services from managed namespaces so Envoy config mirrors deployed workloads.
+        # Discover app services from organization namespaces so Envoy config mirrors deployed workloads.
         namespaces = sorted(
-            await self._list(Namespace, label_selector={"managed-by": "longlink"}),
+            await self._list(Namespace),
             key=lambda item: item.name,
         )
 
-        # Build routes for each managed organization namespace except the gateway namespace.
+        # Build routes for each organization namespace except the gateway namespace.
         for namespace_object in namespaces:
             namespace = namespace_object.name
 
-            # The gateway namespace hosts infrastructure, not application services.
-            if namespace == GATEWAY_NAMESPACE:
+            # Non-organization namespaces and the gateway namespace do not host application services.
+            if not namespace.startswith("longlink-") or namespace == "longlink-system":
                 continue
 
             # Only managed application services become gateway routes.
@@ -99,14 +82,14 @@ class KubernetesGateway(KubernetesResources):
                 await self._list(
                     Service,
                     namespace,
-                    {"managed-by": "longlink", "compute-role": "application"},
+                    {"compute-role": "application"},
                 ),
                 key=lambda item: item.name,
             )
 
             # Add one route pair and one cluster for each routable application service.
             for service in services:
-                application_id = service.labels.get(APPLICATION_ID_LABEL)
+                application_id = service.labels.get("longlink.io/application-id")
                 service_ports = service.spec.get("ports", [])
 
                 # Services without platform identity or ports cannot be proxied safely.
@@ -120,8 +103,8 @@ class KubernetesGateway(KubernetesResources):
 
                 # The cluster gateway only accepts requests authenticated by the API proxy.
                 gateway_secret_match = {
-                    "name": GATEWAY_SECRET_HEADER,
-                    "string_match": {"exact": GATEWAY_AUTH_SECRET_PLACEHOLDER},
+                    "name": "x-longlink-gateway-secret",
+                    "string_match": {"exact": "__LONG_LINK_GATEWAY_SECRET__"},
                 }
 
                 # Secret-matched routes forward to the app and remove the secret before the app sees it.
@@ -136,7 +119,7 @@ class KubernetesGateway(KubernetesResources):
                             "prefix_rewrite": "/",
                             "timeout": "300s",
                         },
-                        "request_headers_to_remove": [GATEWAY_SECRET_HEADER],
+                        "request_headers_to_remove": ["x-longlink-gateway-secret"],
                     }
                 )
 
@@ -204,7 +187,7 @@ class KubernetesGateway(KubernetesResources):
             "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
             "stat_prefix": "longlink_gateway",
             "codec_type": "AUTO",
-            "max_request_headers_kb": GATEWAY_MAX_REQUEST_HEADERS_KB,
+            "max_request_headers_kb": 64,
             "stream_idle_timeout": "300s",
             "request_timeout": "300s",
             "common_http_protocol_options": {"idle_timeout": "300s"},
@@ -281,8 +264,8 @@ class KubernetesGateway(KubernetesResources):
                     "common_tls_context": {
                         "tls_certificates": [
                             {
-                                "certificate_chain": {"filename": f"{GATEWAY_TLS_MOUNT_PATH}/tls.crt"},
-                                "private_key": {"filename": f"{GATEWAY_TLS_MOUNT_PATH}/tls.key"},
+                                "certificate_chain": {"filename": "/etc/longlink/tls/tls.crt"},
+                                "private_key": {"filename": "/etc/longlink/tls/tls.key"},
                             }
                         ]
                     },
@@ -293,16 +276,16 @@ class KubernetesGateway(KubernetesResources):
             "admin": {
                 "access_log_path": "/tmp/envoy-admin.log",
                 "address": {
-                    "socket_address": {"address": "127.0.0.1", "port_value": GATEWAY_ADMIN_CONTAINER_PORT}
+                    "socket_address": {"address": "127.0.0.1", "port_value": 9901}
                 },
             },
             "static_resources": {
                 "listeners": [
                     {
                         "name": "listener_0",
-                        "per_connection_buffer_limit_bytes": GATEWAY_PER_CONNECTION_BUFFER_LIMIT_BYTES,
+                        "per_connection_buffer_limit_bytes": 1024 * 1024,
                         "address": {
-                            "socket_address": {"address": "0.0.0.0", "port_value": GATEWAY_CONTAINER_PORT}
+                            "socket_address": {"address": "0.0.0.0", "port_value": 8443}
                         },
                         "filter_chains": [filter_chain],
                     }
@@ -319,11 +302,11 @@ class KubernetesGateway(KubernetesResources):
         gateway_uses_tls = self._gateway_uses_tls()
         gateway_scheme = "HTTPS" if gateway_uses_tls else "HTTP"
         volume_mounts: list[dict[str, Any]] = [
-            {"name": "config", "mountPath": GATEWAY_CONFIG_MOUNT_PATH},
+            {"name": "config", "mountPath": "/etc/envoy"},
             {"name": "tmp", "mountPath": "/tmp"},
         ]
         volumes: list[dict[str, Any]] = [
-            {"name": "template", "configMap": {"name": GATEWAY_CONFIG_NAME}},
+            {"name": "template", "configMap": {"name": "longlink-gateway"}},
             {"name": "config", "emptyDir": {}},
             {"name": "tmp", "emptyDir": {}},
         ]
@@ -331,16 +314,16 @@ class KubernetesGateway(KubernetesResources):
         # Mount TLS material only when Envoy terminates HTTPS itself.
         if gateway_uses_tls:
             volume_mounts.append(
-                {"name": "tls", "mountPath": GATEWAY_TLS_MOUNT_PATH, "readOnly": True}
+                {"name": "tls", "mountPath": "/etc/longlink/tls", "readOnly": True}
             )
-            volumes.append({"name": "tls", "secret": {"secretName": GATEWAY_TLS_SECRET_NAME}})
+            volumes.append({"name": "tls", "secret": {"secretName": "longlink-gateway-tls"}})
 
         # Local development can use an Ingress on port 80; production exposes the gateway service directly.
         use_development_ingress = env.DEVELOPMENT and not gateway_uses_tls
-        gateway_service_port = 80 if use_development_ingress else GATEWAY_SERVICE_PORT
+        gateway_service_port = 80 if use_development_ingress else 443
         service_spec: dict[str, Any] = {
             "type": "ClusterIP" if use_development_ingress else "LoadBalancer",
-            "selector": {"app": GATEWAY_NAME},
+            "selector": {"app": "longlink-gateway"},
             "ports": [
                 {
                     "name": "gateway",
@@ -362,21 +345,10 @@ class KubernetesGateway(KubernetesResources):
         template_context: dict[str, object] = {
             "config_hash": config_hash,
             "envoy_config": json.dumps(envoy_config),
-            "gateway_admin_container_port": GATEWAY_ADMIN_CONTAINER_PORT,
-            "gateway_auth_secret_name": GATEWAY_AUTH_SECRET_NAME,
-            "gateway_auth_secret_placeholder": GATEWAY_AUTH_SECRET_PLACEHOLDER,
-            "gateway_config_mount_path": GATEWAY_CONFIG_MOUNT_PATH,
-            "gateway_config_name": GATEWAY_CONFIG_NAME,
-            "gateway_config_render_image": GATEWAY_CONFIG_RENDER_IMAGE,
-            "gateway_container_port": GATEWAY_CONTAINER_PORT,
-            "gateway_image": GATEWAY_IMAGE,
-            "gateway_name": GATEWAY_NAME,
-            "gateway_namespace": GATEWAY_NAMESPACE,
             "gateway_scheme": gateway_scheme,
             "gateway_secret": base64.b64encode(self._proxy_secret.encode("utf-8")).decode("ascii"),
             "gateway_service_port": gateway_service_port,
             "gateway_service_spec": json.dumps(service_spec),
-            "gateway_template_mount_path": GATEWAY_TEMPLATE_MOUNT_PATH,
             "gateway_volume_mounts": json.dumps(volume_mounts),
             "gateway_volumes": json.dumps(volumes),
         }
@@ -393,7 +365,6 @@ class KubernetesGateway(KubernetesResources):
                 gateway_tls_key=base64.b64encode(
                     (self._gateway_tls_key or "").encode("utf-8")
                 ).decode("ascii"),
-                gateway_tls_secret_name=GATEWAY_TLS_SECRET_NAME,
             )
             manifests[1:1] = tls_manifests
 
@@ -429,7 +400,7 @@ class KubernetesGateway(KubernetesResources):
                         raise ValueError(f"Failed updating Service '{manifest['metadata']['name']}'") from exc
 
                     # Development may switch the local gateway between direct LoadBalancer and Traefik Ingress modes.
-                    await self._delete(Service, manifest["metadata"]["name"], GATEWAY_NAMESPACE)
+                    await self._delete(Service, manifest["metadata"]["name"], "longlink-system")
                     resource = await self._resource(manifest)
                     await resource.create()
 

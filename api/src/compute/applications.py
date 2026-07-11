@@ -3,7 +3,6 @@ from typing import Any, cast
 from datetime import UTC, datetime
 from .cluster import KubernetesCluster
 from src.utils import names, templates
-from .constants import APPLICATION_ID_LABEL
 from .resources import parse_kubernetes_timestamp
 from src.constants import ROOT
 from .library import Pod, Secret, Service, APIObject, Deployment, kr8s
@@ -15,8 +14,8 @@ class KubernetesApplications(KubernetesCluster):
     async def _pods(self, organization: str, application: str) -> list[APIObject]:
         """Return pods for one managed application."""
 
-        namespace = names.k8name(names.knames(organization, "Organization"))
-        name = names.knames(application, "Application name")
+        namespace = names.k8name(names.knames(organization))
+        name = names.knames(application)
         return await self._list(Pod, namespace, {"app": name})
 
     async def application_pods(self, organization: str, application: str) -> list[APIObject]:
@@ -31,8 +30,8 @@ class KubernetesApplications(KubernetesCluster):
     async def application_deployment_ready(self, organization: str, application: str) -> bool:
         """Return whether the current application Deployment rollout is ready."""
 
-        namespace = names.k8name(names.knames(organization, "Organization"))
-        name = names.knames(application, "Application name")
+        namespace = names.k8name(names.knames(organization))
+        name = names.knames(application)
 
         # Read the live Deployment so rollout status reflects the Kubernetes controller state.
         try:
@@ -80,8 +79,8 @@ class KubernetesApplications(KubernetesCluster):
     ) -> str:
         """Create or replace one internal application Deployment and Service."""
 
-        namespace = names.k8name(names.knames(organization, "Organization"))
-        name = names.knames(application, "Application name")
+        namespace = names.k8name(names.knames(organization))
+        name = names.knames(application)
 
         # Replace the full Secret data map so removed environment keys do not survive a merge patch.
         secret_body: dict[str, Any] = {
@@ -91,10 +90,9 @@ class KubernetesApplications(KubernetesCluster):
                 "name": name,
                 "namespace": namespace,
                 "labels": {
-                    "managed-by": "longlink",
                     "compute-role": "application",
                     "app": name,
-                    APPLICATION_ID_LABEL: application_id,
+                    "longlink.io/application-id": application_id,
                 },
             },
             "type": "Opaque",
@@ -124,8 +122,8 @@ class KubernetesApplications(KubernetesCluster):
     async def delete_application(self, organization: str, application: str) -> None:
         """Delete one managed application workload and tolerate missing resources."""
 
-        namespace = names.k8name(names.knames(organization, "Organization"))
-        name = names.knames(application, "Application name")
+        namespace = names.k8name(names.knames(organization))
+        name = names.knames(application)
 
         delete_calls = (
             (Deployment, "Deployment"),
@@ -147,8 +145,8 @@ class KubernetesApplications(KubernetesCluster):
     async def logs(self, organization: str, application: str, lines: int = 200) -> str:
         """Return recent logs for one managed application."""
 
-        namespace = names.k8name(names.knames(organization, "Organization"))
-        name = names.knames(application, "Application name")
+        namespace = names.k8name(names.knames(organization))
+        name = names.knames(application)
 
         # List pods before selecting the most recent log source.
         try:

@@ -298,7 +298,7 @@ async def test_create_rejects_organization_with_overlong_runtime_name(users: tup
     location = await db.locations.create("local", "Local testing", owner, "CH")
 
     # Act
-    with pytest.raises(ValueError, match="S3 bucket name must be at most 63 characters"):
+    with pytest.raises(ValueError, match="Value must be at most 63 characters"):
         await db.organizations.create("a" * 48, "a" * 48, location.id, owner)
 
     # Assert

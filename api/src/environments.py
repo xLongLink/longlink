@@ -1,12 +1,6 @@
 import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-DEVELOPMENT_CORS_ORIGINS = (
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "http://localhost:8000",
-)
-
 
 def _development_enabled() -> bool:
     """Return whether local development configuration should be enabled."""
@@ -18,26 +12,6 @@ def _development_enabled() -> bool:
         return development.strip().lower() in {"1", "true", "yes", "on", "y"}
 
     return os.getenv("ENVIRONMENT", "").strip().lower() == "development"
-
-
-def _environment_files() -> tuple[str, ...]:
-    """Load sample values in development, so local `.env` values remain overridable."""
-
-    # Include sample defaults only during local development.
-    if _development_enabled():
-        return (".env.sample", ".env")
-
-    return (".env",)
-
-
-def resolve_cors_origins(development: bool) -> tuple[str, ...]:
-    """Return localhost CORS origins only in development."""
-
-    # Development mode accepts local frontend origins.
-    if development:
-        return DEVELOPMENT_CORS_ORIGINS
-
-    return ()
 
 
 class Env(BaseSettings):
@@ -75,7 +49,7 @@ class Env(BaseSettings):
     EMAIL_SMTP_TIMEOUT_SECONDS: int | None = None
 
     model_config = SettingsConfigDict(
-        env_file=_environment_files(),
+        env_file=(".env.sample", ".env") if _development_enabled() else (".env",),
         env_file_encoding="utf-8",
     )
 

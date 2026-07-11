@@ -2,7 +2,8 @@ import sys
 import httpx2
 from fastapi import Request, HTTPException
 from src.environments import env
-from src.models.roles import role, PlatformRoles
+from src.utils import roles
+from src.models.roles import PlatformRoles
 from src.database.models.users import User
 from src.database.services import users
 
@@ -100,8 +101,7 @@ async def authadmin(request: Request) -> User:
     user = await authuser(request)
 
     # Only administrator accounts can continue past this check.
-    if not role.atleast(user.role, PlatformRoles.administrator):
-        raise HTTPException(status_code=403, detail="Administrator privileges required")
+    roles.atleast(user.role, PlatformRoles.administrator, "Administrator privileges required")
 
     return user
 
@@ -112,7 +112,6 @@ async def authsupport(request: Request) -> User:
     user = await authuser(request)
 
     # Only support-capable accounts can continue past this check.
-    if not role.atleast(user.role, PlatformRoles.support):
-        raise HTTPException(status_code=403, detail="Support access required")
+    roles.atleast(user.role, PlatformRoles.support, "Support access required")
 
     return user

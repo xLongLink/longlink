@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from src.utils import names
 
 SHARED_BUCKET_SLUG = "shared"
@@ -9,7 +10,7 @@ def name(*parts: str) -> str:
 
     bucket_name = "-".join((STORAGE_BUCKET_PREFIX, *parts))
 
-    return names.knames(bucket_name, "S3 bucket name")
+    return names.knames(bucket_name)
 
 
 def shared(organization_slug: str) -> str:
@@ -21,7 +22,11 @@ def shared(organization_slug: str) -> str:
 def application(organization_slug: str, application_slug: str) -> str:
     """Return the initial application bucket assignment for one application."""
 
-    return name(organization_slug, application_slug)
+    # Convert derived application bucket validation failures into route conflicts.
+    try:
+        return name(organization_slug, application_slug)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail="Invalid application runtime resource name") from exc
 
 
 def prefix(organization_slug: str) -> str:

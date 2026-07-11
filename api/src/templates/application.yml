@@ -8,7 +8,6 @@ metadata:
   name: $name
   namespace: $namespace
   labels:
-    managed-by: longlink
     compute-role: application
     app: $name
     longlink.io/application-id: $application_id
@@ -22,7 +21,6 @@ spec:
       annotations:
         longlink.io/rollout-token: "$rollout_token"
       labels:
-        managed-by: longlink
         compute-role: application
         app: $name
         longlink.io/application-id: $application_id
@@ -82,7 +80,6 @@ metadata:
   name: $name
   namespace: $namespace
   labels:
-    managed-by: longlink
     compute-role: application
     app: $name
     longlink.io/application-id: $application_id

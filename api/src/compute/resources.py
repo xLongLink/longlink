@@ -183,12 +183,3 @@ class KubernetesResources:
             # Preserve unexpected Kubernetes failures for the higher-level adapter.
             if not self._not_found(exc):
                 raise
-
-    def _validate_managed_namespace(self, namespace: str, namespace_object: APIObject) -> None:
-        """Raise when one namespace is not owned by LongLink."""
-
-        labels = namespace_object.metadata.get("labels", {})
-
-        # Prevent accidental mutation or deletion of namespaces not created by LongLink.
-        if labels.get("managed-by") != "longlink":
-            raise ValueError(f"Namespace '{namespace}' is not managed by LongLink")

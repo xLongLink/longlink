@@ -41,8 +41,8 @@ async def remove_application_runtime(
 ) -> None:
     """Remove runtime resources for one application."""
 
-    names.knames(organization.slug, "Organization")
-    names.knames(application.slug, "Application name")
+    names.knames(organization.slug)
+    names.knames(application.slug)
     names.k8name(organization.slug)
     names.dbname(organization.slug)
 
@@ -78,7 +78,7 @@ async def remove_application_runtime(
 async def remove_organization_runtime(organization: Organization | OrganizationDetails | OrganizationSummary) -> None:
     """Remove runtime resources for one organization and its applications."""
 
-    names.knames(organization.slug, "Organization")
+    names.knames(organization.slug)
     names.k8name(organization.slug)
     names.dbname(organization.slug)
 
@@ -319,8 +319,8 @@ async def sync_application_runtime(
         application.slug,
         payload.image,
     )
-    names.knames(organization.slug, "Organization")
-    names.knames(application.slug, "Application name")
+    names.knames(organization.slug)
+    names.knames(application.slug)
     names.k8name(organization.slug)
     names.dbname(organization.slug)
 

@@ -4,14 +4,14 @@ from dataclasses import dataclass
 from fastapi import Depends, Response, APIRouter, HTTPException
 from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authsupport
-from src.utils import names, buckets
+from src.utils import names, roles, buckets
 from src.logger import logger
 from src.operations.constants import RESOURCE_REMOVE_STEP
 from src.operations.implementation import bootstrap, registries
 from src.adapters.storage.base import StorageBucketUsage
 from src.adapters.database.types import DatabaseTableData
 from tenant.database import SHARED_SCHEMA
-from src.models.roles import role, PlatformRoles, OrganizationRoles
+from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import (OrganizationDatabaseResourceKind, OrganizationDatabaseTableResponse,
                                    OrganizationDatabaseResourceResponse)
@@ -68,8 +68,6 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
 
     access = await organization_access(organization_id, user)
     organization = await organizations.get(organization_id)
-
-    # Guard against deleted or missing organizations.
     if organization is None:
         raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
@@ -164,8 +162,7 @@ async def list_organization_database_resources(
     organization = member_access.organization
 
     # Restrict database inspection to maintainers.
-    if not role.atleast(member_access.role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Database resource inspection permissions required")
+    roles.atleast(member_access.role, OrganizationRoles.maintain, "Database resource inspection permissions required")
 
     registry = await registries.organization_database_registry(organization)
 
@@ -189,8 +186,7 @@ async def list_organization_storage_resources(
     organization = member_access.organization
 
     # Restrict storage inspection to maintainers.
-    if not role.atleast(member_access.role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Storage resource inspection permissions required")
+    roles.atleast(member_access.role, OrganizationRoles.maintain, "Storage resource inspection permissions required")
 
     registry = await registries.organization_storage_registry(organization)
 
@@ -216,8 +212,7 @@ async def list_organization_database_resource_tables(
     organization = member_access.organization
 
     # Restrict table inspection to maintainers.
-    if not role.atleast(member_access.role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Database resource inspection permissions required")
+    roles.atleast(member_access.role, OrganizationRoles.maintain, "Database resource inspection permissions required")
 
     registry = await registries.organization_database_registry(organization)
 
@@ -266,11 +261,10 @@ async def create_organization_invitation(
     """Create one invitation for an organization member."""
 
     # Require maintainers to create invitations.
-    if not role.atleast(member_access.role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Invitation permissions required")
+    roles.atleast(member_access.role, OrganizationRoles.maintain, "Invitation permissions required")
 
     # Prevent inviting roles above the caller's role.
-    if role.rank(payload.role) > role.rank(member_access.role):
+    if roles.rank(payload.role) > roles.rank(member_access.role):
         raise HTTPException(status_code=403, detail="Invitation role permissions required")
 
     await invitations.create(member_access.organization.id, payload.email, payload.role, member_access.user)
@@ -289,10 +283,9 @@ async def update_organization_member(
     organization = member_access.organization
 
     # Require organization administrators to manage members.
-    if not role.atleast(member_access.role, OrganizationRoles.admin):
-        raise HTTPException(status_code=403, detail="Member management permissions required")
+    roles.atleast(member_access.role, OrganizationRoles.admin, "Member management permissions required")
 
-    can_manage_owner_role = role.atleast(member_access.role, OrganizationRoles.owner)
+    can_manage_owner_role = roles.rank(member_access.role) >= roles.rank(OrganizationRoles.owner)
 
     # Allow only owners to grant owner access.
     if payload.role == OrganizationRoles.owner and not can_manage_owner_role:
@@ -305,8 +298,6 @@ async def update_organization_member(
         raise HTTPException(status_code=403, detail="Owner management permissions required")
 
     updated = await organizations.update_member_role(organization.id, member_id, payload.role, member_access.user)
-
-    # Report missing active organization members.
     if not updated:
         raise HTTPException(status_code=404, detail=f"Organization member '{member_id}' not found")
 
@@ -328,26 +319,19 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
     # Let platform administrators delete any organization.
     if user.role == PlatformRoles.administrator:
         organization = await organizations.get_record(organization_id)
-
-        # Report missing organizations before removal.
         if organization is None:
             raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
     else:
         member_access = await organizations.get_member_access(organization_id, user.id)
-
-        # Hide organizations the caller cannot access.
         if member_access is None:
             raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
         _, membership_role = member_access
 
         # Require organization owners to delete organizations.
-        if not role.atleast(membership_role, OrganizationRoles.owner):
-            raise HTTPException(status_code=403, detail="Organization deletion permissions required")
+        roles.atleast(membership_role, OrganizationRoles.owner, "Organization deletion permissions required")
 
     deleted = await organizations.soft_delete(organization_id, user)
-
-    # Treat already-deleted organizations as missing.
     if deleted is None:
         raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
@@ -603,7 +587,7 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
 
     # Validate derived resource names before creating the organization.
     try:
-        slug = names.slugify(payload.name, "Organization")
+        slug = names.slugify(payload.name)
         names.k8name(slug)
         names.dbname(slug)
         buckets.shared(slug)

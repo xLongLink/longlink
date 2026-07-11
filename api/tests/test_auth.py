@@ -154,14 +154,14 @@ async def test_auth_oidc_upserts_activates_and_redirects(monkeypatch: pytest.Mon
 
     monkeypatch.setattr(auth_routes, "oauth", OAuthStub(oidc_client))
     monkeypatch.setattr(auth_routes, "upsert_oidc_user", fake_upsert_oidc_user)
-    request = RequestStub({auth_routes.OIDC_NEXT_SESSION_KEY: "/organizations/acme"})
+    request = RequestStub({"oidc_next": "/organizations/acme"})
 
     response = await auth_routes.auth_oidc(request)
 
     assert response.headers["location"] == "/organizations/acme"
     assert request.session["oidc"] == "callback-subject"
     assert request.session["oidc_accounts"] == ["callback-subject"]
-    assert auth_routes.OIDC_NEXT_SESSION_KEY not in request.session
+    assert "oidc_next" not in request.session
     assert oidc_client.authorize_calls == 1
     assert [userinfo.sub for userinfo in upserts] == ["callback-subject"]
 

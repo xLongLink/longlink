@@ -20,7 +20,7 @@ from src.routes import operations as operations_route
 from src.routes import applications, organizations
 from src.operations.worker import run_operation_scheduler
 from collections.abc import AsyncIterator
-from src.environments import env, resolve_cors_origins
+from src.environments import env
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -45,23 +45,6 @@ app = FastAPI(
 )
 
 
-def configure_cors(application: FastAPI, origins: tuple[str, ...]) -> list[str]:
-    """Add credentialed CORS middleware for configured origins."""
-
-    cors_origins = [origin for origin in origins if origin]
-    if not cors_origins:
-        return []
-
-    application.add_middleware(
-        CORSMiddleware,
-        allow_origins=cors_origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-    return cors_origins
-
-
 app.add_middleware(
     SessionMiddleware,
     secret_key=env.SESSION_KEY,
@@ -69,8 +52,6 @@ app.add_middleware(
     same_site="lax",
     https_only=not env.DEVELOPMENT,
 )
-
-cors_origins = configure_cors(app, resolve_cors_origins(env.DEVELOPMENT))
 
 # Register API routes after importing the endpoint modules so their decorators run.
 app.include_router(auth.router)
@@ -94,8 +75,17 @@ static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():
     app.frontend("/", directory=static_dir)
 
-
+# Local development entrypoint. Production imports the app with Gunicorn, so this block is not executed.
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+    if env.DEVELOPMENT:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["http://localhost:5173"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)

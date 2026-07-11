@@ -25,7 +25,7 @@ class OidcClientStub:
         self.calls.append(
             {
                 "kwargs": kwargs,
-                "next_path": request.session.get(auth_routes.OIDC_NEXT_SESSION_KEY),
+                "next_path": request.session.get("oidc_next"),
                 "redirect_uri": redirect_uri,
             }
         )
@@ -73,18 +73,29 @@ def test_login_oidc_forwards_social_provider_hint(monkeypatch: pytest.MonkeyPatc
     ("next_path", "expected_path"),
     [
         ("/orgs/acme?tab=Apps#top", "/orgs/acme?tab=Apps#top"),
-        ("//evil.example", auth_routes.DEFAULT_POST_LOGIN_REDIRECT),
-        ("///evil.example", auth_routes.DEFAULT_POST_LOGIN_REDIRECT),
-        ("https://evil.example", auth_routes.DEFAULT_POST_LOGIN_REDIRECT),
-        ("/\\evil.example", auth_routes.DEFAULT_POST_LOGIN_REDIRECT),
-        ("settings", auth_routes.DEFAULT_POST_LOGIN_REDIRECT),
-        (None, auth_routes.DEFAULT_POST_LOGIN_REDIRECT),
+        ("//evil.example", "/organizations"),
+        ("///evil.example", "/organizations"),
+        ("https://evil.example", "/organizations"),
+        ("/\\evil.example", "/organizations"),
+        ("settings", "/organizations"),
+        (None, "/organizations"),
     ],
 )
-def test_sanitize_post_login_redirect(next_path: str | None, expected_path: str) -> None:
+def test_login_oidc_sanitizes_next_path(monkeypatch: pytest.MonkeyPatch, next_path: str | None, expected_path: str) -> None:
     """Keep post-login redirects constrained to same-origin relative paths."""
 
-    assert auth_routes.sanitize_post_login_redirect(next_path) == expected_path
+    # Arrange
+    oidc_client = OidcClientStub()
+    monkeypatch.setattr(auth_routes, "oauth", OAuthStub(oidc_client))
+    client = TestClient(app)
+    params = {"next": next_path} if next_path is not None else {}
+
+    # Act
+    response = client.get("/auth/login/oidc", params=params)
+
+    # Assert
+    assert response.status_code == 204
+    assert oidc_client.calls[0]["next_path"] == expected_path
 
 
 def test_login_oidc_rejects_unsafe_next_path(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -103,7 +114,7 @@ def test_login_oidc_rejects_unsafe_next_path(monkeypatch: pytest.MonkeyPatch) ->
     assert oidc_client.calls == [
         {
             "kwargs": {"kc_idp_hint": "google"},
-            "next_path": auth_routes.DEFAULT_POST_LOGIN_REDIRECT,
+            "next_path": "/organizations",
             "redirect_uri": env.OIDC_REDIRECT_URI,
         }
     ]
@@ -126,7 +137,7 @@ def test_login_oidc_rejects_malformed_next_path(monkeypatch: pytest.MonkeyPatch,
     assert oidc_client.calls == [
         {
             "kwargs": {},
-            "next_path": auth_routes.DEFAULT_POST_LOGIN_REDIRECT,
+            "next_path": "/organizations",
             "redirect_uri": env.OIDC_REDIRECT_URI,
         }
     ]

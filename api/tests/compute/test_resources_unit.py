@@ -1,10 +1,8 @@
 from datetime import UTC, datetime
-from typing import cast
 
 import pytest
 
 from src.compute.resources import KubernetesResources, parse_kubernetes_timestamp
-from src.compute.library import APIObject
 
 
 pytestmark = pytest.mark.no_db
@@ -40,18 +38,3 @@ def test_kubernetes_not_found_recognizes_response_status() -> None:
 
     assert resources._not_found(Error())
     assert not resources._not_found(RuntimeError("boom"))
-
-
-def test_kubernetes_validate_managed_namespace_rejects_unmanaged_namespace() -> None:
-    """Reject namespaces that are not marked as managed by LongLink."""
-
-    resources = KubernetesResources("{}", "secret", "apps.example.test")
-
-
-    class NamespaceObject:
-        """Expose metadata in the shape returned by kr8s resources."""
-
-        metadata = {"labels": {"managed-by": "external"}}
-
-    with pytest.raises(ValueError, match="not managed by LongLink"):
-        resources._validate_managed_namespace("default", cast(APIObject, NamespaceObject()))

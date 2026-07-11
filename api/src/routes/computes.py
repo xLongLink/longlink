@@ -54,13 +54,7 @@ async def list_compute_registries(_user: User = Depends(authsupport)) -> list[Co
 async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)) -> ComputeRegistry:
     """Return one compute backend registration."""
 
-    registry = await compute.get(registry_id)
-
-    # Require an existing compute registry.
-    if registry is None:
-        raise HTTPException(status_code=404, detail=f"Compute registry '{registry_id}' not found")
-
-    return registry
+    return await compute.get(registry_id)
 
 
 @router.delete("/api/computes/{registry_id}", status_code=204)
@@ -68,8 +62,6 @@ async def delete_compute_registry(registry_id: UUID, user: User = Depends(authad
     """Soft-delete one compute backend registration."""
 
     deleted = await compute.delete(registry_id, user)
-
-    # Report missing registries as not found.
     if not deleted:
         raise HTTPException(status_code=404, detail=f"Compute registry '{registry_id}' not found")
 
@@ -108,10 +100,6 @@ async def get_compute_resources(registry_id: UUID, _: User = Depends(authsupport
 
     registry = await compute.get(registry_id)
 
-    # Require an existing compute registry.
-    if registry is None:
-        raise HTTPException(status_code=404, detail=f"Compute registry '{registry_id}' not found")
-
     compute_adapter = compute_runtime.kubernetes(registry)
 
     # Ask the backend for current capacity.
@@ -130,10 +118,6 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
 
     registry = await compute.get(registry_id)
 
-    # Require an existing compute registry.
-    if registry is None:
-        raise HTTPException(status_code=404, detail=f"Compute registry '{registry_id}' not found")
-
     compute_adapter = compute_runtime.kubernetes(registry)
 
     # Ask the backend for known namespaces.
@@ -146,18 +130,11 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
     return [{"name": namespace_name} for namespace_name in namespace_names]
 
 
-@router.get(
-    "/api/computes/{registry_id}/namespaces/{namespace}/pods",
-    response_model=list[PodResponse],
-)
+@router.get("/api/computes/{registry_id}/namespaces/{namespace}/pods", response_model=list[PodResponse])
 async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depends(authsupport)) -> list[dict[str, object]]:
     """List all pods in a namespace on a compute backend."""
 
     registry = await compute.get(registry_id)
-
-    # Require an existing compute registry.
-    if registry is None:
-        raise HTTPException(status_code=404, detail=f"Compute registry '{registry_id}' not found")
 
     compute_adapter = compute_runtime.kubernetes(registry)
 

@@ -272,6 +272,7 @@ export function Menu({
     const activeValue = isControlled ? value : internalValue;
 
     const activeContent = activeValue ? getActiveContent(sections, activeValue) : [];
+    const previousActiveValueRef = React.useRef<string | undefined>(undefined);
 
     const [expandedSectionIds, setExpandedSectionIds] = React.useState<Set<string>>(() => {
         // Start collapsed when no item is active.
@@ -341,8 +342,16 @@ export function Menu({
     }, [activeValue, hashNavigation, isControlled, onValueChange, sections]);
 
     React.useEffect(() => {
+        const previousActiveValue = previousActiveValueRef.current;
+        previousActiveValueRef.current = activeValue;
+
         // Nothing to expand without an active value.
         if (!activeValue) {
+            return;
+        }
+
+        // Preserve manual collapse state while the active item has not changed.
+        if (previousActiveValue === activeValue) {
             return;
         }
 
@@ -443,6 +452,8 @@ export function Menu({
                 <ul className="space-y-2" role="list">
                     {sections.map((section) => {
                         const hasSubSections = section.subSections.length > 0;
+                        const hasContent = section.content.length > 0;
+                        const firstSubSectionValue = section.subSections[0]?.value;
                         const sectionIsActive =
                             activeValue === section.value ||
                             section.subSections.some((subSection) => subSection.value === activeValue);
@@ -460,6 +471,16 @@ export function Menu({
                                     aria-current={sectionIsActive ? 'page' : undefined}
                                     className={menuItemVariants({ active: sectionIsActive })}
                                     onClick={() => {
+                                        // Treat groups without their own panel as disclosure controls.
+                                        if (hasSubSections && !hasContent) {
+                                            if (!sectionIsActive && firstSubSectionValue) {
+                                                commitValue(firstSubSectionValue);
+                                            }
+
+                                            toggleExpanded(section.value, { preserveIfExpanded: !sectionIsActive });
+                                            return;
+                                        }
+
                                         commitValue(section.value);
 
                                         // Open nested navigation when present.

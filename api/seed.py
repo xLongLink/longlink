@@ -234,7 +234,7 @@ async def seed_local_development() -> None:
 
     # Create and bootstrap the local organization on first seed.
     if organization is None:
-        organization_slug = names.slugify(LOCAL_ORG, "Organization")
+        organization_slug = names.slugify(LOCAL_ORG)
         names.k8name(organization_slug)
         names.dbname(organization_slug)
         buckets.shared(organization_slug)
@@ -263,9 +263,9 @@ async def seed_local_development() -> None:
         raise RuntimeError("Seeded organization could not be loaded")
 
     application_payload = ApplicationCreate.model_validate(LOCAL_APP)
-    application_slug = names.slugify(LOCAL_APP_NAME, "Application name")
-    names.knames(organization_record.slug, "Organization")
-    names.knames(application_slug, "Application name")
+    application_slug = names.slugify(LOCAL_APP_NAME)
+    names.knames(organization_record.slug)
+    names.knames(application_slug)
     names.k8name(organization_record.slug)
     names.dbname(organization_record.slug)
 

@@ -31,8 +31,6 @@ async def get_database_registry(registry_id: UUID, _: User = Depends(authsupport
     """Return one database backend registration."""
 
     registry = await database.get(registry_id)
-
-    # Require an existing active registry.
     if registry is None:
         raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
 
@@ -44,8 +42,6 @@ async def delete_database_registry(registry_id: UUID, user: User = Depends(autha
     """Soft-delete one database backend registration."""
 
     deleted = await database.delete(registry_id, user)
-
-    # Report missing registries as not found.
     if not deleted:
         raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
 
@@ -77,8 +73,6 @@ async def list_database_databases(registry_id: UUID, _: User = Depends(authsuppo
     """List all databases on a database backend."""
 
     registry = await database.get(registry_id)
-
-    # Require an existing active registry.
     if registry is None:
         raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
 
@@ -106,8 +100,6 @@ async def list_database_schemas(
     """List all schemas in a database on a database backend."""
 
     registry = await database.get(registry_id)
-
-    # Require an existing active registry.
     if registry is None:
         raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
 
@@ -132,8 +124,6 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
     """Return total and free storage for one database backend."""
 
     registry = await database.get(registry_id)
-
-    # Require an existing active registry.
     if registry is None:
         raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
 

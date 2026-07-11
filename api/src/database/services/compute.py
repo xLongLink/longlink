@@ -29,7 +29,7 @@ async def fetch_all() -> list[ComputeRegistry]:
         return result.scalars().all()
 
 
-async def get(registry_id: UUID, include_deleted: bool = False) -> ComputeRegistry | None:
+async def get(registry_id: UUID, include_deleted: bool = False) -> ComputeRegistry:
     """Return one compute backend by id."""
 
     # Build the lookup within one scoped session.
@@ -50,7 +50,13 @@ async def get(registry_id: UUID, include_deleted: bool = False) -> ComputeRegist
             .where(*conditions)
         )
         result = await session.execute(statement)
-        return result.scalar_one_or_none()
+        registry = result.scalar_one_or_none()
+
+        # Missing registries are reported at the lookup boundary.
+        if registry is None:
+            raise HTTPException(status_code=404, detail=f"Compute registry '{registry_id}' not found")
+
+        return registry
 
 
 async def get_by_proxy_secret(proxy_secret: str) -> ComputeRegistry | None:

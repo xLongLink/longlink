@@ -990,9 +990,9 @@ async def test_application_proxy_forwards_authenticated_request(
     assert isinstance(headers, dict)
     assert headers["x-longlink-gateway-secret"] == registry.proxy_secret
     assert headers["x-user-id"] == str(user.id)
-    assert headers["accept"] == "application/json"
-    assert headers["accept-language"] == "en-US"
     assert headers["content-type"] == "text/plain"
+    assert "accept" not in headers
+    assert "accept-language" not in headers
     assert "authorization" not in headers
     assert "cookie" not in headers
     assert "x-custom-feature" not in headers

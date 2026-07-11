@@ -22,8 +22,6 @@ async def get_location(location_id: UUID, _: User = Depends(authsupport)) -> Loc
     """Return one location."""
 
     location = await locations.get(location_id)
-
-    # Require an existing active location.
     if location is None:
         raise HTTPException(status_code=404, detail=f"Location '{location_id}' not found")
 
@@ -35,8 +33,6 @@ async def delete_location(location_id: UUID, user: User = Depends(authadmin)) ->
     """Soft-delete one location."""
 
     deleted = await locations.delete(location_id, user)
-
-    # Report missing locations as not found.
     if not deleted:
         raise HTTPException(status_code=404, detail=f"Location '{location_id}' not found")
 

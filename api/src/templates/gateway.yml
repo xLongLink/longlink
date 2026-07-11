@@ -4,11 +4,10 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: $gateway_auth_secret_name
-  namespace: $gateway_namespace
+  name: longlink-gateway-auth
+  namespace: longlink-system
   labels:
-    managed-by: longlink
-    app: $gateway_name
+    app: longlink-gateway
 type: Opaque
 data:
   gateway-secret: "$gateway_secret"
@@ -16,34 +15,31 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: $gateway_config_name
-  namespace: $gateway_namespace
+  name: longlink-gateway
+  namespace: longlink-system
   labels:
-    managed-by: longlink
-    app: $gateway_name
+    app: longlink-gateway
 data:
   envoy.yaml: $envoy_config
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: $gateway_name
-  namespace: $gateway_namespace
+  name: longlink-gateway
+  namespace: longlink-system
   labels:
-    managed-by: longlink
-    app: $gateway_name
+    app: longlink-gateway
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: $gateway_name
+      app: longlink-gateway
   template:
     metadata:
       annotations:
         longlink.io/config-hash: $config_hash
       labels:
-        managed-by: longlink
-        app: $gateway_name
+        app: longlink-gateway
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -55,26 +51,26 @@ spec:
           type: RuntimeDefault
       initContainers:
         - name: render-config
-          image: $gateway_config_render_image
+          image: busybox:1.36.1
           command:
             - sh
             - -c
             - >-
-              sed 's|$gateway_auth_secret_placeholder|'"$$LONG_LINK_GATEWAY_SECRET"'|g'
-              $gateway_template_mount_path/envoy.yaml >
-              $gateway_config_mount_path/envoy.yaml
+              sed 's|__LONG_LINK_GATEWAY_SECRET__|'"$$LONG_LINK_GATEWAY_SECRET"'|g'
+              /etc/envoy-template/envoy.yaml >
+              /etc/envoy/envoy.yaml
           env:
             - name: LONG_LINK_GATEWAY_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: $gateway_auth_secret_name
+                  name: longlink-gateway-auth
                   key: gateway-secret
           volumeMounts:
             - name: template
-              mountPath: $gateway_template_mount_path
+              mountPath: /etc/envoy-template
               readOnly: true
             - name: config
-              mountPath: $gateway_config_mount_path
+              mountPath: /etc/envoy
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -82,16 +78,16 @@ spec:
                 - ALL
             readOnlyRootFilesystem: true
       containers:
-        - name: $gateway_name
-          image: $gateway_image
+        - name: longlink-gateway
+          image: envoyproxy/envoy:v1.31.5
           args:
             - -c
-            - $gateway_config_mount_path/envoy.yaml
+            - /etc/envoy/envoy.yaml
           ports:
             - name: gateway
-              containerPort: $gateway_container_port
+              containerPort: 8443
             - name: admin
-              containerPort: $gateway_admin_container_port
+              containerPort: 9901
           readinessProbe:
             httpGet:
               path: /ready
@@ -125,28 +121,26 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: $gateway_name
-  namespace: $gateway_namespace
+  name: longlink-gateway
+  namespace: longlink-system
   labels:
-    managed-by: longlink
-    app: $gateway_name
+    app: longlink-gateway
 spec: $gateway_service_spec
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: longlink-gateway-ingress
-  namespace: $gateway_namespace
+  namespace: longlink-system
   labels:
-    managed-by: longlink
-    app: $gateway_name
+    app: longlink-gateway
 spec:
   podSelector:
     matchLabels:
-      app: $gateway_name
+      app: longlink-gateway
   policyTypes:
     - Ingress
   ingress:
     - ports:
         - protocol: TCP
-          port: $gateway_container_port
+          port: 8443

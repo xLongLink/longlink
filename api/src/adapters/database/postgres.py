@@ -69,13 +69,7 @@ class Postgres(Database):
         return conn.engine.sync_engine.dialect.identifier_preparer.quote(value)
 
     @contextlib.asynccontextmanager
-    async def _connection(
-        self,
-        database: str,
-        *,
-        autocommit: bool = False,
-        search_path: str | None = None,
-    ) -> AsyncIterator[AsyncConnection]:
+    async def _connection( self, database: str, *, autocommit: bool = False, search_path: str | None = None ) -> AsyncIterator[AsyncConnection]:
         """Open one managed SQLAlchemy connection for a database.
 
         The adapter owns the engine lifecycle and disposes it after every operation.

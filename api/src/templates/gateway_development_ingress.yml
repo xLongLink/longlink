@@ -4,11 +4,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: $gateway_name
-  namespace: $gateway_namespace
+  name: longlink-gateway
+  namespace: longlink-system
   labels:
-    managed-by: longlink
-    app: $gateway_name
+    app: longlink-gateway
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
 spec:
@@ -19,13 +18,13 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: $gateway_name
+                name: longlink-gateway
                 port:
                   number: $gateway_service_port
           - path: /ready
             pathType: Exact
             backend:
               service:
-                name: $gateway_name
+                name: longlink-gateway
                 port:
                   number: $gateway_service_port

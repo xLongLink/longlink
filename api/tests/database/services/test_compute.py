@@ -46,7 +46,6 @@ async def test_create_get_and_fetch_all_return_active_compute_registries(users: 
     assert registry.created_by.id == owner.id
     assert registry.updated_by.id == owner.id
     assert [item.id for item in fetched] == [registry.id]
-    assert reloaded is not None
     assert reloaded.id == registry.id
 
 
@@ -102,15 +101,16 @@ async def test_delete_soft_deletes_compute_registry_and_include_deleted_can_relo
     deleted = await db.compute.delete(registry.id, owner)
     second_delete = await db.compute.delete(registry.id, owner)
     missing_delete = await db.compute.delete(uuid4(), owner)
-    active = await db.compute.get(registry.id)
     deleted_registry = await db.compute.get(registry.id, include_deleted=True)
 
     # Assert
     assert deleted is True
     assert second_delete is False
     assert missing_delete is False
-    assert active is None
-    assert deleted_registry is not None
+    with pytest.raises(HTTPException) as exc:
+        await db.compute.get(registry.id)
+    assert exc.value.status_code == 404
+    assert exc.value.detail == f"Compute registry '{registry.id}' not found"
     assert deleted_registry.deleted_id == owner.id
     assert await db.compute.fetch_all() == []
 

@@ -1,5 +1,5 @@
 import httpx2
-from typing import Any, Final, Literal
+from typing import Any, Literal
 from fastapi import Query, Request, Response, APIRouter, HTTPException
 from pydantic import ValidationError
 from src.auth import SessionAccountsService, oauth
@@ -13,14 +13,29 @@ from src.database.services import users
 from authlib.integrations.base_client import OAuthError
 
 router = APIRouter()
-DEFAULT_POST_LOGIN_REDIRECT: Final[str] = "/organizations"
-OIDC_NEXT_SESSION_KEY: Final[str] = "oidc_next"
 
 
-def sanitize_post_login_redirect(next_path: object) -> str:
-    """Return a safe same-origin post-login redirect path."""
+async def _oidc_userinfo(oidc: Any, token: object) -> object:
+    """Return profile claims from token userinfo or the provider userinfo endpoint."""
 
-    return urls.safe_local_path(next_path, DEFAULT_POST_LOGIN_REDIRECT)
+    raw_userinfo: object = getattr(token, "userinfo", None)
+
+    # Use profile claims embedded in the token response when Authlib provided them.
+    if raw_userinfo is not None:
+        return raw_userinfo
+
+    # Request profile claims from the userinfo endpoint.
+    try:
+        return await oidc.userinfo(token=token)
+    except httpx2.HTTPStatusError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="OIDC userinfo endpoint failed. Verify provider URL and client credentials.",
+        ) from exc
+    except OAuthError as exc:
+        raise HTTPException(status_code=401, detail="OIDC userinfo response could not be validated") from exc
+    except ValidationError as exc:
+        raise HTTPException(status_code=503, detail="Authentication provider returned an invalid user profile") from exc
 
 
 async def upsert_oidc_user(userinfo: OidcUserInfo) -> str:
@@ -80,7 +95,7 @@ async def login_oidc(
     oauth_client: Any = oauth
     oidc = oauth_client.create_client("oidc")
 
-    request.session[OIDC_NEXT_SESSION_KEY] = sanitize_post_login_redirect(next_path)
+    request.session["oidc_next"] = urls.safe_local_path(next_path, "/organizations")
     authorize_kwargs: dict[str, Any] = {}
 
     # Pass through the selected upstream provider hint.
@@ -118,45 +133,14 @@ async def auth_oidc(request: Request) -> RedirectResponse:
     try:
         token: Any = await oidc.authorize_access_token(request)
     except httpx2.HTTPStatusError as exc:
-        raise HTTPException(status_code=503, detail="OIDC token exchange failed. Verify provider URL and client credentials.") from exc
+        raise HTTPException(
+            status_code=503,
+            detail="OIDC token exchange failed. Verify provider URL and client credentials.",
+        ) from exc
     except OAuthError as exc:
         raise HTTPException(status_code=401, detail="OIDC callback could not be validated") from exc
 
-    raw_userinfo: Any = getattr(token, "userinfo", None)
-
-    # Fall back to the userinfo endpoint when the token payload does not include profile claims.
-    if raw_userinfo is None:
-
-        # Reuse mapping token payloads directly.
-        if isinstance(token, dict):
-            token_payload = token
-
-        # Convert Pydantic v2-style token payloads.
-        elif hasattr(token, "model_dump"):
-            token_payload = token.model_dump(mode="python")
-
-        # Convert Pydantic v1-style token payloads.
-        elif hasattr(token, "dict"):
-            token_payload = token.dict()
-
-        # Coerce other token payload shapes into mappings.
-        else:
-
-            # Convert iterable token payloads when possible.
-            try:
-                token_payload = dict(token)
-            except TypeError as exc:
-                raise HTTPException(status_code=503, detail="Authentication provider returned an invalid token payload") from exc
-
-        # Request profile claims from the userinfo endpoint.
-        try:
-            raw_userinfo = await oidc.userinfo(token=token_payload)
-        except httpx2.HTTPStatusError as exc:
-            raise HTTPException(status_code=503, detail="OIDC userinfo endpoint failed. Verify provider URL and client credentials.") from exc
-        except OAuthError as exc:
-            raise HTTPException(status_code=401, detail="OIDC userinfo response could not be validated") from exc
-        except ValidationError as exc:
-            raise HTTPException(status_code=503, detail="Authentication provider returned an invalid user profile") from exc
+    raw_userinfo = await _oidc_userinfo(oidc, token)
 
     # Validate the provider profile payload.
     try:
@@ -166,8 +150,8 @@ async def auth_oidc(request: Request) -> RedirectResponse:
 
     subject = await upsert_oidc_user(userinfo)
     SessionAccountsService(request).activate(subject)
-    next_path = request.session.pop(OIDC_NEXT_SESSION_KEY, DEFAULT_POST_LOGIN_REDIRECT)
-    return RedirectResponse(sanitize_post_login_redirect(next_path))
+    next_path = request.session.pop("oidc_next", "/organizations")
+    return RedirectResponse(urls.safe_local_path(next_path, "/organizations"))
 
 
 @router.post("/auth/logout", response_model=SuccessResponse, include_in_schema=False)
