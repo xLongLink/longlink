@@ -230,13 +230,7 @@ function parsePageContent(content: string): PageParseResult {
 /**
  * Renders metadata-backed XML pages for control-plane and application routes.
  */
-export default function View({
-    applicationStatus,
-    locale,
-    metadata,
-    runtimeContext,
-    runtimeKey,
-}: ViewProps) {
+export default function View({ applicationStatus, locale, metadata, runtimeContext, runtimeKey }: ViewProps) {
     const { t } = useTranslation();
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
@@ -365,12 +359,7 @@ export default function View({
     /* Load each XML page once for the active route instance. */
     useEffect(() => {
         // Skip page loading until an XML page can render.
-        if (
-            applicationIsLoading ||
-            !activePageTab ||
-            !activePageStateKey ||
-            activePagePath === undefined
-        ) {
+        if (applicationIsLoading || !activePageTab || !activePageStateKey || activePagePath === undefined) {
             return;
         }
 

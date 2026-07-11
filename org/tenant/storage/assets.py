@@ -1,6 +1,6 @@
 import mimetypes
-from dataclasses import dataclass
 from pathlib import PurePosixPath
+from dataclasses import dataclass
 
 LOGO_CONTENT_TYPE = "image/svg+xml"
 LOGO_PATH = "brand/logo.svg"

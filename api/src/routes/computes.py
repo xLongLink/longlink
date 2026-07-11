@@ -5,8 +5,7 @@ from src.auth import authadmin, authsupport
 from src.utils import urls, names
 from src.logger import logger
 from src.environments import env
-from src.models.computes import (PodResponse, NamespaceResponse, ComputeRegistryCreate, ComputeRegistryResponse,
-                                 ComputeResourcesResponse)
+from src.models.computes import PodResponse, NamespaceResponse, ComputeRegistryCreate, ComputeRegistryResponse, ComputeResourcesResponse
 from src.database.services import compute
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry

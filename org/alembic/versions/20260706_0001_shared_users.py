@@ -1,6 +1,6 @@
 import sqlalchemy as sa
-from collections.abc import Sequence
 from alembic import op
+from collections.abc import Sequence
 
 # revision identifiers, used by Alembic.
 revision: str = "20260706_0001"

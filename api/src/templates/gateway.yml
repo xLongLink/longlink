@@ -1,5 +1,4 @@
 # Template for the per-cluster Envoy gateway resources.
-
 ---
 apiVersion: v1
 kind: Secret

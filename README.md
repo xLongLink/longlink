@@ -17,7 +17,6 @@ LongLink provides that foundation. It turns real-world processes into production
 
 Specific workflows can be customized like software, built quickly like modern AI-assisted applications, and maintained with the discipline of proper engineering. LongLink brings software-development principles to the broader world of work, making valuable processes structured, deployable, reviewable, and cheap to maintain over time.
 
-
 <br />
 
 ## Get Started
@@ -45,7 +44,6 @@ longlink dev
 ```
 
 </details>
-
 
 <br />
 

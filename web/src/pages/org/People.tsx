@@ -22,16 +22,13 @@ import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
 import { formatDate, getInitials } from '@/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
-    BookOpen,
-    Crown,
-    GitPullRequest,
-    MoreVertical,
-    PenLine,
-    Settings2,
-    type LucideIcon,
-} from 'lucide-react';
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { BookOpen, Crown, GitPullRequest, MoreVertical, PenLine, Settings2, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -61,7 +58,14 @@ const ORGANIZATION_ROLE_ICONS: Record<Role, LucideIcon> = {
 };
 
 /** Renders the organization people lists for settings sections. */
-export default function People({ organization, people, invitations, activeSection = 'members', isLoading, error }: PeopleProps) {
+export default function People({
+    organization,
+    people,
+    invitations,
+    activeSection = 'members',
+    isLoading,
+    error,
+}: PeopleProps) {
     const { t } = useTranslation();
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
@@ -223,17 +227,15 @@ export default function People({ organization, people, invitations, activeSectio
                                 <p className="text-sm text-muted-foreground">{t('people.invitationsPermissionHint')}</p>
                             )}
                         </div>
-                        <Button
-                            type="button"
-                            onClick={() => setInviteOpen(true)}
-                            disabled={organization.length === 0}
-                        >
+                        <Button type="button" onClick={() => setInviteOpen(true)} disabled={organization.length === 0}>
                             {t('actions.invite')}
                         </Button>
                     </div>
                     <hr className="border-border" />
                     {isLoading ? null : error ? (
-                        <div className="rounded-md border p-4 text-sm text-destructive">{t('errors.loadInvitations')}</div>
+                        <div className="rounded-md border p-4 text-sm text-destructive">
+                            {t('errors.loadInvitations')}
+                        </div>
                     ) : invitations.length ? (
                         <DataTable columns={localizedInvitationColumns} data={invitations} />
                     ) : (

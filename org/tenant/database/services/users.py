@@ -1,8 +1,7 @@
-from sqlalchemy.ext.asyncio import AsyncConnection
-from sqlalchemy.dialects.postgresql import insert as postgres_insert
-
 from tenant.models.users import User
+from sqlalchemy.ext.asyncio import AsyncConnection
 from tenant.database.models.users import shared_users_table
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
 
 
 class UsersService:

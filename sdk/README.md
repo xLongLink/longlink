@@ -12,7 +12,6 @@ Python SDK for building and packaging LongLink applications.
 
 </div>
 
-
 ## Gettin started
 
 ```bash
@@ -20,7 +19,6 @@ longlink init
 ```
 
 > See [`xLongLink/sample`](https://github.com/xLongLink/sample) for a minimal LongLink application that demonstrates SDK setup, XML pages, translations, routes, tests, and Docker image builds.
-
 
 <br/>
 
@@ -34,7 +32,6 @@ This builds the SDK web bundle, recreates `sdk/dev`, links that generated app to
 
 > Requirements: Python 3.14 or newer, `uv`, and Docker if you want to build an image. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for more details.
 
-
 <br/>
 
 ## Testing
@@ -46,7 +43,6 @@ uv run pytest tests
 
 <br/>
 <br/>
-
 
 ---
 

@@ -6,17 +6,10 @@ from fastapi.testclient import TestClient
 from src.models.storages import StorageKind
 from src.database.session import get_session
 from src.models.databases import DatabaseKind
+from src.database.services import users, storage, database, locations, operations, invitations, applications, organizations
 from src.models.operations import OperationKind
 from src.database.models.users import User
-from src.database.services import users
-from src.database.services import storage
-from src.database.services import database
 from src.database.models.association import UserOrganization
-from src.database.services import locations
-from src.database.services import operations
-from src.database.services import invitations
-from src.database.services import applications
-from src.database.services import organizations
 
 db = SimpleNamespace(
     applications=applications,

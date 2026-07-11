@@ -31,18 +31,18 @@ uv run pytest tests    # Run tests
 
 The build command writes these labels into image metadata when values are available:
 
-| Label | Value | Description |
-| --- | --- | --- |
-| `longlink.name` | `<app-name>` | Application name. |
-| `longlink.sdk` | `<installed-longlink-version>` | Installed LongLink SDK version. |
-| `longlink.version` | `<app-pyproject-version>` | Application version from `pyproject.toml`. |
-| `longlink.description` | `<app-description>` | Optional application description. |
-| `longlink.environments` | `<json-environment-list>` | App environment variables when `src/envs.py` exists. |
-| `longlink.title` | `<app-title>` | Optional application title. |
-| `longlink.summary` | `<app-summary>` | Optional short summary. |
-| `longlink.terms_of_service` | `<terms-url>` | Optional terms-of-service URL. |
-| `longlink.contact` | `<contact-metadata>` | Optional contact metadata. |
-| `longlink.license_info` | `<license-metadata>` | Optional license metadata. |
+| Label                       | Value                          | Description                                          |
+| --------------------------- | ------------------------------ | ---------------------------------------------------- |
+| `longlink.name`             | `<app-name>`                   | Application name.                                    |
+| `longlink.sdk`              | `<installed-longlink-version>` | Installed LongLink SDK version.                      |
+| `longlink.version`          | `<app-pyproject-version>`      | Application version from `pyproject.toml`.           |
+| `longlink.description`      | `<app-description>`            | Optional application description.                    |
+| `longlink.environments`     | `<json-environment-list>`      | App environment variables when `src/envs.py` exists. |
+| `longlink.title`            | `<app-title>`                  | Optional application title.                          |
+| `longlink.summary`          | `<app-summary>`                | Optional short summary.                              |
+| `longlink.terms_of_service` | `<terms-url>`                  | Optional terms-of-service URL.                       |
+| `longlink.contact`          | `<contact-metadata>`           | Optional contact metadata.                           |
+| `longlink.license_info`     | `<license-metadata>`           | Optional license metadata.                           |
 
 ## XML
 

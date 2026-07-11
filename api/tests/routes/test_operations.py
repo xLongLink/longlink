@@ -1,11 +1,7 @@
 from types import SimpleNamespace
 from fastapi.testclient import TestClient
+from src.database.services import users, locations, operations, applications, organizations
 from src.models.operations import OperationKind
-from src.database.services import users
-from src.database.services import locations
-from src.database.services import operations
-from src.database.services import applications
-from src.database.services import organizations
 
 db = SimpleNamespace(
     applications=applications,

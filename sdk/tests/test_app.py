@@ -1,7 +1,7 @@
 import json
 import pytest
-from pathlib import Path
 from pytest import MonkeyPatch
+from pathlib import Path
 from longlink.app import LongLink
 from fastapi.testclient import TestClient
 from longlink.utils.settings import Envs

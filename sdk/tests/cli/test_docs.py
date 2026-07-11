@@ -1,6 +1,6 @@
 import click
-
-from longlink.cli.docs import render_component_docs, resolve_component_schema, summarize_component_schema
+from longlink.cli.docs import (render_component_docs, resolve_component_schema,
+                               summarize_component_schema)
 
 
 def test_resolve_component_schema_matches_component_case_insensitively() -> None:

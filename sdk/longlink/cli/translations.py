@@ -1,5 +1,5 @@
-import json
 import re
+import json
 import click
 from lxml import etree
 from typing import TypeGuard

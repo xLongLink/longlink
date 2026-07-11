@@ -1,6 +1,5 @@
 import click
 import pytest
-
 import longlink.cli as cli
 
 

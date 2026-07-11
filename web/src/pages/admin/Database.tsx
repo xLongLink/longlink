@@ -19,9 +19,7 @@ import { useDeleteDialog } from '@/lib/utils';
 import { PostgreSQL } from '@/svg/PostgreSQL';
 
 /** Returns localized admin database table columns. */
-function createDatabaseColumnsBase(
-    t: TFunction
-): Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation }>> {
+function createDatabaseColumnsBase(t: TFunction): Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation }>> {
     return [
         {
             id: 'database',

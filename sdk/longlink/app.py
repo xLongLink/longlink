@@ -7,8 +7,8 @@ from longlink.pages import (XMLResponse, PageDefinition, page_file_tab,
                             extract_longlink_metadata)
 from longlink.utils import Envs
 from collections.abc import Callable
-from longlink.routes import routes
 from longlink.logger import ApiAccessFilter
+from longlink.routes import routes
 from longlink.constants import ROOT
 from longlink.utils.xml import Longlink as LonglinkXml
 from fastapi.staticfiles import StaticFiles

@@ -32,9 +32,9 @@ export const content = (
             registry, and <Code>--push</Code> to push the image after the local Docker build completes.
         </P>
         <P>
-            Point <Code>longlink build</Code> at the environment class from <Code>pyproject.toml</Code>. The build command
-            parses the class statically for image metadata, without importing application code or requiring real secret
-            values.
+            Point <Code>longlink build</Code> at the environment class from <Code>pyproject.toml</Code>. The build
+            command parses the class statically for image metadata, without importing application code or requiring real
+            secret values.
         </P>
         <CodeBlock>{`[tool.longlink]
 environment = "src.envs:Env"`}</CodeBlock>

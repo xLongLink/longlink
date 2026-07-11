@@ -27,8 +27,8 @@ export const content = (
         <P>
             The SDK exposes a small database API for application-owned relational data. Use <Code>db.Table</Code> to
             define <A href="https://sqlmodel.tiangolo.com/">SQLModel</A> tables with LongLink audit fields, and use{' '}
-            <Code>async with db.get_session()</Code> to open an async <A href="https://www.sqlalchemy.org/">SQLAlchemy</A>{' '}
-            database session.
+            <Code>async with db.get_session()</Code> to open an async{' '}
+            <A href="https://www.sqlalchemy.org/">SQLAlchemy</A> database session.
         </P>
         <div className="overflow-hidden rounded-md border">
             <Table>
@@ -119,8 +119,8 @@ async def create_project() -> None:
         </Heading>
         <P>
             Users are managed by the LongLink platform and exposed by the SDK. Application code should not create,
-            update, or authenticate users directly; use <Code>User</Code> as read-only display data when you need to show
-            who created or changed a row.
+            update, or authenticate users directly; use <Code>User</Code> as read-only display data when you need to
+            show who created or changed a row.
         </P>
         <P>
             Models that inherit from <Code>db.Table</Code> expose user relationships such as <Code>created_by</Code> and{' '}

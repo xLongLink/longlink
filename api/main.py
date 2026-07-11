@@ -2,25 +2,12 @@ import asyncio
 import contextlib
 from fastapi import FastAPI
 from pathlib import Path
-from src.routes import (
-    auth,
-    icons,
-    image,
-    users,
-    health,
-    accounts,
-    branding,
-    computes,
-    countries,
-    storages,
-    databases,
-    locations,
-)
+from src.routes import auth, icons, image, users, health, accounts, branding, computes, storages, countries, databases, locations
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
-from src.operations.worker import run_operation_scheduler
 from collections.abc import AsyncIterator
 from src.environments import env
+from src.operations.worker import run_operation_scheduler
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 

@@ -14,7 +14,6 @@ export function useStorages() {
     });
 }
 
-
 /** Fetches buckets for one storage registry. */
 export function useStorageBuckets(storageId: string) {
     const enabled = storageId.length > 0;
@@ -24,7 +23,6 @@ export function useStorageBuckets(storageId: string) {
         parse: (value) => parseApiCollection(apiStorageBucketSchema, value),
     });
 }
-
 
 /** Fetches object metadata for one storage bucket. */
 export function useStorageObjects(storageId: string, bucketName: string) {

@@ -18,9 +18,7 @@ import type { ApiComputeRegistry, ApiLocation } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 
 /** Returns localized admin compute table columns. */
-function createComputeColumnsBase(
-    t: TFunction
-): Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation }>> {
+function createComputeColumnsBase(t: TFunction): Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation }>> {
     return [
         {
             id: 'compute',

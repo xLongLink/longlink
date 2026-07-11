@@ -1,6 +1,6 @@
 import random
 from typing import Literal
-from fastapi import APIRouter, Response
+from fastapi import Response, APIRouter
 from src.models.users import ACCENT_COLOR_VALUES
 
 router = APIRouter()

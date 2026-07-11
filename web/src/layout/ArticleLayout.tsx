@@ -250,7 +250,6 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
     );
 }
 
-
 function ArticleContent({ content, metadata }: ArticleContentProps) {
     const { t } = useTranslation();
     const lastUpdated = metadata.lastUpdated

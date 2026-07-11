@@ -1,7 +1,7 @@
 import asyncio
 import sysconfig
-from pathlib import Path
 from alembic import command
+from pathlib import Path
 from alembic.config import Config
 from sqlalchemy.engine import URL
 

@@ -4,12 +4,12 @@ from fastapi import Query, Request, Response, APIRouter, HTTPException
 from pydantic import ValidationError
 from src.auth import SessionAccountsService, oauth
 from src.utils import urls
-from src.operations.implementation import bootstrap
 from src.models.auth import OidcUserInfo
 from src.environments import env
 from fastapi.responses import RedirectResponse
 from src.models.common import SuccessResponse
 from src.database.services import users
+from src.operations.implementation import bootstrap
 from authlib.integrations.base_client import OAuthError
 
 router = APIRouter()

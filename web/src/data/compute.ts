@@ -14,7 +14,6 @@ export function useComputes() {
     });
 }
 
-
 /** Fetches namespaces for one compute registry. */
 export function useComputeNamespaces(computeId: string) {
     const enabled = computeId.length > 0;
@@ -24,7 +23,6 @@ export function useComputeNamespaces(computeId: string) {
         parse: (value) => parseApiCollection(apiComputeNamespaceSchema, value),
     });
 }
-
 
 /** Fetches pods for one namespace in a compute registry. */
 export function useComputePods(computeId: string, namespace: string) {

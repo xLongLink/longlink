@@ -3,15 +3,8 @@ from uuid import uuid4
 from types import SimpleNamespace
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.users import Theme, Accent, Radius, Language
+from src.database.services import users, compute, storage, database, locations, operations, applications, organizations
 from src.database.models.users import User
-from src.database.services import users
-from src.database.services import compute
-from src.database.services import storage
-from src.database.services import database
-from src.database.services import locations
-from src.database.services import operations
-from src.database.services import applications
-from src.database.services import organizations
 
 db = SimpleNamespace(
     applications=applications,

@@ -45,15 +45,11 @@ export default function Pricing() {
             <main className="min-h-[calc(100vh-9rem)]">
                 <section className="mx-auto flex w-full max-w-6xl flex-col items-center gap-12 px-6 py-12 sm:gap-16 sm:py-16">
                     <div className="mx-auto max-w-2xl space-y-3 text-center">
-                        <p className="text-sm font-medium tracking-[0.24em] text-accent uppercase">
-                            Pricing
-                        </p>
+                        <p className="text-sm font-medium tracking-[0.24em] text-accent uppercase">Pricing</p>
                         <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
                             Simple workflow, Simple plans
                         </h1>
-                        <p className="text-lg leading-8 text-muted-foreground">
-                            Designed to be extended.
-                        </p>
+                        <p className="text-lg leading-8 text-muted-foreground">Designed to be extended.</p>
                     </div>
 
                     <div className="grid w-full gap-4 md:grid-cols-3">
@@ -81,19 +77,27 @@ export default function Pricing() {
                                         )}
 
                                         <div className="mt-6 flex min-h-20 items-end justify-center gap-2">
-                                            <span className="text-5xl font-semibold tracking-tight">{option.price}</span>
+                                            <span className="text-5xl font-semibold tracking-tight">
+                                                {option.price}
+                                            </span>
                                             {option.period ? (
-                                                <span className="pb-1 text-sm text-muted-foreground">{option.period}</span>
+                                                <span className="pb-1 text-sm text-muted-foreground">
+                                                    {option.period}
+                                                </span>
                                             ) : null}
                                         </div>
                                     </div>
 
                                     <div className="flex flex-1 flex-col border-t border-border bg-muted/20 px-6 py-8">
                                         {option.name === 'Team' ? (
-                                            <p className="mb-5 text-sm text-foreground">Everything included in Free, plus...</p>
+                                            <p className="mb-5 text-sm text-foreground">
+                                                Everything included in Free, plus...
+                                            </p>
                                         ) : null}
                                         {option.name === 'Work' ? (
-                                            <p className="mb-5 text-sm text-foreground">Everything included in Team, plus...</p>
+                                            <p className="mb-5 text-sm text-foreground">
+                                                Everything included in Team, plus...
+                                            </p>
                                         ) : null}
 
                                         {option.features.length ? (
@@ -103,8 +107,13 @@ export default function Pricing() {
                                                         {feature.description ? (
                                                             <details className="group flex-1">
                                                                 <summary className="flex cursor-pointer list-none gap-3 text-left text-foreground transition-colors hover:text-accent [&::-webkit-details-marker]:hidden">
-                                                                    <ChevronRight className="mt-0.5 size-4 shrink-0 transition-transform group-open:rotate-90" strokeWidth={1.8} />
-                                                            <span className="text-foreground">{feature.label}</span>
+                                                                    <ChevronRight
+                                                                        className="mt-0.5 size-4 shrink-0 transition-transform group-open:rotate-90"
+                                                                        strokeWidth={1.8}
+                                                                    />
+                                                                    <span className="text-foreground">
+                                                                        {feature.label}
+                                                                    </span>
                                                                 </summary>
                                                                 <p className="mt-2 whitespace-pre-line pl-7 text-xs leading-5 text-muted-foreground">
                                                                     {feature.description}
@@ -112,7 +121,10 @@ export default function Pricing() {
                                                             </details>
                                                         ) : (
                                                             <>
-                                                                <ChevronRight className="mt-0.5 size-4 shrink-0" strokeWidth={1.8} />
+                                                                <ChevronRight
+                                                                    className="mt-0.5 size-4 shrink-0"
+                                                                    strokeWidth={1.8}
+                                                                />
                                                                 <span>{feature.label}</span>
                                                             </>
                                                         )}
@@ -121,8 +133,8 @@ export default function Pricing() {
                                             </ul>
                                         ) : (
                                             <p className="text-sm leading-6 text-muted-foreground">
-                                                More compute, storage, bandwidth, retention, and isolation options will be
-                                                available before launch.
+                                                More compute, storage, bandwidth, retention, and isolation options will
+                                                be available before launch.
                                             </p>
                                         )}
                                     </div>

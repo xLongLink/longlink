@@ -1,9 +1,9 @@
 import sys
 import click
 import select
-import subprocess
 import uvicorn
 import threading
+import subprocess
 import webbrowser
 from pathlib import Path
 from longlink.logger import logger, log_config

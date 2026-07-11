@@ -1,8 +1,6 @@
 from types import SimpleNamespace
 from fastapi.testclient import TestClient
-from src.database.services import users
-from src.database.services import database
-from src.database.services import locations
+from src.database.services import users, database, locations
 
 db = SimpleNamespace(
     database=database,

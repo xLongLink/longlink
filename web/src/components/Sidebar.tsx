@@ -135,7 +135,6 @@ function renderArticleNavigationItem(
     );
 }
 
-
 /** Returns whether an article navigation item or descendant matches the current route. */
 function articleNavigationItemIsActive(item: ArticleNavigationItem, currentPath: string): boolean {
     // Match direct routes before checking descendants.
@@ -145,7 +144,6 @@ function articleNavigationItemIsActive(item: ArticleNavigationItem, currentPath:
 
     return item.children?.some((child) => articleNavigationItemIsActive(child, currentPath)) ?? false;
 }
-
 
 /** Renders the left navigation for article pages. */
 export function Sidebar({ currentPath, groups }: SidebarProps) {
@@ -173,12 +171,7 @@ export function Sidebar({ currentPath, groups }: SidebarProps) {
                         <SidebarGroupContent>
                             <SidebarMenu className="space-y-0.5">
                                 {group.items.map((item) =>
-                                    renderArticleNavigationItem(
-                                        item,
-                                        currentPath,
-                                        openItemPaths,
-                                        setOpenItemPaths
-                                    )
+                                    renderArticleNavigationItem(item, currentPath, openItemPaths, setOpenItemPaths)
                                 )}
                             </SidebarMenu>
                         </SidebarGroupContent>

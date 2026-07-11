@@ -1,5 +1,4 @@
 import pytest
-
 from tenant.storage import assets
 
 

@@ -526,12 +526,20 @@ export default function Home() {
                     <div className="space-y-5">
                         <h1 className="mx-auto flex max-w-4xl flex-col items-center text-center text-[1.875rem] font-medium leading-[1.02] text-foreground min-[420px]:text-[2.25rem] sm:text-6xl lg:text-7xl">
                             <span className="block whitespace-nowrap text-center">Just another dashboard</span>
-                            <span className="mt-1 block whitespace-nowrap text-center line-through">Nothing to see here</span>
+                            <span className="mt-1 block whitespace-nowrap text-center line-through">
+                                Nothing to see here
+                            </span>
                         </h1>
                         <p className="mx-auto text-sm leading-6 text-muted-foreground sm:text-lg">
-                            <span className="mx-auto block">The narrative has changed, but you are still buying the old story</span>
-                            <span className="mx-auto block tracking-[-0.012em]">The economics have shifted; flexibility now lives in code</span>
-                            <span className="mx-auto block tracking-[0.018em]">Build the process, not the workaround</span>
+                            <span className="mx-auto block">
+                                The narrative has changed, but you are still buying the old story
+                            </span>
+                            <span className="mx-auto block tracking-[-0.012em]">
+                                The economics have shifted; flexibility now lives in code
+                            </span>
+                            <span className="mx-auto block tracking-[0.018em]">
+                                Build the process, not the workaround
+                            </span>
                             <span className="mx-auto block tracking-[0.026em]">Start from solid ground</span>
                             <span className="mx-auto block">This is LongLink</span>
                         </p>

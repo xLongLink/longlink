@@ -1,19 +1,17 @@
-import time
 import re
-from collections.abc import Iterator
-from pathlib import Path
-from urllib.parse import parse_qs, urlsplit
-
+import time
 import httpx2
 import pytest
+from src import auth as auth_module
+from main import app
+from pathlib import Path
+from containers import DockerRuntimeContainer
+from src.routes import auth as auth_routes
+from urllib.parse import parse_qs, urlsplit
 from docker.errors import DockerException
+from collections.abc import Iterator
 from fastapi.testclient import TestClient
 from authlib.integrations.starlette_client import OAuth
-from containers import DockerRuntimeContainer
-from main import app
-from src.routes import auth as auth_routes
-from src import auth as auth_module
-
 
 KEYCLOAK_IMAGE = "quay.io/keycloak/keycloak:25.0"
 KEYCLOAK_REALM_NAME = "dev"

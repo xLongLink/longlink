@@ -3,7 +3,6 @@ from click.testing import CliRunner
 from longlink.cli.init import init_command
 from longlink.constants import ROOT
 
-
 IGNORED_SCAFFOLD_NAMES = frozenset({".pytest_cache", ".venv", "__pycache__"})
 
 

@@ -6,7 +6,6 @@ It provides the shared foundation for auth, organizations, permissions, deployme
 
 When working in this repo, keep changes practical, small, and aligned with the existing API, SDK, and web boundaries. Preserve the core product goal: process-specific applications should be easy to understand, test, review, deploy, and maintain without proprietary platform lock-in.
 
-
 ## Architecture
 
 ```bash
@@ -58,7 +57,6 @@ longlink/
     └── rfc/                        # Reference RFC material
 ```
 
-
 ## Python Guidelines
 
 - Use safe, practical defaults that minimize required configuration.
@@ -86,26 +84,24 @@ longlink/
 - Avoid mocks and global runtime-state modifications where practical, preferring real implementations and explicit dependency boundaries.
 - Prefer simple, maintainable, conventional solutions over clever hacks.
 
+## JavaScript / TypeScript Guidelines
 
-## JavaScript / TypeScript  Guidelines
-
-
-- Validate inputs at system boundaries. 
-- Avoid any; prefer precise types, generics, unknown with narrowing, discriminated unions, and established validation libraries. 
+- Validate inputs at system boundaries.
+- Avoid any; prefer precise types, generics, unknown with narrowing, discriminated unions, and established validation libraries.
 - Avoid unsafe assertions and truthiness checks when 0, false, or empty strings are valid.
-- Structure and simplicity: Keep logic inline unless extraction improves reuse, readability, or separation of concerns. 
-- Avoid single-use helpers, unnecessary abstractions, duplicated state, dead code, and clever hacks. 
+- Structure and simplicity: Keep logic inline unless extraction improves reuse, readability, or separation of concerns.
+- Avoid single-use helpers, unnecessary abstractions, duplicated state, dead code, and clever hacks.
 - Keep changes small and follow existing project conventions.
-- Functions and documentation: Keep function signatures on one line when they fit. 
-- Add JSDoc to JavaScript functions and to TypeScript functions when behavior is not clear from the types. 
+- Functions and documentation: Keep function signatures on one line when they fit.
+- Add JSDoc to JavaScript functions and to TypeScript functions when behavior is not clear from the types.
 - Add a descriptive `// ...` comment before logic blocks, with one blank line before each comment.
-- Use clear domain terminology, concise filenames, consistent plural model names, and namespaced APIs for related factories or facades. 
+- Use clear domain terminology, concise filenames, consistent plural model names, and namespaced APIs for related factories or facades.
 - Avoid renaming imports unless it improves clarity.
-- Inline simple single-use prop types and className expressions. Keep named prop types when shared or complex. 
-- Extract components only for meaningful UI boundaries. 
+- Inline simple single-use prop types and className expressions. Keep named prop types when shared or complex.
+- Extract components only for meaningful UI boundaries.
 - Avoid unnecessary cards, duplicated derived state, index-based keys, and effects that do not synchronize with external systems.
 - Async and state: Prefer explicit async/await, handle every promise, use concurrency only when operations are independent, and clean up timers, listeners, subscriptions, and observers. Avoid global runtime-state changes unless unavoidable.
-- Prefer established libraries for validation, routing, forms, dates, URLs, parsing, and internationalization when they simplify the implementation. 
+- Prefer established libraries for validation, routing, forms, dates, URLs, parsing, and internationalization when they simplify the implementation.
 - Declare route response schemas and return raw domain objects or primitive values without reconstructing response models solely for validation.
-- Do not add tests unless explicitly requested. Test the real implementation, avoid mocks where practical, and never duplicate production logic in tests. 
+- Do not add tests unless explicitly requested. Test the real implementation, avoid mocks where practical, and never duplicate production logic in tests.
 - Run formatting, linting, type checking, and relevant existing tests, then review the implementation for further simplification.

@@ -53,12 +53,7 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
                     <Separator className="my-2 h-px w-full border-t border-border/60" />
 
                     <div className="space-y-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full"
-                            onClick={handleProviderSignIn}
-                        >
+                        <Button type="button" variant="outline" className="w-full" onClick={handleProviderSignIn}>
                             {t('actions.login')}
                         </Button>
                     </div>

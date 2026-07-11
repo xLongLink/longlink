@@ -1,9 +1,7 @@
 import sys
 import pytest
 import subprocess
-
 from click.testing import CliRunner
-
 from longlink.cli.testing import test_command as longlink_test_command
 
 

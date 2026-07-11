@@ -4,18 +4,8 @@ from pathlib import Path
 from sqlmodel import SQLModel
 from alembic.config import Config
 from alembic.script import ScriptDirectory
-from src.database.models import (
-    users,
-    computes,
-    storages,
-    databases,
-    locations,
-    operations,
-    association,
-    invitations,
-    applications,
-    organizations,
-)
+from src.database.models import (users, computes, storages, databases, locations, operations, association, invitations, applications,
+                                 organizations)
 
 pytestmark = pytest.mark.no_db
 _MODEL_MODULES = (

@@ -1,6 +1,6 @@
 from uuid import UUID
-from datetime import UTC, datetime
 from fastapi import HTTPException
+from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from src.database.session import session_scope

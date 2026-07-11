@@ -45,7 +45,6 @@ export function Avatar({ props, nodes }: Props) {
     return <UIAvatar size={size}>{renderNode(nodes, ctx)}</UIAvatar>;
 }
 
-
 /** Resolves a validated XML avatar size. */
 function resolveAvatarSize(value: string): AvatarSize {
     // Accept only avatar sizes supported by the UI component.

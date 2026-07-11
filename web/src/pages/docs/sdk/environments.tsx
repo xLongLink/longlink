@@ -29,8 +29,8 @@ export const content = (
         </Heading>
         <P>
             Use required fields for values that must be provided by the deployment, and optional fields for settings
-            that can fall back to a default. Create <Code>Env()</Code> in your own application code when you need to read
-            values; the <Code>LongLink</Code> app object does not need the user environment instance.
+            that can fall back to a default. Create <Code>Env()</Code> in your own application code when you need to
+            read values; the <Code>LongLink</Code> app object does not need the user environment instance.
         </P>
         <CodeBlock language="python">
             {

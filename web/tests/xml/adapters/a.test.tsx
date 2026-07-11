@@ -30,5 +30,4 @@ describe('A', () => {
 
         expect(output).toContain('href="/orgs/acme/apps/inventory/files/document.pdf"');
     });
-
 });

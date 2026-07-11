@@ -1,5 +1,4 @@
 # Template for the local development gateway Ingress.
-
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

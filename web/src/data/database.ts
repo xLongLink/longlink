@@ -14,7 +14,6 @@ export function useDatabases() {
     });
 }
 
-
 /** Fetches databases for one database registry. */
 export function useDatabaseInstances(databaseId: string) {
     const enabled = databaseId.length > 0;
@@ -24,7 +23,6 @@ export function useDatabaseInstances(databaseId: string) {
         parse: (value) => parseApiCollection(apiDatabaseInstanceSchema, value),
     });
 }
-
 
 /** Fetches schemas for one database inside a registry. */
 export function useDatabaseSchemas(databaseId: string, databaseName: string) {

@@ -1,9 +1,7 @@
 from types import SimpleNamespace
 from datetime import UTC, datetime
 from fastapi.testclient import TestClient
-from src.database.services import users
-from src.database.services import storage
-from src.database.services import locations
+from src.database.services import users, storage, locations
 
 db = SimpleNamespace(
     locations=locations,

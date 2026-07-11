@@ -1,13 +1,9 @@
 from types import SimpleNamespace
 from datetime import UTC, datetime, timedelta
-from src.models.operations import OperationKind
 from src.database.session import get_session
+from src.database.services import users, locations, operations, applications, organizations
+from src.models.operations import OperationKind
 from src.database.models.operations import Operation
-from src.database.services import users
-from src.database.services import locations
-from src.database.services import operations
-from src.database.services import applications
-from src.database.services import organizations
 
 db = SimpleNamespace(
     applications=applications,

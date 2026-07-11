@@ -1,8 +1,8 @@
-from types import SimpleNamespace
-from typing import cast
-from uuid import UUID
 import seed
 import pytest
+from uuid import UUID
+from types import SimpleNamespace
+from typing import cast
 
 pytestmark = pytest.mark.no_db
 

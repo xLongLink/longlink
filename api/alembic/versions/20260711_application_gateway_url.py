@@ -1,5 +1,5 @@
-import urllib.parse
 import sqlalchemy as sa
+import urllib.parse
 from alembic import op
 
 revision = "20260711_application_gateway_url"

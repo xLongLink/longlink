@@ -18,7 +18,6 @@ export function Badge({ props, nodes }: Props) {
     return <UIBadge variant={variant}>{text}</UIBadge>;
 }
 
-
 /** Resolves a validated XML badge variant. */
 function resolveBadgeVariant(value: string): BadgeVariant {
     // Accept only badge variants supported by the UI component.

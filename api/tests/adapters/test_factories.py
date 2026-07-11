@@ -1,12 +1,10 @@
 import pytest
-from uuid import UUID
-
 from src import adapters
+from uuid import UUID
 from src.models.storages import StorageKind
 from src.models.databases import DatabaseKind
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
-
 
 pytestmark = pytest.mark.no_db
 

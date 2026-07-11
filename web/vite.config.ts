@@ -11,7 +11,6 @@ export function resolveBuildOutDir(mode: string): string {
         : path.resolve(__dirname, '../api/src/.static/web');
 }
 
-
 /** Removes public crawler files from the embedded SDK bundle. */
 function sdkCrawlerCleanupPlugin(mode: string): Plugin {
     return {

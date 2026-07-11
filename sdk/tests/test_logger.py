@@ -1,6 +1,5 @@
 import logging
-
-from longlink.logger import ApiAccessFilter, ColorFormatter
+from longlink.logger import ColorFormatter, ApiAccessFilter
 
 
 def test_color_formatter_restores_record_level_name() -> None:

@@ -17,8 +17,8 @@ export const content = (
             Components
         </Heading>
         <P>
-            Component elements cover form controls, text, lists, tables, and small visual building blocks used inside SDK
-            XML pages.
+            Component elements cover form controls, text, lists, tables, and small visual building blocks used inside
+            SDK XML pages.
         </P>
         <Stack className="gap-3">
             <Heading id="icon" level="h2">
@@ -604,9 +604,7 @@ export const content = (
             <Heading id="list" level="h2">
                 List
             </Heading>
-            <P>
-                Ul and Ol render unordered or ordered list containers. Li renders one item inside either list.
-            </P>
+            <P>Ul and Ol render unordered or ordered list containers. Li renders one item inside either list.</P>
             <CodeBlock language="xml">{`<Ul>
   <Li i18n="..." />
   <Li i18n="..." />

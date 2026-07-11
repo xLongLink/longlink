@@ -1,7 +1,7 @@
 import pytest
 from fastapi import HTTPException
 from src.utils import roles
-from src.models.roles import ApplicationRoles, OrganizationRoles, PlatformRoles
+from src.models.roles import PlatformRoles, ApplicationRoles, OrganizationRoles
 
 
 @pytest.mark.parametrize(

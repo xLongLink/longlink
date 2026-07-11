@@ -1,11 +1,11 @@
 import sys
 import httpx2
 from fastapi import Request, HTTPException
-from src.environments import env
 from src.utils import roles
+from src.environments import env
 from src.models.roles import PlatformRoles
-from src.database.models.users import User
 from src.database.services import users
+from src.database.models.users import User
 
 # Authlib imports the HTTP client as `httpx`; use the configured `httpx2` package instead.
 sys.modules.setdefault("httpx", httpx2)

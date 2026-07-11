@@ -35,13 +35,7 @@ export function Button({ props, nodes }: Props) {
     // Render submit buttons with form-submit semantics.
     if (submit) {
         return (
-            <UIButton
-                disabled={disabled}
-                size={size}
-                type="submit"
-                variant={variant}
-                onClick={handleClick}
-            >
+            <UIButton disabled={disabled} size={size} type="submit" variant={variant} onClick={handleClick}>
                 {props.i18n ? childContent : null}
                 {text}
             </UIButton>
@@ -49,19 +43,12 @@ export function Button({ props, nodes }: Props) {
     }
 
     return (
-        <UIButton
-            disabled={disabled}
-            size={size}
-            type="button"
-            variant={variant}
-            onClick={handleClick}
-        >
+        <UIButton disabled={disabled} size={size} type="button" variant={variant} onClick={handleClick}>
             {props.i18n ? childContent : null}
             {text}
         </UIButton>
     );
 }
-
 
 /** Resolves a validated XML button size. */
 export function resolveButtonSize(value: string): ButtonSize {
@@ -80,7 +67,6 @@ export function resolveButtonSize(value: string): ButtonSize {
             throw new Error(`Unsupported Button size '${value}'`);
     }
 }
-
 
 /** Resolves a validated XML button variant. */
 export function resolveButtonVariant(value: string): ButtonVariant {

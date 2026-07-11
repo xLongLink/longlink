@@ -1,5 +1,5 @@
-from tenant.database.models.users import SharedUser, shared_users_table
 from tenant.constants import SHARED_USERS_TABLE
+from tenant.database.models.users import SharedUser, shared_users_table
 
 
 def test_shared_user_is_tenant_database_table() -> None:

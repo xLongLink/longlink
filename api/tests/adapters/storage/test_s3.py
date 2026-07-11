@@ -1,9 +1,9 @@
 import pytest
 import asyncio
+from containers import DockerRuntimeContainer
 from docker.errors import DockerException
 from collections.abc import AsyncIterator
 from botocore.exceptions import EndpointConnectionError
-from containers import DockerRuntimeContainer
 from src.adapters.storage.s3 import S3
 
 pytestmark = pytest.mark.no_db

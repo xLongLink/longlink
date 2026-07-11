@@ -1,10 +1,7 @@
-from datetime import UTC, datetime
-
 import pytest
+from datetime import UTC, datetime
 from botocore.exceptions import ClientError
-
 from src.adapters.storage.s3 import S3
-
 
 pytestmark = pytest.mark.no_db
 

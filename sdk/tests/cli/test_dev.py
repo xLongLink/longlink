@@ -1,10 +1,8 @@
 import sys
-import webbrowser
-
 import pytest
-from click.testing import CliRunner
-
+import webbrowser
 from longlink.cli import dev as cli_dev
+from click.testing import CliRunner
 
 
 class NonInteractiveInput:

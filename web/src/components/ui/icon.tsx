@@ -73,7 +73,6 @@ export function normalizeIconName(name: string): string {
     return kebabCase(name);
 }
 
-
 /** Returns a Lucide-compatible icon component for one normalized icon name. */
 export function createLucideIconComponent(name: string): LucideIcon | null {
     const normalizedName = normalizeIconName(name);
@@ -87,7 +86,6 @@ export function createLucideIconComponent(name: string): LucideIcon | null {
         return <Icon name={normalizedName} className={className} {...props} />;
     } as LucideIcon;
 }
-
 
 /** Renders one supported Lucide icon, falling back to Box for unsupported names. */
 export function Icon({ className, name, ...props }: LucideProps & { name: string }) {

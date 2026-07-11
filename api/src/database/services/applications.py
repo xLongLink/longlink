@@ -1,11 +1,11 @@
 from uuid import UUID
-from datetime import UTC, datetime
 from fastapi import HTTPException
+from datetime import UTC, datetime
+from src.utils import buckets
 from sqlalchemy import and_, select
 from sqlalchemy.orm import selectinload
 from src.models.roles import ApplicationRoles
 from src.models.statuses import ApplicationStatus
-from src.utils import buckets
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization

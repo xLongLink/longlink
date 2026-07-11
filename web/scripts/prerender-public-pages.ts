@@ -10,7 +10,6 @@ function escapeHtmlAttribute(value: string): string {
     return value.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
 
-
 /** Returns the output file path for one public route. */
 function routeOutputPath(routePath: string): string {
     if (routePath === '/') {
@@ -19,7 +18,6 @@ function routeOutputPath(routePath: string): string {
 
     return path.join(outputDirectory, routePath.replace(/^\//, ''), 'index.html');
 }
-
 
 /** Injects route-specific metadata and prerendered app content into the built shell. */
 function renderHtml(shell: string, page: PublicSeoPage): string {
@@ -31,9 +29,9 @@ function renderHtml(shell: string, page: PublicSeoPage): string {
             ? JSON.stringify({
                   '@context': 'https://schema.org',
                   '@type': 'WebSite',
-                      name: 'LongLink',
-                      url: canonicalUrl,
-                      hasPart: [
+                  name: 'LongLink',
+                  url: canonicalUrl,
+                  hasPart: [
                       { '@type': 'SiteNavigationElement', name: 'Pricing', url: `${SITE_URL}/pricing` },
                       { '@type': 'SiteNavigationElement', name: 'Documentation', url: `${SITE_URL}/docs` },
                       { '@type': 'SiteNavigationElement', name: 'Application SDK Docs', url: `${SITE_URL}/docs/sdk` },
@@ -61,7 +59,6 @@ function renderHtml(shell: string, page: PublicSeoPage): string {
         .replace(/<title>.*?<\/title>/, seoHead)
         .replace('<div id="root"></div>', `<div id="root">${render(page.path)}</div>`);
 }
-
 
 /** Writes prerendered HTML files for all public search pages. */
 async function main(): Promise<void> {

@@ -27,5 +27,4 @@ describe('Button', () => {
         expect(cart).toHaveLength(1);
         expect(cart[0]).toEqual({ name: 'Apples', quantity: 1, price: '$2.40' });
     });
-
 });

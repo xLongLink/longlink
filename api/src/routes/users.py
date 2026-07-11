@@ -1,11 +1,11 @@
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authsupport
-from src.operations.implementation import bootstrap
 from src.models.users import UserUpdate, UserProfile, UserListItem
+from src.database.services import users
 from src.database.models.users import User
+from src.operations.implementation import bootstrap
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
-from src.database.services import users
 
 router = APIRouter()
 

@@ -24,7 +24,6 @@ export function useApplications() {
     });
 }
 
-
 /** Fetches the shared location list for selectors and admin views. */
 export function useLocations(enabled = true) {
     return useCollectionQuery<ApiLocation>(enabled ? '/api/locations' : null, {
@@ -32,7 +31,6 @@ export function useLocations(enabled = true) {
         parse: (value) => parseApiCollection(apiLocationSchema, value),
     });
 }
-
 
 /** Fetches ISO country options for selectors. */
 export function useCountries(enabled = true) {
@@ -42,7 +40,6 @@ export function useCountries(enabled = true) {
     });
 }
 
-
 /** Fetches the operation list for admin views. */
 export function useOperations() {
     return useCollectionQuery<ApiOperation>('/api/operations', {
@@ -50,14 +47,12 @@ export function useOperations() {
     });
 }
 
-
 /** Fetches the organization list for admin views. */
 export function useOrganizations() {
     return useCollectionQuery<ApiOrganizationSummary>('/api/organizations', {
         parse: (value) => parseApiCollection(apiOrganizationSummarySchema, value),
     });
 }
-
 
 /** Fetches the full user list for admin views. */
 export function useUsers() {

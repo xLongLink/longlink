@@ -1,7 +1,7 @@
+import pycountry
 from typing import Annotated
 from pydantic import BaseModel
 from pydantic.functional_validators import BeforeValidator
-import pycountry
 
 DEFAULT_COUNTRY = "CH"
 

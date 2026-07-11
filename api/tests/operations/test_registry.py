@@ -1,5 +1,4 @@
-from src.operations import execute
-from src.operations import registry
+from src.operations import execute, registry
 from src.models.operations import OperationKind
 from src.database.models.operations import Operation
 

@@ -1,14 +1,14 @@
 from uuid import UUID
+from fastapi import HTTPException
 from datetime import UTC, datetime
 from src.utils import names, buckets
-from fastapi import HTTPException
 from sqlalchemy import select
 from tenant.models import User as TenantUser
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.roles import OrganizationRoles
-from src.models.countries import DEFAULT_COUNTRY
 from src.database.session import session_scope
+from src.models.countries import DEFAULT_COUNTRY
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.invitations import OrganizationInvitation

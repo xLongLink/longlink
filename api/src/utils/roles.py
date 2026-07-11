@@ -1,13 +1,6 @@
 from fastapi import HTTPException
-from src.models.roles import (
-    RoleName,
-    PlatformRoles,
-    ApplicationRoles,
-    PlatformRoleRanks,
-    OrganizationRoles,
-    ApplicationRoleRanks,
-    OrganizationRoleRanks,
-)
+from src.models.roles import (RoleName, PlatformRoles, ApplicationRoles, OrganizationRoles, PlatformRoleRanks, ApplicationRoleRanks,
+                              OrganizationRoleRanks)
 
 
 def rank(value: RoleName | None) -> int:

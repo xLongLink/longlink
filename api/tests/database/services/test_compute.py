@@ -1,12 +1,9 @@
 import pytest
-from fastapi import HTTPException
 from uuid import uuid4
 from types import SimpleNamespace
+from fastapi import HTTPException
+from src.database.services import compute, locations, applications, organizations
 from src.database.models.users import User
-from src.database.services import compute
-from src.database.services import locations
-from src.database.services import applications
-from src.database.services import organizations
 
 db = SimpleNamespace(
     applications=applications,

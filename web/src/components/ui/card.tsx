@@ -17,13 +17,7 @@ function Card({ className, ...props }: React.ComponentProps<'div'>) {
 
 /** Renders a card title. */
 function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
-    return (
-        <div
-            data-slot="card-title"
-            className={cn('text-base leading-snug font-medium', className)}
-            {...props}
-        />
-    );
+    return <div data-slot="card-title" className={cn('text-base leading-snug font-medium', className)} {...props} />;
 }
 
 /** Renders secondary card description text. */
@@ -44,13 +38,7 @@ function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
 
 /** Renders the main card body. */
 function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
-    return (
-        <div
-            data-slot="card-content"
-            className={cn('flex-1 px-4', className)}
-            {...props}
-        />
-    );
+    return <div data-slot="card-content" className={cn('flex-1 px-4', className)} {...props} />;
 }
 
 export { Card, CardAction, CardContent, CardDescription, CardTitle };

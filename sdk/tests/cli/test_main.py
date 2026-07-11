@@ -1,7 +1,6 @@
-import importlib
-
 import click
 import pytest
+import importlib
 
 cli_main = importlib.import_module("longlink.cli.main")
 

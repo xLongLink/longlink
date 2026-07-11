@@ -2,7 +2,7 @@ import json
 import yaml
 from typing import Any, TypeVar, cast
 from datetime import UTC, datetime
-from .library import APIObject, object_from_spec, kr8s
+from .library import APIObject, kr8s, object_from_spec
 
 KubernetesResource = TypeVar("KubernetesResource", bound=APIObject)
 

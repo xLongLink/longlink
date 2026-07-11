@@ -9,19 +9,8 @@ asyncio.iscoroutinefunction = inspect.iscoroutinefunction  # type: ignore[assign
 # Temporarily patch coroutine detection while importing kr8s.
 try:
     import kr8s
-    from kr8s.asyncio.objects import (
-        Pod,
-        Node,
-        Secret,
-        Service,
-        Ingress,
-        APIObject,
-        ConfigMap,
-        Deployment,
-        Namespace,
-        NetworkPolicy,
-        object_from_spec,
-    )
+    from kr8s.asyncio.objects import (Pod, Node, Secret, Ingress, Service, APIObject, ConfigMap, Namespace, Deployment, NetworkPolicy,
+                                      object_from_spec)
 
 # Always restore asyncio after kr8s import side effects finish.
 finally:

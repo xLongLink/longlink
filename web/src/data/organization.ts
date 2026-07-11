@@ -24,7 +24,6 @@ export function useOrganizationDatabaseResources(organizationId: string) {
     );
 }
 
-
 /** Fetches table previews for one organization database resource. */
 export function useOrganizationDatabaseResourceTables(
     organizationId: string,
@@ -40,7 +39,6 @@ export function useOrganizationDatabaseResourceTables(
         parse: (value) => parseApiCollection(apiOrganizationDatabaseTableSchema, value),
     });
 }
-
 
 /** Fetches storage resources for one organization. */
 export function useOrganizationStorageResources(organizationId: string) {

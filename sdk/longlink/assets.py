@@ -1,7 +1,7 @@
 from typing import cast
 from tenant.storage import assets as organization_assets
-from longlink.constants import ROOT
 from longlink.storage import create_fs
+from longlink.constants import ROOT
 from longlink.utils.settings import Envs
 
 LOCAL_LOGO_PATH = ROOT / ".static" / "assets" / "logo.svg"

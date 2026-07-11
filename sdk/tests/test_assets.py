@@ -1,8 +1,7 @@
 import pytest
 from pathlib import Path
-from tenant.storage import assets as organization_assets
-
 from longlink import assets
+from tenant.storage import assets as organization_assets
 
 
 def test_logo_returns_development_fallback_asset(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

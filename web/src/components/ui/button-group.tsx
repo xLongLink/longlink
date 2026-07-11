@@ -56,7 +56,11 @@ function ButtonGroupText({ className, render, ...props }: useRender.ComponentPro
     });
 }
 
-function ButtonGroupSeparator({ className, orientation = 'vertical', ...props }: React.ComponentProps<typeof Separator>) {
+function ButtonGroupSeparator({
+    className,
+    orientation = 'vertical',
+    ...props
+}: React.ComponentProps<typeof Separator>) {
     return (
         <Separator
             data-slot="button-group-separator"

@@ -5,10 +5,10 @@ from conftest import session_cookie
 from src.routes import auth as auth_routes
 from src.environments import env
 from src.models.users import UserProfile, UserListItem
-from fastapi.testclient import TestClient
-from src.database.models.users import User
 from src.routes.users import user_profile_payload
+from fastapi.testclient import TestClient
 from src.database.services import users as users_service
+from src.database.models.users import User
 
 
 class OidcClientStub:

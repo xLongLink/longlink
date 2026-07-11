@@ -391,9 +391,7 @@ export function Menu({
 
     /** Moves focus through rendered menu items. */
     function onKeyDown(event: React.KeyboardEvent<HTMLElement>) {
-        const items = Array.from(
-            event.currentTarget.querySelectorAll<HTMLElement>('[data-menu-item="true"]')
-        );
+        const items = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('[data-menu-item="true"]'));
 
         // Ignore keyboard navigation when no items are focusable.
         if (!items.length) {

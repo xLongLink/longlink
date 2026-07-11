@@ -3,9 +3,9 @@ from fastapi import Depends, Response, APIRouter, HTTPException
 from src.auth import authadmin, authsupport
 from src.utils import names
 from src.models.locations import LocationCreate, LocationResponse
+from src.database.services import locations
 from src.database.models.users import User
 from src.database.models.locations import Location
-from src.database.services import locations
 
 router = APIRouter()
 

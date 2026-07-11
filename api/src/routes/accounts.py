@@ -2,8 +2,8 @@ from fastapi import Request, APIRouter, HTTPException
 from src.auth import SessionAccountsService
 from src.models.users import UserListItem
 from src.models.common import SuccessResponse
-from src.database.models.users import User
 from src.database.services import users
+from src.database.models.users import User
 
 router = APIRouter()
 

@@ -1,6 +1,6 @@
+from . import assets
 from longlink.app import LongLink
 from longlink.router import Router
-from . import assets
 from longlink.storage import create_fs
 from longlink.database import User, create_db
 from longlink.utils.xml import Element, Longlink

@@ -1,15 +1,15 @@
-import pytest
 import time
+import pytest
 import psycopg
 from uuid import UUID
 from datetime import UTC, datetime
+from containers import DockerRuntimeContainer
 from sqlalchemy import text
 from docker.errors import DockerException
 from tenant.models import User as TenantUser
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine
-from containers import DockerRuntimeContainer
 from src.adapters.database.postgres import Postgres
 
 pytestmark = pytest.mark.no_db

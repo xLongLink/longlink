@@ -4,12 +4,12 @@ from typing import Any
 from datetime import UTC, datetime, timedelta
 from src.logger import logger
 from src.operations import registry
-from src.operations.constants import APPLICATION_VERIFY_STEP, RESOURCE_REMOVE_STEP
-from src.operations.implementation import resources, registries
 from src.models.statuses import ApplicationStatus
 from src.compute.resources import parse_kubernetes_timestamp
 from src.database.services import operations, applications, organizations
 from src.models.operations import OperationKind
+from src.operations.constants import RESOURCE_REMOVE_STEP, APPLICATION_VERIFY_STEP
+from src.operations.implementation import resources, registries
 from src.database.models.operations import Operation
 from src.database.models.applications import Application
 

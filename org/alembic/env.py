@@ -2,10 +2,10 @@ import asyncio
 from typing import Any
 from alembic import context
 from sqlalchemy import pool, text, engine_from_config
+from tenant.constants import SHARED_SCHEMA
 from sqlalchemy.engine import Connection, make_url
 from sqlalchemy.ext.asyncio import create_async_engine
 from tenant.database.models import shared_metadata
-from tenant.constants import SHARED_SCHEMA
 
 config = context.config
 target_metadata = shared_metadata

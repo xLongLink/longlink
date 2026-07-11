@@ -2,13 +2,13 @@ import re
 from uuid import UUID
 from typing import Any, ClassVar
 from datetime import datetime
-from contextlib import asynccontextmanager
-from collections.abc import AsyncIterator
 from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel
+from contextlib import asynccontextmanager
 from sqlalchemy import Uuid, Column, String, DateTime
 from tenant.utils import utcnow
 from sqlalchemy.orm import relationship, declared_attr
+from collections.abc import AsyncIterator
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import (AsyncEngine, async_sessionmaker,
                                     create_async_engine)

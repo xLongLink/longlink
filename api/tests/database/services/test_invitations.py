@@ -1,15 +1,13 @@
 import pytest
-from fastapi import HTTPException
 from uuid import uuid4
 from types import SimpleNamespace
+from fastapi import HTTPException
 from datetime import UTC, datetime
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session
+from src.database.services import locations, invitations, organizations
 from src.database.models.users import User
 from src.database.models.invitations import OrganizationInvitation
-from src.database.services import invitations
-from src.database.services import locations
-from src.database.services import organizations
 
 db = SimpleNamespace(
     invitations=invitations,

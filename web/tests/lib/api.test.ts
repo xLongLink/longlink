@@ -90,7 +90,9 @@ describe('fetchApiJson', () => {
             'fetch',
             async () => new Response('not json', { status: 500 }),
             async () => {
-                await expect(fetchApiJson('/api/broken')).rejects.toEqual(new ApiError('API request failed (500)', 500));
+                await expect(fetchApiJson('/api/broken')).rejects.toEqual(
+                    new ApiError('API request failed (500)', 500)
+                );
             }
         );
     });
@@ -98,16 +100,24 @@ describe('fetchApiJson', () => {
 
 describe('fetchApiText', () => {
     it('returns response text for successful requests', async () => {
-        await withGlobalValue('fetch', async () => new Response('plain logs'), async () => {
-            await expect(fetchApiText('/api/applications/app-1/logs')).resolves.toBe('plain logs');
-        });
+        await withGlobalValue(
+            'fetch',
+            async () => new Response('plain logs'),
+            async () => {
+                await expect(fetchApiText('/api/applications/app-1/logs')).resolves.toBe('plain logs');
+            }
+        );
     });
 });
 
 describe('fetchApiVoid', () => {
     it('accepts empty successful responses', async () => {
-        await withGlobalValue('fetch', async () => new Response(null, { status: 204 }), async () => {
-            await expect(fetchApiVoid('/api/empty')).resolves.toBeUndefined();
-        });
+        await withGlobalValue(
+            'fetch',
+            async () => new Response(null, { status: 204 }),
+            async () => {
+                await expect(fetchApiVoid('/api/empty')).resolves.toBeUndefined();
+            }
+        );
     });
 });

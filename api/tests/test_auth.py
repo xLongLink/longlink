@@ -1,8 +1,8 @@
 import pytest
-from fastapi import HTTPException
 from src import auth as auth_module
 from uuid import UUID
 from types import SimpleNamespace
+from fastapi import HTTPException
 from src.routes import auth as auth_routes
 from src.routes import users as users_routes
 from src.routes import organizations as organizations_routes

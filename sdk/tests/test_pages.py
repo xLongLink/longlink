@@ -1,4 +1,5 @@
-from longlink.pages import page_file_tab, page_file_route, normalize_page_path, extract_longlink_metadata
+from longlink.pages import (page_file_tab, page_file_route,
+                            normalize_page_path, extract_longlink_metadata)
 
 
 def test_page_metadata_helpers() -> None:

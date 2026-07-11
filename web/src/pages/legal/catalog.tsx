@@ -14,7 +14,6 @@ function legalPage(page: Omit<ArticlePage, 'breadcrumbs'>): ArticlePage {
     };
 }
 
-
 const termsPage = legalPage({
     title: 'Terms of Service',
     path: '/terms',

@@ -94,9 +94,9 @@ with fs.open("reports/example.txt", "wb") as f:
             Assets
         </Heading>
         <P>
-            Organization-level assets live in shared storage. The SDK exposes <Code>longlink.assets.logo()</Code> for the
-            organization logo, using a bundled fallback in development and testing and the organization shared bucket in
-            production.
+            Organization-level assets live in shared storage. The SDK exposes <Code>longlink.assets.logo()</Code> for
+            the organization logo, using a bundled fallback in development and testing and the organization shared
+            bucket in production.
         </P>
         <CodeBlock language="python">{`from longlink import assets
 

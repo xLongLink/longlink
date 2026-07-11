@@ -59,7 +59,6 @@ export function Tabs({ props, nodes }: Props) {
     );
 }
 
-
 /** Resolves a validated XML tabs orientation. */
 function resolveTabsOrientation(value: string): TabsOrientation {
     // Accept only orientations supported by the UI component.

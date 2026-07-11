@@ -4,13 +4,13 @@ from uuid import UUID
 from datetime import UTC, datetime
 from src.routes import operations as operation_routes
 from src.operations import worker as operation_worker
-from src.operations.implementation import applications as application_operations
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
 from src.models.locations import LocationProvider, LocationResponse
 from src.models.operations import OperationKind, OperationStatus
 from src.models.organizations import OrganizationDetails
 from src.database.models.users import User
+from src.operations.implementation import applications as application_operations
 from src.database.models.operations import Operation
 from src.database.models.applications import Application
 

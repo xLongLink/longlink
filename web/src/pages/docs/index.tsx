@@ -161,7 +161,7 @@ export const content = (
                             </div>
                         </TableCell>
                         <TableCell className="whitespace-normal text-muted-foreground">
-                            Just write to the support, not even AI understand the documentation. 
+                            Just write to the support, not even AI understand the documentation.
                         </TableCell>
                     </TableRow>
                     <TableRow>
@@ -187,7 +187,7 @@ export const content = (
                             </div>
                         </TableCell>
                         <TableCell className="whitespace-normal text-muted-foreground">
-                            Not sure, an intern has set this up a few years ago. 
+                            Not sure, an intern has set this up a few years ago.
                         </TableCell>
                     </TableRow>
                     <TableRow>
@@ -228,8 +228,8 @@ export const content = (
         <P>
             However, faster development does not automatically produce reliable or maintainable systems. Every
             application still requires a common foundation: authentication, organizations, permissions, databases,
-            storage, deployment, routing, logs, monitoring, and a consistent operating environment. Rebuilding this layer
-            for every application creates costs that are ultimately reflected in the final price.
+            storage, deployment, routing, logs, monitoring, and a consistent operating environment. Rebuilding this
+            layer for every application creates costs that are ultimately reflected in the final price.
         </P>
         <P>
             LongLink provides this foundation, allowing teams to build and operate business-process applications as
@@ -239,8 +239,8 @@ export const content = (
         <P>
             This approach brings the way businesses define their operations closer to software-engineering practices.
             Processes become explicit models, states, rules, actions, and interfaces, creating systems that are more
-            modular, structured, and less prone to error, as well as easier to test, review, audit, document, extend, and
-            maintain.
+            modular, structured, and less prone to error, as well as easier to test, review, audit, document, extend,
+            and maintain.
         </P>
         <P>
             Python is central to this model. It provides a practical bridge between business knowledge, professional
@@ -250,8 +250,6 @@ export const content = (
             representation in AI training data and development workflows improves the quality and precision of
             AI-assisted development.
         </P>
-        <P>
-            And, of course, is open source.
-        </P>
+        <P>And, of course, is open source.</P>
     </Stack>
 );
