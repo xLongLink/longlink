@@ -1,7 +1,6 @@
 import i18next, { type Resource } from 'i18next';
 import { useEffect, type ReactNode } from 'react';
 import { I18nextProvider, initReactI18next, useTranslation as useReactTranslation } from 'react-i18next';
-
 import { DEFAULT_LANGUAGE, resolveSupportedLanguage, type Language, type UserLanguage } from '@/lib/languages';
 import defaultTranslationCatalog from '@/translations/en.json';
 

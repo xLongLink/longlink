@@ -8,7 +8,6 @@ import {
 import startCase from 'lodash/startCase';
 import { Fragment } from 'react';
 import { Link, useLocation } from 'react-router';
-
 import { Wordmark } from '@/components/Wordmark';
 
 type BreadcrumbTrailItem = {

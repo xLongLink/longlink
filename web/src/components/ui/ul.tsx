@@ -1,5 +1,4 @@
 import * as React from 'react';
-
 import { cn } from '@/lib/utils';
 
 /** Renders an unordered list with typographic defaults. */

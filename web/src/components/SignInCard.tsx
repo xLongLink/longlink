@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
-
 import { Wordmark } from '@/components/Wordmark';
 import { useUser } from '@/hooks/use-user';
 import { apiUrl } from '@/lib/api';

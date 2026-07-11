@@ -1,5 +1,4 @@
 import { Link } from 'react-router';
-
 import { CodeBlock } from '@/components/CodeBlock';
 import { Code } from '@/components/ui/code';
 import { Heading } from '@/components/ui/heading';

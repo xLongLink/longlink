@@ -1,6 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
-
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { UserProfile } from '@/components/Profile';
 import { Wordmark } from '@/components/Wordmark';
@@ -8,7 +7,6 @@ import { useUserProfile } from '@/hooks/use-user';
 import { useTranslation } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router';
-
 import TopLayout from './TopLayout';
 
 type LayoutTab = {

@@ -1,5 +1,4 @@
 import { Tabs as TabsPrimitive } from '@base-ui/react/tabs';
-
 import { CodeBlock } from '@/components/CodeBlock';
 
 type CodeTabItem = {

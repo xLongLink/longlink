@@ -1,9 +1,7 @@
 import { Package } from 'lucide-react';
-
 import { GitHub } from '@/svg/GitHub';
 import { LinkedIn } from '@/svg/LinkedIn';
 import { Link } from 'react-router';
-
 import { Wordmark } from '@/components/Wordmark';
 
 /** Renders the public landing page footer. */

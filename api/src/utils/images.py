@@ -46,7 +46,7 @@ async def metadata(image: str) -> LongLinkMetadata | None:
         image_reference = parse_reference(image)
         registry_url = _registry_url(image_reference.registry)
     except ValueError as exc:
-        logger.warning("Failed to inspect image metadata for '%s': %s", image, exc)
+        logger.warning("Failed to inspect image metadata: %s", exc)
         return None
 
     # Fetch registry data with TLS matching the registry URL.
@@ -138,7 +138,7 @@ async def metadata(image: str) -> LongLinkMetadata | None:
 
             return result
         except (httpx2.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
-            logger.warning("Failed to inspect image metadata for '%s': %s", image, exc)
+            logger.warning("Failed to inspect image metadata: %s", exc)
             return None
 
 

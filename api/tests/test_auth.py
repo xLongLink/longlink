@@ -8,9 +8,11 @@ from src.routes import users as users_routes
 from src.routes import organizations as organizations_routes
 from src.models.auth import OidcUserInfo
 from src.models.roles import PlatformRoles
-from src.models.users import UserUpdate, UserProfile
+from src.models.users import UserUpdate
 from src.database.services import users as users_service_module
 from src.database.models.users import User
+from src.database.models.association import UserOrganization
+from src.database.models.organizations import Organization
 
 pytestmark = pytest.mark.no_db
 
@@ -128,24 +130,6 @@ def user(oidc: str = "oidc-user", role: PlatformRoles = PlatformRoles.user) -> U
         name=f"{oidc} name",
         avatar="",
         role=role,
-    )
-
-
-def user_profile(profile_user: User) -> UserProfile:
-    """Build a user profile for direct route tests."""
-
-    return UserProfile(
-        id=profile_user.id,
-        name=profile_user.name,
-        email=profile_user.email,
-        avatar=profile_user.avatar,
-        role=profile_user.role,
-        theme=profile_user.theme,
-        accent=profile_user.accent,
-        radius=profile_user.radius,
-        language=profile_user.language,
-        oidc=profile_user.oidc,
-        organizations=[],
     )
 
 
@@ -309,7 +293,7 @@ async def test_patch_me_updates_profile_and_resyncs_organizations(monkeypatch: p
     current_user = user("patch-user")
     updated_user = user("patch-user")
     updated_user.name = "Updated User"
-    profile = user_profile(updated_user)
+    profile: tuple[User, list[tuple[Organization, UserOrganization]]] = (updated_user, [])
     upsert_calls: list[dict[str, object]] = []
     sync_calls: list[User] = []
 
@@ -319,7 +303,7 @@ async def test_patch_me_updates_profile_and_resyncs_organizations(monkeypatch: p
         upsert_calls.append(kwargs)
         return updated_user
 
-    async def fake_profile(user_id: UUID) -> UserProfile:
+    async def fake_profile(user_id: UUID) -> tuple[User, list[tuple[Organization, UserOrganization]]]:
         """Return the updated profile."""
 
         assert user_id == updated_user.id
@@ -340,7 +324,7 @@ async def test_patch_me_updates_profile_and_resyncs_organizations(monkeypatch: p
 
     result = await users_routes.patch_me(UserUpdate(name="Updated User"), current_user)
 
-    assert result == profile
+    assert result == users_routes.user_profile_payload(profile)
     assert upsert_calls == [{"oidc": "patch-user", "name": "Updated User"}]
     assert sync_calls == [updated_user]
 

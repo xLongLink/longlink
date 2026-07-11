@@ -7,6 +7,7 @@ from src.environments import env
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
 from src.database.models.users import User
+from src.routes.users import user_profile_payload
 from src.database.services import users as users_service
 
 
@@ -179,7 +180,7 @@ async def test_activate_account_switches_the_active_session_account(users: tuple
     assert me_response.status_code == 200
     current_profile = await users_service.profile(user_two.id)
     assert current_profile is not None
-    assert me_response.json() == UserProfile.model_validate(current_profile).model_dump(mode="json")
+    assert me_response.json() == UserProfile.model_validate(user_profile_payload(current_profile)).model_dump(mode="json")
 
 
 async def test_activate_account_rejects_account_not_saved_in_session(users: tuple[User, User, User]) -> None:

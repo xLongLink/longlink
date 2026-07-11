@@ -1,5 +1,4 @@
 import { useQuery, useQueryClient, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
-
 import { ApiError, apiQueryKey, fetchApiJson } from '@/lib/api';
 
 type UseApiQueryOptions<TQueryFnData, TData = TQueryFnData> = Omit<

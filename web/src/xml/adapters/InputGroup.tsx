@@ -11,7 +11,6 @@ import { resolveTranslation } from '@/xml/core/i18n';
 import { renderNode } from '@/xml/core/node';
 import type { Props } from '@/xml/types';
 import { resolveXmlBoolean, resolveXmlNumber, resolveXmlString, resolveXmlValue } from './props';
-
 import { readBindableFileInputValue, useBindableValue } from './binding';
 
 /** Renders the shared input group shell. */

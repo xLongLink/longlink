@@ -2,7 +2,6 @@ import { Textarea as UITextarea } from '@/components/ui/textarea';
 import { useXmlContext } from '@/xml/core/context';
 import type { Props } from '@/xml/types';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
-
 import { useBindableValue } from './binding';
 
 /** Renders a shadcn-backed textarea with optional reactive state binding. */

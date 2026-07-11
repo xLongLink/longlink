@@ -1,6 +1,5 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-
 import { publicSeoPages, SITE_URL, type PublicSeoPage } from '../src/lib/seo';
 import { render } from '../src/entry-server';
 

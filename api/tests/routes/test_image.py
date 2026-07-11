@@ -81,4 +81,4 @@ def test_inspect_image_returns_404_when_metadata_missing(clients, monkeypatch) -
 
     # Assert
     assert response.status_code == 404
-    assert response.json() == {"detail": "Image metadata 'ghcr.io/longlink/dashboard:latest' not found"}
+    assert response.json() == {"detail": "Image metadata not found"}

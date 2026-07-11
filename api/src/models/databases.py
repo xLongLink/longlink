@@ -1,19 +1,20 @@
-from enum import Enum
+import urllib.parse
+from enum import StrEnum
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.users import UserSummary
 from src.models.icons import Icon
 from src.models.statuses import ApplicationStatus
 
 
-class DatabaseKind(str, Enum):
+class DatabaseKind(StrEnum):
     """Supported database registry kinds."""
 
     postgresql = "postgresql"
 
 
-class OrganizationDatabaseResourceKind(str, Enum):
+class OrganizationDatabaseResourceKind(StrEnum):
     """Supported organization database resource kinds."""
 
     schema = "schema"
@@ -24,16 +25,48 @@ class DatabaseRegistryCreate(BaseModel):
 
     # Metadata
     kind: DatabaseKind
-    name: str
+    name: str = Field(min_length=1, max_length=128)
 
     # Connection
-    host: str
-    port: int
-    password: str
-    username: str
+    host: str = Field(min_length=1, max_length=255)
+    port: int = Field(ge=1, le=65535)
+    password: str = Field(min_length=1, max_length=255)
+    username: str = Field(min_length=1, max_length=255)
 
     # Relationships
     location_id: UUID
+
+    @field_validator("host")
+    @classmethod
+    def validate_host(cls, host: str) -> str:
+        """Validate a database host value accepted from registry requests."""
+
+        value = host.strip().rstrip("/")
+        parsed_host = urllib.parse.urlsplit(f"//{value}")
+
+        # Database hosts must be plain host or host:port values without URL syntax or credentials.
+        if (
+            not value
+            or "://" in value
+            or parsed_host.hostname is None
+            or parsed_host.username
+            or parsed_host.password
+            or parsed_host.path not in {"", "/"}
+            or parsed_host.query
+            or parsed_host.fragment
+            or any(
+                character.isspace() or ord(character) < 32 or ord(character) == 127 for character in value
+            )
+        ):
+            raise ValueError("Database host is invalid")
+
+        # Access the port property so invalid numeric ports are rejected by urllib.
+        try:
+            parsed_host.port
+        except ValueError as exc:
+            raise ValueError("Database host port is invalid") from exc
+
+        return value
 
 
 class DatabaseDatabaseResponse(BaseModel):

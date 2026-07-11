@@ -1,7 +1,6 @@
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Link, useParams } from 'react-router';
-
 import { DataTable } from '@/components/DataTable';
 import { useStorageBuckets, useStorages } from '@/data/storage';
 import { useTranslation } from '@/lib/i18n';

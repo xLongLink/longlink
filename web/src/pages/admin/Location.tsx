@@ -1,11 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { useTranslation } from '@/lib/i18n';
 import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
 import { toast } from 'sonner';
-
 import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
 import { DataTable } from '@/components/DataTable';
 import CreateLocation from '@/components/dialogs/CreateLocation';

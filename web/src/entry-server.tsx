@@ -5,7 +5,6 @@ import { queryClient } from '@/lib/react-query';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderToString } from 'react-dom/server';
 import { RouterProvider, createMemoryRouter } from 'react-router';
-
 import { getRoutes } from './App';
 
 /** Renders one public route to static HTML for the API website bundle. */

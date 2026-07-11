@@ -1,8 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 import { Link } from 'react-router';
-
 import { buttonVariants } from '@/components/ui/button';
-
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
 import { useTranslation } from '@/lib/i18n';

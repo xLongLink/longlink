@@ -66,14 +66,61 @@ async def list_organizations(_user: User = Depends(authsupport)) -> list[Organiz
 async def get_organization(organization_id: UUID, user: User = Depends(authuser)) -> dict[str, object]:
     """Return one organization and its metadata."""
 
-    await organization_access(organization_id, user)
-    organization = await organizations.get(organization_id, application_user_id=user.id)
+    access = await organization_access(organization_id, user)
+    organization = await organizations.get(organization_id)
 
     # Guard against deleted or missing organizations.
     if organization is None:
         raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
-    return organization
+    active_applications = sorted(await applications.list_by_organization(organization.id), key=lambda item: item.name)
+    application_memberships = await applications.list_user_memberships(organization.id, user.id)
+    application_roles = {membership.application_id: membership.role_name for membership in application_memberships}
+    memberships = await organizations.list_members(organization.id)
+    active_invitations = []
+
+    # Show invitations only to organization managers.
+    if access.role in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
+        active_invitations = await invitations.list_by_organization(organization.id)
+
+    return {
+        "id": organization.id,
+        "name": organization.name,
+        "slug": organization.slug,
+        "avatar": organization.avatar,
+        "country": organization.country,
+        "location": organization.location,
+        "location_id": organization.location_id,
+        "shared_storage_bucket_name": organization.shared_storage_bucket_name,
+        "created_at": organization.created_at,
+        "updated_at": organization.updated_at,
+        "created_by": organization.created_by,
+        "updated_by": organization.updated_by,
+        "deleted_at": organization.deleted_at,
+        "deleted_by": organization.deleted_by,
+        "users": [
+            {
+                "id": member.id,
+                "name": member.name,
+                "email": member.email,
+                "avatar": member.avatar,
+                "role": membership.role_name,
+                "last_access_at": membership.updated_at,
+            }
+            for member, membership in memberships
+        ],
+        "invitations": active_invitations,
+        "applications": [
+            {
+                **application.model_dump(),
+                "created_by": application.created_by,
+                "updated_by": application.updated_by,
+                "deleted_by": application.deleted_by,
+                "role": application_roles.get(application.id),
+            }
+            for application in active_applications
+        ],
+    }
 
 
 @router.get(
@@ -85,11 +132,24 @@ async def list_organization_applications(
 ) -> list[dict[str, object]]:
     """Return the applications for one organization."""
 
-    return await applications.list_responses(
+    active_applications = await applications.list_by_organization(member_access.organization.id)
+    application_memberships = await applications.list_user_memberships(
         member_access.organization.id,
         member_access.user.id,
-        member_access.user,
     )
+    application_roles = {membership.application_id: membership.role_name for membership in application_memberships}
+
+    return [
+        {
+            **application.model_dump(),
+            "organization": application.organization,
+            "created_by": application.created_by or member_access.user,
+            "updated_by": application.updated_by or application.created_by or member_access.user,
+            "deleted_by": application.deleted_by,
+            "role": application_roles.get(application.id),
+        }
+        for application in active_applications
+    ]
 
 
 @router.get(

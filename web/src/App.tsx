@@ -3,7 +3,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { useOrganization } from '@/hooks/use-organization';
 import { useUserProfile } from '@/hooks/use-user';
 import ArticleLayout from '@/layout/ArticleLayout';
-import { canAccessApplication, canViewApplicationLogs } from '@/lib/roles';
+import { canAccessApplication } from '@/lib/roles';
 import Admin from '@/pages/Admin';
 import AdminApplications from '@/pages/admin/Applications';
 import AdminCompute from '@/pages/admin/Compute';
@@ -251,14 +251,12 @@ function SdkApplicationView() {
 function OrganizationApplicationView() {
     const { organization = '', application = '' } = useParams();
     const { organization: organizationDetails, isLoading, error } = useOrganization(organization);
-    const { role: platformRole, organizations: userOrganizations, language } = useUserProfile();
+    const { organizations: userOrganizations, language } = useUserProfile();
     const organizationApplication = organizationDetails?.applications.find((item) => item.slug === application);
     const organizationMembership = userOrganizations.find((item) => item.slug === organization);
     const organizationRole = organizationMembership?.role ?? null;
     const applicationRole = organizationApplication?.role ?? null;
     const hasApplicationAccess = canAccessApplication(organizationRole, applicationRole);
-    const canViewLogs = platformRole === 'administrator' || canViewApplicationLogs(organizationRole, applicationRole);
-    const applicationProxyUrl = organizationApplication ? `/api/applications/${organizationApplication.id}/proxy/` : '';
 
     // Show the shell while organization/application access is still resolving.
     if (isLoading) {
@@ -272,11 +270,8 @@ function OrganizationApplicationView() {
 
     return (
         <View
-            applicationId={organizationApplication.id}
-            applicationName={organizationApplication.name}
-            canViewLogs={canViewLogs}
             applicationStatus={organizationApplication.status}
-            metadata={`${applicationProxyUrl}metadata.json`}
+            metadata={`/api/applications/${organizationApplication.id}/proxy/metadata.json`}
             locale={language}
         />
     );

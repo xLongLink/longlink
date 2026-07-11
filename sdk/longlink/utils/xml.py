@@ -1,3 +1,4 @@
+import re
 from lxml import etree
 from typing import Any
 from pathlib import Path
@@ -5,6 +6,7 @@ from functools import cache
 from longlink.constants import ROOT
 
 XSD_NAMESPACE = {"xsd": "http://www.w3.org/2001/XMLSchema"}
+UNSUPPORTED_XML_MARKUP_PATTERN = re.compile(r"<!\s*(?:DOCTYPE|ENTITY)\b|<!\[CDATA\[", re.IGNORECASE)
 
 
 @cache
@@ -61,6 +63,10 @@ class Element:
 
     def validate(self) -> None:
         """Validate the XML document against the configured XSD schema."""
+
+        # Reject XML constructs that the web runtime parser does not support.
+        if UNSUPPORTED_XML_MARKUP_PATTERN.search(self.content):
+            raise ValueError("XML DOCTYPE, ENTITY, and CDATA constructs are not supported")
 
         parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
         schema_doc = etree.parse(str(self._schema_file_path()), parser)

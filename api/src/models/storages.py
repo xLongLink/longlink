@@ -1,19 +1,21 @@
-from enum import Enum
+import urllib.parse
+from enum import StrEnum
 from uuid import UUID
+from typing import Literal
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.users import UserSummary
 from src.models.icons import Icon
 from src.models.statuses import ApplicationStatus
 
 
-class StorageKind(str, Enum):
+class StorageKind(StrEnum):
     """Supported storage registry kinds."""
 
     s3 = "s3"
 
 
-class OrganizationStorageResourceKind(str, Enum):
+class OrganizationStorageResourceKind(StrEnum):
     """Supported organization storage resource kinds."""
 
     shared_bucket = "shared_bucket"
@@ -42,16 +44,51 @@ class StorageRegistryCreate(BaseModel):
     # Metadata
     kind: StorageKind
     name: str
-    protocol: str
+    protocol: Literal["http", "https"]
 
     # Connection
-    endpoint_url: str
+    endpoint_url: str = Field(min_length=1, max_length=255)
     access_key_id: str
     secret_access_key: str
-    runtime_endpoint_url: str | None = None
+    runtime_endpoint_url: str | None = Field(default=None, max_length=255)
 
     # Relationships
     location_id: UUID
+
+    @field_validator("endpoint_url", "runtime_endpoint_url")
+    @classmethod
+    def validate_endpoint_url(cls, endpoint_url: str | None) -> str | None:
+        """Validate storage endpoint URLs accepted from registry requests."""
+
+        # Optional runtime endpoints can fall back to the control endpoint.
+        if endpoint_url is None:
+            return None
+
+        value = endpoint_url.strip().rstrip("/")
+
+        # Endpoint URLs must be ordinary HTTP(S) URLs without embedded credentials.
+        parsed_url = urllib.parse.urlsplit(value)
+        if (
+            not value
+            or parsed_url.scheme not in {"http", "https"}
+            or not parsed_url.netloc
+            or parsed_url.username
+            or parsed_url.password
+            or parsed_url.query
+            or parsed_url.fragment
+            or any(
+                character.isspace() or ord(character) < 32 or ord(character) == 127 for character in value
+            )
+        ):
+            raise ValueError("Storage endpoint URL is invalid")
+
+        # Access the port property so invalid numeric ports are rejected by urllib.
+        try:
+            parsed_url.port
+        except ValueError as exc:
+            raise ValueError("Storage endpoint URL port is invalid") from exc
+
+        return value
 
 
 class StorageBucketResponse(BaseModel):

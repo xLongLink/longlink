@@ -1,7 +1,6 @@
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
-
 import { DataTable } from '@/components/DataTable';
 import { useOperations } from '@/data/admin';
 import { useTranslation } from '@/lib/i18n';

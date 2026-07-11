@@ -34,9 +34,6 @@ class Application(SQLModel, table=True):
     # Storage
     storage_bucket_name: str | None = Field(default=None, max_length=63)
 
-    # Runtime
-    gateway_url: str | None = Field(default=None, max_length=512)
-
     # Metadata
     name: str = Field(max_length=100)
     slug: str = Field(max_length=100)

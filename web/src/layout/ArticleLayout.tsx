@@ -1,7 +1,6 @@
 import { useTranslation } from '@/lib/i18n';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
-
 import { Sidebar } from '@/components/Sidebar';
 import { useUserProfile } from '@/hooks/use-user';
 import { cn, formatDate } from '@/lib/utils';

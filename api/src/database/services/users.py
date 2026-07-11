@@ -28,8 +28,8 @@ async def get_by_id(user_id: UUID) -> User | None:
         return result.scalar_one_or_none()
 
 
-async def profile(user_id: UUID) -> dict[str, object] | None:
-    """Return one user profile with membership roles included."""
+async def profile(user_id: UUID) -> tuple[User, list[tuple[Organization, UserOrganization]]] | None:
+    """Return one user with active organization membership rows."""
 
     # Load the profile data through one managed session.
     async with session_scope() as session:
@@ -44,7 +44,7 @@ async def profile(user_id: UUID) -> dict[str, object] | None:
 
         # Load organization memberships and their locations without lazy IO.
         organization_result = await session.execute(
-            select(Organization, UserOrganization.role_name)
+            select(Organization, UserOrganization)
             .join(UserOrganization, Organization.id == UserOrganization.organization_id)
             .options(
                 selectinload(Organization.location),
@@ -56,30 +56,7 @@ async def profile(user_id: UUID) -> dict[str, object] | None:
             )
         )
 
-        return {
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "avatar": user.avatar,
-            "role": user.role,
-            "theme": user.theme,
-            "accent": user.accent,
-            "radius": user.radius,
-            "language": user.language,
-            "oidc": user.oidc,
-            "organizations": [
-                {
-                    "id": organization.id,
-                    "name": organization.name,
-                    "slug": organization.slug,
-                    "avatar": organization.avatar,
-                    "country": organization.country,
-                    "location": organization.location,
-                    "role": role_name,
-                }
-                for organization, role_name in organization_result.all()
-            ],
-        }
+        return user, [(organization, membership) for organization, membership in organization_result.all()]
 
 
 async def upsert(

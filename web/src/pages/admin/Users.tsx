@@ -11,7 +11,6 @@ import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
 import { MoreVertical } from 'lucide-react';
 import { toast } from 'sonner';
-
 import { DataTable } from '@/components/DataTable';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUsers } from '@/data/admin';

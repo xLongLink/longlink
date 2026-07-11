@@ -14,7 +14,7 @@ class OrganizationCreate(BaseModel):
 
     # Metadata
     name: str = Field(min_length=1, max_length=128)
-    avatar: str | None = None
+    avatar: str = Field(default="", max_length=2048)
     country: Country = DEFAULT_COUNTRY
 
     # Location

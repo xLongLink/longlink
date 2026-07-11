@@ -1,5 +1,4 @@
 import type { UseQueryResult } from '@tanstack/react-query';
-
 import { useApiQuery } from '@/hooks/use-api';
 
 type UseCollectionQueryOptions<TData> = {

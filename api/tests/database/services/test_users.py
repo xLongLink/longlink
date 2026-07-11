@@ -116,14 +116,16 @@ async def test_profile_returns_created_organization_membership() -> None:
 
     # Assert
     assert profile is not None
-    profile_organization = profile["organizations"][0]
-    assert profile_organization["id"] == organization.id
-    assert profile_organization["name"] == "test"
-    assert profile_organization["slug"] == organization.slug
-    assert profile_organization["avatar"] == "https://example.com/organizations/test.png"
-    assert profile_organization["country"] == "CH"
-    assert profile_organization["location"].id == location.id
-    assert profile_organization["role"] == OrganizationRoles.owner
+    profile_user, memberships = profile
+    profile_organization, profile_membership = memberships[0]
+    assert profile_user.id == user.id
+    assert profile_organization.id == organization.id
+    assert profile_organization.name == "test"
+    assert profile_organization.slug == organization.slug
+    assert profile_organization.avatar == "https://example.com/organizations/test.png"
+    assert profile_organization.country == "CH"
+    assert profile_organization.location.id == location.id
+    assert profile_membership.role_name == OrganizationRoles.owner
 
 
 async def test_upsert_does_not_mark_second_user_as_admin() -> None:

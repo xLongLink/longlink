@@ -3,7 +3,6 @@ import Layout from '@/layout/Layout';
 import NotFound from '@/pages/NotFound';
 import type { ReactElement } from 'react';
 import { useLocation } from 'react-router';
-
 import { SignInCard } from '@/components/SignInCard';
 import { hasMinimumRole, type PlatformRole } from '@/lib/roles';
 

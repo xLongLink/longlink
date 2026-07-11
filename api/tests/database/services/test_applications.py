@@ -154,23 +154,23 @@ async def test_get_services_return_active_applications_and_respect_include_delet
     assert included_reference.deleted_id == user.id
 
 
-async def test_response_list_services_include_expected_application_roles() -> None:
-    """Return application API payloads with admin list and organization-scoped roles."""
+async def test_application_list_services_return_models_and_memberships() -> None:
+    """Return application rows and membership rows for route-level response shaping."""
 
     # Arrange
     user, organization, application = await create_application_context("responses")
 
     # Act
-    all_responses = await db.applications.fetch_all_responses(user)
-    organization_responses = await db.applications.list_responses(organization.id, user.id, user)
+    all_applications = await db.applications.fetch_all()
+    organization_applications = await db.applications.list_by_organization(organization.id)
+    memberships = await db.applications.list_user_memberships(organization.id, user.id)
 
     # Assert
-    assert len(all_responses) == 1
-    assert all_responses[0]["id"] == application.id
-    assert all_responses[0]["role"] is None
-    assert len(organization_responses) == 1
-    assert organization_responses[0]["id"] == application.id
-    assert organization_responses[0]["role"] == ApplicationRoles.admin
+    assert [item.id for item in all_applications] == [application.id]
+    assert [item.id for item in organization_applications] == [application.id]
+    assert len(memberships) == 1
+    assert memberships[0].application_id == application.id
+    assert memberships[0].role_name == ApplicationRoles.admin
 
 
 async def test_list_members_includes_organization_members_with_optional_application_roles(
@@ -203,13 +203,19 @@ async def test_list_members_includes_organization_members_with_optional_applicat
 
     # Act
     members = await db.applications.list_members(application.id, organization.id)
-    members_by_id = {member.id: member for member in members}
+    members_by_id = {
+        member.id: (organization_membership, application_membership)
+        for member, organization_membership, application_membership in members
+    }
 
     # Assert
-    assert members_by_id[owner.id].organization_role == OrganizationRoles.owner
-    assert members_by_id[owner.id].application_role == ApplicationRoles.admin
-    assert members_by_id[member.id].organization_role == OrganizationRoles.read
-    assert members_by_id[member.id].application_role is None
+    owner_organization_membership, owner_application_membership = members_by_id[owner.id]
+    member_organization_membership, member_application_membership = members_by_id[member.id]
+    assert owner_organization_membership.role_name == OrganizationRoles.owner
+    assert owner_application_membership is not None
+    assert owner_application_membership.role_name == ApplicationRoles.admin
+    assert member_organization_membership.role_name == OrganizationRoles.read
+    assert member_application_membership is None
 
 
 async def test_set_member_role_creates_updates_removes_and_restores_memberships(
@@ -306,7 +312,6 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
         description="Updated dashboard",
         digest="sha256:abc123",
         icon="activity",
-        gateway_url=f"https://apps.example.test/api/applications/{application.id}/proxy/",
     )
     await db.applications.soft_delete(application.id, user)
     deleted_runtime = await db.applications.update_runtime(
@@ -327,7 +332,6 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     assert updated.description == "Updated dashboard"
     assert updated.digest == "sha256:abc123"
     assert updated.icon == "activity"
-    assert updated.gateway_url == f"https://apps.example.test/api/applications/{application.id}/proxy/"
     assert updated.updated_id == user.id
     assert deleted_runtime is None
 

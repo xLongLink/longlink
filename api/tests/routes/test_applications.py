@@ -918,7 +918,6 @@ async def test_application_proxy_forwards_authenticated_request(
         app.id,
         image=app.image,
         compute_registry_id=registry.id,
-        gateway_url=f"https://{registry.ingress_host}/api/applications/{app.id}/proxy/",
         status=ApplicationStatus.running,
         user=user,
     )
@@ -991,11 +990,6 @@ async def test_application_proxy_forwards_authenticated_request(
     assert isinstance(headers, dict)
     assert headers["x-longlink-gateway-secret"] == registry.proxy_secret
     assert headers["x-user-id"] == str(user.id)
-    assert headers["x-user-role"] == "owner"
-    assert headers["x-longlink-application-id"] == str(app.id)
-    assert headers["x-longlink-application-slug"] == "dashboard"
-    assert headers["x-longlink-organization-id"] == str(organization.id)
-    assert headers["x-longlink-organization-slug"] == "acme"
     assert headers["accept"] == "application/json"
     assert headers["accept-language"] == "en-US"
     assert headers["content-type"] == "text/plain"
@@ -1003,6 +997,11 @@ async def test_application_proxy_forwards_authenticated_request(
     assert "cookie" not in headers
     assert "x-custom-feature" not in headers
     assert "x-forwarded-for" not in headers
+    assert "x-user-role" not in headers
+    assert "x-longlink-application-id" not in headers
+    assert "x-longlink-application-slug" not in headers
+    assert "x-longlink-organization-id" not in headers
+    assert "x-longlink-organization-slug" not in headers
 
 
 async def test_application_proxy_requires_application_role_for_regular_member(
@@ -1047,7 +1046,6 @@ async def test_application_proxy_requires_application_role_for_regular_member(
         app.id,
         image=app.image,
         compute_registry_id=registry.id,
-        gateway_url=f"https://{registry.ingress_host}/api/applications/{app.id}/proxy/",
         status=ApplicationStatus.running,
         user=owner,
     )
@@ -1112,7 +1110,6 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
         app.id,
         image=app.image,
         compute_registry_id=registry.id,
-        gateway_url=f"https://{registry.ingress_host}/api/applications/{app.id}/proxy/",
         status=ApplicationStatus.running,
         user=user,
     )
@@ -1207,7 +1204,6 @@ async def test_application_proxy_enforces_method_role(
         app.id,
         image=app.image,
         compute_registry_id=registry.id,
-        gateway_url=f"https://{registry.ingress_host}/api/applications/{app.id}/proxy/",
         status=ApplicationStatus.running,
         user=user,
     )
@@ -1336,7 +1332,6 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
         app.id,
         image=app.image,
         compute_registry_id=registry.id,
-        gateway_url=f"https://{registry.ingress_host}/api/applications/{app.id}/proxy/",
         user=owner,
     )
     client = clients[0]

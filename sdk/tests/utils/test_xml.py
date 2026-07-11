@@ -76,6 +76,12 @@ INVALID_FRAGMENTS = [
     ("malformed-longlink", _adapter_schema("Longlink.xsd"), '<longlink><P i18n="dashboard.title"></longlink>'),
 ]
 
+UNSUPPORTED_MARKUP_FRAGMENTS = [
+    ("doctype", "<!DOCTYPE longlink><longlink />"),
+    ("entity", '<!DOCTYPE longlink [<!ENTITY hidden "value">]><longlink />'),
+    ("cdata", "<longlink><![CDATA[hidden]]></longlink>"),
+]
+
 
 def test_element_validation_uses_safe_xml_parser(monkeypatch) -> None:
     """Disable DTD loading, network access, and entity resolution during validation."""
@@ -96,6 +102,16 @@ def test_element_validation_uses_safe_xml_parser(monkeypatch) -> None:
     assert captured_kwargs[0]["load_dtd"] is False
     assert captured_kwargs[0]["no_network"] is True
     assert captured_kwargs[0]["resolve_entities"] is False
+
+
+@pytest.mark.parametrize(("_name", "content"), UNSUPPORTED_MARKUP_FRAGMENTS, ids=[case[0] for case in UNSUPPORTED_MARKUP_FRAGMENTS])
+def test_element_validation_rejects_unsupported_markup(_name: str, content: str) -> None:
+    """Reject XML markup unsupported by the browser runtime."""
+
+    element = Element.from_content(content, schema=SCHEMA)
+
+    with pytest.raises(ValueError, match="DOCTYPE, ENTITY, and CDATA"):
+        element.validate()
 
 
 @pytest.mark.parametrize(("_name", "schema", "content"), VALID_FRAGMENTS, ids=[case[0] for case in VALID_FRAGMENTS])

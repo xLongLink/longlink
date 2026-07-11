@@ -1,6 +1,5 @@
 import { type ColumnDef, type RowData, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { useEffect, useState } from 'react';
-
 import {
     Pagination,
     PaginationContent,

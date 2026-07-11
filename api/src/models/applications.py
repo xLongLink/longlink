@@ -19,10 +19,10 @@ class ApplicationCreate(BaseModel):
     """Validate application creation payloads."""
 
     # Metadata
-    name: str
+    name: str = Field(min_length=1, max_length=100)
     icon: Icon | None = None
     image: str
-    description: str | None = None
+    description: str | None = Field(default=None, max_length=255)
 
     # Relationships
     envs: dict[str, str] = Field(default_factory=dict)

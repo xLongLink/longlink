@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from src.auth import authuser, authadmin
-from src.utils import names, buckets
+from src.utils import names, buckets, urls
 from src.operations.constants import RESOURCE_REMOVE_STEP
 from src.operations.implementation import resources, registries
 from src.models.statuses import ApplicationStatus
@@ -56,10 +56,10 @@ class ApplicationAccess:
     organization_role: OrganizationRoles
 
 
-def _application_proxy_request_url(gateway_url: str, path: str, query: str) -> str:
+def _application_proxy_request_url(ingress_host: str, application_id: UUID, path: str, query: str) -> str:
     """Return the authenticated cluster gateway URL for one proxied application request."""
 
-    url = gateway_url if gateway_url.endswith("/") else f"{gateway_url}/"
+    url = f"{urls.origin(ingress_host)}/api/applications/{application_id}/proxy/"
 
     # Preserve the app-relative path and query string when forwarding through the cluster gateway.
     if path:
@@ -168,7 +168,18 @@ async def application_access(application_id: UUID, user: User = Depends(authuser
 async def list_applications(user: User = Depends(authadmin)) -> list[dict[str, object]]:
     """Return all applications for administrator views."""
 
-    return await applications.fetch_all_responses(user)
+    records = await applications.fetch_all()
+    return [
+        {
+            **application.model_dump(),
+            "organization": application.organization,
+            "created_by": application.created_by or user,
+            "updated_by": application.updated_by or application.created_by or user,
+            "deleted_by": application.deleted_by,
+            "role": None,
+        }
+        for application in records
+    ]
 
 
 @router.post("/api/organizations/{organization_id}/applications", response_model=ApplicationResponse)
@@ -226,7 +237,7 @@ async def create_application(
         raise HTTPException(status_code=404, detail=f"Application '{application.id}' not found")
 
     return {
-        **reloaded_application.model_dump(exclude={"gateway_url"}),
+        **reloaded_application.model_dump(),
         "organization": reloaded_application.organization,
         "created_by": reloaded_application.created_by or user,
         "updated_by": reloaded_application.updated_by or reloaded_application.created_by or user,
@@ -267,10 +278,21 @@ async def get_application_logs(access: ApplicationAccess = Depends(application_a
 @router.get("/api/applications/{application_id}/members", response_model=list[ApplicationMemberResponse])
 async def list_application_members(
     access: ApplicationAccess = Depends(application_access),
-) -> list[ApplicationMemberResponse]:
+) -> list[dict[str, object]]:
     """Return organization members and their application-specific roles."""
 
-    return await applications.list_members(access.application.id, access.application.organization_id)
+    member_rows = await applications.list_members(access.application.id, access.application.organization_id)
+    return [
+        {
+            "id": member.id,
+            "name": member.name,
+            "email": member.email,
+            "avatar": member.avatar,
+            "application_role": application_membership.role_name if application_membership is not None else None,
+            "organization_role": organization_membership.role_name,
+        }
+        for member, organization_membership, application_membership in member_rows
+    ]
 
 
 @router.patch("/api/applications/{application_id}/members/{member_id}", status_code=204)
@@ -398,20 +420,9 @@ async def proxy_application_request(
     if registry is None:
         raise HTTPException(status_code=503, detail=f"No compute cluster configured for location '{access.organization.location_id}'")
 
-    # The API talks to the externally reachable per-cluster gateway stored on the application row.
-    if access.application.gateway_url is None:
-        raise HTTPException(status_code=503, detail="Application gateway URL is not configured")
-
-    # Build the authenticated upstream request that only the API is allowed to send.
-    upstream_url = _application_proxy_request_url(access.application.gateway_url, path, request.url.query)
-    runtime_headers = {
-        "x-user-id": str(access.user.id),
-        "x-user-role": runtime_role,
-        "x-longlink-application-id": str(access.application.id),
-        "x-longlink-application-slug": access.application.slug,
-        "x-longlink-organization-id": str(access.organization.id),
-        "x-longlink-organization-slug": access.organization.slug,
-    }
+    # Build the authenticated upstream request from the same registry that provides the gateway secret.
+    upstream_url = _application_proxy_request_url(registry.ingress_host, access.application.id, path, request.url.query)
+    runtime_headers = {"x-user-id": str(access.user.id)}
     request_headers = _application_proxy_request_headers(request, registry.proxy_secret, runtime_headers)
 
     # The cluster gateway is the only public Kubernetes entry point and requires the registry secret.

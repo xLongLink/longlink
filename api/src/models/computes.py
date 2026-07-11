@@ -1,6 +1,7 @@
+import urllib.parse
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import Field, BaseModel, ConfigDict, field_validator, model_validator
 from src.models.users import UserSummary
 
 
@@ -10,13 +11,52 @@ class ComputeRegistryCreate(BaseModel):
     # Metadata
     name: str
     kubeconfig: str
-    ingress_host: str
+    ingress_host: str = Field(min_length=1, max_length=255)
     gateway_tls_key: str | None = None
     gateway_tls_certificate: str | None = None
     gateway_load_balancer_ip: str | None = None
 
     # Relationships
     location_id: UUID
+
+    @field_validator("ingress_host")
+    @classmethod
+    def validate_ingress_host(cls, ingress_host: str) -> str:
+        """Validate a gateway ingress host or absolute HTTP(S) URL."""
+
+        value = ingress_host.strip().rstrip("/")
+
+        # Gateway hosts must be non-empty and safe for URL and Envoy domain composition.
+        if not value or any(
+            character.isspace() or ord(character) < 32 or ord(character) == 127 for character in value
+        ):
+            raise ValueError("Gateway ingress host contains invalid characters")
+
+        parsed_value = urllib.parse.urlsplit(value)
+        parsed_host = parsed_value if parsed_value.scheme else urllib.parse.urlsplit(f"//{value}")
+
+        # Absolute URLs are allowed only for HTTP(S) gateway endpoints.
+        if parsed_value.scheme and parsed_value.scheme not in {"http", "https"}:
+            raise ValueError("Gateway ingress host URL must use HTTP or HTTPS")
+
+        # Gateway hosts must not carry credentials, paths, query strings, or fragments.
+        if (
+            parsed_host.hostname is None
+            or parsed_host.username
+            or parsed_host.password
+            or parsed_host.path not in {"", "/"}
+            or parsed_host.query
+            or parsed_host.fragment
+        ):
+            raise ValueError("Gateway ingress host is invalid")
+
+        # Access the port property so invalid numeric ports are rejected by urllib.
+        try:
+            parsed_host.port
+        except ValueError as exc:
+            raise ValueError("Gateway ingress host port is invalid") from exc
+
+        return value
 
     @model_validator(mode="after")
     def validate_gateway_tls_pair(self) -> ComputeRegistryCreate:

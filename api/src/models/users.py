@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID
 from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.countries import Country
@@ -6,7 +6,7 @@ from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.locations import LocationResponse
 
 
-class Theme(str, Enum):
+class Theme(StrEnum):
     """Supported user theme preferences."""
 
     system = "system"
@@ -14,7 +14,7 @@ class Theme(str, Enum):
     dark = "dark"
 
 
-class Accent(str, Enum):
+class Accent(StrEnum):
     """Supported user accent colors from the Tailwind palette."""
 
     slate = "slate"
@@ -69,7 +69,7 @@ ACCENT_COLORS: dict[Accent, str] = {
 ACCENT_COLOR_VALUES: tuple[str, ...] = tuple(ACCENT_COLORS.values())
 
 
-class Radius(str, Enum):
+class Radius(StrEnum):
     """Supported corner radius preferences."""
 
     none = "none"
@@ -78,7 +78,7 @@ class Radius(str, Enum):
     large = "large"
 
 
-class Language(str, Enum):
+class Language(StrEnum):
     """Supported user interface languages."""
 
     en = "en"
@@ -102,8 +102,8 @@ class UserUpdate(BaseModel):
     """Payload to update mutable user profile fields."""
 
     # Metadata
-    name: str | None = None
-    avatar: str | None = None
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    avatar: str | None = Field(default=None, max_length=2048)
 
     # Preferences
     theme: Theme | None = None

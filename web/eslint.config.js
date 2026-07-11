@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import perfectionist from 'eslint-plugin-perfectionist';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import { defineConfig, globalIgnores } from 'eslint/config';
@@ -19,7 +20,18 @@ export default defineConfig([
             ecmaVersion: 2020,
             globals: globals.browser,
         },
+        plugins: {
+            perfectionist,
+        },
         rules: {
+            'perfectionist/sort-imports': [
+                'error',
+                {
+                    newlinesBetween: 'never',
+                    order: 'asc',
+                    type: 'line-length',
+                },
+            ],
             'react-refresh/only-export-components': 'off',
         },
     },

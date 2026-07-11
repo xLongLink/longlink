@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { useTranslation } from '@/lib/i18n';
@@ -7,7 +6,6 @@ import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
-
 import { AdminActionMenu } from '@/components/admin/AdminTableElements';
 import { DataTable } from '@/components/DataTable';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';

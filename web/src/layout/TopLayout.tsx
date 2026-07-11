@@ -1,5 +1,4 @@
 import type { HTMLAttributes, ReactNode } from 'react';
-
 import { cn } from '@/lib/utils';
 
 /** Renders the shared top layout shell. */

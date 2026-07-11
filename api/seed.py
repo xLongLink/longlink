@@ -224,7 +224,7 @@ async def seed_local_development() -> None:
         )
         await compute_runtime.kubernetes(compute_registry).setup()
 
-    # Reused registries may need their gateway URL refreshed after port changes.
+    # Reused registries may need their gateway host refreshed after port changes.
     elif compute_registry.ingress_host != LOCAL_COMPUTE_INGRESS_HOST:
         await sync_local_compute_ingress_host(compute_registry.id)
 

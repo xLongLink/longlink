@@ -53,7 +53,7 @@ async def test_create_organization_returns_owner_role(
     organization = await db.organizations.get(UUID(response.json()["id"]))
     assert organization is not None
     payload = response.json()
-    assert payload["id"] == str(organization["id"])
+    assert payload["id"] == str(organization.id)
     assert payload["name"] == "acme"
     assert payload["avatar"] == avatar
     assert payload["country"] == "DE"
@@ -250,7 +250,7 @@ async def test_delete_organization_soft_deletes_and_queues_removal(
     assert await db.organizations.get(organization.id) is None
     deleted = await db.organizations.get(organization.id, include_deleted=True)
     assert deleted is not None
-    assert deleted["deleted_at"] is not None
+    assert deleted.deleted_at is not None
     assert await db.applications.list_by_organization(organization.id) == []
     recorded_operations = await db.operations.fetch_all()
     assert len(recorded_operations) == 1
@@ -912,8 +912,9 @@ async def test_update_organization_member_changes_role(
     assert response.status_code == 204
     updated_organization = await db.organizations.get(organization.id)
     assert updated_organization is not None
-    updated_member = next(item for item in updated_organization["users"] if item["id"] == member.id)
-    assert updated_member["role"] == OrganizationRoles.admin
+    updated_members = await db.organizations.list_members(organization.id)
+    updated_member = next(membership for user, membership in updated_members if user.id == member.id)
+    assert updated_member.role_name == OrganizationRoles.admin
 
 
 async def test_update_organization_member_returns_403_for_regular_member(

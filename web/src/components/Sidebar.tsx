@@ -1,6 +1,5 @@
 import { useState, type Dispatch, type MouseEvent, type SetStateAction } from 'react';
 import { Link } from 'react-router';
-
 import { cn } from '@/lib/utils';
 import type { ArticleNavigationGroup, ArticleNavigationItem } from '@/pages/catalog';
 import {
@@ -20,7 +19,6 @@ import {
     SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { ChevronDownIcon } from 'lucide-react';
-
 import { Wordmark } from '@/components/Wordmark';
 
 export type SidebarProps = {

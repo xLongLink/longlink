@@ -1,5 +1,4 @@
 import { Bot, Boxes, Code2, Cog, Puzzle, Table2 } from 'lucide-react';
-
 import { Wordmark } from '@/components/Wordmark';
 import { A } from '@/components/ui/a';
 import { Heading } from '@/components/ui/heading';

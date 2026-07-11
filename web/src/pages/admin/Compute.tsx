@@ -4,7 +4,6 @@ import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
-
 import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
 import { DataTable } from '@/components/DataTable';
 import ConnectCompute from '@/components/dialogs/ConnectCompute';

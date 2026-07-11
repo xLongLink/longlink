@@ -166,11 +166,10 @@ async def database_users(organization_id: UUID) -> list[TenantUser]:
 async def get(
     organization_id: UUID,
     include_deleted: bool = False,
-    application_user_id: UUID | None = None,
-) -> dict[str, object] | None:
-    """Return one organization details payload by id."""
+) -> Organization | None:
+    """Return one organization by id with related rows loaded."""
 
-    # Load organization details and related payload data.
+    # Load organization details through one managed session.
     async with session_scope() as session:
         conditions = [Organization.id == organization_id]
 
@@ -189,115 +188,24 @@ async def get(
             .where(*conditions)
         )
         result = await session.execute(statement)
-        organization = result.scalar_one_or_none()
+        return result.scalar_one_or_none()
 
-        # Return none for missing organizations.
-        if organization is None:
-            return None
 
-        applications_result = await session.execute(
-            select(Application)
-            .options(
-                selectinload(Application.compute_registry),
-                selectinload(Application.created_by),
-                selectinload(Application.updated_by),
-                selectinload(Application.deleted_by),
-            )
-            .where(
-                Application.organization_id == organization.id,
-                Application.deleted_at.is_(None),
-            )
-            .order_by(Application.name)
-        )
-        active_applications = applications_result.scalars().all()
-        application_roles = {}
-        caller_organization_role = None
+async def list_members(organization_id: UUID) -> list[tuple[User, UserOrganization]]:
+    """Return active organization member rows for one organization."""
 
-        # Load caller roles when rendering user-specific data.
-        if application_user_id is not None:
-            role_result = await session.execute(
-                select(UserOrganization.role_name).where(
-                    UserOrganization.organization_id == organization.id,
-                    UserOrganization.user_id == application_user_id,
-                    UserOrganization.deleted_at.is_(None),
-                )
-            )
-            caller_organization_role = role_result.scalar_one_or_none()
-            roles_result = await session.execute(
-                select(UserApplication.application_id, UserApplication.role_name).where(
-                    UserApplication.organization_id == organization.id,
-                    UserApplication.user_id == application_user_id,
-                    UserApplication.deleted_at.is_(None),
-                )
-            )
-            application_roles = dict(roles_result.all())
-
-        active_invitations = []
-
-        # Show invitations only to organization managers.
-        if application_user_id is None or caller_organization_role in {
-            OrganizationRoles.admin,
-            OrganizationRoles.maintain,
-            OrganizationRoles.owner,
-        }:
-            invitations_result = await session.execute(
-                select(OrganizationInvitation)
-                .where(
-                    OrganizationInvitation.organization_id == organization.id,
-                    OrganizationInvitation.deleted_at.is_(None),
-                )
-                .order_by(OrganizationInvitation.created_at.desc())
-            )
-            active_invitations = invitations_result.scalars().all()
-
-        memberships_result = await session.execute(
-            select(User, UserOrganization.role_name, UserOrganization.updated_at)
+    # Query memberships with user rows so routes can shape API payloads.
+    async with session_scope() as session:
+        statement = (
+            select(User, UserOrganization)
             .join(UserOrganization, UserOrganization.user_id == User.id)
             .where(
-                UserOrganization.organization_id == organization.id,
+                UserOrganization.organization_id == organization_id,
                 UserOrganization.deleted_at.is_(None),
             )
         )
-        members = [
-            {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email,
-                "avatar": user.avatar,
-                "role": role_name,
-                "last_access_at": updated_at,
-            }
-            for user, role_name, updated_at in memberships_result.all()
-        ]
-
-        return {
-            "id": organization.id,
-            "name": organization.name,
-            "slug": organization.slug,
-            "avatar": organization.avatar,
-            "country": organization.country,
-            "location": organization.location,
-            "location_id": organization.location_id,
-            "shared_storage_bucket_name": organization.shared_storage_bucket_name,
-            "created_at": organization.created_at,
-            "updated_at": organization.updated_at,
-            "created_by": organization.created_by,
-            "updated_by": organization.updated_by,
-            "deleted_at": organization.deleted_at,
-            "deleted_by": organization.deleted_by,
-            "users": members,
-            "invitations": active_invitations,
-            "applications": [
-                {
-                    **application.model_dump(exclude={"gateway_url"}),
-                    "created_by": application.created_by,
-                    "updated_by": application.updated_by,
-                    "deleted_by": application.deleted_by,
-                    "role": application_roles.get(application.id),
-                }
-                for application in active_applications
-            ],
-        }
+        result = await session.execute(statement)
+        return [(user, membership) for user, membership in result.all()]
 
 
 async def membership_role(organization_id: UUID, user_id: UUID) -> OrganizationRoles | None:

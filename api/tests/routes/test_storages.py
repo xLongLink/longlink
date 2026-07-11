@@ -29,7 +29,7 @@ async def test_storage_registry_endpoint_supports_create_and_list(
         json={
             "kind": "s3",
             "name": "object-store",
-            "protocol": "s3",
+            "protocol": "https",
             "endpoint_url": "https://storage.longlink.internal",
             "runtime_endpoint_url": "https://storage.runtime.longlink.internal",
             "access_key_id": "access-key",
@@ -71,7 +71,7 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
         json={
             "kind": "s3",
             "name": "object-store",
-            "protocol": "s3",
+            "protocol": "https",
             "endpoint_url": "https://storage.longlink.internal",
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",
@@ -129,7 +129,7 @@ async def test_storage_object_endpoint_returns_bucket_objects(
         json={
             "kind": "s3",
             "name": "object-store",
-            "protocol": "s3",
+            "protocol": "https",
             "endpoint_url": "https://storage.longlink.internal",
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",

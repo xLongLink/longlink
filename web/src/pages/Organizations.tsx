@@ -11,7 +11,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Hero, HeroAction, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { Building2, Settings2 } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
-
 import type { ApiUserOrganizationMembership } from '@/lib/types';
 
 /** Renders the organizations landing page for signed-in and anonymous users. */

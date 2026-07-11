@@ -1,6 +1,5 @@
 import { buttonVariants } from '@/components/ui/button';
 import { createLucideIconComponent } from '@/components/ui/icon';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMetadata, type MetadataPage } from '@/hooks/use-metadata';
 import XML from '@/layout/XmlLayout';
 import { ApiError, fetchApiText } from '@/lib/api';
@@ -28,10 +27,7 @@ import {
 import NotFound from './NotFound';
 
 type ViewProps = {
-    applicationId?: string;
-    applicationName?: string;
     applicationStatus?: ApiOrganizationApplication['status'] | 'loading';
-    canViewLogs?: boolean;
     metadata: string;
     locale?: string;
     runtimeContext?: ExecutionContext;
@@ -47,10 +43,6 @@ type ErrorStateProps = {
 
 type LoadingStateProps = {
     status: ApiOrganizationApplication['status'] | 'loading';
-};
-
-type LogsStateProps = {
-    applicationName: string;
 };
 
 type PageState = {
@@ -82,17 +74,6 @@ type MetadataRoute = RouteObject & {
     page: MetadataPage;
 };
 
-type LogsState = {
-    content: string;
-    error: string | null;
-    loading: boolean;
-};
-
-const emptyLogsState: LogsState = {
-    content: '',
-    error: null,
-    loading: false,
-};
 const emptyRouteParams: Record<string, string> = {};
 
 /**
@@ -250,10 +231,7 @@ function parsePageContent(content: string): PageParseResult {
  * Renders metadata-backed XML pages for control-plane and application routes.
  */
 export default function View({
-    applicationId,
-    applicationName,
     applicationStatus,
-    canViewLogs = false,
     locale,
     metadata,
     runtimeContext,
@@ -264,7 +242,6 @@ export default function View({
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [pageStates, setPageStates] = useState<Record<string, PageState>>({});
-    const [logsState, setLogsState] = useState<LogsState>(emptyLogsState);
     const pageStatesRef = useRef<Record<string, PageState>>({});
     const inFlightPageKeysRef = useRef<Set<string>>(new Set());
     const runtimeContextRef = useRef<ExecutionContext | undefined>(runtimeContext);
@@ -302,15 +279,9 @@ export default function View({
         activePageState?.cacheKey === pageCacheKey &&
         activePageState.path === activePagePath &&
         activePageState.routePath === activeRoutePath;
-    const applicationFailed = applicationStatus === 'failed';
     const isNotFound =
         metadataDocument === null || Boolean(metadataDocument?.pages && normalizedRoutePath && !activeRouteMatch);
     const metadataLoading = error instanceof ApiError && error.status === 503;
-    const shouldShowLogs =
-        canViewLogs &&
-        (applicationFailed ||
-            (applicationStatus === 'running' &&
-                (metadataLoading || (activePageStateIsCurrent && activePageState.status === 503))));
 
     runtimeContextRef.current = runtimeContext;
 
@@ -395,7 +366,6 @@ export default function View({
     useEffect(() => {
         // Skip page loading until an XML page can render.
         if (
-            shouldShowLogs ||
             applicationIsLoading ||
             !activePageTab ||
             !activePageStateKey ||
@@ -566,65 +536,14 @@ export default function View({
         navigationBaseUrl,
         pageCacheKey,
         resolvedMetadataBaseUrl,
-        shouldShowLogs,
     ]);
 
-    // Fetch logs when the current user is allowed to inspect an unavailable application runtime.
-    useEffect(() => {
-        // Clear logs when logs are not visible.
-        if (!shouldShowLogs || !applicationId) {
-            setLogsState(emptyLogsState);
-            return;
-        }
-
-        const controller = new AbortController();
-
-        setLogsState({ ...emptyLogsState, loading: true });
-
-        void fetchApiText(`/api/applications/${applicationId}/logs`, { signal: controller.signal })
-            .then((content) => {
-                // Ignore log responses after cleanup.
-                if (!controller.signal.aborted) {
-                    setLogsState({ ...emptyLogsState, content });
-                }
-            })
-            .catch((fetchError: unknown) => {
-                // Ignore aborts from logs cleanup.
-                if (controller.signal.aborted) {
-                    return;
-                }
-
-                setLogsState({
-                    ...emptyLogsState,
-                    error: fetchError instanceof Error ? fetchError.message : t('appView.loadLogsFailed'),
-                });
-            });
-
-        return () => controller.abort();
-    }, [applicationId, shouldShowLogs]);
-
     // Show deployment loading before rendering runtime pages.
-    if ((applicationIsLoading || metadataLoading) && !shouldShowLogs) {
+    if (applicationIsLoading || metadataLoading) {
         return (
             <XML tabs={tabs}>
                 <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
                     <LoadingState status={applicationStatus ?? 'loading'} />
-                </section>
-            </XML>
-        );
-    }
-
-    // Show runtime logs instead of unavailable page content.
-    if (shouldShowLogs) {
-        return (
-            <XML tabs={tabs}>
-                <section className="px-6 py-10">
-                    <LogsState
-                        applicationName={applicationName ?? application ?? 'Application'}
-                        logsContent={logsState.content}
-                        logsError={logsState.error}
-                        logsLoading={logsState.loading}
-                    />
                 </section>
             </XML>
         );
@@ -745,40 +664,6 @@ function LoadingState({ status }: LoadingStateProps) {
                 </h1>
                 <p className="text-sm leading-6 text-muted-foreground">{t('appView.retryLater')}</p>
             </div>
-        </div>
-    );
-}
-
-/** Renders the logs view for administrators while an application is unavailable. */
-function LogsState({
-    applicationName,
-    logsContent,
-    logsError,
-    logsLoading,
-}: LogsStateProps & { logsContent: string; logsError: string | null; logsLoading: boolean }) {
-    const { t } = useTranslation();
-
-    return (
-        <div className="space-y-4">
-            <div className="space-y-1">
-                <h1 className="text-2xl font-semibold text-foreground">{t('appView.applicationLogs')}</h1>
-                <p className="text-sm leading-6 text-muted-foreground">
-                    {t('appView.logsDescription', { applicationName })}
-                </p>
-            </div>
-
-            {!logsLoading &&
-                (logsError ? (
-                    <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-                        {logsError}
-                    </div>
-                ) : (
-                    <ScrollArea className="h-[60vh] overflow-hidden rounded-md border bg-muted/30">
-                        <pre className="p-3 text-xs leading-5 whitespace-pre-wrap text-foreground">
-                            {logsContent || t('appView.emptyLogs')}
-                        </pre>
-                    </ScrollArea>
-                ))}
         </div>
     );
 }

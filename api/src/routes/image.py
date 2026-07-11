@@ -15,6 +15,6 @@ async def inspect_image(image: str, _: User = Depends(authuser)) -> LongLinkMeta
 
     # Fail fast when the image cannot be inspected or has no metadata labels.
     if image_metadata is None:
-        raise HTTPException(status_code=404, detail=f"Image metadata '{image}' not found")
+        raise HTTPException(status_code=404, detail="Image metadata not found")
 
     return image_metadata

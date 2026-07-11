@@ -2,7 +2,6 @@ import { useTranslation } from '@/lib/i18n';
 import { CheckIcon, ClipboardCopyIcon } from 'lucide-react';
 import { useEffect, useRef, useState, type ComponentType, type CSSProperties } from 'react';
 import { toast } from 'sonner';
-
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 // @ts-expect-error react-syntax-highlighter does not ship declarations for this optimized subpath.

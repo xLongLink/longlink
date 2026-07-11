@@ -7,7 +7,6 @@ from src.models.roles import ApplicationRoles
 from src.models.statuses import ApplicationStatus
 from src.utils import buckets
 from src.database.session import session_scope
-from src.models.applications import ApplicationMemberResponse
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.applications import Application
@@ -40,42 +39,6 @@ async def fetch_all() -> list[Application]:
         return result.scalars().all()
 
 
-async def fetch_all_responses(user: User) -> list[dict[str, object]]:
-    """Return all registered applications as API payloads."""
-
-    # Load active applications for response shaping.
-    async with session_scope() as session:
-        statement = (
-            select(Application)
-            .join(Application.organization)
-            .options(
-                selectinload(Application.organization).selectinload(Organization.created_by),
-                selectinload(Application.organization).selectinload(Organization.updated_by),
-                selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.compute_registry),
-                selectinload(Application.database_registry),
-                selectinload(Application.storage_registry),
-                selectinload(Application.created_by),
-                selectinload(Application.updated_by),
-                selectinload(Application.deleted_by),
-            )
-            .where(Application.deleted_at.is_(None))
-            .order_by(Organization.name, Application.name)
-        )
-        result = await session.execute(statement)
-        return [
-            {
-                **application.model_dump(exclude={"gateway_url"}),
-                "organization": application.organization,
-                "created_by": application.created_by or user,
-                "updated_by": application.updated_by or application.created_by or user,
-                "deleted_by": application.deleted_by,
-                "role": None,
-            }
-            for application in result.scalars().all()
-        ]
-
-
 async def list_by_organization(organization_id: UUID, include_deleted: bool = False) -> list[Application]:
     """Return all active applications for one organization."""
 
@@ -105,54 +68,6 @@ async def list_by_organization(organization_id: UUID, include_deleted: bool = Fa
         )
         result = await session.execute(statement)
         return result.scalars().all()
-
-
-async def list_responses(organization_id: UUID, user_id: UUID, user: User) -> list[dict[str, object]]:
-    """Return organization applications as API payloads."""
-
-    # Load applications with caller membership roles.
-    async with session_scope() as session:
-
-        # Join the membership row so the caller can render the app role in one query.
-        statement = (
-            select(Application, UserApplication.role_name)
-            .options(
-                selectinload(Application.organization).selectinload(Organization.created_by),
-                selectinload(Application.organization).selectinload(Organization.updated_by),
-                selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.compute_registry),
-                selectinload(Application.database_registry),
-                selectinload(Application.storage_registry),
-                selectinload(Application.created_by),
-                selectinload(Application.updated_by),
-                selectinload(Application.deleted_by),
-            )
-            .outerjoin(
-                UserApplication,
-                and_(
-                    Application.organization_id == UserApplication.organization_id,
-                    Application.id == UserApplication.application_id,
-                    UserApplication.user_id == user_id,
-                    UserApplication.deleted_at.is_(None),
-                ),
-            )
-            .where(
-                Application.organization_id == organization_id,
-                Application.deleted_at.is_(None),
-            )
-        )
-        result = await session.execute(statement)
-        return [
-            {
-                **application.model_dump(exclude={"gateway_url"}),
-                "organization": application.organization,
-                "created_by": application.created_by or user,
-                "updated_by": application.updated_by or application.created_by or user,
-                "deleted_by": application.deleted_by,
-                "role": role_name,
-            }
-            for application, role_name in result.all()
-        ]
 
 
 async def get(organization_id: UUID, slug: str) -> Application | None:
@@ -243,15 +158,32 @@ async def membership_role(application_id: UUID, user_id: UUID) -> ApplicationRol
         return result.scalar_one_or_none()
 
 
-async def list_members(application_id: UUID, organization_id: UUID) -> list[ApplicationMemberResponse]:
-    """Return organization members with their application roles."""
+async def list_user_memberships(organization_id: UUID, user_id: UUID) -> list[UserApplication]:
+    """Return active application memberships for one user in one organization."""
+
+    # Query active application memberships for response shaping at the route boundary.
+    async with session_scope() as session:
+        statement = select(UserApplication).where(
+            UserApplication.organization_id == organization_id,
+            UserApplication.user_id == user_id,
+            UserApplication.deleted_at.is_(None),
+        )
+        result = await session.execute(statement)
+        return result.scalars().all()
+
+
+async def list_members(
+    application_id: UUID,
+    organization_id: UUID,
+) -> list[tuple[User, UserOrganization, UserApplication | None]]:
+    """Return organization member rows with optional application membership rows."""
 
     # Query organization members and app roles together.
     async with session_scope() as session:
 
         # Start from organization memberships so users without app access are visible.
         statement = (
-            select(User, UserOrganization.role_name, UserApplication.role_name)
+            select(User, UserOrganization, UserApplication)
             .join(UserOrganization, UserOrganization.user_id == User.id)
             .outerjoin(
                 UserApplication,
@@ -271,15 +203,8 @@ async def list_members(application_id: UUID, organization_id: UUID) -> list[Appl
         )
         result = await session.execute(statement)
         return [
-            ApplicationMemberResponse(
-                id=member.id,
-                name=member.name,
-                email=member.email,
-                avatar=member.avatar,
-                application_role=application_role,
-                organization_role=organization_role,
-            )
-            for member, organization_role, application_role in result.all()
+            (member, organization_membership, application_membership)
+            for member, organization_membership, application_membership in result.all()
         ]
 
 
@@ -360,7 +285,6 @@ async def create(
     slug: str,
     image: str,
     user: User,
-    application_id: UUID | None = None,
     status: ApplicationStatus = ApplicationStatus.creating,
     compute_registry_id: UUID | None = None,
     database_registry_id: UUID | None = None,
@@ -370,7 +294,6 @@ async def create(
     description: str | None = None,
     digest: str | None = None,
     icon: str | None = None,
-    gateway_url: str | None = None,
     storage_bucket_name: str | None = None,
 ) -> Application:
     """Add a new application to the database for one organization."""
@@ -400,7 +323,6 @@ async def create(
             "database_registry_id": database_registry_id,
             "storage_registry_id": storage_registry_id,
             "storage_bucket_name": storage_bucket_name or buckets.application(organization.slug, slug),
-            "gateway_url": gateway_url,
             "name": name,
             "slug": slug,
             "status": status,
@@ -411,10 +333,6 @@ async def create(
             "image": image,
             "icon": icon,
         }
-
-        # Creation normally lets the model generate ids, but runtime provisioning can precompute ids for stored URLs.
-        if application_id is not None:
-            application_kwargs["id"] = application_id
 
         application = Application(**application_kwargs)
         application.created_id = user.id
@@ -477,7 +395,6 @@ async def update_runtime(
     compute_registry_id: UUID | None = None,
     database_registry_id: UUID | None = None,
     storage_registry_id: UUID | None = None,
-    gateway_url: str | None = None,
     version: str | None = None,
     sdk: str | None = None,
     description: str | None = None,
@@ -498,7 +415,6 @@ async def update_runtime(
         application.compute_registry_id = compute_registry_id
         application.database_registry_id = database_registry_id
         application.storage_registry_id = storage_registry_id
-        application.gateway_url = gateway_url
         application.sdk = sdk
         application.digest = digest
         application.description = description

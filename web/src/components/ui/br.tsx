@@ -1,5 +1,4 @@
 import * as React from 'react';
-
 import { cn } from '@/lib/utils';
 
 /** Renders a spacer block for visual separation. */

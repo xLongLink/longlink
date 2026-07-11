@@ -1,7 +1,6 @@
 import { useTranslation } from '@/lib/i18n';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Link } from 'react-router';
-
 import { DataTable } from '@/components/DataTable';
 import { Icon } from '@/components/ui/icon';
 import type { ApiOrganizationApplication } from '@/lib/types';
