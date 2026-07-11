@@ -27,11 +27,6 @@ export const content = (
         <Heading id="usage" level="h2">
             Usage
         </Heading>
-        <P>
-            Use required fields for values that must be provided by the deployment, and optional fields for settings
-            that can fall back to a default. Create <Code>Env()</Code> in your own application code when you need to
-            read values; the <Code>LongLink</Code> app object does not need the user environment instance.
-        </P>
         <CodeBlock language="python">
             {
                 'from longlink import Environments\nfrom pydantic import Field\n\nclass Env(Environments):\n    """Project-specific environment model."""\n\n    REQUIRED: str = Field(description="Required value")\n    OPTIONAL: str = Field(default="optional", description="Optional value")'

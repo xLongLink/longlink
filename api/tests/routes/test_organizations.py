@@ -149,7 +149,7 @@ async def test_create_organization_initializes_storage(
             return bucket_name
 
     monkeypatch.setattr(
-        "src.runtime.bootstrap.adapters.storage",
+        "src.routes.organizations.adapters.storage",
         lambda registry: FakeStorage(
             registry.endpoint_url,
             registry.access_key_id,

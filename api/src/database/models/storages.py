@@ -10,7 +10,6 @@ from tenant.database.types import UTCDateTime
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.users import User
-    from src.database.models.locations import Location
 
 
 class StorageRegistry(SQLModel, table=True):
@@ -47,5 +46,4 @@ class StorageRegistry(SQLModel, table=True):
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 
     # Location
-    location: "Location" = Relationship()
     location_id: UUID = Field(foreign_key="locations.id")

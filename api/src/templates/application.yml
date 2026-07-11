@@ -5,11 +5,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: $name
+  name: $application_id
   namespace: $namespace
   labels:
     compute-role: application
-    app: $name
+    app: $application_id
     longlink.io/application-id: $application_id
 spec:
   replicas: 1
@@ -17,14 +17,14 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: $name
+      app: $application_id
   template:
     metadata:
       annotations:
         longlink.io/rollout-token: "$rollout_token"
       labels:
         compute-role: application
-        app: $name
+        app: $application_id
         longlink.io/application-id: $application_id
     spec:
       automountServiceAccountToken: false
@@ -36,26 +36,26 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: $name
+        - name: $application_id
           image: $image
           imagePullPolicy: Always
           ports:
-            - containerPort: $port
+            - containerPort: 8000
           startupProbe:
             httpGet:
               path: /health
-              port: $port
+              port: 8000
             periodSeconds: 2
             failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /health
-              port: $port
+              port: 8000
             periodSeconds: 5
             failureThreshold: 3
           envFrom:
             - secretRef:
-                name: $name
+                name: $application_id
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -79,16 +79,16 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: $name
+  name: $application_id
   namespace: $namespace
   labels:
     compute-role: application
-    app: $name
+    app: $application_id
     longlink.io/application-id: $application_id
 spec:
   type: ClusterIP
   selector:
-    app: $name
+    app: $application_id
   ports:
-    - port: $port
-      targetPort: $port
+    - port: 8000
+      targetPort: 8000

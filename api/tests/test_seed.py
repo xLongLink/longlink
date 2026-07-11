@@ -111,10 +111,10 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
 
         return []
 
-    async def create_organization(*args: object, **kwargs: object) -> SimpleNamespace:
-        """Record the local organization creation request."""
+    async def create_organization(payload: seed.OrganizationCreate, user_argument: object) -> SimpleNamespace:
+        """Record the local organization endpoint creation request."""
 
-        calls["organization"] = (args, kwargs)
+        calls["organization"] = (payload, user_argument)
         return organization
 
     async def load_organization(organization_id: UUID) -> SimpleNamespace:
@@ -140,11 +140,6 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
 
         raise AssertionError(f"Unexpected application sync: {args}")
 
-    async def record_bootstrap(*args: object) -> None:
-        """Record that organization bootstrap ran."""
-
-        calls["bootstrap"] = args
-
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
     monkeypatch.setattr(seed, "local_database_host", local_database_host)
     monkeypatch.setattr(seed, "seed_local_administrator", seed_administrator)
@@ -158,14 +153,11 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
     monkeypatch.setattr(seed.compute_service, "create", create_compute_registry)
     monkeypatch.setattr(seed, "Kubernetes", lambda kubeconfig, proxy_secret: fake_kubernetes)
     monkeypatch.setattr(seed.organization_service, "fetch", fetch_no_organizations)
-    monkeypatch.setattr(seed.organization_service, "create", create_organization)
+    monkeypatch.setattr(seed.organization_routes, "create_organization", create_organization)
     monkeypatch.setattr(seed.organization_service, "get", load_organization)
     monkeypatch.setattr(seed.organization_service, "applications", list_no_applications)
     monkeypatch.setattr(seed.resources, "create_application_runtime", create_application_runtime)
     monkeypatch.setattr(seed.resources, "sync_application_runtime", sync_application_runtime)
-    monkeypatch.setattr(seed.bootstrap, "create_organization_namespace", record_bootstrap)
-    monkeypatch.setattr(seed.bootstrap, "create_organization_database", record_bootstrap)
-    monkeypatch.setattr(seed.bootstrap, "create_organization_storage", record_bootstrap)
 
     await seed.seed_local_development()
 
@@ -201,6 +193,12 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         "user": user,
     }
     assert fake_kubernetes.setup_calls == 1
+    organization_payload, organization_user = cast(tuple[seed.OrganizationCreate, object], calls["organization"])
+    assert organization_payload.name == seed.LOCAL_ORG
+    assert organization_payload.avatar == seed.LOCAL_ORG_AVATAR
+    assert organization_payload.country == "CH"
+    assert organization_payload.location_id == location.id
+    assert organization_user == user
     assert calls["application_lookup"] == organization.id
     application_create_call = cast(tuple[object, ...], calls["application_create"])
     assert application_create_call[0] == organization

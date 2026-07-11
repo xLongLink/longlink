@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from src.utils import names
 from src.runtime import Kubernetes
 from src.runtime import bootstrap
+from src.routes import organizations as organization_routes
 from src.runtime import provisioning as resources
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import StorageKind
@@ -19,6 +20,7 @@ from src.database.services import database as database_service
 from src.database.services import locations as location_service
 from src.database.services import organizations as organization_service
 from src.models.applications import ApplicationCreate
+from src.models.organizations import OrganizationCreate
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.databases import DatabaseRegistry
@@ -222,20 +224,16 @@ async def seed_local_development() -> None:
     # Find the local organization before deciding whether to create or repair it.
     organization = next((organization for organization in organizations if organization.name == LOCAL_ORG), None)
     if organization is None:
-        organization_slug = names.slugify(LOCAL_ORG)
-        names.knames(organization_slug)
-        names.knames(f"{organization_slug}-shared")
-        organization = await organization_service.create(
-            LOCAL_ORG,
-            organization_slug,
-            location.id,
+        # Use the organization endpoint implementation so seed creation follows API runtime bootstrap.
+        organization = await organization_routes.create_organization(
+            OrganizationCreate(
+                name=LOCAL_ORG,
+                avatar=LOCAL_ORG_AVATAR,
+                country="CH",
+                location_id=location.id,
+            ),
             admin_user,
-            LOCAL_ORG_AVATAR,
-            country="CH",
         )
-        await bootstrap.create_organization_namespace(organization)
-        await bootstrap.create_organization_database(organization)
-        await bootstrap.create_organization_storage(organization)
 
     # Reused organizations need owner and shared-user state repaired.
     else:

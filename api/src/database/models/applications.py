@@ -7,14 +7,10 @@ from sqlalchemy import Column, UniqueConstraint
 from tenant.utils import utcnow
 from src.models.statuses import ApplicationStatus
 from tenant.database.types import UTCDateTime
-from src.database.models.association import UserApplication
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.users import User
-    from src.database.models.computes import ComputeRegistry
-    from src.database.models.storages import StorageRegistry
-    from src.database.models.databases import DatabaseRegistry
     from src.database.models.organizations import Organization
 
 
@@ -67,14 +63,3 @@ class Application(SQLModel, table=True):
 
     # Relationships
     organization: "Organization" = Relationship(back_populates="applications")
-    compute_registry: Optional["ComputeRegistry"] = Relationship()
-    database_registry: Optional["DatabaseRegistry"] = Relationship()
-    storage_registry: Optional["StorageRegistry"] = Relationship()
-    users: list["User"] = Relationship(
-        back_populates="applications",
-        sa_relationship_kwargs={
-            "secondary": UserApplication.__table__,
-            "primaryjoin": "and_(Application.organization_id == UserApplication.organization_id, Application.id == UserApplication.application_id)",
-            "secondaryjoin": "UserApplication.user_id == User.id",
-        },
-    )

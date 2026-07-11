@@ -1,10 +1,9 @@
 from types import SimpleNamespace
-from datetime import UTC, datetime, timedelta
+from datetime import datetime
 from src.operations import execute
 from src.database.services import users, compute, database, locations, operations, applications, organizations
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationStatus
-from src.runtime.startup import ApplicationStartupState, application_pods_startup_state
 
 db = SimpleNamespace(
     applications=applications,
@@ -41,65 +40,6 @@ def pod_status(created_at: datetime, phase: str, containers: list[SimpleNamespac
         metadata=SimpleNamespace(creation_timestamp=created_at),
         status=SimpleNamespace(phase=phase, container_statuses=containers),
     )
-
-
-def test_application_pods_startup_state_ignores_stale_dead_pods() -> None:
-    """Keep a fresh rollout pending while old pods from a previous rollout are dead."""
-
-    # Arrange
-    created_at = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
-    stale_pod = pod_status(
-        created_at - timedelta(minutes=5),
-        "Running",
-        [container_status(waiting_reason="CrashLoopBackOff")],
-    )
-    current_pod = pod_status(
-        created_at + timedelta(seconds=2),
-        "Pending",
-        [container_status()],
-    )
-
-    # Act
-    startup_state = application_pods_startup_state([stale_pod, current_pod], created_at)
-
-    # Assert
-    assert startup_state == ApplicationStartupState.pending
-
-
-def test_application_pods_startup_state_treats_image_pull_backoff_as_dead() -> None:
-    """Fail verification when a current pod cannot pull its configured image."""
-
-    # Arrange
-    created_at = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
-    pod = pod_status(
-        created_at + timedelta(seconds=2),
-        "Pending",
-        [container_status(waiting_reason="ImagePullBackOff")],
-    )
-
-    # Act
-    startup_state = application_pods_startup_state([pod], created_at)
-
-    # Assert
-    assert startup_state == ApplicationStartupState.dead
-
-
-def test_application_pods_startup_state_marks_current_crashloop_dead() -> None:
-    """Fail verification when the current rollout pod is crashlooping."""
-
-    # Arrange
-    created_at = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
-    pod = pod_status(
-        created_at + timedelta(seconds=2),
-        "Running",
-        [container_status(waiting_reason="CrashLoopBackOff")],
-    )
-
-    # Act
-    startup_state = application_pods_startup_state([pod], created_at)
-
-    # Assert
-    assert startup_state == ApplicationStartupState.dead
 
 
 async def test_execute_application_verify_operation_completes_running_application(monkeypatch) -> None:

@@ -78,11 +78,11 @@ async def delete(location_id: UUID, user: User) -> bool:
                 select(model.id).where(
                     model.location_id == location_id,
                     model.deleted_at.is_(None),
-                )
+                ).limit(1)
             )
 
             # Block deletion when active resources still depend on it.
-            if result.scalar_one_or_none() is not None:
+            if result.scalars().first() is not None:
                 raise HTTPException(status_code=409, detail=f"Location is used by {label}")
 
         now = datetime.now(UTC)

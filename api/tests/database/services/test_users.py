@@ -1,7 +1,6 @@
 import pytest
-from uuid import uuid4
 from types import SimpleNamespace
-from src.models.roles import PlatformRoles, OrganizationRoles
+from src.models.roles import PlatformRoles
 from src.models.users import Theme, Accent, Radius, Language
 from src.database.services import users, compute, storage, database, locations, operations, applications, organizations
 from src.database.models.users import User
@@ -18,7 +17,7 @@ db = SimpleNamespace(
 )
 
 
-async def test_fetch_get_by_id_and_get_return_persisted_users(users: tuple[User, User, User]) -> None:
+async def test_fetch_and_get_return_persisted_users(users: tuple[User, User, User]) -> None:
     """Return persisted users through all user read services."""
 
     # Arrange
@@ -26,13 +25,13 @@ async def test_fetch_get_by_id_and_get_return_persisted_users(users: tuple[User,
 
     # Act
     fetched = await db.users.fetch()
-    by_id = await db.users.get_by_id(second_user.id)
+    by_second_oidc = await db.users.get(second_user.oidc)
     by_oidc = await db.users.get(third_user.oidc)
 
     # Assert
     assert {user.id for user in fetched} == {first_user.id, second_user.id, third_user.id}
-    assert by_id is not None
-    assert by_id.id == second_user.id
+    assert by_second_oidc is not None
+    assert by_second_oidc.id == second_user.id
     assert by_oidc is not None
     assert by_oidc.id == third_user.id
 
@@ -40,18 +39,11 @@ async def test_fetch_get_by_id_and_get_return_persisted_users(users: tuple[User,
 async def test_missing_user_reads_return_none() -> None:
     """Return None when user read services cannot find a user."""
 
-    # Arrange
-    missing_id = uuid4()
-
     # Act
-    by_id = await db.users.get_by_id(missing_id)
     by_oidc = await db.users.get("missing-oidc")
-    memberships = await db.users.organization_memberships(missing_id)
 
     # Assert
-    assert by_id is None
     assert by_oidc is None
-    assert memberships == []
 
 
 async def test_upsert_creates_user_when_no_existing_match() -> None:
@@ -88,32 +80,6 @@ async def test_upsert_requires_identity_fields_for_new_user() -> None:
     # Assert
     assert str(exc.value) == "Missing user fields"
     assert await db.users.fetch() == []
-
-
-async def test_organization_memberships_returns_created_organization_membership() -> None:
-    """Return organization memberships created through the organization service."""
-
-    # Arrange
-    user = await db.users.upsert(
-        oidc="oidc-subject-admin",
-        email="admin@example.com",
-        name="First User",
-        avatar=None,
-    )
-    location = await db.locations.create("local", "Local testing", user, "CH")
-    organization = await db.organizations.create("test", "test", location.id, user, avatar="https://example.com/organizations/test.png")
-
-    memberships = await db.users.organization_memberships(user.id)
-
-    # Assert
-    profile_organization, profile_membership = memberships[0]
-    assert profile_organization.id == organization.id
-    assert profile_organization.name == "test"
-    assert profile_organization.slug == organization.slug
-    assert profile_organization.avatar == "https://example.com/organizations/test.png"
-    assert profile_organization.country == "CH"
-    assert profile_organization.location.id == location.id
-    assert profile_membership.role == OrganizationRoles.owner
 
 
 async def test_upsert_does_not_mark_second_user_as_admin() -> None:

@@ -126,28 +126,20 @@ async def test_get_services_return_active_applications_and_respect_include_delet
 
     # Act
     by_id = await db.applications.get(application.id)
-    reference = await db.applications.get_reference(application.id)
     await db.applications.soft_delete(application.id, user)
     deleted_by_id = await db.applications.get(application.id)
-    deleted_reference = await db.applications.get_reference(application.id)
     included_by_id = await db.applications.get(application.id, include_deleted=True)
-    included_reference = await db.applications.get_reference(application.id, include_deleted=True)
 
     # Assert
     assert by_id is not None
     assert by_id.id == application.id
-    assert reference is not None
-    assert reference.id == application.id
     assert deleted_by_id is None
-    assert deleted_reference is None
     assert included_by_id is not None
     assert included_by_id.deleted_id == user.id
-    assert included_reference is not None
-    assert included_reference.deleted_id == user.id
 
 
-async def test_application_list_services_return_models_and_memberships() -> None:
-    """Return application rows and membership rows for route-level response shaping."""
+async def test_application_list_services_return_models_and_creator_role() -> None:
+    """Return application rows and the creator membership role."""
 
     # Arrange
     user, organization, application = await create_application_context("responses")
@@ -155,14 +147,12 @@ async def test_application_list_services_return_models_and_memberships() -> None
     # Act
     all_applications = await db.applications.fetch()
     organization_applications = await db.organizations.applications(organization.id)
-    memberships = await db.applications.list_user_memberships(organization.id, user.id)
+    role = await db.applications.membership_role(application.id, user.id)
 
     # Assert
     assert [item.id for item in all_applications] == [application.id]
     assert [item.id for item in organization_applications] == [application.id]
-    assert len(memberships) == 1
-    assert memberships[0].application_id == application.id
-    assert memberships[0].role == ApplicationRoles.admin
+    assert role == ApplicationRoles.admin
 
 
 async def test_list_members_includes_organization_members_with_optional_application_roles(

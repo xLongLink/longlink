@@ -6,13 +6,11 @@ from sqlalchemy import Column, String, text
 from tenant.utils import utcnow
 from src.models.countries import DEFAULT_COUNTRY
 from tenant.database.types import UTCDateTime
-from src.database.models.association import UserOrganization
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.users import User
     from src.database.models.locations import Location
-    from src.database.models.invitations import OrganizationInvitation
     from src.database.models.applications import Application
 
 
@@ -53,13 +51,4 @@ class Organization(SQLModel, table=True):
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 
     # Relationships
-    users: list["User"] = Relationship(
-        back_populates="organizations",
-        sa_relationship_kwargs={
-            "secondary": UserOrganization.__table__,
-            "primaryjoin": "Organization.id == UserOrganization.organization_id",
-            "secondaryjoin": "UserOrganization.user_id == User.id",
-        },
-    )
-    invitations: list["OrganizationInvitation"] = Relationship(back_populates="organization")
     applications: list["Application"] = Relationship(back_populates="organization")

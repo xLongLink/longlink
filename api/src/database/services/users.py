@@ -1,4 +1,3 @@
-from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 from src.models.roles import PlatformRoles
@@ -19,35 +18,6 @@ async def fetch() -> list[User]:
         return result.scalars().all()
 
 
-async def get_by_id(user_id: UUID) -> User | None:
-    """Return one user by id."""
-
-    # Read the user through a managed database session.
-    async with session_scope() as session:
-        statement = select(User).where(User.id == user_id)
-        result = await session.execute(statement)
-        return result.scalar_one_or_none()
-
-
-async def organization_memberships(user_id: UUID) -> list[tuple[Organization, UserOrganization]]:
-    """Return active organization membership rows for one user."""
-
-    # Load organization memberships and their locations without lazy IO.
-    async with session_scope() as session:
-        organization_result = await session.execute(
-            select(Organization, UserOrganization)
-            .join(UserOrganization, Organization.id == UserOrganization.organization_id)
-            .options(selectinload(Organization.location))
-            .where(
-                UserOrganization.user_id == user_id,
-                UserOrganization.deleted_at.is_(None),
-                Organization.deleted_at.is_(None),
-            )
-        )
-
-        return [(organization, membership) for organization, membership in organization_result.all()]
-
-
 async def upsert(
     *,
     oidc: str,
@@ -62,54 +32,48 @@ async def upsert(
 ) -> User:
     """Create a new OIDC user or update an existing one."""
 
-    existing_user = await get(oidc, include_deleted=True)
+    async with session_scope() as session:
+        result = await session.execute(select(User).where(User.oidc == oidc))
+        existing_user = result.scalar_one_or_none()
 
-    # Patch the current record in place when the subject already exists.
-    if existing_user is not None:
-        # Refresh email when supplied.
-        if email is not None:
-            existing_user.email = email
+        # Patch the current record in place when the subject already exists.
+        if existing_user is not None:
+            # Refresh email when supplied.
+            if email is not None:
+                existing_user.email = email
 
-        # Refresh name when supplied.
-        if name is not None:
-            existing_user.name = name
+            # Refresh name when supplied.
+            if name is not None:
+                existing_user.name = name
 
-        # Refresh avatar when supplied.
-        if avatar is not None:
-            existing_user.avatar = avatar or ""
+            # Refresh avatar when supplied.
+            if avatar is not None:
+                existing_user.avatar = avatar or ""
 
-        # Refresh platform role when supplied.
-        if role is not None:
-            existing_user.role = role
+            # Refresh platform role when supplied.
+            if role is not None:
+                existing_user.role = role
 
-        # Refresh theme when supplied.
-        if theme is not None:
-            existing_user.theme = theme
+            # Refresh theme when supplied.
+            if theme is not None:
+                existing_user.theme = theme
 
-        # Refresh accent when supplied.
-        if accent is not None:
-            existing_user.accent = accent
+            # Refresh accent when supplied.
+            if accent is not None:
+                existing_user.accent = accent
 
-        # Refresh radius when supplied.
-        if radius is not None:
-            existing_user.radius = radius
+            # Refresh radius when supplied.
+            if radius is not None:
+                existing_user.radius = radius
 
-        # Refresh language when supplied.
-        if language is not None:
-            existing_user.language = language
+            # Refresh language when supplied.
+            if language is not None:
+                existing_user.language = language
 
-        existing_user.oidc = oidc
-
-        # Persist the existing user changes in one transaction.
-        async with session_scope() as session:
-            session.add(existing_user)
             await session.commit()
             await session.refresh(existing_user)
+            return existing_user
 
-        return existing_user
-
-    # Create new users inside one managed session.
-    async with session_scope() as session:
         # Bootstrap the very first user as admin so the instance starts with one owner.
         user_result = await session.execute(select(func.count()).select_from(User))
         is_admin = user_result.scalar_one() == 0
@@ -159,11 +123,14 @@ async def get(oidc: str, include_deleted: bool = False, include_access: bool = F
         # Eager-load resource relationships for request authentication when requested.
         if include_access:
             statement = statement.options(
-                selectinload(User.organization_memberships).selectinload(UserOrganization.organization),
+                selectinload(User.organization_memberships)
+                .selectinload(UserOrganization.organization)
+                .selectinload(Organization.applications),
+                selectinload(User.organization_memberships)
+                .selectinload(UserOrganization.organization)
+                .selectinload(Organization.location),
                 selectinload(User.application_memberships).selectinload(UserApplication.application),
                 selectinload(User.application_memberships).selectinload(UserApplication.organization),
-                selectinload(User.organizations).selectinload(Organization.applications),
-                selectinload(User.applications),
             )
 
         # Hide soft-deleted users unless explicitly requested.
@@ -171,4 +138,4 @@ async def get(oidc: str, include_deleted: bool = False, include_access: bool = F
             statement = statement.where(User.deleted_at.is_(None))
 
         result = await session.execute(statement)
-        return result.scalars().first()
+        return result.scalar_one_or_none()

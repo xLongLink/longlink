@@ -18,9 +18,7 @@ async def get_me(user: User = Depends(authuser)):
 async def get_my_organizations(user: User = Depends(authuser)):
     """Return the authenticated user's organization memberships."""
 
-    memberships = await users.organization_memberships(user.id)
-
-    # Flatten organization rows with membership roles for the API response.
+    # Flatten loaded organization memberships with their roles for the API response.
     return [
         {
             "id": organization.id,
@@ -31,7 +29,8 @@ async def get_my_organizations(user: User = Depends(authuser)):
             "location": organization.location,
             "role": membership.role,
         }
-        for organization, membership in memberships
+        for membership in user.organization_memberships
+        if (organization := membership.organization).deleted_at is None
     ]
 
 

@@ -153,11 +153,11 @@ async def delete(registry_id: UUID, user: User) -> bool:
             select(Application.id).where(
                 Application.storage_registry_id == registry_id,
                 Application.deleted_at.is_(None),
-            )
+            ).limit(1)
         )
 
         # Block deletion while active applications depend on it.
-        if active_application.scalar_one_or_none() is not None:
+        if active_application.scalars().first() is not None:
             raise HTTPException(status_code=409, detail="Storage registry is used by active applications")
 
         now = datetime.now(UTC)

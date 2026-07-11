@@ -11,11 +11,6 @@ from tenant.database.types import UTCDateTime
 from tenant.models.languages import Language
 from src.database.models.association import UserApplication, UserOrganization
 
-# Import relationship targets only during type checking.
-if TYPE_CHECKING:
-    from src.database.models.applications import Application
-    from src.database.models.organizations import Organization
-
 
 class User(SQLModel, table=True):
     """Represent a user account authenticated via OIDC."""
@@ -54,7 +49,6 @@ class User(SQLModel, table=True):
         sa_relationship_kwargs={
             "primaryjoin": "and_(User.id == UserOrganization.user_id, UserOrganization.deleted_at.is_(None))",
             "foreign_keys": "UserOrganization.user_id",
-            "overlaps": "organizations,users",
         },
     )
     application_memberships: list["UserApplication"] = Relationship(
@@ -62,24 +56,5 @@ class User(SQLModel, table=True):
         sa_relationship_kwargs={
             "primaryjoin": "and_(User.id == UserApplication.user_id, UserApplication.deleted_at.is_(None))",
             "foreign_keys": "UserApplication.user_id",
-            "overlaps": "applications,users",
-        },
-    )
-    organizations: list["Organization"] = Relationship(
-        back_populates="users",
-        sa_relationship_kwargs={
-            "secondary": UserOrganization.__table__,
-            "primaryjoin": "and_(User.id == UserOrganization.user_id, UserOrganization.deleted_at.is_(None))",
-            "secondaryjoin": "and_(Organization.id == UserOrganization.organization_id, Organization.deleted_at.is_(None))",
-            "overlaps": "organization_memberships,user",
-        },
-    )
-    applications: list["Application"] = Relationship(
-        back_populates="users",
-        sa_relationship_kwargs={
-            "secondary": UserApplication.__table__,
-            "primaryjoin": "and_(User.id == UserApplication.user_id, UserApplication.deleted_at.is_(None))",
-            "secondaryjoin": "and_(UserApplication.organization_id == Application.organization_id, UserApplication.application_id == Application.id, Application.deleted_at.is_(None))",
-            "overlaps": "application_memberships,user",
         },
     )

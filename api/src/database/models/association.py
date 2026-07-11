@@ -41,11 +41,9 @@ class UserOrganization(SQLModel, table=True):
     # Relationships
     user: "User" = Relationship(
         back_populates="organization_memberships",
-        sa_relationship_kwargs={"foreign_keys": "UserOrganization.user_id", "overlaps": "organizations,users"},
+        sa_relationship_kwargs={"foreign_keys": "UserOrganization.user_id"},
     )
-    organization: "Organization" = Relationship(
-        sa_relationship_kwargs={"foreign_keys": "UserOrganization.organization_id", "overlaps": "organizations,users"}
-    )
+    organization: "Organization" = Relationship(sa_relationship_kwargs={"foreign_keys": "UserOrganization.organization_id"})
 
 
 class UserApplication(SQLModel, table=True):
@@ -76,16 +74,14 @@ class UserApplication(SQLModel, table=True):
     # Relationships
     user: "User" = Relationship(
         back_populates="application_memberships",
-        sa_relationship_kwargs={"foreign_keys": "UserApplication.user_id", "overlaps": "applications,users"},
+        sa_relationship_kwargs={"foreign_keys": "UserApplication.user_id"},
     )
-    organization: "Organization" = Relationship(
-        sa_relationship_kwargs={"foreign_keys": "UserApplication.organization_id", "overlaps": "applications,users"}
-    )
+    organization: "Organization" = Relationship(sa_relationship_kwargs={"foreign_keys": "UserApplication.organization_id"})
     application: "Application" = Relationship(
         sa_relationship_kwargs={
             "primaryjoin": "and_(UserApplication.organization_id == Application.organization_id, UserApplication.application_id == Application.id)",
             "foreign_keys": "[UserApplication.organization_id, UserApplication.application_id]",
-            "overlaps": "applications,users,organization",
+            "overlaps": "organization",
         }
     )
 

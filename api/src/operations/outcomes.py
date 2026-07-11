@@ -16,7 +16,7 @@ class OperationOutcome:
 
     state: OperationOutcomeState
     error: str | None = None
-    delay_seconds: int | None = None
+    delay: int | None = None
 
 
 def complete() -> OperationOutcome:
@@ -26,11 +26,11 @@ def complete() -> OperationOutcome:
     return OperationOutcome(OperationOutcomeState.complete)
 
 
-def defer(delay_seconds: int | None = None) -> OperationOutcome:
+def defer(delay: int | None = None) -> OperationOutcome:
     """Return an outcome that schedules the operation for a later attempt."""
 
     # The dispatcher owns lease release and retry scheduling.
-    return OperationOutcome(OperationOutcomeState.defer, delay_seconds=delay_seconds)
+    return OperationOutcome(OperationOutcomeState.defer, delay=delay)
 
 
 def fail(error: str) -> OperationOutcome:

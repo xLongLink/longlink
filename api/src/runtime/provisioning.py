@@ -27,7 +27,7 @@ async def remove_application_runtime(
     # Remove workload resources only when the app has a compute backend to target.
     if registry is not None:
         adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
-        await adapter.delete_application(organization.slug, application.slug)
+        await adapter.delete_application(organization.slug, str(application.id))
 
     # Remove the application schema from the database registry that originally hosted it.
     if application.database_registry_id is not None:
@@ -107,10 +107,8 @@ async def provision_application_runtime_resources(
     )
     await compute.application(
         organization.slug,
-        application.slug,
         str(application.id),
         runtime_image,
-        8000,
         {**payload.envs, **envs},
         rollout_token=rollout_token,
     )

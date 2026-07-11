@@ -102,8 +102,8 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
     assert [organization.id for organization in fetched] == [active_organization.id]
 
 
-async def test_get_member_and_membership_role_require_active_membership(users: tuple[User, User, User]) -> None:
-    """Return organization access only for active organization members."""
+async def test_membership_role_requires_active_membership(users: tuple[User, User, User]) -> None:
+    """Return organization roles only for active organization members."""
 
     # Arrange
     owner, non_member = users[0], users[1]
@@ -111,16 +111,13 @@ async def test_get_member_and_membership_role_require_active_membership(users: t
     organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
-    owner_organization = await db.organizations.get_member(organization.id, owner.id)
-    non_member_organization = await db.organizations.get_member(organization.id, non_member.id)
     owner_role = await db.organizations.membership_role(organization.id, owner.id)
+    non_member_role = await db.organizations.membership_role(organization.id, non_member.id)
     missing_role = await db.organizations.membership_role(uuid4(), owner.id)
 
     # Assert
-    assert owner_organization is not None
-    assert owner_organization.id == organization.id
-    assert non_member_organization is None
     assert owner_role == OrganizationRoles.owner
+    assert non_member_role is None
     assert missing_role is None
 
 
@@ -253,14 +250,12 @@ async def test_get_includes_application_role_for_requested_user(users: tuple[Use
 
     # Act
     details = await db.organizations.get(organization.id)
-    memberships = await db.applications.list_user_memberships(organization.id, member.id)
+    role = await db.applications.membership_role(application.id, member.id)
 
     # Assert
     assert details is not None
     assert details.id == organization.id
-    assert len(memberships) == 1
-    assert memberships[0].application_id == application.id
-    assert memberships[0].role == ApplicationRoles.read
+    assert role == ApplicationRoles.read
 
 
 async def test_create_rejects_duplicate_organization_names(users: tuple[User, User, User]) -> None:

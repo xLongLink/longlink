@@ -20,7 +20,7 @@ async def apply_outcome(operation: Operation, outcome: OperationOutcome) -> Oper
 
     # Release waiting work back to the scheduled queue.
     if outcome.state == OperationOutcomeState.defer:
-        deferred = await operations.defer(operation.id, operation.lease_token, outcome.delay_seconds)
+        deferred = await operations.defer(operation.id, operation.lease_token, outcome.delay)
         return deferred or operation
 
     # Persist domain failures with sanitized public error text.

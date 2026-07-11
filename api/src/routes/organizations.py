@@ -5,13 +5,13 @@ from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authsupport
 from src.utils import names, roles
 from src.logger import logger
-from src.runtime import bootstrap
+from src.runtime import Kubernetes, bootstrap
 from tenant.database import SHARED_SCHEMA
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import (OrganizationDatabaseResourceKind, OrganizationDatabaseResourceResponse,
                                   OrganizationDatabaseTableRowsResponse, OrganizationDatabaseTableColumnsResponse)
-from src.database.services import locations, operations, registries, invitations, applications, organizations
+from src.database.services import locations, operations, registries, invitations, organizations
 from src.models.applications import ApplicationResponse
 from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary, OrganizationMemberUpdate,
                                       OrganizationInvitationCreate)
@@ -40,15 +40,18 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     """Return one organization and its metadata."""
 
     # Load organization access before exposing organization details.
-    membership = roles.access(user, organization_id)
+    membership = roles.access(user, organization_id, "organization")
     organization_role = membership.role
     organization = await organizations.get(organization_id)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
     active_applications = sorted(await organizations.applications(organization.id), key=lambda item: item.name)
-    application_memberships = await applications.list_user_memberships(organization.id, user.id)
-    application_roles = {membership.application_id: membership.role for membership in application_memberships}
+    application_roles = {
+        membership.application_id: membership.role
+        for membership in user.application_memberships
+        if membership.organization_id == organization.id
+    }
     memberships = await organizations.members(organization.id)
     active_invitations = []
 
@@ -104,15 +107,15 @@ async def list_organization_applications(organization_id: UUID, user: User = Dep
     """Return the applications for one organization."""
 
     # Load organization access before listing applications.
-    membership = roles.access(user, organization_id)
+    membership = roles.access(user, organization_id, "organization")
     organization = membership.organization
 
     active_applications = await organizations.applications(organization.id)
-    application_memberships = await applications.list_user_memberships(
-        organization.id,
-        user.id,
-    )
-    application_roles = {membership.application_id: membership.role for membership in application_memberships}
+    application_roles = {
+        membership.application_id: membership.role
+        for membership in user.application_memberships
+        if membership.organization_id == organization.id
+    }
 
     return [
         {
@@ -135,7 +138,7 @@ async def list_organization_database_resources(organization_id: UUID, user: User
     """Return database schemas for one organization."""
 
     # Load organization access before exposing database resources.
-    membership = roles.access(user, organization_id)
+    membership = roles.access(user, organization_id, "organization")
     organization = membership.organization
     organization_role = membership.role
 
@@ -159,7 +162,7 @@ async def list_organization_storage_resources(organization_id: UUID, user: User 
     """Return storage buckets for one organization."""
 
     # Load organization access before exposing storage resources.
-    membership = roles.access(user, organization_id)
+    membership = roles.access(user, organization_id, "organization")
     organization = membership.organization
     organization_role = membership.role
 
@@ -188,7 +191,7 @@ async def list_organization_database_resource_tables(
     """Return tables and columns for one organization database resource."""
 
     # Load organization access before exposing table metadata.
-    membership = roles.access(user, organization_id)
+    membership = roles.access(user, organization_id, "organization")
     organization = membership.organization
     organization_role = membership.role
 
@@ -242,7 +245,7 @@ async def list_organization_database_resource_table_rows(
     """Return preview rows for one organization database table."""
 
     # Load organization access before exposing table rows.
-    membership = roles.access(user, organization_id)
+    membership = roles.access(user, organization_id, "organization")
     organization = membership.organization
     organization_role = membership.role
 
@@ -297,7 +300,7 @@ async def create_organization_invitation(
     """Create one invitation for an organization member."""
 
     # Load organization access before creating invitations.
-    membership = roles.access(user, organization_id)
+    membership = roles.access(user, organization_id, "organization")
     organization = membership.organization
     organization_role = membership.role
 
@@ -321,7 +324,7 @@ async def update_organization_member(
     """Update one organization member role."""
 
     # Load organization access before updating members.
-    membership = roles.access(user, organization_id)
+    membership = roles.access(user, organization_id, "organization")
     organization = membership.organization
     organization_role = membership.role
 
@@ -363,7 +366,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
         if organization is None:
             raise HTTPException(status_code=404, detail="Organization not found")
     else:
-        membership = roles.access(user, organization_id)
+        membership = roles.access(user, organization_id, "organization")
         membership_role = membership.role
 
         # Require organization owners to delete organizations.
@@ -629,8 +632,43 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
         country=payload.country,
     )
 
-    await bootstrap.create_organization_namespace(organization)
-    await bootstrap.create_organization_database(organization)
-    await bootstrap.create_organization_storage(organization)
+    # Locations without compute are allowed during partial local setup.
+    compute_registry = await registries.compute(organization.location_id)
+    if compute_registry is not None:
+        # Bootstrap failures are logged but do not block organization creation.
+        try:
+            await Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret).namespace(organization.slug)
+
+        # Organization creation remains successful even if runtime bootstrap needs manual repair.
+        except Exception as exc:
+            logger.exception("Failed to create namespace for organization '%s': %r", organization.slug, exc)
+
+    # Locations without a database are allowed during partial local setup.
+    database_registry = await registries.database(organization.location_id)
+    if database_registry is not None:
+        # Bootstrap failures are logged but do not block organization creation.
+        try:
+            await bootstrap.sync_organization_users(organization, database_registry)
+
+        # Organization creation remains successful even if runtime bootstrap needs manual repair.
+        except Exception as exc:
+            logger.exception("Failed to create database for organization '%s': %r", organization.slug, exc)
+
+    # Locations without storage skip object-store bootstrap.
+    storage_registry = await registries.storage(organization.location_id)
+    if storage_registry is not None:
+        # Bootstrap failures are logged but do not block organization creation.
+        try:
+            storage = adapters.storage(storage_registry)
+
+            # The control plane assigns shared buckets when organizations are created.
+            if organization.shared_storage_bucket_name is None:
+                raise ValueError("Organization has no assigned shared storage bucket")
+
+            await storage.bucket(organization.shared_storage_bucket_name)
+
+        # Organization creation remains successful even if runtime bootstrap needs manual repair.
+        except Exception as exc:
+            logger.exception("Failed to create storage for organization '%s': %r", organization.slug, exc)
 
     return organization

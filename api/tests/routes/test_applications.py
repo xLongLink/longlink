@@ -283,10 +283,8 @@ async def test_create_app_returns_app_response(
         async def application(
             self,
             organization: str,
-            application: str,
             application_id: str,
             image: str,
-            port: int,
             secrets: dict[str, str],
             rollout_token: str = "",
         ) -> None:
@@ -294,10 +292,8 @@ async def test_create_app_returns_app_response(
 
             captured["application"] = {
                 "organization": organization,
-                "application": application,
                 "application_id": application_id,
                 "image": image,
-                "port": port,
                 "secrets": secrets,
                 "rollout_token": rollout_token,
             }
@@ -439,7 +435,6 @@ async def test_create_app_returns_app_response(
     application_payload = captured["application"]
     assert isinstance(application_payload, dict)
     assert application_payload["organization"] == "acme"
-    assert application_payload["application"] == "dashboard"
     assert application_payload["application_id"] == payload["id"]
     assert application_payload["image"] == "ghcr.io/longlink/dashboard@sha256:manifest"
     application_secrets = application_payload["secrets"]
@@ -705,12 +700,12 @@ async def test_get_app_logs_returns_pod_logs(
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
 
-        async def logs(self, organization: str, application: str, lines: int = 200) -> str:
+        async def logs(self, organization: str, application_id: str, lines: int = 200) -> str:
             """Record the log request and return fake pod logs."""
 
             captured["logs"] = {
                 "organization": organization,
-                "application": application,
+                "application_id": application_id,
                 "lines": lines,
             }
             return "line 1\nline 2"
@@ -727,7 +722,7 @@ async def test_get_app_logs_returns_pod_logs(
     assert response.headers["content-type"].startswith("text/plain")
     assert captured["logs"] == {
         "organization": "acme",
-        "application": "dashboard",
+        "application_id": str(app.id),
         "lines": 200,
     }
 

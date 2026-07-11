@@ -51,9 +51,6 @@ async def applications(organization_id: UUID, include_deleted: bool = False) -> 
                 selectinload(Application.organization).selectinload(Organization.created_by),
                 selectinload(Application.organization).selectinload(Organization.updated_by),
                 selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.compute_registry),
-                selectinload(Application.database_registry),
-                selectinload(Application.storage_registry),
                 selectinload(Application.created_by),
                 selectinload(Application.updated_by),
                 selectinload(Application.deleted_by),
@@ -80,43 +77,6 @@ async def invitations(organization_id: UUID) -> list[OrganizationInvitation]:
         )
         result = await session.execute(statement)
         return result.scalars().all()
-
-
-async def access(user_id: UUID, organization_id: UUID) -> tuple[Organization, OrganizationRoles] | None:
-    """Return one organization and role when the user can access it."""
-
-    # Check organization membership in one query so missing organizations and non-members look identical.
-    async with session_scope() as session:
-        statement = (
-            select(Organization, UserOrganization.role)
-            .join(UserOrganization, UserOrganization.organization_id == Organization.id)
-            .where(
-                Organization.id == organization_id,
-                Organization.deleted_at.is_(None),
-                UserOrganization.user_id == user_id,
-                UserOrganization.deleted_at.is_(None),
-            )
-        )
-        result = await session.execute(statement)
-
-        # Hide missing organizations and inactive memberships.
-        row = result.one_or_none()
-        if row is None:
-            return None
-
-        organization, role = row
-        return organization, role
-
-
-async def get_member(organization_id: UUID, user_id: UUID) -> Organization | None:
-    """Return one active organization for an active member without details."""
-
-    # Return none when the access check fails.
-    member_access = await access(user_id, organization_id)
-    if member_access is None:
-        return None
-
-    return member_access[0]
 
 
 async def database_users(organization_id: UUID) -> list[TenantUser]:

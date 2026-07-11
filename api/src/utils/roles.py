@@ -1,4 +1,5 @@
 from uuid import UUID
+from typing import Literal, overload
 from fastapi import HTTPException
 from src.models.roles import (RoleName, PlatformRoles, ApplicationRoles, OrganizationRoles, PlatformRoleRanks, ApplicationRoleRanks,
                               OrganizationRoleRanks)
@@ -28,40 +29,64 @@ def rank(value: RoleName | None) -> int:
     raise ValueError(f"Unknown role '{value}'")
 
 
-def atleast(value: RoleName | None, required_role: RoleName, *alternatives: tuple[RoleName | None, RoleName]) -> bool:
-    """Raise unless one role satisfies its required role."""
+def atleast(value: RoleName | None, required_role: RoleName, raise_error: bool = True) -> bool:
+    """Return whether one role satisfies the required role, raising by default."""
 
-    # Accept the first role requirement that matches scope and rank.
-    for current_role, minimum_role in ((value, required_role), *alternatives):
-        if current_role is None:
-            continue
+    # Missing or cross-scope roles never satisfy requirements.
+    if value is None or type(value) is not type(required_role):
+        if raise_error:
+            raise HTTPException(status_code=403, detail="Permission required")
 
-        if type(current_role) is not type(minimum_role):
-            continue
+        return False
 
-        if rank(current_role) >= rank(minimum_role):
-            return True
+    # Enforce the minimum privilege rank.
+    if rank(value) >= rank(required_role):
+        return True
 
-    raise HTTPException(status_code=403, detail="Permission required")
+    if raise_error:
+        raise HTTPException(status_code=403, detail="Permission required")
+
+    return False
 
 
-def access(user: User, resource: UUID) -> UserOrganization | UserApplication:
+@overload
+def access(user: User, resource: UUID, scope: Literal["organization"]) -> UserOrganization: ...
+
+
+@overload
+def access(user: User, resource: UUID, scope: Literal["application"]) -> UserOrganization | UserApplication: ...
+
+
+@overload
+def access(user: User, resource: UUID, scope: None = None) -> UserOrganization | UserApplication: ...
+
+
+def access(user: User, resource: UUID, scope: Literal["organization", "application"] | None = None) -> UserOrganization | UserApplication:
     """Return the loaded membership that grants access to one organization or application."""
 
     # Organization memberships grant access to organization resources.
-    for membership in user.organization_memberships:
-        if membership.organization.deleted_at is None and membership.organization_id == resource:
-            return membership
+    if scope in {None, "organization"}:
+        for membership in user.organization_memberships:
+            if membership.organization.deleted_at is None and membership.organization_id == resource:
+                return membership
 
     # Application memberships grant access to application resources.
-    for membership in user.application_memberships:
-        if membership.application.deleted_at is None and membership.application_id == resource:
-            return membership
-
-    # Organization membership grants base access to the organization's applications.
-    for membership in user.organization_memberships:
-        for application in membership.organization.applications:
-            if application.deleted_at is None and application.id == resource:
+    if scope in {None, "application"}:
+        for membership in user.application_memberships:
+            if (
+                membership.organization.deleted_at is None
+                and membership.application.deleted_at is None
+                and membership.application_id == resource
+            ):
                 return membership
+
+        # Organization membership grants base access to the organization's applications.
+        for membership in user.organization_memberships:
+            if membership.organization.deleted_at is not None:
+                continue
+
+            for application in membership.organization.applications:
+                if application.deleted_at is None and application.id == resource:
+                    return membership
 
     raise HTTPException(status_code=403, detail="Access required")

@@ -135,7 +135,7 @@ async def test_patch_me_updates_authenticated_user_profile(
     # Assert
     assert response.status_code == 200
 
-    updated_user = await db.users.get_by_id(user.id)
+    updated_user = await db.users.get(user.oidc)
     assert updated_user is not None
 
     expected_payload = UserProfile.model_validate(updated_user).model_dump(mode="json")

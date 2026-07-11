@@ -100,10 +100,15 @@ class FakeUserWriteSession:
         """Store existing user count and captured writes."""
 
         self.user_count = user_count
+        self.execute_calls = 0
         self.added_user: User | None = None
 
     async def execute(self, statement) -> FakeSessionResult:
-        """Return the configured user count."""
+        """Return no existing user first, then the configured user count."""
+
+        self.execute_calls += 1
+        if self.execute_calls == 1:
+            return FakeSessionResult(None)
 
         return FakeSessionResult(self.user_count)
 
@@ -324,15 +329,6 @@ async def test_upsert_bootstraps_first_user_role(
     """Make the first user administrator unless a role is explicitly supplied."""
 
     session = FakeUserWriteSession(existing_user_count)
-
-    async def fake_get(oidc: str, include_deleted: bool = False, include_access: bool = False) -> None:
-        """Pretend no user exists yet for the requested OIDC subject."""
-
-        assert include_deleted is True
-        assert include_access is False
-        return None
-
-    monkeypatch.setattr(users_service_module, "get", fake_get)
     monkeypatch.setattr(users_service_module, "session_scope", lambda: FakeSessionScope(session))
 
     created_user = await users_service_module.upsert(

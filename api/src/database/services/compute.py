@@ -144,11 +144,11 @@ async def delete(registry_id: UUID, user: User) -> bool:
             select(Application.id).where(
                 Application.compute_registry_id == registry_id,
                 Application.deleted_at.is_(None),
-            )
+            ).limit(1)
         )
 
         # Active applications keep their compute backend registered.
-        if active_application.scalar_one_or_none() is not None:
+        if active_application.scalars().first() is not None:
             raise HTTPException(status_code=409, detail="Compute registry is used by active applications")
 
         now = datetime.now(UTC)

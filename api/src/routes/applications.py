@@ -13,6 +13,9 @@ from src.models.statuses import ApplicationStatus
 from src.database.services import operations, registries, applications
 from src.models.applications import ApplicationCreate, ApplicationResponse, ApplicationMemberUpdate, ApplicationMemberResponse
 from src.database.models.users import User
+from src.database.models.association import UserApplication
+from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 
 router = APIRouter()
 
@@ -29,7 +32,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     """Register a new application in the database and deploy it on the compute cluster."""
 
     # Resolve access inside the handler so body validation can reject malformed payloads first.
-    membership = roles.access(user, organization_id)
+    membership = roles.access(user, organization_id, "organization")
     organization = membership.organization
     organization_role = membership.role
 
@@ -68,14 +71,11 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     """Return recent pod logs for one managed application."""
 
     # Load application access before exposing logs.
-    access = await applications.access(user.id, application_id)
-    if access is None:
-        raise HTTPException(status_code=404, detail="Application not found")
-
-    application, organization, application_role, organization_role = access
+    application, organization, application_role, organization_role = _application_access(user, application_id)
 
     # Only application or organization maintainers can read logs.
-    roles.atleast(application_role, ApplicationRoles.maintain, (organization_role, OrganizationRoles.maintain))
+    if not roles.atleast(application_role, ApplicationRoles.maintain, raise_error=False):
+        roles.atleast(organization_role, OrganizationRoles.maintain)
 
     registry = await registries.application_compute(application, organization.location_id)
     if registry is None:
@@ -85,7 +85,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
-        logs = await compute_client.logs(organization.slug, application.slug)
+        logs = await compute_client.logs(organization.slug, str(application.id))
     except ValueError as exc:
         raise HTTPException(status_code=503, detail="Application logs unavailable") from exc
 
@@ -97,11 +97,8 @@ async def list_application_members(application_id: UUID, user: User = Depends(au
     """Return organization members and their application-specific roles."""
 
     # Load application access before listing members.
-    access = await applications.access(user.id, application_id)
-    if access is None:
-        raise HTTPException(status_code=404, detail="Application not found")
+    application, _, _, _ = _application_access(user, application_id)
 
-    application, _, _, _ = access
     member_rows = await applications.members(application.id, application.organization_id)
     return [
         {
@@ -126,14 +123,11 @@ async def update_application_member(
     """Update one member's application-specific role."""
 
     # Load application access before updating members.
-    access = await applications.access(user.id, application_id)
-    if access is None:
-        raise HTTPException(status_code=404, detail="Application not found")
-
-    application, _, application_role, organization_role = access
+    application, _, application_role, organization_role = _application_access(user, application_id)
 
     # Only application or organization maintainers can manage members.
-    roles.atleast(application_role, ApplicationRoles.maintain, (organization_role, OrganizationRoles.maintain))
+    if not roles.atleast(application_role, ApplicationRoles.maintain, raise_error=False):
+        roles.atleast(organization_role, OrganizationRoles.maintain)
 
     # Managers may only change roles that are not stronger than their own effective authority.
     caller_role_rank = roles.rank(application_role)
@@ -168,14 +162,11 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
     """Soft-delete one application and queue runtime resource removal."""
 
     # Load application access before deleting the application.
-    access = await applications.access(user.id, application_id)
-    if access is None:
-        raise HTTPException(status_code=404, detail="Application not found")
-
-    application, _, application_role, organization_role = access
+    application, _, application_role, organization_role = _application_access(user, application_id)
 
     # Only application or organization maintainers can delete applications.
-    roles.atleast(application_role, ApplicationRoles.maintain, (organization_role, OrganizationRoles.maintain))
+    if not roles.atleast(application_role, ApplicationRoles.maintain, raise_error=False):
+        roles.atleast(organization_role, OrganizationRoles.maintain)
 
     deleted = await applications.soft_delete(application.id, user)
     if deleted is None:
@@ -191,13 +182,10 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     """Authenticate and forward one application runtime request through the cluster gateway."""
 
     # Load application access before proxying runtime traffic.
-    access = await applications.access(user.id, application_id)
-    if access is None:
-        raise HTTPException(status_code=404, detail="Application not found")
+    application, organization, application_role, organization_role = _application_access(user, application_id)
 
-    application, organization, application_role, organization_role = access
     required_role_rank = ApplicationProxyMethodRanks[request.method.upper()].value
-    has_organization_access = roles.rank(organization_role) >= roles.rank(OrganizationRoles.maintain)
+    has_organization_access = roles.atleast(organization_role, OrganizationRoles.maintain, raise_error=False)
 
     # Require application access unless the caller has elevated organization permissions.
     if application_role is None and not has_organization_access:
@@ -256,3 +244,24 @@ async def proxy_application_request(request: Request, application_id: UUID, path
         response_headers["content-type"] = response_content_type
 
     return Response(content=upstream_response.content, status_code=upstream_response.status_code, headers=response_headers)
+
+
+def _application_access(
+    user: User,
+    application_id: UUID,
+) -> tuple[Application, Organization, ApplicationRoles | None, OrganizationRoles | None]:
+    """Return the loaded application, organization, and caller roles for one application."""
+
+    # Direct application memberships provide application role access.
+    membership = roles.access(user, application_id, "application")
+    if isinstance(membership, UserApplication):
+        organization_membership = next(
+            (item for item in user.organization_memberships if item.organization_id == membership.organization_id),
+            None,
+        )
+        organization_role = organization_membership.role if organization_membership is not None else None
+        return membership.application, membership.organization, membership.role, organization_role
+
+    # Organization memberships provide inherited access to the organization's applications.
+    application = next(item for item in membership.organization.applications if item.id == application_id)
+    return application, membership.organization, None, membership.role

@@ -10,7 +10,6 @@ from tenant.database.types import UTCDateTime
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.users import User
-    from src.database.models.organizations import Organization
 
 
 class OrganizationInvitation(SQLModel, table=True):
@@ -25,7 +24,6 @@ class OrganizationInvitation(SQLModel, table=True):
     email: str = Field(max_length=320)
 
     # Relationships
-    organization: "Organization" = Relationship(back_populates="invitations")
     organization_id: UUID = Field(foreign_key="organizations.id")
 
     # State

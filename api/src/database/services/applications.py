@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from src.utils import names
 from sqlalchemy import and_, select
 from sqlalchemy.orm import selectinload
-from src.models.roles import ApplicationRoles, OrganizationRoles
+from src.models.roles import ApplicationRoles
 from src.models.statuses import ApplicationStatus
 from src.database.session import session_scope
 from src.database.models.users import User
@@ -25,9 +25,6 @@ async def fetch() -> list[Application]:
                 selectinload(Application.organization).selectinload(Organization.created_by),
                 selectinload(Application.organization).selectinload(Organization.updated_by),
                 selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.compute_registry),
-                selectinload(Application.database_registry),
-                selectinload(Application.storage_registry),
                 selectinload(Application.created_by),
                 selectinload(Application.updated_by),
                 selectinload(Application.deleted_by),
@@ -56,9 +53,6 @@ async def get(application_id: UUID, include_deleted: bool = False) -> Applicatio
                 selectinload(Application.organization).selectinload(Organization.created_by),
                 selectinload(Application.organization).selectinload(Organization.updated_by),
                 selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.compute_registry),
-                selectinload(Application.database_registry),
-                selectinload(Application.storage_registry),
                 selectinload(Application.created_by),
                 selectinload(Application.updated_by),
                 selectinload(Application.deleted_by),
@@ -67,67 +61,6 @@ async def get(application_id: UUID, include_deleted: bool = False) -> Applicatio
         )
         result = await session.execute(statement)
         return result.scalar_one_or_none()
-
-
-async def get_reference(application_id: UUID, include_deleted: bool = False) -> Application | None:
-    """Return a registered application by id without eager-loaded relationships."""
-
-    # Load a lightweight application reference by id.
-    async with session_scope() as session:
-        conditions = [Application.id == application_id]
-
-        # Exclude deleted applications unless requested.
-        if not include_deleted:
-            conditions.append(Application.deleted_at.is_(None))
-
-        statement = select(Application).where(*conditions)
-        result = await session.execute(statement)
-        return result.scalar_one_or_none()
-
-
-async def access(
-    user_id: UUID,
-    application_id: UUID,
-) -> tuple[Application, Organization, ApplicationRoles | None, OrganizationRoles] | None:
-    """Return one application access context when the user can access it."""
-
-    # Load the application, organization, organization role, and optional application role in one query.
-    async with session_scope() as session:
-        statement = (
-            select(Application, Organization, UserApplication.role, UserOrganization.role)
-            .join(Organization, Organization.id == Application.organization_id)
-            .join(
-                UserOrganization,
-                and_(
-                    UserOrganization.organization_id == Application.organization_id,
-                    UserOrganization.user_id == user_id,
-                    UserOrganization.deleted_at.is_(None),
-                ),
-            )
-            .outerjoin(
-                UserApplication,
-                and_(
-                    UserApplication.organization_id == Application.organization_id,
-                    UserApplication.application_id == Application.id,
-                    UserApplication.user_id == user_id,
-                    UserApplication.deleted_at.is_(None),
-                ),
-            )
-            .where(
-                Application.id == application_id,
-                Application.deleted_at.is_(None),
-                Organization.deleted_at.is_(None),
-            )
-        )
-        result = await session.execute(statement)
-
-        # Hide applications when the user has no active organization membership.
-        row = result.one_or_none()
-        if row is None:
-            return None
-
-        application, organization, application_role, organization_role = row
-        return application, organization, application_role, organization_role
 
 
 async def membership_role(application_id: UUID, user_id: UUID) -> ApplicationRoles | None:
@@ -142,20 +75,6 @@ async def membership_role(application_id: UUID, user_id: UUID) -> ApplicationRol
         )
         result = await session.execute(statement)
         return result.scalar_one_or_none()
-
-
-async def list_user_memberships(organization_id: UUID, user_id: UUID) -> list[UserApplication]:
-    """Return active application memberships for one user in one organization."""
-
-    # Query active application memberships for response shaping at the route boundary.
-    async with session_scope() as session:
-        statement = select(UserApplication).where(
-            UserApplication.organization_id == organization_id,
-            UserApplication.user_id == user_id,
-            UserApplication.deleted_at.is_(None),
-        )
-        result = await session.execute(statement)
-        return result.scalars().all()
 
 
 async def members(application_id: UUID, organization_id: UUID) -> list[tuple[User, UserOrganization, UserApplication | None]]:
@@ -327,9 +246,6 @@ async def create(
                 selectinload(Application.organization).selectinload(Organization.created_by),
                 selectinload(Application.organization).selectinload(Organization.updated_by),
                 selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.compute_registry),
-                selectinload(Application.database_registry),
-                selectinload(Application.storage_registry),
                 selectinload(Application.created_by),
                 selectinload(Application.updated_by),
                 selectinload(Application.deleted_by),
@@ -435,9 +351,6 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
                 selectinload(Application.organization).selectinload(Organization.created_by),
                 selectinload(Application.organization).selectinload(Organization.updated_by),
                 selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.compute_registry),
-                selectinload(Application.database_registry),
-                selectinload(Application.storage_registry),
                 selectinload(Application.created_by),
                 selectinload(Application.updated_by),
                 selectinload(Application.deleted_by),
