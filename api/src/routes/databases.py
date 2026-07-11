@@ -97,11 +97,11 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
     if registry is None:
         raise HTTPException(status_code=404, detail="Database registry not found")
 
-    database_adapter = adapters.database(registry)
+    db = adapters.database(registry)
 
     # Inspect backend usage through the adapter.
     try:
-        data = await database_adapter.usage()
+        data = await db.usage()
     except Exception as exc:
         logger.exception("Failed to inspect database usage for registry '%s': %r", registry_id, exc)
         raise HTTPException(status_code=503, detail="Database usage unavailable") from exc

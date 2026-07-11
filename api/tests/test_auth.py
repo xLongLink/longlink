@@ -164,12 +164,11 @@ async def test_auth_oidc_upserts_activates_and_redirects(monkeypatch: pytest.Mon
     assert [userinfo.sub for userinfo in upserts] == ["callback-subject"]
 
 
-async def test_upsert_oidc_user_syncs_organization_databases(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Upsert normalized provider claims and resync organization shared users."""
+async def test_upsert_oidc_user_normalizes_provider_claims(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Upsert normalized provider claims into the local user record."""
 
     created_user = user("oidc-upsert")
     upsert_calls: list[dict[str, object]] = []
-    sync_calls: list[User] = []
 
     async def fake_upsert(**kwargs) -> User:
         """Record the user upsert payload."""
@@ -177,17 +176,7 @@ async def test_upsert_oidc_user_syncs_organization_databases(monkeypatch: pytest
         upsert_calls.append(kwargs)
         return created_user
 
-    async def fake_sync_user_organizations(synced_user: User) -> None:
-        """Record organization database sync requests."""
-
-        sync_calls.append(synced_user)
-
     monkeypatch.setattr(auth_routes.users, "upsert", fake_upsert)
-    monkeypatch.setattr(
-        auth_routes.bootstrap,
-        "sync_user_organizations",
-        fake_sync_user_organizations,
-    )
 
     subject = await auth_routes.upsert_oidc_user(
         OidcUserInfo(
@@ -209,7 +198,6 @@ async def test_upsert_oidc_user_syncs_organization_databases(monkeypatch: pytest
             "avatar": "https://example.com/avatar.png",
         }
     ]
-    assert sync_calls == [created_user]
 
 
 async def test_upsert_oidc_user_rejects_missing_identity_claims() -> None:
@@ -261,9 +249,10 @@ async def test_platform_role_dependencies_allow_only_elevated_roles(monkeypatch:
 
     active_user = user("active", PlatformRoles.support)
 
-    async def fake_get(oidc: str) -> User:
+    async def fake_get(oidc: str, include_access: bool = False) -> User:
         """Return the configured active user."""
 
+        assert include_access is True
         assert oidc == active_user.oidc
         return active_user
 
@@ -280,17 +269,16 @@ async def test_platform_role_dependencies_allow_only_elevated_roles(monkeypatch:
         await auth_module.authsupport(RequestStub({"oidc": active_user.oidc}))
 
     assert exc.value.status_code == 403
-    assert exc.value.detail == "Support access required"
+    assert exc.value.detail == "Permission required"
 
 
-async def test_patch_me_updates_profile_and_resyncs_organizations(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Update mutable profile fields and resync shared organization users."""
+async def test_patch_me_updates_profile(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Update mutable profile fields."""
 
     current_user = user("patch-user")
     updated_user = user("patch-user")
     updated_user.name = "Updated User"
     upsert_calls: list[dict[str, object]] = []
-    sync_calls: list[User] = []
 
     async def fake_upsert(**kwargs) -> User:
         """Record the profile update payload."""
@@ -298,44 +286,25 @@ async def test_patch_me_updates_profile_and_resyncs_organizations(monkeypatch: p
         upsert_calls.append(kwargs)
         return updated_user
 
-    async def fake_sync_user_organizations(synced_user: User) -> None:
-        """Record shared-user sync requests."""
-
-        sync_calls.append(synced_user)
-
     monkeypatch.setattr(users_routes.users, "upsert", fake_upsert)
-    monkeypatch.setattr(
-        users_routes.bootstrap,
-        "sync_user_organizations",
-        fake_sync_user_organizations,
-    )
 
     result = await users_routes.patch_me(UserUpdate(name="Updated User"), current_user)
 
     assert result is updated_user
     assert upsert_calls == [{"oidc": "patch-user", "name": "Updated User"}]
-    assert sync_calls == [updated_user]
 
 
-async def test_organization_access_hides_missing_memberships(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Return not-found errors for organization non-members."""
+async def test_organization_access_rejects_missing_memberships() -> None:
+    """Return access errors for organization non-members."""
 
     organization_id = UUID("22222222-2222-2222-2222-222222222222")
     current_user = user("member-check")
 
-    async def fake_get_member_access(organization_id: UUID, user_id: UUID):
-        """Return no organization for a missing active membership."""
-
-        assert user_id == current_user.id
-        return None
-
-    monkeypatch.setattr(organizations_routes.organizations, "get_member_access", fake_get_member_access)
-
     with pytest.raises(HTTPException) as exc:
         await organizations_routes.get_organization(organization_id, current_user)
 
-    assert exc.value.status_code == 404
-    assert exc.value.detail == "Organization not found"
+    assert exc.value.status_code == 403
+    assert exc.value.detail == "Access required"
 
 
 @pytest.mark.parametrize(
@@ -356,10 +325,11 @@ async def test_upsert_bootstraps_first_user_role(
 
     session = FakeUserWriteSession(existing_user_count)
 
-    async def fake_get(oidc: str, include_deleted: bool = False) -> None:
+    async def fake_get(oidc: str, include_deleted: bool = False, include_access: bool = False) -> None:
         """Pretend no user exists yet for the requested OIDC subject."""
 
         assert include_deleted is True
+        assert include_access is False
         return None
 
     monkeypatch.setattr(users_service_module, "get", fake_get)

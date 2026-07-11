@@ -5,18 +5,19 @@ from datetime import datetime
 from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel
 from contextlib import asynccontextmanager
-from sqlalchemy import Uuid, Column, String, DateTime
+from sqlalchemy import Uuid, Column, String
 from tenant.utils import utcnow
 from sqlalchemy.orm import relationship, declared_attr
 from collections.abc import AsyncIterator
 from sqlalchemy.engine import URL
+from tenant.database.types import UTCDateTime
 from sqlalchemy.ext.asyncio import (AsyncEngine, async_sessionmaker,
                                     create_async_engine)
 from longlink.utils.settings import Envs
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 # SQLModel accepts the SQLAlchemy type instance, while Pyright needs a looser value.
-UTC_DATETIME_TYPE: Any = DateTime(timezone=True)
+UTC_DATETIME_TYPE: Any = UTCDateTime()
 DATABASE_SCHEMA_PATTERN = re.compile(r"^[A-Za-z0-9_](?:[A-Za-z0-9_-]{0,61}[A-Za-z0-9_])?$")
 
 

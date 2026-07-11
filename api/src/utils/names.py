@@ -36,16 +36,8 @@ def knames(value: str) -> str:
     if not re.fullmatch(r"^[a-z0-9]([-a-z0-9]*[a-z0-9])?$", value):
         raise ValueError("Value must contain only lowercase letters, numbers, and hyphens")
 
+    # Runtime names must not collide with Kubernetes or LongLink system namespaces.
+    if value in KUBERNETES_SYSTEM_NAMESPACES:
+        raise ValueError("Value is reserved")
+
     return value
-
-
-def namespace(value: str) -> str:
-    """Validate one organization Kubernetes namespace and return it unchanged."""
-
-    namespace_name = knames(value)
-
-    # Organization namespaces must not collide with Kubernetes or LongLink system namespaces.
-    if namespace_name in KUBERNETES_SYSTEM_NAMESPACES:
-        raise ValueError("Namespace name is reserved")
-
-    return namespace_name

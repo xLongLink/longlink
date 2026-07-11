@@ -82,23 +82,11 @@ async def invitations(organization_id: UUID) -> list[OrganizationInvitation]:
         return result.scalars().all()
 
 
-async def get_member(organization_id: UUID, user_id: UUID) -> Organization | None:
-    """Return one active organization for an active member without details."""
+async def access(user_id: UUID, organization_id: UUID) -> tuple[Organization, OrganizationRoles] | None:
+    """Return one organization and role when the user can access it."""
 
-    # Return none when the access check fails.
-    member_access = await get_member_access(organization_id, user_id)
-    if member_access is None:
-        return None
-
-    return member_access[0]
-
-
-async def get_member_access(organization_id: UUID, user_id: UUID) -> tuple[Organization, OrganizationRoles] | None:
-    """Return one active organization and member role for an active member."""
-
-    # Check organization membership in one query.
+    # Check organization membership in one query so missing organizations and non-members look identical.
     async with session_scope() as session:
-        # Join membership in the access check so non-members and missing organizations look identical.
         statement = (
             select(Organization, UserOrganization.role)
             .join(UserOrganization, UserOrganization.organization_id == Organization.id)
@@ -118,6 +106,17 @@ async def get_member_access(organization_id: UUID, user_id: UUID) -> tuple[Organ
 
         organization, role = row
         return organization, role
+
+
+async def get_member(organization_id: UUID, user_id: UUID) -> Organization | None:
+    """Return one active organization for an active member without details."""
+
+    # Return none when the access check fails.
+    member_access = await access(user_id, organization_id)
+    if member_access is None:
+        return None
+
+    return member_access[0]
 
 
 async def database_users(organization_id: UUID) -> list[TenantUser]:
@@ -286,7 +285,6 @@ async def create(
 ) -> Organization:
     """Create an organization."""
 
-    names.namespace(slug)
     names.knames(slug)
     shared_storage_bucket_name = names.knames(f"{slug}-shared")
 

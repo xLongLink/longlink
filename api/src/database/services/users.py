@@ -1,10 +1,10 @@
 from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
-from tenant.models.languages import Language
 from src.models.roles import PlatformRoles
 from src.models.users import Theme, Accent, Radius
 from src.database.session import session_scope
+from tenant.models.languages import Language
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
@@ -27,24 +27,6 @@ async def get_by_id(user_id: UUID) -> User | None:
         statement = select(User).where(User.id == user_id)
         result = await session.execute(statement)
         return result.scalar_one_or_none()
-
-
-async def organizations(user_id: UUID) -> list[Organization]:
-    """Return active organizations for one user."""
-
-    # Load organizations joined through user memberships.
-    async with session_scope() as session:
-        statement = (
-            select(Organization)
-            .join(UserOrganization, UserOrganization.organization_id == Organization.id)
-            .options(selectinload(Organization.location))
-            .where(
-                UserOrganization.user_id == user_id,
-                Organization.deleted_at.is_(None),
-            )
-        )
-        result = await session.execute(statement)
-        return result.scalars().all()
 
 
 async def organization_memberships(user_id: UUID) -> list[tuple[Organization, UserOrganization]]:
@@ -167,12 +149,19 @@ async def upsert(
         return user
 
 
-async def get(oidc: str, include_deleted: bool = False) -> User | None:
+async def get(oidc: str, include_deleted: bool = False, include_access: bool = False) -> User | None:
     """Retrieve a user by OIDC subject."""
 
     # Read the user through a managed database session.
     async with session_scope() as session:
         statement = select(User).where(User.oidc == oidc)
+
+        # Eager-load resource relationships for request authentication when requested.
+        if include_access:
+            statement = statement.options(
+                selectinload(User.organizations).selectinload(Organization.applications),
+                selectinload(User.applications),
+            )
 
         # Hide soft-deleted users unless explicitly requested.
         if not include_deleted:

@@ -85,8 +85,8 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
     assert {user.id for user, _ in memberships} == {owner.id, member.id}
 
 
-async def test_fetch_and_list_by_user_ignore_deleted_organizations(users: tuple[User, User, User]) -> None:
-    """Return only active organizations from collection services."""
+async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User]) -> None:
+    """Return only active organizations from the collection service."""
 
     # Arrange
     owner = users[0]
@@ -97,11 +97,9 @@ async def test_fetch_and_list_by_user_ignore_deleted_organizations(users: tuple[
 
     # Act
     fetched = await db.organizations.fetch()
-    user_organizations = await db.users.organizations(owner.id)
 
     # Assert
     assert [organization.id for organization in fetched] == [active_organization.id]
-    assert [organization.id for organization in user_organizations] == [active_organization.id]
 
 
 async def test_get_member_and_membership_role_require_active_membership(users: tuple[User, User, User]) -> None:

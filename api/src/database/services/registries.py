@@ -8,7 +8,7 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def latest_compute_registry(location_id: UUID) -> ComputeRegistry | None:
+async def latest_compute(location_id: UUID) -> ComputeRegistry | None:
     """Return the newest compute registry for one location."""
 
     return max(
@@ -18,7 +18,7 @@ async def latest_compute_registry(location_id: UUID) -> ComputeRegistry | None:
     )
 
 
-async def latest_database_registry(location_id: UUID) -> DatabaseRegistry | None:
+async def latest_database(location_id: UUID) -> DatabaseRegistry | None:
     """Return the newest database registry for one location."""
 
     return max(
@@ -28,7 +28,7 @@ async def latest_database_registry(location_id: UUID) -> DatabaseRegistry | None
     )
 
 
-async def latest_storage_registry(location_id: UUID) -> StorageRegistry | None:
+async def latest_storage(location_id: UUID) -> StorageRegistry | None:
     """Return the newest storage registry for one location."""
 
     return max(
@@ -38,7 +38,7 @@ async def latest_storage_registry(location_id: UUID) -> StorageRegistry | None:
     )
 
 
-async def application_compute_registry(application: Application, location_id: UUID) -> ComputeRegistry | None:
+async def application_compute(application: Application, location_id: UUID) -> ComputeRegistry | None:
     """Return the compute registry used by an application, falling back to the newest one."""
 
     # Existing applications keep using their assigned compute registry.
@@ -49,10 +49,10 @@ async def application_compute_registry(application: Application, location_id: UU
         if registry is not None:
             return registry
 
-    return await latest_compute_registry(location_id)
+    return await latest_compute(location_id)
 
 
-async def organization_database_registry(
+async def organization_database(
     organization: Organization | OrganizationDetails | OrganizationSummary,
     include_deleted: bool = False,
 ) -> DatabaseRegistry | None:
@@ -73,10 +73,10 @@ async def organization_database_registry(
             if registry is not None:
                 return registry
 
-    return await latest_database_registry(organization.location_id)
+    return await latest_database(organization.location_id)
 
 
-async def organization_storage_registry(
+async def organization_storage(
     organization: Organization | OrganizationDetails | OrganizationSummary,
     include_deleted: bool = False,
 ) -> StorageRegistry | None:
@@ -97,10 +97,10 @@ async def organization_storage_registry(
             if registry is not None:
                 return registry
 
-    return await latest_storage_registry(organization.location_id)
+    return await latest_storage(organization.location_id)
 
 
-async def application_storage_registry(application: Application) -> StorageRegistry | None:
+async def application_storage(application: Application) -> StorageRegistry | None:
     """Return the storage registry used by an application."""
 
     # Storage is optional, so applications without an assigned registry return no backend.

@@ -9,96 +9,96 @@ from src.database.models.storages import StorageRegistry
 async def application_image_metadata(payload: ApplicationCreate) -> LongLinkMetadata:
     """Inspect image metadata and validate required environment values."""
 
-    reserved_payload_envs = sorted(name for name in payload.envs if name.startswith("LONGLINK_"))
+    reserved_payload = sorted(name for name in payload.envs if name.startswith("LONGLINK_"))
 
     # User payloads cannot provide values reserved for control-plane injection.
-    if reserved_payload_envs:
-        raise HTTPException(status_code=409, detail=f"Reserved platform environment variables: {', '.join(reserved_payload_envs)}")
+    if reserved_payload:
+        raise HTTPException(status_code=409, detail=f"Reserved platform environment variables: {', '.join(reserved_payload)}")
 
     # Image inspection must succeed before the platform can trust runtime metadata.
-    image_metadata = await images.metadata(payload.image)
-    if image_metadata is None:
+    metadata = await images.metadata(payload.image)
+    if metadata is None:
         raise HTTPException(status_code=409, detail="Image metadata could not be inspected")
 
     # Deployments must use a resolved immutable image reference.
-    if image_metadata.digest is None or image_metadata.image is None:
+    if metadata.digest is None or metadata.image is None:
         raise HTTPException(status_code=409, detail="Image digest could not be resolved")
 
     # LongLink-prefixed values are always injected by the control plane, never declared by applications.
-    reserved_image_envs: list[str] = []
-    missing_envs: list[str] = []
+    reserved_image: list[str] = []
+    missing: list[str] = []
 
     # Walk required metadata envs once and split them by validation outcome.
-    for environment in image_metadata.environments:
+    for env in metadata.environments:
 
         # Optional envs do not need payload or platform guarantees.
-        if not environment.required:
+        if not env.required:
             continue
 
         # Runtime values with the platform prefix are injected later by the control plane.
-        if environment.name.startswith("LONGLINK_"):
-            reserved_image_envs.append(environment.name)
+        if env.name.startswith("LONGLINK_"):
+            reserved_image.append(env.name)
             continue
 
         # Non-platform required values must be supplied by the application creation payload.
-        if not payload.envs.get(environment.name, "").strip():
-            missing_envs.append(environment.name)
+        if not payload.envs.get(env.name, "").strip():
+            missing.append(env.name)
 
-    reserved_image_envs.sort()
+    reserved_image.sort()
 
     # Reject images that try to declare LongLink-managed runtime values.
-    if reserved_image_envs:
-        raise HTTPException(status_code=409, detail=f"Reserved platform environment variables: {', '.join(reserved_image_envs)}")
+    if reserved_image:
+        raise HTTPException(status_code=409, detail=f"Reserved platform environment variables: {', '.join(reserved_image)}")
 
-    missing_envs.sort()
+    missing.sort()
 
     # Reject images whose app-managed required values are absent.
-    if missing_envs:
-        raise HTTPException(status_code=409, detail=f"Missing required environment variables: {', '.join(missing_envs)}")
+    if missing:
+        raise HTTPException(status_code=409, detail=f"Missing required environment variables: {', '.join(missing)}")
 
-    return image_metadata
+    return metadata
 
 
 def runtime_environment(
     application_slug: str,
-    database_connection: adapters.DatabaseRuntimeConnection,
-    storage_registry: StorageRegistry | None,
-    storage_bucket_name: str | None = None,
-    shared_storage_bucket_name: str | None = None,
-    storage_credentials: adapters.StorageRuntimeCredentials | None = None,
+    connection: adapters.DatabaseRuntimeConnection,
+    storage: StorageRegistry | None,
+    bucket: str | None = None,
+    shared: str | None = None,
+    credentials: adapters.StorageRuntimeCredentials | None = None,
 ) -> dict[str, str]:
     """Build platform-managed environment variables for an application runtime."""
 
     # Build injected platform values explicitly so env names are visible at the injection point.
-    environment = {
+    envs = {
         "LONGLINK_ENV": "production",
-        "LONGLINK_DATABASE_HOST": database_connection["host"],
-        "LONGLINK_DATABASE_NAME": database_connection["database_name"],
-        "LONGLINK_DATABASE_PASSWORD": database_connection["password"],
-        "LONGLINK_DATABASE_PORT": str(database_connection["port"]),
+        "LONGLINK_DATABASE_HOST": connection["host"],
+        "LONGLINK_DATABASE_NAME": connection["database_name"],
+        "LONGLINK_DATABASE_PASSWORD": connection["password"],
+        "LONGLINK_DATABASE_PORT": str(connection["port"]),
         "LONGLINK_DATABASE_SCHEMA": application_slug,
-        "LONGLINK_DATABASE_USERNAME": database_connection["username"],
+        "LONGLINK_DATABASE_USERNAME": connection["username"],
     }
 
     # Add object storage values only when this application has storage configured.
-    if storage_registry is not None:
+    if storage is not None:
 
         # Storage credentials are generated by the storage adapter when storage is configured.
-        if storage_credentials is None:
+        if credentials is None:
             raise ValueError("Storage runtime credentials are required when storage is configured")
 
         # Bucket names are assigned by the control plane before runtime provisioning.
-        if storage_bucket_name is None or shared_storage_bucket_name is None:
+        if bucket is None or shared is None:
             raise ValueError("Assigned storage buckets are required when storage is configured")
 
-        environment.update(
+        envs.update(
             {
-                "LONGLINK_STORAGE_BUCKET": storage_bucket_name,
-                "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.runtime_endpoint_url or storage_registry.endpoint_url,
-                "LONGLINK_STORAGE_PASSWORD": storage_credentials["secret_access_key"],
-                "LONGLINK_STORAGE_SHARED_BUCKET": shared_storage_bucket_name,
-                "LONGLINK_STORAGE_USERNAME": storage_credentials["access_key_id"],
+                "LONGLINK_STORAGE_BUCKET": bucket,
+                "LONGLINK_STORAGE_ENDPOINT_URL": storage.runtime_endpoint_url or storage.endpoint_url,
+                "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
+                "LONGLINK_STORAGE_SHARED_BUCKET": shared,
+                "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
             }
         )
 
-    return environment
+    return envs

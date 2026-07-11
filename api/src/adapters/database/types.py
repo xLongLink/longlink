@@ -9,9 +9,6 @@ class DatabaseSchemaUsage(TypedDict):
     table_count: int
 
 
-DatabaseCellValue = str
-
-
 class DatabaseTableColumn(TypedDict):
     """Describe one database table column."""
 
@@ -34,4 +31,4 @@ class DatabaseTableRows(TypedDict):
 
     name: str
     schema_name: str
-    rows: list[dict[str, DatabaseCellValue]]
+    rows: list[dict[str, str]]

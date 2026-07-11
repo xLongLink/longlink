@@ -11,7 +11,7 @@ def test_healthz_returns_ok() -> None:
     response = TestClient(main.app).get("/api/healthz")
 
     assert response.status_code == 200
-    assert response.json() == {"ok": True}
+    assert response.json() == {"alive": True}
 
 
 def test_static_web_bundle_serves_root() -> None:

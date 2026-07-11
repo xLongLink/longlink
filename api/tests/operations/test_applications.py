@@ -47,20 +47,20 @@ def test_application_pods_startup_state_ignores_stale_dead_pods() -> None:
     """Keep a fresh rollout pending while old pods from a previous rollout are dead."""
 
     # Arrange
-    operation_created_at = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
+    created_at = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
     stale_pod = pod_status(
-        operation_created_at - timedelta(minutes=5),
+        created_at - timedelta(minutes=5),
         "Running",
         [container_status(waiting_reason="CrashLoopBackOff")],
     )
     current_pod = pod_status(
-        operation_created_at + timedelta(seconds=2),
+        created_at + timedelta(seconds=2),
         "Pending",
         [container_status()],
     )
 
     # Act
-    startup_state = application_pods_startup_state([stale_pod, current_pod], operation_created_at)
+    startup_state = application_pods_startup_state([stale_pod, current_pod], created_at)
 
     # Assert
     assert startup_state == ApplicationStartupState.pending
@@ -70,15 +70,15 @@ def test_application_pods_startup_state_treats_image_pull_backoff_as_dead() -> N
     """Fail verification when a current pod cannot pull its configured image."""
 
     # Arrange
-    operation_created_at = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
+    created_at = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
     pod = pod_status(
-        operation_created_at + timedelta(seconds=2),
+        created_at + timedelta(seconds=2),
         "Pending",
         [container_status(waiting_reason="ImagePullBackOff")],
     )
 
     # Act
-    startup_state = application_pods_startup_state([pod], operation_created_at)
+    startup_state = application_pods_startup_state([pod], created_at)
 
     # Assert
     assert startup_state == ApplicationStartupState.dead
@@ -88,15 +88,15 @@ def test_application_pods_startup_state_marks_current_crashloop_dead() -> None:
     """Fail verification when the current rollout pod is crashlooping."""
 
     # Arrange
-    operation_created_at = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
+    created_at = datetime(2026, 7, 1, 12, 0, tzinfo=UTC)
     pod = pod_status(
-        operation_created_at + timedelta(seconds=2),
+        created_at + timedelta(seconds=2),
         "Running",
         [container_status(waiting_reason="CrashLoopBackOff")],
     )
 
     # Act
-    startup_state = application_pods_startup_state([pod], operation_created_at)
+    startup_state = application_pods_startup_state([pod], created_at)
 
     # Assert
     assert startup_state == ApplicationStartupState.dead
@@ -128,7 +128,7 @@ async def test_execute_application_verify_operation_completes_running_applicatio
     )
     calls: list[str] = []
 
-    async def fake_application_compute_registry(application, location_id):
+    async def fake_application_compute(application, location_id):
         """Return a fake compute registry for startup verification."""
 
         return SimpleNamespace(kubeconfig="apiVersion: v1\nclusters: []\n", proxy_secret="proxy-secret")
@@ -148,8 +148,8 @@ async def test_execute_application_verify_operation_completes_running_applicatio
 
 
     monkeypatch.setattr(
-        "src.operations.implementation.applications.registries.application_compute_registry",
-        fake_application_compute_registry,
+        "src.operations.implementation.applications.registries.application_compute",
+        fake_application_compute,
     )
     monkeypatch.setattr(
         "src.operations.implementation.applications.Kubernetes",
@@ -199,7 +199,7 @@ async def test_execute_application_verify_operation_marks_failed_when_dead(monke
     )
     calls: list[str] = []
 
-    async def fake_application_compute_registry(application, location_id):
+    async def fake_application_compute(application, location_id):
         """Return a fake compute registry for startup verification."""
 
         return SimpleNamespace(kubeconfig="apiVersion: v1\nclusters: []\n", proxy_secret="proxy-secret")
@@ -224,8 +224,8 @@ async def test_execute_application_verify_operation_marks_failed_when_dead(monke
 
 
     monkeypatch.setattr(
-        "src.operations.implementation.applications.registries.application_compute_registry",
-        fake_application_compute_registry,
+        "src.operations.implementation.applications.registries.application_compute",
+        fake_application_compute,
     )
     monkeypatch.setattr(
         "src.operations.implementation.applications.Kubernetes",
@@ -274,7 +274,7 @@ async def test_execute_application_verify_operation_releases_when_not_ready(monk
         user=user,
     )
 
-    async def fake_application_compute_registry(application, location_id):
+    async def fake_application_compute(application, location_id):
         """Return a fake compute registry for startup verification."""
 
         return SimpleNamespace(kubeconfig="apiVersion: v1\nclusters: []\n", proxy_secret="proxy-secret")
@@ -298,8 +298,8 @@ async def test_execute_application_verify_operation_releases_when_not_ready(monk
 
 
     monkeypatch.setattr(
-        "src.operations.implementation.applications.registries.application_compute_registry",
-        fake_application_compute_registry,
+        "src.operations.implementation.applications.registries.application_compute",
+        fake_application_compute,
     )
     monkeypatch.setattr(
         "src.operations.implementation.applications.Kubernetes",

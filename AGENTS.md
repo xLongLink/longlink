@@ -69,6 +69,8 @@ longlink/
 - Avoid `Any` and prefer precise type annotations.
 - Keep logic in one function unless extraction clearly improves reuse, readability, or separation of concerns, and avoid single-use helpers unless they hide a genuinely complex boundary.
 - Simplify control flow, remove dead or duplicated code, and review the final implementation for further simplifications.
+- Prefer concise local names when the surrounding scope already provides context; avoid repeating the domain in every variable name.
+- Avoid redundant validation or normalization calls for persisted or already-derived values; validate once at the boundary unless the transformed value is used.
 - Follow existing project conventions for naming, structure, formatting, and architecture.
 - Prefer established, well-maintained libraries over handwritten implementations when they reduce complexity.
 - Target Python 3+ and do not use the `__future__` module.

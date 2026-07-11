@@ -7,9 +7,7 @@ from src.utils import urls
 from src.models.auth import OidcUserInfo
 from src.environments import env
 from fastapi.responses import RedirectResponse
-from src.models.common import SuccessResponse
 from src.database.services import users
-from src.runtime import bootstrap
 from authlib.integrations.base_client import OAuthError
 
 router = APIRouter()
@@ -74,12 +72,6 @@ async def upsert_oidc_user(userinfo: OidcUserInfo) -> str:
     # Prevent deleted users from authenticating.
     if user.deleted_at is not None:
         raise HTTPException(status_code=401, detail="Not authenticated")
-
-    # Sync organization access after profile upsert.
-    try:
-        await bootstrap.sync_user_organizations(user)
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail="Failed to synchronize user profile") from exc
 
     return userinfo.sub
 
@@ -154,9 +146,8 @@ async def auth_oidc(request: Request) -> RedirectResponse:
     return RedirectResponse(urls.safe_local_path(next_path, "/organizations"))
 
 
-@router.post("/auth/logout", response_model=SuccessResponse, include_in_schema=False)
+@router.post("/auth/logout", status_code=204, include_in_schema=False)
 async def logout(request: Request):
     """Clear the user session and log out."""
 
     SessionAccountsService(request).remove()
-    return {}

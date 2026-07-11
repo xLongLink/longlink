@@ -50,14 +50,8 @@ def test_knames_rejects_overlong_dns_label() -> None:
         names.knames("a" * 64)
 
 
-def test_namespace_returns_valid_organization_namespace() -> None:
-    """Return valid organization Kubernetes namespaces unchanged."""
+def test_knames_rejects_system_namespace() -> None:
+    """Reject Kubernetes system namespaces as runtime resource names."""
 
-    assert names.namespace("acme-team") == "acme-team"
-
-
-def test_namespace_rejects_system_namespace() -> None:
-    """Reject Kubernetes system namespaces for organizations."""
-
-    with pytest.raises(ValueError, match="Namespace name is reserved"):
-        names.namespace("kube-system")
+    with pytest.raises(ValueError, match="Value is reserved"):
+        names.knames("kube-system")

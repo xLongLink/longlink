@@ -67,7 +67,6 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
 
     try:
         _wait_for_postgres(container, "longlink", "secret", "postgres")
-        database_url = await adapter.database("acme")
         active_user = TenantUser(
             id=UUID("11111111-1111-1111-1111-111111111111"),
             name="Owner User",
@@ -78,6 +77,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             updated_at=datetime(2026, 7, 1, tzinfo=UTC),
         )
         await adapter.sync_users("acme", [active_user])
+        database_url = adapter.url("acme")
 
         organization_id = UUID("33333333-3333-3333-3333-333333333333")
         application_id = UUID("44444444-4444-4444-4444-444444444444")
@@ -152,7 +152,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         await adapter.delete_database("acme")
         databases_after_delete = await adapter.databases()
 
-        assert database_url.split("?", 1)[0].endswith("/acme")
+        assert database_url.database == "acme"
         assert runtime_connection["username"].startswith("longlink_")
         assert len(runtime_connection["username"]) <= 63
         assert shared_user == {"email": "owner@example.com", "role": "owner"}

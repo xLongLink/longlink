@@ -48,8 +48,8 @@ async def create_compute_registry(payload: ComputeRegistryCreate, user: User = D
 
     # Initialize the cluster immediately so unavailable backends fail fast.
     try:
-        compute_adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
-        await compute_adapter.setup()
+        adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
+        await adapter.setup()
     except Exception as exc:
         raise HTTPException(status_code=503, detail="Failed to initialize the compute cluster") from exc
 
@@ -104,11 +104,11 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
     if registry is None:
         raise HTTPException(status_code=404, detail="Compute registry not found")
 
-    compute_adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
+    adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
 
     # Load namespaces before validating the request.
     try:
-        managed_namespaces = set(await compute_adapter.namespaces())
+        managed_namespaces = set(await adapter.namespaces())
     except Exception as exc:
         logger.exception("Failed to inspect compute namespaces for registry '%s': %r", registry_id, exc)
         raise HTTPException(status_code=503, detail="Compute namespaces unavailable") from exc
@@ -119,7 +119,7 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
 
     # Ask the backend for pods in the namespace.
     try:
-        pods = await compute_adapter.pods(namespace)
+        pods = await adapter.pods(namespace)
     except Exception as exc:
         logger.exception("Failed to inspect pods in namespace '%s' for registry '%s': %r", namespace, registry_id, exc)
         raise HTTPException(status_code=503, detail="Compute pods unavailable") from exc

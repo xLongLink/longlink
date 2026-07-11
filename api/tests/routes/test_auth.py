@@ -176,7 +176,7 @@ async def test_activate_account_switches_the_active_session_account(users: tuple
     response = client.post(f"/auth/accounts/{user_two.oidc}/activate")
 
     # Assert
-    assert response.status_code == 200
+    assert response.status_code == 204
 
     accounts_response = client.get("/auth/accounts")
     assert accounts_response.status_code == 200

@@ -2,7 +2,6 @@ import httpx2
 import pytest
 from types import SimpleNamespace
 from datetime import UTC, datetime
-from src.runtime import registries
 from tenant.models import User as TenantUser
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from fastapi.testclient import TestClient
@@ -10,7 +9,7 @@ from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.models.storages import StorageKind
 from src.database.session import get_session
 from src.models.databases import DatabaseKind
-from src.database.services import users, compute, storage, database, locations, operations, applications, organizations
+from src.database.services import users, compute, storage, database, locations, operations, registries, applications, organizations
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationStatus
 from src.database.models.users import User
@@ -158,10 +157,10 @@ async def test_list_apps_without_organization_requires_admin(
 
     # Assert
     assert response.status_code == 403
-    assert response.json() == {"detail": "Administrator privileges required"}
+    assert response.json() == {"detail": "Permission required"}
 
 
-async def test_list_organization_apps_returns_404_for_non_member(
+async def test_list_organization_apps_returns_403_for_non_member(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
@@ -185,8 +184,8 @@ async def test_list_organization_apps_returns_404_for_non_member(
     response = client.get(f"/api/organizations/{organization.id}/applications")
 
     # Assert
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Organization not found"}
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
 
 
 async def test_create_app_returns_app_response(
@@ -377,6 +376,15 @@ async def test_create_app_returns_app_response(
         ),
     )
     monkeypatch.setattr(
+        "src.runtime.bootstrap.adapters.database",
+        lambda registry: FakeDatabase(
+            registry.host,
+            registry.port,
+            registry.username,
+            registry.password,
+        ),
+    )
+    monkeypatch.setattr(
         "src.runtime.provisioning.adapters.storage",
         lambda registry: FakeStorage(
             registry.endpoint_url,
@@ -451,7 +459,7 @@ async def test_create_app_returns_app_response(
     assert application_secrets["LONGLINK_STORAGE_USERNAME"] == "storage-access"
 
 
-async def test_organization_storage_registry_reuses_existing_app_registry(users: tuple[User, User, User]) -> None:
+async def test_organization_storage_reuses_existing_app_registry(users: tuple[User, User, User]) -> None:
     """Keep organization storage on the first registry already used by its apps."""
 
     # Arrange
@@ -488,7 +496,7 @@ async def test_organization_storage_registry_reuses_existing_app_registry(users:
     )
 
     # Act
-    selected = await registries.organization_storage_registry(organization)
+    selected = await registries.organization_storage(organization)
 
     # Assert
     assert selected is not None
@@ -657,7 +665,7 @@ async def test_create_app_returns_403_for_regular_member(
 
     # Assert
     assert response.status_code == 403
-    assert response.json() == {"detail": "Application creation permissions required"}
+    assert response.json() == {"detail": "Permission required"}
 
 
 async def test_get_app_logs_returns_pod_logs(
@@ -1271,8 +1279,8 @@ async def test_organization_access_rejects_soft_deleted_membership(
     response = client.get(f"/api/organizations/{organization.id}/applications")
 
     # Assert
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Organization not found"}
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
 
 
 async def test_application_proxy_shows_loading_when_app_is_not_ready(

@@ -126,7 +126,6 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | PostgreSQL resource inspection            | Inspects databases, schemas, usage, tables, and preview rows.                                                                                                                                                                                                           |
 | S3-compatible provisioning                | Creates or reuses assigned shared/app buckets, persists assignments, and validates runtime credentials for app read/write, shared read-only, and cross-app denial before injection.                                                                                     |
 | S3-compatible resource inspection         | Lists buckets and object metadata for storage browsers.                                                                                                                                                                                                                 |
-| Invitation email utility                  | Provides MJML/SMTP invitation email helpers when email settings are complete.                                                                                                                                                                                           |
 
 ## Python SDK
 
@@ -348,5 +347,5 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Pyright targets            | Runs API and SDK type checks.                                                                                                              |
 | Web test workflow          | Runs Bun tests, TypeScript build mode, and both Vite bundle builds.                                                                        |
 | SDK test coverage areas    | Covers storage, database/migrations, router behavior, page/i18n routes, logging, CLI commands, and XML schemas.                            |
-| API test coverage areas    | Covers routes, adapters, operations, database services, image inspection, auth, locations, registries, apps, icons, and mail helpers.      |
+| API test coverage areas    | Covers routes, adapters, operations, database services, image inspection, auth, locations, registries, apps, and icons.                    |
 | Web test coverage areas    | Covers API helpers, auth roles, XML layout, docs anchors, XML parser/context/rendering/query/actions/adapters/expressions, and URL safety. |

@@ -86,7 +86,7 @@ async def test_logout_clears_the_active_account(users: tuple[User, User, User]) 
     response = client.post("/auth/logout")
 
     # Assert
-    assert response.status_code == 200
+    assert response.status_code == 204
 
     accounts_response = client.get("/auth/accounts")
     assert accounts_response.status_code == 200

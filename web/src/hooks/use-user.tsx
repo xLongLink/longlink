@@ -190,7 +190,7 @@ export function useUser() {
 
     /** Activates one saved account and refreshes the current user session. */
     const activateAccount = async (oidc: string) => {
-        await fetchApiJson<{ ok: boolean }>(`/auth/accounts/${encodeURIComponent(oidc)}/activate`, {
+        await fetchApiVoid(`/auth/accounts/${encodeURIComponent(oidc)}/activate`, {
             method: 'POST',
         });
 

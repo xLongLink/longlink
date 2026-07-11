@@ -1,7 +1,0 @@
-You were invited to join ${organization_name}
-
-${inviter_name} invited you to join ${organization_name} with the role ${invitation_role}.
-
-Organization ID: ${organization_id}
-
-Open the LongLink application to accept this invitation.

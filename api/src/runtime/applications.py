@@ -12,7 +12,7 @@ class Kubernetes(KubernetesCluster):
     async def application_pods(self, organization: str, application: str) -> list[APIObject]:
         """Return pods for one managed application."""
 
-        namespace = names.namespace(organization)
+        namespace = names.knames(organization)
         name = names.knames(application)
 
         # Convert Kubernetes API failures into a simple caller error.
@@ -24,7 +24,7 @@ class Kubernetes(KubernetesCluster):
     async def application_deployment_ready(self, organization: str, application: str) -> bool:
         """Return whether the current application Deployment rollout is ready."""
 
-        namespace = names.namespace(organization)
+        namespace = names.knames(organization)
         name = names.knames(application)
 
         # Read the live Deployment so rollout status reflects the Kubernetes controller state.
@@ -76,7 +76,7 @@ class Kubernetes(KubernetesCluster):
     ) -> str:
         """Create or replace one internal application Deployment and Service."""
 
-        namespace = names.namespace(organization)
+        namespace = names.knames(organization)
         name = names.knames(application)
 
         # Replace the full Secret data map so removed environment keys do not survive a merge patch.
@@ -119,7 +119,7 @@ class Kubernetes(KubernetesCluster):
     async def delete_application(self, organization: str, application: str) -> None:
         """Delete one managed application workload and tolerate missing resources."""
 
-        namespace = names.namespace(organization)
+        namespace = names.knames(organization)
         name = names.knames(application)
 
         delete_calls = (
@@ -142,7 +142,7 @@ class Kubernetes(KubernetesCluster):
     async def logs(self, organization: str, application: str, lines: int = 200) -> str:
         """Return recent logs for one managed application."""
 
-        namespace = names.namespace(organization)
+        namespace = names.knames(organization)
         name = names.knames(application)
 
         # List pods before selecting the most recent log source.

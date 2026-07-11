@@ -223,7 +223,6 @@ async def seed_local_development() -> None:
     organization = next((organization for organization in organizations if organization.name == LOCAL_ORG), None)
     if organization is None:
         organization_slug = names.slugify(LOCAL_ORG)
-        names.namespace(organization_slug)
         names.knames(organization_slug)
         names.knames(f"{organization_slug}-shared")
         organization = await organization_service.create(
@@ -251,7 +250,6 @@ async def seed_local_development() -> None:
 
     application_payload = ApplicationCreate.model_validate(LOCAL_APP)
     application_slug = names.slugify(LOCAL_APP_NAME)
-    names.namespace(organization_record.slug)
     names.knames(application_slug)
     names.knames(organization_record.slug)
 

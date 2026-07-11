@@ -18,7 +18,7 @@ def test_runtime_environment_uses_separate_connection_credentials() -> None:
             runtime_endpoint_url="http://storage.runtime.longlink.internal:19000",
         ),
     )
-    database_connection: adapters.DatabaseRuntimeConnection = {
+    connection: adapters.DatabaseRuntimeConnection = {
         "host": "database.longlink.internal",
         "port": 5432,
         "password": "database-secret",
@@ -32,7 +32,7 @@ def test_runtime_environment_uses_separate_connection_credentials() -> None:
 
     assert runtime_environment(
         "dashboard",
-        database_connection,
+        connection,
         registry,
         "acme-dashboard",
         "acme-shared",
@@ -63,7 +63,7 @@ def test_runtime_environment_requires_storage_credentials() -> None:
             runtime_endpoint_url="http://storage.runtime.longlink.internal:19000",
         ),
     )
-    database_connection: adapters.DatabaseRuntimeConnection = {
+    connection: adapters.DatabaseRuntimeConnection = {
         "host": "database.longlink.internal",
         "port": 5432,
         "password": "database-secret",
@@ -72,4 +72,4 @@ def test_runtime_environment_requires_storage_credentials() -> None:
     }
 
     with pytest.raises(ValueError, match="Storage runtime credentials"):
-        runtime_environment("dashboard", database_connection, registry)
+        runtime_environment("dashboard", connection, registry)

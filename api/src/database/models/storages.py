@@ -2,9 +2,10 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
+from sqlalchemy import Enum, Column
 from tenant.utils import utcnow
-from sqlalchemy import Enum, Column, DateTime
 from src.models.storages import StorageKind
+from tenant.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
@@ -34,13 +35,13 @@ class StorageRegistry(SQLModel, table=True):
     runtime_endpoint_url: str = Field(max_length=255)
 
     # Audit
-    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False))
+    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
     created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "StorageRegistry.created_id"})
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    updated_at: datetime = Field(default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=utcnow))
+    updated_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow))
     updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "StorageRegistry.updated_id"})
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
-    deleted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
     deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "StorageRegistry.deleted_id"})
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 

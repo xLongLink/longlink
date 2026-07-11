@@ -2,7 +2,7 @@ import secrets
 import contextlib
 from uuid import UUID
 from .base import Database, DatabaseRuntimeConnection
-from .types import DatabaseCellValue, DatabaseTableRows, DatabaseSchemaUsage, DatabaseTableColumn, DatabaseTableColumns
+from .types import DatabaseTableRows, DatabaseSchemaUsage, DatabaseTableColumn, DatabaseTableColumns
 from src.utils import names
 from sqlalchemy import String, text, inspect
 from tenant.models import User
@@ -129,15 +129,6 @@ class Postgres(Database):
             )
 
         return database_name
-
-    async def database(self, organization: str) -> str:
-        """Create the organization database if it does not exist and return a connection DSN."""
-
-        # Organization bootstrap owns database and shared schema preparation.
-        database_name = await self._prepare_organization_database(organization)
-
-        # Return the prepared organization database DSN for callers that still need a connection string.
-        return self.url(database_name).render_as_string(hide_password=False)
 
     async def sync_users(self, organization: str, users: list[User]) -> None:
         """Synchronize shared organization users for one organization."""
@@ -381,7 +372,7 @@ class Postgres(Database):
                 text(f"SELECT * FROM {table_identifier} LIMIT :limit"),
                 {"limit": limit},
             )
-            rows: list[dict[str, DatabaseCellValue]] = []
+            rows: list[dict[str, str]] = []
 
             # Convert every preview value to a string while preserving column names.
             for row in rows_result.mappings().all():

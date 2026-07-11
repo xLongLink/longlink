@@ -44,7 +44,7 @@ class KubernetesCluster(KubernetesGateway):
     async def namespace(self, organization: str) -> None:
         """Create the namespace for an organization if it does not exist."""
 
-        namespace = names.namespace(organization)
+        namespace = names.knames(organization)
 
         # Reuse an existing namespace or create it when Kubernetes reports it missing.
         try:
@@ -69,7 +69,7 @@ class KubernetesCluster(KubernetesGateway):
     async def delete_namespace(self, organization: str) -> None:
         """Delete one managed organization namespace and tolerate missing namespaces."""
 
-        namespace = names.namespace(organization)
+        namespace = names.knames(organization)
 
         # Read the namespace first so missing namespaces can be treated as already deleted.
         try:

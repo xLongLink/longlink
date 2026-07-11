@@ -2,9 +2,10 @@ from uuid import UUID
 from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel
+from sqlalchemy import Enum, Column, ForeignKeyConstraint
 from tenant.utils import utcnow
-from sqlalchemy import Enum, Column, DateTime, ForeignKeyConstraint
 from src.models.roles import ApplicationRoles, OrganizationRoles
+from tenant.database.types import UTCDateTime
 
 
 class UserOrganization(SQLModel, table=True):
@@ -22,13 +23,13 @@ class UserOrganization(SQLModel, table=True):
     )
 
     # Audit
-    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False))
+    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
     updated_at: datetime = Field(
-        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=utcnow)
+        default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow)
     )
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
-    deleted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 
 
@@ -48,13 +49,13 @@ class UserApplication(SQLModel, table=True):
     )
 
     # Audit
-    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False))
+    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
     updated_at: datetime = Field(
-        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=utcnow)
+        default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow)
     )
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
-    deleted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 
     __table_args__ = (

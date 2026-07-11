@@ -63,7 +63,7 @@ async def test_create_organization_initializes_database(
     # Arrange
     owner = users[0]
     client = clients[0]
-    calls: list[tuple[str, str, list[TenantUser] | None]] = []
+    calls: list[tuple[str, str, list[TenantUser]]] = []
     location = await db.locations.create("local", "Local testing", owner, "CH")
     await db.database.create(
         DatabaseKind.postgresql,
@@ -86,12 +86,6 @@ async def test_create_organization_initializes_database(
             self.username = username
             self.password = password
 
-        async def database(self, organization: str) -> str:
-            """Record organization database creation and return its URL."""
-
-            calls.append(("database", organization, None))
-            return f"postgresql://db/{organization}"
-
         async def sync_users(self, organization: str, users: list[TenantUser]) -> None:
             """Record synchronized tenant users for the organization."""
 
@@ -110,11 +104,9 @@ async def test_create_organization_initializes_database(
 
     # Assert
     assert response.status_code == 200
-    synced_users = calls[1][2]
-    assert synced_users is not None
-    assert calls[0] == ("database", "acme", None)
-    assert calls[1][0] == "sync_users"
-    assert calls[1][1] == "acme"
+    synced_users = calls[0][2]
+    assert calls[0][0] == "sync_users"
+    assert calls[0][1] == "acme"
     assert synced_users[0].email == owner.email
     assert synced_users[0].role == "owner"
 
@@ -738,13 +730,13 @@ async def test_organization_database_resource_tables_endpoint_requires_elevated_
 
     # Assert
     assert database_response.status_code == 403
-    assert database_response.json() == {"detail": "Database resource inspection permissions required"}
+    assert database_response.json() == {"detail": "Permission required"}
     assert storage_response.status_code == 403
-    assert storage_response.json() == {"detail": "Storage resource inspection permissions required"}
+    assert storage_response.json() == {"detail": "Permission required"}
     assert response.status_code == 403
-    assert response.json() == {"detail": "Database resource inspection permissions required"}
+    assert response.json() == {"detail": "Permission required"}
     assert rows_response.status_code == 403
-    assert rows_response.json() == {"detail": "Database resource inspection permissions required"}
+    assert rows_response.json() == {"detail": "Permission required"}
 
 
 async def test_get_organization_returns_invitations(
@@ -828,8 +820,8 @@ async def test_get_organization_returns_404_for_non_member(
     response = client.get(f"/api/organizations/{organization.id}")
 
     # Assert
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Organization not found"}
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
 
 
 async def test_create_organization_invitation_returns_204(
@@ -970,7 +962,7 @@ async def test_update_organization_member_returns_403_for_regular_member(
 
     # Assert
     assert response.status_code == 403
-    assert response.json() == {"detail": "Member management permissions required"}
+    assert response.json() == {"detail": "Permission required"}
 
 
 async def test_create_organization_invitation_returns_409_for_duplicate_email(
@@ -1016,8 +1008,8 @@ async def test_create_organization_invitation_returns_404_for_non_member(
     )
 
     # Assert
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Organization not found"}
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
 
 
 async def test_create_organization_invitation_returns_403_for_regular_member(
@@ -1052,7 +1044,7 @@ async def test_create_organization_invitation_returns_403_for_regular_member(
 
     # Assert
     assert response.status_code == 403
-    assert response.json() == {"detail": "Invitation permissions required"}
+    assert response.json() == {"detail": "Permission required"}
 
 
 async def test_create_organization_returns_409_for_duplicate_name(

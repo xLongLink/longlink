@@ -33,10 +33,6 @@ class Database(ABC):
     """
 
     @abstractmethod
-    async def database(self, organization: str) -> str:
-        """Create the database for an organization if it does not exist and return a connection DSN."""
-
-    @abstractmethod
     async def sync_users(self, organization: str, users: list[User]) -> None:
         """Synchronize shared organization users."""
 

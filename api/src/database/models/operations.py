@@ -2,9 +2,10 @@ from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel
+from sqlalchemy import Enum, Column, String
 from tenant.utils import utcnow
-from sqlalchemy import Enum, Column, String, DateTime
 from src.models.operations import OperationKind, OperationStatus
+from tenant.database.types import UTCDateTime
 
 
 class Operation(SQLModel, table=True):
@@ -38,16 +39,16 @@ class Operation(SQLModel, table=True):
 
     # Lease
     lease_token: str | None = Field(default=None, sa_column=Column(String(length=100), nullable=True))
-    lease_expires_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    lease_expires_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
 
     # Timestamps
-    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False))
+    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    scheduled_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
-    updated_at: datetime = Field(default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=utcnow))
+    scheduled_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
+    updated_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow))
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
-    started_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
-    stopped_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    started_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
+    stopped_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
 
     @property
     def status(self) -> OperationStatus:

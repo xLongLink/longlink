@@ -1,14 +1,13 @@
 from fastapi import Request, APIRouter, HTTPException
 from src.auth import SessionAccountsService
 from src.models.users import UserListItem
-from src.models.common import SuccessResponse
 from src.database.services import users
 from src.database.models.users import User
 
 router = APIRouter()
 
 
-@router.post("/auth/accounts/{oidc}/activate", response_model=SuccessResponse, include_in_schema=False)
+@router.post("/auth/accounts/{oidc}/activate", status_code=204, include_in_schema=False)
 async def activate_account(oidc: str, request: Request):
     """Switch the active account within the current browser session."""
 
@@ -23,7 +22,6 @@ async def activate_account(oidc: str, request: Request):
         raise HTTPException(status_code=404, detail="Account not found")
 
     session_accounts.activate(oidc)
-    return {}
 
 
 @router.post("/auth/accounts/deactivate", response_model=list[UserListItem], include_in_schema=False)

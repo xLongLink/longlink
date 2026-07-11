@@ -2,8 +2,9 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
+from sqlalchemy import Enum, Text, Column
 from tenant.utils import utcnow
-from sqlalchemy import Enum, Text, Column, DateTime
+from tenant.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
@@ -33,15 +34,15 @@ class ComputeRegistry(SQLModel, table=True):
     proxy_secret: str = Field(max_length=255, index=True)
 
     # Audit
-    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False))
+    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
     created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "ComputeRegistry.created_id"})
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
     updated_at: datetime = Field(
-        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=utcnow)
+        default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow)
     )
     updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "ComputeRegistry.updated_id"})
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
-    deleted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
 
     # Location
     location_id: UUID = Field(foreign_key="locations.id")

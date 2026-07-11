@@ -1,9 +1,8 @@
-from fastapi import Depends, APIRouter, HTTPException
+from fastapi import Depends, APIRouter
 from src.auth import authuser, authsupport
 from src.models.users import UserUpdate, UserProfile, UserListItem, UserOrganizationMembership
 from src.database.services import users
 from src.database.models.users import User
-from src.runtime import bootstrap
 
 router = APIRouter()
 
@@ -49,11 +48,4 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser)):
 
     params = payload.model_dump(exclude_unset=True)
     updated_user = await users.upsert(oidc=user.oidc, **params)
-
-    # Keep organization mirrors in sync after profile changes.
-    try:
-        await bootstrap.sync_user_organizations(updated_user)
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail="Failed to synchronize user profile") from exc
-
     return updated_user

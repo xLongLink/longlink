@@ -49,7 +49,7 @@ def test_role_atleast_raises_for_insufficient_roles(role_value, required_role) -
     """Raise a forbidden HTTP error when the role does not satisfy the requirement."""
 
     with pytest.raises(HTTPException) as exc:
-        roles.atleast(role_value, required_role, "Custom permissions required")
+        roles.atleast(role_value, required_role)
 
     assert exc.value.status_code == 403
-    assert exc.value.detail == "Custom permissions required"
+    assert exc.value.detail == "Permission required"

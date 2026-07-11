@@ -1,14 +1,12 @@
-from datetime import UTC, timedelta
-from src.runtime import Kubernetes, startup, registries, provisioning
+from datetime import timedelta
+from src.runtime import Kubernetes, startup, provisioning
 from tenant.utils import utcnow
 from src.operations import outcomes as outcome
 from src.operations import registry
 from src.models.statuses import ApplicationStatus
-from src.database.services import applications, organizations
+from src.database.services import registries, applications, organizations
 from src.models.operations import OperationKind
 from src.database.models.operations import Operation
-
-APPLICATION_VERIFICATION_TIMEOUT_SECONDS = 15 * 60
 
 
 @registry.operation_handler(OperationKind.application_verify)
@@ -24,51 +22,46 @@ async def verify(operation: Operation) -> outcome.OperationOutcome:
     if application is None:
         raise ValueError(f"Application '{operation.application_id}' not found")
 
-    # Normalize database timestamps before comparing them with Kubernetes UTC timestamps.
-    operation_created_at = operation.created_at
-    if operation_created_at.tzinfo is None:
-        operation_created_at = operation_created_at.replace(tzinfo=UTC)
-
     # Pending applications eventually fail if they never become ready.
-    startup_timeout_elapsed = utcnow() - operation_created_at >= timedelta(seconds=APPLICATION_VERIFICATION_TIMEOUT_SECONDS)
+    expired = utcnow() - operation.created_at >= timedelta(seconds=15 * 60)
 
     # Missing organizations leave verification pending until timeout.
     organization = await organizations.get(application.organization_id)
     if organization is None:
-        if startup_timeout_elapsed:
+        if expired:
             await applications.set_status(application.id, ApplicationStatus.failed)
             return outcome.fail("Application startup verification timed out")
 
         return outcome.defer()
 
     # Missing compute registries leave verification pending until timeout.
-    compute_registry = await registries.application_compute_registry(application, organization.location_id)
-    if compute_registry is None:
-        if startup_timeout_elapsed:
+    registry = await registries.application_compute(application, organization.location_id)
+    if registry is None:
+        if expired:
             await applications.set_status(application.id, ApplicationStatus.failed)
             return outcome.fail("Application startup verification timed out")
 
         return outcome.defer()
 
-    compute_adapter = Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret)
+    adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
 
     # Runtime adapters raise while deployments or pods are still being created.
     try:
         # A ready deployment is enough to complete verification without pod inspection.
-        if await compute_adapter.application_deployment_ready(organization.slug, application.slug):
+        if await adapter.application_deployment_ready(organization.slug, application.slug):
             await applications.set_status(application.id, ApplicationStatus.running)
             return outcome.complete()
 
-        pods = await compute_adapter.application_pods(organization.slug, application.slug)
+        pods = await adapter.application_pods(organization.slug, application.slug)
 
     except RuntimeError:
-        if startup_timeout_elapsed:
+        if expired:
             await applications.set_status(application.id, ApplicationStatus.failed)
             return outcome.fail("Application startup verification timed out")
 
         return outcome.defer()
 
-    state = startup.application_pods_startup_state(pods, operation_created_at)
+    state = startup.application_pods_startup_state(pods, operation.created_at)
 
     # Ready applications move to running and complete the operation.
     if state == startup.ApplicationStartupState.ready:
@@ -80,7 +73,7 @@ async def verify(operation: Operation) -> outcome.OperationOutcome:
         await applications.set_status(application.id, ApplicationStatus.failed)
         return outcome.fail("Application crashed during startup")
 
-    if startup_timeout_elapsed:
+    if expired:
         await applications.set_status(application.id, ApplicationStatus.failed)
         return outcome.fail("Application startup verification timed out")
 

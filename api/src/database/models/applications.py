@@ -2,10 +2,11 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
-from tenant.utils import utcnow
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy import Column, UniqueConstraint, DateTime
+from sqlalchemy import Column, UniqueConstraint
+from tenant.utils import utcnow
 from src.models.statuses import ApplicationStatus
+from tenant.database.types import UTCDateTime
 from src.database.models.association import UserApplication
 
 # Import relationship targets only during type checking.
@@ -52,15 +53,15 @@ class Application(SQLModel, table=True):
     )
 
     # User
-    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False))
+    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
     created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Application.created_id"})
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
     updated_at: datetime = Field(
-        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=utcnow)
+        default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow)
     )
     updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Application.updated_id"})
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
-    deleted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
     deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Application.deleted_id"})
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 

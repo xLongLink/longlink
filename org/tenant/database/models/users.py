@@ -2,8 +2,9 @@ from uuid import UUID
 from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel
-from sqlalchemy import TIMESTAMP, Uuid, Table, Column, String, MetaData
+from sqlalchemy import Uuid, Table, Column, String, MetaData
 from tenant.constants import SHARED_USERS_TABLE
+from tenant.database.types import UTCDateTime
 
 shared_metadata = MetaData()
 
@@ -24,8 +25,8 @@ class SharedUser(SQLModel, table=True):
     role: str = Field(sa_column=Column(String(32), nullable=False))
 
     # Audit
-    created_at: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), nullable=False))
-    updated_at: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), nullable=False))
-    deleted_at: datetime | None = Field(default=None, sa_column=Column(TIMESTAMP(timezone=True)))
+    created_at: datetime = Field(sa_column=Column(UTCDateTime(), nullable=False))
+    updated_at: datetime = Field(sa_column=Column(UTCDateTime(), nullable=False))
+    deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime()))
 
 shared_users_table: Table = getattr(SharedUser, "__table__")

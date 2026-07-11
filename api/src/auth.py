@@ -86,7 +86,7 @@ async def authuser(request: Request) -> User:
     if oidc is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
 
-    user = await users.get(oidc)
+    user = await users.get(oidc, include_access=True)
 
     # Reject sessions whose user record no longer exists.
     if not user:
@@ -100,7 +100,7 @@ async def authadmin(request: Request) -> User:
     user = await authuser(request)
 
     # Only administrator accounts can continue past this check.
-    roles.atleast(user.role, PlatformRoles.administrator, "Administrator privileges required")
+    roles.atleast(user.role, PlatformRoles.administrator)
 
     return user
 
@@ -111,6 +111,6 @@ async def authsupport(request: Request) -> User:
     user = await authuser(request)
 
     # Only support-capable accounts can continue past this check.
-    roles.atleast(user.role, PlatformRoles.support, "Support access required")
+    roles.atleast(user.role, PlatformRoles.support)
 
     return user
