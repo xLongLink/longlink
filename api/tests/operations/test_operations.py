@@ -7,10 +7,12 @@ from src.operations import worker as operation_worker
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
 from src.models.locations import LocationProvider, LocationResponse
-from src.models.operations import OperationKind, OperationStatus
+from src.models.operations import OperationKind
 from src.models.organizations import OrganizationDetails
 from src.database.models.users import User
+from src.operations.outcomes import OperationOutcomeState
 from src.operations.implementation import applications as application_operations
+from src.operations.implementation import organizations as organization_operations
 from src.database.models.operations import Operation
 from src.database.models.applications import Application
 
@@ -176,15 +178,14 @@ def application_model() -> Application:
     )
 
 
-def leased_operation(kind: OperationKind = OperationKind.application_create, step: str = "verify") -> Operation:
+def leased_operation(kind: OperationKind = OperationKind.application_verify) -> Operation:
     """Build one claimed operation."""
 
     return Operation(
         id=UUID("55555555-5555-5555-5555-555555555555"),
         kind=kind,
-        step=step,
-        application_id=application_model().id if kind != OperationKind.organization_delete else None,
-        organization_id=organization_details().id if kind == OperationKind.organization_delete else None,
+        application_id=application_model().id if kind != OperationKind.organization_remove else None,
+        organization_id=organization_details().id if kind == OperationKind.organization_remove else None,
         started_at=datetime.fromisoformat("2026-07-01T09:00:00+00:00"),
         lease_token="lease-token",
     )
@@ -193,7 +194,7 @@ def leased_operation(kind: OperationKind = OperationKind.application_create, ste
 async def test_operation_claim_sets_lease_token_and_expiry(monkeypatch: pytest.MonkeyPatch) -> None:
     """Claiming an operation assigns a lease token and expiration."""
 
-    operation = Operation(kind=OperationKind.application_create, step="verify")
+    operation = Operation(kind=OperationKind.application_verify)
     session = FakeOperationSession(operation)
 
     monkeypatch.setattr(
@@ -303,12 +304,11 @@ async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytes
     assert renewals == [(operation.id, "lease-token")]
 
 
-async def test_application_and_organization_delete_handlers_remove_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Execute delete cleanup handlers for applications and organizations."""
+async def test_application_and_organization_remove_handlers_remove_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Execute remove cleanup handlers for applications and organizations."""
 
     application = application_model()
     organization = organization_details()
-    completed_operations: list[tuple[UUID, str]] = []
     removals: list[tuple[str, UUID]] = []
 
     async def fake_get_application(application_id: UUID, include_deleted: bool = False) -> Application:
@@ -333,46 +333,21 @@ async def test_application_and_organization_delete_handlers_remove_runtime(monke
 
         removals.append(("organization", organization.id))
 
-    async def fake_complete(operation_id: UUID, lease_token: str) -> Operation:
-        """Record completed cleanup operations."""
-
-        completed_operations.append((operation_id, lease_token))
-        completed = Operation(
-            id=operation_id,
-            kind=OperationKind.application_delete,
-            step="remove",
-            lease_token=lease_token,
-            stopped_at=datetime.now(UTC),
-        )
-        return completed
-
     monkeypatch.setattr(application_operations.applications, "get_by_id", fake_get_application)
     monkeypatch.setattr(application_operations.organizations, "get_record", fake_get_organization)
-    monkeypatch.setattr(
-        application_operations.resources,
-        "remove_application_runtime",
-        fake_remove_application_runtime,
-    )
-    monkeypatch.setattr(
-        application_operations.resources,
-        "remove_organization_runtime",
-        fake_remove_organization_runtime,
-    )
-    monkeypatch.setattr(application_operations.operations, "complete", fake_complete)
+    monkeypatch.setattr(organization_operations.organizations, "get_record", fake_get_organization)
+    monkeypatch.setattr(application_operations.provisioning, "remove_application_runtime", fake_remove_application_runtime)
+    monkeypatch.setattr(organization_operations.provisioning, "remove_organization_runtime", fake_remove_organization_runtime)
 
-    app_operation = leased_operation(OperationKind.application_delete, "remove")
-    org_operation = leased_operation(OperationKind.organization_delete, "remove")
+    app_operation = leased_operation(OperationKind.application_remove)
+    org_operation = leased_operation(OperationKind.organization_remove)
 
-    app_result = await application_operations.execute_application_delete(app_operation)
-    org_result = await application_operations.execute_organization_delete(org_operation)
+    app_result = await application_operations.remove(app_operation)
+    org_result = await organization_operations.remove(org_operation)
 
-    assert app_result.status == OperationStatus.completed
-    assert org_result.status == OperationStatus.completed
+    assert app_result.state == OperationOutcomeState.complete
+    assert org_result.state == OperationOutcomeState.complete
     assert removals == [
         ("application", application.id),
         ("organization", organization.id),
-    ]
-    assert completed_operations == [
-        (app_operation.id, "lease-token"),
-        (org_operation.id, "lease-token"),
     ]

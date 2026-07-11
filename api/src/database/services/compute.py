@@ -53,32 +53,11 @@ async def get(registry_id: UUID, include_deleted: bool = False) -> ComputeRegist
         return result.scalar_one_or_none()
 
 
-async def get_by_proxy_secret(proxy_secret: str) -> ComputeRegistry | None:
-    """Return one active compute backend by its gateway proxy secret."""
-
-    # Resolve proxy secrets within one scoped session.
-    async with session_scope() as session:
-        statement = (
-            select(ComputeRegistry)
-            .options(
-                selectinload(ComputeRegistry.created_by),
-                selectinload(ComputeRegistry.updated_by),
-                selectinload(ComputeRegistry.deleted_by),
-            )
-            .where(
-                ComputeRegistry.proxy_secret == proxy_secret,
-                ComputeRegistry.deleted_at.is_(None),
-            )
-        )
-        result = await session.execute(statement)
-        return result.scalar_one_or_none()
-
-
 async def create(
     name: str,
     slug: str,
     kubeconfig: str,
-    ingress_host: str,
+    gateway_url: str,
     location_id: UUID,
     user: User,
 ) -> ComputeRegistry:
@@ -99,7 +78,7 @@ async def create(
             name=name,
             slug=slug,
             kubeconfig=kubeconfig,
-            ingress_host=ingress_host,
+            gateway_url=gateway_url,
             proxy_secret=proxy_secret_value,
             location_id=location_id,
         )

@@ -60,12 +60,7 @@ async def test_sync_upserts_user_state_from_payload() -> None:
     assert "ON CONFLICT" in sql
     assert "created_at = excluded.created_at" not in sql
     assert "deleted_at = excluded.deleted_at" in sql
-    assert insert_params == [
-        {
-            **active_user.model_dump(exclude={"role"}),
-            "role_name": "owner",
-        }
-    ]
+    assert insert_params == [active_user.model_dump()]
 
 
 async def test_sync_does_not_infer_deactivation_from_an_empty_payload() -> None:

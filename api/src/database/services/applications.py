@@ -39,37 +39,6 @@ async def fetch() -> list[Application]:
         return result.scalars().all()
 
 
-async def list_by_organization(organization_id: UUID, include_deleted: bool = False) -> list[Application]:
-    """Return all active applications for one organization."""
-
-    # Query organization applications in one session.
-    async with session_scope() as session:
-        conditions = [Application.organization_id == organization_id]
-
-        # Include deleted rows only when requested.
-        if not include_deleted:
-            conditions.append(Application.deleted_at.is_(None))
-
-        statement = (
-            select(Application)
-            .options(
-                selectinload(Application.organization).selectinload(Organization.created_by),
-                selectinload(Application.organization).selectinload(Organization.updated_by),
-                selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.compute_registry),
-                selectinload(Application.database_registry),
-                selectinload(Application.storage_registry),
-                selectinload(Application.created_by),
-                selectinload(Application.updated_by),
-                selectinload(Application.deleted_by),
-            )
-            .where(*conditions)
-            .order_by(Application.created_at.asc())
-        )
-        result = await session.execute(statement)
-        return result.scalars().all()
-
-
 async def get(organization_id: UUID, slug: str) -> Application | None:
     """Return a registered application by organization and slug."""
 
@@ -149,7 +118,7 @@ async def membership_role(application_id: UUID, user_id: UUID) -> ApplicationRol
 
     # Query the active membership role.
     async with session_scope() as session:
-        statement = select(UserApplication.role_name).where(
+        statement = select(UserApplication.role).where(
             UserApplication.application_id == application_id,
             UserApplication.user_id == user_id,
             UserApplication.deleted_at.is_(None),
@@ -172,7 +141,7 @@ async def list_user_memberships(organization_id: UUID, user_id: UUID) -> list[Us
         return result.scalars().all()
 
 
-async def list_members(
+async def members(
     application_id: UUID,
     organization_id: UUID,
 ) -> list[tuple[User, UserOrganization, UserApplication | None]]:
@@ -263,7 +232,7 @@ async def set_member_role(
                 application_id=application_id,
                 organization_id=organization_id,
                 user_id=member_id,
-                role_name=role,
+                role=role,
                 created_id=user.id,
                 updated_id=user.id,
             )
@@ -273,7 +242,7 @@ async def set_member_role(
             application_membership.deleted_id = None
             application_membership.updated_at = now
             application_membership.updated_id = user.id
-            application_membership.role_name = role
+            application_membership.role = role
 
         await session.commit()
         return True
@@ -343,7 +312,7 @@ async def create(
                 application_id=application.id,
                 user_id=user.id,
                 organization_id=organization_id,
-                role_name=ApplicationRoles.admin,
+                role=ApplicationRoles.admin,
                 created_id=user.id,
                 updated_id=user.id,
             )

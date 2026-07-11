@@ -19,8 +19,8 @@ async def test_operations_service_fetch_returns_newest_operations_first(users) -
 
     # Arrange
     owner = users[0]
-    older_operation = await db.operations.create(OperationKind.organization_delete, step="remove", user=owner)
-    newer_operation = await db.operations.create(OperationKind.application_delete, step="remove", user=owner)
+    older_operation = await db.operations.create(OperationKind.organization_remove, user=owner)
+    newer_operation = await db.operations.create(OperationKind.application_remove, user=owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -47,8 +47,8 @@ async def test_operations_service_claim_next_claims_oldest_available_operation(u
 
     # Arrange
     owner = users[0]
-    older_operation = await db.operations.create(OperationKind.organization_delete, step="remove", user=owner)
-    newer_operation = await db.operations.create(OperationKind.application_delete, step="remove", user=owner)
+    older_operation = await db.operations.create(OperationKind.organization_remove, user=owner)
+    newer_operation = await db.operations.create(OperationKind.application_remove, user=owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -76,12 +76,11 @@ async def test_operations_service_claim_ignores_future_active_and_stopped_operat
     # Arrange
     owner = users[0]
     future_operation = await db.operations.create(
-        OperationKind.application_delete,
+        OperationKind.application_remove,
         scheduled_at=datetime.now(UTC) + timedelta(days=1),
-        step="remove",
         user=owner,
     )
-    active_operation = await db.operations.create(OperationKind.organization_delete, step="remove", user=owner)
+    active_operation = await db.operations.create(OperationKind.organization_remove, user=owner)
     claimed_operation = await db.operations.claim(active_operation.id)
     assert claimed_operation is not None
     assert claimed_operation.lease_token is not None
@@ -103,7 +102,7 @@ async def test_operations_service_lease_updates_require_matching_token(users) ->
 
     # Arrange
     owner = users[0]
-    operation = await db.operations.create(OperationKind.organization_delete, step="remove", user=owner)
+    operation = await db.operations.create(OperationKind.organization_remove, user=owner)
     claimed = await db.operations.claim(operation.id)
     assert claimed is not None
     assert claimed.lease_token is not None
@@ -143,8 +142,7 @@ async def test_operations_service_tracks_successful_operation_lifecycle() -> Non
 
     # Act
     operation = await db.operations.create(
-        OperationKind.application_create,
-        step="verify",
+        OperationKind.application_verify,
         application_id=application.id,
         user=user,
     )
@@ -180,8 +178,7 @@ async def test_operations_service_tracks_failed_operation_lifecycle() -> None:
 
     # Act
     operation = await db.operations.create(
-        OperationKind.application_create,
-        step="verify",
+        OperationKind.application_verify,
         application_id=application.id,
         user=user,
     )
@@ -216,8 +213,7 @@ async def test_operations_service_defers_active_operation() -> None:
 
     # Act
     operation = await db.operations.create(
-        OperationKind.application_create,
-        step="verify",
+        OperationKind.application_verify,
         application_id=application.id,
         user=user,
     )
@@ -257,10 +253,9 @@ async def test_operations_service_skips_future_scheduled_operations() -> None:
         user=user,
     )
     operation = await db.operations.create(
-        OperationKind.application_delete,
+        OperationKind.application_remove,
         application_id=application.id,
         scheduled_at=datetime.now(UTC) + timedelta(days=7),
-        step="remove",
         user=user,
     )
 
@@ -288,8 +283,7 @@ async def test_operations_service_resets_active_operations(monkeypatch) -> None:
         user=user,
     )
     operation = await db.operations.create(
-        OperationKind.application_create,
-        step="verify",
+        OperationKind.application_verify,
         application_id=application.id,
         user=user,
     )
@@ -311,7 +305,7 @@ async def test_operations_service_reset_active_keeps_unexpired_leases(monkeypatc
     # Arrange
     monkeypatch.setattr(operations, "OPERATION_LEASE_SECONDS", 60)
     owner = users[0]
-    operation = await db.operations.create(OperationKind.organization_delete, step="remove", user=owner)
+    operation = await db.operations.create(OperationKind.organization_remove, user=owner)
     claimed = await db.operations.claim(operation.id)
     assert claimed is not None
     assert claimed.lease_token is not None

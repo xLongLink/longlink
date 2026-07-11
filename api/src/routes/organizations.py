@@ -11,16 +11,14 @@ from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import OrganizationDatabaseResourceKind, OrganizationDatabaseTableResponse, OrganizationDatabaseResourceResponse
 from src.database.services import locations, operations, invitations, applications, organizations
-from src.models.operations import OperationKind
 from src.models.applications import ApplicationResponse
 from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary, OrganizationMemberUpdate,
                                       OrganizationInvitationCreate)
-from src.operations.constants import RESOURCE_REMOVE_STEP
 from src.adapters.storage.base import StorageBucketUsage
 from src.database.models.users import User
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
-from src.operations.implementation import bootstrap, registries
+from src.runtime import bootstrap, registries
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
@@ -69,15 +67,15 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    active_applications = sorted(await applications.list_by_organization(organization.id), key=lambda item: item.name)
+    active_applications = sorted(await organizations.applications(organization.id), key=lambda item: item.name)
     application_memberships = await applications.list_user_memberships(organization.id, user.id)
-    application_roles = {membership.application_id: membership.role_name for membership in application_memberships}
-    memberships = await organizations.list_members(organization.id)
+    application_roles = {membership.application_id: membership.role for membership in application_memberships}
+    memberships = await organizations.members(organization.id)
     active_invitations = []
 
     # Show invitations only to organization managers.
     if access.role in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
-        active_invitations = await invitations.list_by_organization(organization.id)
+        active_invitations = await organizations.invitations(organization.id)
 
     return {
         "id": organization.id,
@@ -100,7 +98,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
                 "name": member.name,
                 "email": member.email,
                 "avatar": member.avatar,
-                "role": membership.role_name,
+                "role": membership.role,
                 "last_access_at": membership.updated_at,
             }
             for member, membership in memberships
@@ -128,12 +126,12 @@ async def list_organization_applications(
 ):
     """Return the applications for one organization."""
 
-    active_applications = await applications.list_by_organization(member_access.organization.id)
+    active_applications = await organizations.applications(member_access.organization.id)
     application_memberships = await applications.list_user_memberships(
         member_access.organization.id,
         member_access.user.id,
     )
-    application_roles = {membership.application_id: membership.role_name for membership in application_memberships}
+    application_roles = {membership.application_id: membership.role for membership in application_memberships}
 
     return [
         {
@@ -168,7 +166,7 @@ async def list_organization_database_resources(
     if registry is None:
         return []
 
-    active_applications = await applications.list_by_organization(organization.id)
+    active_applications = await organizations.applications(organization.id)
     return await _database_resource_rows(organization, registry, active_applications)
 
 
@@ -192,7 +190,7 @@ async def list_organization_storage_resources(
     if registry is None:
         return []
 
-    active_applications = await applications.list_by_organization(organization.id)
+    active_applications = await organizations.applications(organization.id)
     return await _storage_resource_rows(organization, registry, active_applications)
 
 
@@ -241,11 +239,7 @@ async def list_organization_database_resource_tables(
 
     # Convert unexpected adapter failures to availability errors.
     except Exception as exc:
-        logger.exception(
-            "Failed to inspect database resource '%s' for organization '%s'",
-            resource_name,
-            organization.slug,
-        )
+        logger.exception("Failed to inspect database resource '%s' for organization '%s': %r", resource_name, organization.slug, exc)
         raise HTTPException(status_code=503, detail="Database resource unavailable") from exc
 
     return tables
@@ -329,11 +323,9 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
     if deleted is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    await operations.create(
-        OperationKind.organization_delete,
-        organization_id=organization_id,
+    await operations.queue_organization_removal(
+        organization_id,
         scheduled_at=datetime.now(UTC) + timedelta(days=ORGANIZATION_DELETE_DELAY_DAYS),
-        step=RESOURCE_REMOVE_STEP,
         user=user,
     )
 
@@ -355,10 +347,7 @@ async def _database_resource_rows(
 
     # Convert database inspection failures to availability errors.
     except Exception as exc:
-        logger.exception(
-            "Failed to inspect database resources for organization '%s'",
-            organization.slug,
-        )
+        logger.exception("Failed to inspect database resources for organization '%s': %r", organization.slug, exc)
         raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
 
     rows: list[dict[str, object]] = []

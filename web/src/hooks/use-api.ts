@@ -5,7 +5,6 @@ type UseApiQueryOptions<TQueryFnData, TData = TQueryFnData> = Omit<
     UseQueryOptions<TQueryFnData, Error, TData, Array<string>>,
     'queryKey' | 'queryFn'
 > & {
-    notFound?: TQueryFnData;
     parse?: (value: unknown) => TQueryFnData;
     request?: RequestInit;
 };
@@ -15,7 +14,7 @@ export function useApiQuery<TQueryFnData, TData = TQueryFnData>(
     path: string | null,
     options: UseApiQueryOptions<TQueryFnData, TData> = {}
 ): UseQueryResult<TData, Error> {
-    const { notFound, parse, request, ...queryOptions } = options;
+    const { parse, request, ...queryOptions } = options;
     const queryClient = useQueryClient();
 
     const enabled = path !== null && (queryOptions.enabled ?? true);
@@ -32,11 +31,7 @@ export function useApiQuery<TQueryFnData, TData = TQueryFnData>(
                 // Clear the cached session immediately when any request reports auth loss.
                 if (error instanceof ApiError && error.status === 401) {
                     queryClient.setQueryData(apiQueryKey('/api/me'), null);
-                }
-
-                // Allow callers to supply an explicit 404 fallback.
-                if (error instanceof ApiError && error.status === 404 && 'notFound' in options) {
-                    return notFound as TQueryFnData;
+                    queryClient.setQueryData(apiQueryKey('/api/me/organizations'), []);
                 }
 
                 throw error;

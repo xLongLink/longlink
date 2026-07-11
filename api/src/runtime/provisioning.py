@@ -1,4 +1,4 @@
-from src import compute as compute_runtime
+from src import runtime
 from src import adapters
 from uuid import UUID
 from typing import cast
@@ -7,15 +7,13 @@ from src.utils import names, buckets
 from src.logger import logger
 from src.models.statuses import ApplicationStatus
 from src.database.services import database, operations, applications, organizations
-from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
 from src.models.organizations import OrganizationDetails, OrganizationSummary
-from src.operations.constants import APPLICATION_VERIFY_STEP
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
-from src.operations.implementation import registries, environments
+from src.runtime import registries, environments
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
@@ -26,7 +24,7 @@ async def other_application_storage_buckets(organization_id: UUID, application_i
     storage_bucket_names = []
 
     # Include active and deleted applications so credential policies can exclude all other app buckets.
-    for application in await applications.list_by_organization(organization_id, include_deleted=True):
+    for application in await organizations.applications(organization_id, include_deleted=True):
 
         # Skip the current application and apps that never received a storage bucket.
         if application.id != application_id and application.storage_bucket_name is not None:
@@ -50,7 +48,7 @@ async def remove_application_runtime(
 
     # Remove workload resources only when the app has a compute backend to target.
     if compute_registry is not None:
-        compute_adapter = compute_runtime.kubernetes(compute_registry)
+        compute_adapter = runtime.kubernetes(compute_registry)
         await compute_adapter.delete_application(organization.slug, application.slug)
 
     # Remove the application schema from the database registry that originally hosted it.
@@ -82,7 +80,7 @@ async def remove_organization_runtime(organization: Organization | OrganizationD
     names.k8name(organization.slug)
     names.dbname(organization.slug)
 
-    organization_applications = await applications.list_by_organization(organization.id, include_deleted=True)
+    organization_applications = await organizations.applications(organization.id, include_deleted=True)
 
     # Delete application-scoped resources before deleting shared organization resources.
     for application in organization_applications:
@@ -109,7 +107,7 @@ async def remove_organization_runtime(organization: Organization | OrganizationD
 
     # Namespace deletion removes shared gateway/runtime resources for the organization.
     for registry in compute_registries:
-        compute_adapter = compute_runtime.kubernetes(registry)
+        compute_adapter = runtime.kubernetes(registry)
         await compute_adapter.delete_namespace(organization.slug)
 
     database_registry = await registries.organization_database_registry(organization, include_deleted=True)
@@ -139,7 +137,7 @@ async def provision_application_runtime_resources(
 ) -> None:
     """Provision namespace, database, storage, and workload resources for one application."""
 
-    compute_client = compute_runtime.kubernetes(compute_registry)
+    compute_client = runtime.kubernetes(compute_registry)
     db_client = adapters.database(database_registry)
     application_bucket_name = application.storage_bucket_name
     shared_bucket_name = organization.shared_storage_bucket_name
@@ -256,26 +254,21 @@ async def create_application_runtime(
     # Failed provisioning leaves a failed application row and triggers best-effort cleanup.
     except Exception as exc:
         await applications.set_status(application.id, ApplicationStatus.failed)
-        logger.exception("Failed to initialize application runtime for %s/%s", organization.slug, application_slug)
+        logger.exception("Failed to initialize application runtime for %s/%s: %r", organization.slug, application_slug, exc)
 
         # Remove any resources that were created before the provisioning step failed.
         try:
             await remove_application_runtime(application, organization)
 
         # Cleanup failures should not hide the original provisioning error.
-        except Exception:
-            logger.exception("Failed to clean partial application runtime for %s/%s", organization.slug, application_slug)
+        except Exception as cleanup_exc:
+            logger.exception("Failed to clean partial application runtime for %s/%s: %r", organization.slug, application_slug, cleanup_exc)
 
         raise RuntimeError("Failed to initialize the application") from exc
 
     # Queue verification only after the workload has been applied.
     try:
-        operation = await operations.create(
-            OperationKind.application_create,
-            application_id=application.id,
-            step=APPLICATION_VERIFY_STEP,
-            user=user,
-        )
+        operation = await operations.queue_application_verification(application.id, user)
 
     # If verification cannot be queued, the applied workload must be removed.
     except Exception as exc:
@@ -286,18 +279,14 @@ async def create_application_runtime(
             await remove_application_runtime(application, organization)
 
         # Cleanup failures should not hide the queueing error.
-        except Exception:
-            logger.exception("Failed to clean unverified application runtime for %s/%s", organization.slug, application_slug)
+        except Exception as cleanup_exc:
+            logger.exception("Failed to clean unverified application runtime for %s/%s: %r", organization.slug, application_slug, cleanup_exc)
 
-        logger.exception(
-            "Failed to queue application verification for %s/%s",
-            organization.slug,
-            payload.name,
-        )
+        logger.exception("Failed to queue application verification for %s/%s: %r", organization.slug, payload.name, exc)
         raise RuntimeError("Failed to queue application verification") from exc
 
     logger.info(
-        "Queued application creation verification %s for %s/%s",
+        "Queued application verification %s for %s/%s",
         operation.id,
         organization.slug,
         payload.name,
@@ -384,15 +373,10 @@ async def sync_application_runtime(
     # Refresh failures mark the application failed so users do not open a broken runtime.
     except Exception as exc:
         await applications.set_status(application.id, ApplicationStatus.failed)
-        logger.exception("Failed to refresh application runtime for %s/%s", organization.slug, application.slug)
+        logger.exception("Failed to refresh application runtime for %s/%s: %r", organization.slug, application.slug, exc)
         raise RuntimeError("Failed to refresh the application runtime") from exc
 
-    operation = await operations.create(
-        OperationKind.application_create,
-        application_id=application.id,
-        step=APPLICATION_VERIFY_STEP,
-        user=user,
-    )
+    operation = await operations.queue_application_verification(application.id, user)
     logger.info(
         "Queued application sync verification %s for %s/%s",
         operation.id,

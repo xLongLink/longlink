@@ -10,24 +10,7 @@ from src.database.models.invitations import OrganizationInvitation
 from src.database.models.organizations import Organization
 
 
-async def list_by_organization(organization_id: UUID) -> list[OrganizationInvitation]:
-    """Return all active invitations for one organization."""
-
-    # Open a session for the invitation list query.
-    async with session_scope() as session:
-        statement = (
-            select(OrganizationInvitation)
-            .where(
-                OrganizationInvitation.organization_id == organization_id,
-                OrganizationInvitation.deleted_at.is_(None),
-            )
-            .order_by(OrganizationInvitation.created_at.desc())
-        )
-        result = await session.execute(statement)
-        return result.scalars().all()
-
-
-async def create(organization_id: UUID, email: str, role_name: OrganizationRoles, user: User) -> OrganizationInvitation:
+async def create(organization_id: UUID, email: str, role: OrganizationRoles, user: User) -> OrganizationInvitation:
     """Create one invitation after checking for duplicates and memberships."""
 
     normalized_email = email.strip().lower()
@@ -70,7 +53,7 @@ async def create(organization_id: UUID, email: str, role_name: OrganizationRoles
         invitation = OrganizationInvitation(
             organization_id=organization_id,
             email=normalized_email,
-            role_name=role_name,
+            role=role,
         )
         invitation.created_id = user.id
         invitation.updated_id = user.id

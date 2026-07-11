@@ -1,5 +1,6 @@
 from enum import StrEnum
 from uuid import UUID
+from tenant.models.languages import Language
 from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.countries import Country
@@ -78,26 +79,6 @@ class Radius(StrEnum):
     large = "large"
 
 
-class Language(StrEnum):
-    """Supported user interface languages."""
-
-    en = "en"
-    es = "es"
-    fr = "fr"
-    de = "de"
-    it = "it"
-    pt = "pt"
-    nl = "nl"
-    pl = "pl"
-    tr = "tr"
-    ar = "ar"
-    zh = "zh"
-    ja = "ja"
-    ko = "ko"
-    ru = "ru"
-    hi = "hi"
-
-
 class UserUpdate(BaseModel):
     """Payload to update mutable user profile fields."""
 
@@ -113,7 +94,7 @@ class UserUpdate(BaseModel):
 
 
 class UserOrganizationMembership(BaseModel):
-    """Represent one organization membership in the user profile."""
+    """Represent one current-user organization membership."""
 
     # Identifier
     id: UUID
@@ -164,6 +145,3 @@ class UserProfile(UserSummary):
 
     # Identity
     oidc: str
-
-    # Relationships
-    organizations: list[UserOrganizationMembership] = Field(default_factory=list)

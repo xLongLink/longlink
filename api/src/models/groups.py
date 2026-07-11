@@ -1,8 +1,8 @@
-from enum import Enum
+from enum import StrEnum
 
 
 # https://unstats.un.org/unsd/classifications/Econ/
-class ISICGroupCode(str, Enum):
+class ISICGroupCode(StrEnum):
     """ISIC Rev.4 Groups (Section + 3-digit group code)."""
 
     # A - Agriculture, forestry and fishing
@@ -290,7 +290,7 @@ class ISICGroupCode(str, Enum):
     U990 = "U990"
 
 
-class ISICGroupName(str, Enum):
+class ISICGroupName(StrEnum):
     """ISIC Rev.4 Group names (3-digit level)."""
 
     # A - Agriculture, forestry and fishing

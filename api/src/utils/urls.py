@@ -73,16 +73,3 @@ def is_https_url(value: str) -> bool:
 
     url = URL(value.strip())
     return url.scheme == "https" and bool(url.netloc)
-
-
-def origin(value: str) -> str:
-    """Return the absolute origin for a URL or host value."""
-
-    stripped_value = value.strip().rstrip("/")
-    url = URL(stripped_value if "://" in stripped_value else f"https://{stripped_value}")
-
-    # Absolute URL inputs can return their parsed origin.
-    if url.scheme and url.netloc:
-        return f"{url.scheme}://{url.netloc}"
-
-    return f"https://{stripped_value}"

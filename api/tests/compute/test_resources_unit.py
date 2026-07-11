@@ -1,6 +1,6 @@
 import pytest
 from datetime import UTC, datetime
-from src.compute.resources import KubernetesResources, parse_kubernetes_timestamp
+from src.runtime.resources import KubernetesResources, parse_kubernetes_timestamp
 
 pytestmark = pytest.mark.no_db
 

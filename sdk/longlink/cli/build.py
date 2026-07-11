@@ -166,15 +166,8 @@ def read_env_spec(root: Path) -> dict[str, list[dict[str, object]]]:
     module_path = root.joinpath(*module_parts)
     envs_path = module_path.with_suffix(".py")
 
-    # Support package modules as well as file modules.
     if not envs_path.is_file():
-        package_path = module_path / "__init__.py"
-
-        # Treat missing env modules as no requirements.
-        if not package_path.is_file():
-            return empty_spec
-
-        envs_path = package_path
+        return empty_spec
 
     module = ast.parse(envs_path.read_text())
     class_node = next((node for node in module.body if isinstance(node, ast.ClassDef) and node.name == class_name), None)
@@ -255,7 +248,7 @@ def resolve_field_info(value: ast.AST | None) -> dict[str, object]:
         for keyword in value.keywords:
 
             # Use explicit aliases as environment names.
-            if keyword.arg in {"validation_alias", "alias"}:
+            if keyword.arg == "validation_alias":
 
                 # Safely evaluate static alias expressions.
                 try:

@@ -82,7 +82,7 @@ export const content = (
                 <Li>
                     Application and deployment data: application name, slug, icon, image reference, image digest,
                     version, SDK version, description, selected compute, database, and storage registries, environment
-                    values supplied for deployment, deployment status, operation steps, operation errors, runtime
+                    values supplied for deployment, deployment status, operation status, operation errors, runtime
                     status, pod, service, log, and proxy information needed to provision, route, monitor, and support
                     applications.
                 </Li>

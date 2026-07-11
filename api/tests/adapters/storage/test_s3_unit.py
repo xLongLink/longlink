@@ -54,7 +54,7 @@ async def test_s3_objects_normalizes_paged_results(monkeypatch: pytest.MonkeyPat
     class Client:
         """Provide only the S3 calls used by the test."""
 
-        async def __aenter__(self) -> "Client":
+        async def __aenter__(self) -> Client:
             """Enter the fake client context."""
 
             return self

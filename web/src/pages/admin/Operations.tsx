@@ -75,9 +75,6 @@ function createOperationColumns(t: TFunction): Array<ColumnDef<ApiOperation>> {
                             <span className="text-xs text-muted-foreground">{t('columns.id')}</span>{' '}
                             <span className="font-mono text-xs">{operation.id}</span>
                         </div>
-                        <div>
-                            <span className="text-xs text-muted-foreground">{t('columns.step')}</span> {operation.step}
-                        </div>
                         <div className="truncate">
                             <span className="text-xs text-muted-foreground">{t('columns.application')}</span>{' '}
                             {operation.application_id ? (

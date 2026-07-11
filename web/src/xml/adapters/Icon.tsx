@@ -1,4 +1,5 @@
 import { Icon as UIIcon } from '@/components/ui/icon';
+import { isIconName } from '@/lib/icons';
 import { useXmlContext } from '@/xml/core/context';
 import type { Props } from '@/xml/types';
 import { useActionHandler } from './Action';
@@ -14,6 +15,11 @@ export function Icon({ props }: Props) {
     // Fail fast when the caller omits the required icon name.
     if (!iconName.trim()) {
         throw new Error('Icon requires a string name');
+    }
+
+    // Reject unsupported names instead of silently rendering a different icon.
+    if (!isIconName(iconName)) {
+        throw new Error(`Unknown icon "${iconName}"`);
     }
 
     // Use a button shell when the icon triggers an action.

@@ -16,7 +16,7 @@ class UserOrganization(SQLModel, table=True):
     organization_id: UUID = Field(default=None, primary_key=True, foreign_key="organizations.id")
 
     # State
-    role_name: OrganizationRoles = Field(
+    role: OrganizationRoles = Field(
         sa_column=Column(Enum(OrganizationRoles, name="organization_role_enum", native_enum=False), nullable=False)
     )
 
@@ -42,7 +42,7 @@ class UserApplication(SQLModel, table=True):
     organization_id: UUID = Field(default=None, primary_key=True, foreign_key="organizations.id")
 
     # State
-    role_name: ApplicationRoles = Field(
+    role: ApplicationRoles = Field(
         sa_column=Column(Enum(ApplicationRoles, name="application_role_enum", native_enum=False), nullable=False)
     )
 

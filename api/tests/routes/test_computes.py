@@ -25,12 +25,12 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     class FakeCompute:
         """Fake Kubernetes compute client for registry route tests."""
 
-        def __init__(self, kubeconfig: str, proxy_secret: str, ingress_host: str) -> None:
+        def __init__(self, kubeconfig: str, proxy_secret: str, gateway_url: str) -> None:
             """Capture constructor arguments passed by the route."""
 
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
-            captured["ingress_host"] = ingress_host
+            captured["gateway_url"] = gateway_url
 
         async def setup(self) -> None:
             """Capture cluster setup calls."""
@@ -39,8 +39,8 @@ async def test_compute_registry_endpoint_supports_create_and_list(
             captured["setup_calls"] = setup_calls + 1 if isinstance(setup_calls, int) else 1
 
     monkeypatch.setattr(
-        "src.routes.computes.compute_runtime.kubernetes",
-        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret, registry.ingress_host),
+        "src.routes.computes.runtime.kubernetes",
+        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret, registry.gateway_url),
     )
 
     # Act
@@ -49,7 +49,7 @@ async def test_compute_registry_endpoint_supports_create_and_list(
         json={
             "name": "primary",
             "kubeconfig": "apiVersion: v1\nclusters: []\n",
-            "ingress_host": "apps.longlink.internal",
+            "gateway_url": "https://apps.longlink.internal",
             "location_id": str(location.id),
         },
     )
@@ -63,7 +63,7 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     create_payload = create_response.json()
     assert create_payload["id"] == registry_id
     assert create_payload["name"] == "primary"
-    assert create_payload["ingress_host"] == "apps.longlink.internal"
+    assert create_payload["gateway_url"] == "https://apps.longlink.internal"
     assert "gateway_load_balancer_ip" not in create_payload
     assert "kind" not in create_payload
     assert "kubeconfig" not in create_payload
@@ -73,5 +73,5 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     assert get_response.status_code == 404
     assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"
     assert captured["proxy_secret"]
-    assert captured["ingress_host"] == "apps.longlink.internal"
+    assert captured["gateway_url"] == "https://apps.longlink.internal"
     assert captured["setup_calls"] == 1

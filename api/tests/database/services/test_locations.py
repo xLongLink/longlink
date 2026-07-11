@@ -105,7 +105,7 @@ async def test_delete_rejects_location_used_by_active_compute_registries(users: 
         "Primary compute",
         "primary-compute",
         "kubeconfig",
-        "apps.example",
+        "https://apps.example",
         location.id,
         owner,
     )

@@ -222,7 +222,7 @@
         "host": "Host",
         "icon": "Icon",
         "image": "Image",
-        "ingressHost": "Gateway URL or host",
+        "gatewayUrl": "Gateway URL",
         "kind": "Kind",
         "kubeconfig": "Kubeconfig",
         "language": "Language",

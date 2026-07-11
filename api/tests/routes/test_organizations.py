@@ -98,7 +98,7 @@ async def test_create_organization_initializes_database(
             calls.append(("sync_users", organization, users))
 
     monkeypatch.setattr(
-        "src.operations.implementation.bootstrap.adapters.database",
+        "src.runtime.bootstrap.adapters.database",
         lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
     )
 
@@ -159,7 +159,7 @@ async def test_create_organization_initializes_storage(
             return bucket_name
 
     monkeypatch.setattr(
-        "src.operations.implementation.bootstrap.adapters.storage",
+        "src.runtime.bootstrap.adapters.storage",
         lambda registry: FakeStorage(
             registry.protocol,
             registry.endpoint_url,
@@ -244,11 +244,10 @@ async def test_delete_organization_soft_deletes_and_queues_removal(
     deleted = await db.organizations.get(organization.id, include_deleted=True)
     assert deleted is not None
     assert deleted.deleted_at is not None
-    assert await db.applications.list_by_organization(organization.id) == []
+    assert await db.organizations.applications(organization.id) == []
     recorded_operations = await db.operations.fetch()
     assert len(recorded_operations) == 1
-    assert recorded_operations[0].kind == OperationKind.organization_delete
-    assert recorded_operations[0].step == "remove"
+    assert recorded_operations[0].kind == OperationKind.organization_remove
     assert recorded_operations[0].organization_id == organization.id
     assert recorded_operations[0].scheduled_at is not None
 
@@ -705,7 +704,7 @@ async def test_organization_database_resource_tables_endpoint_requires_elevated_
             UserOrganization(
                 user_id=regular_member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.write,
+                role=OrganizationRoles.write,
             )
         )
         await session.commit()
@@ -744,7 +743,7 @@ async def test_get_organization_returns_invitations(
             UserOrganization(
                 user_id=regular_member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.write,
+                role=OrganizationRoles.write,
             )
         )
         await session.commit()
@@ -831,7 +830,7 @@ async def test_create_organization_invitation_returns_204(
 
     # Assert
     assert response.status_code == 204
-    invitations_list = await db.invitations.list_by_organization(organization.id)
+    invitations_list = await db.organizations.invitations(organization.id)
     assert [item.email for item in invitations_list] == [invitee.email]
 
 
@@ -852,7 +851,7 @@ async def test_create_organization_invitation_returns_204_for_maintainer(
             UserOrganization(
                 user_id=maintainer.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.maintain,
+                role=OrganizationRoles.maintain,
             )
         )
         await session.commit()
@@ -867,7 +866,7 @@ async def test_create_organization_invitation_returns_204_for_maintainer(
 
     # Assert
     assert response.status_code == 204
-    invitations_list = await db.invitations.list_by_organization(organization.id)
+    invitations_list = await db.organizations.invitations(organization.id)
     assert [item.email for item in invitations_list] == [invitee.email]
 
 
@@ -888,7 +887,7 @@ async def test_update_organization_member_changes_role(
             UserOrganization(
                 user_id=member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.write,
+                role=OrganizationRoles.write,
             )
         )
         await session.commit()
@@ -905,9 +904,9 @@ async def test_update_organization_member_changes_role(
     assert response.status_code == 204
     updated_organization = await db.organizations.get(organization.id)
     assert updated_organization is not None
-    updated_members = await db.organizations.list_members(organization.id)
+    updated_members = await db.organizations.members(organization.id)
     updated_member = next(membership for user, membership in updated_members if user.id == member.id)
-    assert updated_member.role_name == OrganizationRoles.admin
+    assert updated_member.role == OrganizationRoles.admin
 
 
 async def test_update_organization_member_returns_403_for_regular_member(
@@ -927,14 +926,14 @@ async def test_update_organization_member_returns_403_for_regular_member(
             UserOrganization(
                 user_id=regular_member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.write,
+                role=OrganizationRoles.write,
             )
         )
         session.add(
             UserOrganization(
                 user_id=target_member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.read,
+                role=OrganizationRoles.read,
             )
         )
         await session.commit()
@@ -1016,7 +1015,7 @@ async def test_create_organization_invitation_returns_403_for_regular_member(
             UserOrganization(
                 user_id=regular_member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.write,
+                role=OrganizationRoles.write,
             )
         )
         await session.commit()

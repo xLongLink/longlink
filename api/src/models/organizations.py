@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field, EmailStr, BaseModel, ConfigDict
-from src.models.icons import Icon
+from tenant.models.icons import Icon
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
@@ -50,7 +50,7 @@ class OrganizationInvitationResponse(BaseModel):
     email: str
 
     # State
-    role: OrganizationRoles = Field(validation_alias="role_name")
+    role: OrganizationRoles
 
     # Audit
     created_at: datetime

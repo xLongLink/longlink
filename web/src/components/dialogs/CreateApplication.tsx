@@ -10,6 +10,7 @@ import { useOrganizationActions } from '@/hooks/use-organization';
 import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
 import { apiIconsSchema, apiImageMetadataSchema, parseApiResponse } from '@/lib/api-schemas';
+import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
 import { useTranslation } from '@/lib/i18n';
 import { canCreateApplication } from '@/lib/roles';
 import type { ApiImageMetadata } from '@/lib/types';
@@ -37,7 +38,7 @@ const createApplicationFormSchema = z.object({
     image: z.string().trim().min(1),
     name: z.string().trim(),
     description: z.string().trim(),
-    icon: z.string().trim(),
+    icon: z.union([z.literal(''), z.enum(ICON_NAMES)]),
     envs: z.record(z.string(), z.string()).default({}),
 });
 
@@ -72,13 +73,11 @@ export default function CreateApplication({ organization }: { organization: stri
         resolver: zodResolver(createApplicationFormSchema),
     });
     const values = form.watch();
-    const { data: iconCatalog } = useApiQuery<string[]>(open ? '/api/icons' : null, {
+    const { data: iconCatalog } = useApiQuery<IconName[]>(open ? '/api/icons' : null, {
         parse: (value) => parseApiResponse(apiIconsSchema, value),
         staleTime: Infinity,
     });
-    const iconOptions: string[] = iconCatalog ?? [];
-    const visibleIconOptions =
-        values.icon && !iconOptions.includes(values.icon) ? [values.icon, ...iconOptions] : iconOptions;
+    const iconOptions = iconCatalog ?? [];
     const configurableEnvironments =
         imageMetadata?.environments.filter((env) => !platformEnvironmentNames.has(env.name)) ?? [];
     const organizationMembership = organizations.find((item) => item.slug === organization);
@@ -265,21 +264,21 @@ export default function CreateApplication({ organization }: { organization: stri
                                     <Label htmlFor="application-icon">{t('labels.icon')}</Label>
                                     <Select
                                         value={values.icon}
-                                        onValueChange={(value) =>
-                                            form.setValue('icon', value === '__none__' ? '' : (value ?? ''), {
+                                        onValueChange={(value: string | null) =>
+                                            form.setValue('icon', value && isIconName(value) ? value : '', {
                                                 shouldValidate: true,
                                             })
                                         }
                                     >
                                         <SelectTrigger id="application-icon" className="w-full">
-                                            {values.icon ? (
+                                            {isIconName(values.icon) ? (
                                                 <Icon name={values.icon} className="size-4 text-muted-foreground" />
                                             ) : null}
                                             <SelectValue placeholder={t('dialogs.chooseIcon')} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="__none__">{t('dialogs.none')}</SelectItem>
-                                            {visibleIconOptions.map((name) => (
+                                            {iconOptions.map((name) => (
                                                 <SelectItem key={name} value={name}>
                                                     {name}
                                                 </SelectItem>

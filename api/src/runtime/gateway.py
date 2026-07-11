@@ -2,12 +2,11 @@ import json
 import yaml
 import base64
 import hashlib
-import urllib.parse
 from typing import Any
 from .library import Service, Namespace, kr8s
 from src.utils import templates
 from .resources import KubernetesResources
-from src.constants import ROOT
+from src.constants import ROOT, GATEWAY_SECRET_HEADER, GATEWAY_APPLICATION_HEADER
 from src.environments import env
 
 
@@ -40,23 +39,15 @@ class KubernetesGateway(KubernetesResources):
             )
             await resource.create()
 
-    def _gateway_domain(self) -> str:
-        """Return the gateway Host header domain, including a custom port when configured."""
-
-        value = self._ingress_host.strip().rstrip("/")
-        parsed_url = urllib.parse.urlsplit(value)
-
-        # Full URL values should keep their host and optional port only.
-        if parsed_url.scheme in {"http", "https"} and parsed_url.netloc:
-            return parsed_url.netloc
-
-        return value.split("/", 1)[0]
-
     async def _gateway_routes(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """Return Envoy routes and clusters for all managed application services."""
 
         routes: list[dict[str, Any]] = []
         clusters: list[dict[str, Any]] = []
+        gateway_secret_match = {
+            "name": GATEWAY_SECRET_HEADER,
+            "string_match": {"exact": "__LONG_LINK_GATEWAY_SECRET__"},
+        }
 
         # Discover app services from organization namespaces so Envoy config mirrors deployed workloads.
         namespaces = sorted(
@@ -96,33 +87,23 @@ class KubernetesGateway(KubernetesResources):
                 cluster_name = f"{namespace}-{service_name}"
                 service_host = f"{service_name}.{namespace}.svc.cluster.local"
 
-                # The cluster gateway only accepts requests authenticated by the API proxy.
-                gateway_secret_match = {
-                    "name": "x-longlink-gateway-secret",
-                    "string_match": {"exact": "__LONG_LINK_GATEWAY_SECRET__"},
+                application_id_match = {
+                    "name": GATEWAY_APPLICATION_HEADER,
+                    "string_match": {"exact": application_id},
                 }
 
-                # Secret-matched routes forward to the app and remove the secret before the app sees it.
+                # Header-matched routes forward API-authenticated app traffic.
                 routes.append(
                     {
                         "match": {
-                            "prefix": f"/api/applications/{application_id}/proxy/",
-                            "headers": [gateway_secret_match],
+                            "prefix": "/",
+                            "headers": [gateway_secret_match, application_id_match],
                         },
                         "route": {
                             "cluster": cluster_name,
-                            "prefix_rewrite": "/",
                             "timeout": "300s",
                         },
-                        "request_headers_to_remove": ["x-longlink-gateway-secret"],
-                    }
-                )
-
-                # Requests that bypass the API proxy match the same path but fail before reaching the app.
-                routes.append(
-                    {
-                        "match": {"prefix": f"/api/applications/{application_id}/proxy/"},
-                        "direct_response": {"status": 403, "body": {"inline_string": "Forbidden"}},
+                        "request_headers_to_remove": [GATEWAY_SECRET_HEADER, GATEWAY_APPLICATION_HEADER],
                     }
                 )
 
@@ -203,13 +184,8 @@ class KubernetesGateway(KubernetesResources):
                 "name": "local_route",
                 "virtual_hosts": [
                     {
-                        "name": "health",
-                        "domains": ["*"],
-                        "routes": [health_route],
-                    },
-                    {
                         "name": "applications",
-                        "domains": [self._gateway_domain()],
+                        "domains": ["*"],
                         "routes": routes,
                     }
                 ],
@@ -288,11 +264,11 @@ class KubernetesGateway(KubernetesResources):
             {"name": "tmp", "emptyDir": {}},
         ]
 
-        # Local development can use an Ingress; managed clusters expose the gateway service directly.
+        # Local development can use an Ingress; managed clusters keep the gateway private.
         use_development_ingress = env.DEVELOPMENT
         gateway_service_port = 80
         service_spec: dict[str, Any] = {
-            "type": "ClusterIP" if use_development_ingress else "LoadBalancer",
+            "type": "ClusterIP",
             "selector": {"app": "longlink-gateway"},
             "ports": [
                 {

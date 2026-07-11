@@ -4,7 +4,7 @@ from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin, authsupport
 from src.utils import names
 from src.logger import logger
-from src.models.databases import DatabaseUsageResponse, DatabaseRegistryCreate, DatabaseSchemaResponse, DatabaseRegistryResponse
+from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
 from src.database.services import database
 from src.database.models.users import User
 
@@ -63,13 +63,13 @@ async def list_database_databases(registry_id: UUID, _: User = Depends(authsuppo
     try:
         database_names = await adapter.databases()
     except Exception as exc:
-        logger.exception("Failed to inspect databases for registry '%s'", registry_id)
+        logger.exception("Failed to inspect databases for registry '%s': %r", registry_id, exc)
         raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
 
     return database_names
 
 
-@router.get("/api/databases/{registry_id}/databases/{database_name}/schemas", response_model=list[DatabaseSchemaResponse])
+@router.get("/api/databases/{registry_id}/databases/{database_name}/schemas", response_model=list[str])
 async def list_database_schemas(registry_id: UUID, database_name: str, _: User = Depends(authsupport)):
     """List all schemas in a database on a database backend."""
 
@@ -83,19 +83,15 @@ async def list_database_schemas(registry_id: UUID, database_name: str, _: User =
     try:
         schema_names = await adapter.schemas(database_name)
     except Exception as exc:
-        logger.exception(
-            "Failed to inspect schemas for database '%s' in registry '%s'",
-            database_name,
-            registry_id,
-        )
+        logger.exception("Failed to inspect schemas for database '%s' in registry '%s': %r", database_name, registry_id, exc)
         raise HTTPException(status_code=503, detail="Database schemas unavailable") from exc
 
-    return [{"name": schema_name} for schema_name in schema_names]
+    return schema_names
 
 
-@router.get("/api/databases/{registry_id}/usage", response_model=DatabaseUsageResponse)
+@router.get("/api/databases/{registry_id}/usage", response_model=int)
 async def get_database_usage(registry_id: UUID, _user: User = Depends(authsupport)):
-    """Return total and free storage for one database backend."""
+    """Return used storage bytes for one database backend."""
 
     registry = await database.get(registry_id)
     if registry is None:
@@ -107,7 +103,7 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
     try:
         data = await database_adapter.usage()
     except Exception as exc:
-        logger.exception("Failed to inspect database usage for registry '%s'", registry_id)
+        logger.exception("Failed to inspect database usage for registry '%s': %r", registry_id, exc)
         raise HTTPException(status_code=503, detail="Database usage unavailable") from exc
 
-    return data
+    return data["space_used"]

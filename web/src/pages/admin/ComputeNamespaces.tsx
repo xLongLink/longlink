@@ -4,7 +4,10 @@ import { Link, useParams } from 'react-router';
 import { DataTable } from '@/components/DataTable';
 import { useComputeNamespaces, useComputes } from '@/data/compute';
 import { useTranslation } from '@/lib/i18n';
-import type { ApiComputeNamespace } from '@/lib/types';
+
+type ComputeNamespaceRow = {
+    name: string;
+};
 
 /** Renders namespaces for a compute backend. */
 export default function ComputeNamespaces() {
@@ -15,7 +18,7 @@ export default function ComputeNamespaces() {
 
     const computeRegistry = computes.find((registry) => registry.slug === compute);
 
-    const namespaceColumns: Array<ColumnDef<ApiComputeNamespace>> = [
+    const namespaceColumns: Array<ColumnDef<ComputeNamespaceRow>> = [
         {
             accessorKey: 'name',
             header: t('columns.namespace'),
@@ -32,10 +35,11 @@ export default function ComputeNamespaces() {
     ];
 
     const {
-        items: rows,
+        items: namespaceNames,
         error: namespacesError,
         isLoading: namespacesIsLoading,
     } = useComputeNamespaces(computeRegistry?.id ?? '');
+    const rows = namespaceNames.map((name) => ({ name }));
     const error =
         computeError ??
         (!computesIsLoading && !computeRegistry

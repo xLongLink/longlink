@@ -1,25 +1,30 @@
 from collections.abc import Callable, Awaitable
 from src.models.operations import OperationKind
+from src.operations.outcomes import OperationOutcome
 from src.database.models.operations import Operation
 
-OperationHandler = Callable[[Operation], Awaitable[Operation]]
+OperationHandler = Callable[[Operation], Awaitable[OperationOutcome]]
 
-_handlers: dict[tuple[OperationKind, str], OperationHandler] = {}
+_handlers: dict[OperationKind, OperationHandler] = {}
 
 
-def operation_handler(kind: OperationKind, step: str) -> Callable[[OperationHandler], OperationHandler]:
-    """Register one operation handler for a kind and step."""
+def operation_handler(kind: OperationKind) -> Callable[[OperationHandler], OperationHandler]:
+    """Register one operation handler for a kind."""
 
     def decorator(handler: OperationHandler) -> OperationHandler:
-        """Store the handler under its operation kind and step."""
+        """Store the handler under its operation kind."""
 
-        _handlers[(kind, step)] = handler
+        # Refuse duplicate handlers so operation routing stays deterministic.
+        if kind in _handlers:
+            raise ValueError(f"Operation handler already registered for '{kind}'")
+
+        _handlers[kind] = handler
         return handler
 
     return decorator
 
 
-def get_operation_handler(kind: OperationKind, step: str) -> OperationHandler | None:
-    """Return the registered handler for one operation kind and step."""
+def get_operation_handler(kind: OperationKind) -> OperationHandler | None:
+    """Return the registered handler for one operation kind."""
 
-    return _handlers.get((kind, step))
+    return _handlers.get(kind)

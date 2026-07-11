@@ -77,5 +77,3 @@ LongLink 2026
 </div>
 
 ---
-
-Gringo

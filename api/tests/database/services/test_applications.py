@@ -93,7 +93,7 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
     assert exc.value.detail == "Application slug already exists"
 
 
-async def test_fetch_and_list_by_organization_ignore_deleted_applications() -> None:
+async def test_fetch_and_organization_applications_ignore_deleted_applications() -> None:
     """Return only active applications from collection read services."""
 
     # Arrange
@@ -109,8 +109,8 @@ async def test_fetch_and_list_by_organization_ignore_deleted_applications() -> N
 
     # Act
     fetched = await db.applications.fetch()
-    listed = await db.applications.list_by_organization(organization.id)
-    listed_with_deleted = await db.applications.list_by_organization(organization.id, include_deleted=True)
+    listed = await db.organizations.applications(organization.id)
+    listed_with_deleted = await db.organizations.applications(organization.id, include_deleted=True)
 
     # Assert
     assert [application.id for application in fetched] == [active_application.id]
@@ -159,7 +159,7 @@ async def test_application_list_services_return_models_and_memberships() -> None
 
     # Act
     all_applications = await db.applications.fetch()
-    organization_applications = await db.applications.list_by_organization(organization.id)
+    organization_applications = await db.organizations.applications(organization.id)
     memberships = await db.applications.list_user_memberships(organization.id, user.id)
 
     # Assert
@@ -167,7 +167,7 @@ async def test_application_list_services_return_models_and_memberships() -> None
     assert [item.id for item in organization_applications] == [application.id]
     assert len(memberships) == 1
     assert memberships[0].application_id == application.id
-    assert memberships[0].role_name == ApplicationRoles.admin
+    assert memberships[0].role == ApplicationRoles.admin
 
 
 async def test_list_members_includes_organization_members_with_optional_application_roles(
@@ -193,13 +193,13 @@ async def test_list_members_includes_organization_members_with_optional_applicat
             UserOrganization(
                 user_id=member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.read,
+                role=OrganizationRoles.read,
             )
         )
         await session.commit()
 
     # Act
-    members = await db.applications.list_members(application.id, organization.id)
+    members = await db.applications.members(application.id, organization.id)
     members_by_id = {
         member.id: (organization_membership, application_membership)
         for member, organization_membership, application_membership in members
@@ -208,10 +208,10 @@ async def test_list_members_includes_organization_members_with_optional_applicat
     # Assert
     owner_organization_membership, owner_application_membership = members_by_id[owner.id]
     member_organization_membership, member_application_membership = members_by_id[member.id]
-    assert owner_organization_membership.role_name == OrganizationRoles.owner
+    assert owner_organization_membership.role == OrganizationRoles.owner
     assert owner_application_membership is not None
-    assert owner_application_membership.role_name == ApplicationRoles.admin
-    assert member_organization_membership.role_name == OrganizationRoles.read
+    assert owner_application_membership.role == ApplicationRoles.admin
+    assert member_organization_membership.role == OrganizationRoles.read
     assert member_application_membership is None
 
 
@@ -238,7 +238,7 @@ async def test_set_member_role_creates_updates_removes_and_restores_memberships(
             UserOrganization(
                 user_id=member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.read,
+                role=OrganizationRoles.read,
             )
         )
         await session.commit()

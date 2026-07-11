@@ -16,7 +16,7 @@ def upgrade() -> None:
         sa.Column("organization_id", sa.Uuid(), nullable=False),
         sa.Column("email", sa.String(length=320), nullable=False),
         sa.Column(
-            "role_name",
+            "role",
             sa.Enum("read", "write", "maintain", "admin", "owner", name="organization_role_enum", native_enum=False),
             nullable=False,
         ),

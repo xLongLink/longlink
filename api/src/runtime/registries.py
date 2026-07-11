@@ -1,5 +1,5 @@
 from uuid import UUID
-from src.database.services import compute, storage, database, applications
+from src.database.services import compute, storage, database, organizations
 from src.models.organizations import OrganizationDetails, OrganizationSummary
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -59,7 +59,7 @@ async def organization_database_registry(
     """Return the single database registry used by an organization."""
 
     # Reuse the first registry already assigned to an application in the organization.
-    for application in await applications.list_by_organization(organization.id, include_deleted=include_deleted):
+    for application in await organizations.applications(organization.id, include_deleted=include_deleted):
 
         # Eager-loaded registry relationships avoid another lookup when available.
         if application.database_registry is not None:
@@ -83,7 +83,7 @@ async def organization_storage_registry(
     """Return the single storage registry used by an organization."""
 
     # Reuse the first registry already assigned to an application in the organization.
-    for application in await applications.list_by_organization(organization.id, include_deleted=include_deleted):
+    for application in await organizations.applications(organization.id, include_deleted=include_deleted):
 
         # Eager-loaded registry relationships avoid another lookup when available.
         if application.storage_registry is not None:

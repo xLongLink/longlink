@@ -101,7 +101,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             await conn.execute(text("INSERT INTO runtime_items (id, name) VALUES (1, 'Widget')"))
             shared_user = (
                 await conn.execute(
-                    text("SELECT email, role_name FROM shared.users WHERE id = :user_id"),
+                    text("SELECT email, role FROM shared.users WHERE id = :user_id"),
                     {"user_id": active_user.id},
                 )
             ).mappings().one()
@@ -126,7 +126,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
                 await conn.execute(
                     text(
                         """
-                        INSERT INTO shared.users (id, name, email, avatar, role_name, created_at, updated_at)
+                        INSERT INTO shared.users (id, name, email, avatar, role, created_at, updated_at)
                         VALUES (:id, 'Bad User', 'bad@example.com', '', 'owner', now(), now())
                         """
                     ),
@@ -154,7 +154,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         assert "longlink_acme" in database_url
         assert runtime_connection["username"].startswith("longlink_")
         assert len(runtime_connection["username"]) <= 63
-        assert shared_user == {"email": "owner@example.com", "role_name": "owner"}
+        assert shared_user == {"email": "owner@example.com", "role": "owner"}
         assert deleted_at is not None
         assert [table["name"] for table in tables] == ["runtime_items"]
         assert tables[0]["rows"] == [{"id": 1, "name": "Widget"}]

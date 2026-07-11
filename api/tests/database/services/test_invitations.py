@@ -33,11 +33,11 @@ async def test_create_normalizes_invitation_email_and_lists_active_invitations(
         OrganizationRoles.write,
         owner,
     )
-    invitations = await db.invitations.list_by_organization(organization.id)
+    invitations = await db.organizations.invitations(organization.id)
 
     # Assert
     assert invitation.email == "invited@example.com"
-    assert invitation.role_name == OrganizationRoles.write
+    assert invitation.role == OrganizationRoles.write
     assert invitation.created_id == owner.id
     assert invitation.updated_id == owner.id
     assert [item.id for item in invitations] == [invitation.id]
@@ -94,7 +94,7 @@ async def test_create_rejects_duplicate_invitation_email_case_insensitively(user
     assert exc.value.detail == "Invitation already exists"
 
 
-async def test_list_by_organization_ignores_deleted_invitations(users: tuple[User, User, User]) -> None:
+async def test_organization_invitations_ignore_deleted_invitations(users: tuple[User, User, User]) -> None:
     """Exclude soft-deleted invitations from organization invitation lists."""
 
     # Arrange
@@ -112,7 +112,7 @@ async def test_list_by_organization_ignores_deleted_invitations(users: tuple[Use
         await session.commit()
 
     # Act
-    invitations = await db.invitations.list_by_organization(organization.id)
+    invitations = await db.organizations.invitations(organization.id)
 
     # Assert
     assert invitations == []

@@ -1,7 +1,7 @@
 import i18next, { type Resource } from 'i18next';
 import { useEffect, type ReactNode } from 'react';
 import { I18nextProvider, initReactI18next, useTranslation as useReactTranslation } from 'react-i18next';
-import { DEFAULT_LANGUAGE, resolveSupportedLanguage, type Language, type UserLanguage } from '@/lib/languages';
+import { DEFAULT_LANGUAGE, resolveSupportedLanguage, type Language } from '@/lib/languages';
 import defaultTranslationCatalog from '@/translations/en.json';
 
 type TranslationCatalog = Record<string, unknown>;
@@ -47,7 +47,7 @@ async function loadTranslationCatalog(language: Language): Promise<void> {
 }
 
 /** Provides bundled API-page translations and follows the current user language. */
-export function ApiI18nProvider({ children, language }: { children: ReactNode; language?: UserLanguage | null }) {
+export function ApiI18nProvider({ children, language }: { children: ReactNode; language?: Language | null }) {
     const resolvedLanguage = resolveSupportedLanguage(language);
 
     useEffect(() => {

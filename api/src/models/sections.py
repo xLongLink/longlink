@@ -1,8 +1,8 @@
-from enum import Enum
+from enum import StrEnum
 
 
 # https://unstats.un.org/unsd/classifications/Econ/
-class ISICSectionCode(str, Enum):
+class ISICSectionCode(StrEnum):
     """ISIC Rev.4 Section codes (top-level)."""
 
     A = "A"
@@ -28,7 +28,7 @@ class ISICSectionCode(str, Enum):
     U = "U"
 
 
-class ISICSectionName(str, Enum):
+class ISICSectionName(StrEnum):
     """ISIC Rev.4 Section names (top-level industries)."""
 
     A = "Agriculture, forestry and fishing"

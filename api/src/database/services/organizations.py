@@ -34,19 +34,49 @@ async def fetch() -> list[Organization]:
         return result.scalars().all()
 
 
-async def list_by_user(user_id: UUID) -> list[Organization]:
-    """Return active organizations that contain current or historical user membership."""
+async def applications(organization_id: UUID, include_deleted: bool = False) -> list[Application]:
+    """Return applications for one organization."""
 
-    # Load organizations joined through user memberships.
+    # Query organization applications in one session.
+    async with session_scope() as session:
+        conditions = [Application.organization_id == organization_id]
+
+        # Include deleted rows only when requested.
+        if not include_deleted:
+            conditions.append(Application.deleted_at.is_(None))
+
+        statement = (
+            select(Application)
+            .options(
+                selectinload(Application.organization).selectinload(Organization.created_by),
+                selectinload(Application.organization).selectinload(Organization.updated_by),
+                selectinload(Application.organization).selectinload(Organization.deleted_by),
+                selectinload(Application.compute_registry),
+                selectinload(Application.database_registry),
+                selectinload(Application.storage_registry),
+                selectinload(Application.created_by),
+                selectinload(Application.updated_by),
+                selectinload(Application.deleted_by),
+            )
+            .where(*conditions)
+            .order_by(Application.created_at.asc())
+        )
+        result = await session.execute(statement)
+        return result.scalars().all()
+
+
+async def invitations(organization_id: UUID) -> list[OrganizationInvitation]:
+    """Return active invitations for one organization."""
+
+    # Query organization invitations in one session.
     async with session_scope() as session:
         statement = (
-            select(Organization)
-            .join(UserOrganization, UserOrganization.organization_id == Organization.id)
-            .options(selectinload(Organization.location))
+            select(OrganizationInvitation)
             .where(
-                UserOrganization.user_id == user_id,
-                Organization.deleted_at.is_(None),
+                OrganizationInvitation.organization_id == organization_id,
+                OrganizationInvitation.deleted_at.is_(None),
             )
+            .order_by(OrganizationInvitation.created_at.desc())
         )
         result = await session.execute(statement)
         return result.scalars().all()
@@ -72,7 +102,7 @@ async def get_member_access(organization_id: UUID, user_id: UUID) -> tuple[Organ
 
         # Join membership in the access check so non-members and missing organizations look identical.
         statement = (
-            select(Organization, UserOrganization.role_name)
+            select(Organization, UserOrganization.role)
             .join(UserOrganization, UserOrganization.organization_id == Organization.id)
             .where(
                 Organization.id == organization_id,
@@ -116,7 +146,7 @@ async def database_users(organization_id: UUID) -> list[TenantUser]:
         statement = (
             select(
                 User,
-                UserOrganization.role_name,
+                UserOrganization.role,
                 UserOrganization.created_at,
                 UserOrganization.updated_at,
                 UserOrganization.deleted_at,
@@ -131,7 +161,7 @@ async def database_users(organization_id: UUID) -> list[TenantUser]:
         database_users: list[TenantUser] = []
 
         # Convert each membership row to the tenant-facing user snapshot.
-        for user, role_name, created_at, updated_at, membership_deleted_at in rows:
+        for user, role, created_at, updated_at, membership_deleted_at in rows:
 
             # A shared user becomes inactive when either the account or organization membership is inactive.
             deleted_at = user.deleted_at
@@ -153,7 +183,7 @@ async def database_users(organization_id: UUID) -> list[TenantUser]:
                     name=user.name,
                     email=user.email,
                     avatar=user.avatar,
-                    role=role_name.value,
+                    role=role.value,
                     created_at=created_at,
                     updated_at=tenant_updated_at,
                     deleted_at=deleted_at,
@@ -191,7 +221,7 @@ async def get(
         return result.scalar_one_or_none()
 
 
-async def list_members(organization_id: UUID) -> list[tuple[User, UserOrganization]]:
+async def members(organization_id: UUID) -> list[tuple[User, UserOrganization]]:
     """Return active organization member rows for one organization."""
 
     # Query memberships with user rows so routes can shape API payloads.
@@ -213,7 +243,7 @@ async def membership_role(organization_id: UUID, user_id: UUID) -> OrganizationR
 
     # Query one active organization membership role.
     async with session_scope() as session:
-        statement = select(UserOrganization.role_name).where(
+        statement = select(UserOrganization.role).where(
             UserOrganization.organization_id == organization_id,
             UserOrganization.user_id == user_id,
             UserOrganization.deleted_at.is_(None),
@@ -245,12 +275,12 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
             return False
 
         # Protect organizations from losing their last owner.
-        if membership.role_name == OrganizationRoles.owner and role != OrganizationRoles.owner:
+        if membership.role == OrganizationRoles.owner and role != OrganizationRoles.owner:
             owner_statement = (
                 select(UserOrganization)
                 .where(
                     UserOrganization.organization_id == organization_id,
-                    UserOrganization.role_name == OrganizationRoles.owner,
+                    UserOrganization.role == OrganizationRoles.owner,
                     UserOrganization.deleted_at.is_(None),
                 )
                 .with_for_update()
@@ -263,7 +293,7 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
 
         membership.updated_at = datetime.now(UTC)
         membership.updated_id = user.id
-        membership.role_name = role
+        membership.role = role
         await session.commit()
         return True
 
@@ -300,7 +330,7 @@ async def create(
             UserOrganization(
                 user_id=user.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.owner,
+                role=OrganizationRoles.owner,
                 created_id=user.id,
                 updated_id=user.id,
             )

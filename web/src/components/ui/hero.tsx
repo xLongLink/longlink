@@ -1,16 +1,17 @@
 import * as React from 'react';
+import type { IconName } from '@/lib/icons';
 import { cn } from '@/lib/utils';
 import { Icon as UIIcon } from './icon';
 
 type HeroProps = React.ComponentProps<'section'> & {
-    icon?: string;
+    icon?: IconName;
 };
 
 /**
  * Renders the hero shell with an optional icon and a simple horizontal layout.
  */
 function Hero({ className, icon, children, ...props }: HeroProps) {
-    const iconNode = icon?.trim() ? <UIIcon name={icon} className="size-5" /> : null;
+    const iconNode = icon ? <UIIcon name={icon} className="size-5" /> : null;
 
     return (
         <section data-slot="hero" className={cn('flex items-center gap-4', className)} {...props}>

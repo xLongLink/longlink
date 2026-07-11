@@ -27,7 +27,7 @@ export default defineConfig([
             'perfectionist/sort-imports': [
                 'error',
                 {
-                    newlinesBetween: 'never',
+                    newlinesBetween: 0,
                     order: 'asc',
                     type: 'line-length',
                 },

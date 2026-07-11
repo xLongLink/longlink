@@ -46,12 +46,12 @@ async def test_missing_user_reads_return_none() -> None:
     # Act
     by_id = await db.users.get_by_id(missing_id)
     by_oidc = await db.users.get("missing-oidc")
-    profile = await db.users.profile(missing_id)
+    memberships = await db.users.organization_memberships(missing_id)
 
     # Assert
     assert by_id is None
     assert by_oidc is None
-    assert profile is None
+    assert memberships == []
 
 
 async def test_upsert_creates_user_when_no_existing_match() -> None:
@@ -90,7 +90,7 @@ async def test_upsert_requires_identity_fields_for_new_user() -> None:
     assert await db.users.fetch() == []
 
 
-async def test_profile_returns_created_organization_membership() -> None:
+async def test_organization_memberships_returns_created_organization_membership() -> None:
     """Return organization memberships created through the organization service."""
 
     # Arrange
@@ -101,24 +101,19 @@ async def test_profile_returns_created_organization_membership() -> None:
         avatar=None,
     )
     location = await db.locations.create("local", "Local testing", user, "CH")
-    organization = await db.organizations.create(
-        "test", "test", location.id, user, avatar="https://example.com/organizations/test.png"
-    )
+    organization = await db.organizations.create("test", "test", location.id, user, avatar="https://example.com/organizations/test.png")
 
-    profile = await db.users.profile(user.id)
+    memberships = await db.users.organization_memberships(user.id)
 
     # Assert
-    assert profile is not None
-    profile_user, memberships = profile
     profile_organization, profile_membership = memberships[0]
-    assert profile_user.id == user.id
     assert profile_organization.id == organization.id
     assert profile_organization.name == "test"
     assert profile_organization.slug == organization.slug
     assert profile_organization.avatar == "https://example.com/organizations/test.png"
     assert profile_organization.country == "CH"
     assert profile_organization.location.id == location.id
-    assert profile_membership.role_name == OrganizationRoles.owner
+    assert profile_membership.role == OrganizationRoles.owner
 
 
 async def test_upsert_does_not_mark_second_user_as_admin() -> None:
@@ -158,7 +153,7 @@ async def test_upsert_applies_explicit_user_settings_and_preserves_omitted_value
         theme=Theme.light,
         accent=Accent.blue,
         radius=Radius.large,
-        language=Language.fr,
+        language=Language.it,
     )
 
     # Act
@@ -176,7 +171,7 @@ async def test_upsert_applies_explicit_user_settings_and_preserves_omitted_value
     assert updated_user.theme == Theme.light
     assert updated_user.accent == Accent.blue
     assert updated_user.radius == Radius.large
-    assert updated_user.language == Language.fr
+    assert updated_user.language == Language.it
 
 
 async def test_upsert_updates_existing_user_by_oidc() -> None:

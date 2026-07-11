@@ -1,8 +1,8 @@
-from enum import Enum
+from enum import StrEnum
 
 
 # https://unstats.un.org/unsd/classifications/Econ/
-class ISICClassCode(str, Enum):
+class ISICClassCode(StrEnum):
     """ISIC Rev.4 Classes (Section + 4-digit code)."""
 
     # A - Agriculture, forestry and fishing
@@ -529,7 +529,7 @@ class ISICClassCode(str, Enum):
     U9900 = "U9900"
 
 
-class ISICClassName(str, Enum):
+class ISICClassName(StrEnum):
     """ISIC Rev.4 Class names (4-digit level)."""
 
     # A - Agriculture, forestry and fishing

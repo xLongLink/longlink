@@ -4,10 +4,10 @@ import pytest
 import asyncio
 from typing import Any, cast
 from containers import DockerRuntimeContainer, wait_for_container_log
-from src.compute import Kubernetes
+from src.runtime import Kubernetes
 from docker.errors import DockerException
 from collections.abc import Iterator
-from src.compute.library import Secret, Ingress, Service, ConfigMap, NetworkPolicy
+from src.runtime.library import Secret, Ingress, Service, ConfigMap, NetworkPolicy
 
 pytestmark = pytest.mark.no_db
 K3S_IMAGE = "rancher/k3s:v1.31.5-k3s1"
@@ -64,7 +64,7 @@ def kubernetes_compute() -> Iterator[Kubernetes]:
         pytest.skip(f"Docker/k3s is not available for Kubernetes integration tests: {exc}")
 
     try:
-        yield Kubernetes(container.config_yaml(), "shared-secret", "apps.example.test")
+        yield Kubernetes(container.config_yaml(), "shared-secret")
     finally:
         container.stop()
 
@@ -131,7 +131,9 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
 
         assert route == "/longlink-acme/dashboard/"
         assert "longlink-acme" in namespaces
-        assert f"/api/applications/{application_id}/proxy/" in gateway_config
+        assert f"/api/applications/{application_id}/proxy/" not in gateway_config
+        assert "x-longlink-application-id" in gateway_config
+        assert application_id in gateway_config
         assert "dashboard.longlink-acme.svc.cluster.local" in gateway_config
         assert "shared-secret" not in gateway_config
         assert "__LONG_LINK_GATEWAY_SECRET__" in gateway_config

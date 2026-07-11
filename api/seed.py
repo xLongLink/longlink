@@ -1,6 +1,6 @@
 import asyncio
 import subprocess
-from src import compute as compute_runtime
+from src import runtime
 from uuid import UUID
 from pathlib import Path
 from datetime import UTC, datetime
@@ -21,7 +21,8 @@ from src.models.applications import ApplicationCreate
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.databases import DatabaseRegistry
-from src.operations.implementation import bootstrap, resources
+from src.runtime import bootstrap
+from src.runtime import provisioning as resources
 from src.database.models.association import UserOrganization
 
 LOCAL_ORG = "test"
@@ -29,7 +30,7 @@ LOCAL_ORG_AVATAR = "https://example.com/organizations/test.png"
 LOCAL_ADMIN_OIDC = "00000000-0000-0000-0000-000000000001"
 LOCAL_ADMIN_NAME = "Example LongLink"
 LOCAL_ADMIN_EMAIL = "example@longlink.dev"
-LOCAL_COMPUTE_INGRESS_HOST = "http://localhost:8080"
+LOCAL_COMPUTE_GATEWAY_URL = "http://localhost:8080"
 LOCAL_DATABASE_PORT = 15432
 LOCAL_DOCKER_NETWORK = "k3d-compute"
 LOCAL_APPLICATION_IMAGE = "localhost:15000/longlink-app:dev"
@@ -79,8 +80,8 @@ async def sync_local_database_host(registry_id: UUID, host: str) -> None:
         await session.commit()
 
 
-async def sync_local_compute_ingress_host(registry_id: UUID) -> None:
-    """Update the local compute registry gateway host after development port changes."""
+async def sync_local_compute_gateway_url(registry_id: UUID) -> None:
+    """Update the local compute registry gateway URL after development port changes."""
 
     # Update only the reused local compute registry row.
     async with session_scope() as session:
@@ -90,7 +91,7 @@ async def sync_local_compute_ingress_host(registry_id: UUID) -> None:
         if registry is None:
             raise RuntimeError("Local compute registry could not be loaded")
 
-        registry.ingress_host = LOCAL_COMPUTE_INGRESS_HOST
+        registry.gateway_url = LOCAL_COMPUTE_GATEWAY_URL
         await session.commit()
 
 
@@ -122,7 +123,7 @@ async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) 
                 UserOrganization(
                     user_id=user_id,
                     organization_id=organization_id,
-                    role_name=OrganizationRoles.owner,
+                    role=OrganizationRoles.owner,
                     created_id=user_id,
                     updated_id=user_id,
                 )
@@ -130,7 +131,7 @@ async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) 
         else:
 
             # Reusing old local data should not leave the fixed dev administrator locked out.
-            membership.role_name = OrganizationRoles.owner
+            membership.role = OrganizationRoles.owner
             membership.deleted_at = None
             membership.deleted_id = None
             membership.updated_at = now
@@ -207,7 +208,7 @@ async def seed_local_development() -> None:
         (
             registry
             for registry in compute_registries
-            if registry.name == "local" or registry.ingress_host == LOCAL_COMPUTE_INGRESS_HOST
+            if registry.name == "local" or registry.gateway_url == LOCAL_COMPUTE_GATEWAY_URL
         ),
         None,
     )
@@ -218,15 +219,15 @@ async def seed_local_development() -> None:
             name="local",
             slug=names.slugify("local"),
             kubeconfig=kubeconfig,
-            ingress_host=LOCAL_COMPUTE_INGRESS_HOST,
+            gateway_url=LOCAL_COMPUTE_GATEWAY_URL,
             location_id=location.id,
             user=admin_user,
         )
-        await compute_runtime.kubernetes(compute_registry).setup()
+        await runtime.kubernetes(compute_registry).setup()
 
-    # Reused registries may need their gateway host refreshed after port changes.
-    elif compute_registry.ingress_host != LOCAL_COMPUTE_INGRESS_HOST:
-        await sync_local_compute_ingress_host(compute_registry.id)
+    # Reused registries may need their gateway URL refreshed after port changes.
+    elif compute_registry.gateway_url != LOCAL_COMPUTE_GATEWAY_URL:
+        await sync_local_compute_gateway_url(compute_registry.id)
 
     # Organization
     organizations = await organization_service.fetch()

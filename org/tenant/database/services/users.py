@@ -16,13 +16,9 @@ class UsersService:
 
         rows = []
 
-        # Convert API user models to the shared table column names.
+        # Convert API user models to shared table rows.
         for user in users:
-
-            # The Python model exposes `role`; the shared table stores the historical `role_name` column.
-            row = user.model_dump(exclude={"role"})
-            row["role_name"] = user.role
-            rows.append(row)
+            rows.append(user.model_dump())
 
         insert_statement = postgres_insert(shared_users_table)
         excluded = insert_statement.excluded
@@ -35,7 +31,7 @@ class UsersService:
                     "name": excluded.name,
                     "email": excluded.email,
                     "avatar": excluded.avatar,
-                    "role_name": excluded.role_name,
+                    "role": excluded.role,
                     "updated_at": excluded.updated_at,
                     "deleted_at": excluded.deleted_at,
                 },

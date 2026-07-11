@@ -28,7 +28,7 @@ class ComputeRegistry(SQLModel, table=True):
     name: str = Field(unique=True, max_length=128)
     slug: str = Field(max_length=255, unique=True, sa_column_kwargs={"nullable": False})
     kubeconfig: str = Field(sa_column=Column(Text, nullable=False))
-    ingress_host: str = Field(max_length=255)
+    gateway_url: str = Field(max_length=512)
     proxy_secret: str = Field(max_length=255, index=True)
 
     # Audit

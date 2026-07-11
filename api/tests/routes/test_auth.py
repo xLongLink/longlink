@@ -5,9 +5,7 @@ from conftest import session_cookie
 from src.routes import auth as auth_routes
 from src.environments import env
 from src.models.users import UserProfile, UserListItem
-from src.routes.users import user_profile_payload
 from fastapi.testclient import TestClient
-from src.database.services import users as users_service
 from src.database.models.users import User
 
 
@@ -189,9 +187,7 @@ async def test_activate_account_switches_the_active_session_account(users: tuple
 
     me_response = client.get("/api/me")
     assert me_response.status_code == 200
-    current_profile = await users_service.profile(user_two.id)
-    assert current_profile is not None
-    assert me_response.json() == UserProfile.model_validate(user_profile_payload(current_profile)).model_dump(mode="json")
+    assert me_response.json() == UserProfile.model_validate(user_two).model_dump(mode="json")
 
 
 async def test_activate_account_rejects_account_not_saved_in_session(users: tuple[User, User, User]) -> None:

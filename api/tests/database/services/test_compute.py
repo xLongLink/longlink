@@ -25,7 +25,7 @@ async def test_create_get_and_fetch_return_active_compute_registries(users: tupl
         "Primary compute",
         "primary-compute",
         "kubeconfig",
-        "apps.example",
+        "https://apps.example",
         location.id,
         owner,
     )
@@ -37,7 +37,7 @@ async def test_create_get_and_fetch_return_active_compute_registries(users: tupl
     assert registry.name == "Primary compute"
     assert registry.slug == "primary-compute"
     assert registry.kubeconfig == "kubeconfig"
-    assert registry.ingress_host == "apps.example"
+    assert registry.gateway_url == "https://apps.example"
     assert registry.proxy_secret
     assert registry.location_id == location.id
     assert registry.created_by.id == owner.id
@@ -56,7 +56,7 @@ async def test_create_rejects_duplicate_compute_registry_names(users: tuple[User
         "Primary compute",
         "primary-compute",
         "kubeconfig",
-        "apps.example",
+        "https://apps.example",
         location.id,
         owner,
     )
@@ -67,7 +67,7 @@ async def test_create_rejects_duplicate_compute_registry_names(users: tuple[User
             "Primary compute",
             "primary-compute",
             "other-kubeconfig",
-            "other.example",
+            "https://other.example",
             location.id,
             owner,
         )
@@ -89,7 +89,7 @@ async def test_delete_soft_deletes_compute_registry_and_include_deleted_can_relo
         "Primary compute",
         "primary-compute",
         "kubeconfig",
-        "apps.example",
+        "https://apps.example",
         location.id,
         owner,
     )
@@ -121,7 +121,7 @@ async def test_delete_rejects_compute_registry_used_by_active_applications(users
         "Primary compute",
         "primary-compute",
         "kubeconfig",
-        "apps.example",
+        "https://apps.example",
         location.id,
         owner,
     )

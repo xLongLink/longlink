@@ -33,7 +33,6 @@ class Operation(SQLModel, table=True):
     organization_id: UUID | None = Field(default=None, foreign_key="organizations.id")
 
     # Metadata
-    step: str = Field(sa_column=Column(String(length=100), nullable=False))
     error: str | None = Field(default=None, sa_column=Column(String(length=2000), nullable=True))
 
     # Lease

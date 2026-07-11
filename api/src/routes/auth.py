@@ -9,7 +9,7 @@ from src.environments import env
 from fastapi.responses import RedirectResponse
 from src.models.common import SuccessResponse
 from src.database.services import users
-from src.operations.implementation import bootstrap
+from src.runtime import bootstrap
 from authlib.integrations.base_client import OAuthError
 
 router = APIRouter()

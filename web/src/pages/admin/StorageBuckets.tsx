@@ -4,8 +4,11 @@ import { Link, useParams } from 'react-router';
 import { DataTable } from '@/components/DataTable';
 import { useStorageBuckets, useStorages } from '@/data/storage';
 import { useTranslation } from '@/lib/i18n';
-import type { ApiStorageBucket } from '@/lib/types';
 import { S3 } from '@/svg/S3';
+
+type StorageBucketRow = {
+    name: string;
+};
 
 /** Renders buckets for a storage backend. */
 export default function StorageBuckets() {
@@ -16,7 +19,7 @@ export default function StorageBuckets() {
 
     const storageRegistry = registries.find((registry) => registry.slug === storage);
 
-    const bucketColumns: Array<ColumnDef<ApiStorageBucket>> = [
+    const bucketColumns: Array<ColumnDef<StorageBucketRow>> = [
         {
             accessorKey: 'name',
             header: t('columns.bucket'),
@@ -41,10 +44,11 @@ export default function StorageBuckets() {
     ];
 
     const {
-        items: rows,
+        items: bucketNames,
         error: bucketsError,
         isLoading: bucketsIsLoading,
     } = useStorageBuckets(storageRegistry?.id ?? '');
+    const rows = bucketNames.map((name) => ({ name }));
     const error =
         registriesError ??
         (!registriesIsLoading && !storageRegistry

@@ -42,7 +42,7 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
     compute_registry = fake_resource(
         id=UUID("44444444-4444-4444-4444-444444444444"),
         name="local",
-        ingress_host=seed.LOCAL_COMPUTE_INGRESS_HOST,
+        gateway_url=seed.LOCAL_COMPUTE_GATEWAY_URL,
     )
     kubeconfig = tmp_path / "kubeconfig.yaml"
     kubeconfig.write_text("apiVersion: v1\nclusters: []\n", encoding="utf-8")
@@ -154,7 +154,7 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
     monkeypatch.setattr(seed.storage_service, "create", create_storage_registry)
     monkeypatch.setattr(seed.compute_service, "fetch", fetch_no_compute_registries)
     monkeypatch.setattr(seed.compute_service, "create", create_compute_registry)
-    monkeypatch.setattr(seed.compute_runtime, "kubernetes", lambda registry: fake_kubernetes)
+    monkeypatch.setattr(seed.runtime, "kubernetes", lambda registry: fake_kubernetes)
     monkeypatch.setattr(seed.organization_service, "fetch", fetch_no_organizations)
     monkeypatch.setattr(seed.organization_service, "create", create_organization)
     monkeypatch.setattr(seed.organization_service, "get_record", load_organization)
@@ -195,7 +195,7 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         "name": "local",
         "slug": "local",
         "kubeconfig": "apiVersion: v1\nclusters: []\n",
-        "ingress_host": seed.LOCAL_COMPUTE_INGRESS_HOST,
+        "gateway_url": seed.LOCAL_COMPUTE_GATEWAY_URL,
         "location_id": location.id,
         "user": user,
     }
@@ -253,7 +253,7 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
     async def fetch_compute_registries() -> list[object]:
         """Return the existing local compute registry."""
 
-        return [fake_resource(name="local", ingress_host=seed.LOCAL_COMPUTE_INGRESS_HOST)]
+        return [fake_resource(name="local", gateway_url=seed.LOCAL_COMPUTE_GATEWAY_URL)]
 
     async def fetch_organizations() -> list[object]:
         """Return the existing local organization."""

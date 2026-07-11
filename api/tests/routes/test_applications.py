@@ -13,7 +13,7 @@ from src.database.services import users, compute, storage, database, locations, 
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationStatus
 from src.database.models.users import User
-from src.operations.implementation import registries
+from src.runtime import registries
 from src.database.models.association import UserApplication, UserOrganization
 
 db = SimpleNamespace(
@@ -53,7 +53,7 @@ async def test_list_organization_apps_returns_app_membership_role(
             UserOrganization(
                 user_id=user.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.read,
+                role=OrganizationRoles.read,
             )
         )
         session.add(
@@ -61,7 +61,7 @@ async def test_list_organization_apps_returns_app_membership_role(
                 user_id=user.id,
                 organization_id=organization.id,
                 application_id=app.id,
-                role_name=ApplicationRoles.write,
+                role=ApplicationRoles.write,
             )
         )
         await session.commit()
@@ -205,7 +205,7 @@ async def test_create_app_returns_app_response(
         name="local",
         slug="local",
         kubeconfig="apiVersion: v1\nclusters: []\n",
-        ingress_host="apps.local.longlink.internal",
+        gateway_url="https://apps.local.longlink.internal",
         location_id=local_location.id,
         user=user,
     )
@@ -213,7 +213,7 @@ async def test_create_app_returns_app_response(
         name="remote",
         slug="remote",
         kubeconfig="apiVersion: v1\nclusters: []\n",
-        ingress_host="apps.remote.longlink.internal",
+        gateway_url="https://apps.remote.longlink.internal",
         location_id=remote_location.id,
         user=user,
     )
@@ -263,7 +263,7 @@ async def test_create_app_returns_app_response(
         image_metadata.image = "ghcr.io/longlink/dashboard@sha256:manifest"
         return image_metadata
 
-    monkeypatch.setattr("src.operations.implementation.environments.images.metadata", fake_metadata)
+    monkeypatch.setattr("src.runtime.environments.images.metadata", fake_metadata)
 
     captured: dict[str, object] = {}
     captured_buckets: list[tuple[str, ...]] = []
@@ -271,12 +271,12 @@ async def test_create_app_returns_app_response(
     class FakeCompute:
         """Fake compute adapter for app creation tests."""
 
-        def __init__(self, kubeconfig: str, proxy_secret: str, ingress_host: str) -> None:
+        def __init__(self, kubeconfig: str, proxy_secret: str, gateway_url: str) -> None:
             """Capture compute registry configuration."""
 
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
-            captured["ingress_host"] = ingress_host
+            captured["gateway_url"] = gateway_url
 
         async def namespace(self, organization: str) -> None:
             """Record the namespace requested for the organization."""
@@ -385,11 +385,11 @@ async def test_create_app_returns_app_response(
             return {"access_key_id": "app-access", "secret_access_key": "app-secret"}
 
     monkeypatch.setattr(
-        "src.operations.implementation.resources.compute_runtime.kubernetes",
-        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret, registry.ingress_host),
+        "src.runtime.provisioning.runtime.kubernetes",
+        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret, registry.gateway_url),
     )
     monkeypatch.setattr(
-        "src.operations.implementation.resources.adapters.database",
+        "src.runtime.provisioning.adapters.database",
         lambda registry: FakeDatabase(
             registry.host,
             registry.port,
@@ -398,7 +398,7 @@ async def test_create_app_returns_app_response(
         ),
     )
     monkeypatch.setattr(
-        "src.operations.implementation.resources.adapters.storage",
+        "src.runtime.provisioning.adapters.storage",
         lambda registry: FakeStorage(
             registry.protocol,
             registry.endpoint_url,
@@ -433,7 +433,7 @@ async def test_create_app_returns_app_response(
     assert "gateway_url" not in payload
     assert captured["namespace"] == "acme"
     assert captured["proxy_secret"]
-    assert captured["ingress_host"] == "apps.remote.longlink.internal"
+    assert captured["gateway_url"] == "https://apps.remote.longlink.internal"
     schema_payload = captured["schema"]
     assert isinstance(schema_payload, dict)
     assert schema_payload["organization"] == "acme"
@@ -542,7 +542,7 @@ async def test_create_app_returns_409_when_image_metadata_is_missing(
 
         return None
 
-    monkeypatch.setattr("src.operations.implementation.environments.images.metadata", fake_metadata)
+    monkeypatch.setattr("src.runtime.environments.images.metadata", fake_metadata)
     client = clients[0]
 
     # Act
@@ -554,7 +554,7 @@ async def test_create_app_returns_409_when_image_metadata_is_missing(
     # Assert
     assert response.status_code == 409
     assert response.json() == {"detail": "Image metadata could not be inspected"}
-    assert await db.applications.list_by_organization(organization.id) == []
+    assert await db.organizations.applications(organization.id) == []
 
 
 async def test_create_app_rejects_reserved_platform_environment_requirements(
@@ -572,7 +572,7 @@ async def test_create_app_rejects_reserved_platform_environment_requirements(
         name="local",
         slug="local",
         kubeconfig="apiVersion: v1\nclusters: []\n",
-        ingress_host="apps.local.longlink.internal",
+        gateway_url="https://apps.local.longlink.internal",
         location_id=location.id,
         user=owner,
     )
@@ -602,7 +602,7 @@ async def test_create_app_rejects_reserved_platform_environment_requirements(
         image_metadata.image = "ghcr.io/longlink/dashboard@sha256:manifest"
         return image_metadata
 
-    monkeypatch.setattr("src.operations.implementation.environments.images.metadata", fake_metadata)
+    monkeypatch.setattr("src.runtime.environments.images.metadata", fake_metadata)
     client = clients[0]
 
     # Act
@@ -617,7 +617,7 @@ async def test_create_app_rejects_reserved_platform_environment_requirements(
     # Assert
     assert response.status_code == 409
     assert response.json() == {"detail": "Reserved platform environment variables: LONGLINK_STORAGE_ENDPOINT_URL"}
-    assert await db.applications.list_by_organization(organization.id) == []
+    assert await db.organizations.applications(organization.id) == []
 
 
 async def test_create_app_returns_409_for_overlong_runtime_bucket_name(
@@ -641,7 +641,7 @@ async def test_create_app_returns_409_for_overlong_runtime_bucket_name(
     # Assert
     assert response.status_code == 409
     assert response.json() == {"detail": "Invalid application runtime resource name"}
-    assert await db.applications.list_by_organization(organization.id) == []
+    assert await db.organizations.applications(organization.id) == []
 
 
 async def test_create_app_returns_403_for_regular_member(
@@ -663,7 +663,7 @@ async def test_create_app_returns_403_for_regular_member(
             UserOrganization(
                 user_id=regular_member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.write,
+                role=OrganizationRoles.write,
             )
         )
         await session.commit()
@@ -731,7 +731,7 @@ async def test_get_app_logs_returns_pod_logs(
             "    client-certificate-data: Y2VydA==\n"
             "    client-key-data: a2V5\n"
         ),
-        ingress_host="localhost:8443",
+        gateway_url="https://localhost:8443",
         location_id=location.id,
         user=user,
     )
@@ -740,12 +740,12 @@ async def test_get_app_logs_returns_pod_logs(
     class FakeCompute:
         """Fake compute adapter for app log tests."""
 
-        def __init__(self, kubeconfig: str, proxy_secret: str, ingress_host: str) -> None:
+        def __init__(self, kubeconfig: str, proxy_secret: str, gateway_url: str) -> None:
             """Capture compute registry configuration."""
 
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
-            captured["ingress_host"] = ingress_host
+            captured["gateway_url"] = gateway_url
 
         async def logs(self, organization: str, application: str, lines: int = 200) -> str:
             """Record the log request and return fake pod logs."""
@@ -758,8 +758,8 @@ async def test_get_app_logs_returns_pod_logs(
             return "line 1\nline 2"
 
     monkeypatch.setattr(
-        "src.routes.applications.compute_runtime.kubernetes",
-        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret, registry.ingress_host),
+        "src.routes.applications.runtime.kubernetes",
+        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret, registry.gateway_url),
     )
     client = clients[0]
 
@@ -807,8 +807,7 @@ async def test_delete_application_soft_deletes_and_queues_removal(
     assert deleted.deleted_id == user.id
     recorded_operations = await db.operations.fetch()
     assert len(recorded_operations) == 1
-    assert recorded_operations[0].kind == OperationKind.application_delete
-    assert recorded_operations[0].step == "remove"
+    assert recorded_operations[0].kind == OperationKind.application_remove
     assert recorded_operations[0].application_id == app.id
     assert recorded_operations[0].scheduled_at is not None
 
@@ -856,7 +855,7 @@ async def test_application_proxy_forwards_authenticated_request(
             "    client-certificate-data: Y2VydA==\n"
             "    client-key-data: a2V5\n"
         ),
-        ingress_host="localhost:8443",
+        gateway_url="https://localhost:8443",
         location_id=local_location.id,
         user=user,
     )
@@ -883,7 +882,7 @@ async def test_application_proxy_forwards_authenticated_request(
             "    client-certificate-data: Y2VydA==\n"
             "    client-key-data: a2V5\n"
         ),
-        ingress_host="localhost:8443",
+        gateway_url="https://localhost:8443",
         location_id=remote_location.id,
         user=user,
     )
@@ -910,7 +909,7 @@ async def test_application_proxy_forwards_authenticated_request(
             "    client-certificate-data: Y2VydA==\n"
             "    client-key-data: a2V5\n"
         ),
-        ingress_host="localhost:9443",
+        gateway_url="https://localhost:9443",
         location_id=remote_location.id,
         user=user,
     )
@@ -984,11 +983,12 @@ async def test_application_proxy_forwards_authenticated_request(
     forwarded = captured["request"]
     assert isinstance(forwarded, dict)
     assert forwarded["method"] == "POST"
-    assert forwarded["url"] == f"https://localhost:8443/api/applications/{app.id}/proxy/anything?answer=42"
+    assert forwarded["url"] == "https://localhost:8443/anything?answer=42"
     assert forwarded["content"] == b"payload"
     headers = forwarded["headers"]
     assert isinstance(headers, dict)
     assert headers["x-longlink-gateway-secret"] == registry.proxy_secret
+    assert headers["x-longlink-application-id"] == str(app.id)
     assert headers["x-user-id"] == str(user.id)
     assert headers["content-type"] == "text/plain"
     assert "accept" not in headers
@@ -998,10 +998,16 @@ async def test_application_proxy_forwards_authenticated_request(
     assert "x-custom-feature" not in headers
     assert "x-forwarded-for" not in headers
     assert "x-user-role" not in headers
-    assert "x-longlink-application-id" not in headers
     assert "x-longlink-application-slug" not in headers
     assert "x-longlink-organization-id" not in headers
     assert "x-longlink-organization-slug" not in headers
+
+    root_response = client.get(f"/api/applications/{app.id}/proxy")
+    assert root_response.status_code == 201
+    root_forwarded = captured["request"]
+    assert isinstance(root_forwarded, dict)
+    assert root_forwarded["method"] == "GET"
+    assert root_forwarded["url"] == "https://localhost:8443/"
 
 
 async def test_application_proxy_requires_application_role_for_regular_member(
@@ -1029,7 +1035,7 @@ async def test_application_proxy_requires_application_role_for_regular_member(
             UserOrganization(
                 user_id=user.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.read,
+                role=OrganizationRoles.read,
             )
         )
         await session.commit()
@@ -1038,7 +1044,7 @@ async def test_application_proxy_requires_application_role_for_regular_member(
         name="local",
         slug="local",
         kubeconfig="apiVersion: v1\nclusters: []\n",
-        ingress_host="localhost:9443",
+        gateway_url="https://localhost:9443",
         location_id=location.id,
         user=owner,
     )
@@ -1102,7 +1108,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
             "    client-certificate-data: Y2VydA==\n"
             "    client-key-data: a2V5\n"
         ),
-        ingress_host="localhost:9443",
+        gateway_url="https://localhost:9443",
         location_id=remote_location.id,
         user=user,
     )
@@ -1151,7 +1157,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     assert captured["client_kwargs"] == {"follow_redirects": False, "timeout": 300.0}
     forwarded = captured["request"]
     assert isinstance(forwarded, dict)
-    assert forwarded["url"] == f"https://localhost:9443/api/applications/{app.id}/proxy/i18n/en.json"
+    assert forwarded["url"] == "https://localhost:9443/i18n/en.json"
 
 
 async def test_application_proxy_enforces_method_role(
@@ -1196,7 +1202,7 @@ async def test_application_proxy_enforces_method_role(
             "    client-certificate-data: Y2VydA==\n"
             "    client-key-data: a2V5\n"
         ),
-        ingress_host="localhost:9443",
+        gateway_url="https://localhost:9443",
         location_id=remote_location.id,
         user=user,
     )
@@ -1211,7 +1217,7 @@ async def test_application_proxy_enforces_method_role(
     async with Session() as session:
         organization_membership = await session.get(UserOrganization, (user.id, organization.id))
         assert organization_membership is not None
-        organization_membership.role_name = OrganizationRoles.read
+        organization_membership.role = OrganizationRoles.read
         application_membership = await session.get(
             UserApplication,
             {
@@ -1221,7 +1227,7 @@ async def test_application_proxy_enforces_method_role(
             },
         )
         assert application_membership is not None
-        application_membership.role_name = ApplicationRoles.read
+        application_membership.role = ApplicationRoles.read
         await session.commit()
 
     client = clients[0]
@@ -1287,7 +1293,7 @@ async def test_organization_access_rejects_soft_deleted_membership(
             UserOrganization(
                 user_id=user.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.read,
+                role=OrganizationRoles.read,
                 deleted_at=datetime.now(UTC),
             )
         )
@@ -1324,7 +1330,7 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
         name="local",
         slug="local",
         kubeconfig="apiVersion: v1\nclusters: []\n",
-        ingress_host="localhost:9443",
+        gateway_url="https://localhost:9443",
         location_id=location.id,
         user=owner,
     )

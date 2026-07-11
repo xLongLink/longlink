@@ -8,7 +8,7 @@ import {
     apiOrganizationSummarySchema,
     parseApiResponse,
 } from '@/lib/api-schemas';
-import { applicationsQueryKey, organizationsQueryKey } from '@/lib/query-keys';
+import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 import { canCreateOrganizationInvitation, canManageOrganizationMembers, type Role } from '@/lib/roles';
 import type {
     ApiApplicationResponse,
@@ -188,7 +188,7 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
                 return;
             }
 
-            await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/me') });
+            await queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() });
             await queryClient.invalidateQueries({ queryKey: organizationsQueryKey() });
             await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
         },
@@ -251,7 +251,7 @@ export function useCreateOrganization() {
             );
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/me') });
+            queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() });
         },
     });
 }
@@ -272,7 +272,7 @@ export function useDeleteOrganization() {
             });
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/me') });
+            queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() });
         },
     });
 }

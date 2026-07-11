@@ -21,7 +21,7 @@ class SharedUser(SQLModel, table=True):
     name: str = Field(sa_column=Column(String(255), nullable=False))
     email: str = Field(sa_column=Column(String(254), nullable=False))
     avatar: str = Field(default="", sa_column=Column(String(2048), nullable=False, server_default=""))
-    role_name: str = Field(sa_column=Column(String(32), nullable=False))
+    role: str = Field(sa_column=Column(String(32), nullable=False))
 
     # Audit
     created_at: datetime = Field(sa_column=Column(TIMESTAMP(timezone=True), nullable=False))

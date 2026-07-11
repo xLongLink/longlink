@@ -1,10 +1,10 @@
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.countries import Country
 
 
-class LocationProvider(str, Enum):
+class LocationProvider(StrEnum):
     """Supported datacenter providers for locations."""
 
     local = "local"

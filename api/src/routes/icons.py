@@ -1,6 +1,6 @@
 from fastapi import Depends, APIRouter
 from src.auth import authuser
-from src.models.icons import Icon
+from tenant.models.icons import Icon
 from src.database.models.users import User
 
 router = APIRouter()

@@ -31,13 +31,11 @@ class KubernetesResources:
         self,
         kubeconfig: str,
         proxy_secret: str,
-        ingress_host: str,
     ) -> None:
         """Initialize the Kubernetes compute client."""
 
         self._kubeconfig = kubeconfig
         self._proxy_secret = proxy_secret
-        self._ingress_host = ingress_host
         self._api_client: Any | None = None
 
     async def _client(self) -> Any:

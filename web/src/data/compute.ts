@@ -1,11 +1,7 @@
+import { z } from 'zod';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
-import {
-    apiComputeNamespaceSchema,
-    apiComputePodSchema,
-    apiComputeRegistrySchema,
-    parseApiCollection,
-} from '@/lib/api-schemas';
-import type { ApiComputeNamespace, ApiComputePod, ApiComputeRegistry } from '@/lib/types';
+import { apiComputePodSchema, apiComputeRegistrySchema, parseApiCollection } from '@/lib/api-schemas';
+import type { ApiComputePod, ApiComputeRegistry } from '@/lib/types';
 
 /** Fetches the compute registry list for admin views. */
 export function useComputes() {
@@ -18,9 +14,9 @@ export function useComputes() {
 export function useComputeNamespaces(computeId: string) {
     const enabled = computeId.length > 0;
 
-    return useCollectionQuery<ApiComputeNamespace>(enabled ? `/api/computes/${computeId}/namespaces` : null, {
+    return useCollectionQuery<string>(enabled ? `/api/computes/${computeId}/namespaces` : null, {
         enabled,
-        parse: (value) => parseApiCollection(apiComputeNamespaceSchema, value),
+        parse: (value) => parseApiCollection(z.string(), value),
     });
 }
 

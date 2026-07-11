@@ -11,47 +11,46 @@ class ComputeRegistryCreate(BaseModel):
     # Metadata
     name: str
     kubeconfig: str
-    ingress_host: str = Field(min_length=1, max_length=255)
+    gateway_url: str = Field(min_length=1, max_length=512)
 
     # Relationships
     location_id: UUID
 
-    @field_validator("ingress_host")
+    @field_validator("gateway_url")
     @classmethod
-    def validate_ingress_host(cls, ingress_host: str) -> str:
-        """Validate a gateway ingress host or absolute HTTP(S) URL."""
+    def validate_gateway_url(cls, gateway_url: str) -> str:
+        """Validate an absolute API-facing gateway URL."""
 
-        value = ingress_host.strip().rstrip("/")
+        value = gateway_url.strip().rstrip("/")
 
-        # Gateway hosts must be non-empty and safe for URL and Envoy domain composition.
+        # Gateway URLs must be non-empty and safe to use as proxy origins.
         if not value or any(
             character.isspace() or ord(character) < 32 or ord(character) == 127 for character in value
         ):
-            raise ValueError("Gateway ingress host contains invalid characters")
+            raise ValueError("Gateway URL contains invalid characters")
 
         parsed_value = urllib.parse.urlsplit(value)
-        parsed_host = parsed_value if parsed_value.scheme else urllib.parse.urlsplit(f"//{value}")
 
-        # Absolute URLs are allowed only for HTTP(S) gateway endpoints.
-        if parsed_value.scheme and parsed_value.scheme not in {"http", "https"}:
-            raise ValueError("Gateway ingress host URL must use HTTP or HTTPS")
+        # Gateway URLs must be absolute HTTP(S) origins reachable by the API.
+        if parsed_value.scheme not in {"http", "https"} or not parsed_value.netloc:
+            raise ValueError("Gateway URL must use HTTP or HTTPS")
 
-        # Gateway hosts must not carry credentials, paths, query strings, or fragments.
+        # Gateway origins must not carry credentials, paths, query strings, or fragments.
         if (
-            parsed_host.hostname is None
-            or parsed_host.username
-            or parsed_host.password
-            or parsed_host.path not in {"", "/"}
-            or parsed_host.query
-            or parsed_host.fragment
+            parsed_value.hostname is None
+            or parsed_value.username
+            or parsed_value.password
+            or parsed_value.path not in {"", "/"}
+            or parsed_value.query
+            or parsed_value.fragment
         ):
-            raise ValueError("Gateway ingress host is invalid")
+            raise ValueError("Gateway URL is invalid")
 
         # Access the port property so invalid numeric ports are rejected by urllib.
         try:
-            parsed_host.port
+            parsed_value.port
         except ValueError as exc:
-            raise ValueError("Gateway ingress host port is invalid") from exc
+            raise ValueError("Gateway URL port is invalid") from exc
 
         return value
 
@@ -67,7 +66,7 @@ class ComputeRegistryResponse(BaseModel):
     # Metadata
     name: str
     slug: str
-    ingress_host: str
+    gateway_url: str
 
     # Relationships
     location_id: UUID
@@ -79,13 +78,6 @@ class ComputeRegistryResponse(BaseModel):
     updated_by: UserSummary
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
-
-
-class NamespaceResponse(BaseModel):
-    """Represent a compute namespace."""
-
-    # Metadata
-    name: str
 
 
 class PodResourcesResponse(BaseModel):

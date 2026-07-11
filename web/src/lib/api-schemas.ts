@@ -1,33 +1,7 @@
 import { APPLICATION_ROLE_NAMES, PLATFORM_ROLE_NAMES, ROLE_NAMES } from '@/lib/roles';
 import { ACCENT_VALUES, RADIUS_VALUES, THEME_VALUES } from '@/lib/theme';
-import type {
-    ApiApplicationResponse,
-    ApiApplicationMember,
-    ApiComputeNamespace,
-    ApiComputePod,
-    ApiComputeRegistry,
-    ApiCountryOption,
-    ApiDatabaseRegistry,
-    ApiDatabaseSchema,
-    ApiImageMetadata,
-    ApiInvitation,
-    ApiLocation,
-    ApiOperation,
-    ApiOrganizationApplication,
-    ApiOrganizationDatabaseResource,
-    ApiOrganizationDatabaseTable,
-    ApiOrganizationDetails,
-    ApiOrganizationMemberSummary,
-    ApiOrganizationStorageResource,
-    ApiOrganizationSummary,
-    ApiStorageBucket,
-    ApiStorageObject,
-    ApiStorageRegistry,
-    ApiUserListItem,
-    ApiUserOrganizationMembership,
-    ApiUserProfile,
-    ApiUserSummary,
-} from '@/lib/types';
+import { ICON_NAMES } from '@/lib/icons';
+import { LANGUAGE_VALUES } from '@/lib/languages';
 import { z } from 'zod';
 
 const applicationStatusSchema = z.enum(['creating', 'running', 'failed']);
@@ -37,14 +11,15 @@ const roleSchema = z.enum(ROLE_NAMES);
 const themeSchema = z.enum(THEME_VALUES);
 const accentSchema = z.enum(ACCENT_VALUES);
 const radiusSchema = z.enum(RADIUS_VALUES);
-const iconNameSchema = z.string().nullable() as z.ZodType<ApiOrganizationApplication['icon']>;
+const iconNameSchema = z.enum(ICON_NAMES).nullable();
+const languageSchema = z.enum(LANGUAGE_VALUES);
 
 export const apiLocationSchema = z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
     country: z.string(),
-}) satisfies z.ZodType<ApiLocation>;
+});
 
 export const apiUserSummarySchema = z.object({
     id: z.string(),
@@ -52,11 +27,11 @@ export const apiUserSummarySchema = z.object({
     email: z.string(),
     avatar: z.string(),
     role: platformRoleSchema,
-}) satisfies z.ZodType<ApiUserSummary>;
+});
 
 export const apiUserListItemSchema = apiUserSummarySchema.extend({
     oidc: z.string(),
-}) satisfies z.ZodType<ApiUserListItem>;
+});
 
 const nullableUserSummarySchema = apiUserSummarySchema.nullable();
 
@@ -68,22 +43,21 @@ export const apiUserOrganizationMembershipSchema = z.object({
     country: z.string(),
     location: apiLocationSchema,
     role: roleSchema,
-}) satisfies z.ZodType<ApiUserOrganizationMembership>;
+});
 
 export const apiUserProfileSchema = apiUserListItemSchema.extend({
     theme: themeSchema,
     accent: accentSchema,
     radius: radiusSchema,
-    language: z.string(),
-    organizations: z.array(apiUserOrganizationMembershipSchema),
-}) satisfies z.ZodType<ApiUserProfile>;
+    language: languageSchema,
+});
 
 export const apiInvitationSchema = z.object({
     id: z.string(),
     email: z.string(),
     role: roleSchema,
     created_at: z.string(),
-}) satisfies z.ZodType<ApiInvitation>;
+});
 
 export const apiOrganizationMemberSummarySchema = z.object({
     id: z.string(),
@@ -91,7 +65,7 @@ export const apiOrganizationMemberSummarySchema = z.object({
     email: z.string(),
     avatar: z.string(),
     role: roleSchema,
-}) satisfies z.ZodType<ApiOrganizationMemberSummary>;
+});
 
 export const apiOrganizationSummarySchema = z.object({
     id: z.string(),
@@ -107,7 +81,7 @@ export const apiOrganizationSummarySchema = z.object({
     updated_by: nullableUserSummarySchema,
     deleted_at: z.string().nullable(),
     deleted_by: nullableUserSummarySchema,
-}) satisfies z.ZodType<ApiOrganizationSummary>;
+});
 
 export const apiOrganizationApplicationSchema = z.object({
     id: z.string(),
@@ -127,14 +101,14 @@ export const apiOrganizationApplicationSchema = z.object({
     updated_by: nullableUserSummarySchema,
     deleted_at: z.string().nullable(),
     deleted_by: nullableUserSummarySchema,
-}) satisfies z.ZodType<ApiOrganizationApplication>;
+});
 
 export const apiOrganizationDetailsSchema = apiOrganizationSummarySchema.extend({
     location: apiLocationSchema,
     users: z.array(apiOrganizationMemberSummarySchema),
     invitations: z.array(apiInvitationSchema),
     applications: z.array(apiOrganizationApplicationSchema),
-}) satisfies z.ZodType<ApiOrganizationDetails>;
+});
 
 export const apiEnvironmentMetadataSchema = z.object({
     name: z.string(),
@@ -150,14 +124,14 @@ export const apiImageMetadataSchema = z.object({
     sdk: z.string().nullable(),
     digest: z.string().nullable(),
     environments: z.array(apiEnvironmentMetadataSchema),
-}) satisfies z.ZodType<ApiImageMetadata>;
+});
 
-export const apiIconsSchema = z.array(z.string()) satisfies z.ZodType<string[]>;
+export const apiIconsSchema = z.array(z.enum(ICON_NAMES));
 
 export const apiCountryOptionSchema = z.object({
     code: z.string(),
     name: z.string(),
-}) satisfies z.ZodType<ApiCountryOption>;
+});
 
 export const apiApplicationResponseSchema = z.object({
     id: z.string(),
@@ -179,7 +153,7 @@ export const apiApplicationResponseSchema = z.object({
     updated_by: apiUserSummarySchema,
     deleted_at: z.string().nullable(),
     deleted_by: nullableUserSummarySchema,
-}) satisfies z.ZodType<ApiApplicationResponse>;
+});
 
 export const apiApplicationMemberSchema = z.object({
     id: z.string(),
@@ -188,7 +162,7 @@ export const apiApplicationMemberSchema = z.object({
     avatar: z.string(),
     application_role: applicationRoleSchema.nullable(),
     organization_role: roleSchema,
-}) satisfies z.ZodType<ApiApplicationMember>;
+});
 
 export const apiDatabaseRegistrySchema = z.object({
     id: z.string(),
@@ -205,7 +179,7 @@ export const apiDatabaseRegistrySchema = z.object({
     updated_by: nullableUserSummarySchema,
     deleted_at: z.string().nullable(),
     deleted_by: nullableUserSummarySchema,
-}) satisfies z.ZodType<ApiDatabaseRegistry>;
+});
 
 export const apiStorageRegistrySchema = z.object({
     id: z.string(),
@@ -223,12 +197,12 @@ export const apiStorageRegistrySchema = z.object({
     updated_by: nullableUserSummarySchema,
     deleted_at: z.string().nullable(),
     deleted_by: nullableUserSummarySchema,
-}) satisfies z.ZodType<ApiStorageRegistry>;
+});
 
 export const apiComputeRegistrySchema = z.object({
     id: z.string(),
     slug: z.string(),
-    ingress_host: z.string(),
+    gateway_url: z.string(),
     location_id: z.string(),
     created_at: z.string(),
     created_by: nullableUserSummarySchema,
@@ -236,39 +210,26 @@ export const apiComputeRegistrySchema = z.object({
     updated_by: nullableUserSummarySchema,
     deleted_at: z.string().nullable(),
     deleted_by: nullableUserSummarySchema,
-}) satisfies z.ZodType<ApiComputeRegistry>;
+});
 
 export const apiOperationSchema = z.object({
     id: z.string(),
     kind: z.string(),
     application_id: z.string().nullable(),
     organization_id: z.string().nullable(),
-    step: z.string(),
     status: z.enum(['scheduled', 'active', 'completed', 'failed']),
     error: z.string().nullable(),
     created_at: z.string(),
     started_at: z.string().nullable(),
     stopped_at: z.string().nullable(),
-}) satisfies z.ZodType<ApiOperation>;
-
-export const apiDatabaseSchemaSchema = z.object({
-    name: z.string(),
-}) satisfies z.ZodType<ApiDatabaseSchema>;
-
-export const apiStorageBucketSchema = z.object({
-    name: z.string(),
-}) satisfies z.ZodType<ApiStorageBucket>;
+});
 
 export const apiStorageObjectSchema = z.object({
     key: z.string(),
     size: z.number(),
     etag: z.string().nullable(),
     last_modified: z.string().nullable(),
-}) satisfies z.ZodType<ApiStorageObject>;
-
-export const apiComputeNamespaceSchema = z.object({
-    name: z.string(),
-}) satisfies z.ZodType<ApiComputeNamespace>;
+});
 
 export const apiComputePodResourcesSchema = z.object({
     cpu_limit: z.number(),
@@ -283,13 +244,13 @@ export const apiComputePodSchema = z.object({
     node: z.string().nullable(),
     created_at: z.string().nullable(),
     resources: apiComputePodResourcesSchema.nullable(),
-}) satisfies z.ZodType<ApiComputePod>;
+});
 
 const apiOrganizationDatabaseApplicationSchema = z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
-    icon: z.string().nullable(),
+    icon: iconNameSchema,
     description: z.string().nullable(),
     status: applicationStatusSchema,
 });
@@ -304,13 +265,13 @@ export const apiOrganizationDatabaseResourceSchema = z.object({
     application: apiOrganizationDatabaseApplicationSchema.nullable(),
     database_registry_id: z.string(),
     database_registry_name: z.string(),
-}) satisfies z.ZodType<ApiOrganizationDatabaseResource>;
+});
 
 const apiOrganizationStorageApplicationSchema = z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
-    icon: z.string().nullable(),
+    icon: iconNameSchema,
     description: z.string().nullable(),
     status: applicationStatusSchema,
 });
@@ -324,7 +285,7 @@ export const apiOrganizationStorageResourceSchema = z.object({
     storage_registry_name: z.string(),
     space_used: z.number().nullable(),
     object_count: z.number().nullable(),
-}) satisfies z.ZodType<ApiOrganizationStorageResource>;
+});
 
 const apiOrganizationDatabaseTableCellSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
@@ -340,7 +301,7 @@ export const apiOrganizationDatabaseTableSchema = z.object({
         })
     ),
     rows: z.array(z.record(z.string(), apiOrganizationDatabaseTableCellSchema)),
-}) satisfies z.ZodType<ApiOrganizationDatabaseTable>;
+});
 
 /** Validates an API response value with a Zod schema. */
 export function parseApiResponse<T>(schema: z.ZodType<T>, value: unknown): T {

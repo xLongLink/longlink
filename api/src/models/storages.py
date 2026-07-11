@@ -4,7 +4,7 @@ from uuid import UUID
 from typing import Literal
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
-from src.models.icons import Icon
+from tenant.models.icons import Icon
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
 
@@ -89,13 +89,6 @@ class StorageRegistryCreate(BaseModel):
             raise ValueError("Storage endpoint URL port is invalid") from exc
 
         return value
-
-
-class StorageBucketResponse(BaseModel):
-    """Represent one bucket on a storage backend."""
-
-    # Metadata
-    name: str
 
 
 class OrganizationStorageResourceResponse(BaseModel):

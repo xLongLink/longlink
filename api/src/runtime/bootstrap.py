@@ -1,11 +1,11 @@
-from src import compute as compute_runtime
+from src import runtime
 from src import adapters
 from src.logger import logger
-from src.database.services import organizations
+from src.database.services import users, organizations
 from src.models.organizations import OrganizationDetails, OrganizationSummary
 from src.database.models.users import User
 from src.database.models.databases import DatabaseRegistry
-from src.operations.implementation import registries
+from src.runtime import registries
 from src.database.models.organizations import Organization
 
 
@@ -30,7 +30,7 @@ async def sync_user_organizations(user: User) -> None:
     """Synchronize every organization database affected by one user."""
 
     # A profile update can affect every organization database where the user is a member.
-    for organization in await organizations.list_by_user(user.id):
+    for organization in await users.organizations(user.id):
         await sync_organization_users(organization)
 
 
@@ -45,11 +45,11 @@ async def create_organization_namespace(organization: Organization | Organizatio
 
     # Bootstrap failures are logged but do not block organization creation.
     try:
-        await compute_runtime.kubernetes(registry).namespace(organization.slug)
+        await runtime.kubernetes(registry).namespace(organization.slug)
 
     # Organization creation remains successful even if runtime bootstrap needs manual repair.
-    except Exception:
-        logger.exception("Failed to create namespace for organization '%s'", organization.slug)
+    except Exception as exc:
+        logger.exception("Failed to create namespace for organization '%s': %r", organization.slug, exc)
 
 
 async def create_organization_database(organization: Organization | OrganizationSummary) -> None:
@@ -68,8 +68,8 @@ async def create_organization_database(organization: Organization | Organization
         await db_client.sync_users(organization.slug, await organizations.database_users(organization.id))
 
     # Organization creation remains successful even if runtime bootstrap needs manual repair.
-    except Exception:
-        logger.exception("Failed to create database for organization '%s'", organization.slug)
+    except Exception as exc:
+        logger.exception("Failed to create database for organization '%s': %r", organization.slug, exc)
 
 
 async def create_organization_storage(organization: Organization | OrganizationSummary) -> None:
@@ -92,5 +92,5 @@ async def create_organization_storage(organization: Organization | OrganizationS
         await storage_client.bucket(organization.shared_storage_bucket_name)
 
     # Organization creation remains successful even if runtime bootstrap needs manual repair.
-    except Exception:
-        logger.exception("Failed to create storage for organization '%s'", organization.slug)
+    except Exception as exc:
+        logger.exception("Failed to create storage for organization '%s': %r", organization.slug, exc)

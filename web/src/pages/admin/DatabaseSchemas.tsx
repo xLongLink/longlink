@@ -4,7 +4,10 @@ import { useParams } from 'react-router';
 import { DataTable } from '@/components/DataTable';
 import { useDatabaseSchemas, useDatabases } from '@/data/database';
 import { useTranslation } from '@/lib/i18n';
-import type { ApiDatabaseSchema } from '@/lib/types';
+
+type DatabaseSchemaRow = {
+    name: string;
+};
 
 /** Renders schemas (namespaces) in a database on a database backend. */
 export default function DatabaseSchemas() {
@@ -15,7 +18,7 @@ export default function DatabaseSchemas() {
 
     const databaseRegistry = registries.find((registry) => registry.slug === database);
 
-    const schemaColumns: Array<ColumnDef<ApiDatabaseSchema>> = [
+    const schemaColumns: Array<ColumnDef<DatabaseSchemaRow>> = [
         {
             accessorKey: 'name',
             header: t('columns.schema'),
@@ -25,10 +28,11 @@ export default function DatabaseSchemas() {
     ];
 
     const {
-        items: rows,
+        items: schemaNames,
         error: schemasError,
         isLoading: schemasIsLoading,
     } = useDatabaseSchemas(databaseRegistry?.id ?? '', databaseName);
+    const rows = schemaNames.map((name) => ({ name }));
     const error =
         registriesError ??
         (!registriesIsLoading && !databaseRegistry

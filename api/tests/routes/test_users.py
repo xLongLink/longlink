@@ -2,7 +2,6 @@ from main import app
 from types import SimpleNamespace
 from conftest import session_cookie
 from src.models.users import UserProfile, UserListItem
-from src.routes.users import user_profile_payload
 from fastapi.testclient import TestClient
 from src.database.services import users, compute, storage, database, locations, operations, applications, organizations
 from src.database.models.users import User
@@ -19,31 +18,45 @@ db = SimpleNamespace(
 )
 
 
-async def test_get_me_returns_authenticated_user_profile_and_org_memberships(
+async def test_get_me_returns_authenticated_user_profile_and_separate_org_memberships(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Return the authenticated user's profile with organization memberships."""
+    """Return profile and organization memberships from separate endpoints."""
 
     # Arrange
     user = users[0]
     location = await db.locations.create("local", "Local testing", user, "CH")
-    await db.organizations.create("acme", "acme", location.id, user, avatar="https://example.com/organizations/acme.png")
-
+    organization = await db.organizations.create("acme", "acme", location.id, user, avatar="https://example.com/organizations/acme.png")
     client = clients[0]
 
     # Act
-    response = client.get("/api/me")
+    profile_response = client.get("/api/me")
+    organizations_response = client.get("/api/me/organizations")
 
     # Assert
-    assert response.status_code == 200
+    assert profile_response.status_code == 200
+    assert profile_response.json() == UserProfile.model_validate(user).model_dump(mode="json")
+    assert "organizations" not in profile_response.json()
 
-    profile = await db.users.profile(user.id)
-    assert profile is not None
-
-    expected_payload = UserProfile.model_validate(user_profile_payload(profile)).model_dump(mode="json")
-    assert response.json() == expected_payload
-    assert response.json()["organizations"][0]["slug"] == "acme"
+    assert organizations_response.status_code == 200
+    assert organizations_response.json() == [
+        {
+            "id": str(organization.id),
+            "name": "acme",
+            "slug": "acme",
+            "avatar": "https://example.com/organizations/acme.png",
+            "country": "CH",
+            "location": {
+                "id": str(location.id),
+                "name": "Local testing",
+                "slug": "local",
+                "country": "CH",
+                "provider": "local",
+            },
+            "role": "owner",
+        }
+    ]
 
 
 async def test_get_me_returns_the_active_account_profile(users: tuple[User, User, User]) -> None:
@@ -59,10 +72,7 @@ async def test_get_me_returns_the_active_account_profile(users: tuple[User, User
     # Assert
     assert response.status_code == 200
 
-    current_profile = await db.users.profile(user_one.id)
-    assert current_profile is not None
-
-    assert response.json() == UserProfile.model_validate(user_profile_payload(current_profile)).model_dump(mode="json")
+    assert response.json() == UserProfile.model_validate(user_one).model_dump(mode="json")
 
 
 async def test_logout_clears_the_active_account(users: tuple[User, User, User]) -> None:
@@ -125,8 +135,8 @@ async def test_patch_me_updates_authenticated_user_profile(
     # Assert
     assert response.status_code == 200
 
-    updated_profile = await db.users.profile(user.id)
-    assert updated_profile is not None
+    updated_user = await db.users.get_by_id(user.id)
+    assert updated_user is not None
 
-    expected_payload = UserProfile.model_validate(user_profile_payload(updated_profile)).model_dump(mode="json")
+    expected_payload = UserProfile.model_validate(updated_user).model_dump(mode="json")
     assert response.json() == expected_payload

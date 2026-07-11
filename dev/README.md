@@ -25,7 +25,7 @@ k3d cluster create compute \
   || true
 ```
 
-Use `http://localhost:8080` as the compute ingress host in local config. The local gateway runs plaintext HTTP through the k3d load-balancer mapping unless a gateway TLS certificate is supplied.
+Use `http://localhost:8080` as the compute gateway URL in local config. The local gateway runs plaintext HTTP through the k3d load-balancer mapping.
 Use `localhost:15000/<image>:<tag>` for images pushed to the local registry.
 
 Export the kubeconfig afterward:

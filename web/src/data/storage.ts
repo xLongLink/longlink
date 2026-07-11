@@ -1,11 +1,7 @@
+import { z } from 'zod';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
-import {
-    apiStorageBucketSchema,
-    apiStorageObjectSchema,
-    apiStorageRegistrySchema,
-    parseApiCollection,
-} from '@/lib/api-schemas';
-import type { ApiStorageBucket, ApiStorageObject, ApiStorageRegistry } from '@/lib/types';
+import { apiStorageObjectSchema, apiStorageRegistrySchema, parseApiCollection } from '@/lib/api-schemas';
+import type { ApiStorageObject, ApiStorageRegistry } from '@/lib/types';
 
 /** Fetches the storage registry list for admin views. */
 export function useStorages() {
@@ -18,9 +14,9 @@ export function useStorages() {
 export function useStorageBuckets(storageId: string) {
     const enabled = storageId.length > 0;
 
-    return useCollectionQuery<ApiStorageBucket>(enabled ? `/api/storages/${storageId}/buckets` : null, {
+    return useCollectionQuery<string>(enabled ? `/api/storages/${storageId}/buckets` : null, {
         enabled,
-        parse: (value) => parseApiCollection(apiStorageBucketSchema, value),
+        parse: (value) => parseApiCollection(z.string(), value),
     });
 }
 

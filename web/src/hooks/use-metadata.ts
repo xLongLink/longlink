@@ -6,11 +6,11 @@ const metadataPageSchema = z.object({
     path: z.string().trim().min(1),
     name: z.string().trim().min(1).optional(),
     icon: z.string().trim().min(1).optional(),
-    route: z.string().trim().min(1).optional(),
+    route: z.string().trim(),
 });
 
 const metadataResponseSchema = z.object({
-    pages: z.array(metadataPageSchema).optional(),
+    pages: z.array(metadataPageSchema),
 });
 
 type MetadataPage = z.infer<typeof metadataPageSchema>;
@@ -18,10 +18,9 @@ type MetadataResponse = z.infer<typeof metadataResponseSchema>;
 
 /** Fetches XML metadata for one page bundle. */
 export function useMetadata(metadataPath: string, enabled: boolean) {
-    return useApiQuery<MetadataResponse | null>(enabled ? metadataPath : null, {
+    return useApiQuery<MetadataResponse>(enabled ? metadataPath : null, {
         enabled,
-        notFound: null,
-        parse: (value) => (value === null ? null : metadataResponseSchema.parse(value)),
+        parse: (value) => metadataResponseSchema.parse(value),
     });
 }
 

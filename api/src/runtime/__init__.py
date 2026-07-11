@@ -8,5 +8,4 @@ def kubernetes(registry: ComputeRegistry) -> Kubernetes:
     return Kubernetes(
         registry.kubeconfig,
         registry.proxy_secret,
-        registry.ingress_host,
     )

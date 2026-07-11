@@ -72,26 +72,13 @@ def iter_application_model_files() -> list[Path]:
     """Return application model files that should be loaded for metadata."""
 
     root = Path.cwd()
-    model_files: list[Path] = []
-    nested_model_paths = (
-        root / "src" / "database" / "models",
-        root / "src" / "models",
-    )
+    model_path = root / "src" / "database" / "models"
 
-    # Collect model modules from supported application layouts.
-    for model_path in nested_model_paths:
+    # Ignore applications without database models.
+    if not model_path.exists():
+        return []
 
-        # Ignore layouts that are not present in this application.
-        if not model_path.exists():
-            continue
-
-        model_files.extend(
-            py_file
-            for py_file in sorted(model_path.rglob("*.py"))
-            if not py_file.name.startswith("__")
-        )
-
-    return model_files
+    return [py_file for py_file in sorted(model_path.rglob("*.py")) if not py_file.name.startswith("__")]
 
 
 def load_application_models() -> None:

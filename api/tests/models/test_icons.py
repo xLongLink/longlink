@@ -1,4 +1,4 @@
-from src.models.icons import Icon
+from tenant.models.icons import Icon
 from src.models.applications import ApplicationCreate
 
 
@@ -14,6 +14,6 @@ def test_icon_enum_exposes_typed_members() -> None:
     )
 
     assert len(Icon) == 30
-    assert Icon.LAYOUT_GRID.value == "layout-grid"
-    assert Icon.ROCKET.value == "rocket"
-    assert payload.icon is Icon.LAYOUT_GRID
+    assert Icon.layout_grid.value == "layout-grid"
+    assert Icon.rocket.value == "rocket"
+    assert payload.icon is Icon.layout_grid

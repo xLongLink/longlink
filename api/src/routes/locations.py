@@ -42,5 +42,4 @@ async def create_location(payload: LocationCreate, user: User = Depends(authadmi
 
     # Build a stable slug from the submitted name.
     slug = names.slugify(payload.name)
-
     return await locations.create(slug, payload.name, user, payload.country, payload.provider)

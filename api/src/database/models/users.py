@@ -4,8 +4,9 @@ from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Column
+from tenant.models.languages import Language
 from src.models.roles import PlatformRoles
-from src.models.users import Theme, Accent, Radius, Language
+from src.models.users import Theme, Accent, Radius
 from src.database.models.association import UserApplication, UserOrganization
 
 # Import relationship targets only during type checking.

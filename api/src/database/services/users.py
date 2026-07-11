@@ -1,8 +1,9 @@
 from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
+from tenant.models.languages import Language
 from src.models.roles import PlatformRoles
-from src.models.users import Theme, Accent, Radius, Language
+from src.models.users import Theme, Accent, Radius
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -28,21 +29,29 @@ async def get_by_id(user_id: UUID) -> User | None:
         return result.scalar_one_or_none()
 
 
-async def profile(user_id: UUID) -> tuple[User, list[tuple[Organization, UserOrganization]]] | None:
-    """Return one user with active organization membership rows."""
+async def organizations(user_id: UUID) -> list[Organization]:
+    """Return active organizations for one user."""
 
-    # Load the profile data through one managed session.
+    # Load organizations joined through user memberships.
     async with session_scope() as session:
+        statement = (
+            select(Organization)
+            .join(UserOrganization, UserOrganization.organization_id == Organization.id)
+            .options(selectinload(Organization.location))
+            .where(
+                UserOrganization.user_id == user_id,
+                Organization.deleted_at.is_(None),
+            )
+        )
+        result = await session.execute(statement)
+        return result.scalars().all()
 
-        # Preload the organization locations so response serialization does not trigger lazy IO.
-        user_result = await session.execute(select(User).where(User.id == user_id))
-        user = user_result.scalars().first()
 
-        # Return nothing when the user does not exist.
-        if user is None:
-            return None
+async def organization_memberships(user_id: UUID) -> list[tuple[Organization, UserOrganization]]:
+    """Return active organization membership rows for one user."""
 
-        # Load organization memberships and their locations without lazy IO.
+    # Load organization memberships and their locations without lazy IO.
+    async with session_scope() as session:
         organization_result = await session.execute(
             select(Organization, UserOrganization)
             .join(UserOrganization, Organization.id == UserOrganization.organization_id)
@@ -50,13 +59,13 @@ async def profile(user_id: UUID) -> tuple[User, list[tuple[Organization, UserOrg
                 selectinload(Organization.location),
             )
             .where(
-                UserOrganization.user_id == user.id,
+                UserOrganization.user_id == user_id,
                 UserOrganization.deleted_at.is_(None),
                 Organization.deleted_at.is_(None),
             )
         )
 
-        return user, [(organization, membership) for organization, membership in organization_result.all()]
+        return [(organization, membership) for organization, membership in organization_result.all()]
 
 
 async def upsert(
@@ -77,7 +86,6 @@ async def upsert(
 
     # Patch the current record in place when the subject already exists.
     if existing_user is not None:
-
         # Refresh email when supplied.
         if email is not None:
             existing_user.email = email
@@ -122,7 +130,6 @@ async def upsert(
 
     # Create new users inside one managed session.
     async with session_scope() as session:
-
         # Bootstrap the very first user as admin so the instance starts with one owner.
         user_result = await session.execute(select(func.count()).select_from(User))
         is_admin = user_result.scalar_one() == 0

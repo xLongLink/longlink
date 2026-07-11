@@ -3,7 +3,7 @@ from enum import StrEnum
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
-from src.models.icons import Icon
+from tenant.models.icons import Icon
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
 
@@ -67,20 +67,6 @@ class DatabaseRegistryCreate(BaseModel):
             raise ValueError("Database host port is invalid") from exc
 
         return value
-
-
-class DatabaseSchemaResponse(BaseModel):
-    """Represent one schema (namespace) in a database."""
-
-    # Metadata
-    name: str
-
-
-class DatabaseUsageResponse(BaseModel):
-    """Represent database storage usage in API responses."""
-
-    # Capacity
-    space_used: int
 
 
 class OrganizationDatabaseApplicationResponse(BaseModel):

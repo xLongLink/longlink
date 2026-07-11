@@ -65,4 +65,7 @@ class ApplicationProxyMethodRanks(IntEnum):
     PUT = ApplicationRoleRanks.write.value
 
 
+APPLICATION_PROXY_METHODS = list(ApplicationProxyMethodRanks.__members__)
+
+
 RoleName = PlatformRoles | OrganizationRoles | ApplicationRoles

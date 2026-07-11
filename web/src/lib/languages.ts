@@ -1,19 +1,19 @@
 export const DEFAULT_LANGUAGE = 'en';
 
+export const LANGUAGE_VALUES = ['en', 'it'] as const;
+
 /** Language options currently exposed in account settings. */
 export const LANGUAGE_OPTIONS = [
     { value: 'en', label: 'English', nativeLabel: 'English' },
     { value: 'it', label: 'Italian', nativeLabel: 'Italiano' },
-] as const;
+] as const satisfies Array<{ value: Language; label: string; nativeLabel: string }>;
 
-export type Language = (typeof LANGUAGE_OPTIONS)[number]['value'];
-
-export type UserLanguage = Language | (string & {});
+export type Language = (typeof LANGUAGE_VALUES)[number];
 
 const supportedLanguages = new Set<string>(LANGUAGE_OPTIONS.map((option) => option.value));
 
 /** Returns the closest UI language with a bundled translation catalog. */
-export function resolveSupportedLanguage(language: UserLanguage | null | undefined): Language {
+export function resolveSupportedLanguage(language: Language | null | undefined): Language {
     const normalizedLanguage = language?.trim().toLowerCase();
 
     // Default when the user has not selected a language.
@@ -21,15 +21,9 @@ export function resolveSupportedLanguage(language: UserLanguage | null | undefin
         return DEFAULT_LANGUAGE;
     }
 
-    const baseLanguage = normalizedLanguage.split(/[-_]/)[0];
-    const languageCandidates = [normalizedLanguage, baseLanguage];
-
-    // Prefer exact matches before falling back to the base language.
-    for (const languageCandidate of languageCandidates) {
-        // Return the first supported language candidate.
-        if (languageCandidate && supportedLanguages.has(languageCandidate)) {
-            return languageCandidate as Language;
-        }
+    // Return supported language values only.
+    if (supportedLanguages.has(normalizedLanguage)) {
+        return normalizedLanguage as Language;
     }
 
     return DEFAULT_LANGUAGE;

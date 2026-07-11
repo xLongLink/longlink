@@ -27,7 +27,7 @@ class OrganizationInvitation(SQLModel, table=True):
     organization_id: UUID = Field(foreign_key="organizations.id")
 
     # State
-    role_name: OrganizationRoles = Field(
+    role: OrganizationRoles = Field(
         sa_column=Column(Enum(OrganizationRoles, name="organization_role_enum", native_enum=False), nullable=False)
     )
 

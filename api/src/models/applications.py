@@ -3,7 +3,7 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.utils import images
-from src.models.icons import Icon
+from tenant.models.icons import Icon
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus

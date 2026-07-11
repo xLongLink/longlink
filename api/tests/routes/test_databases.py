@@ -99,4 +99,4 @@ async def test_database_usage_endpoint_returns_backend_capacity(
 
     # Assert
     assert response.status_code == 200
-    assert response.json()["space_used"] == 987654321
+    assert response.json() == 987654321

@@ -24,7 +24,7 @@ function createComputeColumnsBase(t: TFunction): Array<ColumnDef<ApiComputeRegis
             id: 'compute',
             header: t('admin.computeTitle'),
             cell: ({ row }) => {
-                const ingress = row.original.ingress_host;
+                const gatewayUrl = row.original.gateway_url;
                 const computeSlug = row.original.slug;
 
                 return (
@@ -38,7 +38,7 @@ function createComputeColumnsBase(t: TFunction): Array<ColumnDef<ApiComputeRegis
                             <div className="truncate font-medium text-foreground underline-offset-4 hover:underline">
                                 Kubernetes
                             </div>
-                            <div className="truncate text-xs text-muted-foreground">{ingress}</div>
+                            <div className="truncate text-xs text-muted-foreground">{gatewayUrl}</div>
                         </div>
                     </Link>
                 );
@@ -107,7 +107,7 @@ export default function AdminCompute() {
 
                       return (
                           <AdminActionMenu
-                              label={`compute ${compute.ingress_host}`}
+                              label={`compute ${compute.gateway_url}`}
                               copyLabel={t('admin.copyComputeSlug')}
                               copyValue={computeSlug}
                               onDelete={() => deleteDialog.openFor(compute)}

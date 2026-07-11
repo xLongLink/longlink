@@ -10,6 +10,16 @@ export function accountsQueryKey() {
     return apiQueryKey('/auth/accounts');
 }
 
+/** Builds the current user profile query key. */
+export function userProfileQueryKey() {
+    return apiQueryKey('/api/me');
+}
+
+/** Builds the current user's organization memberships query key. */
+export function userOrganizationsQueryKey() {
+    return apiQueryKey('/api/me/organizations');
+}
+
 /** Builds the organizations list query key. */
 export function organizationsQueryKey() {
     return apiQueryKey('/api/organizations');

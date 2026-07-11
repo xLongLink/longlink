@@ -1,10 +1,10 @@
-from enum import Enum
+from enum import StrEnum
 from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
-class OperationStatus(str, Enum):
+class OperationStatus(StrEnum):
     """Supported long-running operation lifecycle states."""
 
     active = "active"
@@ -13,12 +13,12 @@ class OperationStatus(str, Enum):
     scheduled = "scheduled"
 
 
-class OperationKind(str, Enum):
+class OperationKind(StrEnum):
     """Supported long-running operation types."""
 
-    application_create = "application.create"
-    application_delete = "application.delete"
-    organization_delete = "organization.delete"
+    application_remove = "application.remove"
+    application_verify = "application.verify"
+    organization_remove = "organization.remove"
 
 
 class OperationResponse(BaseModel):
@@ -31,7 +31,6 @@ class OperationResponse(BaseModel):
 
     # Metadata
     kind: OperationKind
-    step: str
     error: str | None = None
     status: OperationStatus
 

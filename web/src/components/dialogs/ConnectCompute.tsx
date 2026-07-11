@@ -17,7 +17,7 @@ import type { ApiComputeRegistry } from '@/lib/types';
 
 const computeConnectionSchema = z.object({
     kubeconfig: z.string().refine((value) => value.trim().length > 0),
-    ingressHost: z.string().trim().min(1),
+    gatewayUrl: z.string().trim().min(1),
     locationId: z.string().min(1),
 });
 
@@ -26,7 +26,7 @@ type ComputeConnectionValues = z.output<typeof computeConnectionSchema>;
 
 const defaultComputeConnectionValues = {
     kubeconfig: '',
-    ingressHost: '',
+    gatewayUrl: '',
     locationId: '',
 } satisfies ComputeConnectionInput;
 
@@ -63,7 +63,7 @@ export default function ConnectCompute() {
                     },
                     body: JSON.stringify({
                         kubeconfig: payload.kubeconfig,
-                        ingress_host: payload.ingressHost,
+                        gateway_url: payload.gatewayUrl,
                         location_id: payload.locationId,
                     }),
                 },
@@ -121,11 +121,11 @@ export default function ConnectCompute() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="compute-ingress-host">{t('labels.ingressHost')}</Label>
+                <Label htmlFor="compute-gateway-url">{t('labels.gatewayUrl')}</Label>
                 <Input
-                    id="compute-ingress-host"
-                    {...form.register('ingressHost')}
-                    placeholder="https://apps.example.com"
+                    id="compute-gateway-url"
+                    {...form.register('gatewayUrl')}
+                    placeholder="https://gateway.internal.example.com"
                     autoComplete="off"
                 />
             </div>

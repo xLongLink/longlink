@@ -1,8 +1,8 @@
-from enum import Enum
+from enum import StrEnum
 
 
 # https://unstats.un.org/unsd/classifications/Econ/
-class ISICDivisionCode(str, Enum):
+class ISICDivisionCode(StrEnum):
     """ISIC Rev.4 Divisions (Section + 2-digit division code)."""
 
     # A - Agriculture, forestry and fishing
@@ -136,7 +136,7 @@ class ISICDivisionCode(str, Enum):
     U99 = "U99"
 
 
-class ISICDivisionName(str, Enum):
+class ISICDivisionName(StrEnum):
     """ISIC Rev.4 Division names."""
 
     A01 = "Crop and animal production, hunting and related service activities"

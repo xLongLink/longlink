@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ApplicationStatus(str, Enum):
+class ApplicationStatus(StrEnum):
     """Lifecycle states for installed applications."""
 
     creating = "creating"

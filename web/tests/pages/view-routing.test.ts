@@ -1,4 +1,4 @@
-import { findPageRouteMatch, findPageTabMatch, pageRoutePattern } from '@/pages/View';
+import { findPageRouteMatch, pageRoutePattern } from '@/pages/View';
 import { describe, expect, it } from 'bun:test';
 
 describe('View route metadata', () => {
@@ -23,19 +23,10 @@ describe('View route metadata', () => {
         expect(match?.params).toEqual({ issue: '123' });
     });
 
-    it('falls back to tab routes for older metadata', () => {
-        const pages = [{ path: 'pages/dashboard.xml', tab: 'dashboard' }];
+    it('uses explicit metadata routes', () => {
+        const pages = [{ path: 'pages/dashboard.xml', route: 'dashboard', tab: 'dashboard' }];
 
         expect(pageRoutePattern(pages[0])).toBe('dashboard');
         expect(findPageRouteMatch(pages, 'dashboard')?.page.path).toBe('pages/dashboard.xml');
-    });
-
-    it('prefers static pages for tab fallbacks', () => {
-        const pages = [
-            { path: 'pages/requests/[request].xml', route: 'requests/:request', tab: 'requests' },
-            { path: 'pages/requests.xml', route: 'requests', tab: 'requests' },
-        ];
-
-        expect(findPageTabMatch(pages, 'requests')?.path).toBe('pages/requests.xml');
     });
 });

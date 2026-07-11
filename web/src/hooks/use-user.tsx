@@ -2,9 +2,15 @@ import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/reac
 import { createContext, useContext, useEffect } from 'react';
 import { useApiQuery } from '@/hooks/use-api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
-import { apiUserListItemSchema, apiUserProfileSchema, parseApiCollection, parseApiResponse } from '@/lib/api-schemas';
-import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
-import { accountsQueryKey } from '@/lib/query-keys';
+import {
+    apiUserListItemSchema,
+    apiUserOrganizationMembershipSchema,
+    apiUserProfileSchema,
+    parseApiCollection,
+    parseApiResponse,
+} from '@/lib/api-schemas';
+import { fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { accountsQueryKey, userOrganizationsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 import {
     applyTheme,
     resolveTheme,
@@ -14,7 +20,7 @@ import {
     type Theme,
     type ThemeConfig,
 } from '@/lib/theme';
-import type { ApiUserListItem, ApiUserProfile } from '@/lib/types';
+import type { ApiUserListItem, ApiUserOrganizationMembership, ApiUserProfile } from '@/lib/types';
 
 export type User = ApiUserProfile;
 
@@ -32,7 +38,7 @@ type AccountsState = {
 
 type UserProfileState = {
     user: User | null;
-    organizations: User['organizations'];
+    organizations: ApiUserOrganizationMembership[];
     role: User['role'];
     theme: User['theme'];
     accent: User['accent'];
@@ -73,6 +79,14 @@ function useUserQuery() {
         parse: (value) => (value === null ? null : parseApiResponse(apiUserProfileSchema, value)),
         staleTime: 0,
         refetchOnWindowFocus: true,
+        retry: false,
+    });
+}
+
+/** Hook that fetches the current user's organization memberships. */
+function useUserOrganizationsQuery(user: User | null | undefined) {
+    return useApiQuery<ApiUserOrganizationMembership[]>(user ? '/api/me/organizations' : null, {
+        parse: (value) => parseApiCollection(apiUserOrganizationMembershipSchema, value),
         retry: false,
     });
 }
@@ -123,6 +137,7 @@ export function useUserProfile(): UserProfileState {
     }
 
     const { data: user, error, isLoading } = context;
+    const organizationsQuery = useUserOrganizationsQuery(user);
 
     // Return anonymous defaults when no authenticated user is loaded.
     if (!user) {
@@ -141,14 +156,14 @@ export function useUserProfile(): UserProfileState {
 
     return {
         user,
-        organizations: user.organizations,
+        organizations: organizationsQuery.data ?? [],
         role: user.role,
         theme: user.theme,
         accent: user.accent,
         radius: user.radius,
         language: user.language,
-        isLoading,
-        error: error ?? null,
+        isLoading: isLoading || organizationsQuery.isLoading,
+        error: error ?? organizationsQuery.error ?? null,
     };
 }
 
@@ -180,7 +195,9 @@ export function useUser() {
             method: 'POST',
         });
 
-        await queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/me') });
+        queryClient.setQueryData(userOrganizationsQueryKey(), []);
+        await queryClient.invalidateQueries({ queryKey: userProfileQueryKey() });
+        await queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() });
         await queryClient.invalidateQueries({ queryKey: accountsQueryKey() });
     };
 
@@ -196,7 +213,8 @@ export function useUser() {
 
         await queryClient.cancelQueries({ queryKey: accountsQueryKey() });
         queryClient.setQueryData(accountsQueryKey(), savedAccounts);
-        queryClient.setQueryData(apiQueryKey('/api/me'), null);
+        queryClient.setQueryData(userProfileQueryKey(), null);
+        queryClient.setQueryData(userOrganizationsQueryKey(), []);
     };
 
     return {
@@ -225,7 +243,7 @@ export function useUpdateUser() {
             );
         },
         onSuccess: (user) => {
-            queryClient.setQueryData(apiQueryKey('/api/me'), user);
+            queryClient.setQueryData(userProfileQueryKey(), user);
         },
     });
 }

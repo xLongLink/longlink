@@ -3,7 +3,7 @@ from src import adapters
 from types import SimpleNamespace
 from typing import cast
 from src.database.models.storages import StorageRegistry
-from src.operations.implementation.environments import runtime_environment
+from src.runtime.environments import runtime_environment
 
 pytestmark = pytest.mark.no_db
 

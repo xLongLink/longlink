@@ -40,7 +40,7 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     reloaded = await db.organizations.get(organization.id)
     assert reloaded is not None
-    memberships = await db.organizations.list_members(organization.id)
+    memberships = await db.organizations.members(organization.id)
     assert reloaded.name == "acme"
     assert reloaded.slug == "acme"
     assert reloaded.country == "DE"
@@ -48,7 +48,7 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     Session = await get_session()
     async with Session() as session:
-        statement = select(UserOrganization.role_name).where(
+        statement = select(UserOrganization.role).where(
             UserOrganization.user_id == owner.id,
             UserOrganization.organization_id == organization.id,
         )
@@ -71,14 +71,14 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
             UserOrganization(
                 user_id=member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.write,
+                role=OrganizationRoles.write,
             )
         )
         await session.commit()
 
     # Act
     reloaded = await db.organizations.get(organization.id)
-    memberships = await db.organizations.list_members(organization.id)
+    memberships = await db.organizations.members(organization.id)
 
     # Assert
     assert reloaded is not None
@@ -97,7 +97,7 @@ async def test_fetch_and_list_by_user_ignore_deleted_organizations(users: tuple[
 
     # Act
     fetched = await db.organizations.fetch()
-    user_organizations = await db.organizations.list_by_user(owner.id)
+    user_organizations = await db.users.organizations(owner.id)
 
     # Assert
     assert [organization.id for organization in fetched] == [active_organization.id]
@@ -140,7 +140,7 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
             UserOrganization(
                 user_id=member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.read,
+                role=OrganizationRoles.read,
             )
         )
         await session.commit()
@@ -199,14 +199,14 @@ async def test_database_users_returns_member_state_ordered_by_email(users: tuple
             UserOrganization(
                 user_id=member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.write,
+                role=OrganizationRoles.write,
             )
         )
         session.add(
             UserOrganization(
                 user_id=deleted_member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.read,
+                role=OrganizationRoles.read,
                 deleted_at=deleted_at,
             )
         )
@@ -239,7 +239,7 @@ async def test_get_includes_application_role_for_requested_user(users: tuple[Use
             UserOrganization(
                 user_id=member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.write,
+                role=OrganizationRoles.write,
             )
         )
         await session.commit()
@@ -262,7 +262,7 @@ async def test_get_includes_application_role_for_requested_user(users: tuple[Use
     assert details.id == organization.id
     assert len(memberships) == 1
     assert memberships[0].application_id == application.id
-    assert memberships[0].role_name == ApplicationRoles.read
+    assert memberships[0].role == ApplicationRoles.read
 
 
 async def test_create_rejects_duplicate_organization_names(users: tuple[User, User, User]) -> None:
@@ -311,8 +311,8 @@ async def test_create_invitation_persists_pending_invitation(users: tuple[User, 
     # Assert
     assert invitation.organization_id == organization.id
     assert invitation.email == invitee.email
-    assert invitation.role_name == OrganizationRoles.write
-    reloaded = await db.invitations.list_by_organization(organization.id)
+    assert invitation.role == OrganizationRoles.write
+    reloaded = await db.organizations.invitations(organization.id)
     assert [item.id for item in reloaded] == [invitation.id]
 
 
@@ -356,7 +356,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
             UserOrganization(
                 user_id=member.id,
                 organization_id=organization.id,
-                role_name=OrganizationRoles.write,
+                role=OrganizationRoles.write,
             )
         )
         session.add(
@@ -364,7 +364,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
                 application_id=application.id,
                 organization_id=organization.id,
                 user_id=member.id,
-                role_name=ApplicationRoles.read,
+                role=ApplicationRoles.read,
             )
         )
         await session.commit()
@@ -385,9 +385,9 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert deleted_organization is not None
     assert deleted_organization.deleted_by is not None
     assert deleted_organization.deleted_by.id == owner.id
-    assert await db.organizations.list_members(organization.id) == []
-    assert await db.invitations.list_by_organization(organization.id) == []
-    assert await db.applications.list_by_organization(organization.id) == []
+    assert await db.organizations.members(organization.id) == []
+    assert await db.organizations.invitations(organization.id) == []
+    assert await db.organizations.applications(organization.id) == []
     assert active_application is None
     assert deleted_application is not None
     assert deleted_application.deleted_id == owner.id
@@ -397,4 +397,4 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert await db.organizations.membership_role(organization.id, member.id) is None
     assert await db.applications.membership_role(application.id, owner.id) is None
     assert await db.applications.membership_role(application.id, member.id) is None
-    assert await db.invitations.list_by_organization(organization.id) == []
+    assert await db.organizations.invitations(organization.id) == []

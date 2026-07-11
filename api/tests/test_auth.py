@@ -11,8 +11,6 @@ from src.models.roles import PlatformRoles
 from src.models.users import UserUpdate
 from src.database.services import users as users_service_module
 from src.database.models.users import User
-from src.database.models.association import UserOrganization
-from src.database.models.organizations import Organization
 
 pytestmark = pytest.mark.no_db
 
@@ -224,9 +222,7 @@ async def test_upsert_oidc_user_rejects_missing_identity_claims() -> None:
     assert missing_email_error.value.detail == "Authentication provider returned no email"
 
     with pytest.raises(HTTPException) as missing_name_error:
-        await auth_routes.upsert_oidc_user(
-            OidcUserInfo(sub="missing-name", email="missing@example.com", email_verified=True)
-        )
+        await auth_routes.upsert_oidc_user(OidcUserInfo(sub="missing-name", email="missing@example.com", email_verified=True))
 
     assert missing_name_error.value.status_code == 503
     assert missing_name_error.value.detail == "Authentication provider returned no display name"
@@ -293,7 +289,6 @@ async def test_patch_me_updates_profile_and_resyncs_organizations(monkeypatch: p
     current_user = user("patch-user")
     updated_user = user("patch-user")
     updated_user.name = "Updated User"
-    profile: tuple[User, list[tuple[Organization, UserOrganization]]] = (updated_user, [])
     upsert_calls: list[dict[str, object]] = []
     sync_calls: list[User] = []
 
@@ -303,19 +298,12 @@ async def test_patch_me_updates_profile_and_resyncs_organizations(monkeypatch: p
         upsert_calls.append(kwargs)
         return updated_user
 
-    async def fake_profile(user_id: UUID) -> tuple[User, list[tuple[Organization, UserOrganization]]]:
-        """Return the updated profile."""
-
-        assert user_id == updated_user.id
-        return profile
-
     async def fake_sync_user_organizations(synced_user: User) -> None:
         """Record shared-user sync requests."""
 
         sync_calls.append(synced_user)
 
     monkeypatch.setattr(users_routes.users, "upsert", fake_upsert)
-    monkeypatch.setattr(users_routes.users, "profile", fake_profile)
     monkeypatch.setattr(
         users_routes.bootstrap,
         "sync_user_organizations",
@@ -324,7 +312,7 @@ async def test_patch_me_updates_profile_and_resyncs_organizations(monkeypatch: p
 
     result = await users_routes.patch_me(UserUpdate(name="Updated User"), current_user)
 
-    assert result == users_routes.user_profile_payload(profile)
+    assert result is updated_user
     assert upsert_calls == [{"oidc": "patch-user", "name": "Updated User"}]
     assert sync_calls == [updated_user]
 

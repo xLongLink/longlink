@@ -87,7 +87,7 @@ def test_read_env_spec_emits_only_supported_environment_metadata(tmp_path: Path)
     (settings_path / "envs.py").write_text(
         "from pydantic import BaseModel, Field\n\n"
         "class Env(BaseModel):\n"
-        "    API_KEY: str = Field(default='dev', alias='LONG_API_KEY', description='API key', secret=True)\n"
+        "    API_KEY: str = Field(default='dev', validation_alias='LONG_API_KEY', description='API key', secret=True)\n"
         "    TOKEN: str = Field(default_factory=str, validation_alias='LONG_TOKEN')\n"
         "    PORT: int = 8080\n"
     )
@@ -127,8 +127,8 @@ def test_read_env_spec_respects_positional_field_defaults(tmp_path: Path) -> Non
     (src_path / "envs.py").write_text(
         "from pydantic import BaseModel, Field\n\n"
         "class Env(BaseModel):\n"
-        "    OPTIONAL_TOKEN: str = Field('dev', alias='OPTIONAL_TOKEN')\n"
-        "    REQUIRED_TOKEN: str = Field(..., alias='REQUIRED_TOKEN')\n"
+        "    OPTIONAL_TOKEN: str = Field('dev', validation_alias='OPTIONAL_TOKEN')\n"
+        "    REQUIRED_TOKEN: str = Field(..., validation_alias='REQUIRED_TOKEN')\n"
     )
 
     # Act

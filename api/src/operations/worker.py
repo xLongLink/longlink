@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 from uuid import UUID
+from typing import cast
 from src.logger import logger
 from src.operations import execute
 from src.database.services import operations
@@ -35,25 +36,20 @@ async def run_operation_scheduler() -> None:
             continue
 
         logger.info("Executing operation %s (%s)", operation.id, operation.kind)
-
-        # Claimed rows should have a lease token, but skip defensively if not.
-        if operation.lease_token is None:
-            logger.warning("Skipping operation %s without a lease token", operation.id)
-            continue
-
-        heartbeat = asyncio.create_task(renew_operation_lease(operation.id, operation.lease_token))
+        lease_token = cast(str, operation.lease_token)
+        heartbeat = asyncio.create_task(renew_operation_lease(operation.id, lease_token))
 
         # Execute one claimed operation without stopping the worker on failure.
         try:
             result = await execute(operation)
 
-            # Deferred operations are immediately claimable in tests, so yield before polling again.
-            if result.started_at is None and result.stopped_at is None and result.step == operation.step:
+            # Deferred operations can become claimable quickly in tests, so yield before polling again.
+            if result.started_at is None and result.stopped_at is None:
                 await asyncio.sleep(1)
 
         # Handler failures are recorded by execute and should not stop the worker loop.
-        except Exception:
-            logger.exception("Operation scheduler failed for %s (%s)", operation.id, operation.kind)
+        except Exception as exc:
+            logger.exception("Operation scheduler failed for %s (%s): %r", operation.id, operation.kind, exc)
 
         # Heartbeats must always stop once this operation attempt is done.
         finally:

@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import kebabCase from 'lodash/kebabCase';
+import { isIconName, type IconName } from '@/lib/icons';
 import {
     Activity,
     ArrowRight,
@@ -68,35 +68,28 @@ const staticIconRegistry = {
     x: X,
 } satisfies Record<string, LucideIcon>;
 
-/** Normalizes XML and app icon names into Lucide's kebab-case format. */
-export function normalizeIconName(name: string): string {
-    return kebabCase(name);
-}
-
-/** Returns a Lucide-compatible icon component for one normalized icon name. */
+/** Returns a Lucide-compatible icon component for one supported icon name. */
 export function createLucideIconComponent(name: string): LucideIcon | null {
-    const normalizedName = normalizeIconName(name);
-
-    // Ignore empty icon names.
-    if (!normalizedName) {
+    // Ignore unsupported icon names.
+    if (!isIconName(name)) {
         return null;
     }
 
+    const iconName: IconName = name;
+
     return function IconComponent({ className, ...props }: LucideProps) {
-        return <Icon name={normalizedName} className={className} {...props} />;
+        return <Icon className={className} {...props} name={iconName} />;
     } as LucideIcon;
 }
 
-/** Renders one supported Lucide icon, falling back to Box for unsupported names. */
-export function Icon({ className, name, ...props }: LucideProps & { name: string }) {
-    const normalizedName = normalizeIconName(name);
+/** Renders one supported Lucide icon. */
+export function Icon({ className, name, ...props }: LucideProps & { name: IconName }) {
+    const StaticIcon = staticIconRegistry[name];
 
-    // Reject empty icon names before rendering.
-    if (!normalizedName) {
+    // Reject unsupported icon names before rendering.
+    if (!StaticIcon) {
         throw new Error(`Unknown icon "${name}"`);
     }
-
-    const StaticIcon = staticIconRegistry[normalizedName as keyof typeof staticIconRegistry] ?? Box;
 
     return <StaticIcon aria-hidden={true} className={cn('size-4 shrink-0', className)} {...props} />;
 }

@@ -7,6 +7,8 @@ name = "tenant"
 version = "0.0.0"
 description = "LongLink tenant-scoped shared resources"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE*"]
 requires-python = ">=3.14"
 dependencies = [
     "alembic>=1.18.5,<2",

@@ -4,7 +4,7 @@ from src.operations import execute
 from src.database.services import users, compute, database, locations, operations, applications, organizations
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationStatus
-from src.operations.implementation.applications import ApplicationStartupState, application_pods_startup_state
+from src.runtime.startup import ApplicationStartupState, application_pods_startup_state
 
 db = SimpleNamespace(
     applications=applications,
@@ -102,8 +102,8 @@ def test_application_pods_startup_state_marks_current_crashloop_dead() -> None:
     assert startup_state == ApplicationStartupState.dead
 
 
-async def test_execute_application_create_operation_completes_running_application(monkeypatch) -> None:
-    """Complete an application.create operation once the application is alive."""
+async def test_execute_application_verify_operation_completes_running_application(monkeypatch) -> None:
+    """Complete an application.verify operation once the application is alive."""
 
     # Arrange
     user = await db.users.upsert(
@@ -122,9 +122,8 @@ async def test_execute_application_create_operation_completes_running_applicatio
         user=user,
     )
     operation = await db.operations.create(
-        OperationKind.application_create,
+        OperationKind.application_verify,
         application_id=application.id,
-        step="verify",
         user=user,
     )
     calls: list[str] = []
@@ -136,7 +135,7 @@ async def test_execute_application_create_operation_completes_running_applicatio
         return ApplicationStartupState.ready
 
     monkeypatch.setattr(
-        "src.operations.implementation.applications.inspect_application_startup",
+        "src.runtime.startup.inspect_application_startup",
         fake_inspect_application_startup,
     )
 
@@ -157,8 +156,8 @@ async def test_execute_application_create_operation_completes_running_applicatio
     assert refreshed.stopped_at is not None
 
 
-async def test_execute_application_create_operation_marks_failed_when_dead(monkeypatch) -> None:
-    """Fail an application.create operation when the application crashes during startup."""
+async def test_execute_application_verify_operation_marks_failed_when_dead(monkeypatch) -> None:
+    """Fail an application.verify operation when the application crashes during startup."""
 
     # Arrange
     user = await db.users.upsert(
@@ -177,9 +176,8 @@ async def test_execute_application_create_operation_marks_failed_when_dead(monke
         user=user,
     )
     operation = await db.operations.create(
-        OperationKind.application_create,
+        OperationKind.application_verify,
         application_id=application.id,
-        step="verify",
         user=user,
     )
     calls: list[str] = []
@@ -191,7 +189,7 @@ async def test_execute_application_create_operation_marks_failed_when_dead(monke
         return ApplicationStartupState.dead
 
     monkeypatch.setattr(
-        "src.operations.implementation.applications.inspect_application_startup",
+        "src.runtime.startup.inspect_application_startup",
         fake_inspect_application_startup,
     )
 
@@ -212,8 +210,8 @@ async def test_execute_application_create_operation_marks_failed_when_dead(monke
     assert refreshed.stopped_at is not None
 
 
-async def test_execute_application_create_operation_releases_when_not_ready(monkeypatch) -> None:
-    """Release application.create verification when the application is still starting."""
+async def test_execute_application_verify_operation_releases_when_not_ready(monkeypatch) -> None:
+    """Release application.verify when the application is still starting."""
 
     # Arrange
     user = await db.users.upsert(
@@ -232,9 +230,8 @@ async def test_execute_application_create_operation_releases_when_not_ready(monk
         user=user,
     )
     operation = await db.operations.create(
-        OperationKind.application_create,
+        OperationKind.application_verify,
         application_id=application.id,
-        step="verify",
         user=user,
     )
 
@@ -244,7 +241,7 @@ async def test_execute_application_create_operation_releases_when_not_ready(monk
         return ApplicationStartupState.pending
 
     monkeypatch.setattr(
-        "src.operations.implementation.applications.inspect_application_startup",
+        "src.runtime.startup.inspect_application_startup",
         fake_inspect_application_startup,
     )
 
@@ -257,6 +254,5 @@ async def test_execute_application_create_operation_releases_when_not_ready(monk
     refreshed = await db.operations.get(operation.id)
     assert refreshed is not None
     assert refreshed.status == "scheduled"
-    assert refreshed.step == "verify"
     assert refreshed.started_at is None
     assert refreshed.stopped_at is None

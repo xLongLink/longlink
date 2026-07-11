@@ -21,7 +21,6 @@ import {
     matchRoutes,
     useNavigate,
     useParams,
-    useSearchParams,
     type RouteObject,
 } from 'react-router';
 import NotFound from './NotFound';
@@ -83,9 +82,9 @@ function normalizePath(path: string): string {
     return path.replace(/^\/+|\/+$/g, '');
 }
 
-/** Returns the route pattern exposed by metadata, falling back to older tab-only metadata. */
+/** Returns the route pattern exposed by metadata. */
 export function pageRoutePattern(page: MetadataPage): string {
-    return normalizePath(page.route ?? page.tab);
+    return normalizePath(page.route);
 }
 
 /** Returns true when a metadata route contains dynamic path segments. */
@@ -116,18 +115,6 @@ export function findPageRouteMatch(pages: MetadataPage[] | undefined, path: stri
     };
 }
 
-/** Finds the preferred page for one tab, preferring static pages over dynamic detail pages. */
-export function findPageTabMatch(pages: MetadataPage[] | undefined, tab: string | null): MetadataPage | undefined {
-    // Skip tab lookup when no tab is selected.
-    if (!tab) {
-        return undefined;
-    }
-
-    const tabPages = pages?.filter((page) => page.tab === tab) ?? [];
-
-    return tabPages.find((page) => !pageRouteIsDynamic(page)) ?? tabPages[0];
-}
-
 /** Builds an app-shell href for one metadata route path. */
 function resolveApplicationHref(routePath: string, organization?: string, application?: string): string {
     const normalizedRoutePath = normalizePath(routePath);
@@ -144,14 +131,6 @@ function resolveApplicationHref(routePath: string, organization?: string, applic
     }
 
     return `${basePath}/${normalizedRoutePath}`;
-}
-
-/** Builds the legacy query-string href for one metadata tab. */
-function resolveTabHref(tab: string, organization?: string, application?: string): string {
-    const query = new URLSearchParams({ tab });
-    const basePath = resolveApplicationHref('', organization, application);
-
-    return `${basePath === '/' ? '' : basePath}?${query.toString()}`;
 }
 
 /** Resolves route params inside a URL template. */
@@ -234,7 +213,6 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
     const { t } = useTranslation();
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
     const [pageStates, setPageStates] = useState<Record<string, PageState>>({});
     const pageStatesRef = useRef<Record<string, PageState>>({});
     const inFlightPageKeysRef = useRef<Set<string>>(new Set());
@@ -247,15 +225,12 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
     const applicationIsLoading = applicationStatus !== undefined && applicationStatus !== 'running';
     const { data: metadataDocument, isLoading, error } = useMetadata(resolvedMetadata, !applicationIsLoading);
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
-    const selectedTab = searchParams.get('tab');
     const activeRouteMatch = useMemo(
         () => findPageRouteMatch(metadataDocument?.pages, normalizedRoutePath),
         [metadataDocument?.pages, normalizedRoutePath]
     );
-    const selectedTabPage = findPageTabMatch(metadataDocument?.pages, selectedTab);
     /* Resolve explicit browser routes first so dynamic detail views can share a tab with their list page. */
-    const activePage =
-        activeRouteMatch?.page ?? selectedTabPage ?? (!normalizedRoutePath ? metadataDocument?.pages?.[0] : undefined);
+    const activePage = activeRouteMatch?.page ?? (!normalizedRoutePath ? metadataDocument?.pages[0] : undefined);
     const activePagePath = activePage?.path;
     const activePageTab = activePage?.tab;
     let activeRoutePath = normalizedRoutePath;
@@ -273,8 +248,7 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
         activePageState?.cacheKey === pageCacheKey &&
         activePageState.path === activePagePath &&
         activePageState.routePath === activeRoutePath;
-    const isNotFound =
-        metadataDocument === null || Boolean(metadataDocument?.pages && normalizedRoutePath && !activeRouteMatch);
+    const isNotFound = Boolean(metadataDocument?.pages && normalizedRoutePath && !activeRouteMatch);
     const metadataLoading = error instanceof ApiError && error.status === 503;
 
     runtimeContextRef.current = runtimeContext;
@@ -288,7 +262,7 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
     // Make the first page explicit in the URL when the app loads without a selected view.
     useEffect(() => {
         // Skip redirects when the view is already selected.
-        if (!metadataDocument?.pages?.length || selectedTab || normalizedRoutePath) {
+        if (!metadataDocument?.pages.length || normalizedRoutePath) {
             return;
         }
 
@@ -296,15 +270,10 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
         const firstPageRoute = pageRoutePattern(firstPage);
 
         // Prefer route navigation for static metadata routes.
-        if (firstPage.route != null && firstPageRoute && !pageRouteIsDynamic(firstPage)) {
+        if (firstPageRoute && !pageRouteIsDynamic(firstPage)) {
             navigate(resolveApplicationHref(firstPageRoute, organization, application), { replace: true });
-            return;
         }
-
-        const query = new URLSearchParams({ tab: firstPage.tab });
-
-        navigate(`?${query.toString()}`, { replace: true });
-    }, [application, metadataDocument?.pages, navigate, normalizedRoutePath, organization, selectedTab]);
+    }, [application, metadataDocument?.pages, navigate, normalizedRoutePath, organization]);
 
     const tabs = useMemo(() => {
         const tabGroups = new Map<
@@ -325,14 +294,20 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
             const icon = iconName ? createLucideIconComponent(iconName) : undefined;
             const routePattern = pageRoutePattern(page);
             const dynamic = pageRouteIsDynamic(page);
-            const href =
-                page.route != null && routePattern && !dynamic
-                    ? resolveApplicationHref(routePattern, organization, application)
-                    : resolveTabHref(page.tab, organization, application);
             const currentGroup = tabGroups.get(page.tab);
 
+            // Dynamic pages need concrete params, so they cannot be direct navigation targets.
+            if (!routePattern || dynamic) {
+                if (currentGroup) {
+                    currentGroup.active = currentGroup.active || page.tab === activePageTab;
+                }
+                continue;
+            }
+
+            const href = resolveApplicationHref(routePattern, organization, application);
+
             // Prefer static pages as tab targets because dynamic routes need concrete parameter values.
-            if (!currentGroup || (currentGroup.dynamic && !dynamic)) {
+            if (!currentGroup) {
                 tabGroups.set(page.tab, {
                     active: page.tab === activePageTab,
                     dynamic,

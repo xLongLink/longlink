@@ -158,7 +158,7 @@ class Postgres(Database):
         database_name = await self._prepare_organization_database(organization)
 
         # Generate an app-scoped role and password for the deployed runtime.
-        role_name = f"longlink_{organization_id.hex[:16]}_{application_id.hex[:16]}"
+        runtime_username = f"longlink_{organization_id.hex[:16]}_{application_id.hex[:16]}"
         role_password = secrets.token_urlsafe(24)
 
         # Create the app schema and bind the runtime role inside the organization database.
@@ -166,8 +166,8 @@ class Postgres(Database):
             await conn.execute(CreateSchema(quoted_name(application, True), if_not_exists=True))
 
             # Create or rotate the app login role before granting schema permissions.
-            result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": role_name})
-            role = self.quote(conn, role_name)
+            result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
+            role = self.quote(conn, runtime_username)
             password_processor = String().literal_processor(conn.engine.sync_engine.dialect)
 
             # PostgreSQL password literals must be escaped by the active SQLAlchemy dialect.
@@ -210,7 +210,7 @@ class Postgres(Database):
             "host": self._host,
             "port": self._port,
             "password": role_password,
-            "username": role_name,
+            "username": runtime_username,
             "database_name": database_name,
         }
 
@@ -227,13 +227,13 @@ class Postgres(Database):
             if result.scalar_one_or_none() is None:
                 return
 
-        role_name = f"longlink_{organization_id.hex[:16]}_{application_id.hex[:16]}"
+        runtime_username = f"longlink_{organization_id.hex[:16]}_{application_id.hex[:16]}"
 
         # Drop app-owned objects before dropping the global role from the maintenance database.
         async with self._connection(database_name) as conn:
             schema = self.quote(conn, application)
-            role = self.quote(conn, role_name)
-            role_exists = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": role_name})
+            role = self.quote(conn, runtime_username)
+            role_exists = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
             await conn.exec_driver_sql(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
 
             # DROP OWNED is only valid when the runtime role still exists.
@@ -242,7 +242,7 @@ class Postgres(Database):
 
         # Roles are cluster-global, so drop them from the maintenance database with autocommit.
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
-            role = self.quote(conn, role_name)
+            role = self.quote(conn, runtime_username)
             await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
 
     async def delete_database(self, organization: str) -> None:

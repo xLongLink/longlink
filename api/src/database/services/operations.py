@@ -97,7 +97,6 @@ async def reset_active() -> None:
 
 async def create(
     kind: OperationKind,
-    step: str,
     application_id: UUID | None = None,
     organization_id: UUID | None = None,
     scheduled_at: datetime | None = None,
@@ -112,7 +111,6 @@ async def create(
             application_id=application_id,
             organization_id=organization_id,
             scheduled_at=scheduled_at,
-            step=step,
         )
 
         # Attribute the operation to the caller when available.
@@ -123,6 +121,45 @@ async def create(
         await session.commit()
         await session.refresh(operation)
         return operation
+
+
+async def queue_application_verification(application_id: UUID, user: User | None = None) -> Operation:
+    """Queue one application runtime readiness check."""
+
+    # Application verification only needs the application reference.
+    return await create(OperationKind.application_verify, application_id=application_id, user=user)
+
+
+async def queue_application_removal(
+    application_id: UUID,
+    scheduled_at: datetime | None = None,
+    user: User | None = None,
+) -> Operation:
+    """Queue runtime cleanup for one deleted application."""
+
+    # Application cleanup only needs the application reference and optional schedule.
+    return await create(
+        OperationKind.application_remove,
+        application_id=application_id,
+        scheduled_at=scheduled_at,
+        user=user,
+    )
+
+
+async def queue_organization_removal(
+    organization_id: UUID,
+    scheduled_at: datetime | None = None,
+    user: User | None = None,
+) -> Operation:
+    """Queue runtime cleanup for one deleted organization."""
+
+    # Organization cleanup only needs the organization reference and optional schedule.
+    return await create(
+        OperationKind.organization_remove,
+        organization_id=organization_id,
+        scheduled_at=scheduled_at,
+        user=user,
+    )
 
 
 async def claim(operation_id: UUID) -> Operation | None:
@@ -161,12 +198,12 @@ async def claim(operation_id: UUID) -> Operation | None:
 
 
 async def defer(operation_id: UUID, lease_token: str, delay_seconds: int | None = None) -> Operation | None:
-    """Make one active operation claimable later without changing its step."""
+    """Make one active operation claimable later."""
 
     # Release the operation lease inside one transaction.
     async with session_scope() as session:
 
-        # A waiting step should be retried later without blocking the worker.
+        # Waiting work should be retried later without blocking the worker.
         now = datetime.now(UTC)
         retry_delay_seconds = OPERATION_RETRY_DELAY_SECONDS if delay_seconds is None else delay_seconds
         scheduled_at = now + timedelta(seconds=max(0, retry_delay_seconds))
