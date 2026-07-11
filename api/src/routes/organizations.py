@@ -437,7 +437,7 @@ async def _storage_resource_rows(
     registry: StorageRegistry,
     active_applications: list[Application],
 ) -> list[dict[str, object]]:
-    """Inspect one storage backend and return managed organization bucket rows."""
+    """Inspect one storage backend and return organization bucket rows."""
 
     # List backend buckets before building resource rows.
     try:
@@ -471,7 +471,7 @@ async def _storage_resource_rows(
     # Compare expected app buckets against the backend listing so only existing resources are visible.
     for application in sorted(active_applications, key=lambda item: item.name):
 
-        # Ignore applications without managed storage.
+        # Ignore applications without assigned storage.
         if application.storage_bucket_name is None:
             continue
 
@@ -484,18 +484,18 @@ async def _storage_resource_rows(
         visible_application_buckets.append((application, application.storage_bucket_name))
         bucket_names_requiring_usage.append(application.storage_bucket_name)
 
-    # Keep stale managed buckets visible as orphaned resources.
-    managed_bucket_prefix = buckets.prefix(organization.slug)
+    # Keep stale organization buckets visible as orphaned resources.
+    organization_bucket_prefix = buckets.prefix(organization.slug)
     orphaned_bucket_names = [
         listed_bucket_name
         for listed_bucket_name in sorted(bucket_names)
-        if listed_bucket_name not in expected_bucket_names and listed_bucket_name.startswith(managed_bucket_prefix)
+        if listed_bucket_name not in expected_bucket_names and listed_bucket_name.startswith(organization_bucket_prefix)
     ]
     bucket_names_requiring_usage.extend(orphaned_bucket_names)
 
     bucket_usage_by_name: dict[str, StorageBucketUsage] = {}
 
-    # Fetch usage for every visible managed bucket.
+    # Fetch usage for every visible organization bucket.
     try:
 
         # Collect usage by bucket name for row construction.
@@ -551,13 +551,13 @@ async def _storage_resource_rows(
             }
         )
 
-    # Add stale managed buckets as orphaned resources.
+    # Add stale organization buckets as orphaned resources.
     for orphaned_bucket_name in orphaned_bucket_names:
         usage = bucket_usage_by_name[orphaned_bucket_name]
         rows.append(
             {
                 "kind": OrganizationStorageResourceKind.application_bucket,
-                "name": orphaned_bucket_name.removeprefix(managed_bucket_prefix),
+                "name": orphaned_bucket_name.removeprefix(organization_bucket_prefix),
                 "bucket_name": orphaned_bucket_name,
                 "application": None,
                 "storage_registry_id": registry.id,

@@ -347,7 +347,7 @@ async def test_organization_access_hides_missing_memberships(monkeypatch: pytest
         await organizations_routes.get_organization(organization_id, current_user)
 
     assert exc.value.status_code == 404
-    assert exc.value.detail == f"Organization '{organization_id}' not found"
+    assert exc.value.detail == "Organization not found"
 
 
 @pytest.mark.parametrize(

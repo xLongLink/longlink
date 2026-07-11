@@ -213,13 +213,13 @@ async def create_application_runtime(
 
     # Application runtime requires a compute backend in the organization location.
     if compute_registry is None:
-        raise RuntimeError(f"No compute cluster configured for location '{organization.location_id}'")
+        raise RuntimeError("No compute cluster configured")
 
     database_registry = await registries.organization_database_registry(organization)
 
     # Application runtime requires a tenant database backend.
     if database_registry is None:
-        raise RuntimeError(f"No database configured for location '{organization.location_id}'")
+        raise RuntimeError("No database configured")
 
     storage_registry = await registries.organization_storage_registry(organization)
 
@@ -335,13 +335,13 @@ async def sync_application_runtime(
 
     # Runtime sync requires the app's assigned compute backend or the current location backend.
     if compute_registry is None:
-        raise RuntimeError(f"No compute cluster configured for location '{organization.location_id}'")
+        raise RuntimeError("No compute cluster configured")
 
     database_registry = await registries.organization_database_registry(organization)
 
     # Runtime sync requires the organization database backend.
     if database_registry is None:
-        raise RuntimeError(f"No database configured for location '{organization.location_id}'")
+        raise RuntimeError("No database configured")
 
     storage_registry = await registries.application_storage_registry(application)
 

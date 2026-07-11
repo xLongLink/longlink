@@ -43,7 +43,11 @@ async def application_compute_registry(application: Application, location_id: UU
 
     # Existing applications keep using their assigned compute registry.
     if application.compute_registry_id is not None:
-        return await compute.get(application.compute_registry_id, include_deleted=True)
+        registry = await compute.get(application.compute_registry_id, include_deleted=True)
+
+        # Ignore dangling ids so the application can fall back to the active location registry.
+        if registry is not None:
+            return registry
 
     return await latest_compute_registry(location_id)
 

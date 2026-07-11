@@ -7,7 +7,6 @@ import type {
     ApiComputePod,
     ApiComputeRegistry,
     ApiCountryOption,
-    ApiDatabaseInstance,
     ApiDatabaseRegistry,
     ApiDatabaseSchema,
     ApiImageMetadata,
@@ -251,10 +250,6 @@ export const apiOperationSchema = z.object({
     started_at: z.string().nullable(),
     stopped_at: z.string().nullable(),
 }) satisfies z.ZodType<ApiOperation>;
-
-export const apiDatabaseInstanceSchema = z.object({
-    name: z.string(),
-}) satisfies z.ZodType<ApiDatabaseInstance>;
 
 export const apiDatabaseSchemaSchema = z.object({
     name: z.string(),

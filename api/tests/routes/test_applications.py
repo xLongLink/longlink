@@ -186,7 +186,7 @@ async def test_list_organization_apps_returns_404_for_non_member(
 
     # Assert
     assert response.status_code == 404
-    assert response.json() == {"detail": f"Organization '{organization.id}' not found"}
+    assert response.json() == {"detail": "Organization not found"}
 
 
 async def test_create_app_returns_app_response(
@@ -1259,7 +1259,7 @@ async def test_application_proxy_returns_unavailable_without_compute_registry(
 
     # Assert
     assert response.status_code == 503
-    assert response.json() == {"detail": f"No compute cluster configured for location '{location.id}'"}
+    assert response.json() == {"detail": "No compute cluster configured"}
 
 
 async def test_organization_access_rejects_soft_deleted_membership(
@@ -1300,7 +1300,7 @@ async def test_organization_access_rejects_soft_deleted_membership(
 
     # Assert
     assert response.status_code == 404
-    assert response.json() == {"detail": f"Organization '{organization.id}' not found"}
+    assert response.json() == {"detail": "Organization not found"}
 
 
 async def test_application_proxy_shows_loading_when_app_is_not_ready(

@@ -304,7 +304,7 @@ async def create(
 
         # Require the owning organization to exist.
         if organization is None:
-            raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
+            raise HTTPException(status_code=404, detail="Organization not found")
 
         # Check slug uniqueness so K8s resource names stay collision-free.
         slug_statement = select(Application).where(

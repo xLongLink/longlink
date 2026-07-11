@@ -21,7 +21,11 @@ async def list_compute_registries(_user: User = Depends(authsupport)):
 async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)):
     """Return one compute backend registration."""
 
-    return await compute.get(registry_id)
+    registry = await compute.get(registry_id)
+    if registry is None:
+        raise HTTPException(status_code=404, detail="Compute registry not found")
+
+    return registry
 
 
 @router.delete("/api/computes/{registry_id}", status_code=204)
@@ -57,6 +61,8 @@ async def get_compute_resources(registry_id: UUID, _: User = Depends(authsupport
     """Return total and allocatable cluster resources."""
 
     registry = await compute.get(registry_id)
+    if registry is None:
+        raise HTTPException(status_code=404, detail="Compute registry not found")
 
     compute_adapter = compute_runtime.kubernetes(registry)
 
@@ -75,6 +81,8 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
     """List all namespaces on a compute backend."""
 
     registry = await compute.get(registry_id)
+    if registry is None:
+        raise HTTPException(status_code=404, detail="Compute registry not found")
 
     compute_adapter = compute_runtime.kubernetes(registry)
 
@@ -93,6 +101,8 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
     """List all pods in a namespace on a compute backend."""
 
     registry = await compute.get(registry_id)
+    if registry is None:
+        raise HTTPException(status_code=404, detail="Compute registry not found")
 
     compute_adapter = compute_runtime.kubernetes(registry)
 

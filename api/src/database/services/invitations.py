@@ -41,7 +41,7 @@ async def create(organization_id: UUID, email: str, role_name: OrganizationRoles
 
         # Require an active target organization.
         if (await session.execute(organization_statement)).scalar_one_or_none() is None:
-            raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
+            raise HTTPException(status_code=404, detail="Organization not found")
 
         member_statement = (
             select(User.id)

@@ -412,7 +412,7 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     assert response.json() == {"detail": "Database resources unavailable"}
 
 
-async def test_organization_storage_endpoint_returns_managed_buckets(
+async def test_organization_storage_endpoint_returns_organization_buckets(
     clients: tuple[TestClient, TestClient, TestClient],
     monkeypatch,
     users: tuple[User, User, User],
@@ -808,7 +808,7 @@ async def test_get_organization_returns_404_for_non_member(
 
     # Assert
     assert response.status_code == 404
-    assert response.json() == {"detail": f"Organization '{organization.id}' not found"}
+    assert response.json() == {"detail": "Organization not found"}
 
 
 async def test_create_organization_invitation_returns_204(
@@ -996,7 +996,7 @@ async def test_create_organization_invitation_returns_404_for_non_member(
 
     # Assert
     assert response.status_code == 404
-    assert response.json() == {"detail": f"Organization '{organization.id}' not found"}
+    assert response.json() == {"detail": "Organization not found"}
 
 
 async def test_create_organization_invitation_returns_403_for_regular_member(

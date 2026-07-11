@@ -4,8 +4,11 @@ import { Link, useParams } from 'react-router';
 import { DataTable } from '@/components/DataTable';
 import { useDatabaseInstances, useDatabases } from '@/data/database';
 import { useTranslation } from '@/lib/i18n';
-import type { ApiDatabaseInstance } from '@/lib/types';
 import { PostgreSQL } from '@/svg/PostgreSQL';
+
+type DatabaseInstanceRow = {
+    name: string;
+};
 
 /** Renders databases for a database backend. */
 export default function DatabaseInstances() {
@@ -16,7 +19,7 @@ export default function DatabaseInstances() {
 
     const databaseRegistry = registries.find((registry) => registry.slug === database);
 
-    const databaseColumns: Array<ColumnDef<ApiDatabaseInstance>> = [
+    const databaseColumns: Array<ColumnDef<DatabaseInstanceRow>> = [
         {
             accessorKey: 'name',
             header: t('columns.database'),
@@ -41,10 +44,11 @@ export default function DatabaseInstances() {
     ];
 
     const {
-        items: rows,
+        items: databaseNames,
         error: databasesError,
         isLoading: databasesIsLoading,
     } = useDatabaseInstances(databaseRegistry?.id ?? '');
+    const rows = databaseNames.map((name) => ({ name }));
     const error =
         registriesError ??
         (!registriesIsLoading && !databaseRegistry

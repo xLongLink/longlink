@@ -59,8 +59,7 @@ async def get_me(user: User = Depends(authuser)):
 async def list_users(_: User = Depends(authsupport)):
     """Return all user summaries for support and administrator views."""
 
-    records = await users.fetch()
-    return records
+    return await users.fetch()
 
 
 @router.patch("/api/me", response_model=UserProfile)

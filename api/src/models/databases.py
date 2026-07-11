@@ -69,13 +69,6 @@ class DatabaseRegistryCreate(BaseModel):
         return value
 
 
-class DatabaseDatabaseResponse(BaseModel):
-    """Represent one database on a database server."""
-
-    # Metadata
-    name: str
-
-
 class DatabaseSchemaResponse(BaseModel):
     """Represent one schema (namespace) in a database."""
 

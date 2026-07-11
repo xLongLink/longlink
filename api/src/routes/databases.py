@@ -4,8 +4,7 @@ from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin, authsupport
 from src.utils import names
 from src.logger import logger
-from src.models.databases import (DatabaseUsageResponse, DatabaseRegistryCreate, DatabaseSchemaResponse, DatabaseDatabaseResponse,
-                                  DatabaseRegistryResponse)
+from src.models.databases import DatabaseUsageResponse, DatabaseRegistryCreate, DatabaseSchemaResponse, DatabaseRegistryResponse
 from src.database.services import database
 from src.database.models.users import User
 
@@ -16,8 +15,7 @@ router = APIRouter()
 async def list_database_registries(_user: User = Depends(authsupport)):
     """Return all registered database backends."""
 
-    registries = await database.fetch()
-    return registries
+    return await database.fetch()
 
 
 @router.get("/api/databases/{registry_id}", response_model=DatabaseRegistryResponse)
@@ -41,23 +39,17 @@ async def delete_database_registry(registry_id: UUID, user: User = Depends(autha
 
 
 @router.post("/api/databases", response_model=DatabaseRegistryResponse)
-async def create_database_registry(
-    payload: DatabaseRegistryCreate, user: User = Depends(authadmin)
-):
+async def create_database_registry(payload: DatabaseRegistryCreate, user: User = Depends(authadmin)):
     """Create one database backend registration."""
 
     # Build a stable slug from the submitted name.
     slug = names.slugify(payload.name)
 
     registry = await database.create(**payload.model_dump(), slug=slug, user=user)
-
     return registry
 
 
-@router.get(
-    "/api/databases/{registry_id}/databases",
-    response_model=list[DatabaseDatabaseResponse],
-)
+@router.get("/api/databases/{registry_id}/databases", response_model=list[str])
 async def list_database_databases(registry_id: UUID, _: User = Depends(authsupport)):
     """List all databases on a database backend."""
 
@@ -65,38 +57,31 @@ async def list_database_databases(registry_id: UUID, _: User = Depends(authsuppo
     if registry is None:
         raise HTTPException(status_code=404, detail="Database registry not found")
 
-    database_adapter = adapters.database(registry)
+    adapter = adapters.database(registry)
 
     # Inspect backend databases through the adapter.
     try:
-        database_names = await database_adapter.databases()
+        database_names = await adapter.databases()
     except Exception as exc:
         logger.exception("Failed to inspect databases for registry '%s'", registry_id)
         raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
 
-    return [{"name": database_name} for database_name in database_names]
+    return database_names
 
 
-@router.get(
-    "/api/databases/{registry_id}/databases/{database_name}/schemas",
-    response_model=list[DatabaseSchemaResponse],
-)
-async def list_database_schemas(
-    registry_id: UUID,
-    database_name: str,
-    _: User = Depends(authsupport),
-):
+@router.get("/api/databases/{registry_id}/databases/{database_name}/schemas", response_model=list[DatabaseSchemaResponse])
+async def list_database_schemas(registry_id: UUID, database_name: str, _: User = Depends(authsupport)):
     """List all schemas in a database on a database backend."""
 
     registry = await database.get(registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Database registry not found")
 
-    database_adapter = adapters.database(registry)
+    adapter = adapters.database(registry)
 
     # Inspect backend schemas through the adapter.
     try:
-        schema_names = await database_adapter.schemas(database_name)
+        schema_names = await adapter.schemas(database_name)
     except Exception as exc:
         logger.exception(
             "Failed to inspect schemas for database '%s' in registry '%s'",

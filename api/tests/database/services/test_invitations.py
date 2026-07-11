@@ -56,7 +56,7 @@ async def test_create_rejects_invitation_for_missing_organization(users: tuple[U
 
     # Assert
     assert exc.value.status_code == 404
-    assert exc.value.detail == f"Organization '{organization_id}' not found"
+    assert exc.value.detail == "Organization not found"
 
 
 async def test_create_rejects_invitation_for_existing_member_email(users: tuple[User, User, User]) -> None:

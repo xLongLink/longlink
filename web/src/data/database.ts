@@ -1,11 +1,7 @@
+import { z } from 'zod';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
-import {
-    apiDatabaseInstanceSchema,
-    apiDatabaseRegistrySchema,
-    apiDatabaseSchemaSchema,
-    parseApiCollection,
-} from '@/lib/api-schemas';
-import type { ApiDatabaseInstance, ApiDatabaseRegistry, ApiDatabaseSchema } from '@/lib/types';
+import { apiDatabaseRegistrySchema, apiDatabaseSchemaSchema, parseApiCollection } from '@/lib/api-schemas';
+import type { ApiDatabaseRegistry, ApiDatabaseSchema } from '@/lib/types';
 
 /** Fetches the database registry list for admin views. */
 export function useDatabases() {
@@ -18,9 +14,9 @@ export function useDatabases() {
 export function useDatabaseInstances(databaseId: string) {
     const enabled = databaseId.length > 0;
 
-    return useCollectionQuery<ApiDatabaseInstance>(enabled ? `/api/databases/${databaseId}/databases` : null, {
+    return useCollectionQuery<string>(enabled ? `/api/databases/${databaseId}/databases` : null, {
         enabled,
-        parse: (value) => parseApiCollection(apiDatabaseInstanceSchema, value),
+        parse: (value) => parseApiCollection(z.string(), value),
     });
 }
 

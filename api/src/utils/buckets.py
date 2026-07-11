@@ -6,7 +6,7 @@ STORAGE_BUCKET_PREFIX = "longlink"
 
 
 def name(*parts: str) -> str:
-    """Return a validated managed storage bucket name."""
+    """Return a validated generated storage bucket name."""
 
     bucket_name = "-".join((STORAGE_BUCKET_PREFIX, *parts))
 
@@ -30,7 +30,7 @@ def application(organization_slug: str, application_slug: str) -> str:
 
 
 def prefix(organization_slug: str) -> str:
-    """Return the managed bucket prefix used for one organization."""
+    """Return the generated bucket prefix used for one organization."""
 
     shared(organization_slug)
     return f"{STORAGE_BUCKET_PREFIX}-{organization_slug}-"
