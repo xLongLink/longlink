@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from datetime import UTC, datetime
 from src.utils import names
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from tenant.models import User as TenantUser
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
@@ -294,6 +294,19 @@ async def create(
         )
         result = await session.execute(statement)
         return result.scalar_one()
+
+
+async def discard_created(organization_id: UUID) -> None:
+    """Hard-delete an organization created by a failed synchronous bootstrap."""
+
+    # Remove dependent rows before deleting the organization row so creation can be retried with the same name.
+    async with session_scope() as session:
+        await session.execute(delete(UserApplication).where(UserApplication.organization_id == organization_id))
+        await session.execute(delete(Application).where(Application.organization_id == organization_id))
+        await session.execute(delete(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization_id))
+        await session.execute(delete(UserOrganization).where(UserOrganization.organization_id == organization_id))
+        await session.execute(delete(Organization).where(Organization.id == organization_id))
+        await session.commit()
 
 
 async def soft_delete(organization_id: UUID, user: User) -> Organization | None:

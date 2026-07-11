@@ -299,7 +299,7 @@ export const content = (
             <p>
                 These actions use account, organization, application, infrastructure, status, and operation data rather
                 than behavioral profiling. Deleting or replacing applications, schemas, buckets, or organizations may
-                cause loss of Customer Content. Contact <A href="mailto:info@longlink.ch">info@longlink.ch</A> if you
+                cause loss of Customer Content. Contact <A href="mailto:info@longlink.dev">info@longlink.dev</A> if you
                 believe an automated operational action was incorrect and want human review.
             </p>
             <p>
@@ -379,8 +379,8 @@ export const content = (
             </Heading>
             <p>LongLink SAGL, UID CHE-150.642.313.</p>
             <p>
-                Privacy, security, technical, and account support:{' '}
-                <A href="mailto:info@longlink.ch">info@longlink.ch</A>.
+                Privacy enquiries and data-rights requests: <A href="mailto:info@longlink.ch">info@longlink.ch</A>.
+                Security, technical, and account support: <A href="mailto:info@longlink.dev">info@longlink.dev</A>.
             </p>
         </section>
     </>

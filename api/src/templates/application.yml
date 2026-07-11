@@ -21,7 +21,7 @@ spec:
   template:
     metadata:
       annotations:
-        longlink.io/rollout-token: "$rollout_token"
+        longlink.io/rollout-token: ""
       labels:
         compute-role: application
         app: $application_id

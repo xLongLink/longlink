@@ -266,6 +266,17 @@ async def test_create_app_returns_app_response(
     captured: dict[str, object] = {}
     captured_buckets: list[tuple[str, ...]] = []
 
+    class FakeConnection:
+        """Fake database connection context for shared user synchronization."""
+
+        async def __aenter__(self) -> object:
+            """Return the fake connection."""
+
+            return self
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Close the fake connection context."""
+
     class FakeCompute:
         """Fake compute adapter for app creation tests."""
 
@@ -280,13 +291,12 @@ async def test_create_app_returns_app_response(
 
             captured["namespace"] = organization
 
-        async def application(
+        async def create(
             self,
             organization: str,
             application_id: str,
             image: str,
             secrets: dict[str, str],
-            rollout_token: str = "",
         ) -> None:
             """Record the application deployment request."""
 
@@ -295,7 +305,6 @@ async def test_create_app_returns_app_response(
                 "application_id": application_id,
                 "image": image,
                 "secrets": secrets,
-                "rollout_token": rollout_token,
             }
 
     class FakeDatabase:
@@ -335,13 +344,29 @@ async def test_create_app_returns_app_response(
                 "database_name": "acme",
             }
 
-        async def sync_users(self, organization: str, users: list[TenantUser]) -> None:
-            """Record synchronized tenant users for the organization."""
+        async def prepare_organization_database(self, organization: str) -> str:
+            """Record the prepared organization database."""
 
-            captured["sync_users"] = {
-                "organization": organization,
-                "users": users,
+            captured["prepared_database"] = organization
+            return organization
+
+        def connection(self, database: str, *, autocommit: bool = False, search_path: str | None = None) -> FakeConnection:
+            """Record the opened shared-schema database connection."""
+
+            captured["connection"] = {
+                "database": database,
+                "autocommit": autocommit,
+                "search_path": search_path,
             }
+            return FakeConnection()
+
+    async def sync_tenant_users(connection: object, users: list[TenantUser]) -> None:
+        """Record synchronized tenant users for the organization."""
+
+        captured["tenant_users"] = {
+            "connection": connection,
+            "users": users,
+        }
 
     class FakeStorage:
         """Fake storage adapter for app creation tests."""
@@ -380,6 +405,7 @@ async def test_create_app_returns_app_response(
             registry.password,
         ),
     )
+    monkeypatch.setattr("src.runtime.bootstrap.tenant_users.sync", sync_tenant_users)
     monkeypatch.setattr(
         "src.runtime.provisioning.adapters.storage",
         lambda registry: FakeStorage(
@@ -425,12 +451,13 @@ async def test_create_app_returns_app_response(
         ("bucket", "acme-shared"),
         ("bucket", "acme-dashboard"),
     ]
-    sync_payload = captured["sync_users"]
+    sync_payload = captured["tenant_users"]
     assert isinstance(sync_payload, dict)
     synced_users = sync_payload["users"]
     assert isinstance(synced_users, list)
     assert all(isinstance(synced_user, TenantUser) for synced_user in synced_users)
-    assert sync_payload["organization"] == "acme"
+    assert captured["prepared_database"] == "acme"
+    assert captured["connection"] == {"database": "acme", "autocommit": False, "search_path": "shared"}
     assert synced_users[0].email == user.email
     application_payload = captured["application"]
     assert isinstance(application_payload, dict)
@@ -700,15 +727,14 @@ async def test_get_app_logs_returns_pod_logs(
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
 
-        async def logs(self, organization: str, application_id: str, lines: int = 200) -> str:
+        async def logs(self, application_id: str, lines: int = 200) -> list[str]:
             """Record the log request and return fake pod logs."""
 
             captured["logs"] = {
-                "organization": organization,
                 "application_id": application_id,
                 "lines": lines,
             }
-            return "line 1\nline 2"
+            return ["line 1", "line 2"]
 
     monkeypatch.setattr("src.routes.applications.Kubernetes", FakeCompute)
     client = clients[0]
@@ -718,10 +744,9 @@ async def test_get_app_logs_returns_pod_logs(
 
     # Assert
     assert response.status_code == 200
-    assert response.text == "line 1\nline 2"
-    assert response.headers["content-type"].startswith("text/plain")
+    assert response.json() == ["line 1", "line 2"]
+    assert response.headers["content-type"].startswith("application/json")
     assert captured["logs"] == {
-        "organization": "acme",
         "application_id": str(app.id),
         "lines": 200,
     }
@@ -985,7 +1010,7 @@ async def test_application_proxy_requires_application_role_for_regular_member(
 
     # Assert
     assert response.status_code == 403
-    assert response.json() == {"detail": "Application access required"}
+    assert response.json() == {"detail": "Application read access required"}
 
 
 async def test_application_proxy_returns_unavailable_when_gateway_request_fails(

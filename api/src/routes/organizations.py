@@ -17,6 +17,7 @@ from src.models.organizations import (OrganizationCreate, OrganizationDetails, O
                                       OrganizationInvitationCreate)
 from src.adapters.storage.base import StorageBucketUsage
 from src.database.models.users import User
+from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.applications import Application
@@ -25,6 +26,78 @@ from src.database.models.organizations import Organization
 router = APIRouter()
 TABLE_PREVIEW_LIMIT = 100
 ORGANIZATION_DELETE_DELAY_DAYS = 0
+
+
+async def _location_runtime_registries(location_id: UUID) -> tuple[ComputeRegistry, DatabaseRegistry, StorageRegistry]:
+    """Return the required runtime registries for one location."""
+
+    # Organizations require a compute namespace in their location.
+    compute_registry = await registries.compute(location_id)
+    if compute_registry is None:
+        raise HTTPException(status_code=409, detail="Location has no compute registry")
+
+    # Organizations require a tenant database in their location.
+    database_registry = await registries.database(location_id)
+    if database_registry is None:
+        raise HTTPException(status_code=409, detail="Location has no database registry")
+
+    # Organizations require shared object storage in their location.
+    storage_registry = await registries.storage(location_id)
+    if storage_registry is None:
+        raise HTTPException(status_code=409, detail="Location has no storage registry")
+
+    return compute_registry, database_registry, storage_registry
+
+
+async def _provision_organization_runtime(
+    organization: Organization,
+    compute_registry: ComputeRegistry,
+    database_registry: DatabaseRegistry,
+    storage_registry: StorageRegistry,
+) -> None:
+    """Provision the lightweight runtime resources required by one organization."""
+
+    # Create the organization namespace before workloads can target it.
+    await Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret).namespace(organization.slug)
+
+    # Create the organization database and synchronize shared users into it.
+    await bootstrap.sync_organization_users(organization, database_registry)
+
+    # The control plane assigns shared buckets when organizations are created.
+    if organization.shared_storage_bucket_name is None:
+        raise ValueError("Organization has no assigned shared storage bucket")
+
+    # Create the shared organization storage bucket.
+    storage = adapters.storage(storage_registry)
+    await storage.bucket(organization.shared_storage_bucket_name)
+
+
+async def _cleanup_organization_runtime(
+    organization: Organization,
+    compute_registry: ComputeRegistry,
+    database_registry: DatabaseRegistry,
+    storage_registry: StorageRegistry,
+) -> None:
+    """Best-effort cleanup for a failed synchronous organization bootstrap."""
+
+    # Remove the shared bucket first because it is independent of compute and database resources.
+    if organization.shared_storage_bucket_name is not None:
+        try:
+            await adapters.storage(storage_registry).delete_bucket(organization.shared_storage_bucket_name)
+        except Exception as exc:
+            logger.exception("Failed to clean up storage for organization '%s': %r", organization.slug, exc)
+
+    # Remove the organization database even if user synchronization failed midway.
+    try:
+        await adapters.database(database_registry).delete_database(organization.slug)
+    except Exception as exc:
+        logger.exception("Failed to clean up database for organization '%s': %r", organization.slug, exc)
+
+    # Remove the namespace last so any namespace-scoped resources are deleted together.
+    try:
+        await Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret).delete_namespace(organization.slug)
+    except Exception as exc:
+        logger.exception("Failed to clean up namespace for organization '%s': %r", organization.slug, exc)
 
 
 @router.get("/api/organizations", response_model=list[OrganizationSummary])
@@ -623,6 +696,9 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
 
+    # Require the selected location to have all runtime backends before inserting the organization row.
+    compute_registry, database_registry, storage_registry = await _location_runtime_registries(payload.location_id)
+
     organization = await organizations.create(
         payload.name,
         slug,
@@ -632,43 +708,21 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
         country=payload.country,
     )
 
-    # Locations without compute are allowed during partial local setup.
-    compute_registry = await registries.compute(organization.location_id)
-    if compute_registry is not None:
-        # Bootstrap failures are logged but do not block organization creation.
+    # Runtime bootstrap is part of organization creation and must complete before the row is returned.
+    try:
+        await _provision_organization_runtime(organization, compute_registry, database_registry, storage_registry)
+
+    # Failed bootstrap must not leave a visible organization that cannot run applications.
+    except Exception as exc:
+        logger.exception("Failed to initialize runtime for organization '%s': %r", organization.slug, exc)
+        await _cleanup_organization_runtime(organization, compute_registry, database_registry, storage_registry)
+
+        # Remove the just-created control-plane rows so a user can retry the same organization name.
         try:
-            await Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret).namespace(organization.slug)
+            await organizations.discard_created(organization.id)
+        except Exception as cleanup_exc:
+            logger.exception("Failed to discard organization '%s' after bootstrap failure: %r", organization.slug, cleanup_exc)
 
-        # Organization creation remains successful even if runtime bootstrap needs manual repair.
-        except Exception as exc:
-            logger.exception("Failed to create namespace for organization '%s': %r", organization.slug, exc)
-
-    # Locations without a database are allowed during partial local setup.
-    database_registry = await registries.database(organization.location_id)
-    if database_registry is not None:
-        # Bootstrap failures are logged but do not block organization creation.
-        try:
-            await bootstrap.sync_organization_users(organization, database_registry)
-
-        # Organization creation remains successful even if runtime bootstrap needs manual repair.
-        except Exception as exc:
-            logger.exception("Failed to create database for organization '%s': %r", organization.slug, exc)
-
-    # Locations without storage skip object-store bootstrap.
-    storage_registry = await registries.storage(organization.location_id)
-    if storage_registry is not None:
-        # Bootstrap failures are logged but do not block organization creation.
-        try:
-            storage = adapters.storage(storage_registry)
-
-            # The control plane assigns shared buckets when organizations are created.
-            if organization.shared_storage_bucket_name is None:
-                raise ValueError("Organization has no assigned shared storage bucket")
-
-            await storage.bucket(organization.shared_storage_bucket_name)
-
-        # Organization creation remains successful even if runtime bootstrap needs manual repair.
-        except Exception as exc:
-            logger.exception("Failed to create storage for organization '%s': %r", organization.slug, exc)
+        raise HTTPException(status_code=503, detail="Organization runtime provisioning failed") from exc
 
     return organization

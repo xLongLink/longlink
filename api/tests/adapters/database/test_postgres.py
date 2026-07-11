@@ -8,6 +8,8 @@ from sqlalchemy import text
 from docker.errors import DockerException
 from tenant.models import User as TenantUser
 from sqlalchemy.exc import SQLAlchemyError
+from tenant.database import SHARED_SCHEMA
+from tenant.database import users as tenant_users
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine
 from src.adapters.database.postgres import Postgres
@@ -76,7 +78,10 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             created_at=datetime(2026, 7, 1, tzinfo=UTC),
             updated_at=datetime(2026, 7, 1, tzinfo=UTC),
         )
-        await adapter.sync_users("acme", [active_user])
+        database_name = await adapter.prepare_organization_database("acme")
+        async with adapter.connection(database_name, search_path=SHARED_SCHEMA) as conn:
+            await tenant_users.sync(conn, [active_user])
+
         database_url = adapter.url("acme")
 
         organization_id = UUID("33333333-3333-3333-3333-333333333333")
@@ -108,7 +113,9 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
 
         inactive_at = datetime(2026, 7, 2, tzinfo=UTC)
         inactive_user = active_user.model_copy(update={"updated_at": inactive_at, "deleted_at": inactive_at})
-        await adapter.sync_users("acme", [inactive_user])
+        async with adapter.connection(database_name, search_path=SHARED_SCHEMA) as conn:
+            await tenant_users.sync(conn, [inactive_user])
+
         maintenance_engine = create_async_engine(database_url)
         try:
             async with maintenance_engine.begin() as conn:

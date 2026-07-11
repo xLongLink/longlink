@@ -9,73 +9,51 @@ from src.constants import ROOT
 class Kubernetes(KubernetesCluster):
     """Manage Kubernetes namespaces, application workloads, and the cluster gateway."""
 
-    async def application_pods(self, organization: str, application_id: str) -> list[APIObject]:
-        """Return pods for one managed application."""
+    async def pod(self, application_id: str) -> APIObject | None:
+        """Return the pod for one managed application."""
 
-        namespace = names.knames(organization)
-        name = names.knames(application_id)
-
-        # Convert Kubernetes API failures into a simple caller error.
+        # Application UUIDs are globally unique, so pod lookup can span organization namespaces.
         try:
-            return await self._list(Pod, namespace, {"app": name})
+            pods = await self._list(Pod, kr8s.ALL, {"longlink.io/application-id": application_id})
         except kr8s.ServerError as exc:
-            raise RuntimeError("Failed reading application pods") from exc
+            raise RuntimeError("Failed reading application pod") from exc
 
-    async def application_deployment_ready(self, organization: str, application_id: str) -> bool:
+        # Applications run as single-pod workloads, but the pod may not exist yet during startup.
+        return pods[0] if pods else None
+
+    async def ready(self, application_id: str) -> bool:
         """Return whether the current application Deployment rollout is ready."""
 
-        namespace = names.knames(organization)
-        name = names.knames(application_id)
-
-        # Read the live Deployment so rollout status reflects the Kubernetes controller state.
+        # Application UUIDs are globally unique, so deployment lookup can span organization namespaces.
         try:
-            deployment = await self._read(Deployment, name, namespace)
+            deployments = await self._list(Deployment, kr8s.ALL, {"longlink.io/application-id": application_id})
         except kr8s.ServerError as exc:
             raise RuntimeError("Failed reading application deployment") from exc
 
-        metadata = deployment.metadata
-        spec = deployment.spec
-        status = deployment.status
-
-        # Missing deployment sections mean Kubernetes has not reported readiness yet.
-        if metadata is None or spec is None or status is None:
+        # The Deployment may not exist yet during initial startup.
+        if not deployments:
             return False
 
-        observed_generation = status.get("observedGeneration")
-        generation = metadata.get("generation")
-
-        # Applications are single-replica workloads and should not report ready otherwise.
-        if spec.get("replicas", 1) != 1:
+        # Missing deployment status means Kubernetes has not reported readiness yet.
+        deployment = deployments[0]
+        if deployment.metadata is None or deployment.status is None:
             return False
 
-        # A rollout without generation tracking cannot be proven ready.
-        if observed_generation is None or generation is None:
-            return False
-
-        # Wait until the controller has observed the latest desired generation.
-        if observed_generation < generation:
-            return False
+        observed_generation = deployment.status.get("observedGeneration")
+        generation = deployment.metadata.get("generation")
 
         return (
-            status.get("replicas") == 1
-            and status.get("updatedReplicas") == 1
-            and status.get("readyReplicas") == 1
-            and status.get("availableReplicas") == 1
-            and status.get("unavailableReplicas", 0) == 0
+            generation is not None
+            and observed_generation is not None
+            and observed_generation >= generation
+            and deployment.status.get("updatedReplicas") == 1
+            and deployment.status.get("readyReplicas") == 1
         )
 
-    async def application(
-        self,
-        organization: str,
-        application_id: str,
-        image: str,
-        secrets: dict[str, str],
-        rollout_token: str = "",
-    ) -> str:
+    async def create(self,organization: str,application_id: str,image: str,secrets: dict[str, str]) -> str:
         """Create or replace one internal application Deployment and Service."""
 
         namespace = names.knames(organization)
-        application_id = names.knames(application_id)
 
         # Replace the full Secret data map so removed environment keys do not survive a merge patch.
         secret_body: dict[str, Any] = {
@@ -102,7 +80,6 @@ class Kubernetes(KubernetesCluster):
             image=image,
             namespace=namespace,
             application_id=application_id,
-            rollout_token=rollout_token,
         )
 
         # Apply Deployment and Service manifests after the runtime Secret exists.
@@ -112,42 +89,41 @@ class Kubernetes(KubernetesCluster):
         await self._sync_gateway()
         return f"/{namespace}/{application_id}/"
 
-    async def delete_application(self, organization: str, application_id: str) -> None:
+    async def delete(self, application_id: str) -> None:
         """Delete one managed application workload and tolerate missing resources."""
 
-        namespace = names.knames(organization)
-        name = names.knames(application_id)
-
-        delete_calls = (Deployment, Service, Secret)
-
-        # Delete all UUID-named workload resources.
-        for resource_class in delete_calls:
-
-            # Surface Kubernetes deletion failures with resource context.
+        # Delete all UUID-labeled workload resources across organization namespaces.
+        for resource_class in (Deployment, Service, Secret):
             try:
-                await self._delete(resource_class, name, namespace)
+                resources = await self._list(resource_class, kr8s.ALL, {"longlink.io/application-id": application_id})
             except kr8s.ServerError as exc:
                 raise ValueError("Failed deleting application resources") from exc
 
+            # Surface Kubernetes deletion failures with resource context.
+            for resource in resources:
+                try:
+                    await cast(Any, resource).delete()
+                except (kr8s.NotFoundError, kr8s.ServerError) as exc:
+                    if not self._not_found(exc):
+                        raise ValueError("Failed deleting application resources") from exc
+
         await self._sync_gateway()
 
-    async def logs(self, organization: str, application_id: str, lines: int = 200) -> str:
+    async def logs(self, application_id: str, lines: int = 200) -> list[str]:
         """Return recent logs for one managed application."""
 
-        # List pods before selecting the most recent log source.
+        # Read the application pod before streaming logs from it.
         try:
-            pods = await self.application_pods(organization, application_id)
+            pod = await self.pod(application_id)
         except RuntimeError as exc:
-            raise ValueError("Failed listing application pods") from exc
+            raise ValueError("Failed reading application pod") from exc
 
         # Logs require the single application pod to exist.
-        if not pods:
-            raise ValueError("No application pods found")
-
-        pod = pods[0]
+        if pod is None:
+            raise ValueError("No application pod found")
 
         # Convert Kubernetes API failures into a simple client-facing adapter error.
         try:
-            return "\n".join([line async for line in cast(Any, pod).logs(tail_lines=lines)])
+            return [cast(str, line) async for line in cast(Any, pod).logs(tail_lines=lines)]
         except kr8s.ServerError as exc:
             raise ValueError("Failed reading application logs") from exc

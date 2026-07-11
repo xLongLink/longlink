@@ -81,40 +81,38 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         await compute.namespace("acme")
         await compute.namespace("acme")
         application_id = "00000000-0000-4000-8000-000000000001"
-        route = await compute.application(
+        route = await compute.create(
             "acme",
             application_id,
             ECHO_SERVER_IMAGE,
             {"LONG_LINK_REQUIRED": "value", "PORT": "8000"},
-            rollout_token="integration-test",
         )
 
         # Wait for the image pull, deployment scheduling, and readiness probe-free startup to finish.
         deadline = time.monotonic() + 180
-        ready_pod_names: list[str] = []
+        ready_pod_name: str | None = None
         while time.monotonic() < deadline:
-            pods = await compute.application_pods("acme", application_id)
-            ready_pod_names = [
-                pod.name
-                for pod in pods
-                if pod.raw.get("status", {}).get("phase") == "Running"
-                and any(
-                    condition.get("type") == "Ready" and condition.get("status") == "True"
-                    for condition in pod.raw.get("status", {}).get("conditions", [])
-                )
-            ]
-            if ready_pod_names:
+            pod = await compute.pod(application_id)
+
+            # The application pod is created asynchronously by the deployment controller.
+            if pod is not None and pod.raw.get("status", {}).get("phase") == "Running" and any(
+                condition.get("type") == "Ready" and condition.get("status") == "True"
+                for condition in pod.raw.get("status", {}).get("conditions", [])
+            ):
+                ready_pod_name = pod.name
+
+            if ready_pod_name is not None:
                 break
             await asyncio.sleep(2)
         else:
+            pod = await compute.pod(application_id)
             pod_statuses = [
                 {
                     "name": pod.name,
                     "phase": pod.raw.get("status", {}).get("phase"),
                     "container_statuses": pod.raw.get("status", {}).get("containerStatuses"),
                 }
-                for pod in await compute.application_pods("acme", application_id)
-            ]
+            ] if pod is not None else []
             pytest.fail(f"k3s application pod did not become ready before timeout: {pod_statuses}")
 
         gateway_config = (await compute._read(ConfigMap, "longlink-gateway", "longlink-system")).data["envoy.yaml"]
@@ -122,7 +120,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         gateway_service = await compute._read(Service, "longlink-gateway", "longlink-system")
         gateway_policy = await compute._read(NetworkPolicy, "longlink-gateway-ingress", "longlink-system")
         gateway_ingress = await compute._read(Ingress, "longlink-gateway", "longlink-system")
-        logs = await compute.logs("acme", application_id, lines=50)
+        logs = await compute.logs(application_id, lines=50)
         namespaces = await compute.namespaces()
         cluster_resources = await compute.resources()
         namespace_pods = await compute.pods("acme")
@@ -142,7 +140,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         assert isinstance(logs, str)
         assert cluster_resources["ram_total"] > 0
         assert cluster_resources["cpu_total"] > 0
-        application_pod = next((pod for pod in namespace_pods if pod["name"] in ready_pod_names), None)
+        application_pod = next((pod for pod in namespace_pods if pod["name"] == ready_pod_name), None)
         assert application_pod is not None
         assert application_pod["status"] == "Running"
         application_pod_resources = cast(dict[str, Any], application_pod["resources"])
@@ -151,5 +149,5 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         assert application_pod_resources["cpu_usage"] >= 0.0
         assert application_pod_resources["ram_usage"] >= 0
     finally:
-        await compute.delete_application("acme", application_id)
+        await compute.delete(application_id)
         await compute.delete_namespace("acme")

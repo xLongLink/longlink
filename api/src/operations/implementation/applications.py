@@ -1,11 +1,11 @@
+from src import adapters
 from datetime import timedelta
-from src.runtime import Kubernetes, startup, provisioning
+from src.runtime import Kubernetes, startup
 from tenant.utils import utcnow
 from src.operations import outcomes as outcome
 from src.operations import registry
 from src.models.statuses import ApplicationStatus
-from src.runtime.resources import parse_kubernetes_timestamp
-from src.database.services import registries, applications, organizations
+from src.database.services import database, registries, applications, organizations
 from src.models.operations import OperationKind
 from src.database.models.operations import Operation
 
@@ -40,28 +40,11 @@ async def verify(operation: Operation) -> outcome.OperationOutcome:
             # Runtime adapters raise while deployments or pods are still being created.
             try:
                 # A ready deployment is enough to complete verification without pod inspection.
-                if await adapter.application_deployment_ready(organization.slug, application_id):
+                if await adapter.ready(application_id):
                     await applications.set_status(application.id, ApplicationStatus.running)
                     return outcome.complete()
 
-                pods = await adapter.application_pods(organization.slug, application_id)
-
-                # Ignore stale pods from older rollouts so they cannot fail a fresh verification operation.
-                threshold = operation.created_at - timedelta(seconds=startup.POD_ROLLOUT_GRACE_SECONDS)
-                current = None
-                for pod in pods:
-                    metadata = startup.runtime_value(pod, "metadata")
-
-                    # Parse creation timestamps and keep pods with missing values.
-                    pod_created = parse_kubernetes_timestamp(startup.runtime_value(metadata, "creation_timestamp", "creationTimestamp"))
-                    if pod_created is None:
-                        current = pod
-                        break
-
-                    # Only a pod created near this verification operation can decide its result.
-                    if pod_created >= threshold:
-                        current = pod
-                        break
+                current = await adapter.pod(application_id)
 
                 # Inspect the current pod when Kubernetes has created one for this rollout.
                 if current is not None:
@@ -153,5 +136,29 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
     if organization is None:
         return outcome.complete()
 
-    await provisioning.remove_application_runtime(application, organization)
+    # Remove workload resources only when the app has a compute backend to target.
+    registry = await registries.application_compute(application, organization.location_id)
+    if registry is not None:
+        adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
+        await adapter.delete(str(application.id))
+
+    # Remove the application schema from the database registry that originally hosted it.
+    if application.database_registry_id is not None:
+        # Missing registries are tolerated during cleanup because resources may already be gone.
+        registry = await database.get(application.database_registry_id, include_deleted=True)
+        if registry is not None:
+            adapter = adapters.database(registry)
+            await adapter.delete_schema(
+                organization.slug,
+                application.slug,
+                organization_id=organization.id,
+                application_id=application.id,
+            )
+
+    # Remove the application bucket only when storage was assigned.
+    registry = await registries.application_storage(application)
+    if registry is not None and application.storage_bucket_name is not None:
+        adapter = adapters.storage(registry)
+        await adapter.delete_bucket(application.storage_bucket_name)
+
     return outcome.complete()

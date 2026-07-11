@@ -105,7 +105,7 @@ export const content = (
                 You must protect passwords, OAuth or OIDC access, API credentials, deployment secrets, kubeconfigs,
                 database credentials, object-storage keys, application environment values, SSH keys, and other access
                 materials. You must use reasonable access controls and notify{' '}
-                <A href="mailto:info@longlink.ch">info@longlink.ch</A> promptly if you suspect compromise.
+                <A href="mailto:info@longlink.dev">info@longlink.dev</A> promptly if you suspect compromise.
             </p>
             <p>
                 You are responsible for configuring and hardening applications, applying updates, managing encryption
@@ -458,8 +458,8 @@ export const content = (
                 18. Contact
             </Heading>
             <p>
-                Legal, general, technical, account, and billing enquiries:{' '}
-                <A href="mailto:info@longlink.ch">info@longlink.ch</A>.
+                Legal enquiries: <A href="mailto:info@longlink.ch">info@longlink.ch</A>. General, technical, account,
+                and billing enquiries: <A href="mailto:info@longlink.dev">info@longlink.dev</A>.
             </p>
             <p>LongLink SAGL, UID CHE-150.642.313.</p>
         </section>

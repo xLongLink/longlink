@@ -11,7 +11,7 @@ Do not open public issues for suspected vulnerabilities.
 Report security issues through one of these channels:
 
 - GitHub private vulnerability reporting, when available for this repository
-- Email `info@longlink.ch` with the subject `LongLink security report`
+- Email `info@longlink.dev` with the subject `LongLink security report`
 
 Include the affected version or commit, reproduction steps, impact, and any relevant logs or proof-of-concept details.
 

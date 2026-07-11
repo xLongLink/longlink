@@ -649,7 +649,7 @@ export default function Home() {
                             <ArrowRight className="size-4" aria-hidden="true" />
                         </Link>
                         <a
-                            href="mailto:info@longlink.ch"
+                            href="mailto:info@longlink.dev"
                             className={buttonVariants({ variant: 'outline', size: 'lg', className: 'px-4' })}
                         >
                             <Mail className="size-4" aria-hidden="true" />

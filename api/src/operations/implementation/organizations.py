@@ -1,9 +1,9 @@
 from src import adapters
 from uuid import UUID
-from src.runtime import Kubernetes, provisioning
+from src.runtime import Kubernetes
 from src.operations import outcomes as outcome
 from src.operations import registry
-from src.database.services import registries, organizations
+from src.database.services import database, registries, organizations
 from src.models.operations import OperationKind
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
@@ -26,22 +26,41 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
     # Load deleted applications so their resources are removed before shared organization resources.
     apps = await organizations.applications(organization.id, include_deleted=True)
 
-    # Delete application-scoped resources before deleting shared organization resources.
-    for app in apps:
-        await provisioning.remove_application_runtime(app, organization)
-
     # Track compute registries that need organization-level namespace cleanup.
     computes: list[ComputeRegistry] = []
     seen: set[UUID] = set()
 
-    # Collect every compute registry that may still contain organization resources.
+    # Delete application-scoped resources before deleting shared organization resources.
     for app in apps:
-        compute = await registries.application_compute(app, organization.location_id)
+        # Remove workload resources only when the app has a compute backend to target.
+        registry = await registries.application_compute(app, organization.location_id)
+        if registry is not None:
+            adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
+            await adapter.delete(str(app.id))
 
-        # Deduplicate registries so namespace deletion runs once per backend.
-        if compute is not None and compute.id not in seen:
-            computes.append(compute)
-            seen.add(compute.id)
+            # Deduplicate registries so namespace deletion runs once per backend.
+            if registry.id not in seen:
+                computes.append(registry)
+                seen.add(registry.id)
+
+        # Remove the application schema from the database registry that originally hosted it.
+        if app.database_registry_id is not None:
+            # Missing registries are tolerated during cleanup because resources may already be gone.
+            registry = await database.get(app.database_registry_id, include_deleted=True)
+            if registry is not None:
+                adapter = adapters.database(registry)
+                await adapter.delete_schema(
+                    organization.slug,
+                    app.slug,
+                    organization_id=organization.id,
+                    application_id=app.id,
+                )
+
+        # Remove the application bucket only when storage was assigned.
+        registry = await registries.application_storage(app)
+        if registry is not None and app.storage_bucket_name is not None:
+            adapter = adapters.storage(registry)
+            await adapter.delete_bucket(app.storage_bucket_name)
 
     current = await registries.compute(organization.location_id, include_deleted=True)
 

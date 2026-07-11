@@ -72,7 +72,7 @@ Run these commands from `api/`. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for m
 <div align="center">
 LongLink 2026
 
-[License](../LICENSE) &nbsp; - &nbsp; [Contributing](./CONTRIBUTING.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.ch)
+[License](../LICENSE) &nbsp; - &nbsp; [Contributing](./CONTRIBUTING.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.dev)
 
 </div>
 

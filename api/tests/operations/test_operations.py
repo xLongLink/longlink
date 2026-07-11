@@ -329,12 +329,6 @@ async def test_application_and_organization_remove_handlers_remove_runtime(monke
         assert include_deleted
         return organization
 
-    async def fake_remove_application_runtime(runtime_application: Application, runtime_organization: OrganizationDetails) -> None:
-        """Record application runtime removal."""
-
-        assert runtime_organization.id == organization.id
-        removals.append(("application", runtime_application.id))
-
     async def fake_organization_applications(organization_id: UUID, include_deleted: bool = False) -> list[Application]:
         """Return soft-deleted applications for organization cleanup."""
 
@@ -390,15 +384,20 @@ async def test_application_and_organization_remove_handlers_remove_runtime(monke
 
             removals.append(("namespace", namespace))
 
+        async def delete(self, application_id: str) -> None:
+            """Record application deletion."""
+
+            removals.append(("application", UUID(application_id)))
+
     monkeypatch.setattr(application_operations.applications, "get", fake_get_application)
     monkeypatch.setattr(application_operations.organizations, "get", fake_get_organization)
     monkeypatch.setattr(organization_operations.organizations, "get", fake_get_organization)
     monkeypatch.setattr(organization_operations.organizations, "applications", fake_organization_applications)
-    monkeypatch.setattr(application_operations.provisioning, "remove_application_runtime", fake_remove_application_runtime)
     monkeypatch.setattr(organization_operations.registries, "application_compute", fake_application_compute)
     monkeypatch.setattr(organization_operations.registries, "compute", fake_compute)
     monkeypatch.setattr(organization_operations.registries, "database", fake_database)
     monkeypatch.setattr(organization_operations.registries, "storage", fake_storage)
+    monkeypatch.setattr(application_operations, "Kubernetes", FakeKubernetes)
     monkeypatch.setattr(organization_operations, "Kubernetes", FakeKubernetes)
 
     app_operation = leased_operation(OperationKind.application_remove)

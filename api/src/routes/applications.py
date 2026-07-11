@@ -14,8 +14,6 @@ from src.database.services import operations, registries, applications
 from src.models.applications import ApplicationCreate, ApplicationResponse, ApplicationMemberUpdate, ApplicationMemberResponse
 from src.database.models.users import User
 from src.database.models.association import UserApplication
-from src.database.models.applications import Application
-from src.database.models.organizations import Organization
 
 router = APIRouter()
 
@@ -66,12 +64,26 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     return reloaded_application
 
 
-@router.get("/api/applications/{application_id}/logs")
-async def get_application_logs(application_id: UUID, user: User = Depends(authuser)) -> Response:
+@router.get("/api/applications/{application_id}/logs", response_model=list[str])
+async def get_application_logs(application_id: UUID, user: User = Depends(authuser)):
     """Return recent pod logs for one managed application."""
 
     # Load application access before exposing logs.
-    application, organization, application_role, organization_role = _application_access(user, application_id)
+    membership = roles.access(user, application_id, "application")
+    organization = membership.organization
+
+    # Direct application memberships provide application role access.
+    if isinstance(membership, UserApplication):
+        application = membership.application
+        application_role = membership.role
+        organization_role = next(
+            (item.role for item in user.organization_memberships if item.organization_id == membership.organization_id),
+            None,
+        )
+    else:
+        application = next(item for item in organization.applications if item.id == application_id)
+        application_role = None
+        organization_role = membership.role
 
     # Only application or organization maintainers can read logs.
     if not roles.atleast(application_role, ApplicationRoles.maintain, raise_error=False):
@@ -85,11 +97,11 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
-        logs = await compute_client.logs(organization.slug, str(application.id))
+        logs = await compute_client.logs(str(application.id))
     except ValueError as exc:
         raise HTTPException(status_code=503, detail="Application logs unavailable") from exc
 
-    return Response(content=logs, media_type="text/plain")
+    return logs
 
 
 @router.get("/api/applications/{application_id}/members", response_model=list[ApplicationMemberResponse])
@@ -97,7 +109,13 @@ async def list_application_members(application_id: UUID, user: User = Depends(au
     """Return organization members and their application-specific roles."""
 
     # Load application access before listing members.
-    application, _, _, _ = _application_access(user, application_id)
+    membership = roles.access(user, application_id, "application")
+
+    # Resolve the application from the membership that granted access.
+    if isinstance(membership, UserApplication):
+        application = membership.application
+    else:
+        application = next(item for item in membership.organization.applications if item.id == application_id)
 
     member_rows = await applications.members(application.id, application.organization_id)
     return [
@@ -123,7 +141,20 @@ async def update_application_member(
     """Update one member's application-specific role."""
 
     # Load application access before updating members.
-    application, _, application_role, organization_role = _application_access(user, application_id)
+    membership = roles.access(user, application_id, "application")
+
+    # Direct application memberships provide application role access.
+    if isinstance(membership, UserApplication):
+        application = membership.application
+        application_role = membership.role
+        organization_role = next(
+            (item.role for item in user.organization_memberships if item.organization_id == membership.organization_id),
+            None,
+        )
+    else:
+        application = next(item for item in membership.organization.applications if item.id == application_id)
+        application_role = None
+        organization_role = membership.role
 
     # Only application or organization maintainers can manage members.
     if not roles.atleast(application_role, ApplicationRoles.maintain, raise_error=False):
@@ -162,7 +193,20 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
     """Soft-delete one application and queue runtime resource removal."""
 
     # Load application access before deleting the application.
-    application, _, application_role, organization_role = _application_access(user, application_id)
+    membership = roles.access(user, application_id, "application")
+
+    # Direct application memberships provide application role access.
+    if isinstance(membership, UserApplication):
+        application = membership.application
+        application_role = membership.role
+        organization_role = next(
+            (item.role for item in user.organization_memberships if item.organization_id == membership.organization_id),
+            None,
+        )
+    else:
+        application = next(item for item in membership.organization.applications if item.id == application_id)
+        application_role = None
+        organization_role = membership.role
 
     # Only application or organization maintainers can delete applications.
     if not roles.atleast(application_role, ApplicationRoles.maintain, raise_error=False):
@@ -182,14 +226,24 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     """Authenticate and forward one application runtime request through the cluster gateway."""
 
     # Load application access before proxying runtime traffic.
-    application, organization, application_role, organization_role = _application_access(user, application_id)
+    membership = roles.access(user, application_id, "application")
+    organization = membership.organization
+
+    # Direct application memberships provide application role access.
+    if isinstance(membership, UserApplication):
+        application = membership.application
+        application_role = membership.role
+        organization_role = next(
+            (item.role for item in user.organization_memberships if item.organization_id == membership.organization_id),
+            None,
+        )
+    else:
+        application = next(item for item in organization.applications if item.id == application_id)
+        application_role = None
+        organization_role = membership.role
 
     required_role_rank = ApplicationProxyMethodRanks[request.method.upper()].value
     has_organization_access = roles.atleast(organization_role, OrganizationRoles.maintain, raise_error=False)
-
-    # Require application access unless the caller has elevated organization permissions.
-    if application_role is None and not has_organization_access:
-        raise HTTPException(status_code=403, detail="Application access required")
 
     # Enforce method-level runtime access in the API before any request can reach Kubernetes.
     if not has_organization_access and roles.rank(application_role) < required_role_rank:
@@ -244,24 +298,3 @@ async def proxy_application_request(request: Request, application_id: UUID, path
         response_headers["content-type"] = response_content_type
 
     return Response(content=upstream_response.content, status_code=upstream_response.status_code, headers=response_headers)
-
-
-def _application_access(
-    user: User,
-    application_id: UUID,
-) -> tuple[Application, Organization, ApplicationRoles | None, OrganizationRoles | None]:
-    """Return the loaded application, organization, and caller roles for one application."""
-
-    # Direct application memberships provide application role access.
-    membership = roles.access(user, application_id, "application")
-    if isinstance(membership, UserApplication):
-        organization_membership = next(
-            (item for item in user.organization_memberships if item.organization_id == membership.organization_id),
-            None,
-        )
-        organization_role = organization_membership.role if organization_membership is not None else None
-        return membership.application, membership.organization, membership.role, organization_role
-
-    # Organization memberships provide inherited access to the organization's applications.
-    application = next(item for item in membership.organization.applications if item.id == application_id)
-    return application, membership.organization, None, membership.role

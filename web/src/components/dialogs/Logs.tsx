@@ -1,10 +1,20 @@
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { fetchApiText } from '@/lib/api';
-import { useTranslation } from '@/lib/i18n';
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useTranslation } from '@/lib/i18n';
+import { useApiQuery } from '@/hooks/use-api';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+
+/** Parses the application log response. */
+function parseLogLines(value: unknown): string[] {
+    // The logs endpoint returns one JSON string per log line.
+    if (!Array.isArray(value) || !value.every((line) => typeof line === 'string')) {
+        throw new Error('Invalid application logs response');
+    }
+
+    return value;
+}
 
 /** Renders the application logs dialog for an organization. */
 export default function Logs({
@@ -22,11 +32,13 @@ export default function Logs({
 }) {
     const { t } = useTranslation();
     const [internalOpen, setInternalOpen] = useState(false);
-    const [logsContent, setLogsContent] = useState('');
-    const [logsError, setLogsError] = useState<string | null>(null);
-    const [logsLoading, setLogsLoading] = useState(false);
     const isControlled = open !== undefined;
     const dialogOpen = isControlled ? open : internalOpen;
+    const logsPath = dialogOpen ? `/api/applications/${applicationId}/logs` : null;
+    const logsQuery = useApiQuery<string[]>(logsPath, { parse: parseLogLines });
+    const logLines = dialogOpen ? (logsQuery.data ?? []) : [];
+    const logsLoading = dialogOpen && logsQuery.isFetching;
+    const logsError = dialogOpen && logsQuery.error ? logsQuery.error.message || t('appView.loadLogsFailed') : null;
 
     const handleOpenChange = (nextOpen: boolean) => {
         // Mirror open state only for uncontrolled usage.
@@ -35,54 +47,7 @@ export default function Logs({
         }
 
         onOpenChange?.(nextOpen);
-
-        // Clear logs when the dialog closes.
-        if (!nextOpen) {
-            setLogsContent('');
-            setLogsError(null);
-            setLogsLoading(false);
-        }
     };
-
-    // Fetch the selected application's pod logs only while the dialog is open.
-    useEffect(() => {
-        // Skip log fetching while closed.
-        if (!dialogOpen) {
-            return;
-        }
-
-        let cancelled = false;
-
-        setLogsLoading(true);
-        setLogsError(null);
-        setLogsContent('');
-
-        void (async () => {
-            // Fetch logs for the selected application.
-            try {
-                const text = await fetchApiText(`/api/applications/${applicationId}/logs`);
-
-                // Ignore successful responses after cleanup.
-                if (!cancelled) {
-                    setLogsContent(text);
-                }
-            } catch (mutationError) {
-                // Ignore errors after cleanup.
-                if (!cancelled) {
-                    setLogsError(mutationError instanceof Error ? mutationError.message : t('appView.loadLogsFailed'));
-                }
-            } finally {
-                // Stop loading only while still mounted.
-                if (!cancelled) {
-                    setLogsLoading(false);
-                }
-            }
-        })();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [applicationId, dialogOpen]);
 
     return (
         <>
@@ -110,7 +75,7 @@ export default function Logs({
                             ) : (
                                 <ScrollArea className="h-[60vh] overflow-hidden rounded-md border bg-muted/30">
                                     <pre className="p-3 text-xs leading-5 whitespace-pre-wrap text-foreground">
-                                        {logsContent || t('appView.emptyLogs')}
+                                        {logLines.length > 0 ? logLines.join('\n') : t('appView.emptyLogs')}
                                     </pre>
                                 </ScrollArea>
                             ))}

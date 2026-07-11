@@ -5,7 +5,7 @@ from src.utils import names
 from src.logger import logger
 from src.runtime import Kubernetes, bootstrap, environments
 from src.models.statuses import ApplicationStatus
-from src.database.services import database, operations, registries, applications
+from src.database.services import operations, registries, applications
 from src.models.applications import ApplicationCreate
 from src.models.organizations import OrganizationDetails, OrganizationSummary
 from src.database.models.users import User
@@ -16,41 +16,6 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
-async def remove_application_runtime(
-    application: Application,
-    organization: Organization | OrganizationDetails | OrganizationSummary,
-) -> None:
-    """Remove runtime resources for one application."""
-
-    registry = await registries.application_compute(application, organization.location_id)
-
-    # Remove workload resources only when the app has a compute backend to target.
-    if registry is not None:
-        adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
-        await adapter.delete_application(organization.slug, str(application.id))
-
-    # Remove the application schema from the database registry that originally hosted it.
-    if application.database_registry_id is not None:
-        registry = await database.get(application.database_registry_id, include_deleted=True)
-
-        # Missing registries are tolerated during cleanup because resources may already be gone.
-        if registry is not None:
-            adapter = adapters.database(registry)
-            await adapter.delete_schema(
-                organization.slug,
-                application.slug,
-                organization_id=organization.id,
-                application_id=application.id,
-            )
-
-    registry = await registries.application_storage(application)
-
-    # Remove the application bucket only when storage was assigned.
-    if registry is not None and application.storage_bucket_name is not None:
-        adapter = adapters.storage(registry)
-        await adapter.delete_bucket(application.storage_bucket_name)
-
-
 async def provision_application_runtime_resources(
     organization: Organization | OrganizationDetails | OrganizationSummary,
     application: Application,
@@ -58,8 +23,7 @@ async def provision_application_runtime_resources(
     runtime_image: str,
     compute_registry: ComputeRegistry,
     database_registry: DatabaseRegistry,
-    storage_registry: StorageRegistry | None,
-    rollout_token: str = "",
+    storage_registry: StorageRegistry,
 ) -> None:
     """Provision namespace, database, storage, and workload resources for one application."""
 
@@ -78,18 +42,15 @@ async def provision_application_runtime_resources(
 
     await compute.namespace(organization.slug)
     await bootstrap.sync_organization_users(organization, database_registry)
-    credentials: adapters.StorageRuntimeCredentials | None = None
 
-    # Provision storage resources only when this location has storage configured.
-    if storage_registry is not None:
-        # Ensure object storage exists before the workload receives backend credentials.
-        storage = adapters.storage(storage_registry)
-        await storage.bucket(shared)
-        await storage.bucket(bucket)
-        credentials = {
-            "access_key_id": storage_registry.access_key_id,
-            "secret_access_key": storage_registry.secret_access_key,
-        }
+    # Ensure object storage exists before the workload receives backend credentials.
+    storage = adapters.storage(storage_registry)
+    await storage.bucket(shared)
+    await storage.bucket(bucket)
+    credentials: adapters.StorageRuntimeCredentials = {
+        "access_key_id": storage_registry.access_key_id,
+        "secret_access_key": storage_registry.secret_access_key,
+    }
 
     connection = await db.schema(
         organization.slug,
@@ -105,12 +66,11 @@ async def provision_application_runtime_resources(
         shared,
         credentials,
     )
-    await compute.application(
+    await compute.create(
         organization.slug,
         str(application.id),
         runtime_image,
         {**payload.envs, **envs},
-        rollout_token=rollout_token,
     )
 
 
@@ -139,7 +99,10 @@ async def create_application_runtime(
     if db is None:
         raise RuntimeError("No database configured")
 
+    # Application runtime requires shared object storage in the organization location.
     storage = await registries.storage(organization.location_id)
+    if storage is None:
+        raise RuntimeError("No storage configured")
 
     app = await applications.create(
         organization.id,
@@ -148,7 +111,7 @@ async def create_application_runtime(
         image=payload.image,
         compute_registry_id=compute.id,
         database_registry_id=db.id,
-        storage_registry_id=storage.id if storage is not None else None,
+        storage_registry_id=storage.id,
         storage_bucket_name=bucket,
         sdk=metadata.sdk,
         digest=digest,
@@ -176,13 +139,13 @@ async def create_application_runtime(
         await applications.set_status(app.id, ApplicationStatus.failed)
         logger.exception("Failed to initialize application runtime for %s/%s: %r", organization.slug, application_slug, exc)
 
-        # Remove any resources that were created before the provisioning step failed.
+        # Queue cleanup for any resources that were created before provisioning failed.
         try:
-            await remove_application_runtime(app, organization)
+            await operations.queue_application_removal(app.id, scheduled_at=datetime.now(UTC), user=user)
 
         # Cleanup failures should not hide the original provisioning error.
         except Exception as cleanup_exc:
-            logger.exception("Failed to clean partial application runtime for %s/%s: %r", organization.slug, application_slug, cleanup_exc)
+            logger.exception("Failed to queue partial application runtime cleanup for %s/%s: %r", organization.slug, application_slug, cleanup_exc)
 
         raise RuntimeError("Failed to initialize the application") from exc
 
@@ -196,12 +159,12 @@ async def create_application_runtime(
 
         # The workload exists at this point, but without verification it must not be left running.
         try:
-            await remove_application_runtime(app, organization)
+            await operations.queue_application_removal(app.id, scheduled_at=datetime.now(UTC), user=user)
 
         # Cleanup failures should not hide the queueing error.
         except Exception as cleanup_exc:
             logger.exception(
-                "Failed to clean unverified application runtime for %s/%s: %r", organization.slug, application_slug, cleanup_exc
+                "Failed to queue unverified application runtime cleanup for %s/%s: %r", organization.slug, application_slug, cleanup_exc
             )
 
         logger.exception("Failed to queue application verification for %s/%s: %r", organization.slug, payload.name, exc)
@@ -253,13 +216,17 @@ async def sync_application_runtime(
     if storage is None:
         storage = await registries.storage(organization.location_id)
 
+    # Runtime sync requires an object storage backend.
+    if storage is None:
+        raise RuntimeError("No storage configured")
+
     # Stop if the application was deleted between loading and update.
     updated = await applications.update_runtime(
         application.id,
         image=payload.image,
         compute_registry_id=compute.id,
         database_registry_id=db.id,
-        storage_registry_id=storage.id if storage is not None else None,
+        storage_registry_id=storage.id,
         sdk=metadata.sdk,
         digest=digest,
         version=metadata.version,
@@ -271,7 +238,7 @@ async def sync_application_runtime(
     if updated is None:
         raise RuntimeError("Application no longer exists")
 
-    # Reapply the workload with a fresh rollout token so fixed development tags pull the newest image.
+    # Reapply the workload with the refreshed runtime metadata.
     try:
         await provision_application_runtime_resources(
             organization,
@@ -281,7 +248,6 @@ async def sync_application_runtime(
             compute,
             db,
             storage,
-            rollout_token=datetime.now(UTC).isoformat(),
         )
 
     # Refresh failures mark the application failed so users do not open a broken runtime.

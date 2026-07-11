@@ -80,7 +80,7 @@ async def test_execute_application_verify_operation_completes_running_applicatio
         def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             """Accept the compute registry connection fields."""
 
-        async def application_deployment_ready(self, organization: str, application: str) -> bool:
+        async def ready(self, application: str) -> bool:
             """Pretend the application is already ready."""
 
             calls.append("startup-check")
@@ -151,16 +151,16 @@ async def test_execute_application_verify_operation_marks_failed_when_dead(monke
         def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             """Accept the compute registry connection fields."""
 
-        async def application_deployment_ready(self, organization: str, application: str) -> bool:
+        async def ready(self, application: str) -> bool:
             """Pretend the deployment is not ready yet."""
 
             return False
 
-        async def application_pods(self, organization: str, application: str) -> list[SimpleNamespace]:
-            """Return a current pod in a terminal startup state."""
+        async def pod(self, application: str) -> SimpleNamespace:
+            """Return the current pod in a terminal startup state."""
 
             calls.append("startup-check")
-            return [pod_status(operation.created_at, "Pending", [container_status(waiting_reason="ImagePullBackOff")])]
+            return pod_status(operation.created_at, "Pending", [container_status(waiting_reason="ImagePullBackOff")])
 
 
     monkeypatch.setattr(
@@ -226,15 +226,15 @@ async def test_execute_application_verify_operation_releases_when_not_ready(monk
         def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             """Accept the compute registry connection fields."""
 
-        async def application_deployment_ready(self, organization: str, application: str) -> bool:
+        async def ready(self, application: str) -> bool:
             """Pretend the deployment is not ready yet."""
 
             return False
 
-        async def application_pods(self, organization: str, application: str) -> list[SimpleNamespace]:
-            """Return no current pods yet."""
+        async def pod(self, application: str) -> None:
+            """Return no current pod yet."""
 
-            return []
+            return None
 
 
     monkeypatch.setattr(

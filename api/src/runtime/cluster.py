@@ -36,11 +36,6 @@ class KubernetesCluster(KubernetesGateway):
             },
         }
 
-    async def _apply_application_network_policy(self, namespace: str) -> None:
-        """Create or patch the namespace ingress policy for application pods."""
-
-        await self._upsert(self._application_network_policy(namespace))
-
     async def namespace(self, organization: str) -> None:
         """Create the namespace for an organization if it does not exist."""
 
@@ -61,10 +56,10 @@ class KubernetesCluster(KubernetesGateway):
                 {"apiVersion": "v1", "kind": "Namespace", "metadata": {"name": namespace}}
             )
             await resource.create()
-            await self._apply_application_network_policy(namespace)
+            await self._upsert(self._application_network_policy(namespace))
             return None
 
-        await self._apply_application_network_policy(namespace)
+        await self._upsert(self._application_network_policy(namespace))
 
     async def delete_namespace(self, organization: str) -> None:
         """Delete one managed organization namespace and tolerate missing namespaces."""

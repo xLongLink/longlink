@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from src.models.storages import StorageKind
 from src.database.session import get_session
 from src.models.databases import DatabaseKind
-from src.database.services import users, storage, database, locations, operations, invitations, applications, organizations
+from src.database.services import users, compute, storage, database, locations, operations, invitations, applications, organizations
 from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -14,6 +14,7 @@ from src.database.models.association import UserOrganization
 db = SimpleNamespace(
     applications=applications,
     database=database,
+    compute=compute,
     invitations=invitations,
     locations=locations,
     operations=operations,
@@ -23,8 +24,158 @@ db = SimpleNamespace(
 )
 
 
+async def create_required_location_registries(location_id: UUID, user: User) -> None:
+    """Create the compute, database, and storage registries required by organization creation."""
+
+    # Create the compute registry attached to the location.
+    await db.compute.create(
+        "compute",
+        "compute",
+        "apiVersion: v1\nclusters: []\n",
+        "https://apps.local.longlink.internal",
+        location_id,
+        user,
+    )
+
+    # Create the database registry attached to the location.
+    await db.database.create(
+        DatabaseKind.postgresql,
+        "database",
+        "database",
+        "db.longlink.internal",
+        5432,
+        "longlink",
+        "secret",
+        location_id,
+        user,
+    )
+
+    # Create the storage registry attached to the location.
+    await db.storage.create(
+        StorageKind.s3,
+        "storage",
+        "storage",
+        "http://storage.local",
+        "access",
+        "secret",
+        location_id,
+        user,
+    )
+
+
+def patch_organization_runtime(monkeypatch, captured: dict[str, object]) -> None:
+    """Patch organization runtime adapters with lightweight test doubles."""
+
+    calls: list[tuple[str, object]] = []
+    captured["calls"] = calls
+
+    class FakeKubernetes:
+        """Fake compute adapter for organization creation tests."""
+
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
+            """Store compute registry configuration for assertions."""
+
+            self.kubeconfig = kubeconfig
+            self.proxy_secret = proxy_secret
+
+        async def namespace(self, organization: str) -> None:
+            """Record namespace creation."""
+
+            calls.append(("namespace", organization))
+
+        async def delete_namespace(self, organization: str) -> None:
+            """Record namespace cleanup."""
+
+            calls.append(("delete_namespace", organization))
+
+    class FakeConnection:
+        """Fake database connection context for shared user synchronization."""
+
+        async def __aenter__(self) -> object:
+            """Return the fake connection."""
+
+            return self
+
+        async def __aexit__(self, *_args: object) -> None:
+            """Close the fake connection context."""
+
+    class FakeDatabase:
+        """Fake database adapter for organization creation tests."""
+
+        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+            """Store database registry configuration for assertions."""
+
+            self.host = host
+            self.port = port
+            self.username = username
+            self.password = password
+
+        async def prepare_organization_database(self, organization: str) -> str:
+            """Record the prepared organization database."""
+
+            captured["prepared_database"] = organization
+            return organization
+
+        def connection(self, database: str, *, autocommit: bool = False, search_path: str | None = None) -> FakeConnection:
+            """Record the opened shared-schema database connection."""
+
+            captured["connection"] = {
+                "database": database,
+                "autocommit": autocommit,
+                "search_path": search_path,
+            }
+            return FakeConnection()
+
+        async def delete_database(self, organization: str) -> None:
+            """Record database cleanup."""
+
+            calls.append(("delete_database", organization))
+
+    class FakeStorage:
+        """Fake storage adapter for organization creation tests."""
+
+        def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+            """Store storage registry configuration for assertions."""
+
+            self.endpoint_url = endpoint_url
+            self.access_key_id = access_key_id
+            self.secret_access_key = secret_access_key
+
+        async def bucket(self, bucket_name: str) -> str:
+            """Record bucket creation and return the bucket name."""
+
+            calls.append(("bucket", bucket_name))
+            return bucket_name
+
+        async def delete_bucket(self, bucket_name: str) -> None:
+            """Record bucket cleanup."""
+
+            calls.append(("delete_bucket", bucket_name))
+
+    async def sync_tenant_users(_connection: object, users: list[TenantUser]) -> None:
+        """Record synchronized tenant users for the organization."""
+
+        captured["tenant_users"] = users
+
+    monkeypatch.setattr("src.routes.organizations.Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(
+        "src.runtime.bootstrap.adapters.database",
+        lambda registry: FakeDatabase(registry.host, registry.port, registry.username, registry.password),
+    )
+    monkeypatch.setattr(
+        "src.routes.organizations.adapters.database",
+        lambda registry: FakeDatabase(registry.host, registry.port, registry.username, registry.password),
+    )
+    monkeypatch.setattr(
+        "src.routes.organizations.adapters.storage",
+        lambda registry: FakeStorage(registry.endpoint_url, registry.access_key_id, registry.secret_access_key),
+    )
+    monkeypatch.setattr("src.runtime.bootstrap.tenant_users.sync", sync_tenant_users)
+
+
 async def test_create_organization_returns_owner_role(
     clients: tuple[TestClient, TestClient, TestClient],
+    monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
     """Create a new organization and return the owner role in the payload."""
@@ -33,6 +184,9 @@ async def test_create_organization_returns_owner_role(
     owner = users[0]
     client = clients[0]
     location = await db.locations.create("local", "Local testing", owner, "CH")
+    captured: dict[str, object] = {}
+    await create_required_location_registries(location.id, owner)
+    patch_organization_runtime(monkeypatch, captured)
     avatar = "https://example.com/organizations/acme.png"
 
     # Act
@@ -63,38 +217,10 @@ async def test_create_organization_initializes_database(
     # Arrange
     owner = users[0]
     client = clients[0]
-    calls: list[tuple[str, str, list[TenantUser]]] = []
+    captured: dict[str, object] = {}
     location = await db.locations.create("local", "Local testing", owner, "CH")
-    await db.database.create(
-        DatabaseKind.postgresql,
-        "primary",
-        "primary",
-        "db.longlink.internal",
-        5432,
-        "longlink",
-        "secret",
-        location.id,
-        owner,
-    )
-
-    class FakePostgres:
-        def __init__(self, host: str, port: int, username: str, password: str) -> None:
-            """Store database registry configuration for assertions."""
-
-            self.host = host
-            self.port = port
-            self.username = username
-            self.password = password
-
-        async def sync_users(self, organization: str, users: list[TenantUser]) -> None:
-            """Record synchronized tenant users for the organization."""
-
-            calls.append(("sync_users", organization, users))
-
-    monkeypatch.setattr(
-        "src.runtime.bootstrap.adapters.database",
-        lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
-    )
+    await create_required_location_registries(location.id, owner)
+    patch_organization_runtime(monkeypatch, captured)
 
     # Act
     response = client.post(
@@ -104,9 +230,10 @@ async def test_create_organization_initializes_database(
 
     # Assert
     assert response.status_code == 200
-    synced_users = calls[0][2]
-    assert calls[0][0] == "sync_users"
-    assert calls[0][1] == "acme"
+    assert captured["prepared_database"] == "acme"
+    assert captured["connection"] == {"database": "acme", "autocommit": False, "search_path": "shared"}
+    synced_users = captured["tenant_users"]
+    assert isinstance(synced_users, list)
     assert synced_users[0].email == owner.email
     assert synced_users[0].role == "owner"
 
@@ -121,41 +248,10 @@ async def test_create_organization_initializes_storage(
     # Arrange
     owner = users[0]
     client = clients[0]
-    calls: list[tuple[str, ...]] = []
+    captured: dict[str, object] = {}
     location = await db.locations.create("local", "Local testing", owner, "CH")
-    await db.storage.create(
-        StorageKind.s3,
-        "primary",
-        "primary",
-        "http://storage.local",
-        "access",
-        "secret",
-        location.id,
-        owner,
-    )
-
-    class FakeStorage:
-        def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
-            """Store storage registry configuration for assertions."""
-
-            self.endpoint_url = endpoint_url
-            self.access_key_id = access_key_id
-            self.secret_access_key = secret_access_key
-
-        async def bucket(self, bucket_name: str) -> str:
-            """Record bucket creation and return the bucket name."""
-
-            calls.append(("bucket", bucket_name))
-            return bucket_name
-
-    monkeypatch.setattr(
-        "src.routes.organizations.adapters.storage",
-        lambda registry: FakeStorage(
-            registry.endpoint_url,
-            registry.access_key_id,
-            registry.secret_access_key,
-        ),
-    )
+    await create_required_location_registries(location.id, owner)
+    patch_organization_runtime(monkeypatch, captured)
 
     # Act
     response = client.post(
@@ -165,7 +261,9 @@ async def test_create_organization_initializes_storage(
 
     # Assert
     assert response.status_code == 200
-    assert calls == [("bucket", "acme-shared")]
+    calls = captured["calls"]
+    assert isinstance(calls, list)
+    assert ("bucket", "acme-shared") in calls
 
 
 async def test_get_organization_returns_member_payload(
@@ -886,6 +984,7 @@ async def test_create_organization_invitation_returns_204_for_maintainer(
 
 async def test_update_organization_member_changes_role(
     clients: tuple[TestClient, TestClient, TestClient],
+    monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
     """Allow organization owners to change member roles."""
@@ -893,6 +992,9 @@ async def test_update_organization_member_changes_role(
     # Arrange
     owner, member = users[0], users[1]
     location = await db.locations.create("local", "Local testing", owner, "CH")
+    captured: dict[str, object] = {}
+    await create_required_location_registries(location.id, owner)
+    patch_organization_runtime(monkeypatch, captured)
     organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     Session = await get_session()
@@ -1056,6 +1158,7 @@ async def test_create_organization_returns_409_for_duplicate_name(
     # Arrange
     user = users[0]
     location = await db.locations.create("local", "Local testing", user, "CH")
+    await create_required_location_registries(location.id, user)
     await db.organizations.create("acme", "acme", location.id, user)
     client = clients[0]
 

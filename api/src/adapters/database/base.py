@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 from typing import TypedDict
+from contextlib import AbstractAsyncContextManager
+from sqlalchemy.ext.asyncio import AsyncConnection
 from .types import DatabaseTableRows, DatabaseSchemaUsage, DatabaseTableColumns
-from tenant.models import User
 
 
 class DatabaseRuntimeConnection(TypedDict):
@@ -33,8 +34,18 @@ class Database(ABC):
     """
 
     @abstractmethod
-    async def sync_users(self, organization: str, users: list[User]) -> None:
-        """Synchronize shared organization users."""
+    def connection(
+        self,
+        database: str,
+        *,
+        autocommit: bool = False,
+        search_path: str | None = None,
+    ) -> AbstractAsyncContextManager[AsyncConnection]:
+        """Open one managed database connection."""
+
+    @abstractmethod
+    async def prepare_organization_database(self, organization: str) -> str:
+        """Ensure one organization's database and shared schema are ready."""
 
     @abstractmethod
     async def schema(
