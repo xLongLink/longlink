@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 
 import { AdminActionMenu } from '@/components/admin/AdminTableElements';
 import { DataTable } from '@/components/DataTable';
-import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useOrganizations } from '@/data/admin';
 import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiVoid } from '@/lib/api';
@@ -195,7 +195,7 @@ export default function AdminOrganizations() {
                 isLoading={isLoading}
                 pageSize={25}
             />
-            <DeleteConfirmationDialog {...deleteDialog.dialogProps} />
+            <DeleteConfirmation {...deleteDialog.dialogProps} />
         </div>
     );
 }

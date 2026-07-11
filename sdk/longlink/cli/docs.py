@@ -248,8 +248,13 @@ def docs_command(component: str | None) -> None:
         return
 
     adapters = ROOT / ".static" / "xsd" / "adapters"
-    docs = [
-        render_component_docs(schema_path.stem)
-        for schema_path in sorted(adapters.glob("*.xsd"), key=lambda path: path.stem.casefold())
-    ]
+    docs = []
+
+    # Render only component schemas; shared type-only schemas do not have root elements.
+    for schema_path in sorted(adapters.glob("*.xsd"), key=lambda path: path.stem.casefold()):
+        schema = etree.parse(str(schema_path))
+        if schema.find("xsd:element", namespaces=XSD_NAMESPACE) is None:
+            continue
+        docs.append(render_component_docs(schema_path.stem))
+
     click.echo("\n\n".join(docs))

@@ -1,11 +1,10 @@
 from src import adapters
 from uuid import UUID
 from dataclasses import dataclass
-from fastapi import Depends, Response, APIRouter
+from fastapi import Depends, Response, APIRouter, HTTPException
 from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authsupport
 from src.utils import names, buckets
-from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
 from src.logger import logger
 from src.operations.constants import RESOURCE_REMOVE_STEP
 from src.operations.implementation import bootstrap, registries
@@ -49,7 +48,7 @@ async def organization_access(organization_id: UUID, user: User = Depends(authus
 
     # Hide organizations that the user cannot access.
     if member_access is None:
-        raise NotFoundError("Organization", organization_id)
+        raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
     organization, organization_role = member_access
     return OrganizationAccess(user=user, role=organization_role, organization=organization)
@@ -72,7 +71,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
 
     # Guard against deleted or missing organizations.
     if organization is None:
-        raise NotFoundError("Organization", organization_id)
+        raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
     return organization
 
@@ -106,7 +105,7 @@ async def list_organization_database_resources(
 
     # Restrict database inspection to maintainers.
     if not role.atleast(member_access.role, OrganizationRoles.maintain):
-        raise ForbiddenError("Database resource inspection permissions required")
+        raise HTTPException(status_code=403, detail="Database resource inspection permissions required")
 
     registry = await registries.organization_database_registry(organization)
 
@@ -131,7 +130,7 @@ async def list_organization_storage_resources(
 
     # Restrict storage inspection to maintainers.
     if not role.atleast(member_access.role, OrganizationRoles.maintain):
-        raise ForbiddenError("Storage resource inspection permissions required")
+        raise HTTPException(status_code=403, detail="Storage resource inspection permissions required")
 
     registry = await registries.organization_storage_registry(organization)
 
@@ -158,13 +157,13 @@ async def list_organization_database_resource_tables(
 
     # Restrict table inspection to maintainers.
     if not role.atleast(member_access.role, OrganizationRoles.maintain):
-        raise ForbiddenError("Database resource inspection permissions required")
+        raise HTTPException(status_code=403, detail="Database resource inspection permissions required")
 
     registry = await registries.organization_database_registry(organization)
 
     # Require an assigned database registry for table inspection.
     if registry is None:
-        raise NotFoundError("Database resource", resource_name)
+        raise HTTPException(status_code=404, detail=f"Database resource '{resource_name}' not found")
 
     database_adapter = adapters.database(registry)
     database_name = names.dbname(organization.slug)
@@ -179,12 +178,12 @@ async def list_organization_database_resource_tables(
             "pg_toast",
             "public",
         } or resource_name.startswith("pg_"):
-            raise NotFoundError("Database resource", resource_name)
+            raise HTTPException(status_code=404, detail=f"Database resource '{resource_name}' not found")
 
         tables = await database_adapter.tables(database_name, resource_name, limit=TABLE_PREVIEW_LIMIT)
 
     # Preserve explicit not-found errors.
-    except NotFoundError:
+    except HTTPException:
         raise
 
     # Convert unexpected adapter failures to availability errors.
@@ -194,7 +193,7 @@ async def list_organization_database_resource_tables(
             resource_name,
             organization.slug,
         )
-        raise UnavailableError("Database resource unavailable") from exc
+        raise HTTPException(status_code=503, detail="Database resource unavailable") from exc
 
     return tables
 
@@ -208,11 +207,11 @@ async def create_organization_invitation(
 
     # Require maintainers to create invitations.
     if not role.atleast(member_access.role, OrganizationRoles.maintain):
-        raise ForbiddenError("Invitation permissions required")
+        raise HTTPException(status_code=403, detail="Invitation permissions required")
 
     # Prevent inviting roles above the caller's role.
     if role.rank(payload.role) > role.rank(member_access.role):
-        raise ForbiddenError("Invitation role permissions required")
+        raise HTTPException(status_code=403, detail="Invitation role permissions required")
 
     await invitations.create(member_access.organization.id, payload.email, payload.role, member_access.user)
 
@@ -231,25 +230,25 @@ async def update_organization_member(
 
     # Require organization administrators to manage members.
     if not role.atleast(member_access.role, OrganizationRoles.admin):
-        raise ForbiddenError("Member management permissions required")
+        raise HTTPException(status_code=403, detail="Member management permissions required")
 
     can_manage_owner_role = role.atleast(member_access.role, OrganizationRoles.owner)
 
     # Allow only owners to grant owner access.
     if payload.role == OrganizationRoles.owner and not can_manage_owner_role:
-        raise ForbiddenError("Owner management permissions required")
+        raise HTTPException(status_code=403, detail="Owner management permissions required")
 
     target_role = await organizations.membership_role(organization.id, member_id)
 
     # Allow only owners to change existing owners.
     if target_role == OrganizationRoles.owner and not can_manage_owner_role:
-        raise ForbiddenError("Owner management permissions required")
+        raise HTTPException(status_code=403, detail="Owner management permissions required")
 
     updated = await organizations.update_member_role(organization.id, member_id, payload.role, member_access.user)
 
     # Report missing active organization members.
     if not updated:
-        raise NotFoundError("Organization member", member_id)
+        raise HTTPException(status_code=404, detail=f"Organization member '{member_id}' not found")
 
     # Synchronize tenant users after role changes.
     try:
@@ -257,7 +256,7 @@ async def update_organization_member(
 
     # Surface synchronization failures as unavailable.
     except Exception as exc:
-        raise UnavailableError("Failed to synchronize organization members") from exc
+        raise HTTPException(status_code=503, detail="Failed to synchronize organization members") from exc
 
     return Response(status_code=204)
 
@@ -272,25 +271,25 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
 
         # Report missing organizations before removal.
         if organization is None:
-            raise NotFoundError("Organization", organization_id)
+            raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
     else:
         member_access = await organizations.get_member_access(organization_id, user.id)
 
         # Hide organizations the caller cannot access.
         if member_access is None:
-            raise NotFoundError("Organization", organization_id)
+            raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
         _, membership_role = member_access
 
         # Require organization owners to delete organizations.
         if not role.atleast(membership_role, OrganizationRoles.owner):
-            raise ForbiddenError("Organization deletion permissions required")
+            raise HTTPException(status_code=403, detail="Organization deletion permissions required")
 
     deleted = await organizations.soft_delete(organization_id, user)
 
     # Treat already-deleted organizations as missing.
     if deleted is None:
-        raise NotFoundError("Organization", organization_id)
+        raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
     await operations.create(
         OperationKind.organization_delete,
@@ -323,7 +322,7 @@ async def _database_resource_rows(
             "Failed to inspect database resources for organization '%s'",
             organization.slug,
         )
-        raise UnavailableError("Database resources unavailable") from exc
+        raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
 
     rows: list[dict[str, object]] = []
     resource_fields: dict[str, object] = {
@@ -416,7 +415,7 @@ async def _storage_resource_rows(
             registry.name,
             exc,
         )
-        raise UnavailableError("Storage resources unavailable") from exc
+        raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
 
     expected_bucket_names: set[str] = set()
     rows: list[dict[str, object]] = []
@@ -474,7 +473,7 @@ async def _storage_resource_rows(
             registry.name,
             exc,
         )
-        raise UnavailableError("Storage resources unavailable") from exc
+        raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
 
     # Include the shared bucket when it is visible.
     if shared_bucket_name is not None and shared_bucket_name in bucket_names:
@@ -540,7 +539,7 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
 
     # Require a valid deployment location.
     if await locations.get(payload.location_id) is None:
-        raise NotFoundError("Location", payload.location_id)
+        raise HTTPException(status_code=404, detail=f"Location '{payload.location_id}' not found")
 
     # Validate derived resource names before creating the organization.
     try:
@@ -551,7 +550,7 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
 
     # Return invalid names as request conflicts.
     except ValueError as exc:
-        raise ConflictError(str(exc)) from exc
+        raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
 
     organization = await organizations.create(
         payload.name,

@@ -1,6 +1,6 @@
 from src import adapters
 from src.utils import images
-from src.errors import ConflictError
+from fastapi import HTTPException
 from src.models.metadata import LongLinkMetadata
 from src.models.applications import ApplicationCreate
 from src.database.models.storages import StorageRegistry
@@ -13,17 +13,17 @@ async def application_image_metadata(payload: ApplicationCreate) -> LongLinkMeta
 
     # User payloads cannot provide values reserved for control-plane injection.
     if reserved_payload_envs:
-        raise ConflictError(f"Reserved platform environment variables: {', '.join(reserved_payload_envs)}")
+        raise HTTPException(status_code=409, detail=f"Reserved platform environment variables: {', '.join(reserved_payload_envs)}")
 
     image_metadata = await images.metadata(payload.image)
 
     # Image inspection must succeed before the platform can trust runtime metadata.
     if image_metadata is None:
-        raise ConflictError("Image metadata could not be inspected")
+        raise HTTPException(status_code=409, detail="Image metadata could not be inspected")
 
     # Deployments must use a resolved immutable image reference.
     if image_metadata.digest is None or image_metadata.image is None:
-        raise ConflictError("Image digest could not be resolved")
+        raise HTTPException(status_code=409, detail="Image digest could not be resolved")
 
     # LongLink-prefixed values are always injected by the control plane, never declared by applications.
     reserved_image_envs: list[str] = []
@@ -49,13 +49,13 @@ async def application_image_metadata(payload: ApplicationCreate) -> LongLinkMeta
 
     # Reject images that try to declare LongLink-managed runtime values.
     if reserved_image_envs:
-        raise ConflictError(f"Reserved platform environment variables: {', '.join(reserved_image_envs)}")
+        raise HTTPException(status_code=409, detail=f"Reserved platform environment variables: {', '.join(reserved_image_envs)}")
 
     missing_envs.sort()
 
     # Reject images whose app-managed required values are absent.
     if missing_envs:
-        raise ConflictError(f"Missing required environment variables: {', '.join(missing_envs)}")
+        raise HTTPException(status_code=409, detail=f"Missing required environment variables: {', '.join(missing_envs)}")
 
     return image_metadata
 

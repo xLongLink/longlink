@@ -4,10 +4,9 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { RegistryDialogShell, RegistryLocationField } from '@/components/dialogs/RegistryDialogElements';
+import { RegistryLocationField, RegistryShell } from '@/components/dialogs/RegistryElements';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useLocations } from '@/data/admin';
 import { useUserProfile } from '@/hooks/use-user';
@@ -19,7 +18,6 @@ import type { ApiComputeRegistry } from '@/lib/types';
 
 const computeConnectionSchema = z
     .object({
-        kind: z.literal('kubernetes'),
         kubeconfig: z.string().refine((value) => value.trim().length > 0),
         ingressHost: z.string().trim().min(1),
         gatewayLoadBalancerIp: z.string().trim(),
@@ -35,7 +33,6 @@ type ComputeConnectionInput = z.input<typeof computeConnectionSchema>;
 type ComputeConnectionValues = z.output<typeof computeConnectionSchema>;
 
 const defaultComputeConnectionValues = {
-    kind: 'kubernetes',
     kubeconfig: '',
     ingressHost: '',
     gatewayLoadBalancerIp: '',
@@ -45,7 +42,7 @@ const defaultComputeConnectionValues = {
 } satisfies ComputeConnectionInput;
 
 /** Renders the admin compute connect dialog. */
-export default function ConnectComputeDialog() {
+export default function ConnectCompute() {
     const { t } = useTranslation();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
@@ -76,7 +73,6 @@ export default function ConnectComputeDialog() {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        kind: payload.kind,
                         kubeconfig: payload.kubeconfig,
                         ingress_host: payload.ingressHost,
                         ...(payload.gatewayLoadBalancerIp
@@ -107,7 +103,7 @@ export default function ConnectComputeDialog() {
     }
 
     return (
-        <RegistryDialogShell
+        <RegistryShell
             title={t('dialogs.connectComputeTitle')}
             description={t('dialogs.connectComputeDescription')}
             open={open}
@@ -134,23 +130,6 @@ export default function ConnectComputeDialog() {
                 }
             })}
         >
-            <div className="space-y-2">
-                <Label htmlFor="compute-kind">{t('labels.kind')}</Label>
-                <Select
-                    value={values.kind}
-                    onValueChange={(value) =>
-                        form.setValue('kind', value === 'kubernetes' ? value : 'kubernetes', { shouldValidate: true })
-                    }
-                >
-                    <SelectTrigger id="compute-kind" className="w-full">
-                        <SelectValue placeholder={t('dialogs.chooseComputeKind')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="kubernetes">Kubernetes</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-
             <div className="space-y-2">
                 <Label htmlFor="compute-kubeconfig">{t('labels.kubeconfig')}</Label>
                 <Textarea
@@ -207,6 +186,6 @@ export default function ConnectComputeDialog() {
                 locations={locations}
                 onValueChange={(value) => form.setValue('locationId', value, { shouldValidate: true })}
             />
-        </RegistryDialogShell>
+        </RegistryShell>
     );
 }

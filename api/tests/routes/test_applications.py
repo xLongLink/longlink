@@ -6,7 +6,6 @@ from tenant.models import User as TenantUser
 from src.operations.implementation import registries
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from fastapi.testclient import TestClient
-from src.models.computes import ComputeKind
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.models.storages import StorageKind
 from src.database.session import get_session
@@ -203,7 +202,6 @@ async def test_create_app_returns_app_response(
     remote_location = await db.locations.create("remote", "Remote testing", user, "CH")
     organization = await db.organizations.create("acme", "acme", remote_location.id, user)
     await db.compute.create(
-        kind=ComputeKind.kubernetes,
         name="local",
         slug="local",
         kubeconfig="apiVersion: v1\nclusters: []\n",
@@ -212,7 +210,6 @@ async def test_create_app_returns_app_response(
         user=user,
     )
     await db.compute.create(
-        kind=ComputeKind.kubernetes,
         name="remote",
         slug="remote",
         kubeconfig="apiVersion: v1\nclusters: []\n",
@@ -433,7 +430,7 @@ async def test_create_app_returns_app_response(
     assert payload["version"] == "20250623_120000"
     assert payload["sdk"] == "0.1.0"
     assert payload["digest"] == "sha256:manifest"
-    assert payload["gateway_url"] == f"/api/applications/{payload['id']}/proxy/"
+    assert "gateway_url" not in payload
     assert captured["namespace"] == "acme"
     assert captured["proxy_secret"]
     assert captured["ingress_host"] == "apps.remote.longlink.internal"
@@ -572,7 +569,6 @@ async def test_create_app_rejects_reserved_platform_environment_requirements(
     location = await db.locations.create("local", "Local testing", owner, "CH")
     organization = await db.organizations.create("acme", "acme", location.id, owner)
     await db.compute.create(
-        kind=ComputeKind.kubernetes,
         name="local",
         slug="local",
         kubeconfig="apiVersion: v1\nclusters: []\n",
@@ -644,7 +640,7 @@ async def test_create_app_returns_409_for_overlong_runtime_bucket_name(
 
     # Assert
     assert response.status_code == 409
-    assert response.json() == {"detail": "S3 bucket name must be at most 63 characters"}
+    assert response.json() == {"detail": "Invalid application runtime resource name"}
     assert await db.applications.list_by_organization(organization.id) == []
 
 
@@ -713,7 +709,6 @@ async def test_get_app_logs_returns_pod_logs(
         user=user,
     )
     await db.compute.create(
-        kind=ComputeKind.kubernetes,
         name="local",
         slug="local",
         kubeconfig=(
@@ -839,7 +834,6 @@ async def test_application_proxy_forwards_authenticated_request(
     )
     await db.applications.set_status(app.id, ApplicationStatus.running)
     await db.compute.create(
-        kind=ComputeKind.kubernetes,
         name="local",
         slug="local",
         kubeconfig=(
@@ -867,7 +861,6 @@ async def test_application_proxy_forwards_authenticated_request(
         user=user,
     )
     registry = await db.compute.create(
-        kind=ComputeKind.kubernetes,
         name="remote",
         slug="remote",
         kubeconfig=(
@@ -895,7 +888,6 @@ async def test_application_proxy_forwards_authenticated_request(
         user=user,
     )
     await db.compute.create(
-        kind=ComputeKind.kubernetes,
         name="remote-extra",
         slug="remote-extra",
         kubeconfig=(
@@ -926,6 +918,7 @@ async def test_application_proxy_forwards_authenticated_request(
         app.id,
         image=app.image,
         compute_registry_id=registry.id,
+        gateway_url=f"https://{registry.ingress_host}/api/applications/{app.id}/proxy/",
         status=ApplicationStatus.running,
         user=user,
     )
@@ -972,7 +965,12 @@ async def test_application_proxy_forwards_authenticated_request(
         f"/api/applications/{app.id}/proxy/anything?answer=42",
         content=b"payload",
         headers={
+            "accept": "application/json",
+            "accept-language": "en-US",
             "authorization": "Bearer user-controlled",
+            "content-type": "text/plain",
+            "x-custom-feature": "user-controlled",
+            "x-forwarded-for": "203.0.113.10",
             "x-user-id": "spoofed",
         },
     )
@@ -998,8 +996,13 @@ async def test_application_proxy_forwards_authenticated_request(
     assert headers["x-longlink-application-slug"] == "dashboard"
     assert headers["x-longlink-organization-id"] == str(organization.id)
     assert headers["x-longlink-organization-slug"] == "acme"
+    assert headers["accept"] == "application/json"
+    assert headers["accept-language"] == "en-US"
+    assert headers["content-type"] == "text/plain"
     assert "authorization" not in headers
     assert "cookie" not in headers
+    assert "x-custom-feature" not in headers
+    assert "x-forwarded-for" not in headers
 
 
 async def test_application_proxy_requires_application_role_for_regular_member(
@@ -1033,7 +1036,6 @@ async def test_application_proxy_requires_application_role_for_regular_member(
         await session.commit()
 
     registry = await db.compute.create(
-        kind=ComputeKind.kubernetes,
         name="local",
         slug="local",
         kubeconfig="apiVersion: v1\nclusters: []\n",
@@ -1045,6 +1047,7 @@ async def test_application_proxy_requires_application_role_for_regular_member(
         app.id,
         image=app.image,
         compute_registry_id=registry.id,
+        gateway_url=f"https://{registry.ingress_host}/api/applications/{app.id}/proxy/",
         status=ApplicationStatus.running,
         user=owner,
     )
@@ -1079,7 +1082,6 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     )
     await db.applications.set_status(app.id, ApplicationStatus.running)
     registry = await db.compute.create(
-        kind=ComputeKind.kubernetes,
         name="local",
         slug="local",
         kubeconfig=(
@@ -1110,6 +1112,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
         app.id,
         image=app.image,
         compute_registry_id=registry.id,
+        gateway_url=f"https://{registry.ingress_host}/api/applications/{app.id}/proxy/",
         status=ApplicationStatus.running,
         user=user,
     )
@@ -1174,7 +1177,6 @@ async def test_application_proxy_enforces_method_role(
     )
     await db.applications.set_status(app.id, ApplicationStatus.running)
     registry = await db.compute.create(
-        kind=ComputeKind.kubernetes,
         name="local",
         slug="local",
         kubeconfig=(
@@ -1205,6 +1207,7 @@ async def test_application_proxy_enforces_method_role(
         app.id,
         image=app.image,
         compute_registry_id=registry.id,
+        gateway_url=f"https://{registry.ingress_host}/api/applications/{app.id}/proxy/",
         status=ApplicationStatus.running,
         user=user,
     )
@@ -1322,7 +1325,6 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
         user=owner,
     )
     registry = await db.compute.create(
-        kind=ComputeKind.kubernetes,
         name="local",
         slug="local",
         kubeconfig="apiVersion: v1\nclusters: []\n",
@@ -1334,6 +1336,7 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
         app.id,
         image=app.image,
         compute_registry_id=registry.id,
+        gateway_url=f"https://{registry.ingress_host}/api/applications/{app.id}/proxy/",
         user=owner,
     )
     client = clients[0]

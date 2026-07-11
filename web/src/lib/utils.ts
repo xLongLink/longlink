@@ -17,7 +17,7 @@ const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
 });
 const numberFormatter = new Intl.NumberFormat();
 
-export type DeleteConfirmationDialogProps = {
+export type DeleteConfirmationProps = {
     open: boolean;
     title: string;
     description: ReactNode;
@@ -166,6 +166,6 @@ export function useDeleteDialog<TItem>({
                     setError(mutationError instanceof Error ? mutationError.message : errorMessage);
                 }
             },
-        } satisfies DeleteConfirmationDialogProps,
+        } satisfies DeleteConfirmationProps,
     };
 }

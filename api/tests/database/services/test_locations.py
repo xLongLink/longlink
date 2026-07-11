@@ -1,8 +1,7 @@
 import pytest
+from fastapi import HTTPException
 from uuid import uuid4
 from types import SimpleNamespace
-from src.errors import ConflictError
-from src.models.computes import ComputeKind
 from src.models.storages import StorageKind
 from src.models.databases import DatabaseKind
 from src.models.locations import LocationProvider
@@ -55,11 +54,12 @@ async def test_create_rejects_duplicate_location_slug(users: tuple[User, User, U
     await db.locations.create("primary", "Primary", owner, "CH")
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.locations.create("primary", "Primary!", owner, "CH")
 
     # Assert
-    assert str(exc.value) == "Location already exists"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Location already exists"
 
 
 async def test_delete_soft_deletes_location_and_read_services_ignore_it(users: tuple[User, User, User]) -> None:
@@ -91,11 +91,12 @@ async def test_delete_rejects_location_used_by_active_organizations(users: tuple
     await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.locations.delete(location.id, owner)
 
     # Assert
-    assert str(exc.value) == "Location is used by active organizations"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Location is used by active organizations"
     assert await db.locations.get(location.id) is not None
 
 
@@ -106,7 +107,6 @@ async def test_delete_rejects_location_used_by_active_compute_registries(users: 
     owner = users[0]
     location = await db.locations.create("primary", "Primary", owner, "CH")
     await db.compute.create(
-        ComputeKind.kubernetes,
         "Primary compute",
         "primary-compute",
         "kubeconfig",
@@ -116,11 +116,12 @@ async def test_delete_rejects_location_used_by_active_compute_registries(users: 
     )
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.locations.delete(location.id, owner)
 
     # Assert
-    assert str(exc.value) == "Location is used by active compute registries"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Location is used by active compute registries"
 
 
 async def test_delete_rejects_location_used_by_active_database_registries(users: tuple[User, User, User]) -> None:
@@ -142,11 +143,12 @@ async def test_delete_rejects_location_used_by_active_database_registries(users:
     )
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.locations.delete(location.id, owner)
 
     # Assert
-    assert str(exc.value) == "Location is used by active database registries"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Location is used by active database registries"
 
 
 async def test_delete_rejects_location_used_by_active_storage_registries(users: tuple[User, User, User]) -> None:
@@ -168,8 +170,9 @@ async def test_delete_rejects_location_used_by_active_storage_registries(users: 
     )
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.locations.delete(location.id, owner)
 
     # Assert
-    assert str(exc.value) == "Location is used by active storage registries"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Location is used by active storage registries"

@@ -1,7 +1,6 @@
 import sys
 import httpx2
-from fastapi import Request
-from src.errors import ForbiddenError, UnauthorizedError
+from fastapi import Request, HTTPException
 from src.environments import env
 from src.models.roles import role, PlatformRoles
 from src.database.models.users import User
@@ -85,13 +84,13 @@ async def authuser(request: Request) -> User:
 
     # Reject requests without an active session account.
     if oidc is None:
-        raise UnauthorizedError("Not authenticated")
+        raise HTTPException(status_code=401, detail="Not authenticated")
 
     user = await users.get(oidc)
 
     # Reject sessions whose user record no longer exists.
     if not user:
-        raise UnauthorizedError("Not authenticated")
+        raise HTTPException(status_code=401, detail="Not authenticated")
     return user
 
 
@@ -102,7 +101,7 @@ async def authadmin(request: Request) -> User:
 
     # Only administrator accounts can continue past this check.
     if not role.atleast(user.role, PlatformRoles.administrator):
-        raise ForbiddenError("Administrator privileges required")
+        raise HTTPException(status_code=403, detail="Administrator privileges required")
 
     return user
 
@@ -114,6 +113,6 @@ async def authsupport(request: Request) -> User:
 
     # Only support-capable accounts can continue past this check.
     if not role.atleast(user.role, PlatformRoles.support):
-        raise ForbiddenError("Support access required")
+        raise HTTPException(status_code=403, detail="Support access required")
 
     return user

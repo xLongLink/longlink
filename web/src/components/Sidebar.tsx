@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import { cn } from '@/lib/utils';
 import type { ArticleNavigationGroup, ArticleNavigationItem } from '@/pages/catalog';
 import {
-    Sidebar,
+    Sidebar as UISidebar,
     SidebarContent,
     SidebarGroup,
     SidebarGroupContent,
@@ -23,7 +23,7 @@ import { ChevronDownIcon } from 'lucide-react';
 
 import { Wordmark } from '@/components/Wordmark';
 
-export type ArticleSidebarProps = {
+export type SidebarProps = {
     currentPath: string;
     groups: ArticleNavigationGroup[];
 };
@@ -150,11 +150,11 @@ function articleNavigationItemIsActive(item: ArticleNavigationItem, currentPath:
 
 
 /** Renders the left navigation for article pages. */
-export function ArticleSidebar({ currentPath, groups }: ArticleSidebarProps) {
+export function Sidebar({ currentPath, groups }: SidebarProps) {
     const [openItemPaths, setOpenItemPaths] = useState<Record<string, boolean>>({});
 
     return (
-        <Sidebar side="left" variant="sidebar" collapsible="offcanvas" className="group-data-[side=left]:border-r-0">
+        <UISidebar side="left" variant="sidebar" collapsible="offcanvas" className="group-data-[side=left]:border-r-0">
             <SidebarHeader className="h-[3.75rem] justify-center px-2 py-1.5 lg:h-[4.0625rem]">
                 <Link
                     to="/"
@@ -187,6 +187,6 @@ export function ArticleSidebar({ currentPath, groups }: ArticleSidebarProps) {
                     </SidebarGroup>
                 ))}
             </SidebarContent>
-        </Sidebar>
+        </UISidebar>
     );
 }

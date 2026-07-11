@@ -1,5 +1,4 @@
 import os
-from src.utils import urls
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEVELOPMENT_CORS_ORIGINS = (
@@ -79,28 +78,5 @@ class Env(BaseSettings):
         env_file=_environment_files(),
         env_file_encoding="utf-8",
     )
-
-
-def validate_production_settings(settings: Env) -> None:
-    """Fail fast when production settings are unsafe."""
-
-    # Local development may use plain HTTP endpoints.
-    if settings.DEVELOPMENT:
-        return
-
-    errors: list[str] = []
-
-    # OIDC traffic carries authentication secrets, so production endpoints must be HTTPS.
-    for field_name in ("OIDC_ISSUER", "OIDC_REDIRECT_URI"):
-        value = str(getattr(settings, field_name)).strip()
-
-        # Collect every unsafe endpoint before raising.
-        if not urls.is_https_url(value):
-            errors.append(f"{field_name} must be an HTTPS URL outside development")
-
-    # Raise one combined configuration error.
-    if errors:
-        raise RuntimeError(f"Invalid production configuration: {'; '.join(errors)}")
-
 
 env = Env(**{})

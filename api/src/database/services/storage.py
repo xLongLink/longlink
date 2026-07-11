@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import UTC, datetime
+from fastapi import HTTPException
 from sqlalchemy import select
-from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.storages import StorageKind
@@ -74,7 +74,7 @@ async def create(
 
         # Reject duplicate registry names before insert.
         if storage is not None:
-            raise ConflictError("Storage registry already exists")
+            raise HTTPException(status_code=409, detail="Storage registry already exists")
 
         storage = StorageRegistry(
             kind=kind,
@@ -96,7 +96,7 @@ async def create(
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
-            raise ConflictError("Storage registry already exists") from exc
+            raise HTTPException(status_code=409, detail="Storage registry already exists") from exc
 
         await session.refresh(storage)
         statement = (
@@ -132,7 +132,7 @@ async def delete(registry_id: UUID, user: User) -> bool:
 
         # Block deletion while active applications depend on it.
         if active_application.scalar_one_or_none() is not None:
-            raise ConflictError("Storage registry is used by active applications")
+            raise HTTPException(status_code=409, detail="Storage registry is used by active applications")
 
         now = datetime.now(UTC)
         registry.deleted_at = now

@@ -1,5 +1,5 @@
 import { DataTable } from '@/components/DataTable';
-import CreateOrganizationDialog from '@/components/dialogs/CreateOrganizationDialog';
+import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { SignInCard } from '@/components/SignInCard';
 import { useUserProfile } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
@@ -74,7 +74,7 @@ export default function Organizations() {
                         </div>
 
                         <HeroAction>
-                            <CreateOrganizationDialog />
+                            <CreateOrganization />
                         </HeroAction>
                     </div>
                 </Hero>

@@ -1,6 +1,6 @@
 from uuid import UUID
+from fastapi import HTTPException
 from sqlalchemy import func, select
-from src.errors import NotFoundError, ConflictError
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
@@ -41,7 +41,7 @@ async def create(organization_id: UUID, email: str, role_name: OrganizationRoles
 
         # Require an active target organization.
         if (await session.execute(organization_statement)).scalar_one_or_none() is None:
-            raise NotFoundError("Organization", organization_id)
+            raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
         member_statement = (
             select(User.id)
@@ -55,7 +55,7 @@ async def create(organization_id: UUID, email: str, role_name: OrganizationRoles
 
         # Reject emails that already belong to the organization.
         if (await session.execute(member_statement)).scalar_one_or_none() is not None:
-            raise ConflictError("User is already a member")
+            raise HTTPException(status_code=409, detail="User is already a member")
 
         invitation_statement = select(OrganizationInvitation.id).where(
             OrganizationInvitation.organization_id == organization_id,
@@ -65,7 +65,7 @@ async def create(organization_id: UUID, email: str, role_name: OrganizationRoles
 
         # Keep one pending invitation per email address.
         if (await session.execute(invitation_statement)).scalar_one_or_none() is not None:
-            raise ConflictError("Invitation already exists")
+            raise HTTPException(status_code=409, detail="Invitation already exists")
 
         invitation = OrganizationInvitation(
             organization_id=organization_id,
@@ -81,7 +81,7 @@ async def create(organization_id: UUID, email: str, role_name: OrganizationRoles
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
-            raise ConflictError("Invitation already exists") from exc
+            raise HTTPException(status_code=409, detail="Invitation already exists") from exc
 
         await session.refresh(invitation)
         return invitation

@@ -1,9 +1,7 @@
 import asyncio
 import contextlib
-from alembic import command
 from fastapi import FastAPI
 from pathlib import Path
-from src.errors import register_error_handlers
 from src.routes import (
     auth,
     icons,
@@ -20,34 +18,17 @@ from src.routes import (
 )
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
-from alembic.config import Config
 from src.operations.worker import run_operation_scheduler
 from collections.abc import AsyncIterator
-from src.environments import env, resolve_cors_origins, validate_production_settings
-from src.utils import urls
-from sqlalchemy.engine import make_url
+from src.environments import env, resolve_cors_origins
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-
-
-async def migrate_development_sqlite_database() -> None:
-    """Apply Alembic migrations for local SQLite development databases."""
-
-    database_url = make_url(urls.database(env.DATABASE_URL))
-    if not env.DEVELOPMENT or not database_url.drivername.startswith("sqlite"):
-        return
-
-    # Alembic's async environment uses asyncio.run(), so execute it outside the
-    # running ASGI event loop.
-    config = Config(str(Path(__file__).with_name("alembic.ini")))
-    await asyncio.to_thread(command.upgrade, config, "head")
 
 
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Start the API and background operation worker."""
 
-    await migrate_development_sqlite_database()
     worker = asyncio.create_task(run_operation_scheduler())
     yield
 
@@ -56,16 +37,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await worker
 
 
-validate_production_settings(env)
-
 app = FastAPI(
     lifespan=lifespan,
     docs_url=None,
     redoc_url="/redocs",
     openapi_url="/openapi.json",
 )
-
-register_error_handlers(app)
 
 
 def configure_cors(application: FastAPI, origins: tuple[str, ...]) -> list[str]:

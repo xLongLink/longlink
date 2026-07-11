@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import UTC, datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum, Text, Column
-from src.models.computes import ComputeKind
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
@@ -20,8 +19,9 @@ class ComputeRegistry(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 
     # State
-    kind: ComputeKind = Field(
-        sa_column=Column(Enum(ComputeKind, name="compute_kind_enum", native_enum=False), nullable=False)
+    kind: str = Field(
+        default="kubernetes",
+        sa_column=Column(Enum("kubernetes", name="compute_kind_enum", native_enum=False), nullable=False),
     )
 
     # Metadata
@@ -29,7 +29,6 @@ class ComputeRegistry(SQLModel, table=True):
     slug: str = Field(max_length=255, unique=True, sa_column_kwargs={"nullable": False})
     kubeconfig: str = Field(sa_column=Column(Text, nullable=False))
     ingress_host: str = Field(max_length=255)
-    ingress_name: str = Field(max_length=255)
     proxy_secret: str = Field(max_length=255, index=True)
     gateway_tls_key: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     gateway_tls_certificate: str | None = Field(default=None, sa_column=Column(Text, nullable=True))

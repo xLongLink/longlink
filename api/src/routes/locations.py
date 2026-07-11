@@ -1,8 +1,7 @@
 from uuid import UUID
-from fastapi import Depends, Response, APIRouter
+from fastapi import Depends, Response, APIRouter, HTTPException
 from src.auth import authadmin, authsupport
 from src.utils import names
-from src.errors import NotFoundError, ConflictError
 from src.models.locations import LocationCreate, LocationResponse
 from src.database.models.users import User
 from src.database.models.locations import Location
@@ -26,7 +25,7 @@ async def get_location(location_id: UUID, _: User = Depends(authsupport)) -> Loc
 
     # Require an existing active location.
     if location is None:
-        raise NotFoundError("Location", location_id)
+        raise HTTPException(status_code=404, detail=f"Location '{location_id}' not found")
 
     return location
 
@@ -39,7 +38,7 @@ async def delete_location(location_id: UUID, user: User = Depends(authadmin)) ->
 
     # Report missing locations as not found.
     if not deleted:
-        raise NotFoundError("Location", location_id)
+        raise HTTPException(status_code=404, detail=f"Location '{location_id}' not found")
 
     return Response(status_code=204)
 
@@ -52,6 +51,6 @@ async def create_location(payload: LocationCreate, user: User = Depends(authadmi
     try:
         slug = names.slugify(payload.name)
     except ValueError as exc:
-        raise ConflictError(str(exc)) from exc
+        raise HTTPException(status_code=409, detail="Invalid location name") from exc
 
     return await locations.create(slug, payload.name, user, payload.country, payload.provider)

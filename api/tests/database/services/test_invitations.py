@@ -1,8 +1,8 @@
 import pytest
+from fastapi import HTTPException
 from uuid import uuid4
 from types import SimpleNamespace
 from datetime import UTC, datetime
-from src.errors import NotFoundError, ConflictError
 from src.models.roles import OrganizationRoles
 from src.database.session import get_session
 from src.database.models.users import User
@@ -53,10 +53,11 @@ async def test_create_rejects_invitation_for_missing_organization(users: tuple[U
     organization_id = uuid4()
 
     # Act
-    with pytest.raises(NotFoundError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.invitations.create(organization_id, "invited@example.com", OrganizationRoles.write, owner)
 
     # Assert
+    assert exc.value.status_code == 404
     assert exc.value.detail == f"Organization '{organization_id}' not found"
 
 
@@ -69,11 +70,12 @@ async def test_create_rejects_invitation_for_existing_member_email(users: tuple[
     organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.invitations.create(organization.id, owner.email.upper(), OrganizationRoles.write, owner)
 
     # Assert
-    assert str(exc.value) == "User is already a member"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "User is already a member"
 
 
 async def test_create_rejects_duplicate_invitation_email_case_insensitively(users: tuple[User, User, User]) -> None:
@@ -86,11 +88,12 @@ async def test_create_rejects_duplicate_invitation_email_case_insensitively(user
     await db.invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.invitations.create(organization.id, "INVITED@example.com", OrganizationRoles.admin, owner)
 
     # Assert
-    assert str(exc.value) == "Invitation already exists"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Invitation already exists"
 
 
 async def test_list_by_organization_ignores_deleted_invitations(users: tuple[User, User, User]) -> None:

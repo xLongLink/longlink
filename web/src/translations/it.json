@@ -336,7 +336,6 @@
         "namespacesTitle": "Namespace"
     },
     "dialogs": {
-        "chooseComputeKind": "Scegli un tipo di calcolo",
         "chooseCountry": "Scegli un paese",
         "chooseDatabaseKind": "Scegli un tipo di database",
         "chooseIcon": "Scegli un'icona",

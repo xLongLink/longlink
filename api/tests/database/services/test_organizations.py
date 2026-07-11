@@ -1,9 +1,9 @@
 import pytest
+from fastapi import HTTPException
 from uuid import uuid4
 from types import SimpleNamespace
 from datetime import UTC, datetime
 from sqlalchemy import select
-from src.errors import ConflictError
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.database.session import get_session
 from src.database.models.users import User
@@ -181,11 +181,12 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
     organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.organizations.update_member_role(organization.id, owner.id, OrganizationRoles.admin, owner)
 
     # Assert
-    assert str(exc.value) == "Organization must have at least one owner"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Organization must have at least one owner"
     assert await db.organizations.membership_role(organization.id, owner.id) == OrganizationRoles.owner
 
 
@@ -277,11 +278,12 @@ async def test_create_rejects_duplicate_organization_names(users: tuple[User, Us
     await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.organizations.create("acme", "acme", location.id, owner)
 
     # Assert
-    assert str(exc.value) == "Organization already exists"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Organization already exists"
 
 
 async def test_create_rejects_organization_with_overlong_runtime_name(users: tuple[User, User, User]) -> None:
@@ -328,11 +330,12 @@ async def test_create_invitation_rejects_duplicate_email(users: tuple[User, User
     await db.invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.invitations.create(organization.id, invitee.email, OrganizationRoles.admin, owner)
 
     # Assert
-    assert str(exc.value) == "Invitation already exists"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Invitation already exists"
 
 
 async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, User, User]) -> None:

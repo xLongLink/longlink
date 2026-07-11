@@ -1,38 +1,39 @@
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
-import { ChevronRight } from 'lucide-react';
+import { BrainCircuit, ChevronRight, Sparkles, Users } from 'lucide-react';
 
 const pricingOptions = [
     {
         name: 'Free',
+        icon: Sparkles,
         price: 'CHF 0',
         period: '/user/month',
-        description: 'A real LongLink account for building and running apps, with included platform limits.',
+        description: 'Designed for small teams getting started with building and running process apps.',
         features: [
-            'Real hosted LongLink workspace',
-            'Local SDK and XML runtime',
-            '100MB database and 1 DB connection',
-            '2GB object storage',
-            '5GB outbound bandwidth',
+            {
+                label: 'Deploy any Application',
+                description:
+                    'Deploy your application or find free open-source applications to start from.\n\nApplications sleep automatically when inactive, and abuse-prevention safeguards help keep the shared platform reliable.',
+            },
+            { label: '100MB Database Space', description: 'Shared across all apps in the workspace.' },
+            { label: '2GB Object Storage Space', description: 'Shared across all apps in the workspace.' },
         ],
     },
     {
         name: 'Team',
+        icon: Users,
         price: 'Coming soon',
         period: null,
         description: 'Run production apps with pricing that scales with the people using the workflow.',
-        features: [
-            '256Mi RAM and 500m CPU limit',
-            '1GB database and 2GB object storage',
-            '5GB outbound bandwidth included',
-        ],
+        features: [{ label: 'Coming soon', description: null }],
     },
     {
-        name: 'Scale',
+        name: 'Work',
+        icon: BrainCircuit,
         price: 'Coming soon',
         period: null,
-        description: '',
-        features: [],
+        description: 'Use AI-assisted workflows to build, adapt, and operate process apps faster.',
+        features: [{ label: 'Coming soon', description: null }],
     },
 ] as const;
 
@@ -48,22 +49,26 @@ export default function Pricing() {
                             Pricing
                         </p>
                         <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-                            Simple pricing for LongLink
+                            Simple workflow, Simple plans
                         </h1>
                         <p className="text-lg leading-8 text-muted-foreground">
-                            Start with LongLink's shared foundation, then extend each app with the Python code,
-                            workflow rules, APIs, and screens your process needs.
+                            Designed to be extended.
                         </p>
                     </div>
 
                     <div className="grid w-full gap-4 md:grid-cols-3">
                         {pricingOptions.map((option) => {
+                            const TierIcon = option.icon;
+
                             return (
                                 <article
                                     key={option.name}
                                     className="flex min-h-[38rem] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm"
                                 >
                                     <div className="flex flex-col items-center px-6 pt-8 pb-7 text-center">
+                                        <div className="mb-5 flex size-9 items-center justify-center text-muted-foreground">
+                                            <TierIcon aria-hidden={true} className="size-5" />
+                                        </div>
                                         <h2 className="text-2xl font-semibold">{option.name}</h2>
                                         {option.description ? (
                                             <p className="mt-2 min-h-10 max-w-64 text-xs leading-5 text-muted-foreground">
@@ -87,16 +92,30 @@ export default function Pricing() {
                                         {option.name === 'Team' ? (
                                             <p className="mb-5 text-sm text-foreground">Everything included in Free, plus...</p>
                                         ) : null}
-                                        {option.name === 'Scale' ? (
-                                            <p className="mb-5 text-sm text-foreground">For larger production deployments...</p>
+                                        {option.name === 'Work' ? (
+                                            <p className="mb-5 text-sm text-foreground">Everything included in Team, plus...</p>
                                         ) : null}
 
                                         {option.features.length ? (
                                             <ul className="space-y-4 text-sm text-muted-foreground">
                                                 {option.features.map((feature) => (
-                                                    <li key={feature} className="flex gap-3">
-                                                        <ChevronRight className="mt-0.5 size-4 shrink-0" strokeWidth={1.8} />
-                                                        <span>{feature}</span>
+                                                    <li key={feature.label} className="flex gap-3">
+                                                        {feature.description ? (
+                                                            <details className="group flex-1">
+                                                                <summary className="flex cursor-pointer list-none gap-3 text-left text-foreground transition-colors hover:text-accent [&::-webkit-details-marker]:hidden">
+                                                                    <ChevronRight className="mt-0.5 size-4 shrink-0 transition-transform group-open:rotate-90" strokeWidth={1.8} />
+                                                            <span className="text-foreground">{feature.label}</span>
+                                                                </summary>
+                                                                <p className="mt-2 whitespace-pre-line pl-7 text-xs leading-5 text-muted-foreground">
+                                                                    {feature.description}
+                                                                </p>
+                                                            </details>
+                                                        ) : (
+                                                            <>
+                                                                <ChevronRight className="mt-0.5 size-4 shrink-0" strokeWidth={1.8} />
+                                                                <span>{feature.label}</span>
+                                                            </>
+                                                        )}
                                                     </li>
                                                 ))}
                                             </ul>
@@ -113,8 +132,8 @@ export default function Pricing() {
                     </div>
 
                     <p className="max-w-3xl text-center text-sm leading-6 text-muted-foreground">
-                        Included limits keep the shared platform predictable. Apps that need more compute, database,
-                        storage, bandwidth, retention, or isolation can move to a larger plan when available.
+                        LongLink is currently in beta. Pricing, limits, and included features may change as the platform
+                        evolves.
                     </p>
                 </section>
             </main>

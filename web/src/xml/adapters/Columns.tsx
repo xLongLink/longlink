@@ -30,7 +30,7 @@ export function Columns({ nodes }: Props) {
 /** Renders a single width-managed column. */
 export function Column({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
-    const width = resolveXmlString(props, 'width', ctx);
+    const width = resolveXmlString(props, 'width', ctx, '100');
 
     return <ColumnShell width={width}>{renderNode(nodes, ctx)}</ColumnShell>;
 }

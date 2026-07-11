@@ -1,7 +1,7 @@
 import pytest
+from fastapi import HTTPException
 from uuid import uuid4
 from types import SimpleNamespace
-from src.errors import ConflictError
 from src.models.storages import StorageKind
 from src.database.models.users import User
 from src.database.services import storage
@@ -100,7 +100,7 @@ async def test_create_rejects_duplicate_storage_registry_names(users: tuple[User
     )
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.storage.create(
             StorageKind.s3,
             "Primary storage",
@@ -114,7 +114,8 @@ async def test_create_rejects_duplicate_storage_registry_names(users: tuple[User
         )
 
     # Assert
-    assert str(exc.value) == "Storage registry already exists"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Storage registry already exists"
 
 
 async def test_delete_soft_deletes_storage_registry_and_include_deleted_can_reload_it(
@@ -182,8 +183,9 @@ async def test_delete_rejects_storage_registry_used_by_active_applications(users
     )
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.storage.delete(registry.id, owner)
 
     # Assert
-    assert str(exc.value) == "Storage registry is used by active applications"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Storage registry is used by active applications"

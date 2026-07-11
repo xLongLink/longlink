@@ -32,7 +32,7 @@ const defaultCreateOrganizationValues = {
 } satisfies CreateOrganizationInput;
 
 /** Renders the create-organization dialog. */
-export default function CreateOrganizationDialog() {
+export default function CreateOrganization() {
     const { t } = useTranslation();
     const { role } = useUserProfile();
     const createOrganization = useCreateOrganization();

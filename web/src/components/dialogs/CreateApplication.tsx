@@ -57,7 +57,7 @@ const defaultCreateApplicationValues = {
 } satisfies CreateApplicationInput;
 
 /** Renders the create-application dialog for an organization. */
-export default function CreateApplicationDialog({ organization }: { organization: string }) {
+export default function CreateApplication({ organization }: { organization: string }) {
     const { t } = useTranslation();
     const { organizations } = useUserProfile();
     const { createApplication, isCreatingApplication } = useOrganizationActions(organization);

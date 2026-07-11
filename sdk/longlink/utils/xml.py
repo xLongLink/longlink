@@ -1,7 +1,30 @@
 from lxml import etree
 from typing import Any
 from pathlib import Path
+from functools import cache
 from longlink.constants import ROOT
+
+XSD_NAMESPACE = {"xsd": "http://www.w3.org/2001/XMLSchema"}
+
+
+@cache
+def known_xml_tags() -> frozenset[str]:
+    """Return XML tag names declared by bundled adapter schemas."""
+
+    tags: set[str] = set()
+    parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
+
+    # Adapter schemas define the complete XML component surface used by the runtime.
+    for schema_path in sorted((ROOT / ".static" / "xsd" / "adapters").glob("*.xsd")):
+        schema_doc = etree.parse(str(schema_path), parser)
+
+        # Type-only schemas intentionally contribute no component tags.
+        for element in schema_doc.findall("xsd:element", namespaces=XSD_NAMESPACE):
+            name = element.get("name")
+            if name:
+                tags.add(name)
+
+    return frozenset(tags)
 
 
 class Element:
@@ -48,6 +71,13 @@ class Element:
             xml_doc = etree.XML(self.content.encode("utf-8"), parser)
         except etree.XMLSyntaxError as error:
             raise ValueError(f"XML syntax is invalid: {error}") from error
+
+        # Reject unsupported tags before permissive child wildcards can let them through XSD validation.
+        known_tags = known_xml_tags()
+        for xml_element in xml_doc.iter():
+            tag = xml_element.tag
+            if isinstance(tag, str) and tag not in known_tags:
+                raise ValueError(f"XML is invalid: Line {xml_element.sourceline}: unsupported XML tag {tag}")
 
         # Surface schema validation details instead of a generic lxml failure.
         if not schema.validate(xml_doc):

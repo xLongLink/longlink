@@ -31,7 +31,7 @@ const defaultCreateLocationValues = {
 } satisfies CreateLocationInput;
 
 /** Renders the admin create location dialog. */
-export default function CreateLocationDialog() {
+export default function CreateLocation() {
     const { t } = useTranslation();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();

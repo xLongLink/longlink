@@ -39,7 +39,6 @@ export { Longlink } from './Longlink';
 export { Menu, MenuSection, MenuSubSection } from './Menu';
 export { Ol } from './Ol';
 export { P } from './P';
-export { Pre } from './Pre';
 export * from './props';
 export { RadioGroup, RadioGroupItem } from './RadioGroup';
 export { S } from './S';

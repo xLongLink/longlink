@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { RegistryDialogShell, RegistryLocationField } from '@/components/dialogs/RegistryDialogElements';
+import { RegistryLocationField, RegistryShell } from '@/components/dialogs/RegistryElements';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -41,7 +41,7 @@ const defaultStorageConnectionValues = {
 } satisfies StorageConnectionInput;
 
 /** Renders the admin storage connect dialog. */
-export default function ConnectStorageDialog() {
+export default function ConnectStorage() {
     const { t } = useTranslation();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
@@ -98,7 +98,7 @@ export default function ConnectStorageDialog() {
     }
 
     return (
-        <RegistryDialogShell
+        <RegistryShell
             title={t('dialogs.connectStorageTitle')}
             description={t('dialogs.connectStorageDescription')}
             open={open}
@@ -198,6 +198,6 @@ export default function ConnectStorageDialog() {
                 locations={locations}
                 onValueChange={(value) => form.setValue('locationId', value, { shouldValidate: true })}
             />
-        </RegistryDialogShell>
+        </RegistryShell>
     );
 }

@@ -1,6 +1,5 @@
-from fastapi import Request, APIRouter
+from fastapi import Request, APIRouter, HTTPException
 from src.auth import SessionAccountsService
-from src.errors import NotFoundError, ForbiddenError
 from src.models.users import UserListItem
 from src.models.common import SuccessResponse
 from src.database.models.users import User
@@ -17,11 +16,11 @@ async def activate_account(oidc: str, request: Request) -> dict[str, object]:
 
     # Only activate accounts saved in this session.
     if oidc not in session_accounts.list():
-        raise ForbiddenError("Account is not saved in this session")
+        raise HTTPException(status_code=403, detail="Account is not saved in this session")
 
     # Require the saved account to still exist.
     if await users.get(oidc) is None:
-        raise NotFoundError("Account", oidc)
+        raise HTTPException(status_code=404, detail=f"Account '{oidc}' not found")
 
     session_accounts.activate(oidc)
     return {}

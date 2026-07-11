@@ -1,12 +1,10 @@
 from uuid import UUID
 import secrets
 from datetime import UTC, datetime
+from fastapi import HTTPException
 from sqlalchemy import select
-from src.errors import ConflictError
-from src.constants import INGRESS_NAME
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.models.computes import ComputeKind
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -77,7 +75,6 @@ async def get_by_proxy_secret(proxy_secret: str) -> ComputeRegistry | None:
 
 
 async def create(
-    kind: ComputeKind,
     name: str,
     slug: str,
     kubeconfig: str,
@@ -96,17 +93,16 @@ async def create(
 
         # Fail early when the name already exists.
         if result.scalar_one_or_none() is not None:
-            raise ConflictError("Compute registry already exists")
+            raise HTTPException(status_code=409, detail="Compute registry already exists")
 
         # Registries are append-only once created.
         proxy_secret_value = secrets.token_urlsafe(32)
         compute = ComputeRegistry(
-            kind=kind,
+            kind="kubernetes",
             name=name,
             slug=slug,
             kubeconfig=kubeconfig,
             ingress_host=ingress_host,
-            ingress_name=INGRESS_NAME,
             proxy_secret=proxy_secret_value,
             gateway_tls_key=gateway_tls_key,
             gateway_tls_certificate=gateway_tls_certificate,
@@ -122,7 +118,7 @@ async def create(
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
-            raise ConflictError("Compute registry already exists") from exc
+            raise HTTPException(status_code=409, detail="Compute registry already exists") from exc
 
         await session.refresh(compute)
         statement = (
@@ -158,7 +154,7 @@ async def delete(registry_id: UUID, user: User) -> bool:
 
         # Active applications keep their compute backend registered.
         if active_application.scalar_one_or_none() is not None:
-            raise ConflictError("Compute registry is used by active applications")
+            raise HTTPException(status_code=409, detail="Compute registry is used by active applications")
 
         now = datetime.now(UTC)
         registry.deleted_at = now

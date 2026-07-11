@@ -1,8 +1,8 @@
 import pytest
+from fastapi import HTTPException
 from src import auth as auth_module
 from uuid import UUID
 from types import SimpleNamespace
-from src.errors import NotFoundError, ForbiddenError, UnauthorizedError, UnavailableError
 from src.routes import auth as auth_routes
 from src.routes import users as users_routes
 from src.routes import organizations as organizations_routes
@@ -233,18 +233,27 @@ async def test_upsert_oidc_user_syncs_organization_databases(monkeypatch: pytest
 async def test_upsert_oidc_user_rejects_missing_identity_claims() -> None:
     """Reject provider profiles that cannot create a complete local user."""
 
-    with pytest.raises(UnavailableError, match="returned no email"):
+    with pytest.raises(HTTPException) as missing_email_error:
         await auth_routes.upsert_oidc_user(OidcUserInfo(sub="missing-email", name="No Email"))
 
-    with pytest.raises(UnavailableError, match="returned no display name"):
+    assert missing_email_error.value.status_code == 503
+    assert missing_email_error.value.detail == "Authentication provider returned no email"
+
+    with pytest.raises(HTTPException) as missing_name_error:
         await auth_routes.upsert_oidc_user(
             OidcUserInfo(sub="missing-name", email="missing@example.com", email_verified=True)
         )
 
-    with pytest.raises(UnauthorizedError, match="unverified email"):
+    assert missing_name_error.value.status_code == 503
+    assert missing_name_error.value.detail == "Authentication provider returned no display name"
+
+    with pytest.raises(HTTPException) as unverified_email_error:
         await auth_routes.upsert_oidc_user(
             OidcUserInfo(sub="unverified-email", email="unverified@example.com", email_verified=False, name="User")
         )
+
+    assert unverified_email_error.value.status_code == 401
+    assert unverified_email_error.value.detail == "Authentication provider returned an unverified email"
 
 
 def test_session_accounts_activate_deactivate_and_remove() -> None:
@@ -287,8 +296,11 @@ async def test_platform_role_dependencies_allow_only_elevated_roles(monkeypatch:
     assert await auth_module.authadmin(RequestStub({"oidc": active_user.oidc})) is active_user
 
     active_user.role = PlatformRoles.user
-    with pytest.raises(ForbiddenError, match="Support access required"):
+    with pytest.raises(HTTPException) as exc:
         await auth_module.authsupport(RequestStub({"oidc": active_user.oidc}))
+
+    assert exc.value.status_code == 403
+    assert exc.value.detail == "Support access required"
 
 
 async def test_patch_me_updates_profile_and_resyncs_organizations(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -347,8 +359,11 @@ async def test_organization_access_hides_missing_memberships(monkeypatch: pytest
 
     monkeypatch.setattr(organizations_routes.organizations, "get_member_access", fake_get_member_access)
 
-    with pytest.raises(NotFoundError, match=f"Organization '{organization_id}' not found"):
+    with pytest.raises(HTTPException) as exc:
         await organizations_routes.get_organization(organization_id, current_user)
+
+    assert exc.value.status_code == 404
+    assert exc.value.detail == f"Organization '{organization_id}' not found"
 
 
 @pytest.mark.parametrize(

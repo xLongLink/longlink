@@ -1,7 +1,7 @@
 import pytest
+from fastapi import HTTPException
 from uuid import uuid4
 from types import SimpleNamespace
-from src.errors import ConflictError
 from src.models.databases import DatabaseKind
 from src.database.models.users import User
 from src.database.services import database
@@ -74,7 +74,7 @@ async def test_create_rejects_duplicate_database_registry_names(users: tuple[Use
     )
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.database.create(
             DatabaseKind.postgresql,
             "Primary database",
@@ -88,7 +88,8 @@ async def test_create_rejects_duplicate_database_registry_names(users: tuple[Use
         )
 
     # Assert
-    assert str(exc.value) == "Database registry already exists"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Database registry already exists"
 
 
 async def test_delete_soft_deletes_database_registry_and_include_deleted_can_reload_it(
@@ -156,8 +157,9 @@ async def test_delete_rejects_database_registry_used_by_active_applications(user
     )
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.database.delete(registry.id, owner)
 
     # Assert
-    assert str(exc.value) == "Database registry is used by active applications"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Database registry is used by active applications"

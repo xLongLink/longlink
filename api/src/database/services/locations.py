@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import UTC, datetime
+from fastapi import HTTPException
 from sqlalchemy import select
-from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from src.database.session import session_scope
 from src.models.locations import LocationProvider
@@ -54,7 +54,7 @@ async def create(
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
-            raise ConflictError("Location already exists") from exc
+            raise HTTPException(status_code=409, detail="Location already exists") from exc
 
         await session.refresh(location)
         return location
@@ -89,7 +89,7 @@ async def delete(location_id: UUID, user: User) -> bool:
 
             # Block deletion when active resources still depend on it.
             if result.scalar_one_or_none() is not None:
-                raise ConflictError(f"Location is used by {label}")
+                raise HTTPException(status_code=409, detail=f"Location is used by {label}")
 
         now = datetime.now(UTC)
         location.deleted_at = now

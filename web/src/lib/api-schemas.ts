@@ -121,7 +121,6 @@ export const apiOrganizationApplicationSchema = z.object({
     status: applicationStatusSchema,
     role: applicationRoleSchema.nullable(),
     description: z.string().nullable(),
-    gateway_url: z.string().nullable(),
     icon: iconNameSchema,
     created_at: z.string(),
     updated_at: z.string(),
@@ -229,7 +228,6 @@ export const apiStorageRegistrySchema = z.object({
 
 export const apiComputeRegistrySchema = z.object({
     id: z.string(),
-    kind: z.string(),
     slug: z.string(),
     ingress_host: z.string(),
     gateway_load_balancer_ip: z.string().nullable(),

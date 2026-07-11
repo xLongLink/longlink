@@ -1,8 +1,8 @@
 from uuid import UUID
 from datetime import UTC, datetime
-from src.utils import names, buckets, gateway
+from src.utils import names, buckets
+from fastapi import HTTPException
 from sqlalchemy import select
-from src.errors import ConflictError
 from tenant.models import User as TenantUser
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
@@ -289,11 +289,10 @@ async def get(
             "invitations": active_invitations,
             "applications": [
                 {
-                    **application.model_dump(),
+                    **application.model_dump(exclude={"gateway_url"}),
                     "created_by": application.created_by,
                     "updated_by": application.updated_by,
                     "deleted_by": application.deleted_by,
-                    "gateway_url": gateway.application_url(application.id) if application.compute_registry is not None else None,
                     "role": application_roles.get(application.id),
                 }
                 for application in active_applications
@@ -352,7 +351,7 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
 
             # Reject demotion when this is the only owner.
             if len(owner_result.scalars().all()) <= 1:
-                raise ConflictError("Organization must have at least one owner")
+                raise HTTPException(status_code=409, detail="Organization must have at least one owner")
 
         membership.updated_at = datetime.now(UTC)
         membership.updated_id = user.id
@@ -407,7 +406,7 @@ async def create(
         # Keep name collisions at the service boundary as an API conflict.
         except IntegrityError as exc:
             await session.rollback()
-            raise ConflictError("Organization already exists") from exc
+            raise HTTPException(status_code=409, detail="Organization already exists") from exc
 
         await session.refresh(organization)
         statement = (

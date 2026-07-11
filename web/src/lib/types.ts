@@ -51,7 +51,6 @@ export type ApiOrganizationApplication = {
     status: 'creating' | 'running' | 'failed';
     role: ApplicationRole | null;
     description: string | null;
-    gateway_url: string | null;
     icon: IconName | null;
     created_at: string;
     updated_at: string;
@@ -253,7 +252,6 @@ export type ApiStorageObject = {
 
 export type ApiComputeRegistry = {
     id: string;
-    kind: string;
     slug: string;
     ingress_host: string;
     gateway_load_balancer_ip: string | null;

@@ -138,7 +138,6 @@
             "outdated": "Old email approvals are retired.",
             "owner": "Workflow owner",
             "ownerHelp": "This is local state bound directly from XML.",
-            "payload": "{\n  \"status\": \"approved\"\n}",
             "profileTip": "Use a subsection when one settings area needs a secondary view.",
             "reviewer": "Default reviewer",
             "runbook": "Reviewer note",

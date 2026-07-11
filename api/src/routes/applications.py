@@ -4,10 +4,9 @@ from uuid import UUID
 from dataclasses import dataclass
 from collections.abc import Mapping
 from datetime import UTC, datetime
-from fastapi import Depends, Request, Response, APIRouter
+from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from src.auth import authuser, authadmin
-from src.utils import names, buckets, gateway
-from src.errors import ConflictError, NotFoundError, ForbiddenError, UnavailableError
+from src.utils import names, buckets
 from src.operations.constants import RESOURCE_REMOVE_STEP
 from src.operations.implementation import resources, registries
 from src.models.statuses import ApplicationStatus
@@ -40,7 +39,7 @@ APPLICATION_PROXY_HOP_BY_HOP_HEADERS = {
     "upgrade",
 }
 APPLICATION_PROXY_PLATFORM_HEADER_PREFIXES = ("x-longlink-", "x-user-")
-APPLICATION_PROXY_REQUEST_PRIVATE_HEADERS = {"accept-encoding", "authorization", "content-length", "cookie", "host"}
+APPLICATION_PROXY_REQUEST_ALLOWED_HEADERS = {"accept", "accept-language", "content-type"}
 APPLICATION_PROXY_RESPONSE_PRIVATE_HEADERS = {"content-encoding", "content-length", "set-cookie"}
 
 router = APIRouter()
@@ -57,10 +56,10 @@ class ApplicationAccess:
     organization_role: OrganizationRoles
 
 
-def _application_proxy_request_url(application_id: UUID, ingress_host: str, path: str, query: str) -> str:
+def _application_proxy_request_url(gateway_url: str, path: str, query: str) -> str:
     """Return the authenticated cluster gateway URL for one proxied application request."""
 
-    url = gateway.upstream_application_url(application_id, ingress_host)
+    url = gateway_url if gateway_url.endswith("/") else f"{gateway_url}/"
 
     # Preserve the app-relative path and query string when forwarding through the cluster gateway.
     if path:
@@ -106,16 +105,12 @@ def _application_proxy_request_headers(
     headers: dict[str, str] = {}
     blocked_headers = _application_proxy_hop_by_hop_headers(request.headers)
 
-    # Copy only client headers that are safe for the runtime app to receive.
+    # Forward only request headers runtime apps need; all private/custom headers are denied by default.
     for name, value in request.headers.items():
         lowered_name = name.lower()
 
-        # Drop transport, session, and platform-owned headers before forwarding to the app.
-        if (
-            lowered_name in blocked_headers
-            or lowered_name in APPLICATION_PROXY_REQUEST_PRIVATE_HEADERS
-            or _application_proxy_platform_header(lowered_name)
-        ):
+        # Drop hop-by-hop headers even when a client tries to name an allowed header in Connection.
+        if lowered_name in blocked_headers or lowered_name not in APPLICATION_PROXY_REQUEST_ALLOWED_HEADERS:
             continue
 
         headers[name] = value
@@ -149,14 +144,14 @@ async def application_access(application_id: UUID, user: User = Depends(authuser
 
     # Missing applications should not expose downstream access details.
     if application is None:
-        raise NotFoundError("Application", application_id)
+        raise HTTPException(status_code=404, detail=f"Application '{application_id}' not found")
 
     # Organization membership grants the base right to see the application route.
     member_access = await organizations.get_member_access(application.organization_id, user.id)
 
     # Missing organization access hides the tenant boundary.
     if member_access is None:
-        raise NotFoundError("Organization", application.organization_id)
+        raise HTTPException(status_code=404, detail=f"Organization '{application.organization_id}' not found")
 
     organization, organization_role = member_access
     application_role = await applications.membership_role(application.id, user.id)
@@ -189,13 +184,13 @@ async def create_application(
 
     # Missing organization access returns the same not-found shape.
     if member_access is None:
-        raise NotFoundError("Organization", organization_id)
+        raise HTTPException(status_code=404, detail=f"Organization '{organization_id}' not found")
 
     organization, organization_role = member_access
 
     # Application creation provisions runtime resources, so it requires elevated organization permissions.
     if not role.atleast(organization_role, OrganizationRoles.maintain):
-        raise ForbiddenError("Application creation permissions required")
+        raise HTTPException(status_code=403, detail="Application creation permissions required")
 
     # Validate all derived infrastructure names before any provisioning side effects happen.
     try:
@@ -210,7 +205,7 @@ async def create_application(
             raise ValueError("Organization has no assigned shared storage bucket")
         buckets.application(organization.slug, application_slug)
     except ValueError as exc:
-        raise ConflictError(str(exc)) from exc
+        raise HTTPException(status_code=409, detail="Invalid application runtime resource name") from exc
 
     # Provision runtime resources and convert infrastructure failures into API availability errors.
     try:
@@ -221,22 +216,21 @@ async def create_application(
             user,
         )
     except RuntimeError as exc:
-        raise UnavailableError(str(exc)) from exc
+        raise HTTPException(status_code=503, detail="Application runtime provisioning failed") from exc
 
     # Reload the row so response serialization includes relationships populated by the service layer.
     reloaded_application = await applications.get_by_id(application.id)
 
     # Treat unexpected reload failure as a missing application.
     if reloaded_application is None:
-        raise NotFoundError("Application", application.id)
+        raise HTTPException(status_code=404, detail=f"Application '{application.id}' not found")
 
     return {
-        **reloaded_application.model_dump(),
+        **reloaded_application.model_dump(exclude={"gateway_url"}),
         "organization": reloaded_application.organization,
         "created_by": reloaded_application.created_by or user,
         "updated_by": reloaded_application.updated_by or reloaded_application.created_by or user,
         "deleted_by": reloaded_application.deleted_by,
-        "gateway_url": applications.response_gateway_url(reloaded_application),
     }
 
 
@@ -251,13 +245,13 @@ async def get_application_logs(access: ApplicationAccess = Depends(application_a
 
     # Only application or organization maintainers can read logs.
     if not can_manage_application:
-        raise ForbiddenError("Application log permissions required")
+        raise HTTPException(status_code=403, detail="Application log permissions required")
 
     registry = await registries.application_compute_registry(access.application, access.organization.location_id)
 
     # Logs require a configured compute registry.
     if registry is None:
-        raise UnavailableError(f"No compute cluster configured for location '{access.organization.location_id}'")
+        raise HTTPException(status_code=503, detail=f"No compute cluster configured for location '{access.organization.location_id}'")
 
     compute_client = compute_runtime.kubernetes(registry)
 
@@ -265,7 +259,7 @@ async def get_application_logs(access: ApplicationAccess = Depends(application_a
     try:
         logs = await compute_client.logs(access.organization.slug, access.application.slug)
     except ValueError as exc:
-        raise UnavailableError(str(exc)) from exc
+        raise HTTPException(status_code=503, detail="Application logs unavailable") from exc
 
     return Response(content=logs, media_type="text/plain")
 
@@ -294,7 +288,7 @@ async def update_application_member(
 
     # Only application or organization maintainers can manage members.
     if not can_manage_application:
-        raise ForbiddenError("Application member management permissions required")
+        raise HTTPException(status_code=403, detail="Application member management permissions required")
 
     # Managers may only change roles that are not stronger than their own effective authority.
     caller_role_rank = role.rank(access.application_role)
@@ -307,11 +301,11 @@ async def update_application_member(
 
     # Managers cannot modify roles above their authority.
     if role.rank(member_application_role) > caller_role_rank:
-        raise ForbiddenError("Application role management permissions required")
+        raise HTTPException(status_code=403, detail="Application role management permissions required")
 
     # Managers cannot assign roles above their authority.
     if role.rank(payload.role) > caller_role_rank:
-        raise ForbiddenError("Application role management permissions required")
+        raise HTTPException(status_code=403, detail="Application role management permissions required")
 
     updated = await applications.set_member_role(
         access.application.id,
@@ -323,7 +317,7 @@ async def update_application_member(
 
     # The service reports false when the target member is absent.
     if not updated:
-        raise NotFoundError("Organization member", member_id)
+        raise HTTPException(status_code=404, detail=f"Organization member '{member_id}' not found")
 
     return Response(status_code=204)
 
@@ -339,13 +333,13 @@ async def delete_application(access: ApplicationAccess = Depends(application_acc
 
     # Only application or organization maintainers can delete applications.
     if not can_manage_application:
-        raise ForbiddenError("Application deletion permissions required")
+        raise HTTPException(status_code=403, detail="Application deletion permissions required")
 
     deleted = await applications.soft_delete(access.application.id, access.user)
 
     # Missing rows are reported as a normal not-found response.
     if deleted is None:
-        raise NotFoundError("Application", access.application.id)
+        raise HTTPException(status_code=404, detail=f"Application '{access.application.id}' not found")
 
     # Runtime cleanup is asynchronous so the delete request is not blocked by cluster calls.
     await operations.create(
@@ -379,7 +373,7 @@ async def proxy_application_request(
 
     # Require at least one role before deriving runtime headers.
     if not runtime_roles:
-        raise ForbiddenError("Application access required")
+        raise HTTPException(status_code=403, detail="Application access required")
 
     runtime_role = max(runtime_roles, key=role.rank).value
 
@@ -388,7 +382,7 @@ async def proxy_application_request(
 
     # Reject methods that exceed the caller's effective runtime role.
     if not role.atleast(runtime_role, required_role):
-        raise ForbiddenError(f"Application {required_role} access required")
+        raise HTTPException(status_code=403, detail=f"Application {required_role} access required")
 
     names.knames(access.organization.slug, "Organization")
     names.knames(access.application.slug, "Application name")
@@ -402,10 +396,14 @@ async def proxy_application_request(
 
     # Proxying requires a configured compute registry.
     if registry is None:
-        raise UnavailableError(f"No compute cluster configured for location '{access.organization.location_id}'")
+        raise HTTPException(status_code=503, detail=f"No compute cluster configured for location '{access.organization.location_id}'")
+
+    # The API talks to the externally reachable per-cluster gateway stored on the application row.
+    if access.application.gateway_url is None:
+        raise HTTPException(status_code=503, detail="Application gateway URL is not configured")
 
     # Build the authenticated upstream request that only the API is allowed to send.
-    upstream_url = _application_proxy_request_url(access.application.id, registry.ingress_host, path, request.url.query)
+    upstream_url = _application_proxy_request_url(access.application.gateway_url, path, request.url.query)
     runtime_headers = {
         "x-user-id": str(access.user.id),
         "x-user-role": runtime_role,
@@ -428,7 +426,7 @@ async def proxy_application_request(
                 headers=request_headers,
             )
     except httpx2.HTTPError as exc:
-        raise UnavailableError("Application proxy request failed") from exc
+        raise HTTPException(status_code=503, detail="Application proxy request failed") from exc
 
     return Response(
         content=upstream_response.content,

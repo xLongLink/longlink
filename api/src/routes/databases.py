@@ -1,10 +1,9 @@
 from uuid import UUID
-from fastapi import Depends, Response, APIRouter
+from fastapi import Depends, Response, APIRouter, HTTPException
 from src.auth import authadmin, authsupport
 from src import adapters
 from src.utils import names
 from src.logger import logger
-from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.models.databases import (
     DatabaseUsageResponse,
     DatabaseRegistryCreate,
@@ -35,7 +34,7 @@ async def get_database_registry(registry_id: UUID, _: User = Depends(authsupport
 
     # Require an existing active registry.
     if registry is None:
-        raise NotFoundError("Database registry", registry_id)
+        raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
 
     return registry
 
@@ -48,7 +47,7 @@ async def delete_database_registry(registry_id: UUID, user: User = Depends(autha
 
     # Report missing registries as not found.
     if not deleted:
-        raise NotFoundError("Database registry", registry_id)
+        raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
 
     return Response(status_code=204)
 
@@ -63,7 +62,7 @@ async def create_database_registry(
     try:
         slug = names.slugify(payload.name)
     except ValueError as exc:
-        raise ConflictError(str(exc)) from exc
+        raise HTTPException(status_code=409, detail="Invalid database registry name") from exc
 
     registry = await database.create(**payload.model_dump(), slug=slug, user=user)
 
@@ -81,7 +80,7 @@ async def list_database_databases(registry_id: UUID, _: User = Depends(authsuppo
 
     # Require an existing active registry.
     if registry is None:
-        raise NotFoundError("Database registry", registry_id)
+        raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
 
     database_adapter = adapters.database(registry)
 
@@ -90,7 +89,7 @@ async def list_database_databases(registry_id: UUID, _: User = Depends(authsuppo
         database_names = await database_adapter.databases()
     except Exception as exc:
         logger.exception("Failed to inspect databases for registry '%s'", registry_id)
-        raise UnavailableError("Database resources unavailable") from exc
+        raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
 
     return [{"name": database_name} for database_name in database_names]
 
@@ -110,7 +109,7 @@ async def list_database_schemas(
 
     # Require an existing active registry.
     if registry is None:
-        raise NotFoundError("Database registry", registry_id)
+        raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
 
     database_adapter = adapters.database(registry)
 
@@ -123,7 +122,7 @@ async def list_database_schemas(
             database_name,
             registry_id,
         )
-        raise UnavailableError("Database schemas unavailable") from exc
+        raise HTTPException(status_code=503, detail="Database schemas unavailable") from exc
 
     return [{"name": schema_name} for schema_name in schema_names]
 
@@ -136,7 +135,7 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
 
     # Require an existing active registry.
     if registry is None:
-        raise NotFoundError("Database registry", registry_id)
+        raise HTTPException(status_code=404, detail=f"Database registry '{registry_id}' not found")
 
     database_adapter = adapters.database(registry)
 
@@ -145,6 +144,6 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
         data = await database_adapter.usage()
     except Exception as exc:
         logger.exception("Failed to inspect database usage for registry '%s'", registry_id)
-        raise UnavailableError("Database usage unavailable") from exc
+        raise HTTPException(status_code=503, detail="Database usage unavailable") from exc
 
     return data

@@ -47,7 +47,6 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     create_response = client.post(
         "/api/computes",
         json={
-            "kind": "kubernetes",
             "name": "primary",
             "kubeconfig": "apiVersion: v1\nclusters: []\n",
             "ingress_host": "apps.longlink.internal",
@@ -65,6 +64,7 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     assert create_payload["id"] == registry_id
     assert create_payload["name"] == "primary"
     assert create_payload["ingress_host"] == "apps.longlink.internal"
+    assert "kind" not in create_payload
     assert "kubeconfig" not in create_payload
     assert list_response.status_code == 200
     assert [item["id"] for item in list_response.json()] == [registry_id]

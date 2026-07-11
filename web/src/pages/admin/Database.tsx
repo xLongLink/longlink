@@ -8,8 +8,8 @@ import { toast } from 'sonner';
 
 import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
 import { DataTable } from '@/components/DataTable';
-import ConnectDatabaseDialog from '@/components/dialogs/ConnectDatabaseDialog';
-import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
+import ConnectDatabase from '@/components/dialogs/ConnectDatabase';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useLocations } from '@/data/admin';
 import { useDatabases } from '@/data/database';
 import { useUserProfile } from '@/hooks/use-user';
@@ -130,7 +130,7 @@ export default function AdminDatabase() {
                         <HeroDescription>{t('admin.databaseDescription')}</HeroDescription>
                     </div>
                 </Hero>
-                {canManage ? <ConnectDatabaseDialog /> : null}
+                {canManage ? <ConnectDatabase /> : null}
             </div>
             <DataTable
                 columns={databaseColumns}
@@ -139,7 +139,7 @@ export default function AdminDatabase() {
                 isLoading={databasesIsLoading || locationsIsLoading}
                 pageSize={25}
             />
-            <DeleteConfirmationDialog {...deleteDialog.dialogProps} />
+            <DeleteConfirmation {...deleteDialog.dialogProps} />
         </div>
     );
 }

@@ -7,7 +7,7 @@ import type { ApiLocation } from '@/lib/types';
 import type { ReactNode } from 'react';
 
 /** Renders the shared shell for registry connection dialogs. */
-export function RegistryDialogShell({
+export function RegistryShell({
     title,
     error,
     open,

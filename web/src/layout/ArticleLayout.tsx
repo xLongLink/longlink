@@ -2,7 +2,7 @@ import { useTranslation } from '@/lib/i18n';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 
-import { ArticleSidebar } from '@/components/ArticleSidebar';
+import { Sidebar } from '@/components/Sidebar';
 import { useUserProfile } from '@/hooks/use-user';
 import { cn, formatDate } from '@/lib/utils';
 import type { ArticleNavigationGroup, ArticlePage } from '@/pages/catalog';
@@ -136,7 +136,7 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
 
     return (
         <SidebarProvider defaultOpen>
-            <ArticleSidebar currentPath={location.pathname} groups={navigationGroups} />
+            <Sidebar currentPath={location.pathname} groups={navigationGroups} />
 
             <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
                 <div className="flex h-full w-full flex-col shadow-sm">

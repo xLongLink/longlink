@@ -258,7 +258,7 @@ function OrganizationApplicationView() {
     const applicationRole = organizationApplication?.role ?? null;
     const hasApplicationAccess = canAccessApplication(organizationRole, applicationRole);
     const canViewLogs = platformRole === 'administrator' || canViewApplicationLogs(organizationRole, applicationRole);
-    const applicationGatewayUrl = organizationApplication?.gateway_url ?? '';
+    const applicationProxyUrl = organizationApplication ? `/api/applications/${organizationApplication.id}/proxy/` : '';
 
     // Show the shell while organization/application access is still resolving.
     if (isLoading) {
@@ -276,7 +276,7 @@ function OrganizationApplicationView() {
             applicationName={organizationApplication.name}
             canViewLogs={canViewLogs}
             applicationStatus={organizationApplication.status}
-            metadata={`${applicationGatewayUrl}metadata.json`}
+            metadata={`${applicationProxyUrl}metadata.json`}
             locale={language}
         />
     );

@@ -1,9 +1,8 @@
 from src import compute as compute_runtime
 from uuid import UUID
-from fastapi import Depends, Response, APIRouter
+from fastapi import Depends, Response, APIRouter, HTTPException
 from src.auth import authadmin, authsupport
 from src.utils import urls, names
-from src.errors import ConflictError, NotFoundError, UnavailableError
 from src.logger import logger
 from src.environments import env
 from src.models.computes import (PodResponse, NamespaceResponse, ComputeRegistryCreate, ComputeRegistryResponse,
@@ -40,7 +39,7 @@ def _validate_production_gateway_settings(payload: ComputeRegistryCreate) -> Non
 
     # Report all gateway validation errors together.
     if errors:
-        raise ConflictError("Invalid production gateway settings: " + "; ".join(errors))
+        raise HTTPException(status_code=409, detail="Invalid production gateway settings: " + "; ".join(errors))
 
 
 @router.get("/api/computes", response_model=list[ComputeRegistryResponse])
@@ -59,7 +58,7 @@ async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)
 
     # Require an existing compute registry.
     if registry is None:
-        raise NotFoundError("Compute registry", registry_id)
+        raise HTTPException(status_code=404, detail=f"Compute registry '{registry_id}' not found")
 
     return registry
 
@@ -72,7 +71,7 @@ async def delete_compute_registry(registry_id: UUID, user: User = Depends(authad
 
     # Report missing registries as not found.
     if not deleted:
-        raise NotFoundError("Compute registry", registry_id)
+        raise HTTPException(status_code=404, detail=f"Compute registry '{registry_id}' not found")
 
     return Response(status_code=204)
 
@@ -89,7 +88,7 @@ async def create_compute_registry(
     try:
         slug = names.slugify(payload.name)
     except ValueError as exc:
-        raise ConflictError(str(exc)) from exc
+        raise HTTPException(status_code=409, detail="Invalid compute registry name") from exc
 
     registry = await compute.create(**payload.model_dump(), slug=slug, user=user)
 
@@ -98,7 +97,7 @@ async def create_compute_registry(
         compute_adapter = compute_runtime.kubernetes(registry)
         await compute_adapter.setup()
     except Exception as exc:
-        raise UnavailableError("Failed to initialize the compute cluster") from exc
+        raise HTTPException(status_code=503, detail="Failed to initialize the compute cluster") from exc
 
     return registry
 
@@ -111,7 +110,7 @@ async def get_compute_resources(registry_id: UUID, _: User = Depends(authsupport
 
     # Require an existing compute registry.
     if registry is None:
-        raise NotFoundError("Compute registry", registry_id)
+        raise HTTPException(status_code=404, detail=f"Compute registry '{registry_id}' not found")
 
     compute_adapter = compute_runtime.kubernetes(registry)
 
@@ -120,7 +119,7 @@ async def get_compute_resources(registry_id: UUID, _: User = Depends(authsupport
         data = await compute_adapter.resources()
     except Exception as exc:
         logger.exception("Failed to inspect compute resources for registry '%s'", registry_id)
-        raise UnavailableError("Compute resources unavailable") from exc
+        raise HTTPException(status_code=503, detail="Compute resources unavailable") from exc
 
     return data
 
@@ -133,7 +132,7 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
 
     # Require an existing compute registry.
     if registry is None:
-        raise NotFoundError("Compute registry", registry_id)
+        raise HTTPException(status_code=404, detail=f"Compute registry '{registry_id}' not found")
 
     compute_adapter = compute_runtime.kubernetes(registry)
 
@@ -142,7 +141,7 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
         namespace_names = await compute_adapter.namespaces()
     except Exception as exc:
         logger.exception("Failed to inspect compute namespaces for registry '%s'", registry_id)
-        raise UnavailableError("Compute namespaces unavailable") from exc
+        raise HTTPException(status_code=503, detail="Compute namespaces unavailable") from exc
 
     return [{"name": namespace_name} for namespace_name in namespace_names]
 
@@ -158,7 +157,7 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
 
     # Require an existing compute registry.
     if registry is None:
-        raise NotFoundError("Compute registry", registry_id)
+        raise HTTPException(status_code=404, detail=f"Compute registry '{registry_id}' not found")
 
     compute_adapter = compute_runtime.kubernetes(registry)
 
@@ -167,11 +166,11 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
         managed_namespaces = set(await compute_adapter.namespaces())
     except Exception as exc:
         logger.exception("Failed to inspect compute namespaces for registry '%s'", registry_id)
-        raise UnavailableError("Compute namespaces unavailable") from exc
+        raise HTTPException(status_code=503, detail="Compute namespaces unavailable") from exc
 
     # Reject pods requests outside managed namespaces.
     if namespace not in managed_namespaces:
-        raise NotFoundError("Compute namespace", namespace)
+        raise HTTPException(status_code=404, detail=f"Compute namespace '{namespace}' not found")
 
     # Ask the backend for pods in the namespace.
     try:
@@ -182,6 +181,6 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
             namespace,
             registry_id,
         )
-        raise UnavailableError("Compute pods unavailable") from exc
+        raise HTTPException(status_code=503, detail="Compute pods unavailable") from exc
 
     return pods

@@ -7,7 +7,7 @@ import { Stack } from '@/components/ui/stack';
 import { Ul } from '@/components/ui/ul';
 
 export const metadata = {
-    lastUpdated: '2026-07-10',
+    lastUpdated: '2026-07-11',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/components.tsx',
 };
 
@@ -585,14 +585,6 @@ export const content = (
                     </Li>
                 </Ul>
             </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Pre Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>lang</Code>: optional.
-                    </Li>
-                </Ul>
-            </Stack>
             <CodeBlock language="xml">{`<H1 i18n="..." />
 <H2 i18n="..." />
 <H3 i18n="..." />
@@ -605,7 +597,6 @@ export const content = (
 <Sup i18n="..." />
 <Sub i18n="..." />
 <Code i18n="..." />
-<Pre lang="json" i18n="..." />
 <Br />
 <Hr />`}</CodeBlock>
         </Stack>

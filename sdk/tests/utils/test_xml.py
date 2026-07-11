@@ -1,8 +1,8 @@
 import pytest
 from typing import Any
 from pathlib import Path
-from longlink.constants import ROOT
 from longlink.utils import xml as xml_utils
+from longlink.constants import ROOT
 from longlink.utils.xml import Element
 
 ADAPTERS = ROOT / ".static" / "xsd" / "adapters"
@@ -28,12 +28,12 @@ VALID_FRAGMENTS = [
     ("button-group-text", _adapter_schema("ButtonGroupText.xsd"), '<ButtonGroupText i18n="actions.quick" />'),
     ("card", _adapter_schema("Card.xsd"), '<Card><P i18n="cards.content" /></Card>'),
     ("checkbox", _adapter_schema("Checkbox.xsd"), '<Checkbox checked="true" defaultChecked="false" disabled="true" if="canEdit" />'),
-    ("columns", _adapter_schema("Columns.xsd"), '<Columns><Column width="70"><P i18n="layout.main" /></Column><Column width="30"><P i18n="layout.sidebar" /></Column></Columns>'),
+    ("columns", _adapter_schema("Columns.xsd"), '<Columns><Column width="70"><P i18n="layout.main" /></Column><Column><P i18n="layout.sidebar" /></Column></Columns>'),
     ("dialog", _adapter_schema("Dialog.xsd"), '<Dialog open="true"><DialogTrigger><Button i18n="dialog.open" /></DialogTrigger><DialogContent><DialogTitle><P i18n="issues.deleteTitle" /></DialogTitle><DialogDescription><P i18n="issues.deleteDescription" /></DialogDescription></DialogContent></Dialog>'),
     ("field", _adapter_schema("Field.xsd"), '<Field><FieldLabel htmlFor="name" i18n="users.fullName" /><Input id="name" autoComplete="off" /></Field>'),
     ("flex", _adapter_schema("Flex.xsd"), '<Flex space="between"><P i18n="users.name" /><Badge i18n="status.live" /></Flex>'),
     ("for", _adapter_schema("For.xsd"), '<For each="items" as="item"><P i18n="items.name" /></For>'),
-    ("hero", _adapter_schema("Hero.xsd"), '<Hero icon="layout-grid"><HeroTitle i18n="orgs.title" /><HeroDescription i18n="orgs.description" /><HeroContent><Button i18n="orgs.create" /></HeroContent></Hero>'),
+    ("hero", _adapter_schema("Hero.xsd"), '<Hero icon="layout-grid"><HeroTitle i18n="orgs.title" /><HeroDescription i18n="orgs.description" /><HeroAction><Button i18n="orgs.create" /></HeroAction></Hero>'),
     ("hr", _adapter_schema("Hr.xsd"), '<Hr />'),
     ("icon", _adapter_schema("Icon.xsd"), '<Icon name="layout-grid" if="show" />'),
     ("input", _adapter_schema("Input.xsd"), '<Input placeholder="Draft title" value="Draft" type="text" if="isEditable" />'),
@@ -63,7 +63,6 @@ VALID_FRAGMENTS = [
 INVALID_FRAGMENTS = [
     ("unknown-action-attribute", _adapter_schema("Action.xsd"), '<Action tone="accent"><Button i18n="actions.save" /></Action>'),
     ("unknown-button-attribute", _adapter_schema("Button.xsd"), '<Button href="/issues" i18n="actions.open" />'),
-    ("missing-column-width", _adapter_schema("Columns.xsd"), '<Columns><Column><P i18n="layout.main" /></Column></Columns>'),
     ("invalid-flex-space", _adapter_schema("Flex.xsd"), '<Flex space="stretch"><P i18n="users.name" /></Flex>'),
     ("missing-for-as", _adapter_schema("For.xsd"), '<For each="items" />'),
     ("unknown-longlink-attribute", _adapter_schema("Longlink.xsd"), '<longlink hidden="true"><P i18n="dashboard.title" /></longlink>'),

@@ -1,6 +1,6 @@
 import { DataTable } from '@/components/DataTable';
-import CreateApplicationDialog from '@/components/dialogs/CreateApplicationDialog';
-import LogsDialog from '@/components/dialogs/LogsDialog';
+import CreateApplication from '@/components/dialogs/CreateApplication';
+import Logs from '@/components/dialogs/Logs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -727,7 +727,7 @@ export default function Settings({
                                 ) : null}
                             </div>
 
-                            {!selectedApplication ? <CreateApplicationDialog organization={organization} /> : null}
+                            {!selectedApplication ? <CreateApplication organization={organization} /> : null}
                         </div>
 
                         {selectedApplication ? (
@@ -869,7 +869,7 @@ export default function Settings({
             </Menu>
 
             {logsTarget ? (
-                <LogsDialog
+                <Logs
                     applicationId={logsTarget.id}
                     applicationName={logsTarget.name}
                     open={logsTarget !== null}

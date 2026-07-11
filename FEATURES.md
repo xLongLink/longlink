@@ -34,9 +34,9 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | CORS policy                 | Allows credentialed CORS for configured origins, with localhost defaults in development.                                                                                       |
 | Logo SVG endpoint           | `GET /logo.svg` returns a no-store randomized LongLink wordmark SVG with an accent color and `theme=system`, `theme=light`, or `theme=dark` text color.                        |
 | Health endpoint             | `GET /api/healthz` returns `{"status":"ok"}`.                                                                                                                                  |
-| Domain error responses      | Maps domain errors to JSON `detail` responses with appropriate HTTP status codes.                                                                                              |
+| Domain error responses      | Returns JSON `detail` responses with route-specific HTTP status codes and stable conflict messages for managed resource-name validation.                                       |
 | Control database sessions   | Provides cached async SQLAlchemy sessions, connection verification, and database URL normalization.                                                                            |
-| Control database migrations | Migrates users, organizations, applications, registries, memberships, invitations, and operations, supports percent-encoded database URLs, and applies pending migrations on local SQLite development starts. |
+| Control database migrations | Migrates users, organizations, applications, registries, memberships, invitations, and operations, and supports percent-encoded database URLs. |
 | Local seed script           | Seeds local location, registries, organization, app metadata, and runtime data through public API routes.                                                                      |
 | Local runtime endpoints     | Separates host-facing endpoints from pod-facing runtime endpoints for S3-compatible storage.                                                                                   |
 
@@ -62,7 +62,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Locations                | Lists and gets locations for support/admin users; administrators can create and delete unused locations with ISO country codes.                                |
 | Country options          | Returns pycountry-backed ISO country options for organization and location selectors.                                                                          |
 | Location providers       | Supports `local`, `infomaniak`, `ovh`, `scaleway`, `hetzner`, and `exoscale`.                                                                                 |
-| Compute registries       | Creates dedicated Kubernetes compute registries with kubeconfig, gateway host, optional LoadBalancer IP, and production TLS material; lists, gets, and deletes unused registries for support/admin users. |
+| Compute registries       | Creates Kubernetes-only compute registries with kubeconfig, gateway host, optional LoadBalancer IP, and production TLS material; lists, gets, and deletes unused registries for support/admin users. |
 | Compute inspection       | Inspects total and allocatable cluster resources, managed namespaces, managed-namespace pods, and pod usage when metrics are available.                       |
 | Database registries      | Creates PostgreSQL registries with a single connection endpoint; lists, gets, and deletes unused registries for support/admin users.                         |
 | Database inspection      | Inspects managed organization databases, managed database schemas, and aggregate non-system database storage usage.                                           |
@@ -102,12 +102,12 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Application verification            | Marks apps running when the current Deployment rollout is ready and failed when current rollout pods crash, hit terminal image/config wait reasons, or exceed the verification timeout. |
 | Global application listing          | Lets platform administrators list all active applications.                                                                              |
 | Application logs                    | Lets application maintainers/admins and elevated organization members fetch recent plain-text logs from the newest application pod.     |
-| Application gateway                 | Routes runtime traffic through the API proxy, which authorizes users and forwards requests to secret-protected per-cluster Envoy gateways before internal service forwarding. |
+| Application gateway                 | Stores private API-to-cluster gateway URLs for deployed apps and routes runtime traffic through the API proxy, which authorizes users and forwards requests to secret-protected per-cluster Envoy gateways before internal service forwarding. |
 | Application access roles            | Uses application membership roles for runtime access, with method-level role enforcement and elevated organization roles allowed to manage application lifecycle actions. |
 | Application member management       | Lets organization members view application permission rows and lets permitted app/org managers set or remove app roles up to their own role rank for org members. |
-| Gateway header policy               | Requires compute gateway secrets stored in Kubernetes Secrets, rejects unavailable apps with no-store 503, and injects trusted `x-user-id` and `x-user-role` from the API proxy. |
+| Gateway header policy               | Requires compute gateway secrets stored in Kubernetes Secrets, rejects unavailable apps with no-store 503, forwards only minimal browser content negotiation headers, and injects trusted `x-user-id` and `x-user-role` from the API proxy. |
 | Registry selection                  | Uses newest active compute registries and keeps database/storage registries consistent for all apps in an organization.                 |
-| Managed resource naming             | Generates slugs with library-backed normalization and validates managed Kubernetes/PostgreSQL/S3 resource names before provisioning.     |
+| Managed resource naming             | Generates slugs with library-backed normalization, validates managed Kubernetes/PostgreSQL/S3 resource names before provisioning, and reports invalid derived names with stable 409 conflict responses. |
 
 ### Operations and Adapters
 
@@ -229,7 +229,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Feature                       | Supported behavior                                                                                                                            |
 | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | Public home page              | Renders the marketing landing page with navbar, hero CTA, compact feature cards, and centered post-card CTAs.                                 |
-| Pricing page                  | Exposes `/pricing` with Free, Team, and Scale pricing options.                                                                                |
+| Pricing page                  | Exposes `/pricing` with Free, Team, and Work pricing options.                                                                                 |
 | Legal pages                   | Exposes impressum, privacy, and terms pages with minimal legal content.                                                                       |
 | Documentation catalog         | Exposes docs pages for API, self-hosting, SDK, environments, routes, storage, database, testing, building, XML pages, layout, and components. |
 | Documentation topic icons     | Uses one explicit icon assignment per documentation topic.                                                                                   |
@@ -286,7 +286,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 | Resource hooks                | Provides typed hooks for users, orgs, apps, locations, databases, storages, computes, operations, metadata, and mobile breakpoint detection.          |
 | Organization mutation helpers | Supports create organization, invite member, change member role, and create application flows.                                                        |
 | Create application dialog     | Supports schema-backed image inspection, metadata review, icon selection, env entry, and app creation.                                                |
-| Registry connection dialogs   | Create database, storage, and compute registries with location selection and schema-backed client validation.                                         |
+| Registry connection dialogs   | Create database, storage, and Kubernetes compute registries with location selection and schema-backed client validation.                            |
 | Create location dialog        | Supports administrator-only schema-backed location creation.                                                                                          |
 | Create organization dialog    | Supports schema-backed organization creation with name, avatar URL, country, and location.                                                            |
 | Logs dialog                   | Fetches application logs only while open and displays logs/errors.                                                                                    |
@@ -325,7 +325,7 @@ This file tracks the behavior currently supported by the codebase. Keep it updat
 
 | Feature                | Supported behavior                                                                                                                    |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Text components        | Supports headings, paragraphs, app links, resource links, inline text styles, code/pre, lists, breaks, and separators.                |
+| Text components        | Supports headings, paragraphs, app links, resource links, inline text styles, code, lists, breaks, and separators.                    |
 | Layout components      | Supports columns, grids, stacks, flex rows, cards, hero slots, tabs, dialogs, and menus.                                              |
 | Form components        | Supports buttons, fields, labels, inputs, textareas, input groups, checkboxes, switches, sliders, toggles, radio groups, and selects. |
 | Visual components      | Supports Lucide icons, badges, avatars, safe avatar images/fallbacks, and avatar badges.                                           |

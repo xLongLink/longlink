@@ -12,7 +12,7 @@ from .constants import (GATEWAY_NAME, GATEWAY_IMAGE, GATEWAY_NAMESPACE, GATEWAY_
                         GATEWAY_ADMIN_CONTAINER_PORT, GATEWAY_MAX_REQUEST_HEADERS_KB, GATEWAY_AUTH_SECRET_PLACEHOLDER,
                         GATEWAY_PER_CONNECTION_BUFFER_LIMIT_BYTES)
 from .resources import KubernetesResources
-from src.constants import TEMPLATES
+from src.constants import ROOT
 from src.environments import env
 from .library import Service, Namespace, kr8s
 
@@ -380,12 +380,12 @@ class KubernetesGateway(KubernetesResources):
             "gateway_volume_mounts": json.dumps(volume_mounts),
             "gateway_volumes": json.dumps(volumes),
         }
-        manifests = templates.readyml_list(TEMPLATES / "gateway.yml", **template_context)
+        manifests = templates.readyml_list(ROOT / "templates" / "gateway.yml", **template_context)
 
         # Insert the TLS Secret before the ConfigMap so referenced certificate data exists with the deployment.
         if gateway_uses_tls:
             tls_manifests = templates.readyml_list(
-                TEMPLATES / "gateway_tls_secret.yml",
+                ROOT / "templates" / "gateway_tls_secret.yml",
                 **template_context,
                 gateway_tls_certificate=base64.b64encode(
                     (self._gateway_tls_certificate or "").encode("utf-8")
@@ -400,7 +400,7 @@ class KubernetesGateway(KubernetesResources):
         # Development needs an Ingress resource because the local gateway service stays ClusterIP.
         if use_development_ingress:
             ingress_manifests = templates.readyml_list(
-                TEMPLATES / "gateway_development_ingress.yml",
+                ROOT / "templates" / "gateway_development_ingress.yml",
                 **template_context,
             )
             manifests.extend(ingress_manifests)

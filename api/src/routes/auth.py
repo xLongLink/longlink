@@ -1,10 +1,9 @@
 import httpx2
 from typing import Any, Final, Literal
-from fastapi import Query, Request, Response, APIRouter
+from fastapi import Query, Request, Response, APIRouter, HTTPException
 from pydantic import ValidationError
 from src.auth import SessionAccountsService, oauth
 from src.utils import urls
-from src.errors import UnauthorizedError, UnavailableError
 from src.operations.implementation import bootstrap
 from src.models.auth import OidcUserInfo
 from src.environments import env
@@ -31,7 +30,7 @@ async def upsert_oidc_user(userinfo: OidcUserInfo) -> str:
 
     # Require an email claim from the provider.
     if not email:
-        raise UnavailableError("Authentication provider returned no email")
+        raise HTTPException(status_code=503, detail="Authentication provider returned no email")
 
     name = userinfo.name or userinfo.preferred_username
 
@@ -42,13 +41,13 @@ async def upsert_oidc_user(userinfo: OidcUserInfo) -> str:
 
         # Require complete name parts before composing a name.
         if not given_name or not family_name:
-            raise UnavailableError("Authentication provider returned no display name")
+            raise HTTPException(status_code=503, detail="Authentication provider returned no display name")
 
         name = f"{given_name} {family_name}"
 
     # Reject profiles with unverified emails.
     if userinfo.email_verified is not True:
-        raise UnauthorizedError("Authentication provider returned an unverified email")
+        raise HTTPException(status_code=401, detail="Authentication provider returned an unverified email")
 
     user = await users.upsert(
         oidc=userinfo.sub,
@@ -59,13 +58,13 @@ async def upsert_oidc_user(userinfo: OidcUserInfo) -> str:
 
     # Prevent deleted users from authenticating.
     if user.deleted_at is not None:
-        raise UnauthorizedError("Not authenticated")
+        raise HTTPException(status_code=401, detail="Not authenticated")
 
     # Sync organization access after profile upsert.
     try:
         await bootstrap.sync_user_organizations(user)
     except Exception as exc:
-        raise UnavailableError("Failed to synchronize user profile") from exc
+        raise HTTPException(status_code=503, detail="Failed to synchronize user profile") from exc
 
     return userinfo.sub
 
@@ -98,12 +97,13 @@ async def login_oidc(
 
         # Ensure Authlib returned an HTTP response.
         if not isinstance(response, Response):
-            raise UnavailableError("OIDC provider returned an invalid redirect response")
+            raise HTTPException(status_code=503, detail="OIDC provider returned an invalid redirect response")
 
         return response
     except httpx2.HTTPStatusError as exc:
-        raise UnavailableError(
-            "OIDC provider metadata is unavailable. Check OIDC_ISSUER and provider realm configuration."
+        raise HTTPException(
+            status_code=503,
+            detail="OIDC provider metadata is unavailable. Check OIDC_ISSUER and provider realm configuration.",
         ) from exc
 
 
@@ -118,9 +118,9 @@ async def auth_oidc(request: Request) -> RedirectResponse:
     try:
         token: Any = await oidc.authorize_access_token(request)
     except httpx2.HTTPStatusError as exc:
-        raise UnavailableError("OIDC token exchange failed. Verify provider URL and client credentials.") from exc
+        raise HTTPException(status_code=503, detail="OIDC token exchange failed. Verify provider URL and client credentials.") from exc
     except OAuthError as exc:
-        raise UnauthorizedError("OIDC callback could not be validated") from exc
+        raise HTTPException(status_code=401, detail="OIDC callback could not be validated") from exc
 
     raw_userinfo: Any = getattr(token, "userinfo", None)
 
@@ -146,23 +146,23 @@ async def auth_oidc(request: Request) -> RedirectResponse:
             try:
                 token_payload = dict(token)
             except TypeError as exc:
-                raise UnavailableError("Authentication provider returned an invalid token payload") from exc
+                raise HTTPException(status_code=503, detail="Authentication provider returned an invalid token payload") from exc
 
         # Request profile claims from the userinfo endpoint.
         try:
             raw_userinfo = await oidc.userinfo(token=token_payload)
         except httpx2.HTTPStatusError as exc:
-            raise UnavailableError("OIDC userinfo endpoint failed. Verify provider URL and client credentials.") from exc
+            raise HTTPException(status_code=503, detail="OIDC userinfo endpoint failed. Verify provider URL and client credentials.") from exc
         except OAuthError as exc:
-            raise UnauthorizedError("OIDC userinfo response could not be validated") from exc
+            raise HTTPException(status_code=401, detail="OIDC userinfo response could not be validated") from exc
         except ValidationError as exc:
-            raise UnavailableError("Authentication provider returned an invalid user profile") from exc
+            raise HTTPException(status_code=503, detail="Authentication provider returned an invalid user profile") from exc
 
     # Validate the provider profile payload.
     try:
         userinfo = OidcUserInfo.model_validate(raw_userinfo)
     except ValidationError as exc:
-        raise UnavailableError("Authentication provider returned an invalid user profile") from exc
+        raise HTTPException(status_code=503, detail="Authentication provider returned an invalid user profile") from exc
 
     subject = await upsert_oidc_user(userinfo)
     SessionAccountsService(request).activate(subject)

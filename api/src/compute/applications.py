@@ -5,7 +5,7 @@ from .cluster import KubernetesCluster
 from src.utils import names, templates
 from .constants import APPLICATION_ID_LABEL
 from .resources import parse_kubernetes_timestamp
-from src.constants import TEMPLATES
+from src.constants import ROOT
 from .library import Pod, Secret, Service, APIObject, Deployment, kr8s
 
 
@@ -105,7 +105,7 @@ class KubernetesApplications(KubernetesCluster):
         await self._replace(secret_body)
 
         application_manifests = templates.readyml_list(
-            TEMPLATES / "application.yml",
+            ROOT / "templates" / "application.yml",
             image=image,
             name=name,
             namespace=namespace,

@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import UTC, datetime
+from fastapi import HTTPException
 from sqlalchemy import select
-from src.errors import ConflictError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.database.session import session_scope
@@ -73,7 +73,7 @@ async def create(
 
         # Reject duplicate registry names before insert.
         if database is not None:
-            raise ConflictError("Database registry already exists")
+            raise HTTPException(status_code=409, detail="Database registry already exists")
 
         database = DatabaseRegistry(
             kind=kind,
@@ -94,7 +94,7 @@ async def create(
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
-            raise ConflictError("Database registry already exists") from exc
+            raise HTTPException(status_code=409, detail="Database registry already exists") from exc
 
         registry_id = database.id
         await session.refresh(database)
@@ -131,7 +131,7 @@ async def delete(registry_id: UUID, user: User) -> bool:
 
         # Block deletion while active applications depend on it.
         if active_application.scalar_one_or_none() is not None:
-            raise ConflictError("Database registry is used by active applications")
+            raise HTTPException(status_code=409, detail="Database registry is used by active applications")
 
         now = datetime.now(UTC)
         registry.deleted_at = now

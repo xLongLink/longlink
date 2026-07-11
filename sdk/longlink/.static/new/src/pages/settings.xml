@@ -71,7 +71,6 @@
                         <Sub i18n="settings.application.sub" />
                     </P>
                     <Br />
-                    <Pre lang="json" i18n="settings.application.payload" />
                 </Stack>
             </Stack>
             <MenuSubSection value="profile" i18n="settings.sections.profile">

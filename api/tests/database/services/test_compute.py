@@ -1,9 +1,7 @@
 import pytest
+from fastapi import HTTPException
 from uuid import uuid4
 from types import SimpleNamespace
-from src.constants import INGRESS_NAME
-from src.errors import ConflictError
-from src.models.computes import ComputeKind
 from src.database.models.users import User
 from src.database.services import compute
 from src.database.services import locations
@@ -27,7 +25,6 @@ async def test_create_get_and_fetch_all_return_active_compute_registries(users: 
 
     # Act
     registry = await db.compute.create(
-        ComputeKind.kubernetes,
         "Primary compute",
         "primary-compute",
         "kubeconfig",
@@ -39,12 +36,11 @@ async def test_create_get_and_fetch_all_return_active_compute_registries(users: 
     reloaded = await db.compute.get(registry.id)
 
     # Assert
-    assert registry.kind == ComputeKind.kubernetes
+    assert registry.kind == "kubernetes"
     assert registry.name == "Primary compute"
     assert registry.slug == "primary-compute"
     assert registry.kubeconfig == "kubeconfig"
     assert registry.ingress_host == "apps.example"
-    assert registry.ingress_name == INGRESS_NAME
     assert registry.proxy_secret
     assert registry.location_id == location.id
     assert registry.created_by.id == owner.id
@@ -61,7 +57,6 @@ async def test_create_rejects_duplicate_compute_registry_names(users: tuple[User
     owner = users[0]
     location = await db.locations.create("primary", "Primary", owner, "CH")
     await db.compute.create(
-        ComputeKind.kubernetes,
         "Primary compute",
         "primary-compute",
         "kubeconfig",
@@ -71,9 +66,8 @@ async def test_create_rejects_duplicate_compute_registry_names(users: tuple[User
     )
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.compute.create(
-            ComputeKind.kubernetes,
             "Primary compute",
             "primary-compute",
             "other-kubeconfig",
@@ -83,7 +77,8 @@ async def test_create_rejects_duplicate_compute_registry_names(users: tuple[User
         )
 
     # Assert
-    assert str(exc.value) == "Compute registry already exists"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Compute registry already exists"
 
 
 async def test_delete_soft_deletes_compute_registry_and_include_deleted_can_reload_it(
@@ -95,7 +90,6 @@ async def test_delete_soft_deletes_compute_registry_and_include_deleted_can_relo
     owner = users[0]
     location = await db.locations.create("primary", "Primary", owner, "CH")
     registry = await db.compute.create(
-        ComputeKind.kubernetes,
         "Primary compute",
         "primary-compute",
         "kubeconfig",
@@ -129,7 +123,6 @@ async def test_delete_rejects_compute_registry_used_by_active_applications(users
     location = await db.locations.create("primary", "Primary", owner, "CH")
     organization = await db.organizations.create("acme", "acme", location.id, owner)
     registry = await db.compute.create(
-        ComputeKind.kubernetes,
         "Primary compute",
         "primary-compute",
         "kubeconfig",
@@ -147,8 +140,9 @@ async def test_delete_rejects_compute_registry_used_by_active_applications(users
     )
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.compute.delete(registry.id, owner)
 
     # Assert
-    assert str(exc.value) == "Compute registry is used by active applications"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Compute registry is used by active applications"

@@ -1,21 +1,13 @@
-from enum import Enum
 from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, model_validator
 from src.models.users import UserSummary
 
 
-class ComputeKind(str, Enum):
-    """Supported compute registry kinds."""
-
-    kubernetes = "kubernetes"
-
-
 class ComputeRegistryCreate(BaseModel):
     """Request body for creating a compute registry."""
 
     # Metadata
-    kind: ComputeKind
     name: str
     kubeconfig: str
     ingress_host: str
@@ -49,7 +41,6 @@ class ComputeRegistryResponse(BaseModel):
     id: UUID
 
     # Metadata
-    kind: ComputeKind
     name: str
     slug: str
     ingress_host: str

@@ -192,7 +192,6 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         "user": user,
     }
     assert calls["compute"] == {
-        "kind": seed.ComputeKind.kubernetes,
         "name": "local",
         "slug": "local",
         "kubeconfig": "apiVersion: v1\nclusters: []\n",

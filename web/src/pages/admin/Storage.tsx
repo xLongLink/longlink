@@ -8,8 +8,8 @@ import { toast } from 'sonner';
 
 import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
 import { DataTable } from '@/components/DataTable';
-import ConnectStorageDialog from '@/components/dialogs/ConnectStorageDialog';
-import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
+import ConnectStorage from '@/components/dialogs/ConnectStorage';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useLocations } from '@/data/admin';
 import { useStorages } from '@/data/storage';
 import { useUserProfile } from '@/hooks/use-user';
@@ -143,7 +143,7 @@ export default function AdminStorage() {
                         <HeroDescription>{t('admin.storageDescription')}</HeroDescription>
                     </div>
                 </Hero>
-                {canManage ? <ConnectStorageDialog /> : null}
+                {canManage ? <ConnectStorage /> : null}
             </div>
             <DataTable
                 columns={storageColumns}
@@ -152,7 +152,7 @@ export default function AdminStorage() {
                 isLoading={storageIsLoading || locationsIsLoading}
                 pageSize={25}
             />
-            <DeleteConfirmationDialog {...deleteDialog.dialogProps} />
+            <DeleteConfirmation {...deleteDialog.dialogProps} />
         </div>
     );
 }

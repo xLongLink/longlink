@@ -6,7 +6,6 @@ from datetime import UTC, datetime
 from src import compute as compute_runtime
 from src.utils import names, buckets
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.computes import ComputeKind
 from src.models.storages import StorageKind
 from src.models.locations import LocationProvider
 from src.models.databases import DatabaseKind
@@ -216,7 +215,6 @@ async def seed_local_development() -> None:
     # Create or repair the local compute registry for gateway routing.
     if compute_registry is None:
         compute_registry = await compute_service.create(
-            kind=ComputeKind.kubernetes,
             name="local",
             slug=names.slugify("local"),
             kubeconfig=kubeconfig,

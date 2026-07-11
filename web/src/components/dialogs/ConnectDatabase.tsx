@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { RegistryDialogShell, RegistryLocationField } from '@/components/dialogs/RegistryDialogElements';
+import { RegistryLocationField, RegistryShell } from '@/components/dialogs/RegistryElements';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -39,7 +39,7 @@ const defaultDatabaseConnectionValues = {
 } satisfies DatabaseConnectionInput;
 
 /** Renders the admin database connect dialog. */
-export default function ConnectDatabaseDialog() {
+export default function ConnectDatabase() {
     const { t } = useTranslation();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
@@ -94,7 +94,7 @@ export default function ConnectDatabaseDialog() {
     }
 
     return (
-        <RegistryDialogShell
+        <RegistryShell
             title={t('dialogs.connectDatabaseTitle')}
             description={t('dialogs.connectDatabaseDescription')}
             open={open}
@@ -180,6 +180,6 @@ export default function ConnectDatabaseDialog() {
                 locations={locations}
                 onValueChange={(value) => form.setValue('locationId', value, { shouldValidate: true })}
             />
-        </RegistryDialogShell>
+        </RegistryShell>
     );
 }

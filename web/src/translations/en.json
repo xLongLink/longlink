@@ -336,7 +336,6 @@
         "namespacesTitle": "Namespaces"
     },
     "dialogs": {
-        "chooseComputeKind": "Choose a compute kind",
         "chooseCountry": "Choose a country",
         "chooseDatabaseKind": "Choose a database kind",
         "chooseIcon": "Choose an icon",

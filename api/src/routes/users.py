@@ -1,6 +1,5 @@
-from fastapi import Depends, APIRouter
+from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authsupport
-from src.errors import NotFoundError, UnavailableError
 from src.operations.implementation import bootstrap
 from src.models.users import UserUpdate, UserProfile, UserListItem
 from src.database.models.users import User
@@ -17,7 +16,7 @@ async def get_me(user: User = Depends(authuser)) -> dict[str, object]:
 
     # Require the authenticated user profile to exist.
     if profile is None:
-        raise NotFoundError("User", user.id)
+        raise HTTPException(status_code=404, detail=f"User '{user.id}' not found")
 
     return profile
 
@@ -41,12 +40,12 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser)) -> dict[
     try:
         await bootstrap.sync_user_organizations(updated_user)
     except Exception as exc:
-        raise UnavailableError("Failed to synchronize user profile") from exc
+        raise HTTPException(status_code=503, detail="Failed to synchronize user profile") from exc
 
     profile = await users.profile(updated_user.id)
 
     # Require the refreshed user profile to exist.
     if profile is None:
-        raise NotFoundError("User", updated_user.id)
+        raise HTTPException(status_code=404, detail=f"User '{updated_user.id}' not found")
 
     return profile

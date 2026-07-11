@@ -1,11 +1,10 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 from typing import cast
 from datetime import UTC, datetime
 from src import compute as compute_runtime
 from src import adapters
-from src.utils import names, buckets
+from src.utils import names, buckets, gateway
 from src.logger import logger
-from src.constants import APP_SERVICE_PORT
 from src.operations.constants import APPLICATION_VERIFY_STEP
 from src.operations.implementation import environments, registries
 from src.models.statuses import ApplicationStatus
@@ -189,7 +188,7 @@ async def provision_application_runtime_resources(
         application.slug,
         str(application.id),
         runtime_image,
-        APP_SERVICE_PORT,
+        8000,
         {**payload.envs, **runtime_envs},
         rollout_token=rollout_token,
     )
@@ -204,6 +203,7 @@ async def create_application_runtime(
     """Create the application row, provision runtime resources, and queue verification."""
 
     application_bucket_name = buckets.application(organization.slug, application_slug)
+    application_id = uuid4()
     logger.info("Provisioning application %s/%s", organization.slug, application_slug)
 
     image_metadata = await environments.application_image_metadata(payload)
@@ -229,9 +229,11 @@ async def create_application_runtime(
         payload.name,
         application_slug,
         image=payload.image,
+        application_id=application_id,
         compute_registry_id=compute_registry.id,
         database_registry_id=database_registry.id,
         storage_registry_id=storage_registry.id if storage_registry is not None else None,
+        gateway_url=gateway.upstream_application_url(application_id, compute_registry.ingress_host),
         storage_bucket_name=application_bucket_name,
         sdk=image_metadata.sdk,
         digest=digest,
@@ -356,6 +358,7 @@ async def sync_application_runtime(
         compute_registry_id=compute_registry.id,
         database_registry_id=database_registry.id,
         storage_registry_id=storage_registry.id if storage_registry is not None else None,
+        gateway_url=gateway.upstream_application_url(application.id, compute_registry.ingress_host),
         sdk=image_metadata.sdk,
         digest=digest,
         version=image_metadata.version,

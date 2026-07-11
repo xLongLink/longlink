@@ -82,7 +82,6 @@ class ApplicationResponse(BaseModel):
     digest: str | None = None
     version: str | None = None
     description: str | None = None
-    gateway_url: str | None = None
 
     # State
     role: ApplicationRoles | None = None

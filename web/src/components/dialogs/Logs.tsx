@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 
 /** Renders the application logs dialog for an organization. */
-export default function LogsDialog({
+export default function Logs({
     applicationId,
     applicationName,
     open,

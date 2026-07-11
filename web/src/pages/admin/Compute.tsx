@@ -7,8 +7,8 @@ import { toast } from 'sonner';
 
 import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
 import { DataTable } from '@/components/DataTable';
-import ConnectComputeDialog from '@/components/dialogs/ConnectComputeDialog';
-import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
+import ConnectCompute from '@/components/dialogs/ConnectCompute';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useLocations } from '@/data/admin';
 import { useComputes } from '@/data/compute';
 import { useUserProfile } from '@/hooks/use-user';
@@ -24,10 +24,9 @@ function createComputeColumnsBase(
 ): Array<ColumnDef<ApiComputeRegistry & { location?: ApiLocation }>> {
     return [
         {
-            accessorKey: 'kind',
-            header: t('columns.kind'),
+            id: 'compute',
+            header: t('admin.computeTitle'),
             cell: ({ row }) => {
-                const kind = row.original.kind;
                 const ingress = row.original.ingress_host;
                 const computeSlug = row.original.slug;
 
@@ -40,7 +39,7 @@ function createComputeColumnsBase(
                         />
                         <div className="min-w-0">
                             <div className="truncate font-medium text-foreground underline-offset-4 hover:underline">
-                                {kind}
+                                Kubernetes
                             </div>
                             <div className="truncate text-xs text-muted-foreground">{ingress}</div>
                         </div>
@@ -131,7 +130,7 @@ export default function AdminCompute() {
                         <HeroDescription>{t('admin.computeDescription')}</HeroDescription>
                     </div>
                 </Hero>
-                {canManage ? <ConnectComputeDialog /> : null}
+                {canManage ? <ConnectCompute /> : null}
             </div>
             <DataTable
                 columns={computeColumns}
@@ -140,7 +139,7 @@ export default function AdminCompute() {
                 isLoading={computesIsLoading || locationsIsLoading}
                 pageSize={25}
             />
-            <DeleteConfirmationDialog {...deleteDialog.dialogProps} />
+            <DeleteConfirmation {...deleteDialog.dialogProps} />
         </div>
     );
 }

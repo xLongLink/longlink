@@ -11,7 +11,7 @@ from pathlib import Path
 from smtplib import SMTP, SMTP_SSL
 from src.logger import logger
 from email.message import EmailMessage
-from src.constants import MAIL_TEMPLATES
+from src.constants import ROOT
 from collections.abc import Mapping
 from src.environments import env
 
@@ -228,7 +228,7 @@ async def send_organization_invitation_email(
     await send_templated_email(
         recipient_email=recipient_email,
         subject=f"You are invited to {organization_name}",
-        mjml_template=MAIL_TEMPLATES / "organization_invitation.mjml",
-        text_template=MAIL_TEMPLATES / "organization_invitation.txt",
+        mjml_template=ROOT / "templates" / "mail" / "organization_invitation.mjml",
+        text_template=ROOT / "templates" / "mail" / "organization_invitation.txt",
         context=context,
     )

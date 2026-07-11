@@ -1,6 +1,6 @@
 import { DataTable } from '@/components/DataTable';
-import CreateOrganizationDialog from '@/components/dialogs/CreateOrganizationDialog';
-import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
+import CreateOrganization from '@/components/dialogs/CreateOrganization';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useDeleteOrganization } from '@/hooks/use-organization';
 import { useUpdateUser, useUserProfile } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
@@ -335,7 +335,7 @@ export default function Settings() {
                                     </p>
                                 </div>
 
-                                <CreateOrganizationDialog />
+                                <CreateOrganization />
                             </div>
 
                             <DataTable columns={organizationColumns} data={organizations} isLoading={isLoading} />
@@ -343,7 +343,7 @@ export default function Settings() {
                     </MenuSection>
                 </Menu>
 
-                <DeleteConfirmationDialog {...deleteDialog.dialogProps} />
+                <DeleteConfirmation {...deleteDialog.dialogProps} />
             </section>
         </Layout>
     );

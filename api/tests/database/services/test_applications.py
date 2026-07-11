@@ -1,7 +1,7 @@
 import pytest
+from fastapi import HTTPException
 from uuid import uuid4
 from types import SimpleNamespace
-from src.errors import ConflictError
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
 from src.database.session import get_session
@@ -82,7 +82,7 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
     user, organization, _ = await create_application_context("duplicate")
 
     # Act
-    with pytest.raises(ConflictError) as exc:
+    with pytest.raises(HTTPException) as exc:
         await db.applications.create(
             organization.id,
             "Duplicate dashboard",
@@ -92,7 +92,8 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
         )
 
     # Assert
-    assert str(exc.value) == "Application slug already exists"
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Application slug already exists"
 
 
 async def test_fetch_all_and_list_by_organization_ignore_deleted_applications() -> None:
@@ -305,6 +306,7 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
         description="Updated dashboard",
         digest="sha256:abc123",
         icon="activity",
+        gateway_url=f"https://apps.example.test/api/applications/{application.id}/proxy/",
     )
     await db.applications.soft_delete(application.id, user)
     deleted_runtime = await db.applications.update_runtime(
@@ -325,6 +327,7 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     assert updated.description == "Updated dashboard"
     assert updated.digest == "sha256:abc123"
     assert updated.icon == "activity"
+    assert updated.gateway_url == f"https://apps.example.test/api/applications/{application.id}/proxy/"
     assert updated.updated_id == user.id
     assert deleted_runtime is None
 

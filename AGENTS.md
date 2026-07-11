@@ -47,7 +47,6 @@ longlink/
 │   │   ├── auth.py               # Authentication helpers
 │   │   ├── constants.py          # Shared constants
 │   │   ├── environments.py       # Environment configuration
-│   │   ├── errors.py             # Error handling
 │   │   └── logger.py             # Logging setup
 │   └── tests/                    # API tests
 ├── sdk/                          # Python SDK: application runtime, CLI, scaffolding
@@ -87,7 +86,7 @@ The control plane manages users, organizations, memberships, applications, locat
 
 Applications are added to the control plane as packaged container images. When an image is registered, the platform inspects its LongLink labels, creates the application record, stores metadata, checks organization access, receives required environment values, and starts the deployment workflow.
 
-Infrastructure is connected through location-scoped registries. Compute registries point to Kubernetes clusters, database registries point to database servers, and storage registries point to S3-compatible storage backends. The control plane does not hard-code a single provider; adapters translate LongLink organizations and applications into resources on the selected backend.
+Infrastructure is connected through location-scoped registries. Compute registries point to Kubernetes clusters, database registries point to database servers, and storage registries point to S3-compatible storage backends. Adapters translate LongLink organizations and applications into resources on the selected backend.
 
 Long-running work is tracked as operations. Application creation queues a verification operation that checks the deployed pods and moves the application to `running` or `failed`. Application deletion queues a removal operation that deletes runtime resources and marks the application deleted. The operation scheduler runs in the API process and keeps retrying pending work without blocking normal API requests.
 
