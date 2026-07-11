@@ -41,9 +41,8 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
     const getStartedHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
 
     useEffect(() => {
-        const contentElement = contentRef.current;
-
         // Clear the table of contents until content is mounted.
+        const contentElement = contentRef.current;
         if (!contentElement) {
             setPageToc([]);
             return;

@@ -44,7 +44,7 @@ class KubernetesCluster(KubernetesGateway):
     async def namespace(self, organization: str) -> None:
         """Create the namespace for an organization if it does not exist."""
 
-        namespace = names.k8name(names.knames(organization))
+        namespace = names.namespace(organization)
 
         # Reuse an existing namespace or create it when Kubernetes reports it missing.
         try:
@@ -69,7 +69,7 @@ class KubernetesCluster(KubernetesGateway):
     async def delete_namespace(self, organization: str) -> None:
         """Delete one managed organization namespace and tolerate missing namespaces."""
 
-        namespace = names.k8name(names.knames(organization))
+        namespace = names.namespace(organization)
 
         # Read the namespace first so missing namespaces can be treated as already deleted.
         try:
@@ -97,8 +97,8 @@ class KubernetesCluster(KubernetesGateway):
     async def namespaces(self) -> list[str]:
         """List all organization namespaces in the connected cluster."""
 
-        # Organization namespaces use the standard LongLink Kubernetes name prefix.
-        return [ns.name for ns in await self._list(Namespace) if ns.name.startswith("longlink-") and ns.name != "longlink-system"]
+        # Dedicated compute clusters reserve Kubernetes system namespaces for platform infrastructure.
+        return [ns.name for ns in await self._list(Namespace) if ns.name not in names.KUBERNETES_SYSTEM_NAMESPACES]
 
     async def resources(self) -> dict[str, int | float]:
         """Return total and allocatable cluster resources."""

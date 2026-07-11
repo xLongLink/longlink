@@ -1,11 +1,10 @@
-from src import runtime
 from src import adapters
 from src.logger import logger
 from src.database.services import users, organizations
 from src.models.organizations import OrganizationDetails, OrganizationSummary
 from src.database.models.users import User
 from src.database.models.databases import DatabaseRegistry
-from src.runtime import registries
+from src.runtime import Kubernetes, registries
 from src.database.models.organizations import Organization
 
 
@@ -15,9 +14,8 @@ async def sync_organization_users(
 ) -> None:
     """Synchronize organization members into the shared users schema."""
 
-    database_registry = registry or await registries.organization_database_registry(organization)
-
     # Organizations without a database registry do not have a tenant database to synchronize.
+    database_registry = registry or await registries.organization_database_registry(organization)
     if database_registry is None:
         return
 
@@ -37,15 +35,14 @@ async def sync_user_organizations(user: User) -> None:
 async def create_organization_namespace(organization: Organization | OrganizationSummary) -> None:
     """Best-effort create the organization namespace on the active compute registry."""
 
-    registry = await registries.latest_compute_registry(organization.location_id)
-
     # Locations without compute are allowed during partial local setup.
+    registry = await registries.latest_compute_registry(organization.location_id)
     if registry is None:
         return
 
     # Bootstrap failures are logged but do not block organization creation.
     try:
-        await runtime.kubernetes(registry).namespace(organization.slug)
+        await Kubernetes(registry.kubeconfig, registry.proxy_secret).namespace(organization.slug)
 
     # Organization creation remains successful even if runtime bootstrap needs manual repair.
     except Exception as exc:
@@ -55,9 +52,8 @@ async def create_organization_namespace(organization: Organization | Organizatio
 async def create_organization_database(organization: Organization | OrganizationSummary) -> None:
     """Best-effort create the organization database on the active database registry."""
 
-    registry = await registries.latest_database_registry(organization.location_id)
-
     # Locations without a database are allowed during partial local setup.
+    registry = await registries.latest_database_registry(organization.location_id)
     if registry is None:
         return
 
@@ -75,9 +71,8 @@ async def create_organization_database(organization: Organization | Organization
 async def create_organization_storage(organization: Organization | OrganizationSummary) -> None:
     """Best-effort create the assigned shared bucket on the active storage registry."""
 
-    registry = await registries.latest_storage_registry(organization.location_id)
-
     # Locations without storage skip object-store bootstrap.
+    registry = await registries.latest_storage_registry(organization.location_id)
     if registry is None:
         return
 

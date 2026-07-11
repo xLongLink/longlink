@@ -128,15 +128,32 @@ async def test_execute_application_verify_operation_completes_running_applicatio
     )
     calls: list[str] = []
 
-    async def fake_inspect_application_startup(operation, application=None) -> ApplicationStartupState:
-        """Pretend the application is already ready."""
+    async def fake_application_compute_registry(application, location_id):
+        """Return a fake compute registry for startup verification."""
 
-        calls.append("startup-check")
-        return ApplicationStartupState.ready
+        return SimpleNamespace(kubeconfig="apiVersion: v1\nclusters: []\n", proxy_secret="proxy-secret")
+
+
+    class FakeKubernetes:
+        """Fake Kubernetes client for startup verification."""
+
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
+            """Accept the compute registry connection fields."""
+
+        async def application_deployment_ready(self, organization: str, application: str) -> bool:
+            """Pretend the application is already ready."""
+
+            calls.append("startup-check")
+            return True
+
 
     monkeypatch.setattr(
-        "src.runtime.startup.inspect_application_startup",
-        fake_inspect_application_startup,
+        "src.operations.implementation.applications.registries.application_compute_registry",
+        fake_application_compute_registry,
+    )
+    monkeypatch.setattr(
+        "src.operations.implementation.applications.Kubernetes",
+        FakeKubernetes,
     )
 
     # Act
@@ -146,7 +163,7 @@ async def test_execute_application_verify_operation_completes_running_applicatio
 
     # Assert
     assert calls == ["startup-check"]
-    refreshed_application = await db.applications.get_by_id(application.id)
+    refreshed_application = await db.applications.get(application.id)
     assert refreshed_application is not None
     assert refreshed_application.status == ApplicationStatus.running
     refreshed = await db.operations.get(operation.id)
@@ -182,15 +199,37 @@ async def test_execute_application_verify_operation_marks_failed_when_dead(monke
     )
     calls: list[str] = []
 
-    async def fake_inspect_application_startup(operation, application=None) -> ApplicationStartupState:
-        """Pretend the application has crashed."""
+    async def fake_application_compute_registry(application, location_id):
+        """Return a fake compute registry for startup verification."""
 
-        calls.append("startup-check")
-        return ApplicationStartupState.dead
+        return SimpleNamespace(kubeconfig="apiVersion: v1\nclusters: []\n", proxy_secret="proxy-secret")
+
+
+    class FakeKubernetes:
+        """Fake Kubernetes client for startup verification."""
+
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
+            """Accept the compute registry connection fields."""
+
+        async def application_deployment_ready(self, organization: str, application: str) -> bool:
+            """Pretend the deployment is not ready yet."""
+
+            return False
+
+        async def application_pods(self, organization: str, application: str) -> list[SimpleNamespace]:
+            """Return a current pod in a terminal startup state."""
+
+            calls.append("startup-check")
+            return [pod_status(operation.created_at, "Pending", [container_status(waiting_reason="ImagePullBackOff")])]
+
 
     monkeypatch.setattr(
-        "src.runtime.startup.inspect_application_startup",
-        fake_inspect_application_startup,
+        "src.operations.implementation.applications.registries.application_compute_registry",
+        fake_application_compute_registry,
+    )
+    monkeypatch.setattr(
+        "src.operations.implementation.applications.Kubernetes",
+        FakeKubernetes,
     )
 
     # Act
@@ -200,7 +239,7 @@ async def test_execute_application_verify_operation_marks_failed_when_dead(monke
 
     # Assert
     assert calls == ["startup-check"]
-    refreshed_application = await db.applications.get_by_id(application.id)
+    refreshed_application = await db.applications.get(application.id)
     assert refreshed_application is not None
     assert refreshed_application.status == ApplicationStatus.failed
     refreshed = await db.operations.get(operation.id)
@@ -235,14 +274,36 @@ async def test_execute_application_verify_operation_releases_when_not_ready(monk
         user=user,
     )
 
-    async def fake_inspect_application_startup(operation, application=None) -> ApplicationStartupState:
-        """Pretend the application is still starting."""
+    async def fake_application_compute_registry(application, location_id):
+        """Return a fake compute registry for startup verification."""
 
-        return ApplicationStartupState.pending
+        return SimpleNamespace(kubeconfig="apiVersion: v1\nclusters: []\n", proxy_secret="proxy-secret")
+
+
+    class FakeKubernetes:
+        """Fake Kubernetes client for startup verification."""
+
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
+            """Accept the compute registry connection fields."""
+
+        async def application_deployment_ready(self, organization: str, application: str) -> bool:
+            """Pretend the deployment is not ready yet."""
+
+            return False
+
+        async def application_pods(self, organization: str, application: str) -> list[SimpleNamespace]:
+            """Return no current pods yet."""
+
+            return []
+
 
     monkeypatch.setattr(
-        "src.runtime.startup.inspect_application_startup",
-        fake_inspect_application_startup,
+        "src.operations.implementation.applications.registries.application_compute_registry",
+        fake_application_compute_registry,
+    )
+    monkeypatch.setattr(
+        "src.operations.implementation.applications.Kubernetes",
+        FakeKubernetes,
     )
 
     # Act

@@ -1,33 +1,30 @@
-import os
-import secrets
 import aioboto3
-from .base import Storage, StorageObjectData, StorageBucketUsage, StorageRuntimeCredentials
+import urllib.parse
+from .base import Storage, StorageObjectData, StorageBucketUsage
 from typing import TYPE_CHECKING, cast
-from datetime import datetime
-from contextlib import AbstractAsyncContextManager, suppress
-from src.environments import env
-from botocore.exceptions import ClientError
+from contextlib import AbstractAsyncContextManager
 
 # Import typing-only S3 stubs without adding runtime dependencies.
 if TYPE_CHECKING:
     from types_aiobotocore_s3.client import S3Client
-    from types_aiobotocore_s3.type_defs import GetObjectOutputTypeDef, ObjectIdentifierTypeDef
+    from types_aiobotocore_s3.type_defs import ObjectIdentifierTypeDef
 
 
 class S3(Storage):
     """S3-compatible storage adapter."""
 
-    _ACCESS_DENIED_CODES = {"403", "AccessDenied", "AllAccessDisabled"}
-    _BUCKET_EXISTS_CODES = {"BucketAlreadyExists", "BucketAlreadyOwnedByYou"}
-    _MISSING_BUCKET_CODES = {"404", "NoSuchBucket", "NotFound"}
-    _MISSING_OBJECT_CODES = {"404", "NoSuchKey", "NotFound"}
-
-    def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+    def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
         """Initialize the storage adapter."""
-        self._protocol = protocol
+
+        # Derive TLS behavior from the endpoint URL so registry data has one source of truth.
+        parsed_url = urllib.parse.urlsplit(endpoint_url)
+        if parsed_url.scheme not in {"http", "https"}:
+            raise ValueError("Storage endpoint URL must use http or https")
+
         self._endpoint_url = endpoint_url
         self._access_key_id = access_key_id
         self._secret_access_key = secret_access_key
+        self._use_ssl = parsed_url.scheme == "https"
         self._session = aioboto3.Session()
 
     def _client(
@@ -41,33 +38,12 @@ class S3(Storage):
             "AbstractAsyncContextManager[S3Client]",
             self._session.client(
                 "s3",
-                use_ssl=self._protocol == "https",
+                use_ssl=self._use_ssl,
                 endpoint_url=self._endpoint_url,
                 aws_access_key_id=access_key_id if access_key_id is not None else self._access_key_id,
                 aws_secret_access_key=secret_access_key if secret_access_key is not None else self._secret_access_key,
             ),
         )
-
-    @staticmethod
-    def _error_code(exc: ClientError) -> str:
-        """Return the normalized S3 error code from one client error."""
-
-        return str(exc.response.get("Error", {}).get("Code", ""))
-
-    def _is_access_denied(self, exc: ClientError) -> bool:
-        """Return whether an S3 client error represents denied access."""
-
-        return self._error_code(exc) in self._ACCESS_DENIED_CODES
-
-    def _is_missing_object(self, exc: ClientError) -> bool:
-        """Return whether an S3 client error proves object read access for a missing key."""
-
-        return self._error_code(exc) in self._MISSING_OBJECT_CODES
-
-    async def _drain_object_body(self, response: GetObjectOutputTypeDef) -> None:
-        """Drain an S3 object response so the async connection can be reused."""
-
-        await response["Body"].read()
 
     async def buckets(self) -> list[str]:
         """List storage buckets."""
@@ -80,10 +56,6 @@ class S3(Storage):
 
     async def objects(self, bucket_name: str, *, limit: int = 1000) -> list[StorageObjectData]:
         """List object metadata for one bucket."""
-
-        # Nothing can be returned when the caller requests no objects.
-        if limit <= 0:
-            return []
 
         objects: list[StorageObjectData] = []
 
@@ -100,23 +72,19 @@ class S3(Storage):
 
             # The paginator owns continuation tokens; keep only the response normalization here.
             async for page in pages:
-
                 # Normalize each object entry from the current page.
                 for item in page.get("Contents", []):
-                    key = item.get("Key")
-
                     # Ignore entries that do not include object keys.
+                    key = item.get("Key")
                     if key is None:
                         continue
 
                     etag = item.get("ETag")
-                    last_modified = item.get("LastModified")
                     objects.append(
                         {
                             "key": str(key),
                             "size": int(item.get("Size", 0)),
                             "etag": str(etag) if etag is not None else None,
-                            "last_modified": last_modified if isinstance(last_modified, datetime) else None,
                         }
                     )
 
@@ -145,24 +113,11 @@ class S3(Storage):
 
         # Keep bucket cleanup in one client session.
         async with self._client() as client:
-
-            # Check whether the bucket still exists before deleting objects.
-            try:
-                await client.head_bucket(Bucket=bucket_name)
-            except ClientError as exc:
-
-                # Missing buckets are already deleted.
-                if self._error_code(exc) in self._MISSING_BUCKET_CODES:
-                    return
-                raise
-
             paginator = client.get_paginator("list_objects_v2")
 
             # Delete objects page by page before removing the bucket.
             async for page in paginator.paginate(Bucket=bucket_name):
-                objects: list[ObjectIdentifierTypeDef] = [
-                    {"Key": str(item["Key"])} for item in page.get("Contents", []) if "Key" in item
-                ]
+                objects: list[ObjectIdentifierTypeDef] = [{"Key": str(item["Key"])} for item in page.get("Contents", []) if "Key" in item]
 
                 # Skip empty pages from compatible storage backends.
                 if objects:
@@ -170,142 +125,11 @@ class S3(Storage):
 
             await client.delete_bucket(Bucket=bucket_name)
 
-    async def application_credentials(
-        self,
-        application_bucket: str,
-        shared_bucket: str,
-        other_application_buckets: list[str],
-    ) -> StorageRuntimeCredentials:
-        """Return validated runtime credentials for one application."""
-
-        credentials: StorageRuntimeCredentials = {
-            "access_key_id": self._access_key_id,
-            "secret_access_key": self._secret_access_key,
-        }
-
-        # Local MinIO uses one admin key for provisioning and runtime during seed/dev flows.
-        if env.DEVELOPMENT and os.getenv("ENVIRONMENT", "").strip().lower() != "testing":
-            return credentials
-
-        check_key = f".longlink/access-check-{secrets.token_urlsafe(8)}"
-
-        # Validate runtime access using the credentials the app will receive.
-        async with self._client(credentials["access_key_id"], credentials["secret_access_key"]) as runtime_client:
-
-            # Prove the runtime can read and write its own application bucket.
-            application_check_created = False
-
-            # Exercise application bucket read/write access.
-            try:
-                await runtime_client.put_object(Bucket=application_bucket, Key=check_key, Body=b"")
-                application_check_created = True
-                response = await runtime_client.get_object(Bucket=application_bucket, Key=check_key)
-                await self._drain_object_body(response)
-                await runtime_client.delete_object(Bucket=application_bucket, Key=check_key)
-                application_check_created = False
-            except ClientError as exc:
-
-                # Clean up the probe object if the write already succeeded.
-                if application_check_created:
-
-                    # Ignore cleanup failures so the original access error is preserved.
-                    with suppress(ClientError):
-                        await runtime_client.delete_object(Bucket=application_bucket, Key=check_key)
-
-                raise ValueError("Storage runtime credentials need read/write access to the application bucket") from exc
-
-            # Prove the runtime can list and read shared organization storage but cannot write it.
-            try:
-                await runtime_client.list_objects_v2(Bucket=shared_bucket, MaxKeys=1)
-                response = await runtime_client.get_object(Bucket=shared_bucket, Key=check_key)
-                await self._drain_object_body(response)
-            except ClientError as exc:
-
-                # A missing-object response still proves shared bucket read access.
-                if not self._is_missing_object(exc):
-                    raise ValueError("Storage runtime credentials need read access to the shared bucket") from exc
-
-            # Confirm shared bucket writes are denied.
-            try:
-                await runtime_client.put_object(Bucket=shared_bucket, Key=check_key, Body=b"")
-            except ClientError as exc:
-
-                # Only access-denied errors satisfy the write isolation check.
-                if not self._is_access_denied(exc):
-                    raise ValueError("Storage shared bucket write check failed") from exc
-            else:
-                await runtime_client.delete_object(Bucket=shared_bucket, Key=check_key)
-                raise ValueError("Storage runtime credentials must not write to the shared bucket")
-
-            # Reject credentials that can access another assigned application bucket.
-            for listed_bucket_name in other_application_buckets:
-
-                # Ignore buckets already validated in the allowed set.
-                if listed_bucket_name in {application_bucket, shared_bucket}:
-                    continue
-
-                # Confirm listing another app bucket is denied.
-                try:
-                    await runtime_client.list_objects_v2(Bucket=listed_bucket_name, MaxKeys=1)
-                except ClientError as exc:
-
-                    # Only access-denied errors satisfy the listing isolation check.
-                    if not self._is_access_denied(exc):
-                        raise ValueError("Storage cross-application read check failed") from exc
-                else:
-                    raise ValueError("Storage runtime credentials must not read other application buckets")
-
-                # Confirm direct object reads are also denied.
-                try:
-                    response = await runtime_client.get_object(Bucket=listed_bucket_name, Key=check_key)
-                    await self._drain_object_body(response)
-                except ClientError as exc:
-
-                    # A missing-object response still proves read access.
-                    if self._is_missing_object(exc):
-                        raise ValueError("Storage runtime credentials must not read other application buckets") from exc
-
-                    # Unexpected errors should not be treated as valid denial.
-                    if not self._is_access_denied(exc):
-                        raise ValueError("Storage cross-application read check failed") from exc
-                else:
-                    raise ValueError("Storage runtime credentials must not read other application buckets")
-
-                # Confirm writes to another app bucket are denied.
-                try:
-                    await runtime_client.put_object(Bucket=listed_bucket_name, Key=check_key, Body=b"")
-                except ClientError as exc:
-
-                    # Only access-denied errors satisfy the write isolation check.
-                    if not self._is_access_denied(exc):
-                        raise ValueError("Storage cross-application write check failed") from exc
-                else:
-                    await runtime_client.delete_object(Bucket=listed_bucket_name, Key=check_key)
-                    raise ValueError("Storage runtime credentials must not write other application buckets")
-
-        return credentials
-
     async def bucket(self, bucket_name: str) -> str:
         """Create one assigned bucket and return its name."""
 
-        # Use the provisioning client to create or verify the bucket.
+        # Use the provisioning client to create the bucket.
         async with self._client() as client:
-
-            # S3-compatible services disagree on repeated creates, so verify access when a bucket exists.
-            try:
-                await client.create_bucket(Bucket=bucket_name)
-            except ClientError as exc:
-
-                # Only known duplicate-bucket errors are recoverable.
-                if self._error_code(exc) not in self._BUCKET_EXISTS_CODES:
-                    raise
-
-                await client.head_bucket(Bucket=bucket_name)
+            await client.create_bucket(Bucket=bucket_name)
 
         return bucket_name
-
-    async def setup(self) -> None:
-        """Initialize the S3 backend used by the control plane."""
-
-        # The storage backend is provisioned externally; no bootstrap is required.
-        return None

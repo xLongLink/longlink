@@ -1,12 +1,11 @@
 import urllib.parse
 from enum import StrEnum
 from uuid import UUID
-from typing import Literal
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
-from tenant.models.icons import Icon
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
+from tenant.models.icons import Icon
 
 
 class StorageKind(StrEnum):
@@ -44,7 +43,6 @@ class StorageRegistryCreate(BaseModel):
     # Metadata
     kind: StorageKind
     name: str
-    protocol: Literal["http", "https"]
 
     # Connection
     endpoint_url: str = Field(min_length=1, max_length=255)
@@ -76,9 +74,7 @@ class StorageRegistryCreate(BaseModel):
             or parsed_url.password
             or parsed_url.query
             or parsed_url.fragment
-            or any(
-                character.isspace() or ord(character) < 32 or ord(character) == 127 for character in value
-            )
+            or any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in value)
         ):
             raise ValueError("Storage endpoint URL is invalid")
 
@@ -119,9 +115,6 @@ class StorageObjectResponse(BaseModel):
     # Usage
     size: int
 
-    # Audit
-    last_modified: datetime | None = None
-
 
 class StorageRegistryResponse(BaseModel):
     """Represent one storage registry in API responses."""
@@ -135,7 +128,6 @@ class StorageRegistryResponse(BaseModel):
     kind: StorageKind
     name: str
     slug: str
-    protocol: str
 
     # Connection
     endpoint_url: str

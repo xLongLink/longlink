@@ -68,11 +68,10 @@ async def create(
 
     # Use one session for duplicate checks and creation.
     async with session_scope() as session:
-        result = await session.execute(select(DatabaseRegistry).where(DatabaseRegistry.name == name))
-        database = result.scalar_one_or_none()
+        result = await session.execute(select(DatabaseRegistry.id).where(DatabaseRegistry.name == name))
 
         # Reject duplicate registry names before insert.
-        if database is not None:
+        if result.scalar_one_or_none() is not None:
             raise HTTPException(status_code=409, detail="Database registry already exists")
 
         database = DatabaseRegistry(
@@ -97,7 +96,6 @@ async def create(
             raise HTTPException(status_code=409, detail="Database registry already exists") from exc
 
         registry_id = database.id
-        await session.refresh(database)
         statement = (
             select(DatabaseRegistry)
             .options(

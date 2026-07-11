@@ -4,7 +4,7 @@ import base64
 import hashlib
 from typing import Any
 from .library import Service, Namespace, kr8s
-from src.utils import templates
+from src.utils import names, templates
 from .resources import KubernetesResources
 from src.constants import ROOT, GATEWAY_SECRET_HEADER, GATEWAY_APPLICATION_HEADER
 from src.environments import env
@@ -59,8 +59,8 @@ class KubernetesGateway(KubernetesResources):
         for namespace_object in namespaces:
             namespace = namespace_object.name
 
-            # Non-organization namespaces and the gateway namespace do not host application services.
-            if not namespace.startswith("longlink-") or namespace == "longlink-system":
+            # Kubernetes system namespaces do not host application services.
+            if namespace in names.KUBERNETES_SYSTEM_NAMESPACES:
                 continue
 
             # Only managed application services become gateway routes.

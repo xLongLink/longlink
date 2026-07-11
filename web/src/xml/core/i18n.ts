@@ -18,9 +18,8 @@ export function resolveTranslation(props: ASTProps, ctx: ExecutionContext): stri
         throw new Error(`i18n must be a dotted translation key, received "${props.i18n ?? ''}"`);
     }
 
-    const translations = ctx.translations;
-
     // Require the active XML translation catalog.
+    const translations = ctx.translations;
     if (!translations) {
         throw new Error(`Missing translation catalog for key "${key}"`);
     }
@@ -183,9 +182,8 @@ function interpolate(template: string, props: ASTProps, ctx: ExecutionContext, c
             return '';
         }
 
-        const value = evaluate(rawValue, ctx);
-
         // Nullish evaluated values render as empty strings.
+        const value = evaluate(rawValue, ctx);
         if (value == null) {
             return '';
         }

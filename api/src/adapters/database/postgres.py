@@ -168,9 +168,9 @@ class Postgres(Database):
             # Create or rotate the app login role before granting schema permissions.
             result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
             role = self.quote(conn, runtime_username)
-            password_processor = String().literal_processor(conn.engine.sync_engine.dialect)
 
             # PostgreSQL password literals must be escaped by the active SQLAlchemy dialect.
+            password_processor = String().literal_processor(conn.engine.sync_engine.dialect)
             if password_processor is None:
                 raise ValueError("PostgreSQL string literal processing is unavailable")
 

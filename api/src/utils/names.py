@@ -2,6 +2,8 @@ import re
 from fastapi import HTTPException
 from slugify import slugify as text_slugify
 
+KUBERNETES_SYSTEM_NAMESPACES = {"default", "kube-node-lease", "kube-public", "kube-system", "longlink-system"}
+
 
 def slugify(value: str, max_length: int = 63) -> str:
     """Convert a string to a URL-safe and K8s-safe slug."""
@@ -37,6 +39,18 @@ def knames(value: str) -> str:
     return value
 
 
+def namespace(value: str) -> str:
+    """Validate one organization Kubernetes namespace and return it unchanged."""
+
+    namespace_name = knames(value)
+
+    # Organization namespaces must not collide with Kubernetes or LongLink system namespaces.
+    if namespace_name in KUBERNETES_SYSTEM_NAMESPACES:
+        raise ValueError("Namespace name is reserved")
+
+    return namespace_name
+
+
 def dbname(value: str) -> str:
     """Return the managed PostgreSQL database name for one value."""
 
@@ -48,11 +62,3 @@ def dbname(value: str) -> str:
         raise ValueError("Database name must be at most 63 characters")
 
     return database_name
-
-
-def k8name(value: str) -> str:
-    """Return the managed Kubernetes name for one value."""
-
-    knames(value)
-    name = f"longlink-{value}"
-    return knames(name)

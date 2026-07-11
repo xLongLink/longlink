@@ -127,9 +127,8 @@ function parseMenuSections(children?: React.ReactNode): ResolvedMenuSection[] {
 
 /** Resolves the first root or nested item. */
 function getInitialValue(sections: ResolvedMenuSection[]): string | undefined {
-    const firstSection = sections[0];
-
     // Return no default when the menu has no sections.
+    const firstSection = sections[0];
     if (!firstSection) {
         return undefined;
     }
@@ -144,9 +143,8 @@ function getCurrentHashValue(): string | undefined {
         return undefined;
     }
 
-    const hash = window.location.hash.replace(/^#/, '');
-
     // Treat an empty hash as absent.
+    const hash = window.location.hash.replace(/^#/, '');
     if (!hash) {
         return undefined;
     }
@@ -225,9 +223,8 @@ function findActiveSection(sections: ResolvedMenuSection[], value: string): Reso
 
 /** Resolves the content nodes for the current active value. */
 function getActiveContent(sections: ResolvedMenuSection[], value: string): React.ReactNode[] {
-    const activeSection = findActiveSection(sections, value);
-
     // Return empty content when nothing owns the value.
+    const activeSection = findActiveSection(sections, value);
     if (!activeSection) {
         return [];
     }

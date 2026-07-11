@@ -128,9 +128,8 @@ function resolveMenuLabel(props: ASTProps, ctx: ExecutionContext, defaultValue?:
 
 /** Resolves a Lucide icon component from an XML icon name. */
 function resolveIconComponent(name: string) {
-    const icon = createLucideIconComponent(name);
-
     // Reject unsupported names instead of silently rendering a different icon.
+    const icon = createLucideIconComponent(name);
     if (icon === null) {
         throw new Error(`Unknown icon "${name}"`);
     }

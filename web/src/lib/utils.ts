@@ -81,8 +81,8 @@ export function formatBytes(bytes: number): string {
 
 /** Returns compact avatar initials for a display name. */
 export function getInitials(value: string | null | undefined): string {
-    const name = value?.trim() ?? '';
     // Fall back when no display name is available.
+    const name = value?.trim() ?? '';
     if (!name) return '--';
 
     const words = name.split(/\s+/).filter(Boolean);

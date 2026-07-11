@@ -54,14 +54,13 @@ async def metadata(image: str) -> LongLinkMetadata | None:
 
         # LongLink labels are stored in the image config blob, reached through the image manifest.
         try:
+            # Stop when the manifest cannot be resolved.
             manifest_result = await _fetch_manifest(
                 client,
                 registry_url,
                 image_reference.repository,
                 image_reference.tag_or_digest,
             )
-
-            # Stop when the manifest cannot be resolved.
             if manifest_result is None:
                 return None
 
@@ -72,9 +71,8 @@ async def metadata(image: str) -> LongLinkMetadata | None:
             if not isinstance(manifest_config, dict):
                 return None
 
-            config_digest = manifest_config.get("digest")
-
             # Require a config blob digest.
+            config_digest = manifest_config.get("digest")
             if config_digest is None:
                 return None
 
@@ -221,9 +219,8 @@ def _registry_url(registry: str) -> str:
 
         return f"http://{normalized_registry}"
 
-    registry_url = SUPPORTED_REGISTRIES.get(normalized_registry)
-
     # Require registries to be explicitly supported.
+    registry_url = SUPPORTED_REGISTRIES.get(normalized_registry)
     if registry_url is None:
         raise ValueError("Image registry is not supported")
 

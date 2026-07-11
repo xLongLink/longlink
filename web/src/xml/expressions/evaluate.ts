@@ -113,9 +113,8 @@ function readInterpolationSegment(input: string, start: number): InterpolationSe
             throw new Error('Unclosed XML expression interpolation');
         }
 
-        const expression = input.slice(start + 2, node.end).trim();
-
         // Reject empty interpolation bodies.
+        const expression = input.slice(start + 2, node.end).trim();
         if (!expression) {
             throw new Error('Unclosed XML expression interpolation');
         }
@@ -189,9 +188,8 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
             return evaluateNode(node.expression, scope);
 
         case 'MemberExpression': {
-            const object = evaluateNode(node.object, scope);
-
             // Stop property reads on nullish objects.
+            const object = evaluateNode(node.object, scope);
             if (object == null) return undefined;
 
             // Resolve computed property keys through the evaluator.
@@ -319,9 +317,8 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
                 : evaluateNode(node.alternate, scope);
 
         case 'CallExpression': {
-            const callback = resolveSafeCall(node.callee);
-
             // Reject calls outside the allowlist.
+            const callback = resolveSafeCall(node.callee);
             if (!callback) {
                 // Optional calls resolve to undefined when missing.
                 if (node.optional) return undefined;

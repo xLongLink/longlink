@@ -1,10 +1,10 @@
-from src import runtime
 from src import adapters
 from uuid import UUID
 from typing import cast
 from datetime import UTC, datetime
 from src.utils import names, buckets
 from src.logger import logger
+from src.runtime import Kubernetes, registries, environments
 from src.models.statuses import ApplicationStatus
 from src.database.services import database, operations, applications, organizations
 from src.models.applications import ApplicationCreate
@@ -13,24 +13,8 @@ from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
-from src.runtime import registries, environments
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
-
-
-async def other_application_storage_buckets(organization_id: UUID, application_id: UUID) -> list[str]:
-    """Return assigned storage buckets for other applications in one organization."""
-
-    storage_bucket_names = []
-
-    # Include active and deleted applications so credential policies can exclude all other app buckets.
-    for application in await organizations.applications(organization_id, include_deleted=True):
-
-        # Skip the current application and apps that never received a storage bucket.
-        if application.id != application_id and application.storage_bucket_name is not None:
-            storage_bucket_names.append(application.storage_bucket_name)
-
-    return storage_bucket_names
 
 
 async def remove_application_runtime(
@@ -39,16 +23,15 @@ async def remove_application_runtime(
 ) -> None:
     """Remove runtime resources for one application."""
 
-    names.knames(organization.slug)
+    names.namespace(organization.slug)
     names.knames(application.slug)
-    names.k8name(organization.slug)
     names.dbname(organization.slug)
 
     compute_registry = await registries.application_compute_registry(application, organization.location_id)
 
     # Remove workload resources only when the app has a compute backend to target.
     if compute_registry is not None:
-        compute_adapter = runtime.kubernetes(compute_registry)
+        compute_adapter = Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret)
         await compute_adapter.delete_application(organization.slug, application.slug)
 
     # Remove the application schema from the database registry that originally hosted it.
@@ -76,8 +59,7 @@ async def remove_application_runtime(
 async def remove_organization_runtime(organization: Organization | OrganizationDetails | OrganizationSummary) -> None:
     """Remove runtime resources for one organization and its applications."""
 
-    names.knames(organization.slug)
-    names.k8name(organization.slug)
+    names.namespace(organization.slug)
     names.dbname(organization.slug)
 
     organization_applications = await organizations.applications(organization.id, include_deleted=True)
@@ -107,7 +89,7 @@ async def remove_organization_runtime(organization: Organization | OrganizationD
 
     # Namespace deletion removes shared gateway/runtime resources for the organization.
     for registry in compute_registries:
-        compute_adapter = runtime.kubernetes(registry)
+        compute_adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
         await compute_adapter.delete_namespace(organization.slug)
 
     database_registry = await registries.organization_database_registry(organization, include_deleted=True)
@@ -137,7 +119,7 @@ async def provision_application_runtime_resources(
 ) -> None:
     """Provision namespace, database, storage, and workload resources for one application."""
 
-    compute_client = runtime.kubernetes(compute_registry)
+    compute_client = Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret)
     db_client = adapters.database(database_registry)
     application_bucket_name = application.storage_bucket_name
     shared_bucket_name = organization.shared_storage_bucket_name
@@ -156,16 +138,14 @@ async def provision_application_runtime_resources(
 
     # Provision storage resources only when this location has storage configured.
     if storage_registry is not None:
-
         # Ensure object storage exists before the workload receives backend credentials.
         storage_client = adapters.storage(storage_registry)
         await storage_client.bucket(shared_bucket_name)
         await storage_client.bucket(application_bucket_name)
-        storage_credentials = await storage_client.application_credentials(
-            application_bucket_name,
-            shared_bucket_name,
-            await other_application_storage_buckets(organization.id, application.id),
-        )
+        storage_credentials = {
+            "access_key_id": storage_registry.access_key_id,
+            "secret_access_key": storage_registry.secret_access_key,
+        }
 
     database_connection = await db_client.schema(
         organization.slug,
@@ -207,15 +187,13 @@ async def create_application_runtime(
     digest = cast(str, image_metadata.digest)
     runtime_image = cast(str, image_metadata.image)
 
-    compute_registry = await registries.latest_compute_registry(organization.location_id)
-
     # Application runtime requires a compute backend in the organization location.
+    compute_registry = await registries.latest_compute_registry(organization.location_id)
     if compute_registry is None:
         raise RuntimeError("No compute cluster configured")
 
-    database_registry = await registries.organization_database_registry(organization)
-
     # Application runtime requires a tenant database backend.
+    database_registry = await registries.organization_database_registry(organization)
     if database_registry is None:
         raise RuntimeError("No database configured")
 
@@ -280,7 +258,9 @@ async def create_application_runtime(
 
         # Cleanup failures should not hide the queueing error.
         except Exception as cleanup_exc:
-            logger.exception("Failed to clean unverified application runtime for %s/%s: %r", organization.slug, application_slug, cleanup_exc)
+            logger.exception(
+                "Failed to clean unverified application runtime for %s/%s: %r", organization.slug, application_slug, cleanup_exc
+            )
 
         logger.exception("Failed to queue application verification for %s/%s: %r", organization.slug, payload.name, exc)
         raise RuntimeError("Failed to queue application verification") from exc
@@ -308,9 +288,8 @@ async def sync_application_runtime(
         application.slug,
         payload.image,
     )
-    names.knames(organization.slug)
+    names.namespace(organization.slug)
     names.knames(application.slug)
-    names.k8name(organization.slug)
     names.dbname(organization.slug)
 
     # Runtime sync requires the organization shared bucket assigned at creation.
@@ -320,24 +299,22 @@ async def sync_application_runtime(
     digest = cast(str, image_metadata.digest)
     runtime_image = cast(str, image_metadata.image)
 
-    compute_registry = await registries.application_compute_registry(application, organization.location_id)
-
     # Runtime sync requires the app's assigned compute backend or the current location backend.
+    compute_registry = await registries.application_compute_registry(application, organization.location_id)
     if compute_registry is None:
         raise RuntimeError("No compute cluster configured")
 
-    database_registry = await registries.organization_database_registry(organization)
-
     # Runtime sync requires the organization database backend.
+    database_registry = await registries.organization_database_registry(organization)
     if database_registry is None:
         raise RuntimeError("No database configured")
 
-    storage_registry = await registries.application_storage_registry(application)
-
     # Existing apps without assigned storage can adopt the organization storage backend.
+    storage_registry = await registries.application_storage_registry(application)
     if storage_registry is None:
         storage_registry = await registries.organization_storage_registry(organization)
 
+    # Stop if the application was deleted between loading and update.
     updated_application = await applications.update_runtime(
         application.id,
         image=payload.image,
@@ -352,8 +329,6 @@ async def sync_application_runtime(
         icon=payload.icon.value if payload.icon is not None else None,
         user=user,
     )
-
-    # Stop if the application was deleted between loading and update.
     if updated_application is None:
         raise RuntimeError("Application no longer exists")
 

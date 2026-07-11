@@ -33,13 +33,7 @@ async def get(location_id: UUID) -> Location | None:
         return result.scalar_one_or_none()
 
 
-async def create(
-    slug: str,
-    name: str,
-    user: User,
-    country: str,
-    provider: LocationProvider = LocationProvider.local,
-) -> Location:
+async def create(slug: str, name: str, user: User, country: str, provider: LocationProvider = LocationProvider.local) -> Location:
     """Create one location."""
 
     # Use one session for creating the location.

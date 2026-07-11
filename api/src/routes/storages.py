@@ -68,7 +68,7 @@ async def list_storage_buckets(registry_id: UUID, _: User = Depends(authsupport)
 
 
 @router.get("/api/storages/{registry_id}/buckets/{bucket_name}/objects", response_model=list[StorageObjectResponse])
-async def list_storage_bucket_objects(registry_id: UUID,bucket_name: str,_: User = Depends(authsupport)):
+async def list_storage_bucket_objects(registry_id: UUID, bucket_name: str, _: User = Depends(authsupport)):
     """List object metadata for one storage bucket."""
 
     registry = await storage.get(registry_id)

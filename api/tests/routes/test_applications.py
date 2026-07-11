@@ -2,6 +2,7 @@ import httpx2
 import pytest
 from types import SimpleNamespace
 from datetime import UTC, datetime
+from src.runtime import registries
 from tenant.models import User as TenantUser
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from fastapi.testclient import TestClient
@@ -13,7 +14,6 @@ from src.database.services import users, compute, storage, database, locations, 
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationStatus
 from src.database.models.users import User
-from src.runtime import registries
 from src.database.models.association import UserApplication, UserOrganization
 
 db = SimpleNamespace(
@@ -243,7 +243,6 @@ async def test_create_app_returns_app_response(
         kind=StorageKind.s3,
         name="remote",
         slug="remote",
-        protocol="http",
         endpoint_url="http://storage.control.longlink.internal",
         runtime_endpoint_url="http://storage.runtime.longlink.internal:19000",
         access_key_id="storage-access",
@@ -271,12 +270,11 @@ async def test_create_app_returns_app_response(
     class FakeCompute:
         """Fake compute adapter for app creation tests."""
 
-        def __init__(self, kubeconfig: str, proxy_secret: str, gateway_url: str) -> None:
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             """Capture compute registry configuration."""
 
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
-            captured["gateway_url"] = gateway_url
 
         async def namespace(self, organization: str) -> None:
             """Record the namespace requested for the organization."""
@@ -353,11 +351,10 @@ async def test_create_app_returns_app_response(
     class FakeStorage:
         """Fake storage adapter for app creation tests."""
 
-        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+        def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
             """Capture storage registry configuration."""
 
             captured["storage"] = {
-                "protocol": protocol,
                 "endpoint_url": endpoint_url,
                 "access_key_id": access_key_id,
                 "secret_access_key": secret_access_key,
@@ -369,25 +366,7 @@ async def test_create_app_returns_app_response(
             captured_buckets.append(("bucket", bucket_name))
             return bucket_name
 
-        async def application_credentials(
-            self,
-            application_bucket: str,
-            shared_bucket: str,
-            other_application_buckets: list[str],
-        ) -> dict[str, str]:
-            """Record application credential inputs and return fake credentials."""
-
-            captured["storage_credentials"] = {
-                "application_bucket": application_bucket,
-                "shared_bucket": shared_bucket,
-                "other_application_buckets": other_application_buckets,
-            }
-            return {"access_key_id": "app-access", "secret_access_key": "app-secret"}
-
-    monkeypatch.setattr(
-        "src.runtime.provisioning.runtime.kubernetes",
-        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret, registry.gateway_url),
-    )
+    monkeypatch.setattr("src.runtime.provisioning.Kubernetes", FakeCompute)
     monkeypatch.setattr(
         "src.runtime.provisioning.adapters.database",
         lambda registry: FakeDatabase(
@@ -400,7 +379,6 @@ async def test_create_app_returns_app_response(
     monkeypatch.setattr(
         "src.runtime.provisioning.adapters.storage",
         lambda registry: FakeStorage(
-            registry.protocol,
             registry.endpoint_url,
             registry.access_key_id,
             registry.secret_access_key,
@@ -433,7 +411,6 @@ async def test_create_app_returns_app_response(
     assert "gateway_url" not in payload
     assert captured["namespace"] == "acme"
     assert captured["proxy_secret"]
-    assert captured["gateway_url"] == "https://apps.remote.longlink.internal"
     schema_payload = captured["schema"]
     assert isinstance(schema_payload, dict)
     assert schema_payload["organization"] == "acme"
@@ -444,11 +421,6 @@ async def test_create_app_returns_app_response(
         ("bucket", "longlink-acme-shared"),
         ("bucket", "longlink-acme-dashboard"),
     ]
-    assert captured["storage_credentials"] == {
-        "application_bucket": "longlink-acme-dashboard",
-        "shared_bucket": "longlink-acme-shared",
-        "other_application_buckets": [],
-    }
     sync_payload = captured["sync_users"]
     assert isinstance(sync_payload, dict)
     synced_users = sync_payload["users"]
@@ -474,9 +446,9 @@ async def test_create_app_returns_app_response(
     assert application_secrets["LONGLINK_DATABASE_USERNAME"] == "longlink_acme_dashboard"
     assert application_secrets["LONGLINK_STORAGE_BUCKET"] == "longlink-acme-dashboard"
     assert application_secrets["LONGLINK_STORAGE_ENDPOINT_URL"] == "http://storage.runtime.longlink.internal:19000"
-    assert application_secrets["LONGLINK_STORAGE_PASSWORD"] == "app-secret"
+    assert application_secrets["LONGLINK_STORAGE_PASSWORD"] == "storage-secret"
     assert application_secrets["LONGLINK_STORAGE_SHARED_BUCKET"] == "longlink-acme-shared"
-    assert application_secrets["LONGLINK_STORAGE_USERNAME"] == "app-access"
+    assert application_secrets["LONGLINK_STORAGE_USERNAME"] == "storage-access"
 
 
 async def test_organization_storage_registry_reuses_existing_app_registry(users: tuple[User, User, User]) -> None:
@@ -490,7 +462,6 @@ async def test_organization_storage_registry_reuses_existing_app_registry(users:
         kind=StorageKind.s3,
         name="primary",
         slug="primary",
-        protocol="http",
         endpoint_url="http://storage-primary.local",
         access_key_id="primary-access",
         secret_access_key="primary-secret",
@@ -509,7 +480,6 @@ async def test_organization_storage_registry_reuses_existing_app_registry(users:
         kind=StorageKind.s3,
         name="secondary",
         slug="secondary",
-        protocol="http",
         endpoint_url="http://storage-secondary.local",
         access_key_id="secondary-access",
         secret_access_key="secondary-secret",
@@ -740,12 +710,11 @@ async def test_get_app_logs_returns_pod_logs(
     class FakeCompute:
         """Fake compute adapter for app log tests."""
 
-        def __init__(self, kubeconfig: str, proxy_secret: str, gateway_url: str) -> None:
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             """Capture compute registry configuration."""
 
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
-            captured["gateway_url"] = gateway_url
 
         async def logs(self, organization: str, application: str, lines: int = 200) -> str:
             """Record the log request and return fake pod logs."""
@@ -757,10 +726,7 @@ async def test_get_app_logs_returns_pod_logs(
             }
             return "line 1\nline 2"
 
-    monkeypatch.setattr(
-        "src.routes.applications.runtime.kubernetes",
-        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret, registry.gateway_url),
-    )
+    monkeypatch.setattr("src.routes.applications.Kubernetes", FakeCompute)
     client = clients[0]
 
     # Act
@@ -801,8 +767,8 @@ async def test_delete_application_soft_deletes_and_queues_removal(
 
     # Assert
     assert response.status_code == 204
-    assert await db.applications.get_by_id(app.id) is None
-    deleted = await db.applications.get_by_id(app.id, include_deleted=True)
+    assert await db.applications.get(app.id) is None
+    deleted = await db.applications.get(app.id, include_deleted=True)
     assert deleted is not None
     assert deleted.deleted_id == user.id
     recorded_operations = await db.operations.fetch()

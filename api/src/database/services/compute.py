@@ -53,14 +53,7 @@ async def get(registry_id: UUID, include_deleted: bool = False) -> ComputeRegist
         return result.scalar_one_or_none()
 
 
-async def create(
-    name: str,
-    slug: str,
-    kubeconfig: str,
-    gateway_url: str,
-    location_id: UUID,
-    user: User,
-) -> ComputeRegistry:
+async def create(name: str, slug: str, kubeconfig: str, gateway_url: str, location_id: UUID, user: User) -> ComputeRegistry:
     """Create one compute backend registration."""
 
     # Create the registry within one scoped session.
@@ -93,7 +86,6 @@ async def create(
             await session.rollback()
             raise HTTPException(status_code=409, detail="Compute registry already exists") from exc
 
-        await session.refresh(compute)
         statement = (
             select(ComputeRegistry)
             .options(

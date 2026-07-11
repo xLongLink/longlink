@@ -122,27 +122,22 @@ async def test_get_services_return_active_applications_and_respect_include_delet
     """Return applications through direct read services and hide deleted rows by default."""
 
     # Arrange
-    user, organization, application = await create_application_context("reads")
+    user, _, application = await create_application_context("reads")
 
     # Act
-    by_slug = await db.applications.get(organization.id, application.slug)
-    by_id = await db.applications.get_by_id(application.id)
+    by_id = await db.applications.get(application.id)
     reference = await db.applications.get_reference(application.id)
     await db.applications.soft_delete(application.id, user)
-    deleted_by_slug = await db.applications.get(organization.id, application.slug)
-    deleted_by_id = await db.applications.get_by_id(application.id)
+    deleted_by_id = await db.applications.get(application.id)
     deleted_reference = await db.applications.get_reference(application.id)
-    included_by_id = await db.applications.get_by_id(application.id, include_deleted=True)
+    included_by_id = await db.applications.get(application.id, include_deleted=True)
     included_reference = await db.applications.get_reference(application.id, include_deleted=True)
 
     # Assert
-    assert by_slug is not None
-    assert by_slug.id == application.id
     assert by_id is not None
     assert by_id.id == application.id
     assert reference is not None
     assert reference.id == application.id
-    assert deleted_by_slug is None
     assert deleted_by_id is None
     assert deleted_reference is None
     assert included_by_id is not None
@@ -341,8 +336,8 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
 
     # Act
     deleted = await db.applications.soft_delete(application.id, user)
-    active_application = await db.applications.get_by_id(application.id)
-    deleted_application = await db.applications.get_by_id(application.id, include_deleted=True)
+    active_application = await db.applications.get(application.id)
+    deleted_application = await db.applications.get(application.id, include_deleted=True)
     role = await db.applications.membership_role(application.id, user.id)
     second_delete = await db.applications.soft_delete(application.id, user)
     missing_delete = await db.applications.soft_delete(uuid4(), user)

@@ -156,7 +156,6 @@ async def test_delete_rejects_location_used_by_active_storage_registries(users: 
         StorageKind.s3,
         "Primary storage",
         "primary-storage",
-        "s3",
         "https://s3.example",
         "access-key",
         "secret-key",

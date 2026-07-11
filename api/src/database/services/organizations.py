@@ -85,9 +85,8 @@ async def invitations(organization_id: UUID) -> list[OrganizationInvitation]:
 async def get_member(organization_id: UUID, user_id: UUID) -> Organization | None:
     """Return one active organization for an active member without details."""
 
-    member_access = await get_member_access(organization_id, user_id)
-
     # Return none when the access check fails.
+    member_access = await get_member_access(organization_id, user_id)
     if member_access is None:
         return None
 
@@ -112,30 +111,14 @@ async def get_member_access(organization_id: UUID, user_id: UUID) -> tuple[Organ
             )
         )
         result = await session.execute(statement)
-        row = result.one_or_none()
 
         # Hide missing organizations and inactive memberships.
+        row = result.one_or_none()
         if row is None:
             return None
 
         organization, role = row
         return organization, role
-
-
-async def get_record(organization_id: UUID, include_deleted: bool = False) -> Organization | None:
-    """Return one organization row for runtime callers that need attributes."""
-
-    # Load one organization record.
-    async with session_scope() as session:
-        conditions = [Organization.id == organization_id]
-
-        # Exclude deleted organizations unless requested.
-        if not include_deleted:
-            conditions.append(Organization.deleted_at.is_(None))
-
-        statement = select(Organization).where(*conditions)
-        result = await session.execute(statement)
-        return result.scalar_one_or_none()
 
 
 async def database_users(organization_id: UUID) -> list[TenantUser]:
@@ -193,10 +176,7 @@ async def database_users(organization_id: UUID) -> list[TenantUser]:
         return database_users
 
 
-async def get(
-    organization_id: UUID,
-    include_deleted: bool = False,
-) -> Organization | None:
+async def get(organization_id: UUID, include_deleted: bool = False) -> Organization | None:
     """Return one organization by id with related rows loaded."""
 
     # Load organization details through one managed session.
@@ -268,16 +248,16 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
             )
         )
         result = await session.execute(statement)
-        membership = result.scalar_one_or_none()
 
         # Require an active organization membership.
+        membership = result.scalar_one_or_none()
         if membership is None:
             return False
 
         # Protect organizations from losing their last owner.
         if membership.role == OrganizationRoles.owner and role != OrganizationRoles.owner:
             owner_statement = (
-                select(UserOrganization)
+                select(UserOrganization.user_id)
                 .where(
                     UserOrganization.organization_id == organization_id,
                     UserOrganization.role == OrganizationRoles.owner,
@@ -308,7 +288,7 @@ async def create(
 ) -> Organization:
     """Create an organization."""
 
-    names.k8name(slug)
+    names.namespace(slug)
     names.dbname(slug)
     shared_storage_bucket_name = buckets.shared(slug)
 
@@ -346,7 +326,6 @@ async def create(
             await session.rollback()
             raise HTTPException(status_code=409, detail="Organization already exists") from exc
 
-        await session.refresh(organization)
         statement = (
             select(Organization)
             .options(

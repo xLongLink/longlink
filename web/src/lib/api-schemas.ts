@@ -186,7 +186,6 @@ export const apiStorageRegistrySchema = z.object({
     kind: z.string(),
     name: z.string(),
     slug: z.string(),
-    protocol: z.string(),
     endpoint_url: z.string(),
     access_key_id: z.string(),
     runtime_endpoint_url: z.string(),
@@ -228,7 +227,6 @@ export const apiStorageObjectSchema = z.object({
     key: z.string(),
     size: z.number(),
     etag: z.string().nullable(),
-    last_modified: z.string().nullable(),
 });
 
 export const apiComputePodResourcesSchema = z.object({

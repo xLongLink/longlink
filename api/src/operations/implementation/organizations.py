@@ -10,15 +10,13 @@ from src.database.models.operations import Operation
 async def remove(operation: Operation) -> OperationOutcome:
     """Remove runtime resources for one deleted organization."""
 
-    organization_id = operation.organization_id
-
     # Organization removal operations must reference the organization row.
+    organization_id = operation.organization_id
     if organization_id is None:
         raise ValueError("Operation missing organization reference")
 
-    organization = await organizations.get_record(organization_id, include_deleted=True)
-
-    # Missing organizations have no runtime resources to remove.
+    # Look up the deleted organization before removing runtime resources.
+    organization = await organizations.get(organization_id, include_deleted=True)
     if organization is None:
         return complete()
 

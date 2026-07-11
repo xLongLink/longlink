@@ -1,12 +1,7 @@
-from src import runtime
 from enum import StrEnum
 from typing import Any
 from datetime import UTC, datetime, timedelta
 from src.runtime.resources import parse_kubernetes_timestamp
-from src.database.services import applications, organizations
-from src.runtime import registries
-from src.database.models.operations import Operation
-from src.database.models.applications import Application
 
 
 class ApplicationStartupState(StrEnum):
@@ -19,7 +14,6 @@ class ApplicationStartupState(StrEnum):
 
 POD_ROLLOUT_GRACE_SECONDS = 30
 POD_STARTUP_FAILURE_GRACE_SECONDS = 2 * 60
-APPLICATION_VERIFICATION_TIMEOUT_SECONDS = 15 * 60
 FAILED_CONTAINER_WAITING_REASONS = {
     "CrashLoopBackOff",
     "CreateContainerConfigError",
@@ -55,17 +49,6 @@ def runtime_value(item: Any, *names: str) -> Any:
 
     return None
 
-
-def application_verification_timed_out(operation_created_at: datetime) -> bool:
-    """Return whether application startup verification has exceeded its retry window."""
-
-    # Treat naive database timestamps as UTC so timeout comparisons stay stable.
-    if operation_created_at.tzinfo is None:
-        operation_created_at = operation_created_at.replace(tzinfo=UTC)
-
-    return datetime.now(UTC) - operation_created_at >= timedelta(seconds=APPLICATION_VERIFICATION_TIMEOUT_SECONDS)
-
-
 def application_pods_startup_state(pods: list[Any], operation_created_at: datetime) -> ApplicationStartupState:
     """Return the startup state for pods relevant to one verification operation."""
 
@@ -79,9 +62,9 @@ def application_pods_startup_state(pods: list[Any], operation_created_at: dateti
     # Ignore stale pods from older rollouts so they cannot fail a fresh verification operation.
     for pod in pods:
         metadata = runtime_value(pod, "metadata")
-        pod_created_at = parse_kubernetes_timestamp(runtime_value(metadata, "creation_timestamp", "creationTimestamp"))
 
-        # Keep pods with missing timestamps because they may be current runtime objects from tests or adapters.
+        # Parse creation timestamps and keep pods with missing values.
+        pod_created_at = parse_kubernetes_timestamp(runtime_value(metadata, "creation_timestamp", "creationTimestamp"))
         if pod_created_at is None:
             relevant_pods.append(pod)
             continue
@@ -99,9 +82,8 @@ def application_pods_startup_state(pods: list[Any], operation_created_at: dateti
 
     # Count pods where every known container has reached the ready state.
     for pod in relevant_pods:
-        status = runtime_value(pod, "status")
-
         # Pods without status cannot prove readiness.
+        status = runtime_value(pod, "status")
         if status is None:
             continue
 
@@ -123,9 +105,8 @@ def application_pods_startup_state(pods: list[Any], operation_created_at: dateti
 
     # Inspect non-ready pods for terminal states that should fail verification.
     for pod in relevant_pods:
-        status = runtime_value(pod, "status")
-
         # Pods without status may still be pending.
+        status = runtime_value(pod, "status")
         if status is None:
             continue
 
@@ -138,9 +119,8 @@ def application_pods_startup_state(pods: list[Any], operation_created_at: dateti
 
         # Container states expose more specific startup failures than the pod phase.
         for container in runtime_value(status, "container_statuses", "containerStatuses") or []:
-            state = runtime_value(container, "state")
-
             # Containers without state have not produced a terminal signal yet.
+            state = runtime_value(container, "state")
             if state is None:
                 continue
 
@@ -176,57 +156,3 @@ def application_pods_startup_state(pods: list[Any], operation_created_at: dateti
         return ApplicationStartupState.dead
 
     return ApplicationStartupState.pending
-
-
-async def inspect_application_startup(
-    operation: Operation,
-    application: Application | None = None,
-) -> ApplicationStartupState:
-    """Inspect one application deployment startup state."""
-
-    application_id = operation.application_id
-
-    # Verification cannot proceed until the operation references an application.
-    if application_id is None:
-        return ApplicationStartupState.pending
-
-    application = application or await applications.get_by_id(application_id)
-
-    # Missing applications are treated as pending so the scheduler can retry within the timeout window.
-    if application is None:
-        return ApplicationStartupState.pending
-
-    organization = await organizations.get_record(application.organization_id)
-
-    # Missing organizations are treated as pending for the same retry behavior.
-    if organization is None:
-        return ApplicationStartupState.pending
-
-    compute_registry = await registries.application_compute_registry(application, organization.location_id)
-
-    # Without compute configuration there is no runtime state to inspect yet.
-    if compute_registry is None:
-        return ApplicationStartupState.pending
-
-    compute_adapter = runtime.kubernetes(compute_registry)
-
-    # The deployment readiness check is the fastest success path.
-    try:
-
-        # A ready deployment is enough to complete verification without pod inspection.
-        if await compute_adapter.application_deployment_ready(organization.slug, application.slug):
-            return ApplicationStartupState.ready
-
-    # Runtime adapters raise while deployments are still being created.
-    except RuntimeError:
-        return ApplicationStartupState.pending
-
-    # Inspect pods once so ready and terminal states use the same runtime snapshot.
-    try:
-        pods = await compute_adapter.application_pods(organization.slug, application.slug)
-
-    # Pod inspection can lag behind deployment creation.
-    except RuntimeError:
-        return ApplicationStartupState.pending
-
-    return application_pods_startup_state(pods, operation.created_at)

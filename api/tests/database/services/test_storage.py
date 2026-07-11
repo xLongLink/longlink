@@ -26,7 +26,6 @@ async def test_create_get_and_fetch_return_active_storage_registries(users: tupl
         StorageKind.s3,
         "Primary storage",
         "primary-storage",
-        "s3",
         "https://s3.example",
         "access-key",
         "secret-key",
@@ -40,7 +39,6 @@ async def test_create_get_and_fetch_return_active_storage_registries(users: tupl
     assert registry.kind == StorageKind.s3
     assert registry.name == "Primary storage"
     assert registry.slug == "primary-storage"
-    assert registry.protocol == "s3"
     assert registry.endpoint_url == "https://s3.example"
     assert registry.access_key_id == "access-key"
     assert registry.secret_access_key == "secret-key"
@@ -65,7 +63,6 @@ async def test_create_persists_storage_runtime_endpoint_override(users: tuple[Us
         StorageKind.s3,
         "Primary storage",
         "primary-storage",
-        "s3",
         "https://s3.example",
         "access-key",
         "secret-key",
@@ -88,7 +85,6 @@ async def test_create_rejects_duplicate_storage_registry_names(users: tuple[User
         StorageKind.s3,
         "Primary storage",
         "primary-storage",
-        "s3",
         "https://s3.example",
         "access-key",
         "secret-key",
@@ -102,7 +98,6 @@ async def test_create_rejects_duplicate_storage_registry_names(users: tuple[User
             StorageKind.s3,
             "Primary storage",
             "primary-storage",
-        "s3",
             "https://other-s3.example",
             "other-access-key",
             "other-secret-key",
@@ -127,7 +122,6 @@ async def test_delete_soft_deletes_storage_registry_and_include_deleted_can_relo
         StorageKind.s3,
         "Primary storage",
         "primary-storage",
-        "s3",
         "https://s3.example",
         "access-key",
         "secret-key",
@@ -163,7 +157,6 @@ async def test_delete_rejects_storage_registry_used_by_active_applications(users
         StorageKind.s3,
         "Primary storage",
         "primary-storage",
-        "s3",
         "https://s3.example",
         "access-key",
         "secret-key",

@@ -15,9 +15,8 @@ async def application_image_metadata(payload: ApplicationCreate) -> LongLinkMeta
     if reserved_payload_envs:
         raise HTTPException(status_code=409, detail=f"Reserved platform environment variables: {', '.join(reserved_payload_envs)}")
 
-    image_metadata = await images.metadata(payload.image)
-
     # Image inspection must succeed before the platform can trust runtime metadata.
+    image_metadata = await images.metadata(payload.image)
     if image_metadata is None:
         raise HTTPException(status_code=409, detail="Image metadata could not be inspected")
 

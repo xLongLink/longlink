@@ -45,10 +45,8 @@ async def execute(operation: Operation) -> Operation:
         from src.operations.implementation import applications as _applications  # noqa: F401
         from src.operations.implementation import organizations as _organizations  # noqa: F401
 
-        # Dispatch the operation to the registered handler for its kind.
+        # Resolve the operation handler before dispatching the operation.
         handler = registry.get_operation_handler(operation.kind)
-
-        # Unsupported operation rows are terminal worker errors.
         if handler is None:
             raise ValueError(f"Unsupported operation '{operation.kind}'")
 

@@ -81,9 +81,8 @@ class SessionAccountsService:
 async def authuser(request: Request) -> User:
     """Authenticate a user from session and return the User object."""
 
+    # Load the active session account and reject missing sessions.
     oidc = SessionAccountsService(request).active()
-
-    # Reject requests without an active session account.
     if oidc is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
 

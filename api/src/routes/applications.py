@@ -1,5 +1,4 @@
 import httpx2
-from src import runtime
 from uuid import UUID
 from dataclasses import dataclass
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
@@ -20,7 +19,7 @@ from src.models.applications import ApplicationCreate, ApplicationResponse, Appl
 from src.database.models.users import User
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
-from src.runtime import registries
+from src.runtime import Kubernetes, registries
 from src.runtime import provisioning as resources
 
 router = APIRouter()
@@ -95,7 +94,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         raise HTTPException(status_code=503, detail="Application runtime provisioning failed") from exc
 
     # Reload the row so response serialization includes relationships populated by the service layer.
-    reloaded_application = await applications.get_by_id(application.id)
+    reloaded_application = await applications.get(application.id)
     if reloaded_application is None:
         raise HTTPException(status_code=404, detail="Application not found")
 
@@ -118,7 +117,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     if registry is None:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
-    compute_client = runtime.kubernetes(registry)
+    compute_client = Kubernetes(registry.kubeconfig, registry.proxy_secret)
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
@@ -242,8 +241,6 @@ async def proxy_application_request(request: Request, application_id: UUID, path
 
     # Use the app's assigned compute registry so the proxy targets the correct cluster gateway.
     registry = await registries.application_compute_registry(access.application, access.organization.location_id)
-
-    # Proxying requires a configured compute registry.
     if registry is None:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 

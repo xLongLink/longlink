@@ -6,6 +6,8 @@ It provides the shared foundation for auth, organizations, permissions, deployme
 
 When working in this repo, keep changes practical, small, and aligned with the existing API, SDK, and web boundaries. Preserve the core product goal: process-specific applications should be easy to understand, test, review, deploy, and maintain without proprietary platform lock-in.
 
+When listing improvement suggestions, use numbered lists.
+
 ## Architecture
 
 ```bash
@@ -72,6 +74,7 @@ longlink/
 - Target Python 3+ and do not use the `__future__` module.
 - Add a docstring to every Python function.
 - Add a descriptive `# ...` comment before each logic block and leave one blank line before the comment.
+- Keep a lookup and its immediate existence check in the same logic block; place the block comment before the lookup, not between the lookup and `if ... is None` check.
 - Use two blank lines between function definitions and keep function signatures on one line when they fit within the configured line length.
 - Do not start Python files with module-level triple-quoted docstrings unless the file is an Alembic revision.
 - Do not add `__all__` unless the module has a concrete public star-import contract.
@@ -96,6 +99,7 @@ longlink/
 - Functions and documentation: Keep function signatures on one line when they fit.
 - Add JSDoc to JavaScript functions and to TypeScript functions when behavior is not clear from the types.
 - Add a descriptive `// ...` comment before logic blocks, with one blank line before each comment.
+- Keep a lookup and its immediate existence check in the same logic block; place the block comment before the lookup, not between the lookup and the `if` check.
 - Use clear domain terminology, concise filenames, consistent plural model names, and namespaced APIs for related factories or facades.
 - Avoid renaming imports unless it improves clarity.
 - Inline simple single-use prop types and className expressions. Keep named prop types when shared or complex.

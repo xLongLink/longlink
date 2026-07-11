@@ -22,9 +22,8 @@ class LazyCommandGroup(click.Group):
     def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
         """Import and return a command by name on demand."""
 
-        command_path = COMMANDS.get(cmd_name)
-
         # Unknown command names are delegated back to Click.
+        command_path = COMMANDS.get(cmd_name)
         if command_path is None:
             return None
 

@@ -25,12 +25,11 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     class FakeCompute:
         """Fake Kubernetes compute client for registry route tests."""
 
-        def __init__(self, kubeconfig: str, proxy_secret: str, gateway_url: str) -> None:
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             """Capture constructor arguments passed by the route."""
 
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
-            captured["gateway_url"] = gateway_url
 
         async def setup(self) -> None:
             """Capture cluster setup calls."""
@@ -38,10 +37,7 @@ async def test_compute_registry_endpoint_supports_create_and_list(
             setup_calls = captured.get("setup_calls")
             captured["setup_calls"] = setup_calls + 1 if isinstance(setup_calls, int) else 1
 
-    monkeypatch.setattr(
-        "src.routes.computes.runtime.kubernetes",
-        lambda registry: FakeCompute(registry.kubeconfig, registry.proxy_secret, registry.gateway_url),
-    )
+    monkeypatch.setattr("src.routes.computes.Kubernetes", FakeCompute)
 
     # Act
     create_response = client.post(
@@ -73,5 +69,4 @@ async def test_compute_registry_endpoint_supports_create_and_list(
     assert get_response.status_code == 404
     assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"
     assert captured["proxy_secret"]
-    assert captured["gateway_url"] == "https://apps.longlink.internal"
     assert captured["setup_calls"] == 1

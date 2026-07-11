@@ -15,9 +15,9 @@ async def renew_operation_lease(operation_id: UUID, lease_token: str) -> None:
     # Keep extending the lease until execution finishes or ownership is lost.
     while True:
         await asyncio.sleep(max(1, OPERATION_HEARTBEAT_SECONDS))
-        renewed = await operations.renew_lease(operation_id, lease_token)
 
         # Stop renewing if another worker or terminal state changed the lease.
+        renewed = await operations.renew_lease(operation_id, lease_token)
         if renewed is None:
             logger.warning("Operation %s lease was lost", operation_id)
             return
@@ -28,9 +28,8 @@ async def run_operation_scheduler() -> None:
 
     # Keep polling the queue so new claimed operations are drained continuously.
     while True:
-        operation = await operations.claim_next()
-
         # Sleep briefly when the queue has no claimable work.
+        operation = await operations.claim_next()
         if operation is None:
             await asyncio.sleep(1)
             continue

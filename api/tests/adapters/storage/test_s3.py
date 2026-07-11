@@ -32,7 +32,6 @@ async def minio_storage() -> AsyncIterator[S3]:
 
     endpoint_url = f"http://{container.host()}:{container.port(MINIO_PORT)}"
     storage = S3(
-        protocol="http",
         endpoint_url=endpoint_url,
         access_key_id=MINIO_ACCESS_KEY,
         secret_access_key=MINIO_SECRET_KEY,
@@ -55,10 +54,9 @@ async def minio_storage() -> AsyncIterator[S3]:
 
 @pytest.mark.integration
 async def test_s3_adapter_manages_real_minio_buckets_objects_usage_and_cleanup(minio_storage: S3) -> None:
-    """Exercise S3 bucket, object, usage, credential, and cleanup behavior against real MinIO."""
+    """Exercise S3 bucket, object, usage, and cleanup behavior against real MinIO."""
 
     shared_bucket = await minio_storage.bucket("longlink-acme-shared")
-    repeated_shared_bucket = await minio_storage.bucket("longlink-acme-shared")
     app_bucket = await minio_storage.bucket("longlink-acme-dashboard")
     async with minio_storage._client() as client:
         await client.put_object(Bucket=app_bucket, Key="reports/july.csv", Body=b"id,total\n1,42\n")
@@ -69,22 +67,14 @@ async def test_s3_adapter_manages_real_minio_buckets_objects_usage_and_cleanup(m
     limited_objects = await minio_storage.objects(app_bucket, limit=1)
     usage = await minio_storage.bucket_usage(app_bucket)
 
-    with pytest.raises(ValueError, match="shared bucket"):
-        await minio_storage.application_credentials(app_bucket, shared_bucket, [])
-
     await minio_storage.delete_bucket(app_bucket)
-    await minio_storage.delete_bucket(shared_bucket)
     await minio_storage.delete_bucket(shared_bucket)
     final_buckets = await minio_storage.buckets()
 
-    assert repeated_shared_bucket == shared_bucket
     assert {shared_bucket, app_bucket} <= set(buckets)
-    assert {
-        (item["key"], item["size"], item["etag"] is not None, item["last_modified"] is not None)
-        for item in objects
-    } == {
-        ("reports/august.csv", 14, True, True),
-        ("reports/july.csv", 14, True, True),
+    assert {(item["key"], item["size"], item["etag"] is not None) for item in objects} == {
+        ("reports/august.csv", 14, True),
+        ("reports/july.csv", 14, True),
     }
     assert len(limited_objects) == 1
     assert limited_objects[0]["key"] in {"reports/august.csv", "reports/july.csv"}

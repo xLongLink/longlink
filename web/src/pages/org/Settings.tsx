@@ -43,7 +43,7 @@ import type {
     ApiOrganizationStorageResource,
     ApiStorageObject,
 } from '@/lib/types';
-import { formatBytes, formatDateTime, formatNumber, getInitials } from '@/lib/utils';
+import { formatBytes, formatNumber, getInitials } from '@/lib/utils';
 import { PostgreSQL } from '@/svg/PostgreSQL';
 import { S3 } from '@/svg/S3';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -634,16 +634,6 @@ export default function Settings({
             header: t('columns.size'),
             cell: ({ getValue }) => formatBytes(getValue<number>()),
             meta: { className: 'w-32' },
-        },
-        {
-            accessorKey: 'last_modified',
-            header: t('columns.modified'),
-            cell: ({ getValue }) => {
-                const value = getValue<string | null>();
-
-                return value ? formatDateTime(value) : <span className="text-muted-foreground">-</span>;
-            },
-            meta: { className: 'w-52' },
         },
     ];
 

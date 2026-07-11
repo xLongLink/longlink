@@ -23,9 +23,8 @@ export function ContextProvider({ value, children }: { value: ExecutionContext; 
 
 /** Returns the active XML runtime state from the XML context. */
 export function useXmlContext(): { ctx: ExecutionContext } {
-    const runtime = useReactContext(Context);
-
     // Fail fast when XML runtime state is unavailable.
+    const runtime = useReactContext(Context);
     if (!runtime) {
         throw new Error('useXmlContext must be used inside a rendered XML component');
     }

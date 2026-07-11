@@ -5,7 +5,7 @@ import { DataTable } from '@/components/DataTable';
 import { useStorageObjects, useStorages } from '@/data/storage';
 import { useTranslation } from '@/lib/i18n';
 import type { ApiStorageObject } from '@/lib/types';
-import { formatBytes, formatDateTime } from '@/lib/utils';
+import { formatBytes } from '@/lib/utils';
 
 /** Renders object metadata for one storage bucket. */
 export default function StorageObjects() {
@@ -37,16 +37,6 @@ export default function StorageObjects() {
                 );
             },
             meta: { className: 'min-w-40' },
-        },
-        {
-            accessorKey: 'last_modified',
-            header: t('columns.modified'),
-            cell: ({ getValue }) => {
-                const value = getValue<string | null>();
-
-                return value ? formatDateTime(value) : <span className="text-muted-foreground">—</span>;
-            },
-            meta: { className: 'w-52' },
         },
     ];
 

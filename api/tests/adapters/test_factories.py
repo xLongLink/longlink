@@ -33,7 +33,6 @@ def test_storage_factory_builds_s3_adapter() -> None:
         name="s3",
         slug="s3",
         kind=StorageKind.s3,
-        protocol="https",
         endpoint_url="https://storage.example.test",
         access_key_id="access-key",
         secret_access_key="secret-key",

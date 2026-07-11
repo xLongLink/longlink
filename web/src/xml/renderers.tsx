@@ -115,9 +115,8 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
 
             // Refresh each requested setup value.
             for (const id of list) {
-                const setup = runtimeCtx.setups[id];
-
                 // Skip unknown invalidation targets.
+                const setup = runtimeCtx.setups[id];
                 if (!setup) continue;
 
                 delete runtimeCtx.values[id];

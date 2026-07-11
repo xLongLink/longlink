@@ -86,9 +86,8 @@ def summarize_component_schema(schema_path: Path, component: str) -> ComponentDe
     if not complex_type_name:
         raise click.ClickException(f"Schema is missing a type reference: {schema_path.name}")
 
-    complex_type = schema.find(f"xsd:complexType[@name='{complex_type_name}']", namespaces=XSD_NAMESPACE)
-
     # Resolve the referenced complex type.
+    complex_type = schema.find(f"xsd:complexType[@name='{complex_type_name}']", namespaces=XSD_NAMESPACE)
     if complex_type is None:
         raise click.ClickException(f"Schema does not define type {complex_type_name}")
 

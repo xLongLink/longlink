@@ -42,6 +42,8 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
     compute_registry = fake_resource(
         id=UUID("44444444-4444-4444-4444-444444444444"),
         name="local",
+        kubeconfig="apiVersion: v1\nclusters: []\n",
+        proxy_secret="proxy-secret",
         gateway_url=seed.LOCAL_COMPUTE_GATEWAY_URL,
     )
     kubeconfig = tmp_path / "kubeconfig.yaml"
@@ -121,11 +123,11 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         calls["loaded_organization"] = organization_id
         return organization
 
-    async def fetch_no_application(organization_id: UUID, application_slug: str) -> object | None:
-        """Return no existing seeded application."""
+    async def list_no_applications(organization_id: UUID) -> list[object]:
+        """Return no existing seeded applications."""
 
-        calls["application_lookup"] = (organization_id, application_slug)
-        return None
+        calls["application_lookup"] = organization_id
+        return []
 
     async def create_application_runtime(*args: object) -> object:
         """Record the application runtime creation request."""
@@ -154,11 +156,11 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
     monkeypatch.setattr(seed.storage_service, "create", create_storage_registry)
     monkeypatch.setattr(seed.compute_service, "fetch", fetch_no_compute_registries)
     monkeypatch.setattr(seed.compute_service, "create", create_compute_registry)
-    monkeypatch.setattr(seed.runtime, "kubernetes", lambda registry: fake_kubernetes)
+    monkeypatch.setattr(seed, "Kubernetes", lambda kubeconfig, proxy_secret: fake_kubernetes)
     monkeypatch.setattr(seed.organization_service, "fetch", fetch_no_organizations)
     monkeypatch.setattr(seed.organization_service, "create", create_organization)
-    monkeypatch.setattr(seed.organization_service, "get_record", load_organization)
-    monkeypatch.setattr(seed.application_service, "get", fetch_no_application)
+    monkeypatch.setattr(seed.organization_service, "get", load_organization)
+    monkeypatch.setattr(seed.organization_service, "applications", list_no_applications)
     monkeypatch.setattr(seed.resources, "create_application_runtime", create_application_runtime)
     monkeypatch.setattr(seed.resources, "sync_application_runtime", sync_application_runtime)
     monkeypatch.setattr(seed.bootstrap, "create_organization_namespace", record_bootstrap)
@@ -183,7 +185,6 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         "kind": seed.StorageKind.s3,
         "name": "local",
         "slug": "local",
-        "protocol": "http",
         "endpoint_url": "http://localhost:19000",
         "runtime_endpoint_url": "http://host.k3d.internal:19000",
         "access_key_id": "admin",
@@ -200,7 +201,7 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         "user": user,
     }
     assert fake_kubernetes.setup_calls == 1
-    assert calls["application_lookup"] == (organization.id, seed.LOCAL_APP_NAME)
+    assert calls["application_lookup"] == organization.id
     application_create_call = cast(tuple[object, ...], calls["application_create"])
     assert application_create_call[0] == organization
 
@@ -276,11 +277,11 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
         calls["loaded_organization"] = organization_id
         return organization
 
-    async def fetch_application(organization_id: UUID, application_slug: str) -> SimpleNamespace:
+    async def list_applications(organization_id: UUID) -> list[SimpleNamespace]:
         """Return the existing seeded application."""
 
-        calls["application_lookup"] = (organization_id, application_slug)
-        return application
+        calls["application_lookup"] = organization_id
+        return [application]
 
     async def create_application_runtime(*args: object) -> object:
         """Fail if an existing application is recreated."""
@@ -301,10 +302,10 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
     monkeypatch.setattr(seed.storage_service, "fetch", fetch_storage_registries)
     monkeypatch.setattr(seed.compute_service, "fetch", fetch_compute_registries)
     monkeypatch.setattr(seed.organization_service, "fetch", fetch_organizations)
-    monkeypatch.setattr(seed.organization_service, "get_record", load_organization)
+    monkeypatch.setattr(seed.organization_service, "get", load_organization)
     monkeypatch.setattr(seed, "ensure_local_organization_owner", ensure_owner)
     monkeypatch.setattr(seed.bootstrap, "sync_organization_users", sync_organization_users)
-    monkeypatch.setattr(seed.application_service, "get", fetch_application)
+    monkeypatch.setattr(seed.organization_service, "applications", list_applications)
     monkeypatch.setattr(seed.resources, "create_application_runtime", create_application_runtime)
     monkeypatch.setattr(seed.resources, "sync_application_runtime", sync_application_runtime)
 
@@ -312,7 +313,7 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
 
     assert calls["owner"] == (organization.id, user.id)
     assert calls["organization_users"] == organization
-    assert calls["application_lookup"] == (organization.id, seed.LOCAL_APP_NAME)
+    assert calls["application_lookup"] == organization.id
     application_sync_call = cast(tuple[object, ...], calls["application_sync"])
     assert application_sync_call[0] == application
     assert application_sync_call[1] == organization

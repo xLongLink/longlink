@@ -43,9 +43,8 @@ async def list_accounts(request: Request):
 
     # Load each saved session account.
     for oidc in SessionAccountsService(request).list():
-        user = await users.get(oidc)
-
         # Skip stale session account references.
+        user = await users.get(oidc)
         if user is None:
             continue
 

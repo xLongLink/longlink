@@ -42,9 +42,8 @@ function createOrganizationColumnsBase(t: TFunction): Array<ColumnDef<ApiOrganiz
             id: 'created_by',
             header: t('columns.createdBy'),
             cell: ({ row }) => {
-                const createdBy = row.original.created_by;
-
                 // Show an empty value when creator data is unavailable.
+                const createdBy = row.original.created_by;
                 if (!createdBy) {
                     return '—';
                 }
@@ -70,9 +69,8 @@ function createOrganizationColumnsBase(t: TFunction): Array<ColumnDef<ApiOrganiz
             id: 'updated_by',
             header: t('columns.updatedBy'),
             cell: ({ row }) => {
-                const updatedBy = row.original.updated_by;
-
                 // Show an empty value when updater data is unavailable.
+                const updatedBy = row.original.updated_by;
                 if (!updatedBy) {
                     return '—';
                 }
@@ -98,9 +96,8 @@ function createOrganizationColumnsBase(t: TFunction): Array<ColumnDef<ApiOrganiz
             id: 'deleted_by',
             header: t('columns.deletedBy'),
             cell: ({ row }) => {
-                const deletedBy = row.original.deleted_by;
-
                 // Show an empty value when deletion metadata is unavailable.
+                const deletedBy = row.original.deleted_by;
                 if (!deletedBy) {
                     return '—';
                 }

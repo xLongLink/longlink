@@ -50,6 +50,19 @@ def test_knames_rejects_overlong_dns_label() -> None:
         names.knames("a" * 64)
 
 
+def test_namespace_returns_valid_organization_namespace() -> None:
+    """Return valid organization Kubernetes namespaces unchanged."""
+
+    assert names.namespace("acme-team") == "acme-team"
+
+
+def test_namespace_rejects_system_namespace() -> None:
+    """Reject Kubernetes system namespaces for organizations."""
+
+    with pytest.raises(ValueError, match="Namespace name is reserved"):
+        names.namespace("kube-system")
+
+
 def test_dbname_returns_managed_database_name() -> None:
     """Prefix organization slugs for managed PostgreSQL databases."""
 
@@ -68,22 +81,3 @@ def test_dbname_rejects_overlong_database_name() -> None:
 
     with pytest.raises(ValueError, match="Database name must be at most 63 characters"):
         names.dbname("a" * 55)
-
-
-def test_k8name_returns_managed_kubernetes_name() -> None:
-    """Prefix organization slugs for managed Kubernetes namespaces."""
-
-    assert names.k8name("acme-team") == "longlink-acme-team"
-
-
-def test_k8name_allows_maximum_length_name() -> None:
-    """Allow final Kubernetes names exactly at the DNS label limit."""
-
-    assert names.k8name("a" * 54) == f"longlink-{'a' * 54}"
-
-
-def test_k8name_rejects_overlong_name() -> None:
-    """Reject final Kubernetes names longer than one DNS label."""
-
-    with pytest.raises(ValueError, match="Value must be at most 63 characters"):
-        names.k8name("a" * 55)

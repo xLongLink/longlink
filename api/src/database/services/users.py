@@ -55,9 +55,7 @@ async def organization_memberships(user_id: UUID) -> list[tuple[Organization, Us
         organization_result = await session.execute(
             select(Organization, UserOrganization)
             .join(UserOrganization, Organization.id == UserOrganization.organization_id)
-            .options(
-                selectinload(Organization.location),
-            )
+            .options(selectinload(Organization.location))
             .where(
                 UserOrganization.user_id == user_id,
                 UserOrganization.deleted_at.is_(None),

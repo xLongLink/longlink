@@ -28,7 +28,6 @@ def storage(registry: StorageRegistry) -> Storage:
     # Select the S3 adapter for supported storage registries.
     if registry.kind == StorageKind.s3:
         return S3(
-            registry.protocol,
             registry.endpoint_url,
             registry.access_key_id,
             registry.secret_access_key,

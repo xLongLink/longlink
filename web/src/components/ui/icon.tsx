@@ -84,9 +84,8 @@ export function createLucideIconComponent(name: string): LucideIcon | null {
 
 /** Renders one supported Lucide icon. */
 export function Icon({ className, name, ...props }: LucideProps & { name: IconName }) {
-    const StaticIcon = staticIconRegistry[name];
-
     // Reject unsupported icon names before rendering.
+    const StaticIcon = staticIconRegistry[name];
     if (!StaticIcon) {
         throw new Error(`Unknown icon "${name}"`);
     }

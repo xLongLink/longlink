@@ -127,14 +127,14 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         logs = await compute.logs("acme", "dashboard", lines=50)
         namespaces = await compute.namespaces()
         cluster_resources = await compute.resources()
-        namespace_pods = await compute.pods("longlink-acme")
+        namespace_pods = await compute.pods("acme")
 
-        assert route == "/longlink-acme/dashboard/"
-        assert "longlink-acme" in namespaces
+        assert route == "/acme/dashboard/"
+        assert "acme" in namespaces
         assert f"/api/applications/{application_id}/proxy/" not in gateway_config
         assert "x-longlink-application-id" in gateway_config
         assert application_id in gateway_config
-        assert "dashboard.longlink-acme.svc.cluster.local" in gateway_config
+        assert "dashboard.acme.svc.cluster.local" in gateway_config
         assert "shared-secret" not in gateway_config
         assert "__LONG_LINK_GATEWAY_SECRET__" in gateway_config
         assert base64.b64decode(gateway_secret.data["gateway-secret"]).decode("utf-8") == "shared-secret"

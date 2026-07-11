@@ -57,7 +57,6 @@ async def create(
     kind: StorageKind,
     name: str,
     slug: str,
-    protocol: str,
     endpoint_url: str,
     access_key_id: str,
     secret_access_key: str,
@@ -69,18 +68,16 @@ async def create(
 
     # Use one session for duplicate checks and creation.
     async with session_scope() as session:
-        result = await session.execute(select(StorageRegistry).where(StorageRegistry.name == name))
-        storage = result.scalar_one_or_none()
+        result = await session.execute(select(StorageRegistry.id).where(StorageRegistry.name == name))
 
         # Reject duplicate registry names before insert.
-        if storage is not None:
+        if result.scalar_one_or_none() is not None:
             raise HTTPException(status_code=409, detail="Storage registry already exists")
 
         storage = StorageRegistry(
             kind=kind,
             name=name,
             slug=slug,
-            protocol=protocol,
             endpoint_url=endpoint_url,
             access_key_id=access_key_id,
             secret_access_key=secret_access_key,
@@ -98,7 +95,6 @@ async def create(
             await session.rollback()
             raise HTTPException(status_code=409, detail="Storage registry already exists") from exc
 
-        await session.refresh(storage)
         statement = (
             select(StorageRegistry)
             .options(

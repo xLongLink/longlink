@@ -373,8 +373,8 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     deleted = await db.organizations.soft_delete(organization.id, owner)
     active_organization = await db.organizations.get(organization.id)
     deleted_organization = await db.organizations.get(organization.id, include_deleted=True)
-    active_application = await db.applications.get_by_id(application.id)
-    deleted_application = await db.applications.get_by_id(application.id, include_deleted=True)
+    active_application = await db.applications.get(application.id)
+    deleted_application = await db.applications.get(application.id, include_deleted=True)
     second_delete = await db.organizations.soft_delete(organization.id, owner)
     missing_delete = await db.organizations.soft_delete(uuid4(), owner)
 

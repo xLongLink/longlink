@@ -39,10 +39,8 @@ class OrganizationAccess:
 async def organization_access(organization_id: UUID, user: User = Depends(authuser)) -> OrganizationAccess:
     """Return the current user's organization and membership role."""
 
-    # Load the membership row and organization together so all callers use one access path.
+    # Load the membership row and organization together for access checks.
     member_access = await organizations.get_member_access(organization_id, user.id)
-
-    # Hide organizations that the user cannot access.
     if member_access is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
@@ -160,9 +158,8 @@ async def list_organization_database_resources(
     # Restrict database inspection to maintainers.
     roles.atleast(member_access.role, OrganizationRoles.maintain, "Database resource inspection permissions required")
 
-    registry = await registries.organization_database_registry(organization)
-
     # Skip resources when no database registry is assigned.
+    registry = await registries.organization_database_registry(organization)
     if registry is None:
         return []
 
@@ -184,9 +181,8 @@ async def list_organization_storage_resources(
     # Restrict storage inspection to maintainers.
     roles.atleast(member_access.role, OrganizationRoles.maintain, "Storage resource inspection permissions required")
 
-    registry = await registries.organization_storage_registry(organization)
-
     # Skip resources when no storage registry is assigned.
+    registry = await registries.organization_storage_registry(organization)
     if registry is None:
         return []
 
@@ -210,9 +206,8 @@ async def list_organization_database_resource_tables(
     # Restrict table inspection to maintainers.
     roles.atleast(member_access.role, OrganizationRoles.maintain, "Database resource inspection permissions required")
 
-    registry = await registries.organization_database_registry(organization)
-
     # Require an assigned database registry for table inspection.
+    registry = await registries.organization_database_registry(organization)
     if registry is None:
         raise HTTPException(status_code=404, detail="Database resource not found")
 
@@ -306,7 +301,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
 
     # Let platform administrators delete any organization.
     if user.role == PlatformRoles.administrator:
-        organization = await organizations.get_record(organization_id)
+        organization = await organizations.get(organization_id)
         if organization is None:
             raise HTTPException(status_code=404, detail="Organization not found")
     else:
@@ -376,9 +371,8 @@ async def _database_resource_rows(
 
     # List active application schemas before orphaned schemas.
     for application in sorted(active_applications, key=lambda item: item.name):
-        usage = usage_by_schema.get(application.slug)
-
         # Skip applications whose schema is not present.
+        usage = usage_by_schema.get(application.slug)
         if usage is None:
             continue
 
@@ -570,7 +564,7 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     # Validate derived resource names before creating the organization.
     try:
         slug = names.slugify(payload.name)
-        names.k8name(slug)
+        names.namespace(slug)
         names.dbname(slug)
         buckets.shared(slug)
 

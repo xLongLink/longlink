@@ -1,10 +1,12 @@
 import asyncio
 import subprocess
-from src import runtime
 from uuid import UUID
 from pathlib import Path
 from datetime import UTC, datetime
 from src.utils import names, buckets
+from src.runtime import Kubernetes
+from src.runtime import bootstrap
+from src.runtime import provisioning as resources
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import StorageKind
 from src.database.session import session_scope
@@ -15,14 +17,11 @@ from src.database.services import compute as compute_service
 from src.database.services import storage as storage_service
 from src.database.services import database as database_service
 from src.database.services import locations as location_service
-from src.database.services import applications as application_service
 from src.database.services import organizations as organization_service
 from src.models.applications import ApplicationCreate
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.databases import DatabaseRegistry
-from src.runtime import bootstrap
-from src.runtime import provisioning as resources
 from src.database.models.association import UserOrganization
 
 LOCAL_ORG = "test"
@@ -69,9 +68,8 @@ async def sync_local_database_host(registry_id: UUID, host: str) -> None:
 
     # Update only the reused local registry row.
     async with session_scope() as session:
+        # Load the reused local registry row before updating its endpoint.
         registry = await session.get(DatabaseRegistry, registry_id)
-
-        # Missing local rows indicate stale seed assumptions.
         if registry is None:
             raise RuntimeError("Local database registry could not be loaded")
 
@@ -85,9 +83,8 @@ async def sync_local_compute_gateway_url(registry_id: UUID) -> None:
 
     # Update only the reused local compute registry row.
     async with session_scope() as session:
+        # Load the reused local compute registry before updating its gateway URL.
         registry = await session.get(ComputeRegistry, registry_id)
-
-        # Missing local rows indicate stale seed assumptions.
         if registry is None:
             raise RuntimeError("Local compute registry could not be loaded")
 
@@ -129,7 +126,6 @@ async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) 
                 )
             )
         else:
-
             # Reusing old local data should not leave the fixed dev administrator locked out.
             membership.role = OrganizationRoles.owner
             membership.deleted_at = None
@@ -148,9 +144,8 @@ async def seed_local_development() -> None:
     # Location
     location_slug = names.slugify("local")
     locations = await location_service.fetch()
+    # Find the local location before deciding whether to create it.
     location = next((location for location in locations if location.slug == location_slug), None)
-
-    # Create the local location when the development database is empty.
     if location is None:
         location = await location_service.create(
             location_slug,
@@ -163,9 +158,8 @@ async def seed_local_development() -> None:
     # Database registry
     database_host = local_database_host()
     database_registries = await database_service.fetch()
+    # Find the local database registry before deciding whether to create or refresh it.
     database_registry = next((registry for registry in database_registries if registry.name == "local"), None)
-
-    # Register the local database endpoint on first seed.
     if database_registry is None:
         await database_service.create(
             kind=DatabaseKind.postgresql,
@@ -192,7 +186,6 @@ async def seed_local_development() -> None:
             kind=StorageKind.s3,
             name="local",
             slug=names.slugify("local"),
-            protocol="http",
             endpoint_url="http://localhost:19000",
             runtime_endpoint_url="http://host.k3d.internal:19000",
             access_key_id="admin",
@@ -204,16 +197,11 @@ async def seed_local_development() -> None:
     # Compute registry
     kubeconfig = KUBECONFIG.read_text(encoding="utf-8")
     compute_registries = await compute_service.fetch()
+    # Find the local compute registry before deciding whether to create or refresh it.
     compute_registry = next(
-        (
-            registry
-            for registry in compute_registries
-            if registry.name == "local" or registry.gateway_url == LOCAL_COMPUTE_GATEWAY_URL
-        ),
+        (registry for registry in compute_registries if registry.name == "local" or registry.gateway_url == LOCAL_COMPUTE_GATEWAY_URL),
         None,
     )
-
-    # Create or repair the local compute registry for gateway routing.
     if compute_registry is None:
         compute_registry = await compute_service.create(
             name="local",
@@ -223,7 +211,7 @@ async def seed_local_development() -> None:
             location_id=location.id,
             user=admin_user,
         )
-        await runtime.kubernetes(compute_registry).setup()
+        await Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret).setup()
 
     # Reused registries may need their gateway URL refreshed after port changes.
     elif compute_registry.gateway_url != LOCAL_COMPUTE_GATEWAY_URL:
@@ -231,12 +219,11 @@ async def seed_local_development() -> None:
 
     # Organization
     organizations = await organization_service.fetch()
+    # Find the local organization before deciding whether to create or repair it.
     organization = next((organization for organization in organizations if organization.name == LOCAL_ORG), None)
-
-    # Create and bootstrap the local organization on first seed.
     if organization is None:
         organization_slug = names.slugify(LOCAL_ORG)
-        names.k8name(organization_slug)
+        names.namespace(organization_slug)
         names.dbname(organization_slug)
         buckets.shared(organization_slug)
         organization = await organization_service.create(
@@ -257,17 +244,15 @@ async def seed_local_development() -> None:
         await bootstrap.sync_organization_users(organization)
 
     # Application
-    organization_record = await organization_service.get_record(organization.id)
-
-    # Runtime provisioning needs a fully loaded organization row.
+    # Load the full organization row required by runtime provisioning.
+    organization_record = await organization_service.get(organization.id)
     if organization_record is None:
         raise RuntimeError("Seeded organization could not be loaded")
 
     application_payload = ApplicationCreate.model_validate(LOCAL_APP)
     application_slug = names.slugify(LOCAL_APP_NAME)
-    names.knames(organization_record.slug)
+    names.namespace(organization_record.slug)
     names.knames(application_slug)
-    names.k8name(organization_record.slug)
     names.dbname(organization_record.slug)
 
     # Application storage isolation depends on the assigned shared bucket.
@@ -275,9 +260,9 @@ async def seed_local_development() -> None:
         raise RuntimeError("Seeded organization has no assigned shared storage bucket")
     buckets.application(organization_record.slug, application_slug)
 
-    application = await application_service.get(organization_record.id, application_slug)
-
-    # Create the sample app the first time the seed runs.
+    # Load the sample app before deciding whether to create or refresh it.
+    organization_applications = await organization_service.applications(organization_record.id)
+    application = next((application for application in organization_applications if application.slug == application_slug), None)
     if application is None:
         await resources.create_application_runtime(
             organization_record,

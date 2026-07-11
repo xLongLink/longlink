@@ -130,36 +130,18 @@ async def queue_application_verification(application_id: UUID, user: User | None
     return await create(OperationKind.application_verify, application_id=application_id, user=user)
 
 
-async def queue_application_removal(
-    application_id: UUID,
-    scheduled_at: datetime | None = None,
-    user: User | None = None,
-) -> Operation:
+async def queue_application_removal(application_id: UUID, scheduled_at: datetime | None = None, user: User | None = None) -> Operation:
     """Queue runtime cleanup for one deleted application."""
 
     # Application cleanup only needs the application reference and optional schedule.
-    return await create(
-        OperationKind.application_remove,
-        application_id=application_id,
-        scheduled_at=scheduled_at,
-        user=user,
-    )
+    return await create(OperationKind.application_remove, application_id=application_id, scheduled_at=scheduled_at, user=user)
 
 
-async def queue_organization_removal(
-    organization_id: UUID,
-    scheduled_at: datetime | None = None,
-    user: User | None = None,
-) -> Operation:
+async def queue_organization_removal(organization_id: UUID, scheduled_at: datetime | None = None, user: User | None = None) -> Operation:
     """Queue runtime cleanup for one deleted organization."""
 
     # Organization cleanup only needs the organization reference and optional schedule.
-    return await create(
-        OperationKind.organization_remove,
-        organization_id=organization_id,
-        scheduled_at=scheduled_at,
-        user=user,
-    )
+    return await create(OperationKind.organization_remove, organization_id=organization_id, scheduled_at=scheduled_at, user=user)
 
 
 async def claim(operation_id: UUID) -> Operation | None:
@@ -182,9 +164,8 @@ async def claim(operation_id: UUID) -> Operation | None:
             )
             .with_for_update(skip_locked=True)
         )
-        operation = (await session.execute(statement)).scalars().first()
-
         # Stop when another worker already owns the operation.
+        operation = (await session.execute(statement)).scalars().first()
         if operation is None:
             return None
 
@@ -259,9 +240,9 @@ async def claim_next() -> Operation | None:
             .with_for_update(skip_locked=True)
         )
         result = await session.execute(statement)
-        operation = result.scalars().first()
 
         # Return nothing when no operation is ready to run.
+        operation = result.scalars().first()
         if operation is None:
             return None
 

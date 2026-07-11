@@ -135,7 +135,6 @@ async def test_create_organization_initializes_storage(
         StorageKind.s3,
         "primary",
         "primary",
-        "http",
         "http://storage.local",
         "access",
         "secret",
@@ -144,10 +143,9 @@ async def test_create_organization_initializes_storage(
     )
 
     class FakeStorage:
-        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+        def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
             """Store storage registry configuration for assertions."""
 
-            self.protocol = protocol
             self.endpoint_url = endpoint_url
             self.access_key_id = access_key_id
             self.secret_access_key = secret_access_key
@@ -161,7 +159,6 @@ async def test_create_organization_initializes_storage(
     monkeypatch.setattr(
         "src.runtime.bootstrap.adapters.storage",
         lambda registry: FakeStorage(
-            registry.protocol,
             registry.endpoint_url,
             registry.access_key_id,
             registry.secret_access_key,
@@ -188,9 +185,7 @@ async def test_get_organization_returns_member_payload(
     # Arrange
     owner = users[0]
     location = await db.locations.create("local", "Local testing", owner, "CH")
-    organization = await db.organizations.create(
-        "acme", "acme", location.id, owner, avatar="https://example.com/organizations/acme.png"
-    )
+    organization = await db.organizations.create("acme", "acme", location.id, owner, avatar="https://example.com/organizations/acme.png")
     application = await db.applications.create(
         organization.id,
         "dashboard",
@@ -427,7 +422,6 @@ async def test_organization_storage_endpoint_returns_organization_buckets(
         StorageKind.s3,
         "primary",
         "primary",
-        "http",
         "http://storage.local",
         "access",
         "secret",
@@ -454,10 +448,9 @@ async def test_organization_storage_endpoint_returns_organization_buckets(
     )
 
     class FakeStorage:
-        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+        def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
             """Store storage registry configuration for assertions."""
 
-            self.protocol = protocol
             self.endpoint_url = endpoint_url
             self.access_key_id = access_key_id
             self.secret_access_key = secret_access_key
@@ -481,7 +474,6 @@ async def test_organization_storage_endpoint_returns_organization_buckets(
     monkeypatch.setattr(
         "src.routes.organizations.adapters.storage",
         lambda registry: FakeStorage(
-            registry.protocol,
             registry.endpoint_url,
             registry.access_key_id,
             registry.secret_access_key,
@@ -523,7 +515,6 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
         StorageKind.s3,
         "primary",
         "primary",
-        "http",
         "http://storage.local",
         "access",
         "secret",
@@ -540,10 +531,9 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     )
 
     class FakeStorage:
-        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+        def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
             """Store storage registry configuration for assertions."""
 
-            self.protocol = protocol
             self.endpoint_url = endpoint_url
             self.access_key_id = access_key_id
             self.secret_access_key = secret_access_key
@@ -556,7 +546,6 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     monkeypatch.setattr(
         "src.routes.organizations.adapters.storage",
         lambda registry: FakeStorage(
-            registry.protocol,
             registry.endpoint_url,
             registry.access_key_id,
             registry.secret_access_key,

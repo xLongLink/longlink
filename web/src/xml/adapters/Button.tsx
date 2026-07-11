@@ -89,9 +89,8 @@ export function appendButtonItem(
     ctx: ReturnType<typeof useXmlContext>['ctx'],
     appendTarget?: string
 ) {
-    const targetPath = appendTarget ?? resolveXmlString(props, 'append', ctx);
-
     // Skip buttons with no append target.
+    const targetPath = appendTarget ?? resolveXmlString(props, 'append', ctx);
     if (!targetPath) return;
 
     const target = resolvePath(ctx, targetPath.split('.').filter(Boolean));

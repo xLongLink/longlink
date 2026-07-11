@@ -14,9 +14,8 @@ const supportedLanguages = new Set<string>(LANGUAGE_OPTIONS.map((option) => opti
 
 /** Returns the closest UI language with a bundled translation catalog. */
 export function resolveSupportedLanguage(language: Language | null | undefined): Language {
-    const normalizedLanguage = language?.trim().toLowerCase();
-
     // Default when the user has not selected a language.
+    const normalizedLanguage = language?.trim().toLowerCase();
     if (!normalizedLanguage) {
         return DEFAULT_LANGUAGE;
     }

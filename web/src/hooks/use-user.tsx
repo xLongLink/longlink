@@ -129,9 +129,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
 /** Reads the current user profile without loading saved account switcher state. */
 export function useUserProfile(): UserProfileState {
-    const context = useContext(UserContext);
-
     // Fail fast when the provider is missing.
+    const context = useContext(UserContext);
     if (context === undefined) {
         throw new Error('useUserProfile must be used within a UserProvider');
     }

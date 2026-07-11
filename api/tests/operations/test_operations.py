@@ -333,9 +333,9 @@ async def test_application_and_organization_remove_handlers_remove_runtime(monke
 
         removals.append(("organization", organization.id))
 
-    monkeypatch.setattr(application_operations.applications, "get_by_id", fake_get_application)
-    monkeypatch.setattr(application_operations.organizations, "get_record", fake_get_organization)
-    monkeypatch.setattr(organization_operations.organizations, "get_record", fake_get_organization)
+    monkeypatch.setattr(application_operations.applications, "get", fake_get_application)
+    monkeypatch.setattr(application_operations.organizations, "get", fake_get_organization)
+    monkeypatch.setattr(organization_operations.organizations, "get", fake_get_organization)
     monkeypatch.setattr(application_operations.provisioning, "remove_application_runtime", fake_remove_application_runtime)
     monkeypatch.setattr(organization_operations.provisioning, "remove_organization_runtime", fake_remove_organization_runtime)
 

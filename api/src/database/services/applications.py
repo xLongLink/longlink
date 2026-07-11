@@ -39,35 +39,7 @@ async def fetch() -> list[Application]:
         return result.scalars().all()
 
 
-async def get(organization_id: UUID, slug: str) -> Application | None:
-    """Return a registered application by organization and slug."""
-
-    # Load one active application by slug.
-    async with session_scope() as session:
-        statement = (
-            select(Application)
-            .options(
-                selectinload(Application.organization).selectinload(Organization.created_by),
-                selectinload(Application.organization).selectinload(Organization.updated_by),
-                selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.compute_registry),
-                selectinload(Application.database_registry),
-                selectinload(Application.storage_registry),
-                selectinload(Application.created_by),
-                selectinload(Application.updated_by),
-                selectinload(Application.deleted_by),
-            )
-            .where(
-                Application.organization_id == organization_id,
-                Application.slug == slug,
-                Application.deleted_at.is_(None),
-            )
-        )
-        result = await session.execute(statement)
-        return result.scalar_one_or_none()
-
-
-async def get_by_id(application_id: UUID, include_deleted: bool = False) -> Application | None:
+async def get(application_id: UUID, include_deleted: bool = False) -> Application | None:
     """Return a registered application by id."""
 
     # Load one application by id.
@@ -141,10 +113,7 @@ async def list_user_memberships(organization_id: UUID, user_id: UUID) -> list[Us
         return result.scalars().all()
 
 
-async def members(
-    application_id: UUID,
-    organization_id: UUID,
-) -> list[tuple[User, UserOrganization, UserApplication | None]]:
+async def members(application_id: UUID, organization_id: UUID) -> list[tuple[User, UserOrganization, UserApplication | None]]:
     """Return organization member rows with optional application membership rows."""
 
     # Query organization members and app roles together.
@@ -177,19 +146,13 @@ async def members(
         ]
 
 
-async def set_member_role(
-    application_id: UUID,
-    organization_id: UUID,
-    member_id: UUID,
-    role: ApplicationRoles | None,
-    user: User,
-) -> bool:
+async def set_member_role(application_id: UUID, organization_id: UUID, member_id: UUID, role: ApplicationRoles | None, user: User) -> bool:
     """Set or remove one organization member's application role."""
 
     # Update membership rows in one transaction.
     async with session_scope() as session:
         membership_result = await session.execute(
-            select(UserOrganization)
+            select(UserOrganization.user_id)
             .join(User, User.id == UserOrganization.user_id)
             .where(
                 UserOrganization.organization_id == organization_id,
@@ -198,10 +161,9 @@ async def set_member_role(
                 User.deleted_at.is_(None),
             )
         )
-        organization_membership = membership_result.scalar_one_or_none()
 
         # Require an active organization membership first.
-        if organization_membership is None:
+        if membership_result.scalar_one_or_none() is None:
             return False
 
         application_membership = await session.get(
@@ -269,14 +231,13 @@ async def create(
 
     # Create the application and owner membership transactionally.
     async with session_scope() as session:
-        organization = await session.get(Organization, organization_id)
-
         # Require the owning organization to exist.
+        organization = await session.get(Organization, organization_id)
         if organization is None:
             raise HTTPException(status_code=404, detail="Organization not found")
 
         # Check slug uniqueness so K8s resource names stay collision-free.
-        slug_statement = select(Application).where(
+        slug_statement = select(Application.id).where(
             Application.organization_id == organization_id,
             Application.slug == slug,
         )
@@ -286,24 +247,22 @@ async def create(
         if slug_result.scalar_one_or_none() is not None:
             raise HTTPException(status_code=409, detail="Application slug already exists")
 
-        application_kwargs: dict[str, object] = {
-            "organization_id": organization_id,
-            "compute_registry_id": compute_registry_id,
-            "database_registry_id": database_registry_id,
-            "storage_registry_id": storage_registry_id,
-            "storage_bucket_name": storage_bucket_name or buckets.application(organization.slug, slug),
-            "name": name,
-            "slug": slug,
-            "status": status,
-            "sdk": sdk,
-            "digest": digest,
-            "version": version,
-            "description": description,
-            "image": image,
-            "icon": icon,
-        }
-
-        application = Application(**application_kwargs)
+        application = Application(
+            organization_id=organization_id,
+            compute_registry_id=compute_registry_id,
+            database_registry_id=database_registry_id,
+            storage_registry_id=storage_registry_id,
+            storage_bucket_name=storage_bucket_name or buckets.application(organization.slug, slug),
+            name=name,
+            slug=slug,
+            status=status,
+            sdk=sdk,
+            digest=digest,
+            version=version,
+            description=description,
+            image=image,
+            icon=icon,
+        )
         application.created_id = user.id
         application.updated_id = user.id
         session.add(application)
@@ -319,7 +278,6 @@ async def create(
         )
         await session.commit()
 
-        await session.refresh(application)
         statement = (
             select(Application)
             .options(
@@ -344,9 +302,8 @@ async def set_status(application_id: UUID, status: ApplicationStatus) -> Applica
 
     # Update the status inside one session.
     async with session_scope() as session:
-        application = await session.get(Application, application_id)
-
         # Ignore missing applications for status updates.
+        application = await session.get(Application, application_id)
         if application is None:
             return None
 
@@ -429,7 +386,6 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
             membership.updated_id = user.id
 
         await session.commit()
-        await session.refresh(application)
         statement = (
             select(Application)
             .options(

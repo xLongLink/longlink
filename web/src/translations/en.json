@@ -216,7 +216,6 @@
         "accessKeyId": "Access key ID",
         "country": "Country",
         "description": "Description",
-        "endpointProtocol": "Endpoint protocol",
         "endpointUrl": "Endpoint URL",
         "email": "Email",
         "host": "Host",

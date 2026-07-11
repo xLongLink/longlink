@@ -17,7 +17,6 @@ import { storagesQueryKey } from '@/lib/query-keys';
 const storageConnectionSchema = z.object({
     kind: z.literal('s3'),
     name: z.string().trim().min(1),
-    protocol: z.enum(['http', 'https']),
     endpointUrl: z.string().trim().url(),
     runtimeEndpointUrl: z.union([z.literal(''), z.string().trim().url()]),
     accessKeyId: z.string().trim().min(1),
@@ -31,7 +30,6 @@ type StorageConnectionValues = z.output<typeof storageConnectionSchema>;
 const defaultStorageConnectionValues = {
     kind: 's3',
     name: '',
-    protocol: 'https',
     endpointUrl: '',
     runtimeEndpointUrl: '',
     accessKeyId: '',
@@ -73,7 +71,6 @@ export default function ConnectStorage() {
                     body: JSON.stringify({
                         kind: payload.kind,
                         name: payload.name,
-                        protocol: payload.protocol,
                         endpoint_url: payload.endpointUrl,
                         runtime_endpoint_url: payload.runtimeEndpointUrl || undefined,
                         access_key_id: payload.accessKeyId,
@@ -144,11 +141,6 @@ export default function ConnectStorage() {
             <div className="space-y-2">
                 <Label htmlFor="storage-name">{t('labels.name')}</Label>
                 <Input id="storage-name" {...form.register('name')} placeholder="assets" autoComplete="off" />
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="storage-protocol">{t('labels.endpointProtocol')}</Label>
-                <Input id="storage-protocol" {...form.register('protocol')} placeholder="https" autoComplete="off" />
             </div>
 
             <div className="space-y-2">

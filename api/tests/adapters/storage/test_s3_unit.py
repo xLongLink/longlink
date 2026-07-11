@@ -1,34 +1,11 @@
 import pytest
-from datetime import UTC, datetime
-from botocore.exceptions import ClientError
 from src.adapters.storage.s3 import S3
 
 pytestmark = pytest.mark.no_db
 
 
-def client_error(code: str) -> ClientError:
-    """Return one S3 client error with the requested code."""
-
-    return ClientError({"Error": {"Code": code}}, "operation")
-
-
-def test_s3_error_classification_handles_expected_codes() -> None:
-    """Classify S3 access and missing-object errors by provider code."""
-
-    storage = S3("https", "https://storage.example.test", "access", "secret")
-
-    assert storage._is_access_denied(client_error("AccessDenied"))
-    assert storage._is_access_denied(client_error("403"))
-    assert not storage._is_access_denied(client_error("NoSuchBucket"))
-    assert storage._is_missing_object(client_error("NoSuchKey"))
-    assert storage._is_missing_object(client_error("404"))
-    assert not storage._is_missing_object(client_error("AccessDenied"))
-
-
 async def test_s3_objects_normalizes_paged_results(monkeypatch: pytest.MonkeyPatch) -> None:
     """Normalize S3 object pages into storage object metadata."""
-
-    last_modified = datetime(2026, 7, 9, tzinfo=UTC)
 
     class Pages:
         """Provide async S3 list pages."""
@@ -38,7 +15,7 @@ async def test_s3_objects_normalizes_paged_results(monkeypatch: pytest.MonkeyPat
 
             yield {
                 "Contents": [
-                    {"Key": "reports/july.csv", "Size": 14, "ETag": "etag", "LastModified": last_modified},
+                    {"Key": "reports/july.csv", "Size": 14, "ETag": "etag"},
                     {"Size": 99},
                 ]
             }
@@ -68,7 +45,7 @@ async def test_s3_objects_normalizes_paged_results(monkeypatch: pytest.MonkeyPat
             assert name == "list_objects_v2"
             return Paginator()
 
-    storage = S3("https", "https://storage.example.test", "access", "secret")
+    storage = S3("https://storage.example.test", "access", "secret")
     monkeypatch.setattr(storage, "_client", lambda *args, **kwargs: Client())
 
     assert await storage.objects("bucket") == [
@@ -76,7 +53,5 @@ async def test_s3_objects_normalizes_paged_results(monkeypatch: pytest.MonkeyPat
             "key": "reports/july.csv",
             "size": 14,
             "etag": "etag",
-            "last_modified": last_modified,
         }
     ]
-    assert await storage.objects("bucket", limit=0) == []

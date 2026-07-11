@@ -8,13 +8,13 @@ from .resources import parse_kubernetes_timestamp
 from src.constants import ROOT
 
 
-class KubernetesApplications(KubernetesCluster):
-    """Manage LongLink application workloads and runtime logs."""
+class Kubernetes(KubernetesCluster):
+    """Manage Kubernetes namespaces, application workloads, and the cluster gateway."""
 
     async def _pods(self, organization: str, application: str) -> list[APIObject]:
         """Return pods for one managed application."""
 
-        namespace = names.k8name(names.knames(organization))
+        namespace = names.namespace(organization)
         name = names.knames(application)
         return await self._list(Pod, namespace, {"app": name})
 
@@ -30,7 +30,7 @@ class KubernetesApplications(KubernetesCluster):
     async def application_deployment_ready(self, organization: str, application: str) -> bool:
         """Return whether the current application Deployment rollout is ready."""
 
-        namespace = names.k8name(names.knames(organization))
+        namespace = names.namespace(organization)
         name = names.knames(application)
 
         # Read the live Deployment so rollout status reflects the Kubernetes controller state.
@@ -79,7 +79,7 @@ class KubernetesApplications(KubernetesCluster):
     ) -> str:
         """Create or replace one internal application Deployment and Service."""
 
-        namespace = names.k8name(names.knames(organization))
+        namespace = names.namespace(organization)
         name = names.knames(application)
 
         # Replace the full Secret data map so removed environment keys do not survive a merge patch.
@@ -122,7 +122,7 @@ class KubernetesApplications(KubernetesCluster):
     async def delete_application(self, organization: str, application: str) -> None:
         """Delete one managed application workload and tolerate missing resources."""
 
-        namespace = names.k8name(names.knames(organization))
+        namespace = names.namespace(organization)
         name = names.knames(application)
 
         delete_calls = (
@@ -145,7 +145,7 @@ class KubernetesApplications(KubernetesCluster):
     async def logs(self, organization: str, application: str, lines: int = 200) -> str:
         """Return recent logs for one managed application."""
 
-        namespace = names.k8name(names.knames(organization))
+        namespace = names.namespace(organization)
         name = names.knames(application)
 
         # List pods before selecting the most recent log source.

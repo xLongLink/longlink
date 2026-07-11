@@ -14,11 +14,8 @@ class UsersService:
         if not users:
             return
 
-        rows = []
-
         # Convert API user models to shared table rows.
-        for user in users:
-            rows.append(user.model_dump())
+        rows = [user.model_dump() for user in users]
 
         insert_statement = postgres_insert(shared_users_table)
         excluded = insert_statement.excluded

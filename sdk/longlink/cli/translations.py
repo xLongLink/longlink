@@ -159,8 +159,6 @@ def assign_translation_value(target: dict[str, object], segments: list[str], val
 
         # Reject namespace collisions like `items` versus `items.count`.
         entry = current.get(segment)
-
-        # Create a namespace when this segment is new.
         if entry is None:
             entry = {}
             current[segment] = entry

@@ -170,9 +170,8 @@ def read_env_spec(root: Path) -> dict[str, list[dict[str, object]]]:
         return empty_spec
 
     module = ast.parse(envs_path.read_text())
-    class_node = next((node for node in module.body if isinstance(node, ast.ClassDef) and node.name == class_name), None)
-
     # Treat files without the configured settings class as no requirements.
+    class_node = next((node for node in module.body if isinstance(node, ast.ClassDef) and node.name == class_name), None)
     if class_node is None:
         return empty_spec
 
@@ -526,9 +525,8 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
         except ValueError as exc:
             raise click.ClickException(str(exc)) from exc
 
-        docker_command = shutil.which("docker")
-
         # Require a Docker client on PATH.
+        docker_command = shutil.which("docker")
         if docker_command is None:
             raise click.ClickException("Docker is required to build images")
 

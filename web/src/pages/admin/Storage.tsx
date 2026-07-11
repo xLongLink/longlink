@@ -64,7 +64,7 @@ function createStorageColumnsBase(t: TFunction): Array<ColumnDef<ApiStorageRegis
                 return (
                     <div className="min-w-0">
                         <div className="truncate font-medium text-foreground">{storage.access_key_id}</div>
-                        <div className="truncate text-xs text-muted-foreground">{storage.protocol.toUpperCase()}</div>
+                        <div className="truncate text-xs text-muted-foreground">{storage.kind.toUpperCase()}</div>
                     </div>
                 );
             },

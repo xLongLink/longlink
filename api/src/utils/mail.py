@@ -46,9 +46,8 @@ def render_mjml(mjml_content: str) -> str:
     if not command:
         raise MailTemplateError("EMAIL_MJML_COMMAND is not set")
 
-    resolved_command = shutil.which(command)
-
     # Fail early when the configured command is unavailable.
+    resolved_command = shutil.which(command)
     if resolved_command is None:
         raise MailTemplateError(
             f"MJML command '{command}' is not available. Install '@mjml/cli' and set EMAIL_MJML_COMMAND accordingly."
@@ -137,15 +136,13 @@ def _authenticate_client(client: SMTP | SMTP_SSL) -> None:
 def _send_message(message: EmailMessage) -> None:
     """Send one prepared email message over SMTP."""
 
-    smtp_host = env.EMAIL_SMTP_HOST
-
     # Sending requires a configured SMTP host.
+    smtp_host = env.EMAIL_SMTP_HOST
     if smtp_host is None:
         raise MailDeliveryError("EMAIL_SMTP_HOST is required before sending mail")
 
-    smtp_port = env.EMAIL_SMTP_PORT
-
     # Sending requires a configured SMTP port.
+    smtp_port = env.EMAIL_SMTP_PORT
     if smtp_port is None:
         raise MailDeliveryError("EMAIL_SMTP_PORT is required before sending mail")
 

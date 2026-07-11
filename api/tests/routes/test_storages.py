@@ -1,5 +1,4 @@
 from types import SimpleNamespace
-from datetime import UTC, datetime
 from fastapi.testclient import TestClient
 from src.database.services import users, storage, locations
 
@@ -27,7 +26,6 @@ async def test_storage_registry_endpoint_supports_create_and_list(
         json={
             "kind": "s3",
             "name": "object-store",
-            "protocol": "https",
             "endpoint_url": "https://storage.longlink.internal",
             "runtime_endpoint_url": "https://storage.runtime.longlink.internal",
             "access_key_id": "access-key",
@@ -69,7 +67,6 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
         json={
             "kind": "s3",
             "name": "object-store",
-            "protocol": "https",
             "endpoint_url": "https://storage.longlink.internal",
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",
@@ -79,10 +76,9 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
     registry_id = create_response.json()["id"]
 
     class FakeS3:
-        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+        def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
             """Store storage registry configuration for assertions."""
 
-            self.protocol = protocol
             self.endpoint_url = endpoint_url
             self.access_key_id = access_key_id
             self.secret_access_key = secret_access_key
@@ -95,7 +91,6 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
     monkeypatch.setattr(
         "src.routes.storages.adapters.storage",
         lambda registry: FakeS3(
-            registry.protocol,
             registry.endpoint_url,
             registry.access_key_id,
             registry.secret_access_key,
@@ -120,14 +115,12 @@ async def test_storage_object_endpoint_returns_bucket_objects(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    last_modified = datetime(2026, 7, 1, tzinfo=UTC)
     location = await db.locations.create("local", "Local testing", user1, "CH")
     create_response = client.post(
         "/api/storages",
         json={
             "kind": "s3",
             "name": "object-store",
-            "protocol": "https",
             "endpoint_url": "https://storage.longlink.internal",
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",
@@ -137,10 +130,9 @@ async def test_storage_object_endpoint_returns_bucket_objects(
     registry_id = create_response.json()["id"]
 
     class FakeS3:
-        def __init__(self, protocol: str, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
+        def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
             """Store storage registry configuration for assertions."""
 
-            self.protocol = protocol
             self.endpoint_url = endpoint_url
             self.access_key_id = access_key_id
             self.secret_access_key = secret_access_key
@@ -155,14 +147,12 @@ async def test_storage_object_endpoint_returns_bucket_objects(
                     "key": "reports/july.csv",
                     "size": 123,
                     "etag": '"abc123"',
-                    "last_modified": last_modified,
                 }
             ]
 
     monkeypatch.setattr(
         "src.routes.storages.adapters.storage",
         lambda registry: FakeS3(
-            registry.protocol,
             registry.endpoint_url,
             registry.access_key_id,
             registry.secret_access_key,
