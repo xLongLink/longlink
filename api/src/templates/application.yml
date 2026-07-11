@@ -13,6 +13,8 @@ metadata:
     longlink.io/application-id: $application_id
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: $name

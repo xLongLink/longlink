@@ -27,7 +27,7 @@ def upgrade() -> None:
         sa.text(
             """
             UPDATE organizations
-            SET shared_storage_bucket_name = 'longlink-' || slug || '-shared'
+            SET shared_storage_bucket_name = slug || '-shared'
             WHERE shared_storage_bucket_name IS NULL
             """
         )
@@ -37,7 +37,7 @@ def upgrade() -> None:
             """
             UPDATE applications
             SET storage_bucket_name = (
-                SELECT 'longlink-' || organizations.slug || '-' || applications.slug
+                SELECT organizations.slug || '-' || applications.slug
                 FROM organizations
                 WHERE organizations.id = applications.organization_id
             )

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 from typing import TypedDict
-from .types import DatabaseTableData, DatabaseSchemaUsage
+from .types import DatabaseTableRows, DatabaseSchemaUsage, DatabaseTableColumns
 from tenant.models import User
 
 
@@ -79,8 +79,12 @@ class Database(ABC):
         """Return usage details for schemas in a database."""
 
     @abstractmethod
-    async def tables(self, database_name: str, schema_name: str, *, limit: int = 100) -> list[DatabaseTableData]:
-        """Return tables, columns, and preview rows for one schema."""
+    async def table_columns(self, database_name: str, schema_name: str) -> list[DatabaseTableColumns]:
+        """Return tables and columns for one schema."""
+
+    @abstractmethod
+    async def table_rows(self, database_name: str, schema_name: str, table_name: str, *, limit: int = 100) -> DatabaseTableRows:
+        """Return preview rows for one table."""
 
     @abstractmethod
     async def usage(self) -> dict[str, int]:

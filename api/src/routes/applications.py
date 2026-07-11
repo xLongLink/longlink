@@ -1,16 +1,18 @@
 import httpx2
 from uuid import UUID
-from dataclasses import dataclass
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from datetime import UTC, datetime
 from src.auth import authuser, authadmin
-from src.utils import names, roles, buckets
+from src.utils import names, roles
+from dataclasses import dataclass
+from src.runtime import Kubernetes, registries
+from src.runtime import provisioning as resources
 from src.constants import GATEWAY_USER_HEADER, GATEWAY_SECRET_HEADER, GATEWAY_APPLICATION_HEADER
 from src.models.roles import (
+    APPLICATION_PROXY_METHODS,
     ApplicationRoles,
     OrganizationRoles,
     ApplicationRoleRanks,
-    APPLICATION_PROXY_METHODS,
     ApplicationProxyMethodRanks,
 )
 from src.models.statuses import ApplicationStatus
@@ -19,8 +21,6 @@ from src.models.applications import ApplicationCreate, ApplicationResponse, Appl
 from src.database.models.users import User
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
-from src.runtime import Kubernetes, registries
-from src.runtime import provisioning as resources
 
 router = APIRouter()
 
@@ -80,7 +80,12 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     roles.atleast(organization_role, OrganizationRoles.maintain, "Application creation permissions required")
 
     application_slug = names.slugify(payload.name)
-    buckets.application(organization.slug, application_slug)
+
+    # Convert derived application bucket validation failures into route conflicts.
+    try:
+        names.knames(f"{organization.slug}-{application_slug}")
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail="Invalid application runtime resource name") from exc
 
     # Provision runtime resources and convert infrastructure failures into API availability errors.
     try:

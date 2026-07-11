@@ -291,7 +291,7 @@ async def test_create_rejects_organization_with_overlong_runtime_name(users: tup
 
     # Act
     with pytest.raises(ValueError, match="Value must be at most 63 characters"):
-        await db.organizations.create("a" * 48, "a" * 48, location.id, owner)
+        await db.organizations.create("a" * 57, "a" * 57, location.id, owner)
 
     # Assert
     assert await db.organizations.fetch() == []

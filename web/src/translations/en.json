@@ -152,7 +152,6 @@
         "organization": "Organization",
         "owner": "Owner",
         "pod": "Pod",
-        "previewRows": "Preview rows",
         "registry": "Registry",
         "resource": "Resource",
         "resources": "Resources",
@@ -317,7 +316,6 @@
         "objectCount": "{{count}} objects",
         "podsDescription": "Pods in namespace {{namespace}} on compute backend {{name}}.",
         "podsTitle": "Pods",
-        "rowCount": "{{count}} rows",
         "schemaDescription": "Schemas in database {{database}} on database backend {{name}}.",
         "schemasTitle": "Schemas",
         "shared": "shared",
@@ -326,7 +324,6 @@
         "storageNotFound": "Storage \"{{name}}\" not found",
         "tableCount": "{{count}} tables",
         "unknownObjects": "Unknown objects",
-        "unknownRows": "unknown rows",
         "unknownTables": "Unknown tables",
         "namespacesDescription": "Namespaces managed by compute backend {{name}}.",
         "namespacesTitle": "Namespaces"

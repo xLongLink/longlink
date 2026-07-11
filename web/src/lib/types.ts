@@ -14,6 +14,7 @@ import type {
     apiOperationSchema,
     apiOrganizationApplicationSchema,
     apiOrganizationDatabaseResourceSchema,
+    apiOrganizationDatabaseTableRowsSchema,
     apiOrganizationDatabaseTableSchema,
     apiOrganizationDetailsSchema,
     apiOrganizationMemberSummarySchema,
@@ -41,11 +42,16 @@ export type ApiCountryOption = z.infer<typeof apiCountryOptionSchema>;
 export type ApiOrganizationSummary = z.infer<typeof apiOrganizationSummarySchema>;
 export type ApiOrganizationDetails = z.infer<typeof apiOrganizationDetailsSchema>;
 export type ApiLocation = z.infer<typeof apiLocationSchema>;
-export type ApiOrganizationDatabaseApplication = NonNullable<z.infer<typeof apiOrganizationDatabaseResourceSchema>['application']>;
+export type ApiOrganizationDatabaseApplication = NonNullable<
+    z.infer<typeof apiOrganizationDatabaseResourceSchema>['application']
+>;
 export type ApiOrganizationDatabaseResource = z.infer<typeof apiOrganizationDatabaseResourceSchema>;
 export type ApiOrganizationDatabaseTableColumn = z.infer<typeof apiOrganizationDatabaseTableSchema>['columns'][number];
 export type ApiOrganizationDatabaseTable = z.infer<typeof apiOrganizationDatabaseTableSchema>;
-export type ApiOrganizationStorageApplication = NonNullable<z.infer<typeof apiOrganizationStorageResourceSchema>['application']>;
+export type ApiOrganizationDatabaseTableRows = z.infer<typeof apiOrganizationDatabaseTableRowsSchema>;
+export type ApiOrganizationStorageApplication = NonNullable<
+    z.infer<typeof apiOrganizationStorageResourceSchema>['application']
+>;
 export type ApiOrganizationStorageResource = z.infer<typeof apiOrganizationStorageResourceSchema>;
 export type ApiDatabaseRegistry = z.infer<typeof apiDatabaseRegistrySchema>;
 export type ApiStorageRegistry = z.infer<typeof apiStorageRegistrySchema>;

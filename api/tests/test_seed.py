@@ -37,7 +37,7 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         name=seed.LOCAL_ORG,
         slug="test",
         location_id=location.id,
-        shared_storage_bucket_name="longlink-test-shared",
+        shared_storage_bucket_name="test-shared",
     )
     compute_registry = fake_resource(
         id=UUID("44444444-4444-4444-4444-444444444444"),
@@ -219,7 +219,7 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
         name=seed.LOCAL_ORG,
         slug="test",
         location_id=location.id,
-        shared_storage_bucket_name="longlink-test-shared",
+        shared_storage_bucket_name="test-shared",
     )
     application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
     kubeconfig = tmp_path / "kubeconfig.yaml"

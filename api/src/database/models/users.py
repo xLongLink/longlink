@@ -1,9 +1,10 @@
 from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar
-from datetime import UTC, datetime
+from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
+from tenant.utils import utcnow
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy import Column
+from sqlalchemy import Column, DateTime
 from tenant.models.languages import Language
 from src.models.roles import PlatformRoles
 from src.models.users import Theme, Accent, Radius
@@ -30,11 +31,11 @@ class User(SQLModel, table=True):
     avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
 
     # Audit
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False))
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), sa_column_kwargs={"onupdate": lambda: datetime.now(UTC)}
+        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=utcnow)
     )
-    deleted_at: datetime | None = Field(default=None)
+    deleted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
 
     # State
     role: PlatformRoles = Field(

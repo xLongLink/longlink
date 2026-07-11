@@ -1,8 +1,7 @@
 from src import adapters
-from uuid import UUID
 from typing import cast
 from datetime import UTC, datetime
-from src.utils import names, buckets
+from src.utils import names
 from src.logger import logger
 from src.runtime import Kubernetes, registries, environments
 from src.models.statuses import ApplicationStatus
@@ -25,7 +24,7 @@ async def remove_application_runtime(
 
     names.namespace(organization.slug)
     names.knames(application.slug)
-    names.dbname(organization.slug)
+    names.knames(organization.slug)
 
     compute_registry = await registries.application_compute_registry(application, organization.location_id)
 
@@ -54,57 +53,6 @@ async def remove_application_runtime(
     if storage_registry is not None and application.storage_bucket_name is not None:
         storage_client = adapters.storage(storage_registry)
         await storage_client.delete_bucket(application.storage_bucket_name)
-
-
-async def remove_organization_runtime(organization: Organization | OrganizationDetails | OrganizationSummary) -> None:
-    """Remove runtime resources for one organization and its applications."""
-
-    names.namespace(organization.slug)
-    names.dbname(organization.slug)
-
-    organization_applications = await organizations.applications(organization.id, include_deleted=True)
-
-    # Delete application-scoped resources before deleting shared organization resources.
-    for application in organization_applications:
-        await remove_application_runtime(application, organization)
-
-    compute_registries = []
-    seen_compute_registry_ids: set[UUID] = set()
-
-    # Collect every compute registry that may still contain organization resources.
-    for application in organization_applications:
-        registry = await registries.application_compute_registry(application, organization.location_id)
-
-        # Deduplicate registries so namespace deletion runs once per backend.
-        if registry is not None and registry.id not in seen_compute_registry_ids:
-            compute_registries.append(registry)
-            seen_compute_registry_ids.add(registry.id)
-
-    latest_compute = await registries.latest_compute_registry(organization.location_id)
-
-    # Include the current location registry for organizations created before any applications existed.
-    if latest_compute is not None and latest_compute.id not in seen_compute_registry_ids:
-        compute_registries.append(latest_compute)
-        seen_compute_registry_ids.add(latest_compute.id)
-
-    # Namespace deletion removes shared gateway/runtime resources for the organization.
-    for registry in compute_registries:
-        compute_adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
-        await compute_adapter.delete_namespace(organization.slug)
-
-    database_registry = await registries.organization_database_registry(organization, include_deleted=True)
-
-    # Delete the tenant database after app schemas have been removed.
-    if database_registry is not None:
-        db_client = adapters.database(database_registry)
-        await db_client.delete_database(organization.slug)
-
-    storage_registry = await registries.organization_storage_registry(organization, include_deleted=True)
-
-    # Delete the shared bucket only when one was assigned.
-    if storage_registry is not None and organization.shared_storage_bucket_name is not None:
-        storage_client = adapters.storage(storage_registry)
-        await storage_client.delete_bucket(organization.shared_storage_bucket_name)
 
 
 async def provision_application_runtime_resources(
@@ -180,7 +128,7 @@ async def create_application_runtime(
 ) -> Application:
     """Create the application row, provision runtime resources, and queue verification."""
 
-    application_bucket_name = buckets.application(organization.slug, application_slug)
+    application_bucket_name = names.knames(f"{organization.slug}-{application_slug}")
     logger.info("Provisioning application %s/%s", organization.slug, application_slug)
 
     image_metadata = await environments.application_image_metadata(payload)
@@ -290,7 +238,7 @@ async def sync_application_runtime(
     )
     names.namespace(organization.slug)
     names.knames(application.slug)
-    names.dbname(organization.slug)
+    names.knames(organization.slug)
 
     # Runtime sync requires the organization shared bucket assigned at creation.
     if organization.shared_storage_bucket_name is None:

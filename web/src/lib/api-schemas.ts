@@ -1,8 +1,8 @@
-import { APPLICATION_ROLE_NAMES, PLATFORM_ROLE_NAMES, ROLE_NAMES } from '@/lib/roles';
-import { ACCENT_VALUES, RADIUS_VALUES, THEME_VALUES } from '@/lib/theme';
+import { z } from 'zod';
 import { ICON_NAMES } from '@/lib/icons';
 import { LANGUAGE_VALUES } from '@/lib/languages';
-import { z } from 'zod';
+import { ACCENT_VALUES, RADIUS_VALUES, THEME_VALUES } from '@/lib/theme';
+import { APPLICATION_ROLE_NAMES, PLATFORM_ROLE_NAMES, ROLE_NAMES } from '@/lib/roles';
 
 const applicationStatusSchema = z.enum(['creating', 'running', 'failed']);
 const applicationRoleSchema = z.enum(APPLICATION_ROLE_NAMES);
@@ -259,7 +259,6 @@ export const apiOrganizationDatabaseResourceSchema = z.object({
     database_name: z.string(),
     space_used: z.number().nullable(),
     table_count: z.number().nullable(),
-    row_estimate: z.number().nullable(),
     application: apiOrganizationDatabaseApplicationSchema.nullable(),
     database_registry_id: z.string(),
     database_registry_name: z.string(),
@@ -285,8 +284,6 @@ export const apiOrganizationStorageResourceSchema = z.object({
     object_count: z.number().nullable(),
 });
 
-const apiOrganizationDatabaseTableCellSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
-
 export const apiOrganizationDatabaseTableSchema = z.object({
     name: z.string(),
     schema_name: z.string(),
@@ -298,7 +295,12 @@ export const apiOrganizationDatabaseTableSchema = z.object({
             position: z.number(),
         })
     ),
-    rows: z.array(z.record(z.string(), apiOrganizationDatabaseTableCellSchema)),
+});
+
+export const apiOrganizationDatabaseTableRowsSchema = z.object({
+    name: z.string(),
+    schema_name: z.string(),
+    rows: z.array(z.record(z.string(), z.string())),
 });
 
 /** Validates an API response value with a Zod schema. */

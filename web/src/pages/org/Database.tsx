@@ -1,15 +1,19 @@
-import { DataTable } from '@/components/DataTable';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useOrganizationDatabaseResourceTables, useOrganizationDatabaseResources } from '@/data/organization';
-import { useTranslation } from '@/lib/i18n';
+import { Link, useParams } from 'react-router';
+import { type ColumnDef } from '@tanstack/react-table';
 import type {
     ApiOrganizationDatabaseResource,
     ApiOrganizationDatabaseTable,
     ApiOrganizationDetails,
 } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
+import { DataTable } from '@/components/DataTable';
 import { formatBytes, formatNumber, getInitials } from '@/lib/utils';
-import { type ColumnDef } from '@tanstack/react-table';
-import { Link, useParams } from 'react-router';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+    useOrganizationDatabaseResourceTables,
+    useOrganizationDatabaseResources,
+    useOrganizationDatabaseTableRows,
+} from '@/data/organization';
 import { DatabaseTableRows } from './DatabaseTableRows';
 
 type DatabaseProps = {
@@ -51,6 +55,12 @@ export default function Database({ organization, organizationDetails, isLoading 
     } = useOrganizationDatabaseResourceTables(organizationDetails?.id ?? '', databaseResourceTablesRequest);
     const selectedTableName = databaseTable;
     const selectedTable = databaseResourceTables.find((table) => table.name === selectedTableName) ?? null;
+    const databaseTableRowsRequest = selectedResource && selectedTable && isTablePage ? selectedResource : null;
+    const {
+        data: databaseTableRows,
+        error: databaseTableRowsError,
+        isLoading: databaseTableRowsIsLoading,
+    } = useOrganizationDatabaseTableRows(organizationDetails?.id ?? '', databaseTableRowsRequest, selectedTableName);
     const tableDetailError =
         detailError ??
         (!databaseResourceTablesIsLoading && isTablePage && !selectedTable
@@ -84,12 +94,6 @@ export default function Database({ organization, organizationDetails, isLoading 
                 cell: ({ row }) => formatNumber(row.original.columns.length),
                 meta: { className: 'w-32' },
             },
-            {
-                id: 'rows',
-                header: t('columns.previewRows'),
-                cell: ({ row }) => formatNumber(row.original.rows.length),
-                meta: { className: 'w-36' },
-            },
         ];
 
         return (
@@ -116,8 +120,12 @@ export default function Database({ organization, organizationDetails, isLoading 
                 ) : isTablePage ? (
                     tableDetailError ? (
                         <div className="rounded-md border p-4 text-sm text-destructive">{tableDetailError.message}</div>
-                    ) : selectedTable ? (
-                        <DatabaseTableRows table={selectedTable} />
+                    ) : databaseTableRowsIsLoading ? null : databaseTableRowsError ? (
+                        <div className="rounded-md border p-4 text-sm text-destructive">
+                            {databaseTableRowsError.message}
+                        </div>
+                    ) : selectedTable && databaseTableRows ? (
+                        <DatabaseTableRows table={selectedTable} rows={databaseTableRows.rows} />
                     ) : null
                 ) : databaseResourceTables.length ? (
                     <DataTable columns={databaseTableColumns} data={databaseResourceTables} />
@@ -197,7 +205,7 @@ export default function Database({ organization, organizationDetails, isLoading 
             id: 'usage',
             header: t('columns.usage'),
             cell: ({ row }) => {
-                const { row_estimate, space_used, table_count } = row.original;
+                const { space_used, table_count } = row.original;
 
                 return (
                     <div className="min-w-0 space-y-1">
@@ -207,11 +215,7 @@ export default function Database({ organization, organizationDetails, isLoading 
                         <div className="text-xs text-muted-foreground">
                             {table_count === null
                                 ? t('resources.unknownTables')
-                                : t('resources.tableCount', { count: formatNumber(table_count) })}{' '}
-                            ·{' '}
-                            {row_estimate === null
-                                ? t('resources.unknownRows')
-                                : t('resources.rowCount', { count: formatNumber(row_estimate) })}
+                                : t('resources.tableCount', { count: formatNumber(table_count) })}
                         </div>
                     </div>
                 );

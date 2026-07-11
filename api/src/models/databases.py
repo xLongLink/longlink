@@ -103,7 +103,6 @@ class OrganizationDatabaseResourceResponse(BaseModel):
     # Usage
     space_used: int | None = None
     table_count: int | None = None
-    row_estimate: int | None = None
 
 
 class OrganizationDatabaseTableColumnResponse(BaseModel):
@@ -120,8 +119,8 @@ class OrganizationDatabaseTableColumnResponse(BaseModel):
     position: int
 
 
-class OrganizationDatabaseTableResponse(BaseModel):
-    """Represent one database table with preview rows."""
+class OrganizationDatabaseTableColumnsResponse(BaseModel):
+    """Represent one database table with its columns."""
 
     # Metadata
     name: str
@@ -130,8 +129,16 @@ class OrganizationDatabaseTableResponse(BaseModel):
     # Relationships
     columns: list[OrganizationDatabaseTableColumnResponse]
 
+
+class OrganizationDatabaseTableRowsResponse(BaseModel):
+    """Represent preview rows for one database table."""
+
+    # Metadata
+    name: str
+    schema_name: str
+
     # Data
-    rows: list[dict[str, str | int | float | bool | None]]
+    rows: list[dict[str, str]]
 
 
 class DatabaseRegistryResponse(BaseModel):

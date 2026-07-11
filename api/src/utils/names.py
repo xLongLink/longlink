@@ -49,16 +49,3 @@ def namespace(value: str) -> str:
         raise ValueError("Namespace name is reserved")
 
     return namespace_name
-
-
-def dbname(value: str) -> str:
-    """Return the managed PostgreSQL database name for one value."""
-
-    knames(value)
-    database_name = f"longlink_{value}"
-
-    # PostgreSQL identifiers must stay within 63 characters.
-    if len(database_name) > 63:
-        raise ValueError("Database name must be at most 63 characters")
-
-    return database_name

@@ -2,9 +2,7 @@ import secrets
 import contextlib
 from uuid import UUID
 from .base import Database, DatabaseRuntimeConnection
-from .types import DatabaseCellValue, DatabaseTableData, DatabaseSchemaUsage, DatabaseTableColumn
-from decimal import Decimal
-from datetime import date, datetime
+from .types import DatabaseCellValue, DatabaseTableRows, DatabaseSchemaUsage, DatabaseTableColumn, DatabaseTableColumns
 from src.utils import names
 from sqlalchemy import String, text, inspect
 from tenant.models import User
@@ -102,7 +100,7 @@ class Postgres(Database):
     async def _prepare_organization_database(self, organization: str) -> str:
         """Ensure one organization's database and shared schema are ready."""
 
-        database_name = names.dbname(organization)
+        database_name = names.knames(organization)
 
         # Create the organization database from the maintenance database when it is missing.
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
@@ -217,7 +215,7 @@ class Postgres(Database):
     async def delete_schema(self, organization: str, application: str, *, organization_id: UUID, application_id: UUID) -> None:
         """Delete an application schema and its runtime role when present."""
 
-        database_name = names.dbname(organization)
+        database_name = names.knames(organization)
 
         # Skip cleanup when the organization database was already removed.
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
@@ -248,7 +246,7 @@ class Postgres(Database):
     async def delete_database(self, organization: str) -> None:
         """Delete one organization database and tolerate missing databases."""
 
-        database_name_value = names.dbname(organization)
+        database_name_value = names.knames(organization)
 
         # Terminate active sessions so PostgreSQL can drop the organization database.
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
@@ -297,7 +295,7 @@ class Postgres(Database):
     async def schema_usage(self, database_name: str) -> list[DatabaseSchemaUsage]:
         """Return usage details for application schemas in a database."""
 
-        # Aggregate storage and approximate row usage from PostgreSQL catalog tables.
+        # Aggregate storage and table usage from PostgreSQL catalog tables.
         async with self._connection(database_name) as conn:
             result = await conn.execute(
                 text(
@@ -305,8 +303,7 @@ class Postgres(Database):
                     SELECT
                         n.nspname AS name,
                         COALESCE(SUM(CASE WHEN c.relkind IN ('r', 'p', 'm') THEN pg_total_relation_size(c.oid) ELSE 0 END), 0) AS space_used,
-                        COUNT(c.oid) FILTER (WHERE c.relkind IN ('r', 'p', 'm')) AS table_count,
-                        COALESCE(SUM(CASE WHEN c.relkind IN ('r', 'p', 'm') THEN GREATEST(c.reltuples, 0) ELSE 0 END), 0) AS row_estimate
+                        COUNT(c.oid) FILTER (WHERE c.relkind IN ('r', 'p', 'm')) AS table_count
                     FROM pg_namespace n
                     LEFT JOIN pg_class c ON c.relnamespace = n.oid
                     WHERE n.nspname NOT IN ('information_schema', 'pg_catalog', 'pg_toast', 'public')
@@ -323,15 +320,14 @@ class Postgres(Database):
                     "name": row["name"],
                     "space_used": int(row["space_used"]),
                     "table_count": int(row["table_count"]),
-                    "row_estimate": int(row["row_estimate"]),
                 }
                 for row in result.mappings().all()
             ]
 
-    async def tables(self, database_name: str, schema_name: str, *, limit: int = 100) -> list[DatabaseTableData]:
-        """Return tables, columns, and preview rows for one schema."""
+    async def table_columns(self, database_name: str, schema_name: str) -> list[DatabaseTableColumns]:
+        """Return tables and columns for one schema."""
 
-        # Keep inspection and preview queries on the same database connection.
+        # Inspect queryable table metadata in the target database.
         async with self._connection(database_name) as conn:
 
             # Include materialized views because they are queryable like tables for previews.
@@ -342,12 +338,12 @@ class Postgres(Database):
                 )
             )
 
-            tables: list[DatabaseTableData] = []
+            tables: list[DatabaseTableColumns] = []
 
-            # Build one preview payload for each queryable table.
+            # Build one column payload for each queryable table.
             for table_name in table_names:
 
-                # Load column metadata before reading preview rows so the response is self-describing.
+                # Load column metadata through SQLAlchemy's synchronous inspection bridge.
                 columns: list[DatabaseTableColumn] = await conn.run_sync(
                     lambda sync_conn: [
                         {
@@ -362,50 +358,36 @@ class Postgres(Database):
                     ]
                 )
 
-                # Quote schema and table identifiers because app schemas are user-derived slugs.
-                table_identifier = ".".join(self.quote(conn, value) for value in (schema_name, table_name))
-                rows_result = await conn.execute(
-                    text(f"SELECT * FROM {table_identifier} LIMIT :limit"),
-                    {"limit": limit},
-                )
-                rows: list[dict[str, DatabaseCellValue]] = []
-
-                # Convert every preview row to JSON-safe values while preserving column names.
-                for row in rows_result.mappings().all():
-                    values: dict[str, DatabaseCellValue] = {}
-
-                    # Convert each cell while preserving its column name.
-                    for key, value in row.items():
-
-                        # Table previews must be JSON-safe without leaking driver-specific objects.
-                        if value is None or isinstance(value, str | int | float | bool):
-                            values[key] = value
-
-                        # Preserve decimals as JSON numeric values.
-                        elif isinstance(value, Decimal):
-                            values[key] = float(value)
-
-                        # Represent dates, datetimes, and UUIDs as strings.
-                        elif isinstance(value, date | datetime | UUID):
-                            values[key] = str(value)
-
-                        # Fall back to a stable string representation for unknown values.
-                        else:
-                            values[key] = str(value)
-
-                    rows.append(values)
-
-                # Append one table payload after all of its preview rows have been converted.
+                # Append one table payload after its columns have been inspected.
                 tables.append(
                     {
                         "name": table_name,
                         "schema_name": schema_name,
                         "columns": columns,
-                        "rows": rows,
                     }
                 )
 
             return tables
+
+    async def table_rows(self, database_name: str, schema_name: str, table_name: str, *, limit: int = 100) -> DatabaseTableRows:
+        """Return preview rows for one table."""
+
+        # Keep the preview query scoped to the requested organization database.
+        async with self._connection(database_name) as conn:
+
+            # Quote schema and table identifiers because app schemas are user-derived slugs.
+            table_identifier = ".".join(self.quote(conn, value) for value in (schema_name, table_name))
+            rows_result = await conn.execute(
+                text(f"SELECT * FROM {table_identifier} LIMIT :limit"),
+                {"limit": limit},
+            )
+            rows: list[dict[str, DatabaseCellValue]] = []
+
+            # Convert every preview value to a string while preserving column names.
+            for row in rows_result.mappings().all():
+                rows.append({key: "NULL" if value is None else str(value) for key, value in row.items()})
+
+            return {"name": table_name, "schema_name": schema_name, "rows": rows}
 
     async def usage(self) -> dict[str, int]:
         """Return the total non-system database size in bytes."""

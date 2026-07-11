@@ -7,10 +7,9 @@ class DatabaseSchemaUsage(TypedDict):
     name: str
     space_used: int
     table_count: int
-    row_estimate: int
 
 
-DatabaseCellValue = str | int | float | bool | None
+DatabaseCellValue = str
 
 
 class DatabaseTableColumn(TypedDict):
@@ -22,10 +21,17 @@ class DatabaseTableColumn(TypedDict):
     position: int
 
 
-class DatabaseTableData(TypedDict):
-    """Describe one database table with preview rows."""
+class DatabaseTableColumns(TypedDict):
+    """Describe one database table with its columns."""
 
     name: str
     schema_name: str
     columns: list[DatabaseTableColumn]
+
+
+class DatabaseTableRows(TypedDict):
+    """Describe preview rows for one database table."""
+
+    name: str
+    schema_name: str
     rows: list[dict[str, DatabaseCellValue]]

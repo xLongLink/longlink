@@ -1,29 +1,23 @@
 import base64
 from typing import Any, cast
-from datetime import UTC, datetime
 from .cluster import KubernetesCluster
 from .library import Pod, Secret, Service, APIObject, Deployment, kr8s
 from src.utils import names, templates
-from .resources import parse_kubernetes_timestamp
 from src.constants import ROOT
 
 
 class Kubernetes(KubernetesCluster):
     """Manage Kubernetes namespaces, application workloads, and the cluster gateway."""
 
-    async def _pods(self, organization: str, application: str) -> list[APIObject]:
+    async def application_pods(self, organization: str, application: str) -> list[APIObject]:
         """Return pods for one managed application."""
 
         namespace = names.namespace(organization)
         name = names.knames(application)
-        return await self._list(Pod, namespace, {"app": name})
-
-    async def application_pods(self, organization: str, application: str) -> list[APIObject]:
-        """Return pods for one managed application."""
 
         # Convert Kubernetes API failures into a simple caller error.
         try:
-            return await self._pods(organization, application)
+            return await self._list(Pod, namespace, {"app": name})
         except kr8s.ServerError as exc:
             raise RuntimeError("Failed reading application pods") from exc
 
@@ -47,9 +41,12 @@ class Kubernetes(KubernetesCluster):
         if metadata is None or spec is None or status is None:
             return False
 
-        expected_replicas = spec.get("replicas") or 1
         observed_generation = status.get("observedGeneration")
         generation = metadata.get("generation")
+
+        # Applications are single-replica workloads and should not report ready otherwise.
+        if spec.get("replicas", 1) != 1:
+            return False
 
         # A rollout without generation tracking cannot be proven ready.
         if observed_generation is None or generation is None:
@@ -59,12 +56,12 @@ class Kubernetes(KubernetesCluster):
         if observed_generation < generation:
             return False
 
-        unavailable_replicas = status.get("unavailableReplicas", 0)
         return (
-            unavailable_replicas == 0
-            and status.get("updatedReplicas") == expected_replicas
-            and status.get("readyReplicas") == expected_replicas
-            and status.get("availableReplicas") == expected_replicas
+            status.get("replicas") == 1
+            and status.get("updatedReplicas") == 1
+            and status.get("readyReplicas") == 1
+            and status.get("availableReplicas") == 1
+            and status.get("unavailableReplicas", 0) == 0
         )
 
     async def application(
@@ -150,52 +147,18 @@ class Kubernetes(KubernetesCluster):
 
         # List pods before selecting the most recent log source.
         try:
-            pods = await self._pods(organization, application)
-        except kr8s.ServerError as exc:
+            pods = await self.application_pods(organization, application)
+        except RuntimeError as exc:
             raise ValueError(f"Failed listing pods for application '{namespace}/{name}'") from exc
 
-        # Logs require at least one application pod.
+        # Logs require the single application pod to exist.
         if not pods:
             raise ValueError(f"No pods found for application '{namespace}/{name}'")
 
-        def pod_creation_time(item: APIObject) -> datetime:
-            """Return a pod creation timestamp with a deterministic fallback."""
-
-            return parse_kubernetes_timestamp(item.metadata.get("creationTimestamp")) or datetime.min.replace(tzinfo=UTC)
-
-        # Pick the newest pod so logs stay aligned with the latest rollout.
-        pod = max(pods, key=pod_creation_time)
-
-        pod_status = pod.raw.get("status", {})
-
-        # Count all container restarts so logs include the previous crash when available.
-        restart_count = sum(
-            container.get("restartCount") or 0
-            for container in pod_status.get("containerStatuses", [])
-        )
-        previous_logs = ""
-
-        # Include previous container logs only when Kubernetes reports a restart.
-        if restart_count > 0:
-
-            # Previous logs are best effort because old container logs may already be gone.
-            try:
-                previous_logs = "\n".join([line async for line in cast(Any, pod).logs(tail_lines=lines, previous=True)])
-            except kr8s.ServerError as exc:
-                response = getattr(exc, "response", None)
-
-                # Kubernetes returns 400 or 404 when no previous container logs exist.
-                if getattr(response, "status_code", None) not in {400, 404}:
-                    raise ValueError(f"Failed reading previous logs for '{namespace}/{name}'") from exc
+        pod = pods[0]
 
         # Convert Kubernetes API failures into a simple client-facing adapter error.
         try:
-            current_logs = "\n".join([line async for line in cast(Any, pod).logs(tail_lines=lines)])
+            return "\n".join([line async for line in cast(Any, pod).logs(tail_lines=lines)])
         except kr8s.ServerError as exc:
             raise ValueError(f"Failed reading logs for '{namespace}/{name}'") from exc
-
-        # Separate previous and current logs when both are available.
-        if previous_logs.strip() and current_logs.strip():
-            return f"Previous container logs:\n{previous_logs.rstrip()}\n\nCurrent container logs:\n{current_logs}"
-
-        return previous_logs or current_logs

@@ -71,8 +71,8 @@ def test_production_storage_settings_build_s3_filesystem_options(monkeypatch) ->
 @pytest.mark.parametrize(
     "expected_bucket",
     [
-        "longlink-acme-dashboard",
-        "longlink-acme-shared",
+        "acme-dashboard",
+        "acme-shared",
     ],
 )
 def test_production_storage_scopes_paths_to_configured_bucket(

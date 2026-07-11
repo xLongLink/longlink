@@ -3,22 +3,32 @@ from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authsupport
-from src.utils import names, roles, buckets
+from src.utils import names, roles
 from src.logger import logger
 from dataclasses import dataclass
+from src.runtime import bootstrap, registries
 from tenant.database import SHARED_SCHEMA
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
-from src.models.databases import OrganizationDatabaseResourceKind, OrganizationDatabaseTableResponse, OrganizationDatabaseResourceResponse
+from src.models.databases import (
+    OrganizationDatabaseResourceKind,
+    OrganizationDatabaseResourceResponse,
+    OrganizationDatabaseTableRowsResponse,
+    OrganizationDatabaseTableColumnsResponse,
+)
 from src.database.services import locations, operations, invitations, applications, organizations
 from src.models.applications import ApplicationResponse
-from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary, OrganizationMemberUpdate,
-                                      OrganizationInvitationCreate)
+from src.models.organizations import (
+    OrganizationCreate,
+    OrganizationDetails,
+    OrganizationSummary,
+    OrganizationMemberUpdate,
+    OrganizationInvitationCreate,
+)
 from src.adapters.storage.base import StorageBucketUsage
 from src.database.models.users import User
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
-from src.runtime import bootstrap, registries
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
@@ -192,14 +202,14 @@ async def list_organization_storage_resources(
 
 @router.get(
     "/api/organizations/{organization_id}/database/resources/{resource_kind}/{resource_name}/tables",
-    response_model=list[OrganizationDatabaseTableResponse],
+    response_model=list[OrganizationDatabaseTableColumnsResponse],
 )
 async def list_organization_database_resource_tables(
     resource_kind: OrganizationDatabaseResourceKind,
     resource_name: str,
     member_access: OrganizationAccess = Depends(organization_access),
 ):
-    """Return tables, columns, and preview rows for one organization database resource."""
+    """Return tables and columns for one organization database resource."""
 
     organization = member_access.organization
 
@@ -212,11 +222,10 @@ async def list_organization_database_resource_tables(
         raise HTTPException(status_code=404, detail="Database resource not found")
 
     database_adapter = adapters.database(registry)
-    database_name = names.dbname(organization.slug)
+    database_name = names.knames(organization.slug)
 
     # Inspect adapter tables and normalize backend failures.
     try:
-
         # Hide internal PostgreSQL schemas from resource inspection.
         if resource_name in {
             "information_schema",
@@ -226,7 +235,7 @@ async def list_organization_database_resource_tables(
         } or resource_name.startswith("pg_"):
             raise HTTPException(status_code=404, detail="Database resource not found")
 
-        tables = await database_adapter.tables(database_name, resource_name, limit=TABLE_PREVIEW_LIMIT)
+        tables = await database_adapter.table_columns(database_name, resource_name)
 
     # Preserve explicit not-found errors.
     except HTTPException:
@@ -238,6 +247,62 @@ async def list_organization_database_resource_tables(
         raise HTTPException(status_code=503, detail="Database resource unavailable") from exc
 
     return tables
+
+
+@router.get(
+    "/api/organizations/{organization_id}/database/resources/{resource_kind}/{resource_name}/tables/{table_name}/rows",
+    response_model=OrganizationDatabaseTableRowsResponse,
+)
+async def list_organization_database_resource_table_rows(
+    resource_kind: OrganizationDatabaseResourceKind,
+    resource_name: str,
+    table_name: str,
+    member_access: OrganizationAccess = Depends(organization_access),
+):
+    """Return preview rows for one organization database table."""
+
+    organization = member_access.organization
+
+    # Restrict table inspection to maintainers.
+    roles.atleast(member_access.role, OrganizationRoles.maintain, "Database resource inspection permissions required")
+
+    # Require an assigned database registry for table inspection.
+    registry = await registries.organization_database_registry(organization)
+    if registry is None:
+        raise HTTPException(status_code=404, detail="Database resource not found")
+
+    database_adapter = adapters.database(registry)
+    database_name = names.knames(organization.slug)
+
+    # Inspect adapter table rows and normalize backend failures.
+    try:
+        # Hide internal PostgreSQL schemas from resource inspection.
+        if resource_name in {
+            "information_schema",
+            "pg_catalog",
+            "pg_toast",
+            "public",
+        } or resource_name.startswith("pg_"):
+            raise HTTPException(status_code=404, detail="Database resource not found")
+
+        rows = await database_adapter.table_rows(database_name, resource_name, table_name, limit=TABLE_PREVIEW_LIMIT)
+
+    # Preserve explicit not-found errors.
+    except HTTPException:
+        raise
+
+    # Convert unexpected adapter failures to availability errors.
+    except Exception as exc:
+        logger.exception(
+            "Failed to inspect database table '%s.%s' for organization '%s': %r",
+            resource_name,
+            table_name,
+            organization.slug,
+            exc,
+        )
+        raise HTTPException(status_code=503, detail="Database table unavailable") from exc
+
+    return rows
 
 
 @router.post("/api/organizations/{organization_id}/invitations", status_code=204)
@@ -332,7 +397,7 @@ async def _database_resource_rows(
 ) -> list[dict[str, object]]:
     """Inspect one organization database and return API resource rows."""
 
-    database_name = names.dbname(organization.slug)
+    database_name = names.knames(organization.slug)
     application_by_schema = {application.slug: application for application in active_applications}
 
     # Inspect backend schema usage for the organization database.
@@ -365,7 +430,6 @@ async def _database_resource_rows(
                 "application": None,
                 "space_used": shared_usage["space_used"],
                 "table_count": shared_usage["table_count"],
-                "row_estimate": shared_usage["row_estimate"],
             }
         )
 
@@ -390,13 +454,11 @@ async def _database_resource_rows(
                 },
                 "space_used": usage["space_used"],
                 "table_count": usage["table_count"],
-                "row_estimate": usage["row_estimate"],
             }
         )
 
     # Include unmanaged schemas that still exist in the database.
     for usage in sorted(schema_usage, key=lambda item: item["name"]):
-
         # Skip schemas already represented by managed resources.
         if usage["name"] in application_by_schema or usage["name"] == SHARED_SCHEMA:
             continue
@@ -408,7 +470,6 @@ async def _database_resource_rows(
                 "application": None,
                 "space_used": usage["space_used"],
                 "table_count": usage["table_count"],
-                "row_estimate": usage["row_estimate"],
             }
         )
 
@@ -453,7 +514,6 @@ async def _storage_resource_rows(
 
     # Compare expected app buckets against the backend listing so only existing resources are visible.
     for application in sorted(active_applications, key=lambda item: item.name):
-
         # Ignore applications without assigned storage.
         if application.storage_bucket_name is None:
             continue
@@ -468,7 +528,7 @@ async def _storage_resource_rows(
         bucket_names_requiring_usage.append(application.storage_bucket_name)
 
     # Keep stale organization buckets visible as orphaned resources.
-    organization_bucket_prefix = buckets.prefix(organization.slug)
+    organization_bucket_prefix = f"{organization.slug}-"
     orphaned_bucket_names = [
         listed_bucket_name
         for listed_bucket_name in sorted(bucket_names)
@@ -480,7 +540,6 @@ async def _storage_resource_rows(
 
     # Fetch usage for every visible organization bucket.
     try:
-
         # Collect usage by bucket name for row construction.
         for bucket_name in bucket_names_requiring_usage:
             bucket_usage_by_name[bucket_name] = await storage_client.bucket_usage(bucket_name)
@@ -565,8 +624,8 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     try:
         slug = names.slugify(payload.name)
         names.namespace(slug)
-        names.dbname(slug)
-        buckets.shared(slug)
+        names.knames(slug)
+        names.knames(f"{slug}-shared")
 
     # Return invalid names as request conflicts.
     except ValueError as exc:

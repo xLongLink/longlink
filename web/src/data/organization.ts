@@ -1,15 +1,19 @@
-import { useCollectionQuery } from '@/hooks/use-collection-query';
-import {
-    apiOrganizationDatabaseResourceSchema,
-    apiOrganizationDatabaseTableSchema,
-    apiOrganizationStorageResourceSchema,
-    parseApiCollection,
-} from '@/lib/api-schemas';
 import type {
     ApiOrganizationDatabaseResource,
     ApiOrganizationDatabaseTable,
+    ApiOrganizationDatabaseTableRows,
     ApiOrganizationStorageResource,
 } from '@/lib/types';
+import { useApiQuery } from '@/hooks/use-api';
+import { useCollectionQuery } from '@/hooks/use-collection-query';
+import {
+    apiOrganizationDatabaseResourceSchema,
+    apiOrganizationDatabaseTableRowsSchema,
+    apiOrganizationDatabaseTableSchema,
+    apiOrganizationStorageResourceSchema,
+    parseApiCollection,
+    parseApiResponse,
+} from '@/lib/api-schemas';
 
 /** Fetches database resources for one organization. */
 export function useOrganizationDatabaseResources(organizationId: string) {
@@ -24,7 +28,7 @@ export function useOrganizationDatabaseResources(organizationId: string) {
     );
 }
 
-/** Fetches table previews for one organization database resource. */
+/** Fetches table columns for one organization database resource. */
 export function useOrganizationDatabaseResourceTables(
     organizationId: string,
     resource: ApiOrganizationDatabaseResource | null
@@ -37,6 +41,23 @@ export function useOrganizationDatabaseResourceTables(
     return useCollectionQuery<ApiOrganizationDatabaseTable>(path, {
         enabled,
         parse: (value) => parseApiCollection(apiOrganizationDatabaseTableSchema, value),
+    });
+}
+
+/** Fetches preview rows for one organization database table. */
+export function useOrganizationDatabaseTableRows(
+    organizationId: string,
+    resource: ApiOrganizationDatabaseResource | null,
+    tableName: string
+) {
+    const enabled = organizationId.length > 0 && resource !== null && tableName.length > 0;
+    const path = enabled
+        ? `/api/organizations/${organizationId}/database/resources/${resource.kind}/${encodeURIComponent(resource.name)}/tables/${encodeURIComponent(tableName)}/rows`
+        : null;
+
+    return useApiQuery<ApiOrganizationDatabaseTableRows>(path, {
+        enabled,
+        parse: (value) => parseApiResponse(apiOrganizationDatabaseTableRowsSchema, value),
     });
 }
 

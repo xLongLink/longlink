@@ -1,6 +1,7 @@
 import pytest
 import asyncio
 from uuid import UUID
+from types import SimpleNamespace
 from datetime import UTC, datetime
 from src.routes import operations as operation_routes
 from src.operations import worker as operation_worker
@@ -8,9 +9,9 @@ from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
 from src.models.locations import LocationProvider, LocationResponse
 from src.models.operations import OperationKind
+from src.operations.outcomes import OperationOutcomeState
 from src.models.organizations import OrganizationDetails
 from src.database.models.users import User
-from src.operations.outcomes import OperationOutcomeState
 from src.operations.implementation import applications as application_operations
 from src.operations.implementation import organizations as organization_operations
 from src.database.models.operations import Operation
@@ -309,7 +310,12 @@ async def test_application_and_organization_remove_handlers_remove_runtime(monke
 
     application = application_model()
     organization = organization_details()
-    removals: list[tuple[str, UUID]] = []
+    compute_registry = SimpleNamespace(
+        id=UUID("66666666-6666-6666-6666-666666666666"),
+        kubeconfig="apiVersion: v1\nclusters: []\n",
+        proxy_secret="proxy-secret",
+    )
+    removals: list[tuple[str, UUID | str]] = []
 
     async def fake_get_application(application_id: UUID, include_deleted: bool = False) -> Application:
         """Return a soft-deleted application for cleanup."""
@@ -323,21 +329,76 @@ async def test_application_and_organization_remove_handlers_remove_runtime(monke
         assert include_deleted
         return organization
 
-    async def fake_remove_application_runtime(application: Application, organization: OrganizationDetails) -> None:
+    async def fake_remove_application_runtime(runtime_application: Application, runtime_organization: OrganizationDetails) -> None:
         """Record application runtime removal."""
 
-        removals.append(("application", application.id))
+        assert runtime_organization.id == organization.id
+        removals.append(("application", runtime_application.id))
 
-    async def fake_remove_organization_runtime(organization: OrganizationDetails) -> None:
-        """Record organization runtime removal."""
+    async def fake_organization_applications(organization_id: UUID, include_deleted: bool = False) -> list[Application]:
+        """Return soft-deleted applications for organization cleanup."""
 
-        removals.append(("organization", organization.id))
+        assert organization_id == organization.id
+        assert include_deleted
+        return [application]
+
+    async def fake_application_compute_registry(registry_application: Application, location_id: UUID) -> SimpleNamespace:
+        """Return the application's original compute registry."""
+
+        assert registry_application.id == application.id
+        assert location_id == organization.location_id
+        return compute_registry
+
+    async def fake_latest_compute_registry(location_id: UUID) -> SimpleNamespace:
+        """Return the current organization location compute registry."""
+
+        assert location_id == organization.location_id
+        return compute_registry
+
+    async def fake_organization_database_registry(
+        lookup_organization: OrganizationDetails,
+        include_deleted: bool = False,
+    ) -> None:
+        """Return no database registry for organization cleanup."""
+
+        assert lookup_organization.id == organization.id
+        assert include_deleted
+        return None
+
+    async def fake_organization_storage_registry(
+        lookup_organization: OrganizationDetails,
+        include_deleted: bool = False,
+    ) -> None:
+        """Return no storage registry for organization cleanup."""
+
+        assert lookup_organization.id == organization.id
+        assert include_deleted
+        return None
+
+    class FakeKubernetes:
+        """Record namespace deletion for organization cleanup."""
+
+        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
+            """Accept the compute registry connection fields."""
+
+            assert kubeconfig == compute_registry.kubeconfig
+            assert proxy_secret == compute_registry.proxy_secret
+
+        async def delete_namespace(self, namespace: str) -> None:
+            """Record namespace deletion."""
+
+            removals.append(("namespace", namespace))
 
     monkeypatch.setattr(application_operations.applications, "get", fake_get_application)
     monkeypatch.setattr(application_operations.organizations, "get", fake_get_organization)
     monkeypatch.setattr(organization_operations.organizations, "get", fake_get_organization)
+    monkeypatch.setattr(organization_operations.organizations, "applications", fake_organization_applications)
     monkeypatch.setattr(application_operations.provisioning, "remove_application_runtime", fake_remove_application_runtime)
-    monkeypatch.setattr(organization_operations.provisioning, "remove_organization_runtime", fake_remove_organization_runtime)
+    monkeypatch.setattr(organization_operations.registries, "application_compute_registry", fake_application_compute_registry)
+    monkeypatch.setattr(organization_operations.registries, "latest_compute_registry", fake_latest_compute_registry)
+    monkeypatch.setattr(organization_operations.registries, "organization_database_registry", fake_organization_database_registry)
+    monkeypatch.setattr(organization_operations.registries, "organization_storage_registry", fake_organization_storage_registry)
+    monkeypatch.setattr(organization_operations, "Kubernetes", FakeKubernetes)
 
     app_operation = leased_operation(OperationKind.application_remove)
     org_operation = leased_operation(OperationKind.organization_remove)
@@ -349,5 +410,6 @@ async def test_application_and_organization_remove_handlers_remove_runtime(monke
     assert org_result.state == OperationOutcomeState.complete
     assert removals == [
         ("application", application.id),
-        ("organization", organization.id),
+        ("application", application.id),
+        ("namespace", organization.slug),
     ]

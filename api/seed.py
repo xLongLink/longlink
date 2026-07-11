@@ -3,7 +3,7 @@ import subprocess
 from uuid import UUID
 from pathlib import Path
 from datetime import UTC, datetime
-from src.utils import names, buckets
+from src.utils import names
 from src.runtime import Kubernetes
 from src.runtime import bootstrap
 from src.runtime import provisioning as resources
@@ -224,8 +224,8 @@ async def seed_local_development() -> None:
     if organization is None:
         organization_slug = names.slugify(LOCAL_ORG)
         names.namespace(organization_slug)
-        names.dbname(organization_slug)
-        buckets.shared(organization_slug)
+        names.knames(organization_slug)
+        names.knames(f"{organization_slug}-shared")
         organization = await organization_service.create(
             LOCAL_ORG,
             organization_slug,
@@ -253,12 +253,12 @@ async def seed_local_development() -> None:
     application_slug = names.slugify(LOCAL_APP_NAME)
     names.namespace(organization_record.slug)
     names.knames(application_slug)
-    names.dbname(organization_record.slug)
+    names.knames(organization_record.slug)
 
     # Application storage isolation depends on the assigned shared bucket.
     if organization_record.shared_storage_bucket_name is None:
         raise RuntimeError("Seeded organization has no assigned shared storage bucket")
-    buckets.application(organization_record.slug, application_slug)
+    names.knames(f"{organization_record.slug}-{application_slug}")
 
     # Load the sample app before deciding whether to create or refresh it.
     organization_applications = await organization_service.applications(organization_record.id)

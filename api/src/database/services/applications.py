@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import HTTPException
 from datetime import UTC, datetime
-from src.utils import buckets
+from src.utils import names
 from sqlalchemy import and_, select
 from sqlalchemy.orm import selectinload
 from src.models.roles import ApplicationRoles
@@ -118,7 +118,6 @@ async def members(application_id: UUID, organization_id: UUID) -> list[tuple[Use
 
     # Query organization members and app roles together.
     async with session_scope() as session:
-
         # Start from organization memberships so users without app access are visible.
         statement = (
             select(User, UserOrganization, UserApplication)
@@ -178,7 +177,6 @@ async def set_member_role(application_id: UUID, organization_id: UUID, member_id
 
         # Remove application access when no role is provided.
         if role is None:
-
             # Soft-delete an existing active application membership.
             if application_membership is not None and application_membership.deleted_at is None:
                 application_membership.deleted_at = now
@@ -252,7 +250,7 @@ async def create(
             compute_registry_id=compute_registry_id,
             database_registry_id=database_registry_id,
             storage_registry_id=storage_registry_id,
-            storage_bucket_name=storage_bucket_name or buckets.application(organization.slug, slug),
+            storage_bucket_name=storage_bucket_name or names.knames(f"{organization.slug}-{slug}"),
             name=name,
             slug=slug,
             status=status,

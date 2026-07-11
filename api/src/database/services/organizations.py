@@ -1,7 +1,7 @@
 from uuid import UUID
 from fastapi import HTTPException
 from datetime import UTC, datetime
-from src.utils import names, buckets
+from src.utils import names
 from sqlalchemy import select
 from tenant.models import User as TenantUser
 from sqlalchemy.exc import IntegrityError
@@ -98,7 +98,6 @@ async def get_member_access(organization_id: UUID, user_id: UUID) -> tuple[Organ
 
     # Check organization membership in one query.
     async with session_scope() as session:
-
         # Join membership in the access check so non-members and missing organizations look identical.
         statement = (
             select(Organization, UserOrganization.role)
@@ -145,7 +144,6 @@ async def database_users(organization_id: UUID) -> list[TenantUser]:
 
         # Convert each membership row to the tenant-facing user snapshot.
         for user, role, created_at, updated_at, membership_deleted_at in rows:
-
             # A shared user becomes inactive when either the account or organization membership is inactive.
             deleted_at = user.deleted_at
 
@@ -289,8 +287,8 @@ async def create(
     """Create an organization."""
 
     names.namespace(slug)
-    names.dbname(slug)
-    shared_storage_bucket_name = buckets.shared(slug)
+    names.knames(slug)
+    shared_storage_bucket_name = names.knames(f"{slug}-shared")
 
     # Create the organization and owner membership together.
     async with session_scope() as session:

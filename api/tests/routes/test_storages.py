@@ -86,7 +86,7 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
         async def buckets(self) -> list[str]:
             """Return fake bucket names from the storage backend."""
 
-            return ["alpha", "longlink-acme-shared", "longlink-acme-dashboard"]
+            return ["alpha", "acme-shared", "acme-dashboard"]
 
     monkeypatch.setattr(
         "src.routes.storages.adapters.storage",
@@ -102,7 +102,7 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == ["alpha", "longlink-acme-shared", "longlink-acme-dashboard"]
+    assert response.json() == ["alpha", "acme-shared", "acme-dashboard"]
 
 
 async def test_storage_object_endpoint_returns_bucket_objects(

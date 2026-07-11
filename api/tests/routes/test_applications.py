@@ -337,7 +337,7 @@ async def test_create_app_returns_app_response(
                 "port": 5432,
                 "password": "runtime-secret",
                 "username": "longlink_acme_dashboard",
-                "database_name": "longlink_acme",
+                "database_name": "acme",
             }
 
         async def sync_users(self, organization: str, users: list[TenantUser]) -> None:
@@ -418,8 +418,8 @@ async def test_create_app_returns_app_response(
     assert schema_payload["organization_id"] == organization.id
     assert str(schema_payload["application_id"]) == payload["id"]
     assert captured_buckets == [
-        ("bucket", "longlink-acme-shared"),
-        ("bucket", "longlink-acme-dashboard"),
+        ("bucket", "acme-shared"),
+        ("bucket", "acme-dashboard"),
     ]
     sync_payload = captured["sync_users"]
     assert isinstance(sync_payload, dict)
@@ -439,15 +439,15 @@ async def test_create_app_returns_app_response(
     assert application_secrets["API_KEY"] == "secret-value"
     assert application_secrets["LONGLINK_ENV"] == "production"
     assert application_secrets["LONGLINK_DATABASE_HOST"] == "db.remote.longlink.internal"
-    assert application_secrets["LONGLINK_DATABASE_NAME"] == "longlink_acme"
+    assert application_secrets["LONGLINK_DATABASE_NAME"] == "acme"
     assert application_secrets["LONGLINK_DATABASE_PASSWORD"] == "runtime-secret"
     assert application_secrets["LONGLINK_DATABASE_PORT"] == "5432"
     assert application_secrets["LONGLINK_DATABASE_SCHEMA"] == "dashboard"
     assert application_secrets["LONGLINK_DATABASE_USERNAME"] == "longlink_acme_dashboard"
-    assert application_secrets["LONGLINK_STORAGE_BUCKET"] == "longlink-acme-dashboard"
+    assert application_secrets["LONGLINK_STORAGE_BUCKET"] == "acme-dashboard"
     assert application_secrets["LONGLINK_STORAGE_ENDPOINT_URL"] == "http://storage.runtime.longlink.internal:19000"
     assert application_secrets["LONGLINK_STORAGE_PASSWORD"] == "storage-secret"
-    assert application_secrets["LONGLINK_STORAGE_SHARED_BUCKET"] == "longlink-acme-shared"
+    assert application_secrets["LONGLINK_STORAGE_SHARED_BUCKET"] == "acme-shared"
     assert application_secrets["LONGLINK_STORAGE_USERNAME"] == "storage-access"
 
 
@@ -605,7 +605,7 @@ async def test_create_app_returns_409_for_overlong_runtime_bucket_name(
     # Act
     response = client.post(
         f"/api/organizations/{organization.id}/applications",
-        json={"name": "a" * 50, "image": "ghcr.io/longlink/dashboard:latest"},
+        json={"name": "a" * 59, "image": "ghcr.io/longlink/dashboard:latest"},
     )
 
     # Assert

@@ -133,10 +133,11 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
                     {"id": UUID("22222222-2222-2222-2222-222222222222")},
                 )
 
-        tables = await adapter.tables("longlink_acme", "dashboard")
-        schemas = await adapter.schemas("longlink_acme")
+        tables = await adapter.table_columns("acme", "dashboard")
+        table_rows = await adapter.table_rows("acme", "dashboard", "runtime_items")
+        schemas = await adapter.schemas("acme")
         databases = await adapter.databases()
-        schema_usage = await adapter.schema_usage("longlink_acme")
+        schema_usage = await adapter.schema_usage("acme")
         server_usage = await adapter.usage()
 
         await runtime_engine.dispose()
@@ -147,23 +148,23 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             organization_id=organization_id,
             application_id=application_id,
         )
-        schemas_after_delete = await adapter.schemas("longlink_acme")
+        schemas_after_delete = await adapter.schemas("acme")
         await adapter.delete_database("acme")
         databases_after_delete = await adapter.databases()
 
-        assert "longlink_acme" in database_url
+        assert database_url.split("?", 1)[0].endswith("/acme")
         assert runtime_connection["username"].startswith("longlink_")
         assert len(runtime_connection["username"]) <= 63
         assert shared_user == {"email": "owner@example.com", "role": "owner"}
         assert deleted_at is not None
         assert [table["name"] for table in tables] == ["runtime_items"]
-        assert tables[0]["rows"] == [{"id": 1, "name": "Widget"}]
+        assert table_rows["rows"] == [{"id": "1", "name": "Widget"}]
         assert {"dashboard", "shared"} <= set(schemas)
-        assert "longlink_acme" in databases
+        assert "acme" in databases
         assert {item["name"] for item in schema_usage} >= {"dashboard", "shared"}
         assert server_usage["space_used"] > 0
         assert "dashboard" not in schemas_after_delete
-        assert "longlink_acme" not in databases_after_delete
+        assert "acme" not in databases_after_delete
     finally:
         if runtime_engine is not None:
             await runtime_engine.dispose()

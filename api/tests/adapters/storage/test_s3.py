@@ -56,8 +56,8 @@ async def minio_storage() -> AsyncIterator[S3]:
 async def test_s3_adapter_manages_real_minio_buckets_objects_usage_and_cleanup(minio_storage: S3) -> None:
     """Exercise S3 bucket, object, usage, and cleanup behavior against real MinIO."""
 
-    shared_bucket = await minio_storage.bucket("longlink-acme-shared")
-    app_bucket = await minio_storage.bucket("longlink-acme-dashboard")
+    shared_bucket = await minio_storage.bucket("acme-shared")
+    app_bucket = await minio_storage.bucket("acme-dashboard")
     async with minio_storage._client() as client:
         await client.put_object(Bucket=app_bucket, Key="reports/july.csv", Body=b"id,total\n1,42\n")
         await client.put_object(Bucket=app_bucket, Key="reports/august.csv", Body=b"id,total\n2,84\n")

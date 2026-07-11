@@ -1,8 +1,9 @@
 from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
-from datetime import UTC, datetime
+from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Column, String, text
+from tenant.utils import utcnow
+from sqlalchemy import Column, String, DateTime, text
 from src.models.countries import DEFAULT_COUNTRY
 from src.database.models.association import UserOrganization
 
@@ -38,15 +39,15 @@ class Organization(SQLModel, table=True):
     shared_storage_bucket_name: str | None = Field(default=None, max_length=63)
 
     # User
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False))
     created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Organization.created_id"})
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), sa_column_kwargs={"onupdate": lambda: datetime.now(UTC)}
+        default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=utcnow)
     )
     updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Organization.updated_id"})
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
-    deleted_at: datetime | None = Field(default=None)
+    deleted_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
     deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Organization.deleted_id"})
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 

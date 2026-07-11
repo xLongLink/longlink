@@ -19,14 +19,12 @@ def test_parse_kubernetes_timestamp_normalizes_supported_values() -> None:
 def test_kubernetes_not_found_recognizes_response_status() -> None:
     """Recognize generic Kubernetes 404 errors as missing resources."""
 
-    resources = KubernetesResources("{}", "secret", "apps.example.test")
-
+    resources = KubernetesResources("{}", "secret")
 
     class Response:
         """Expose an HTTP status code like kr8s responses."""
 
         status_code = 404
-
 
     class Error(Exception):
         """Expose a response object like kr8s server errors."""

@@ -1,12 +1,16 @@
-import { DataTable } from '@/components/DataTable';
-import { useTranslation } from '@/lib/i18n';
-import type { ApiOrganizationDatabaseTable } from '@/lib/types';
 import { type ColumnDef } from '@tanstack/react-table';
+import type { ApiOrganizationDatabaseTable, ApiOrganizationDatabaseTableRows } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
+import { DataTable } from '@/components/DataTable';
 
-type DatabaseTableRow = Record<string, string | number | boolean | null>;
+type DatabaseTableRow = Record<string, string>;
+type DatabaseTableRowsProps = {
+    table: ApiOrganizationDatabaseTable;
+    rows: ApiOrganizationDatabaseTableRows['rows'];
+};
 
 /** Renders preview rows for one database table with dynamic columns. */
-export function DatabaseTableRows({ table }: { table: ApiOrganizationDatabaseTable }) {
+export function DatabaseTableRows({ table, rows }: DatabaseTableRowsProps) {
     const { t } = useTranslation();
     const databaseRowColumns: Array<ColumnDef<DatabaseTableRow>> = table.columns.length
         ? table.columns.map((column) => ({
@@ -15,11 +19,7 @@ export function DatabaseTableRows({ table }: { table: ApiOrganizationDatabaseTab
               cell: ({ row }) => {
                   const value = row.original[column.name];
 
-                  return value === null || value === undefined ? (
-                      <span className="text-muted-foreground">NULL</span>
-                  ) : (
-                      <span className="font-mono text-xs">{String(value)}</span>
-                  );
+                  return <span className="font-mono text-xs">{value}</span>;
               },
               meta: { className: 'max-w-72 truncate' },
           }))
@@ -31,5 +31,5 @@ export function DatabaseTableRows({ table }: { table: ApiOrganizationDatabaseTab
               },
           ];
 
-    return <DataTable columns={databaseRowColumns} data={table.rows} emptyMessage={t('resources.noRows')} />;
+    return <DataTable columns={databaseRowColumns} data={rows} emptyMessage={t('resources.noRows')} />;
 }

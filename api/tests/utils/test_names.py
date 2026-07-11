@@ -61,23 +61,3 @@ def test_namespace_rejects_system_namespace() -> None:
 
     with pytest.raises(ValueError, match="Namespace name is reserved"):
         names.namespace("kube-system")
-
-
-def test_dbname_returns_managed_database_name() -> None:
-    """Prefix organization slugs for managed PostgreSQL databases."""
-
-    assert names.dbname("acme-team") == "longlink_acme-team"
-
-
-def test_dbname_rejects_invalid_source_name() -> None:
-    """Reject database source names that are not runtime-safe slugs."""
-
-    with pytest.raises(ValueError, match="Value must contain only lowercase letters, numbers, and hyphens"):
-        names.dbname("Acme Team")
-
-
-def test_dbname_rejects_overlong_database_name() -> None:
-    """Reject database names longer than PostgreSQL's identifier limit."""
-
-    with pytest.raises(ValueError, match="Database name must be at most 63 characters"):
-        names.dbname("a" * 55)

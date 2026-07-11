@@ -1,8 +1,9 @@
 from uuid import UUID, uuid4
 from typing import ClassVar
-from datetime import UTC, datetime
+from datetime import datetime
 from sqlmodel import Field, SQLModel
-from sqlalchemy import Enum, Column, String
+from tenant.utils import utcnow
+from sqlalchemy import Enum, Column, String, DateTime
 from src.models.operations import OperationKind, OperationStatus
 
 
@@ -37,18 +38,16 @@ class Operation(SQLModel, table=True):
 
     # Lease
     lease_token: str | None = Field(default=None, sa_column=Column(String(length=100), nullable=True))
-    lease_expires_at: datetime | None = None
+    lease_expires_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
 
     # Timestamps
-    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False))
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    scheduled_at: datetime | None = None
-    updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), sa_column_kwargs={"onupdate": lambda: datetime.now(UTC)}
-    )
+    scheduled_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    updated_at: datetime = Field(default_factory=utcnow, sa_column=Column(DateTime(timezone=True), nullable=False, onupdate=utcnow))
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
-    started_at: datetime | None = None
-    stopped_at: datetime | None = None
+    started_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
+    stopped_at: datetime | None = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))
 
     @property
     def status(self) -> OperationStatus:

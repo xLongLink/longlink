@@ -1,37 +1,8 @@
-import { DataTable } from '@/components/DataTable';
-import CreateApplication from '@/components/dialogs/CreateApplication';
-import Logs from '@/components/dialogs/Logs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Icon } from '@/components/ui/icon';
-import { Menu, MenuSection, MenuSubSection } from '@/components/ui/menu';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
-import {
-    useOrganizationDatabaseResourceTables,
-    useOrganizationDatabaseResources,
-    useOrganizationStorageResources,
-} from '@/data/organization';
-import { useStorageObjects } from '@/data/storage';
-import { useApiQuery } from '@/hooks/use-api';
-import { useOrganizationActions } from '@/hooks/use-organization';
-import { useUserProfile } from '@/hooks/use-user';
-import { apiApplicationMemberSchema, parseApiCollection } from '@/lib/api-schemas';
-import { apiQueryKey, fetchApiVoid } from '@/lib/api';
-import { useTranslation } from '@/lib/i18n';
-import {
-    APPLICATION_ROLE_NAMES,
-    canManageApplication,
-    canViewApplicationLogs,
-    type ApplicationRole,
-} from '@/lib/roles';
+import { useState } from 'react';
+import { type ColumnDef } from '@tanstack/react-table';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { Boxes, Building2, Database, HardDrive, MoreVertical, Users } from 'lucide-react';
 import type {
     ApiApplicationMember,
     ApiInvitation,
@@ -43,16 +14,46 @@ import type {
     ApiOrganizationStorageResource,
     ApiStorageObject,
 } from '@/lib/types';
-import { formatBytes, formatNumber, getInitials } from '@/lib/utils';
-import { PostgreSQL } from '@/svg/PostgreSQL';
 import { S3 } from '@/svg/S3';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { type ColumnDef } from '@tanstack/react-table';
-import { Boxes, Building2, Database, HardDrive, MoreVertical, Users } from 'lucide-react';
-import { useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router';
-import { DatabaseTableRows } from './DatabaseTableRows';
+import { Icon } from '@/components/ui/icon';
+import { useTranslation } from '@/lib/i18n';
+import Logs from '@/components/dialogs/Logs';
+import { Badge } from '@/components/ui/badge';
+import { useApiQuery } from '@/hooks/use-api';
+import { PostgreSQL } from '@/svg/PostgreSQL';
+import { Button } from '@/components/ui/button';
+import { useUserProfile } from '@/hooks/use-user';
+import { DataTable } from '@/components/DataTable';
+import { useStorageObjects } from '@/data/storage';
+import { apiQueryKey, fetchApiVoid } from '@/lib/api';
+import { useOrganizationActions } from '@/hooks/use-organization';
+import { formatBytes, formatNumber, getInitials } from '@/lib/utils';
+import CreateApplication from '@/components/dialogs/CreateApplication';
+import { Menu, MenuSection, MenuSubSection } from '@/components/ui/menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { apiApplicationMemberSchema, parseApiCollection } from '@/lib/api-schemas';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    APPLICATION_ROLE_NAMES,
+    canManageApplication,
+    canViewApplicationLogs,
+    type ApplicationRole,
+} from '@/lib/roles';
+import {
+    useOrganizationDatabaseResourceTables,
+    useOrganizationDatabaseResources,
+    useOrganizationDatabaseTableRows,
+    useOrganizationStorageResources,
+} from '@/data/organization';
 import People from './People';
+import { DatabaseTableRows } from './DatabaseTableRows';
 
 type SettingsProps = {
     organization: string;
@@ -151,6 +152,17 @@ export default function Settings({
     const selectedDatabaseTableName = settingsDatabaseTable;
     const selectedDatabaseTable =
         databaseResourceTables.find((table) => table.name === selectedDatabaseTableName) ?? null;
+    const databaseTableRowsRequest =
+        selectedDatabaseResource && selectedDatabaseTable && isDatabaseTablePage ? selectedDatabaseResource : null;
+    const {
+        data: databaseTableRows,
+        error: databaseTableRowsError,
+        isLoading: databaseTableRowsIsLoading,
+    } = useOrganizationDatabaseTableRows(
+        organizationDetails?.id ?? '',
+        databaseTableRowsRequest,
+        selectedDatabaseTableName
+    );
     const databaseTableDetailError =
         databaseDetailError ??
         (!databaseResourceTablesIsLoading && isDatabaseTablePage && selectedDatabaseTable === null
@@ -614,12 +626,6 @@ export default function Settings({
             cell: ({ row }) => formatNumber(row.original.columns.length),
             meta: { className: 'w-32' },
         },
-        {
-            id: 'rows',
-            header: t('columns.previewRows'),
-            cell: ({ row }) => formatNumber(row.original.rows.length),
-            meta: { className: 'w-36' },
-        },
     ];
 
     const storageObjectColumns: Array<ColumnDef<ApiStorageObject>> = [
@@ -780,8 +786,15 @@ export default function Settings({
                                         <div className="rounded-md border p-4 text-sm text-destructive">
                                             {databaseTableDetailError.message}
                                         </div>
-                                    ) : selectedDatabaseTable ? (
-                                        <DatabaseTableRows table={selectedDatabaseTable} />
+                                    ) : databaseTableRowsIsLoading ? null : databaseTableRowsError ? (
+                                        <div className="rounded-md border p-4 text-sm text-destructive">
+                                            {databaseTableRowsError.message}
+                                        </div>
+                                    ) : selectedDatabaseTable && databaseTableRows ? (
+                                        <DatabaseTableRows
+                                            table={selectedDatabaseTable}
+                                            rows={databaseTableRows.rows}
+                                        />
                                     ) : null
                                 ) : databaseResourceTables.length ? (
                                     <DataTable columns={databaseTableColumns} data={databaseResourceTables} />

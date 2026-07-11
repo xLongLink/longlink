@@ -173,7 +173,7 @@ async def test_create_organization_initializes_storage(
 
     # Assert
     assert response.status_code == 200
-    assert calls == [("bucket", "longlink-acme-shared")]
+    assert calls == [("bucket", "acme-shared")]
 
 
 async def test_get_organization_returns_member_payload(
@@ -301,25 +301,22 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
         async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
             """Return fake schema usage rows for the organization database."""
 
-            assert database_name == "longlink_acme"
+            assert database_name == "acme"
             return [
                 {
                     "name": "shared",
                     "space_used": 1024,
                     "table_count": 1,
-                    "row_estimate": 5,
                 },
                 {
                     "name": "dashboard",
                     "space_used": 2048,
                     "table_count": 2,
-                    "row_estimate": 42,
                 },
                 {
                     "name": "stale",
                     "space_used": 512,
                     "table_count": 1,
-                    "row_estimate": 3,
                 },
             ]
 
@@ -459,16 +456,16 @@ async def test_organization_storage_endpoint_returns_organization_buckets(
             """Return fake bucket names from the storage backend."""
 
             return [
-                "longlink-acme-shared",
-                "longlink-acme-dashboard",
-                "longlink-acme-stale",
-                "longlink-other-shared",
+                "acme-shared",
+                "acme-dashboard",
+                "acme-stale",
+                "other-shared",
             ]
 
         async def bucket_usage(self, bucket_name: str) -> dict[str, int]:
             """Return fake usage counters for one bucket."""
 
-            assert bucket_name.startswith("longlink-acme-")
+            assert bucket_name.startswith("acme-")
             return {"space_used": len(bucket_name), "object_count": 2}
 
     monkeypatch.setattr(
@@ -495,7 +492,7 @@ async def test_organization_storage_endpoint_returns_organization_buckets(
     assert payload[1]["application"]["icon"] == "layout-dashboard"
     assert payload[1]["application"]["description"] == "Dashboard app"
     assert reports.slug not in [item["name"] for item in payload]
-    assert payload[0]["space_used"] == len("longlink-acme-shared")
+    assert payload[0]["space_used"] == len("acme-shared")
     assert payload[0]["object_count"] == 2
 
 
@@ -560,7 +557,7 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     assert response.json() == {"detail": "Storage resources unavailable"}
 
 
-async def test_organization_database_resource_tables_endpoint_returns_table_previews(
+async def test_organization_database_resource_tables_endpoint_returns_columns_and_rows(
     clients: tuple[TestClient, TestClient, TestClient],
     monkeypatch,
     users: tuple[User, User, User],
@@ -601,13 +598,12 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
             self.username = username
             self.password = password
 
-        async def tables(self, database_name: str, schema_name: str, *, limit: int = 100) -> list[dict[str, object]]:
-            """Return fake table previews for shared and app schemas."""
+        async def table_columns(self, database_name: str, schema_name: str) -> list[dict[str, object]]:
+            """Return fake table columns for shared and app schemas."""
 
-            assert database_name == "longlink_acme"
-            assert limit == 100
+            assert database_name == "acme"
 
-            # The route requests each schema separately, so mirror different backend rows per schema.
+            # The route requests each schema separately, so mirror different backend columns per schema.
             if schema_name == "shared":
                 return [
                     {
@@ -627,7 +623,6 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
                                 "position": 2,
                             },
                         ],
-                        "rows": [{"id": str(owner.id), "email": "owner@example.com"}],
                     }
                 ]
 
@@ -650,9 +645,38 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
                             "position": 2,
                         },
                     ],
-                    "rows": [{"id": 100, "total": 42.5}],
                 }
             ]
+
+        async def table_rows(
+            self,
+            database_name: str,
+            schema_name: str,
+            table_name: str,
+            *,
+            limit: int = 100,
+        ) -> dict[str, object]:
+            """Return fake preview rows for one table."""
+
+            assert database_name == "acme"
+            assert limit == 100
+
+            # The route requests one table at a time, so mirror backend rows per table.
+            if schema_name == "shared":
+                assert table_name == "users"
+                return {
+                    "name": "users",
+                    "schema_name": "shared",
+                    "rows": [{"id": str(owner.id), "email": "owner@example.com"}],
+                }
+
+            assert schema_name == "dashboard"
+            assert table_name == "orders"
+            return {
+                "name": "orders",
+                "schema_name": "dashboard",
+                "rows": [{"id": "100", "total": "42.5"}],
+            }
 
     monkeypatch.setattr(
         "src.routes.organizations.adapters.database",
@@ -661,19 +685,25 @@ async def test_organization_database_resource_tables_endpoint_returns_table_prev
 
     # Act
     users_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/shared/tables")
+    users_rows_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/shared/tables/users/rows")
     schema_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/dashboard/tables")
+    schema_rows_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/dashboard/tables/orders/rows")
 
     # Assert
     assert users_response.status_code == 200
     user_tables = users_response.json()
     assert user_tables[0]["name"] == "users"
     assert [column["name"] for column in user_tables[0]["columns"]] == ["id", "email"]
-    assert user_tables[0]["rows"] == [{"id": str(owner.id), "email": "owner@example.com"}]
+    assert "rows" not in user_tables[0]
+    assert users_rows_response.status_code == 200
+    assert users_rows_response.json()["rows"] == [{"id": str(owner.id), "email": "owner@example.com"}]
     assert schema_response.status_code == 200
     schema_tables = schema_response.json()
     assert schema_tables[0]["name"] == "orders"
     assert [column["name"] for column in schema_tables[0]["columns"]] == ["id", "total"]
-    assert schema_tables[0]["rows"] == [{"id": 100, "total": 42.5}]
+    assert "rows" not in schema_tables[0]
+    assert schema_rows_response.status_code == 200
+    assert schema_rows_response.json()["rows"] == [{"id": "100", "total": "42.5"}]
 
 
 async def test_organization_database_resource_tables_endpoint_requires_elevated_role(
@@ -704,6 +734,7 @@ async def test_organization_database_resource_tables_endpoint_requires_elevated_
     database_response = client.get(f"/api/organizations/{organization.id}/database")
     storage_response = client.get(f"/api/organizations/{organization.id}/storage")
     response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/dashboard/tables")
+    rows_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/dashboard/tables/orders/rows")
 
     # Assert
     assert database_response.status_code == 403
@@ -712,6 +743,8 @@ async def test_organization_database_resource_tables_endpoint_requires_elevated_
     assert storage_response.json() == {"detail": "Storage resource inspection permissions required"}
     assert response.status_code == 403
     assert response.json() == {"detail": "Database resource inspection permissions required"}
+    assert rows_response.status_code == 403
+    assert rows_response.json() == {"detail": "Database resource inspection permissions required"}
 
 
 async def test_get_organization_returns_invitations(
