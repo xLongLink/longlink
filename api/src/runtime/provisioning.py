@@ -4,9 +4,9 @@ from datetime import UTC, datetime
 from src.utils import names
 from src.logger import logger
 from src.runtime import bootstrap, environments
-from src.runtime.kubernetes import Kubernetes
 from src.models.statuses import ApplicationStatus
 from src.database.services import operations, registries, applications
+from src.runtime.kubernetes import Kubernetes
 from src.models.applications import ApplicationCreate
 from src.models.organizations import OrganizationDetails, OrganizationSummary
 from src.database.models.users import User
@@ -30,16 +30,9 @@ async def provision_application_runtime_resources(
 
     compute = Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret)
     db = adapters.database(database_registry)
-    bucket = application.storage_bucket_name
-    shared = organization.shared_storage_bucket_name
-
-    # Application buckets are assigned when the control-plane row is created.
-    if bucket is None:
-        raise ValueError("Application has no assigned storage bucket")
-
-    # Shared buckets are assigned when the organization row is created.
-    if shared is None:
-        raise ValueError("Organization has no assigned shared storage bucket")
+    bucket = names.application_bucket(organization.slug, application.slug)
+    shared = names.organization_shared_bucket(organization.slug)
+    schema = names.application_schema(application.slug)
 
     await compute.namespace(organization.slug)
     await bootstrap.sync_organization_users(organization, database_registry)
@@ -55,12 +48,12 @@ async def provision_application_runtime_resources(
 
     connection = await db.schema(
         organization.slug,
-        application.slug,
+        schema,
         organization_id=organization.id,
         application_id=application.id,
     )
     envs = environments.runtime_environment(
-        application.slug,
+        schema,
         connection,
         storage_registry,
         bucket,
@@ -83,7 +76,6 @@ async def create_application_runtime(
 ) -> Application:
     """Create the application row, provision runtime resources, and queue verification."""
 
-    bucket = names.knames(f"{organization.slug}-{application_slug}")
     logger.info("Provisioning application %s/%s", organization.slug, application_slug)
 
     metadata = await environments.application_image_metadata(payload)
@@ -113,7 +105,6 @@ async def create_application_runtime(
         compute_registry_id=compute.id,
         database_registry_id=db.id,
         storage_registry_id=storage.id,
-        storage_bucket_name=bucket,
         sdk=metadata.sdk,
         digest=digest,
         version=metadata.version,
@@ -195,9 +186,6 @@ async def sync_application_runtime(
         payload.image,
     )
 
-    # Runtime sync requires the organization shared bucket assigned at creation.
-    if organization.shared_storage_bucket_name is None:
-        raise ValueError("Organization has no assigned shared storage bucket")
     metadata = await environments.application_image_metadata(payload)
     digest = cast(str, metadata.digest)
     image = cast(str, metadata.image)
@@ -212,7 +200,7 @@ async def sync_application_runtime(
     if db is None:
         raise RuntimeError("No database configured")
 
-    # Existing apps without assigned storage can adopt the organization storage backend.
+    # Existing apps without an assigned storage registry can adopt the organization storage backend.
     storage = await registries.application_storage(application)
     if storage is None:
         storage = await registries.storage(organization.location_id)

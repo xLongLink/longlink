@@ -187,7 +187,6 @@ async def create(
     description: str | None = None,
     digest: str | None = None,
     icon: str | None = None,
-    storage_bucket_name: str | None = None,
 ) -> Application:
     """Add a new application to the database for one organization."""
 
@@ -209,12 +208,15 @@ async def create(
         if slug_result.scalar_one_or_none() is not None:
             raise HTTPException(status_code=409, detail="Application slug already exists")
 
+        # Validate deterministic runtime resource names before creating the row.
+        names.application_schema(slug)
+        names.application_bucket(organization.slug, slug)
+
         application = Application(
             organization_id=organization_id,
             compute_registry_id=compute_registry_id,
             database_registry_id=database_registry_id,
             storage_registry_id=storage_registry_id,
-            storage_bucket_name=storage_bucket_name or names.knames(f"{organization.slug}-{slug}"),
             name=name,
             slug=slug,
             status=status,

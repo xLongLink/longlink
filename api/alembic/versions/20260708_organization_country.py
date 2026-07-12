@@ -16,7 +16,13 @@ def upgrade() -> None:
 
     with op.batch_alter_table("organizations") as batch_op:
         if "country" not in organization_columns:
-            batch_op.add_column(sa.Column("country", sa.String(length=2), server_default=sa.text("'CH'"), nullable=False))
+            batch_op.add_column(sa.Column("country", sa.String(length=2), nullable=True))
+
+    # Backfill existing rows before enforcing NOT NULL without a database default.
+    op.execute(sa.text("UPDATE organizations SET country = 'CH' WHERE country IS NULL"))
+
+    with op.batch_alter_table("organizations") as batch_op:
+        batch_op.alter_column("country", existing_type=sa.String(length=2), nullable=False)
 
 
 def downgrade() -> None:

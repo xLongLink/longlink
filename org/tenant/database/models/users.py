@@ -21,7 +21,7 @@ class SharedUser(SQLModel, table=True):
     # Metadata
     name: str = Field(sa_column=Column(String(255), nullable=False))
     email: str = Field(sa_column=Column(String(254), nullable=False))
-    avatar: str = Field(default="", sa_column=Column(String(2048), nullable=False, server_default=""))
+    avatar: str = Field(default="", sa_column=Column(String(2048), nullable=False))
     role: str = Field(sa_column=Column(String(32), nullable=False))
 
     # Audit

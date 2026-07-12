@@ -7,6 +7,6 @@ def test_operation_handlers_are_registered_by_decorator() -> None:
     """Register operation handlers through route-style implementation modules."""
 
     # Importing the implementation modules runs the decorators and fills the registry.
-    assert registry.get_operation_handler(OperationKind.application_remove) is applications.remove
-    assert registry.get_operation_handler(OperationKind.application_verify) is applications.verify
-    assert registry.get_operation_handler(OperationKind.organization_remove) is organizations.remove
+    assert registry.handlers[OperationKind.application_remove] is applications.remove
+    assert registry.handlers[OperationKind.application_verify] is applications.verify
+    assert registry.handlers[OperationKind.organization_remove] is organizations.remove

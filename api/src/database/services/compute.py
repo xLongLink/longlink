@@ -97,7 +97,6 @@ async def create(name: str, slug: str, kubeconfig: str, gateway_url: str, locati
         # Registries are append-only once created.
         proxy_secret_value = secrets.token_urlsafe(32)
         compute = ComputeRegistry(
-            kind="kubernetes",
             name=name,
             slug=slug,
             kubeconfig=kubeconfig,

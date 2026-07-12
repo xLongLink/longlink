@@ -6,8 +6,7 @@ from .types import DatabaseTableRows, DatabaseSchemaUsage, DatabaseTableColumn, 
 from src.utils import names
 from sqlalchemy import String, text, inspect
 from collections.abc import AsyncIterator
-from tenant.database import SHARED_SCHEMA
-from tenant.database import migrate_database
+from tenant.database import SHARED_SCHEMA, migrate_database
 from src.environments import env
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
@@ -28,14 +27,13 @@ class Postgres(Database):
             password: PostgreSQL password.
         """
 
-        # Store registry connection settings and adapter-local migration state.
+        # Store registry connection settings.
         self._host = host
         self._port = port
         self._username = username
         self._password = password
         self._sslmode = env.DATABASE_SSLMODE
         self._maintenance_database = "postgres"
-        self._migrated_database_names: set[str] = set()
 
     def url(self, database: str, search_path: str | None = None) -> URL:
         """Build one SQLAlchemy URL for the requested database."""
@@ -104,7 +102,7 @@ class Postgres(Database):
     async def prepare_organization_database(self, organization: str) -> str:
         """Ensure one organization's database and shared schema are ready."""
 
-        database_name = names.knames(organization)
+        database_name = names.organization_database(organization)
 
         # Create the organization database from the maintenance database when it is missing.
         async with self.connection(self._maintenance_database, autocommit=True) as conn:
@@ -117,10 +115,8 @@ class Postgres(Database):
                 quoted_database_name = self.quote(conn, database_name)
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
 
-        # Tenant migrations create the shared schema before users or app schemas rely on it.
-        if database_name not in self._migrated_database_names:
-            await migrate_database(self.url(database_name))
-            self._migrated_database_names.add(database_name)
+        # Tenant migrations create the organization schema before users or app schemas rely on it.
+        await migrate_database(self.url(database_name))
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.
         async with self.connection(database_name) as conn:
@@ -137,8 +133,9 @@ class Postgres(Database):
     async def schema(self, organization: str, application: str, *, organization_id: UUID, application_id: UUID) -> DatabaseRuntimeConnection:
         """Create or replace the schema for one application and return runtime connection settings."""
 
-        # App schema provisioning assumes the organization database is already prepared.
-        database_name = await self.prepare_organization_database(organization)
+        # App schema provisioning assumes organization creation already prepared the database.
+        database_name = names.organization_database(organization)
+        schema_name = names.application_schema(application)
 
         # Generate an app-scoped role and password for the deployed runtime.
         runtime_username = f"longlink_{organization_id.hex[:16]}_{application_id.hex[:16]}"
@@ -146,7 +143,7 @@ class Postgres(Database):
 
         # Create the app schema and bind the runtime role inside the organization database.
         async with self.connection(database_name) as conn:
-            await conn.execute(CreateSchema(quoted_name(application, True), if_not_exists=True))
+            await conn.execute(CreateSchema(quoted_name(schema_name, True), if_not_exists=True))
 
             # Create or rotate the app login role before granting schema permissions.
             result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
@@ -169,7 +166,7 @@ class Postgres(Database):
 
             # Quote all identifiers before composing role and privilege statements.
             database = self.quote(conn, database_name)
-            schema = self.quote(conn, application)
+            schema = self.quote(conn, schema_name)
             shared_schema = self.quote(conn, SHARED_SCHEMA)
 
             # App roles write to their own schema and read organization shared tables.
@@ -200,7 +197,8 @@ class Postgres(Database):
     async def delete_schema(self, organization: str, application: str, *, organization_id: UUID, application_id: UUID) -> None:
         """Delete an application schema and its runtime role when present."""
 
-        database_name = names.knames(organization)
+        database_name = names.organization_database(organization)
+        schema_name = names.application_schema(application)
 
         # Skip cleanup when the organization database was already removed.
         async with self.connection(self._maintenance_database, autocommit=True) as conn:
@@ -214,7 +212,7 @@ class Postgres(Database):
 
         # Drop app-owned objects before dropping the global role from the maintenance database.
         async with self.connection(database_name) as conn:
-            schema = self.quote(conn, application)
+            schema = self.quote(conn, schema_name)
             role = self.quote(conn, runtime_username)
             role_exists = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
             await conn.exec_driver_sql(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
@@ -231,7 +229,7 @@ class Postgres(Database):
     async def delete_database(self, organization: str) -> None:
         """Delete one organization database and tolerate missing databases."""
 
-        database_name_value = names.knames(organization)
+        database_name_value = names.organization_database(organization)
 
         # Terminate active sessions so PostgreSQL can drop the organization database.
         async with self.connection(self._maintenance_database, autocommit=True) as conn:

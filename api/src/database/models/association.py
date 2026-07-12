@@ -64,9 +64,7 @@ class UserApplication(SQLModel, table=True):
     # Audit
     created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    updated_at: datetime = Field(
-        default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow)
-    )
+    updated_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow))
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")

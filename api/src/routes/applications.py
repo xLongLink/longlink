@@ -5,12 +5,10 @@ from datetime import UTC, datetime
 from src.auth import authuser, authadmin
 from src.utils import names, roles
 from src.runtime import provisioning as resources
-from src.runtime.kubernetes import Kubernetes
-from src.constants import GATEWAY_USER_HEADER, GATEWAY_SECRET_HEADER, GATEWAY_APPLICATION_HEADER
-from src.models.roles import (APPLICATION_PROXY_METHODS, ApplicationRoles, OrganizationRoles, ApplicationRoleRanks,
-                              ApplicationProxyMethodRanks)
+from src.models.roles import APPLICATION_PROXY_METHODS, Ranks, ApplicationRoles, OrganizationRoles, ApplicationProxyMethodRanks
 from src.models.statuses import ApplicationStatus
 from src.database.services import operations, registries, applications
+from src.runtime.kubernetes import Kubernetes
 from src.models.applications import ApplicationCreate, ApplicationResponse, ApplicationMemberUpdate, ApplicationMemberResponse
 from src.database.models.users import User
 from src.database.models.association import UserApplication
@@ -31,24 +29,26 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
 
     # Resolve access inside the handler so body validation can reject malformed payloads first.
     membership = roles.access(user, organization_id, "organization")
-    organization = membership.organization
-    organization_role = membership.role
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
 
     # Application creation provisions runtime resources, so it requires elevated organization permissions.
-    roles.atleast(organization_role, OrganizationRoles.maintain)
+    if not roles.atleast(membership.role, OrganizationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
 
     application_slug = names.slugify(payload.name)
 
-    # Convert derived application bucket validation failures into route conflicts.
+    # Convert derived application runtime resource validation failures into route conflicts.
     try:
-        names.knames(f"{organization.slug}-{application_slug}")
+        names.application_schema(application_slug)
+        names.application_bucket(membership.organization.slug, application_slug)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid application runtime resource name") from exc
 
     # Provision runtime resources and convert infrastructure failures into API availability errors.
     try:
         application = await resources.create_application_runtime(
-            organization,
+            membership.organization,
             application_slug,
             payload,
             user,
@@ -70,24 +70,28 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
     # Load application access before exposing logs.
     membership = roles.access(user, application_id, "application")
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
 
     # Direct application memberships provide application role access.
     if isinstance(membership, UserApplication):
         application = membership.application
-        organization = membership.organization
-        organization_membership = roles.access(user, membership.organization_id, "organization", raise_error=False)
+        location_id = membership.organization.location_id
+        organization_membership = roles.access(user, membership.organization_id, "organization")
         organization_role = organization_membership.role if organization_membership is not None else None
 
-        if not roles.atleast(membership.role, ApplicationRoles.maintain, raise_error=False):
-            roles.atleast(organization_role, OrganizationRoles.maintain)
+        if not roles.atleast(membership.role, ApplicationRoles.maintain):
+            if not roles.atleast(organization_role, OrganizationRoles.maintain):
+                raise HTTPException(status_code=403, detail="Permission required")
     else:
-        organization = membership.organization
-        application = next(item for item in organization.applications if item.id == application_id)
+        application = next(item for item in membership.organization.applications if item.id == application_id)
+        location_id = membership.organization.location_id
 
         # Organization memberships must satisfy the organization role requirement.
-        roles.atleast(membership.role, OrganizationRoles.maintain)
+        if not roles.atleast(membership.role, OrganizationRoles.maintain):
+            raise HTTPException(status_code=403, detail="Permission required")
 
-    registry = await registries.application_compute(application, organization.location_id)
+    registry = await registries.application_compute(application, location_id)
     if registry is None:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
@@ -108,6 +112,8 @@ async def list_application_members(application_id: UUID, user: User = Depends(au
 
     # Load application access before listing members.
     membership = roles.access(user, application_id, "application")
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
 
     # Resolve the application from the membership that granted access.
     if isinstance(membership, UserApplication):
@@ -140,28 +146,34 @@ async def update_application_member(
 
     # Load application access before updating members.
     membership = roles.access(user, application_id, "application")
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
 
     # Direct application memberships provide application role access.
     if isinstance(membership, UserApplication):
         application = membership.application
         application_role = membership.role
-        organization_membership = roles.access(user, membership.organization_id, "organization", raise_error=False)
-        organization_role = organization_membership.role if organization_membership is not None else None
+        organization_membership = roles.access(user, membership.organization_id, "organization")
+        organization_membership_role = organization_membership.role if organization_membership is not None else None
+
+        # Only application or organization maintainers can manage members.
+        if not roles.atleast(application_role, ApplicationRoles.maintain):
+            if not roles.atleast(organization_membership_role, OrganizationRoles.maintain):
+                raise HTTPException(status_code=403, detail="Permission required")
+
+        caller_role_rank = roles.rank(application_role)
+
+        # Organization maintainers inherit organization-level rank.
+        if roles.rank(organization_membership_role) >= roles.rank(OrganizationRoles.maintain):
+            caller_role_rank = max(caller_role_rank, roles.rank(organization_membership_role))
     else:
         application = next(item for item in membership.organization.applications if item.id == application_id)
-        application_role = None
-        organization_role = membership.role
 
-    # Only application or organization maintainers can manage members.
-    if not roles.atleast(application_role, ApplicationRoles.maintain, raise_error=False):
-        roles.atleast(organization_role, OrganizationRoles.maintain)
+        # Organization memberships grant inherited application management authority.
+        if not roles.atleast(membership.role, OrganizationRoles.maintain):
+            raise HTTPException(status_code=403, detail="Permission required")
 
-    # Managers may only change roles that are not stronger than their own effective authority.
-    caller_role_rank = roles.rank(application_role)
-
-    # Organization maintainers inherit organization-level rank.
-    if roles.rank(organization_role) >= roles.rank(OrganizationRoles.maintain):
-        caller_role_rank = max(caller_role_rank, roles.rank(organization_role))
+        caller_role_rank = roles.rank(membership.role)
 
     member_application_role = await applications.membership_role(application.id, member_id)
 
@@ -190,20 +202,24 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
 
     # Load application access before deleting the application.
     membership = roles.access(user, application_id, "application")
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
 
     # Direct application memberships provide application role access.
     if isinstance(membership, UserApplication):
         application = membership.application
-        organization_membership = roles.access(user, membership.organization_id, "organization", raise_error=False)
+        organization_membership = roles.access(user, membership.organization_id, "organization")
         organization_role = organization_membership.role if organization_membership is not None else None
 
-        if not roles.atleast(membership.role, ApplicationRoles.maintain, raise_error=False):
-            roles.atleast(organization_role, OrganizationRoles.maintain)
+        if not roles.atleast(membership.role, ApplicationRoles.maintain):
+            if not roles.atleast(organization_role, OrganizationRoles.maintain):
+                raise HTTPException(status_code=403, detail="Permission required")
     else:
         application = next(item for item in membership.organization.applications if item.id == application_id)
 
         # Organization memberships must satisfy the organization role requirement.
-        roles.atleast(membership.role, OrganizationRoles.maintain)
+        if not roles.atleast(membership.role, OrganizationRoles.maintain):
+            raise HTTPException(status_code=403, detail="Permission required")
 
     deleted = await applications.soft_delete(application.id, user)
     if deleted is None:
@@ -220,22 +236,25 @@ async def proxy_application_request(request: Request, application_id: UUID, path
 
     # Load application access before proxying runtime traffic.
     membership = roles.access(user, application_id, "application")
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
+
     required_role_rank = ApplicationProxyMethodRanks[request.method.upper()].value
-    required_application_role = ApplicationRoles[ApplicationRoleRanks(required_role_rank).name]
+    required_application_role = ApplicationRoles[Ranks(required_role_rank).name]
 
     # Direct application memberships provide application role access.
     if isinstance(membership, UserApplication):
         application = membership.application
-        organization = membership.organization
-        organization_membership = roles.access(user, membership.organization_id, "organization", raise_error=False)
+        location_id = membership.organization.location_id
+        organization_membership = roles.access(user, membership.organization_id, "organization")
         organization_role = organization_membership.role if organization_membership is not None else None
-        has_application_access = roles.atleast(membership.role, required_application_role, raise_error=False)
-        has_organization_access = roles.atleast(organization_role, OrganizationRoles.maintain, raise_error=False)
+        has_application_access = roles.atleast(membership.role, required_application_role)
+        has_organization_access = roles.atleast(organization_role, OrganizationRoles.maintain)
     else:
-        organization = membership.organization
-        application = next(item for item in organization.applications if item.id == application_id)
+        application = next(item for item in membership.organization.applications if item.id == application_id)
+        location_id = membership.organization.location_id
         has_application_access = False
-        has_organization_access = roles.atleast(membership.role, OrganizationRoles.maintain, raise_error=False)
+        has_organization_access = roles.atleast(membership.role, OrganizationRoles.maintain)
 
     # Enforce method-level runtime access in the API before any request can reach Kubernetes.
     if not has_organization_access and not has_application_access:
@@ -249,19 +268,18 @@ async def proxy_application_request(request: Request, application_id: UUID, path
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
     # Use the app's assigned compute registry so the proxy targets the correct cluster gateway.
-    registry = await registries.application_compute(application, organization.location_id)
+    registry = await registries.application_compute(application, location_id)
     if registry is None:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
     # The gateway receives only the application path; API routing stays outside the cluster.
-    upstream_path = f"/{path}" if path else "/"
-    upstream_url = f"{registry.gateway_url.rstrip('/')}{upstream_path}"
+    upstream_url = f"{registry.gateway_url.rstrip('/')}{f"/{path}" if path else "/"}"
     if request.url.query:
         upstream_url = f"{upstream_url}?{request.url.query}"
     request_headers = {
-        GATEWAY_SECRET_HEADER: registry.proxy_secret,
-        GATEWAY_APPLICATION_HEADER: str(application.id),
-        GATEWAY_USER_HEADER: str(user.id),
+        "x-longlink-gateway-secret": registry.proxy_secret,
+        "x-longlink-application-id": str(application.id),
+        "x-user-id": str(user.id),
     }
     request_content_type = request.headers.get("content-type")
 

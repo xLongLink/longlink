@@ -5,7 +5,7 @@ import hashlib
 from typing import Any, TypeVar, cast
 from .library import Pod, Secret, Service, APIObject, Namespace, Deployment, kr8s, object_from_spec
 from src.utils import names, templates
-from src.constants import ROOT, GATEWAY_SECRET_HEADER, GATEWAY_APPLICATION_HEADER
+from src.constants import ROOT
 from src.environments import env
 
 KubernetesResource = TypeVar("KubernetesResource", bound=APIObject)
@@ -180,7 +180,7 @@ class Kubernetes:
         routes: list[dict[str, Any]] = []
         clusters: list[dict[str, Any]] = []
         gateway_secret_match = {
-            "name": GATEWAY_SECRET_HEADER,
+            "name": "x-longlink-gateway-secret",
             "string_match": {"exact": "__LONG_LINK_GATEWAY_SECRET__"},
         }
 
@@ -223,7 +223,7 @@ class Kubernetes:
                 service_host = f"{service_name}.{namespace}.svc.cluster.local"
 
                 application_id_match = {
-                    "name": GATEWAY_APPLICATION_HEADER,
+                    "name": "x-longlink-application-id",
                     "string_match": {"exact": application_id},
                 }
 
@@ -238,7 +238,7 @@ class Kubernetes:
                             "cluster": cluster_name,
                             "timeout": "300s",
                         },
-                        "request_headers_to_remove": [GATEWAY_SECRET_HEADER, GATEWAY_APPLICATION_HEADER],
+                        "request_headers_to_remove": ["x-longlink-gateway-secret", "x-longlink-application-id"],
                     }
                 )
 

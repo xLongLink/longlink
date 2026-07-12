@@ -4,10 +4,9 @@ from uuid import UUID
 from pathlib import Path
 from datetime import UTC, datetime
 from src.utils import names
-from src.runtime import bootstrap
 from src.routes import organizations as organization_routes
+from src.runtime import bootstrap
 from src.runtime import provisioning as resources
-from src.runtime.kubernetes import Kubernetes
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import StorageKind
 from src.database.session import session_scope
@@ -19,6 +18,7 @@ from src.database.services import storage as storage_service
 from src.database.services import database as database_service
 from src.database.services import locations as location_service
 from src.database.services import organizations as organization_service
+from src.runtime.kubernetes import Kubernetes
 from src.models.applications import ApplicationCreate
 from src.models.organizations import OrganizationCreate
 from src.database.models.users import User
@@ -248,13 +248,12 @@ async def seed_local_development() -> None:
 
     application_payload = ApplicationCreate.model_validate(LOCAL_APP)
     application_slug = names.slugify(LOCAL_APP_NAME)
-    names.knames(application_slug)
-    names.knames(organization_record.slug)
+    names.application_schema(application_slug)
+    names.organization_database(organization_record.slug)
 
-    # Application storage isolation depends on the assigned shared bucket.
-    if organization_record.shared_storage_bucket_name is None:
-        raise RuntimeError("Seeded organization has no assigned shared storage bucket")
-    names.knames(f"{organization_record.slug}-{application_slug}")
+    # Application storage isolation depends on deterministic runtime resource names.
+    names.organization_shared_bucket(organization_record.slug)
+    names.application_bucket(organization_record.slug, application_slug)
 
     # Load the sample app before deciding whether to create or refresh it.
     organization_applications = await organization_service.applications(organization_record.id)

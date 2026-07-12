@@ -100,7 +100,8 @@ async def authadmin(request: Request) -> User:
     user = await authuser(request)
 
     # Only administrator accounts can continue past this check.
-    roles.atleast(user.role, PlatformRoles.administrator)
+    if not roles.atleast(user.role, PlatformRoles.administrator):
+        raise HTTPException(status_code=403, detail="Permission required")
 
     return user
 
@@ -111,6 +112,7 @@ async def authsupport(request: Request) -> User:
     user = await authuser(request)
 
     # Only support-capable accounts can continue past this check.
-    roles.atleast(user.role, PlatformRoles.support)
+    if not roles.atleast(user.role, PlatformRoles.support):
+        raise HTTPException(status_code=403, detail="Permission required")
 
     return user

@@ -1,4 +1,5 @@
 from src import adapters
+from src.utils import names
 from tenant.database import SHARED_SCHEMA
 from tenant.database import users as tenant_users
 from src.database.services import registries, organizations
@@ -20,7 +21,7 @@ async def sync_organization_users(
 
     users = await organizations.database_users(organization.id)
     db = adapters.database(registry)
-    database_name = await db.prepare_organization_database(organization.slug)
+    database_name = names.organization_database(organization.slug)
 
     # Shared organization users are owned by the tenant library, not the API database adapter.
     async with db.connection(database_name, search_path=SHARED_SCHEMA) as conn:

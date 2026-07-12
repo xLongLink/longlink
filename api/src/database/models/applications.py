@@ -26,11 +26,8 @@ class Application(SQLModel, table=True):
     # References
     organization_id: UUID = Field(foreign_key="organizations.id")
     compute_registry_id: UUID | None = Field(default=None, foreign_key="compute_registries.id")
-    database_registry_id: UUID | None = Field(default=None, foreign_key="database_registries.id")
     storage_registry_id: UUID | None = Field(default=None, foreign_key="storage_registries.id")
-
-    # Storage
-    storage_bucket_name: str | None = Field(default=None, max_length=63)
+    database_registry_id: UUID | None = Field(default=None, foreign_key="database_registries.id")
 
     # Metadata
     name: str = Field(max_length=100)
@@ -52,9 +49,7 @@ class Application(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
     created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Application.created_id"})
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    updated_at: datetime = Field(
-        default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow)
-    )
+    updated_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow))
     updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Application.updated_id"})
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))

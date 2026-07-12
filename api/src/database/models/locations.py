@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy import Column, String, text
+from sqlalchemy import Column, String
 from tenant.utils import utcnow
 from src.models.countries import DEFAULT_COUNTRY
 from src.models.locations import LocationProvider
@@ -25,14 +25,11 @@ class Location(SQLModel, table=True):
     # Metadata
     name: str = Field(max_length=255)
     slug: str = Field(unique=True, max_length=128)
-    country: str = Field(
-        default=DEFAULT_COUNTRY, sa_column=Column(String(2), server_default=text("'CH'"), nullable=False)
-    )
+    country: str = Field(default=DEFAULT_COUNTRY, sa_column=Column(String(2), nullable=False))
     provider: LocationProvider = Field(
         default=LocationProvider.local,
         sa_column=Column(
             SAEnum(LocationProvider, name="location_provider_enum", native_enum=False, create_constraint=True),
-            server_default=text("'local'"),
             nullable=False,
         ),
     )
@@ -41,9 +38,7 @@ class Location(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
     created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Location.created_id"})
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    updated_at: datetime = Field(
-        default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow)
-    )
+    updated_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow))
     updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Location.updated_id"})
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))

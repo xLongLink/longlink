@@ -10,7 +10,11 @@ OPERATION_HEARTBEAT_SECONDS = 30
 
 
 async def renew_operation_lease(operation_id: UUID, lease_token: str) -> None:
-    """Keep one claimed operation leased while the current worker executes it."""
+    """Keep the current worker's operation lease alive until execution finishes.
+
+    The lease token is the worker's ownership proof for the active attempt. When renewal returns no row, this worker no
+    longer owns the operation because it was completed, failed, or reclaimed after expiry.
+    """
 
     # Keep extending the lease until execution finishes or ownership is lost.
     while True:
@@ -24,7 +28,11 @@ async def renew_operation_lease(operation_id: UUID, lease_token: str) -> None:
 
 
 async def run_operation_scheduler() -> None:
-    """Continuously claim and execute scheduled operations."""
+    """Continuously claim scheduled operations and run one leased attempt at a time.
+
+    Each claimed operation receives a lease token from the database. The scheduler starts a heartbeat for that token,
+    dispatches the operation handler, then cancels the heartbeat before polling for more work.
+    """
 
     # Keep polling the queue so new claimed operations are drained continuously.
     while True:

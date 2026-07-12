@@ -17,7 +17,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("email", sa.String(length=254), nullable=False),
-        sa.Column("avatar", sa.String(length=2048), server_default="", nullable=False),
+        sa.Column("avatar", sa.String(length=2048), nullable=False),
         sa.Column("role", sa.String(length=32), nullable=False),
         sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=False),

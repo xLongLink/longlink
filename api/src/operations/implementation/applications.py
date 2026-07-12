@@ -1,12 +1,13 @@
 from src import adapters
 from datetime import timedelta
-from src.runtime.kubernetes import Kubernetes
+from src.utils import names
 from tenant.utils import utcnow
 from src.operations import outcomes as outcome
 from src.operations import registry
 from src.models.statuses import ApplicationStatus
 from src.database.services import database, registries, applications, organizations
 from src.models.operations import OperationKind
+from src.runtime.kubernetes import Kubernetes
 from src.database.models.operations import Operation
 
 POD_STARTUP_FAILURE_GRACE_SECONDS = 2 * 60
@@ -161,15 +162,15 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
             adapter = adapters.database(registry)
             await adapter.delete_schema(
                 organization.slug,
-                application.slug,
+                names.application_schema(application.slug),
                 organization_id=organization.id,
                 application_id=application.id,
             )
 
-    # Remove the application bucket only when storage was assigned.
+    # Remove the deterministic application bucket only when storage was assigned.
     registry = await registries.application_storage(application)
-    if registry is not None and application.storage_bucket_name is not None:
+    if registry is not None:
         adapter = adapters.storage(registry)
-        await adapter.delete_bucket(application.storage_bucket_name)
+        await adapter.delete_bucket(names.application_bucket(organization.slug, application.slug))
 
     return outcome.complete()

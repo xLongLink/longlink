@@ -13,12 +13,12 @@ class FakeKubernetes:
     def __init__(self) -> None:
         """Initialize call tracking."""
 
-        self.setup_calls = 0
+        self.sync_gateway_calls = 0
 
-    async def setup(self) -> None:
-        """Record one setup call."""
+    async def sync_gateway(self) -> None:
+        """Record one gateway synchronization call."""
 
-        self.setup_calls += 1
+        self.sync_gateway_calls += 1
 
 
 def fake_resource(**fields: object) -> SimpleNamespace:
@@ -37,7 +37,6 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         name=seed.LOCAL_ORG,
         slug="test",
         location_id=location.id,
-        shared_storage_bucket_name="test-shared",
     )
     compute_registry = fake_resource(
         id=UUID("44444444-4444-4444-4444-444444444444"),
@@ -192,7 +191,7 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         "location_id": location.id,
         "user": user,
     }
-    assert fake_kubernetes.setup_calls == 1
+    assert fake_kubernetes.sync_gateway_calls == 1
     organization_payload, organization_user = cast(tuple[seed.OrganizationCreate, object], calls["organization"])
     assert organization_payload.name == seed.LOCAL_ORG
     assert organization_payload.avatar == seed.LOCAL_ORG_AVATAR
@@ -217,7 +216,6 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
         name=seed.LOCAL_ORG,
         slug="test",
         location_id=location.id,
-        shared_storage_bucket_name="test-shared",
     )
     application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
     kubeconfig = tmp_path / "kubeconfig.yaml"

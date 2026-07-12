@@ -5,7 +5,7 @@ from src.database.models.operations import Operation
 
 OperationHandler = Callable[[Operation], Awaitable[OperationOutcome]]
 
-_handlers: dict[OperationKind, OperationHandler] = {}
+handlers: dict[OperationKind, OperationHandler] = {}
 
 
 def operation_handler(kind: OperationKind) -> Callable[[OperationHandler], OperationHandler]:
@@ -15,16 +15,10 @@ def operation_handler(kind: OperationKind) -> Callable[[OperationHandler], Opera
         """Store the handler under its operation kind."""
 
         # Refuse duplicate handlers so operation routing stays deterministic.
-        if kind in _handlers:
+        if kind in handlers:
             raise ValueError(f"Operation handler already registered for '{kind}'")
 
-        _handlers[kind] = handler
+        handlers[kind] = handler
         return handler
 
     return decorator
-
-
-def get_operation_handler(kind: OperationKind) -> OperationHandler | None:
-    """Return the registered handler for one operation kind."""
-
-    return _handlers.get(kind)

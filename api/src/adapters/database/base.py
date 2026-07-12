@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 from typing import TypedDict
+from .types import DatabaseTableRows, DatabaseSchemaUsage, DatabaseTableColumns
 from contextlib import AbstractAsyncContextManager
 from sqlalchemy.ext.asyncio import AsyncConnection
-from .types import DatabaseTableRows, DatabaseSchemaUsage, DatabaseTableColumns
 
 
 class DatabaseRuntimeConnection(TypedDict):
@@ -25,10 +25,12 @@ class Database(ABC):
             └── Tables  # Managed by the application ORM, e.g. Prisma, SQLAlchemy
 
     Database structure for one organization:
-    ├── shared Schema
-    │   └── Users + other shared tables
-    ├── app_a Schema
-    └── app_n Schema
+    ├── shared Schema  # Organization-owned tables, readable by every application.
+    ├── app_a Schema   # Application-owned tables, writable by app_a.
+    └── app_n Schema   # Application-owned tables, writable by app_n.
+
+    Organization creation owns database creation and tenant migrations. Application creation owns
+    only the application schema and runtime role inside the already-prepared organization database.
 
     Each application has read/write access to its own schema, and read-only access to shared tables.
     """

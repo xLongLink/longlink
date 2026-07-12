@@ -59,6 +59,8 @@ longlink/
     └── rfc/                        # Reference RFC material
 ```
 
+Runtime resource model: one organization maps to one database derived from the organization slug. Each organization database contains one organization-owned shared schema that applications can read, plus one schema per application derived from the application slug where that application has read/write access. Organization and application storage bucket names are also derived from immutable slugs, not persisted separately. Organization creation owns database creation and tenant migrations; application creation owns only application schema and runtime role provisioning.
+
 ## Python Guidelines
 
 - Use safe, practical defaults that minimize required configuration.

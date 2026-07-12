@@ -33,7 +33,6 @@ async def test_create_get_and_fetch_return_active_compute_registries(users: tupl
     reloaded = await db.compute.get(registry.id)
 
     # Assert
-    assert registry.kind == "kubernetes"
     assert registry.name == "Primary compute"
     assert registry.slug == "primary-compute"
     assert registry.kubeconfig == "kubeconfig"

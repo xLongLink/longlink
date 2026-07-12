@@ -1,10 +1,10 @@
 from uuid import UUID
 from typing import Literal, overload
-from fastapi import HTTPException
-from src.models.roles import (RoleName, PlatformRoles, ApplicationRoles, OrganizationRoles, PlatformRoleRanks, ApplicationRoleRanks,
-                              OrganizationRoleRanks)
+from src.models.roles import RoleName, Ranks, PlatformRoles, ApplicationRoles, OrganizationRoles, PlatformRoleRanks
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
+
+AccessMembership = UserOrganization | UserApplication
 
 
 def rank(value: RoleName | None) -> int:
@@ -14,82 +14,62 @@ def rank(value: RoleName | None) -> int:
     if value is None:
         return 0
 
-    # Platform, organization, and application role enums resolve through their matching rank enum.
+    # Platform roles resolve through their own rank scale.
     if type(value) is PlatformRoles:
         return PlatformRoleRanks[value.name].value
 
-    # Organization roles resolve through organization ranks.
-    if type(value) is OrganizationRoles:
-        return OrganizationRoleRanks[value.name].value
-
-    # Application roles resolve through application ranks.
-    if type(value) is ApplicationRoles:
-        return ApplicationRoleRanks[value.name].value
+    # Organization and application roles share the same rank scale.
+    if type(value) in {OrganizationRoles, ApplicationRoles}:
+        return Ranks[value.name].value
 
     raise ValueError(f"Unknown role '{value}'")
 
 
-def atleast(value: RoleName | None, required_role: RoleName, raise_error: bool = True) -> bool:
-    """Return whether one role satisfies the required role, raising by default."""
+def atleast(value: RoleName | None, required_role: RoleName) -> bool:
+    """Return whether one role satisfies the required role."""
 
     # Missing or cross-scope roles never satisfy requirements.
     if value is None or type(value) is not type(required_role):
-        if raise_error:
-            raise HTTPException(status_code=403, detail="Permission required")
-
         return False
 
     # Enforce the minimum privilege rank.
-    if rank(value) >= rank(required_role):
-        return True
-
-    if raise_error:
-        raise HTTPException(status_code=403, detail="Permission required")
-
-    return False
+    return rank(value) >= rank(required_role)
 
 
 @overload
-def access(user: User, resource: UUID, scope: Literal["organization"], raise_error: Literal[True] = True) -> UserOrganization: ...
+def access(user: User, resource: UUID) -> AccessMembership | None:
+    """Return the membership that grants access across supported scopes."""
+
+    ...
 
 
 @overload
-def access(user: User, resource: UUID, scope: Literal["organization"], raise_error: Literal[False]) -> UserOrganization | None: ...
+def access(user: User, resource: UUID, scope: Literal["organization"]) -> UserOrganization | None:
+    """Return the organization membership that grants access."""
+
+    ...
 
 
 @overload
-def access(
-    user: User,
-    resource: UUID,
-    scope: Literal["application"],
-    raise_error: Literal[True] = True,
-) -> UserOrganization | UserApplication: ...
+def access(user: User, resource: UUID, scope: Literal["application"]) -> AccessMembership | None:
+    """Return the application or organization membership that grants access."""
+
+    ...
 
 
 @overload
-def access(
-    user: User,
-    resource: UUID,
-    scope: Literal["application"],
-    raise_error: Literal[False],
-) -> UserOrganization | UserApplication | None: ...
+def access(user: User, resource: UUID, scope: None) -> AccessMembership | None:
+    """Return the membership that grants access across supported scopes."""
 
-
-@overload
-def access(user: User, resource: UUID, scope: None = None, raise_error: Literal[True] = True) -> UserOrganization | UserApplication: ...
-
-
-@overload
-def access(user: User, resource: UUID, scope: None = None, raise_error: Literal[False] = False) -> UserOrganization | UserApplication | None: ...
+    ...
 
 
 def access(
     user: User,
     resource: UUID,
     scope: Literal["organization", "application"] | None = None,
-    raise_error: bool = True,
 ) -> UserOrganization | UserApplication | None:
-    """Return the loaded membership that grants access to one organization or application."""
+    """Return the loaded membership that grants access, or none when access is missing."""
 
     # Organization memberships grant access to organization resources.
     if scope in {None, "organization"}:
@@ -115,8 +95,5 @@ def access(
             for application in membership.organization.applications:
                 if application.deleted_at is None and application.id == resource:
                     return membership
-
-    if raise_error:
-        raise HTTPException(status_code=403, detail="Access required")
 
     return None

@@ -73,9 +73,6 @@ class OrganizationSummary(BaseModel):
     # Relationships
     location_id: UUID
 
-    # Storage
-    shared_storage_bucket_name: str | None = None
-
     # Audit
     created_at: datetime
     updated_at: datetime
@@ -153,9 +150,6 @@ class OrganizationDetails(BaseModel):
     # Location
     location: LocationResponse
     location_id: UUID
-
-    # Storage
-    shared_storage_bucket_name: str | None = None
 
     # Audit
     created_at: datetime

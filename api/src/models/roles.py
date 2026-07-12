@@ -27,8 +27,8 @@ class OrganizationRoles(StrEnum):
     owner = "owner"
 
 
-class OrganizationRoleRanks(IntEnum):
-    """Comparable privilege ranks for organization roles."""
+class Ranks(IntEnum):
+    """Comparable privilege ranks for organization and application roles."""
 
     read = 1
     write = 2
@@ -46,23 +46,14 @@ class ApplicationRoles(StrEnum):
     admin = "admin"
 
 
-class ApplicationRoleRanks(IntEnum):
-    """Comparable privilege ranks for application roles."""
-
-    read = 1
-    write = 2
-    maintain = 3
-    admin = 4
-
-
 class ApplicationProxyMethodRanks(IntEnum):
     """Minimum application role ranks required by proxied HTTP methods."""
 
-    DELETE = ApplicationRoleRanks.maintain.value
-    GET = ApplicationRoleRanks.read.value
-    PATCH = ApplicationRoleRanks.write.value
-    POST = ApplicationRoleRanks.write.value
-    PUT = ApplicationRoleRanks.write.value
+    DELETE = Ranks.maintain.value
+    GET = Ranks.read.value
+    PATCH = Ranks.write.value
+    POST = Ranks.write.value
+    PUT = Ranks.write.value
 
 
 APPLICATION_PROXY_METHODS = list(ApplicationProxyMethodRanks.__members__)

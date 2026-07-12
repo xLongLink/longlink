@@ -1,10 +1,11 @@
 from src import adapters
 from uuid import UUID
-from src.runtime.kubernetes import Kubernetes
+from src.utils import names
 from src.operations import outcomes as outcome
 from src.operations import registry
 from src.database.services import database, registries, organizations
 from src.models.operations import OperationKind
+from src.runtime.kubernetes import Kubernetes
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
@@ -51,16 +52,16 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
                 adapter = adapters.database(registry)
                 await adapter.delete_schema(
                     organization.slug,
-                    app.slug,
+                    names.application_schema(app.slug),
                     organization_id=organization.id,
                     application_id=app.id,
                 )
 
-        # Remove the application bucket only when storage was assigned.
+        # Remove the deterministic application bucket only when storage was assigned.
         registry = await registries.application_storage(app)
-        if registry is not None and app.storage_bucket_name is not None:
+        if registry is not None:
             adapter = adapters.storage(registry)
-            await adapter.delete_bucket(app.storage_bucket_name)
+            await adapter.delete_bucket(names.application_bucket(organization.slug, app.slug))
 
     current = await registries.compute(organization.location_id, include_deleted=True)
 
@@ -84,8 +85,8 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
     registry = await registries.storage(organization.location_id, include_deleted=True)
 
     # Delete the shared bucket only when one was assigned.
-    if registry is not None and organization.shared_storage_bucket_name is not None:
+    if registry is not None:
         adapter = adapters.storage(registry)
-        await adapter.delete_bucket(organization.shared_storage_bucket_name)
+        await adapter.delete_bucket(names.organization_shared_bucket(organization.slug))
 
     return outcome.complete()

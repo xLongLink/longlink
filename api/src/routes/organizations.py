@@ -6,13 +6,13 @@ from src.auth import authuser, authsupport
 from src.utils import names, roles
 from src.logger import logger
 from src.runtime import bootstrap
-from src.runtime.kubernetes import Kubernetes
 from tenant.database import SHARED_SCHEMA
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import (OrganizationDatabaseResourceKind, OrganizationDatabaseResourceResponse,
                                   OrganizationDatabaseTableRowsResponse, OrganizationDatabaseTableColumnsResponse)
 from src.database.services import locations, operations, registries, invitations, organizations
+from src.runtime.kubernetes import Kubernetes
 from src.models.applications import ApplicationResponse
 from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary, OrganizationMemberUpdate,
                                       OrganizationInvitationCreate)
@@ -61,16 +61,15 @@ async def _provision_organization_runtime(
     # Create the organization namespace before workloads can target it.
     await Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret).namespace(organization.slug)
 
-    # Create the organization database and synchronize shared users into it.
+    # Create and migrate the organization database before syncing shared users into it.
+    await adapters.database(database_registry).prepare_organization_database(organization.slug)
+
+    # Synchronize shared users into the existing organization schema.
     await bootstrap.sync_organization_users(organization, database_registry)
 
-    # The control plane assigns shared buckets when organizations are created.
-    if organization.shared_storage_bucket_name is None:
-        raise ValueError("Organization has no assigned shared storage bucket")
-
-    # Create the shared organization storage bucket.
+    # Create the shared organization storage bucket from the deterministic slug-derived name.
     storage = adapters.storage(storage_registry)
-    await storage.bucket(organization.shared_storage_bucket_name)
+    await storage.bucket(names.organization_shared_bucket(organization.slug))
 
 
 async def _cleanup_organization_runtime(
@@ -82,11 +81,10 @@ async def _cleanup_organization_runtime(
     """Best-effort cleanup for a failed synchronous organization bootstrap."""
 
     # Remove the shared bucket first because it is independent of compute and database resources.
-    if organization.shared_storage_bucket_name is not None:
-        try:
-            await adapters.storage(storage_registry).delete_bucket(organization.shared_storage_bucket_name)
-        except Exception as exc:
-            logger.exception("Failed to clean up storage for organization '%s': %r", organization.slug, exc)
+    try:
+        await adapters.storage(storage_registry).delete_bucket(names.organization_shared_bucket(organization.slug))
+    except Exception as exc:
+        logger.exception("Failed to clean up storage for organization '%s': %r", organization.slug, exc)
 
     # Remove the organization database even if user synchronization failed midway.
     try:
@@ -115,7 +113,9 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
 
     # Load organization access before exposing organization details.
     membership = roles.access(user, organization_id, "organization")
-    organization_role = membership.role
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
+
     organization = await organizations.get(organization_id)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -130,7 +130,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     active_invitations = []
 
     # Show invitations only to organization managers.
-    if organization_role in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
+    if membership.role in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
         active_invitations = await organizations.invitations(organization.id)
 
     return {
@@ -141,7 +141,6 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
         "country": organization.country,
         "location": organization.location,
         "location_id": organization.location_id,
-        "shared_storage_bucket_name": organization.shared_storage_bucket_name,
         "created_at": organization.created_at,
         "updated_at": organization.updated_at,
         "created_by": organization.created_by,
@@ -182,13 +181,14 @@ async def list_organization_applications(organization_id: UUID, user: User = Dep
 
     # Load organization access before listing applications.
     membership = roles.access(user, organization_id, "organization")
-    organization = membership.organization
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
 
-    active_applications = await organizations.applications(organization.id)
+    active_applications = await organizations.applications(membership.organization_id)
     application_roles = {
-        membership.application_id: membership.role
-        for membership in user.application_memberships
-        if membership.organization_id == organization.id
+        application_membership.application_id: application_membership.role
+        for application_membership in user.application_memberships
+        if application_membership.organization_id == membership.organization_id
     }
 
     return [
@@ -213,19 +213,20 @@ async def list_organization_database_resources(organization_id: UUID, user: User
 
     # Load organization access before exposing database resources.
     membership = roles.access(user, organization_id, "organization")
-    organization = membership.organization
-    organization_role = membership.role
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
 
     # Restrict database inspection to maintainers.
-    roles.atleast(organization_role, OrganizationRoles.maintain)
+    if not roles.atleast(membership.role, OrganizationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
 
     # Skip resources when no database registry is assigned.
-    registry = await registries.database(organization.location_id)
+    registry = await registries.database(membership.organization.location_id)
     if registry is None:
         return []
 
-    active_applications = await organizations.applications(organization.id)
-    return await _database_resource_rows(organization, registry, active_applications)
+    active_applications = await organizations.applications(membership.organization_id)
+    return await _database_resource_rows(membership.organization, registry, active_applications)
 
 
 @router.get(
@@ -237,19 +238,20 @@ async def list_organization_storage_resources(organization_id: UUID, user: User 
 
     # Load organization access before exposing storage resources.
     membership = roles.access(user, organization_id, "organization")
-    organization = membership.organization
-    organization_role = membership.role
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
 
     # Restrict storage inspection to maintainers.
-    roles.atleast(organization_role, OrganizationRoles.maintain)
+    if not roles.atleast(membership.role, OrganizationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
 
     # Skip resources when no storage registry is assigned.
-    registry = await registries.storage(organization.location_id)
+    registry = await registries.storage(membership.organization.location_id)
     if registry is None:
         return []
 
-    active_applications = await organizations.applications(organization.id)
-    return await _storage_resource_rows(organization, registry, active_applications)
+    active_applications = await organizations.applications(membership.organization_id)
+    return await _storage_resource_rows(membership.organization, registry, active_applications)
 
 
 @router.get(
@@ -266,19 +268,20 @@ async def list_organization_database_resource_tables(
 
     # Load organization access before exposing table metadata.
     membership = roles.access(user, organization_id, "organization")
-    organization = membership.organization
-    organization_role = membership.role
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
 
     # Restrict table inspection to maintainers.
-    roles.atleast(organization_role, OrganizationRoles.maintain)
+    if not roles.atleast(membership.role, OrganizationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
 
     # Require an assigned database registry for table inspection.
-    registry = await registries.database(organization.location_id)
+    registry = await registries.database(membership.organization.location_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Database resource not found")
 
     db = adapters.database(registry)
-    database = names.knames(organization.slug)
+    database = names.organization_database(membership.organization.slug)
 
     # Inspect adapter tables and normalize backend failures.
     try:
@@ -299,7 +302,12 @@ async def list_organization_database_resource_tables(
 
     # Convert unexpected adapter failures to availability errors.
     except Exception as exc:
-        logger.exception("Failed to inspect database resource '%s' for organization '%s': %r", resource_name, organization.slug, exc)
+        logger.exception(
+            "Failed to inspect database resource '%s' for organization '%s': %r",
+            resource_name,
+            membership.organization.slug,
+            exc,
+        )
         raise HTTPException(status_code=503, detail="Database resource unavailable") from exc
 
     return tables
@@ -320,19 +328,20 @@ async def list_organization_database_resource_table_rows(
 
     # Load organization access before exposing table rows.
     membership = roles.access(user, organization_id, "organization")
-    organization = membership.organization
-    organization_role = membership.role
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
 
     # Restrict table inspection to maintainers.
-    roles.atleast(organization_role, OrganizationRoles.maintain)
+    if not roles.atleast(membership.role, OrganizationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
 
     # Require an assigned database registry for table inspection.
-    registry = await registries.database(organization.location_id)
+    registry = await registries.database(membership.organization.location_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Database resource not found")
 
     db = adapters.database(registry)
-    database = names.knames(organization.slug)
+    database = names.organization_database(membership.organization.slug)
 
     # Inspect adapter table rows and normalize backend failures.
     try:
@@ -357,7 +366,7 @@ async def list_organization_database_resource_table_rows(
             "Failed to inspect database table '%s.%s' for organization '%s': %r",
             resource_name,
             table_name,
-            organization.slug,
+            membership.organization.slug,
             exc,
         )
         raise HTTPException(status_code=503, detail="Database table unavailable") from exc
@@ -375,17 +384,18 @@ async def create_organization_invitation(
 
     # Load organization access before creating invitations.
     membership = roles.access(user, organization_id, "organization")
-    organization = membership.organization
-    organization_role = membership.role
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
 
     # Require maintainers to create invitations.
-    roles.atleast(organization_role, OrganizationRoles.maintain)
+    if not roles.atleast(membership.role, OrganizationRoles.maintain):
+        raise HTTPException(status_code=403, detail="Permission required")
 
     # Prevent inviting roles above the caller's role.
-    if roles.rank(payload.role) > roles.rank(organization_role):
+    if roles.rank(payload.role) > roles.rank(membership.role):
         raise HTTPException(status_code=403, detail="Invitation role permissions required")
 
-    await invitations.create(organization.id, payload.email, payload.role, user)
+    await invitations.create(membership.organization_id, payload.email, payload.role, user)
 
 
 @router.patch("/api/organizations/{organization_id}/members/{member_id}", status_code=204)
@@ -399,31 +409,32 @@ async def update_organization_member(
 
     # Load organization access before updating members.
     membership = roles.access(user, organization_id, "organization")
-    organization = membership.organization
-    organization_role = membership.role
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
 
     # Require organization administrators to manage members.
-    roles.atleast(organization_role, OrganizationRoles.admin)
+    if not roles.atleast(membership.role, OrganizationRoles.admin):
+        raise HTTPException(status_code=403, detail="Permission required")
 
-    can_manage_owner_role = roles.rank(organization_role) >= roles.rank(OrganizationRoles.owner)
+    can_manage_owner_role = roles.rank(membership.role) >= roles.rank(OrganizationRoles.owner)
 
     # Allow only owners to grant owner access.
     if payload.role == OrganizationRoles.owner and not can_manage_owner_role:
         raise HTTPException(status_code=403, detail="Owner management permissions required")
 
-    target_role = await organizations.membership_role(organization.id, member_id)
+    target_role = await organizations.membership_role(membership.organization_id, member_id)
 
     # Allow only owners to change existing owners.
     if target_role == OrganizationRoles.owner and not can_manage_owner_role:
         raise HTTPException(status_code=403, detail="Owner management permissions required")
 
-    updated = await organizations.update_member_role(organization.id, member_id, payload.role, user)
+    updated = await organizations.update_member_role(membership.organization_id, member_id, payload.role, user)
     if not updated:
         raise HTTPException(status_code=404, detail="Organization member not found")
 
     # Synchronize tenant users after role changes.
     try:
-        await bootstrap.sync_organization_users(organization)
+        await bootstrap.sync_organization_users(membership.organization)
 
     # Surface synchronization failures as unavailable.
     except Exception as exc:
@@ -441,10 +452,12 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
             raise HTTPException(status_code=404, detail="Organization not found")
     else:
         membership = roles.access(user, organization_id, "organization")
-        membership_role = membership.role
+        if membership is None:
+            raise HTTPException(status_code=403, detail="Access required")
 
         # Require organization owners to delete organizations.
-        roles.atleast(membership_role, OrganizationRoles.owner)
+        if not roles.atleast(membership.role, OrganizationRoles.owner):
+            raise HTTPException(status_code=403, detail="Permission required")
 
     deleted = await organizations.soft_delete(organization_id, user)
     if deleted is None:
@@ -464,8 +477,8 @@ async def _database_resource_rows(
 ) -> list[dict[str, object]]:
     """Inspect one organization database and return API resource rows."""
 
-    database = names.knames(organization.slug)
-    app_by_schema = {app.slug: app for app in apps}
+    database = names.organization_database(organization.slug)
+    app_by_schema = {names.application_schema(app.slug): app for app in apps}
 
     # Inspect backend schema usage for the organization database.
     try:
@@ -503,14 +516,15 @@ async def _database_resource_rows(
     # List active application schemas before orphaned schemas.
     for app in sorted(apps, key=lambda item: item.name):
         # Skip applications whose schema is not present.
-        usage = usage_by_name.get(app.slug)
+        schema = names.application_schema(app.slug)
+        usage = usage_by_name.get(schema)
         if usage is None:
             continue
 
         rows.append(
             {
                 **fields,
-                "name": app.slug,
+                "name": schema,
                 "application": {
                     "id": app.id,
                     "name": app.name,
@@ -568,31 +582,28 @@ async def _storage_resource_rows(
     expected: set[str] = set()
     rows: list[dict[str, object]] = []
     needs_usage: list[str] = []
-    shared = organization.shared_storage_bucket_name
+    shared = names.organization_shared_bucket(organization.slug)
     visible: list[tuple[Application, str]] = []
 
-    # Track the expected shared bucket when configured.
-    if shared is not None:
-        expected.add(shared)
+    # Track the expected shared bucket derived from the organization slug.
+    expected.add(shared)
 
     # Inspect usage only for shared buckets that exist.
-    if shared is not None and shared in buckets:
+    if shared in buckets:
         needs_usage.append(shared)
 
     # Compare expected app buckets against the backend listing so only existing resources are visible.
     for app in sorted(apps, key=lambda item: item.name):
-        # Ignore applications without assigned storage.
-        if app.storage_bucket_name is None:
-            continue
+        bucket = names.application_bucket(organization.slug, app.slug)
 
-        expected.add(app.storage_bucket_name)
+        expected.add(bucket)
 
         # Only show application buckets present in the backend.
-        if app.storage_bucket_name not in buckets:
+        if bucket not in buckets:
             continue
 
-        visible.append((app, app.storage_bucket_name))
-        needs_usage.append(app.storage_bucket_name)
+        visible.append((app, bucket))
+        needs_usage.append(bucket)
 
     # Keep stale organization buckets visible as orphaned resources.
     prefix = f"{organization.slug}-"
@@ -622,7 +633,7 @@ async def _storage_resource_rows(
         raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
 
     # Include the shared bucket when it is visible.
-    if shared is not None and shared in buckets:
+    if shared in buckets:
         usage = usage_by_name[shared]
         rows.append(
             {
@@ -690,8 +701,8 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     # Validate derived resource names before creating the organization.
     try:
         slug = names.slugify(payload.name)
-        names.knames(slug)
-        names.knames(f"{slug}-shared")
+        names.organization_database(slug)
+        names.organization_shared_bucket(slug)
 
     # Return invalid names as request conflicts.
     except ValueError as exc:

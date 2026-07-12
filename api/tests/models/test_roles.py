@@ -1,5 +1,4 @@
 import pytest
-from fastapi import HTTPException
 from src.utils import roles
 from src.models.roles import PlatformRoles, ApplicationRoles, OrganizationRoles
 
@@ -36,10 +35,10 @@ def test_role_atleast_allows_roles_inside_scope() -> None:
     assert roles.atleast(PlatformRoles.administrator, PlatformRoles.support) is True
 
 
-def test_role_atleast_returns_false_without_raising() -> None:
-    """Return false for insufficient roles when raising is disabled."""
+def test_role_atleast_returns_false_for_insufficient_roles() -> None:
+    """Return false for insufficient roles."""
 
-    assert roles.atleast(ApplicationRoles.read, ApplicationRoles.maintain, False) is False
+    assert roles.atleast(ApplicationRoles.read, ApplicationRoles.maintain) is False
 
 
 @pytest.mark.parametrize(
@@ -51,11 +50,7 @@ def test_role_atleast_returns_false_without_raising() -> None:
         (PlatformRoles.administrator, OrganizationRoles.read),
     ],
 )
-def test_role_atleast_raises_for_insufficient_roles(role_value, required_role) -> None:
-    """Raise a forbidden HTTP error when the role does not satisfy the requirement."""
+def test_role_atleast_rejects_insufficient_roles(role_value, required_role) -> None:
+    """Return false when the role does not satisfy the requirement."""
 
-    with pytest.raises(HTTPException) as exc:
-        roles.atleast(role_value, required_role)
-
-    assert exc.value.status_code == 403
-    assert exc.value.detail == "Permission required"
+    assert roles.atleast(role_value, required_role) is False

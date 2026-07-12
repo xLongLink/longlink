@@ -74,7 +74,6 @@ export const apiOrganizationSummarySchema = z.object({
     avatar: z.string(),
     country: z.string(),
     location_id: z.string().nullable(),
-    shared_storage_bucket_name: z.string().nullable(),
     created_at: z.string(),
     updated_at: z.string(),
     created_by: nullableUserSummarySchema,

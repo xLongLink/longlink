@@ -66,7 +66,11 @@ async def get(operation_id: UUID) -> Operation | None:
 
 
 async def reset_active() -> None:
-    """Return expired active operations to the scheduled queue."""
+    """Return expired active operations to the scheduled queue.
+
+    Startup and recovery paths use this to clear stale leases left by stopped workers. Healthy workers keep ownership
+    because only rows with expired leases are reset.
+    """
 
     # Reset expired leases inside one transaction.
     async with session_scope() as session:
@@ -102,7 +106,11 @@ async def create(
     scheduled_at: datetime | None = None,
     user: User | None = None,
 ) -> Operation:
-    """Create one operation record."""
+    """Create a scheduled operation record without claiming it.
+
+    Endpoint handlers call this after writing domain state. The worker later claims the row, receives a lease token, and
+    runs the handler registered for the operation kind.
+    """
 
     # Persist the operation in a managed database session.
     async with session_scope() as session:
@@ -124,28 +132,32 @@ async def create(
 
 
 async def queue_application_verification(application_id: UUID, user: User | None = None) -> Operation:
-    """Queue one application runtime readiness check."""
+    """Queue a metadata-only operation that verifies application runtime readiness."""
 
     # Application verification only needs the application reference.
     return await create(OperationKind.application_verify, application_id=application_id, user=user)
 
 
 async def queue_application_removal(application_id: UUID, scheduled_at: datetime | None = None, user: User | None = None) -> Operation:
-    """Queue runtime cleanup for one deleted application."""
+    """Queue a metadata-only operation that removes one deleted application's runtime resources."""
 
     # Application cleanup only needs the application reference and optional schedule.
     return await create(OperationKind.application_remove, application_id=application_id, scheduled_at=scheduled_at, user=user)
 
 
 async def queue_organization_removal(organization_id: UUID, scheduled_at: datetime | None = None, user: User | None = None) -> Operation:
-    """Queue runtime cleanup for one deleted organization."""
+    """Queue a metadata-only operation that removes one deleted organization's runtime resources."""
 
     # Organization cleanup only needs the organization reference and optional schedule.
     return await create(OperationKind.organization_remove, organization_id=organization_id, scheduled_at=scheduled_at, user=user)
 
 
 async def claim(operation_id: UUID) -> Operation | None:
-    """Mark one scheduled or expired operation as active."""
+    """Claim one requested operation for exclusive execution.
+
+    Only scheduled rows with no active lease or an expired lease can be claimed. Claiming stores a fresh lease token and
+    expiry; later state transitions must present the same token to prove this worker still owns the attempt.
+    """
 
     # Claim the requested operation inside one transaction.
     async with session_scope() as session:
@@ -179,7 +191,11 @@ async def claim(operation_id: UUID) -> Operation | None:
 
 
 async def defer(operation_id: UUID, lease_token: str, delay_seconds: int | None = None) -> Operation | None:
-    """Make one active operation claimable later."""
+    """Release an active lease and schedule the operation for another attempt.
+
+    The update matches both operation id and lease token. Returning `None` means the caller no longer owns the active
+    lease, so another worker may already be responsible for the operation.
+    """
 
     # Release the operation lease inside one transaction.
     async with session_scope() as session:
@@ -217,7 +233,11 @@ async def defer(operation_id: UUID, lease_token: str, delay_seconds: int | None 
 
 
 async def claim_next() -> Operation | None:
-    """Claim the next scheduled or expired operation in FIFO order."""
+    """Claim the oldest ready operation for exclusive execution.
+
+    Worker loops use this as the queue pop operation. It locks one ready row, assigns a fresh lease token, and returns
+    `None` when no scheduled or expired work is currently claimable.
+    """
 
     # Claim the next available operation inside one transaction.
     async with session_scope() as session:
@@ -256,7 +276,11 @@ async def claim_next() -> Operation | None:
 
 
 async def renew_lease(operation_id: UUID, lease_token: str) -> Operation | None:
-    """Extend one active operation lease for the current worker."""
+    """Extend the current worker's active operation lease.
+
+    The lease token check prevents stale workers from renewing after another worker has reclaimed an expired operation.
+    Returning `None` tells the heartbeat that ownership was lost and renewal should stop.
+    """
 
     # Extend the lease inside one transaction.
     async with session_scope() as session:
@@ -286,7 +310,11 @@ async def renew_lease(operation_id: UUID, lease_token: str) -> Operation | None:
 
 
 async def complete(operation_id: UUID, lease_token: str) -> Operation | None:
-    """Mark one active operation as completed."""
+    """Finish an operation only if the caller still owns its lease.
+
+    Successful completion records `stopped_at` and clears lease fields. A `None` result means the token no longer matches,
+    so the caller should treat its result as stale.
+    """
 
     # Complete the operation inside one transaction.
     async with session_scope() as session:
@@ -321,7 +349,11 @@ async def complete(operation_id: UUID, lease_token: str) -> Operation | None:
 
 
 async def fail(operation_id: UUID, error: str, lease_token: str) -> Operation | None:
-    """Mark one active operation as failed and capture the error message."""
+    """Fail an operation only if the caller still owns its lease.
+
+    The public error text is sanitized before it is stored. A `None` result means another worker or terminal transition
+    changed the row first, so the caller should not overwrite it.
+    """
 
     # Record the failure inside one transaction.
     async with session_scope() as session:

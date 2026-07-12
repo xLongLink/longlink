@@ -1,7 +1,9 @@
-import { useState, type Dispatch, type MouseEvent, type SetStateAction } from 'react';
 import { Link } from 'react-router';
-import { cn } from '@/lib/utils';
+import { ChevronDownIcon } from 'lucide-react';
+import { useState, type Dispatch, type MouseEvent, type SetStateAction } from 'react';
 import type { ArticleNavigationGroup, ArticleNavigationItem } from '@/pages/catalog';
+import { cn } from '@/lib/utils';
+import { Wordmark } from '@/components/Wordmark';
 import {
     Sidebar as UISidebar,
     SidebarContent,
@@ -18,8 +20,6 @@ import {
     SidebarMenuSubItem,
     SidebarSeparator,
 } from '@/components/ui/sidebar';
-import { ChevronDownIcon } from 'lucide-react';
-import { Wordmark } from '@/components/Wordmark';
 
 export type SidebarProps = {
     currentPath: string;
@@ -86,7 +86,7 @@ function renderArticleNavigationItem(
                 <SidebarMenuAction
                     aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${item.title}`}
                     aria-expanded={isOpen}
-                    className="!top-0 !right-0 h-7 w-16 cursor-pointer justify-end pr-2"
+                    className="!-top-1.5 !right-0 h-10 w-28 cursor-pointer justify-end pr-3 after:-inset-2 md:after:block"
                     onClick={handleToggle}
                 >
                     <ChevronDownIcon className={cn('size-3.5 transition-transform', !isOpen && '-rotate-90')} />

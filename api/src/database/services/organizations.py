@@ -245,8 +245,8 @@ async def create(
 ) -> Organization:
     """Create an organization."""
 
-    names.knames(slug)
-    shared_storage_bucket_name = names.knames(f"{slug}-shared")
+    names.organization_database(slug)
+    names.organization_shared_bucket(slug)
 
     # Create the organization and owner membership together.
     async with session_scope() as session:
@@ -256,7 +256,6 @@ async def create(
             avatar=avatar or "",
             country=country,
             location_id=location_id,
-            shared_storage_bucket_name=shared_storage_bucket_name,
         )
 
         # Attach the creator as the initial owner for every organization.

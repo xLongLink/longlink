@@ -60,7 +60,7 @@ async def application_image_metadata(payload: ApplicationCreate) -> LongLinkMeta
 
 
 def runtime_environment(
-    application_slug: str,
+    database_schema: str,
     connection: adapters.DatabaseRuntimeConnection,
     storage: StorageRegistry | None,
     bucket: str | None = None,
@@ -76,7 +76,7 @@ def runtime_environment(
         "LONGLINK_DATABASE_NAME": connection["database_name"],
         "LONGLINK_DATABASE_PASSWORD": connection["password"],
         "LONGLINK_DATABASE_PORT": str(connection["port"]),
-        "LONGLINK_DATABASE_SCHEMA": application_slug,
+        "LONGLINK_DATABASE_SCHEMA": database_schema,
         "LONGLINK_DATABASE_USERNAME": connection["username"],
     }
 

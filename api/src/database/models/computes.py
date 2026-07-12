@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Enum, Text, Column, UniqueConstraint
+from sqlalchemy import Text, Column, UniqueConstraint
 from tenant.utils import utcnow
 from tenant.database.types import UTCDateTime
 
@@ -19,12 +19,6 @@ class ComputeRegistry(SQLModel, table=True):
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-
-    # State
-    kind: str = Field(
-        default="kubernetes",
-        sa_column=Column(Enum("kubernetes", name="compute_kind_enum", native_enum=False), nullable=False),
-    )
 
     # Metadata
     name: str = Field(unique=True, max_length=128)

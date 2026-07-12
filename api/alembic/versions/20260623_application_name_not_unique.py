@@ -100,7 +100,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("slug", sa.String(length=128), nullable=False),
-        sa.Column("country", sa.String(length=2), nullable=False, server_default=sa.text("'CH'")),
+        sa.Column("country", sa.String(length=2), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("slug"),
         sa.ForeignKeyConstraint(["created_id"], ["users.id"]),

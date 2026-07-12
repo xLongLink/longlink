@@ -456,7 +456,7 @@ async def test_create_app_returns_app_response(
     synced_users = sync_payload["users"]
     assert isinstance(synced_users, list)
     assert all(isinstance(synced_user, TenantUser) for synced_user in synced_users)
-    assert captured["prepared_database"] == "acme"
+    assert "prepared_database" not in captured
     assert captured["connection"] == {"database": "acme", "autocommit": False, "search_path": "shared"}
     assert synced_users[0].email == user.email
     application_payload = captured["application"]

@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Column, String, text
+from sqlalchemy import Column, String
 from tenant.utils import utcnow
 from src.models.countries import DEFAULT_COUNTRY
 from tenant.database.types import UTCDateTime
@@ -26,24 +26,17 @@ class Organization(SQLModel, table=True):
     name: str = Field(unique=True, max_length=128)
     slug: str = Field(unique=True, max_length=128)
     avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
-    country: str = Field(
-        default=DEFAULT_COUNTRY, sa_column=Column(String(2), server_default=text("'CH'"), nullable=False)
-    )
+    country: str = Field(default=DEFAULT_COUNTRY, sa_column=Column(String(2), nullable=False))
 
     # Location
     location: "Location" = Relationship()
     location_id: UUID = Field(foreign_key="locations.id")
 
-    # Storage
-    shared_storage_bucket_name: str | None = Field(default=None, max_length=63)
-
     # User
     created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
     created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Organization.created_id"})
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    updated_at: datetime = Field(
-        default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow)
-    )
+    updated_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow))
     updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Organization.updated_id"})
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
