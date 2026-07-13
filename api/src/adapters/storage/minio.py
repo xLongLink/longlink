@@ -1,8 +1,9 @@
 import aioboto3
 import urllib.parse
-from .base import Storage, StorageObjectData, StorageBucketUsage, StorageRuntimeCredentials
+from .base import Storage, StorageAccess, StorageRuntimeCredentials
 from typing import TYPE_CHECKING, cast
 from contextlib import AbstractAsyncContextManager
+from botocore.exceptions import ClientError
 
 # Import typing-only S3 stubs without adding runtime dependencies.
 if TYPE_CHECKING:
@@ -45,70 +46,7 @@ class MinIO(Storage):
             ),
         )
 
-    async def buckets(self) -> list[str]:
-        """List storage buckets."""
-
-        # Use one client for the bucket listing request.
-        async with self._client() as client:
-            response = await client.list_buckets()
-
-        return [name for bucket in response.get("Buckets", []) if (name := bucket.get("Name")) is not None]
-
-    async def objects(self, bucket_name: str, *, limit: int = 1000) -> list[StorageObjectData]:
-        """List object metadata for one bucket."""
-
-        objects: list[StorageObjectData] = []
-
-        # Use one client for paginated object listing.
-        async with self._client() as client:
-            paginator = client.get_paginator("list_objects_v2")
-            pages = paginator.paginate(
-                Bucket=bucket_name,
-                PaginationConfig={
-                    "MaxItems": limit,
-                    "PageSize": min(1000, limit),
-                },
-            )
-
-            # The paginator owns continuation tokens; keep only the response normalization here.
-            async for page in pages:
-                # Normalize each object entry from the current page.
-                for item in page.get("Contents", []):
-                    # Ignore entries that do not include object keys.
-                    key = item.get("Key")
-                    if key is None:
-                        continue
-
-                    etag = item.get("ETag")
-                    objects.append(
-                        {
-                            "key": str(key),
-                            "size": int(item.get("Size", 0)),
-                            "etag": str(etag) if etag is not None else None,
-                        }
-                    )
-
-        return objects
-
-    async def bucket_usage(self, bucket_name: str) -> StorageBucketUsage:
-        """Return aggregate usage details for one MinIO bucket."""
-
-        object_count = 0
-        space_used = 0
-
-        # Use one client for paginated usage scanning.
-        async with self._client() as client:
-            paginator = client.get_paginator("list_objects_v2")
-
-            # Walk every listed page because S3-compatible APIs do not expose portable bucket totals.
-            async for page in paginator.paginate(Bucket=bucket_name):
-                contents = page.get("Contents", [])
-                object_count += len(contents)
-                space_used += sum(int(item.get("Size", 0)) for item in contents)
-
-        return {"object_count": object_count, "space_used": space_used}
-
-    async def delete_bucket(self, bucket_name: str) -> None:
+    async def delete(self, bucket: str) -> None:
         """Delete one MinIO bucket and all listed objects."""
 
         # Keep bucket cleanup in one client session.
@@ -116,28 +54,33 @@ class MinIO(Storage):
             paginator = client.get_paginator("list_objects_v2")
 
             # Delete objects page by page before removing the bucket.
-            async for page in paginator.paginate(Bucket=bucket_name):
+            async for page in paginator.paginate(Bucket=bucket):
                 objects: list[ObjectIdentifierTypeDef] = [
                     {"Key": str(item["Key"])} for item in page.get("Contents", []) if "Key" in item
                 ]
 
                 # Skip empty pages from compatible storage backends.
                 if objects:
-                    await client.delete_objects(Bucket=bucket_name, Delete={"Objects": objects})
+                    await client.delete_objects(Bucket=bucket, Delete={"Objects": objects})
 
-            await client.delete_bucket(Bucket=bucket_name)
+            await client.delete_bucket(Bucket=bucket)
 
-    async def bucket(self, bucket_name: str) -> str:
+    async def create(self, bucket: str) -> str:
         """Create one assigned bucket and return its name."""
 
         # Use the provisioning client to create the bucket.
         async with self._client() as client:
-            await client.create_bucket(Bucket=bucket_name)
+            try:
+                await client.create_bucket(Bucket=bucket)
+            except ClientError as exc:
+                error = exc.response.get("Error", {})
+                if error.get("Code") != "BucketAlreadyOwnedByYou":
+                    raise
 
-        return bucket_name
+        return bucket
 
-    async def runtime_credentials(self, name: str, bucket_name: str, shared_bucket_name: str) -> StorageRuntimeCredentials:
-        """Return local runtime credentials for one application."""
+    async def credentials(self, bucket: str, access: StorageAccess) -> StorageRuntimeCredentials:
+        """Return local runtime credentials for one bucket."""
 
         # Local MinIO uses the development root credentials until local policy management is needed.
         return {
@@ -145,7 +88,7 @@ class MinIO(Storage):
             "secret_access_key": self._secret_access_key,
         }
 
-    async def revoke_runtime_credentials(self, credentials: StorageRuntimeCredentials) -> None:
+    async def revoke(self, bucket: str) -> None:
         """Ignore local runtime credential revocation."""
 
         # Local MinIO credentials are shared development credentials and are not application-scoped.

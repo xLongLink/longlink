@@ -1,11 +1,10 @@
 from longlink import db
 from sqlmodel import select
 from sqlalchemy.orm import selectinload
-from src.schemas.requests import PurchaseRequestRead
 from src.database.models.requests import PurchaseRequest
 
 
-async def list_requests() -> list[PurchaseRequestRead]:
+async def list_requests() -> list[PurchaseRequest]:
     """Return purchase requests with their platform-managed audit users."""
 
     async with db.get_session() as session:
@@ -19,12 +18,12 @@ async def list_requests() -> list[PurchaseRequestRead]:
             .order_by(PurchaseRequest.id)
         )
         result = await session.exec(statement)
-        purchase_requests = result.all()
+        purchase_requests = list(result.all())
 
-    return [_purchase_request_read(request) for request in purchase_requests]
+    return purchase_requests
 
 
-async def get_request(request_id: int) -> PurchaseRequestRead | None:
+async def get_request(request_id: int) -> PurchaseRequest | None:
     """Return one purchase request with its platform-managed audit users."""
 
     async with db.get_session() as session:
@@ -43,10 +42,10 @@ async def get_request(request_id: int) -> PurchaseRequestRead | None:
     if request is None:
         return None
 
-    return _purchase_request_read(request)
+    return request
 
 
-async def create_request(title: str, amount: float, vendor: str, justification: str) -> PurchaseRequestRead:
+async def create_request(title: str, amount: float, vendor: str, justification: str) -> PurchaseRequest:
     """Persist a purchase request and return it with its audit users."""
 
     request = PurchaseRequest(
@@ -70,7 +69,7 @@ async def create_request(title: str, amount: float, vendor: str, justification: 
     return created_request
 
 
-async def update_request_status(request_id: int, status: str) -> PurchaseRequestRead | None:
+async def update_request_status(request_id: int, status: str) -> PurchaseRequest | None:
     """Update one purchase request workflow status."""
 
     async with db.get_session() as session:
@@ -83,18 +82,3 @@ async def update_request_status(request_id: int, status: str) -> PurchaseRequest
         await session.commit()
 
     return await get_request(request_id)
-
-
-def _purchase_request_read(request: PurchaseRequest) -> PurchaseRequestRead:
-    """Return the API schema for one purchase request row."""
-
-    return PurchaseRequestRead(
-        id=request.id,
-        title=request.title,
-        amount=request.amount,
-        status=request.status,
-        vendor=request.vendor,
-        justification=request.justification,
-        created_by=request.created_by,
-        updated_by=request.updated_by,
-    )

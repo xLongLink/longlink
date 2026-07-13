@@ -130,17 +130,6 @@ class OrganizationDatabaseTableColumnsResponse(BaseModel):
     columns: list[OrganizationDatabaseTableColumnResponse]
 
 
-class OrganizationDatabaseTableRowsResponse(BaseModel):
-    """Represent preview rows for one database table."""
-
-    # Metadata
-    name: str
-    schema_name: str
-
-    # Data
-    rows: list[dict[str, str]]
-
-
 class DatabaseRegistryResponse(BaseModel):
     """Represent one database registry in API responses."""
 

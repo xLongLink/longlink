@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 from typing import TypedDict
-from .types import DatabaseTableRows, DatabaseSchemaUsage, DatabaseTableColumns
+from .types import DatabaseSchemaUsage, DatabaseTableColumns
 
 
 class DatabaseRuntimeConnection(TypedDict):
@@ -68,10 +68,6 @@ class Database(ABC):
     @abstractmethod
     async def table_columns(self, database_name: str, schema_name: str) -> list[DatabaseTableColumns]:
         """Return tables and columns for one schema."""
-
-    @abstractmethod
-    async def table_rows(self, database_name: str, schema_name: str, table_name: str, *, limit: int = 100) -> DatabaseTableRows:
-        """Return preview rows for one table."""
 
     @abstractmethod
     async def usage(self) -> dict[str, int]:

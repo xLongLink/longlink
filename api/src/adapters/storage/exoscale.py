@@ -6,7 +6,7 @@ import httpx2
 import asyncio
 import hashlib
 import urllib.parse
-from .base import StorageRuntimeCredentials
+from .base import StorageAccess, StorageRuntimeCredentials
 from typing import Literal, cast
 from .minio import MinIO
 from contextlib import suppress
@@ -30,8 +30,10 @@ class Exoscale(MinIO):
         self._zone = self._zone_from_endpoint(endpoint_url)
         self._api_url = f"https://api-{self._zone}.exoscale.com/v2"
 
-    async def runtime_credentials(self, name: str, bucket_name: str, shared_bucket_name: str) -> StorageRuntimeCredentials:
-        """Create IAM role and API key credentials scoped to one application runtime."""
+    async def credentials(self, bucket: str, access: StorageAccess) -> StorageRuntimeCredentials:
+        """Create IAM role and API key credentials scoped to one bucket."""
+
+        name = self._credential_name(bucket)
 
         # Create the restricted role first because API keys are immutable role attachments.
         operation = await self._api_request(
@@ -39,9 +41,9 @@ class Exoscale(MinIO):
             "/iam-role",
             {
                 "name": name,
-                "description": f"LongLink runtime storage access for {bucket_name}",
+                "description": f"LongLink {access} storage access for {bucket}",
                 "editable": False,
-                "policy": self._runtime_policy(bucket_name, shared_bucket_name),
+                "policy": self._bucket_policy(bucket, access),
             },
         )
         role_id = await self._wait_operation(operation, require_reference=True)
@@ -62,16 +64,38 @@ class Exoscale(MinIO):
             "role_id": role_id,
         }
 
-    async def revoke_runtime_credentials(self, credentials: StorageRuntimeCredentials) -> None:
-        """Delete an Exoscale API key and its IAM role."""
+    async def revoke(self, bucket: str) -> None:
+        """Delete Exoscale API keys and IAM roles created for one bucket."""
 
-        # Delete the API key before deleting the role it is attached to.
-        await self._delete_operation(f"/api-key/{urllib.parse.quote(credentials['access_key_id'], safe='')}")
+        name = self._credential_name(bucket)
 
-        # MinIO-style local credentials have no role metadata; Exoscale credentials do.
-        role_id = credentials.get("role_id")
-        if role_id is not None:
-            await self._delete_operation(f"/iam-role/{urllib.parse.quote(role_id, safe='')}")
+        # Delete every matching API key before deleting roles they may reference.
+        keys = await self._api_request("GET", "/api-key")
+        api_keys = keys.get("api-keys", [])
+        if not isinstance(api_keys, list):
+            api_keys = []
+
+        for item in api_keys:
+            if not isinstance(item, dict) or item.get("name") != name:
+                continue
+
+            key = item.get("key")
+            if isinstance(key, str) and key:
+                await self._delete_operation(f"/api-key/{urllib.parse.quote(key, safe='')}")
+
+        # Delete every matching role after keys have been removed.
+        roles = await self._api_request("GET", "/iam-role")
+        iam_roles = roles.get("iam-roles", [])
+        if not isinstance(iam_roles, list):
+            iam_roles = []
+
+        for item in iam_roles:
+            if not isinstance(item, dict) or item.get("name") != name:
+                continue
+
+            role_id = item.get("id")
+            if isinstance(role_id, str) and role_id:
+                await self._delete_operation(f"/iam-role/{urllib.parse.quote(role_id, safe='')}")
 
     def _authorization(self, method: str, path: str, body: str, expires: int) -> str:
         """Return the Exoscale V2 API authorization header value."""
@@ -163,10 +187,14 @@ class Exoscale(MinIO):
 
         raise TimeoutError(f"Exoscale operation '{operation_id}' did not complete")
 
-    def _runtime_policy(self, bucket_name: str, shared_bucket_name: str) -> JsonObject:
-        """Build the IAM policy for one application runtime."""
+    def _bucket_policy(self, bucket: str, access: StorageAccess) -> JsonObject:
+        """Build the IAM policy for one bucket access level."""
 
-        # Restrict SOS access to the app bucket and read-only shared bucket operations.
+        operations = ["get-object", "head-bucket", "head-object", "list-object-versions", "list-objects"]
+        if access == "write":
+            operations.extend(["list-multipart-uploads", "put-object", "delete-object", "abort-multipart-upload"])
+
+        # Restrict SOS access to the requested bucket and access level.
         return {
             "default-service-strategy": "deny",
             "services": {
@@ -174,24 +202,18 @@ class Exoscale(MinIO):
                     "type": "rules",
                     "rules": [
                         {
-                            "expression": (
-                                f"parameters.bucket == '{bucket_name}' && operation in "
-                                "['get-object', 'head-bucket', 'head-object', 'list-multipart-uploads', "
-                                "'list-object-versions', 'list-objects', 'put-object', 'delete-object', 'abort-multipart-upload']"
-                            ),
-                            "action": "allow",
-                        },
-                        {
-                            "expression": (
-                                f"parameters.bucket == '{shared_bucket_name}' && operation in "
-                                "['get-object', 'head-bucket', 'head-object', 'list-object-versions', 'list-objects']"
-                            ),
+                            "expression": f"parameters.bucket == '{bucket}' && operation in {operations!r}",
                             "action": "allow",
                         },
                     ],
                 }
             },
         }
+
+    def _credential_name(self, bucket: str) -> str:
+        """Return the deterministic Exoscale credential name for one bucket."""
+
+        return f"longlink-{bucket}"
 
     def _string(self, data: JsonObject, field: str) -> str:
         """Return one required string field from an Exoscale response."""

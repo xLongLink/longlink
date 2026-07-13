@@ -49,11 +49,9 @@ import {
 import {
     useOrganizationDatabaseResourceTables,
     useOrganizationDatabaseResources,
-    useOrganizationDatabaseTableRows,
     useOrganizationStorageResources,
 } from '@/data/organization';
 import People from './People';
-import { DatabaseTableRows } from './DatabaseTableRows';
 
 type SettingsProps = {
     organization: string;
@@ -87,7 +85,6 @@ export default function Settings({
         settingsBucket = '',
         settingsDatabaseResource = '',
         settingsDatabaseResourceType = '',
-        settingsDatabaseTable = '',
     } = useParams();
     const { role: platformRole, organizations: userOrganizations } = useUserProfile();
     const queryClient = useQueryClient();
@@ -130,7 +127,6 @@ export default function Settings({
     const selectedApplication = applications.find((application) => application.slug === settingsApplication) ?? null;
     const selectedDatabaseKind = settingsDatabaseResourceType === 'schemas' ? 'schema' : null;
     const isDatabaseDetailPage = settingsDatabaseResourceType.length > 0 || settingsDatabaseResource.length > 0;
-    const isDatabaseTablePage = settingsDatabaseTable.length > 0;
     const selectedDatabaseResource =
         databaseResources.find(
             (resource) =>
@@ -149,25 +145,6 @@ export default function Settings({
         error: databaseResourceTablesError,
         isLoading: databaseResourceTablesIsLoading,
     } = useOrganizationDatabaseResourceTables(organizationDetails?.id ?? '', databaseTablesRequest);
-    const selectedDatabaseTableName = settingsDatabaseTable;
-    const selectedDatabaseTable =
-        databaseResourceTables.find((table) => table.name === selectedDatabaseTableName) ?? null;
-    const databaseTableRowsRequest =
-        selectedDatabaseResource && selectedDatabaseTable && isDatabaseTablePage ? selectedDatabaseResource : null;
-    const {
-        data: databaseTableRows,
-        error: databaseTableRowsError,
-        isLoading: databaseTableRowsIsLoading,
-    } = useOrganizationDatabaseTableRows(
-        organizationDetails?.id ?? '',
-        databaseTableRowsRequest,
-        selectedDatabaseTableName
-    );
-    const databaseTableDetailError =
-        databaseDetailError ??
-        (!databaseResourceTablesIsLoading && isDatabaseTablePage && selectedDatabaseTable === null
-            ? new Error(t('resources.databaseTableNotFound', { name: selectedDatabaseTableName }))
-            : null);
     const isStorageDetailPage = settingsBucket.length > 0;
     const selectedStorageResource =
         storageResources.find((resource) => resource.bucket_name === settingsBucket) ?? null;
@@ -605,14 +582,7 @@ export default function Settings({
         {
             accessorKey: 'name',
             header: t('columns.table'),
-            cell: ({ row, getValue }) => (
-                <Link
-                    to={`/orgs/${organization}/settings/database/${settingsDatabaseResourceType}/${encodeURIComponent(settingsDatabaseResource)}/tables/${encodeURIComponent(row.original.name)}`}
-                    className="font-medium text-foreground underline-offset-4 hover:underline"
-                >
-                    {getValue<string>()}
-                </Link>
-            ),
+            cell: ({ getValue }) => <span className="font-medium text-foreground">{getValue<string>()}</span>,
             meta: { className: 'min-w-52' },
         },
         {
@@ -760,16 +730,10 @@ export default function Settings({
                             <>
                                 <div className="space-y-1">
                                     <Link
-                                        to={
-                                            isDatabaseTablePage && selectedDatabaseKind === 'schema'
-                                                ? `/orgs/${organization}/settings/database/${settingsDatabaseResourceType}/${encodeURIComponent(settingsDatabaseResource)}`
-                                                : `/orgs/${organization}/settings/database`
-                                        }
+                                        to={`/orgs/${organization}/settings/database`}
                                         className="inline-flex text-sm font-medium text-foreground hover:underline"
                                     >
-                                        {isDatabaseTablePage && selectedDatabaseKind === 'schema'
-                                            ? t('resources.backToSchema')
-                                            : t('resources.backToDatabase')}
+                                        {t('resources.backToDatabase')}
                                     </Link>
                                 </div>
 
@@ -781,21 +745,6 @@ export default function Settings({
                                     <div className="rounded-md border p-4 text-sm text-destructive">
                                         {databaseResourceTablesError.message}
                                     </div>
-                                ) : isDatabaseTablePage ? (
-                                    databaseTableDetailError ? (
-                                        <div className="rounded-md border p-4 text-sm text-destructive">
-                                            {databaseTableDetailError.message}
-                                        </div>
-                                    ) : databaseTableRowsIsLoading ? null : databaseTableRowsError ? (
-                                        <div className="rounded-md border p-4 text-sm text-destructive">
-                                            {databaseTableRowsError.message}
-                                        </div>
-                                    ) : selectedDatabaseTable && databaseTableRows ? (
-                                        <DatabaseTableRows
-                                            table={selectedDatabaseTable}
-                                            rows={databaseTableRows.rows}
-                                        />
-                                    ) : null
                                 ) : databaseResourceTables.length ? (
                                     <DataTable columns={databaseTableColumns} data={databaseResourceTables} />
                                 ) : (

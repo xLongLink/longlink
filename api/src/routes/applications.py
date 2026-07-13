@@ -14,6 +14,11 @@ from src.database.models.users import User
 from src.database.models.association import UserApplication
 
 router = APIRouter()
+BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
+PROXY_RESPONSE_SECURITY_HEADERS = {
+    "content-security-policy": "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+    "x-content-type-options": "nosniff",
+}
 
 
 @router.get("/api/applications", response_model=list[ApplicationResponse])
@@ -299,11 +304,19 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     except httpx2.HTTPError as exc:
         raise HTTPException(status_code=503, detail="Application proxy request failed") from exc
 
-    response_headers = {}
+    response_headers = dict(PROXY_RESPONSE_SECURITY_HEADERS)
     response_content_type = upstream_response.headers.get("content-type")
 
-    # Only content type crosses the runtime-to-browser boundary.
+    # Reject active documents before they can execute under the authenticated platform origin.
     if response_content_type is not None:
+        response_media_types = {
+            value.partition(";")[0].strip()
+            for value in response_content_type.lower().split(",")
+        }
+        if not response_media_types.isdisjoint(BLOCKED_PROXY_CONTENT_TYPES):
+            raise HTTPException(status_code=502, detail="Application proxy returned an unsupported content type")
+
+        # Only content type crosses the runtime-to-browser boundary.
         response_headers["content-type"] = response_content_type
 
     return Response(content=upstream_response.content, status_code=upstream_response.status_code, headers=response_headers)

@@ -1,9 +1,10 @@
 import httpx2
-from typing import Any, Literal
+from typing import Literal, Protocol, cast
 from fastapi import Query, Request, Response, APIRouter, HTTPException
 from pydantic import ValidationError
 from src.auth import SessionAccountsService, oauth
 from src.utils import urls
+from collections.abc import Mapping
 from src.models.auth import OidcUserInfo
 from src.environments import env
 from fastapi.responses import RedirectResponse
@@ -13,10 +14,29 @@ from authlib.integrations.base_client import OAuthError
 router = APIRouter()
 
 
-async def _oidc_userinfo(oidc: Any, token: object) -> object:
+class OidcClient(Protocol):
+    """Define the Authlib client behavior used by the OIDC routes."""
+
+    async def authorize_redirect(self, request: Request, redirect_uri: str, **kwargs: str) -> object:
+        """Return the provider authorization redirect response."""
+
+        ...
+
+    async def authorize_access_token(self, request: Request) -> object:
+        """Exchange an authorization callback for a provider token."""
+
+        ...
+
+    async def userinfo(self, *, token: Mapping[str, object]) -> object:
+        """Return profile claims from the provider userinfo endpoint."""
+
+        ...
+
+
+async def _oidc_userinfo(oidc: OidcClient, token: Mapping[str, object]) -> object:
     """Return profile claims from token userinfo or the provider userinfo endpoint."""
 
-    raw_userinfo: object = getattr(token, "userinfo", None)
+    raw_userinfo = token.get("userinfo")
 
     # Use profile claims embedded in the token response when Authlib provided them.
     if raw_userinfo is not None:
@@ -84,11 +104,14 @@ async def login_oidc(
 ) -> Response:
     """Initiate OIDC login flow by redirecting to the identity provider."""
 
-    oauth_client: Any = oauth
-    oidc = oauth_client.create_client("oidc")
+    oidc = cast(OidcClient | None, oauth.create_client("oidc"))
+
+    # Treat a missing registered client as an unavailable authentication provider.
+    if oidc is None:
+        raise HTTPException(status_code=503, detail="OIDC provider is unavailable")
 
     request.session["oidc_next"] = urls.safe_local_path(next_path, "/organizations")
-    authorize_kwargs: dict[str, Any] = {}
+    authorize_kwargs: dict[str, str] = {}
 
     # Pass through the selected upstream provider hint.
     if provider is not None:
@@ -118,12 +141,15 @@ async def login_oidc(
 async def auth_oidc(request: Request) -> RedirectResponse:
     """Handle OIDC callback, exchange code for token, and create/update user."""
 
-    oauth_client: Any = oauth
-    oidc = oauth_client.create_client("oidc")
+    oidc = cast(OidcClient | None, oauth.create_client("oidc"))
+
+    # Treat a missing registered client as an unavailable authentication provider.
+    if oidc is None:
+        raise HTTPException(status_code=503, detail="OIDC provider is unavailable")
 
     # Exchange the callback code for a provider token.
     try:
-        token: Any = await oidc.authorize_access_token(request)
+        raw_token = await oidc.authorize_access_token(request)
     except httpx2.HTTPStatusError as exc:
         raise HTTPException(
             status_code=503,
@@ -132,6 +158,11 @@ async def auth_oidc(request: Request) -> RedirectResponse:
     except OAuthError as exc:
         raise HTTPException(status_code=401, detail="OIDC callback could not be validated") from exc
 
+    # Authlib token responses are mappings; reject unexpected provider client output.
+    if not isinstance(raw_token, Mapping):
+        raise HTTPException(status_code=503, detail="OIDC provider returned an invalid token response")
+
+    token: Mapping[str, object] = raw_token
     raw_userinfo = await _oidc_userinfo(oidc, token)
 
     # Validate the provider profile payload.

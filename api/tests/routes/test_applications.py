@@ -355,19 +355,18 @@ async def test_create_app_returns_app_response(
                 "secret_access_key": secret_access_key,
             }
 
-        async def bucket(self, bucket_name: str) -> str:
+        async def create(self, bucket: str) -> str:
             """Record bucket creation and return the bucket name."""
 
-            captured_buckets.append(("bucket", bucket_name))
-            return bucket_name
+            captured_buckets.append(("bucket", bucket))
+            return bucket
 
-        async def runtime_credentials(self, name: str, bucket_name: str, shared_bucket_name: str) -> dict[str, str]:
+        async def credentials(self, bucket: str, access: str) -> dict[str, str]:
             """Return fake scoped runtime credentials."""
 
             captured["storage_credentials"] = {
-                "name": name,
-                "bucket_name": bucket_name,
-                "shared_bucket_name": shared_bucket_name,
+                "bucket": bucket,
+                "access": access,
             }
             return {
                 "access_key_id": "runtime-storage-access",
@@ -433,9 +432,8 @@ async def test_create_app_returns_app_response(
         ("bucket", "acme-dashboard"),
     ]
     assert captured["storage_credentials"] == {
-        "name": f"longlink-{application_id.hex}",
-        "bucket_name": "acme-dashboard",
-        "shared_bucket_name": "acme-shared",
+        "bucket": "acme-dashboard",
+        "access": "write",
     }
     sync_payload = captured["tenant_users"]
     assert isinstance(sync_payload, dict)
@@ -772,7 +770,7 @@ async def test_delete_application_soft_deletes_and_queues_removal(
     assert recorded_operations[0].scheduled_at is not None
 
 
-async def test_application_proxy_forwards_authenticated_request(
+async def test_application_proxy_forwards_safe_content_and_rejects_active_content(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
     monkeypatch,
@@ -885,7 +883,11 @@ async def test_application_proxy_forwards_authenticated_request(
             return SimpleNamespace(
                 status_code=201,
                 content=b"proxied",
-                headers={"content-type": "text/plain", "set-cookie": "ignored=1", "content-length": "999"},
+                headers={
+                    "content-type": captured.get("response_content_type", "text/plain"),
+                    "set-cookie": "ignored=1",
+                    "content-length": "999",
+                },
             )
 
     monkeypatch.setattr("src.routes.applications.httpx2.AsyncClient", FakeProxyClient)
@@ -910,6 +912,10 @@ async def test_application_proxy_forwards_authenticated_request(
     assert response.status_code == 201
     assert response.text == "proxied"
     assert response.headers["content-type"] == "text/plain"
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["content-security-policy"] == (
+        "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    )
     assert "set-cookie" not in response.headers
     assert "content-length" in response.headers
     assert captured["client_kwargs"] == {"follow_redirects": False, "timeout": 300.0}
@@ -935,8 +941,10 @@ async def test_application_proxy_forwards_authenticated_request(
     assert "x-longlink-organization-id" not in headers
     assert "x-longlink-organization-slug" not in headers
 
+    captured["response_content_type"] = "text/html; charset=utf-8"
     root_response = client.get(f"/api/applications/{app.id}/proxy")
-    assert root_response.status_code == 201
+    assert root_response.status_code == 502
+    assert root_response.json() == {"detail": "Application proxy returned an unsupported content type"}
     root_forwarded = captured["request"]
     assert isinstance(root_forwarded, dict)
     assert root_forwarded["method"] == "GET"

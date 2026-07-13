@@ -287,12 +287,6 @@ export const apiOrganizationDatabaseTableSchema = z.object({
     ),
 });
 
-export const apiOrganizationDatabaseTableRowsSchema = z.object({
-    name: z.string(),
-    schema_name: z.string(),
-    rows: z.array(z.record(z.string(), z.string())),
-});
-
 /** Validates an API response value with a Zod schema. */
 export function parseApiResponse<T>(schema: z.ZodType<T>, value: unknown): T {
     return schema.parse(value);

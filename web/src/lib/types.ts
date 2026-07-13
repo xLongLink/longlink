@@ -13,7 +13,6 @@ import type {
     apiOperationSchema,
     apiOrganizationApplicationSchema,
     apiOrganizationDatabaseResourceSchema,
-    apiOrganizationDatabaseTableRowsSchema,
     apiOrganizationDatabaseTableSchema,
     apiOrganizationDetailsSchema,
     apiOrganizationMemberSummarySchema,
@@ -47,7 +46,6 @@ export type ApiOrganizationDatabaseApplication = NonNullable<
 export type ApiOrganizationDatabaseResource = z.infer<typeof apiOrganizationDatabaseResourceSchema>;
 export type ApiOrganizationDatabaseTableColumn = z.infer<typeof apiOrganizationDatabaseTableSchema>['columns'][number];
 export type ApiOrganizationDatabaseTable = z.infer<typeof apiOrganizationDatabaseTableSchema>;
-export type ApiOrganizationDatabaseTableRows = z.infer<typeof apiOrganizationDatabaseTableRowsSchema>;
 export type ApiOrganizationStorageApplication = NonNullable<
     z.infer<typeof apiOrganizationStorageResourceSchema>['application']
 >;

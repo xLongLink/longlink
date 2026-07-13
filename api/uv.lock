@@ -893,37 +893,37 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aioboto3", specifier = "==15.5.0" },
-    { name = "aiomysql", specifier = "==0.3.2" },
-    { name = "aiosqlite", specifier = "==0.22.1" },
-    { name = "alembic", specifier = "==1.18.5" },
-    { name = "authlib", specifier = "==1.7.2" },
-    { name = "botocore", specifier = "==1.40.61" },
-    { name = "docker", marker = "extra == 'dev'", specifier = "==7.1.0" },
-    { name = "email-validator", specifier = "==2.3.0" },
-    { name = "fastapi", specifier = "==0.139.0" },
-    { name = "httpx2", specifier = "==2.3.0" },
-    { name = "isort", marker = "extra == 'dev'", specifier = "==8.0.1" },
-    { name = "itsdangerous", specifier = "==2.2.0" },
-    { name = "kr8s", specifier = "==0.20.15" },
-    { name = "kubernetes", specifier = "==36.0.2" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = "==2.2.0" },
-    { name = "psycopg", extras = ["binary", "pool"], specifier = "==3.3.4" },
-    { name = "pycountry", specifier = "==26.2.16" },
-    { name = "pydantic", specifier = "==2.13.4" },
-    { name = "pydantic-settings", specifier = "==2.14.2" },
-    { name = "pyright", marker = "extra == 'dev'", specifier = "==1.1.411" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = "==8.2.2" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = "==1.2.0" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==7.1.0" },
-    { name = "python-slugify", specifier = "==8.0.4" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = "==0.15.20" },
-    { name = "sqlalchemy", specifier = "==2.0.51" },
-    { name = "sqlmodel", specifier = "==0.0.39" },
-    { name = "starlette", specifier = "==1.3.1" },
+    { name = "aioboto3", specifier = ">=15.5.0" },
+    { name = "aiomysql", specifier = ">=0.3.2" },
+    { name = "aiosqlite", specifier = ">=0.22.1" },
+    { name = "alembic", specifier = ">=1.18.5" },
+    { name = "authlib", specifier = ">=1.7.2" },
+    { name = "botocore", specifier = ">=1.40.61" },
+    { name = "docker", marker = "extra == 'dev'", specifier = ">=7.1.0" },
+    { name = "email-validator", specifier = ">=2.3.0" },
+    { name = "fastapi", specifier = ">=0.139.0" },
+    { name = "httpx2", specifier = ">=2.3.0" },
+    { name = "isort", marker = "extra == 'dev'", specifier = ">=8.0.1" },
+    { name = "itsdangerous", specifier = ">=2.2.0" },
+    { name = "kr8s", specifier = ">=0.20.15" },
+    { name = "kubernetes", specifier = ">=36.0.2" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=2.2.0" },
+    { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.3.4" },
+    { name = "pycountry", specifier = ">=26.2.16" },
+    { name = "pydantic", specifier = ">=2.13.4" },
+    { name = "pydantic-settings", specifier = ">=2.14.2" },
+    { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.411" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.0.3" },
+    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=1.4.0" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=7.1.0" },
+    { name = "python-slugify", specifier = ">=8.0.4" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.15.20" },
+    { name = "sqlalchemy", specifier = ">=2.0.51" },
+    { name = "sqlmodel", specifier = ">=0.0.39" },
+    { name = "starlette", specifier = ">=1.3.1" },
     { name = "tenant", editable = "../org" },
-    { name = "types-aiobotocore", extras = ["s3"], marker = "extra == 'dev'", specifier = "==3.7.0" },
-    { name = "uvicorn", specifier = "==0.47.0" },
+    { name = "types-aiobotocore", extras = ["s3"], marker = "extra == 'dev'", specifier = ">=3.7.0" },
+    { name = "uvicorn", specifier = ">=0.47.0" },
 ]
 provides-extras = ["dev"]
 
@@ -1281,6 +1281,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pygments"
+version = "2.20.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c3/b2/bc9c9196916376152d655522fdcebac55e66de6603a76a02bca1b6414f6c/pygments-2.20.0.tar.gz", hash = "sha256:6757cd03768053ff99f3039c1a36d6c0aa0b263438fcab17520b30a303a82b5f", size = 4955991, upload-time = "2026-03-29T13:29:33.898Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f4/7e/a72dd26f3b0f4f2bf1dd8923c85f7ceb43172af56d63c7383eb62b332364/pygments-2.20.0-py3-none-any.whl", hash = "sha256:81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176", size = 1231151, upload-time = "2026-03-29T13:29:30.038Z" },
+]
+
+[[package]]
 name = "pymysql"
 version = "1.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1304,29 +1313,30 @@ wheels = [
 
 [[package]]
 name = "pytest"
-version = "8.2.2"
+version = "9.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
     { name = "iniconfig" },
     { name = "packaging" },
     { name = "pluggy" },
+    { name = "pygments" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/58/e993ca5357553c966b9e73cb3475d9c935fe9488746e13ebdf9b80fae508/pytest-8.2.2.tar.gz", hash = "sha256:de4bb8104e201939ccdc688b27a89a7be2079b22e2bd2b07f806b6ba71117977", size = 1427980, upload-time = "2024-06-04T13:38:09.274Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/47/b9efed96c114afcfa3c9d3fe98a76a1d14c74a9e266d397cf6eb64be5e01/pytest-9.1.1.tar.gz", hash = "sha256:1088fbde8f2b49d95a549a195707afa7a76a3ce9bcadc26b6d71f0ffda5fe313", size = 1636369, upload-time = "2026-06-19T10:58:32.857Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4e/e7/81ebdd666d3bff6670d27349b5053605d83d55548e6bd5711f3b0ae7dd23/pytest-8.2.2-py3-none-any.whl", hash = "sha256:c434598117762e2bd304e526244f67bf66bbd7b5d6cf22138be51ff661980343", size = 339873, upload-time = "2024-06-04T13:38:05.285Z" },
+    { url = "https://files.pythonhosted.org/packages/24/25/1de2678b631f5a49215c6c96fff41ba892b0a34df68d6d80292b1b48aa7f/pytest-9.1.1-py3-none-any.whl", hash = "sha256:37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c", size = 386536, upload-time = "2026-06-19T10:58:31.347Z" },
 ]
 
 [[package]]
 name = "pytest-asyncio"
-version = "1.2.0"
+version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pytest" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/42/86/9e3c5f48f7b7b638b216e4b9e645f54d199d7abbbab7a64a13b4e12ba10f/pytest_asyncio-1.2.0.tar.gz", hash = "sha256:c609a64a2a8768462d0c99811ddb8bd2583c33fd33cf7f21af1c142e824ffb57", size = 50119, upload-time = "2025-09-12T07:33:53.816Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/43/7c/d36d04db312ecf4298932ef77e6e4a9e8ad017906e24e34f0b0c361a2473/pytest_asyncio-1.4.0.tar.gz", hash = "sha256:c6c0d2259945122819f171a32ecea2c349ead889ee28176caaf492143424be42", size = 58514, upload-time = "2026-05-26T09:56:04.083Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/04/93/2fa34714b7a4ae72f2f8dad66ba17dd9a2c793220719e736dda28b7aec27/pytest_asyncio-1.2.0-py3-none-any.whl", hash = "sha256:8e17ae5e46d8e7efe51ab6494dd2010f4ca8dae51652aa3c8d55acf50bfb2e99", size = 15095, upload-time = "2025-09-12T07:33:52.639Z" },
+    { url = "https://files.pythonhosted.org/packages/03/e2/08a497ef684b88559c9cc5f4ad53a37e7b99e727094a86d6ea32536d5d3c/pytest_asyncio-1.4.0-py3-none-any.whl", hash = "sha256:933ca923a23075a87fb7070c0ec272a6848489824d887c85c812670932835aa1", size = 16930, upload-time = "2026-05-26T09:56:02.576Z" },
 ]
 
 [[package]]

@@ -166,10 +166,8 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
     registry = await registries.application_storage(application)
     if registry is not None:
         adapter = adapters.storage(registry)
-        credentials = applications.storage_runtime_credentials(application)
-        if credentials is not None:
-            await adapter.revoke_runtime_credentials(credentials)
-
-        await adapter.delete_bucket(names.application_bucket(organization.slug, application.slug))
+        bucket = names.application_bucket(organization.slug, application.slug)
+        await adapter.revoke(bucket)
+        await adapter.delete(bucket)
 
     return outcome.complete()

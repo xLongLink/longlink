@@ -3,7 +3,7 @@ from uuid import UUID
 from src.utils import names
 from src.operations import outcomes as outcome
 from src.operations import registry
-from src.database.services import database, registries, applications, organizations
+from src.database.services import database, registries, organizations
 from src.models.operations import OperationKind
 from src.runtime.kubernetes import Kubernetes
 from src.database.models.computes import ComputeRegistry
@@ -56,11 +56,9 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
         registry = await registries.application_storage(app)
         if registry is not None:
             adapter = adapters.storage(registry)
-            credentials = applications.storage_runtime_credentials(app)
-            if credentials is not None:
-                await adapter.revoke_runtime_credentials(credentials)
-
-            await adapter.delete_bucket(names.application_bucket(organization.slug, app.slug))
+            bucket = names.application_bucket(organization.slug, app.slug)
+            await adapter.revoke(bucket)
+            await adapter.delete(bucket)
 
     current = await registries.compute(organization.location_id, include_deleted=True)
 
@@ -86,6 +84,6 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
     # Delete the shared bucket only when one was assigned.
     if registry is not None:
         adapter = adapters.storage(registry)
-        await adapter.delete_bucket(names.organization_shared_bucket(organization.slug))
+        await adapter.delete(names.organization_shared_bucket(organization.slug))
 
     return outcome.complete()

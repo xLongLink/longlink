@@ -127,16 +127,16 @@ def patch_organization_runtime(monkeypatch, captured: dict[str, object]) -> None
             self.access_key_id = access_key_id
             self.secret_access_key = secret_access_key
 
-        async def bucket(self, bucket_name: str) -> str:
+        async def create(self, bucket: str) -> str:
             """Record bucket creation and return the bucket name."""
 
-            calls.append(("bucket", bucket_name))
-            return bucket_name
+            calls.append(("bucket", bucket))
+            return bucket
 
-        async def delete_bucket(self, bucket_name: str) -> None:
+        async def delete(self, bucket: str) -> None:
             """Record bucket cleanup."""
 
-            calls.append(("delete_bucket", bucket_name))
+            calls.append(("delete_bucket", bucket))
 
     async def sync_tenant_users(shared_schema_url: str, users: list[TenantUser]) -> None:
         """Record synchronized tenant users for the organization."""
@@ -530,38 +530,26 @@ async def test_organization_storage_endpoint_returns_organization_buckets(
         user=owner,
     )
 
-    class FakeStorage:
-        def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
-            """Store storage registry configuration for assertions."""
+    async def fake_buckets(registry_argument) -> list[str]:
+        """Return fake bucket names from the storage backend."""
 
-            self.endpoint_url = endpoint_url
-            self.access_key_id = access_key_id
-            self.secret_access_key = secret_access_key
+        assert registry_argument.id == registry.id
+        return [
+            "acme-shared",
+            "acme-dashboard",
+            "acme-stale",
+            "other-shared",
+        ]
 
-        async def buckets(self) -> list[str]:
-            """Return fake bucket names from the storage backend."""
+    async def fake_usage(registry_argument, bucket_name: str) -> dict[str, int]:
+        """Return fake usage counters for one bucket."""
 
-            return [
-                "acme-shared",
-                "acme-dashboard",
-                "acme-stale",
-                "other-shared",
-            ]
+        assert registry_argument.id == registry.id
+        assert bucket_name.startswith("acme-")
+        return {"space_used": len(bucket_name), "object_count": 2}
 
-        async def bucket_usage(self, bucket_name: str) -> dict[str, int]:
-            """Return fake usage counters for one bucket."""
-
-            assert bucket_name.startswith("acme-")
-            return {"space_used": len(bucket_name), "object_count": 2}
-
-    monkeypatch.setattr(
-        "src.routes.organizations.adapters.storage",
-        lambda registry: FakeStorage(
-            registry.endpoint_url,
-            registry.access_key_id,
-            registry.secret_access_key,
-        ),
-    )
+    monkeypatch.setattr("src.routes.organizations.storage_utils.buckets", fake_buckets)
+    monkeypatch.setattr("src.routes.organizations.storage_utils.usage", fake_usage)
 
     # Act
     response = client.get(f"/api/organizations/{organization.id}/storage")
@@ -613,27 +601,13 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
         user=owner,
     )
 
-    class FakeStorage:
-        def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
-            """Store storage registry configuration for assertions."""
+    async def fake_buckets(registry_argument) -> list[str]:
+        """Raise the backend error expected by the test."""
 
-            self.endpoint_url = endpoint_url
-            self.access_key_id = access_key_id
-            self.secret_access_key = secret_access_key
+        assert registry_argument.id == registry.id
+        raise RuntimeError("storage offline")
 
-        async def buckets(self) -> list[str]:
-            """Raise the backend error expected by the test."""
-
-            raise RuntimeError("storage offline")
-
-    monkeypatch.setattr(
-        "src.routes.organizations.adapters.storage",
-        lambda registry: FakeStorage(
-            registry.endpoint_url,
-            registry.access_key_id,
-            registry.secret_access_key,
-        ),
-    )
+    monkeypatch.setattr("src.routes.organizations.storage_utils.buckets", fake_buckets)
 
     # Act
     response = client.get(f"/api/organizations/{organization.id}/storage")
@@ -735,36 +709,6 @@ async def test_organization_database_resource_tables_endpoint_returns_columns_an
                 }
             ]
 
-        async def table_rows(
-            self,
-            database_name: str,
-            schema_name: str,
-            table_name: str,
-            *,
-            limit: int = 100,
-        ) -> dict[str, object]:
-            """Return fake preview rows for one table."""
-
-            assert database_name == organization.id.hex
-            assert limit == 100
-
-            # The route requests one table at a time, so mirror backend rows per table.
-            if schema_name == "shared":
-                assert table_name == "users"
-                return {
-                    "name": "users",
-                    "schema_name": "shared",
-                    "rows": [{"id": str(owner.id), "email": "owner@example.com"}],
-                }
-
-            assert schema_name == dashboard_schema
-            assert table_name == "orders"
-            return {
-                "name": "orders",
-                "schema_name": dashboard_schema,
-                "rows": [{"id": "100", "total": "42.5"}],
-            }
-
     monkeypatch.setattr(
         "src.routes.organizations.adapters.database",
         lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
@@ -772,25 +716,17 @@ async def test_organization_database_resource_tables_endpoint_returns_columns_an
 
     # Act
     users_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/shared/tables")
-    users_rows_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/shared/tables/users/rows")
     schema_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/{dashboard_schema}/tables")
-    schema_rows_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/{dashboard_schema}/tables/orders/rows")
 
     # Assert
     assert users_response.status_code == 200
     user_tables = users_response.json()
     assert user_tables[0]["name"] == "users"
     assert [column["name"] for column in user_tables[0]["columns"]] == ["id", "email"]
-    assert "rows" not in user_tables[0]
-    assert users_rows_response.status_code == 200
-    assert users_rows_response.json()["rows"] == [{"id": str(owner.id), "email": "owner@example.com"}]
     assert schema_response.status_code == 200
     schema_tables = schema_response.json()
     assert schema_tables[0]["name"] == "orders"
     assert [column["name"] for column in schema_tables[0]["columns"]] == ["id", "total"]
-    assert "rows" not in schema_tables[0]
-    assert schema_rows_response.status_code == 200
-    assert schema_rows_response.json()["rows"] == [{"id": "100", "total": "42.5"}]
 
 
 async def test_organization_database_resource_tables_endpoint_requires_elevated_role(
@@ -821,7 +757,6 @@ async def test_organization_database_resource_tables_endpoint_requires_elevated_
     database_response = client.get(f"/api/organizations/{organization.id}/database")
     storage_response = client.get(f"/api/organizations/{organization.id}/storage")
     response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/dashboard/tables")
-    rows_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/dashboard/tables/orders/rows")
 
     # Assert
     assert database_response.status_code == 403
@@ -830,8 +765,6 @@ async def test_organization_database_resource_tables_endpoint_requires_elevated_
     assert storage_response.json() == {"detail": "Permission required"}
     assert response.status_code == 403
     assert response.json() == {"detail": "Permission required"}
-    assert rows_response.status_code == 403
-    assert rows_response.json() == {"detail": "Permission required"}
 
 
 async def test_get_organization_returns_invitations(

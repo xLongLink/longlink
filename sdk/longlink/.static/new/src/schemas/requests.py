@@ -1,6 +1,6 @@
 from typing import Literal
 from longlink import User
-from pydantic import Field, BaseModel
+from pydantic import Field, BaseModel, ConfigDict
 
 RequestStatus = Literal["draft", "submitted", "approved", "rejected"]
 
@@ -24,6 +24,8 @@ class PurchaseRequestStatusUpdate(BaseModel):
 
 class PurchaseRequestRead(BaseModel):
     """Typed response for a purchase request and its audit users."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     # Request fields
     id: int | None

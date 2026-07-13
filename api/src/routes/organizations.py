@@ -4,19 +4,19 @@ from fastapi import Depends, APIRouter, HTTPException
 from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authsupport
 from src.utils import names, roles
+from src.utils import storage as storage_utils
 from src.logger import logger
 from tenant.database import SHARED_SCHEMA
 from tenant.database import users as tenant_users
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import (OrganizationDatabaseResourceKind, OrganizationDatabaseResourceResponse,
-                                  OrganizationDatabaseTableRowsResponse, OrganizationDatabaseTableColumnsResponse)
+                                  OrganizationDatabaseTableColumnsResponse)
 from src.database.services import locations, operations, registries, invitations, organizations
 from src.runtime.kubernetes import Kubernetes
 from src.models.applications import ApplicationResponse
 from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary, OrganizationMemberUpdate,
                                       OrganizationInvitationCreate)
-from src.adapters.storage.base import StorageBucketUsage
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -25,7 +25,6 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 router = APIRouter()
-TABLE_PREVIEW_LIMIT = 100
 ORGANIZATION_DELETE_DELAY_DAYS = 0
 
 
@@ -72,7 +71,7 @@ async def _provision_organization_runtime(
 
     # Create the shared organization storage bucket from the deterministic slug-derived name.
     storage = adapters.storage(storage_registry)
-    await storage.bucket(names.organization_shared_bucket(organization.slug))
+    await storage.create(names.organization_shared_bucket(organization.slug))
 
 
 async def _cleanup_organization_runtime(
@@ -85,7 +84,7 @@ async def _cleanup_organization_runtime(
 
     # Remove the shared bucket first because it is independent of compute and database resources.
     try:
-        await adapters.storage(storage_registry).delete_bucket(names.organization_shared_bucket(organization.slug))
+        await adapters.storage(storage_registry).delete(names.organization_shared_bucket(organization.slug))
     except Exception as exc:
         logger.exception("Failed to clean up storage for organization '%s': %r", organization.slug, exc)
 
@@ -316,67 +315,6 @@ async def list_organization_database_resource_tables(
     return tables
 
 
-@router.get(
-    "/api/organizations/{organization_id}/database/resources/{resource_kind}/{resource_name}/tables/{table_name}/rows",
-    response_model=OrganizationDatabaseTableRowsResponse,
-)
-async def list_organization_database_resource_table_rows(
-    organization_id: UUID,
-    resource_kind: OrganizationDatabaseResourceKind,
-    resource_name: str,
-    table_name: str,
-    user: User = Depends(authuser),
-):
-    """Return preview rows for one organization database table."""
-
-    # Load organization access before exposing table rows.
-    membership = roles.access(user, organization_id, "organization")
-    if membership is None:
-        raise HTTPException(status_code=403, detail="Access required")
-
-    # Restrict table inspection to maintainers.
-    if not roles.atleast(membership.role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
-
-    # Require an assigned database registry for table inspection.
-    registry = await registries.database(membership.organization.location_id)
-    if registry is None:
-        raise HTTPException(status_code=404, detail="Database resource not found")
-
-    db = adapters.database(registry)
-    database = membership.organization.id.hex
-
-    # Inspect adapter table rows and normalize backend failures.
-    try:
-        # Hide internal PostgreSQL schemas from resource inspection.
-        if resource_name in {
-            "information_schema",
-            "pg_catalog",
-            "pg_toast",
-            "public",
-        } or resource_name.startswith("pg_"):
-            raise HTTPException(status_code=404, detail="Database resource not found")
-
-        rows = await db.table_rows(database, resource_name, table_name, limit=TABLE_PREVIEW_LIMIT)
-
-    # Preserve explicit not-found errors.
-    except HTTPException:
-        raise
-
-    # Convert unexpected adapter failures to availability errors.
-    except Exception as exc:
-        logger.exception(
-            "Failed to inspect database table '%s.%s' for organization '%s': %r",
-            resource_name,
-            table_name,
-            membership.organization.slug,
-            exc,
-        )
-        raise HTTPException(status_code=503, detail="Database table unavailable") from exc
-
-    return rows
-
-
 @router.post("/api/organizations/{organization_id}/invitations", status_code=204)
 async def create_organization_invitation(
     organization_id: UUID,
@@ -574,8 +512,7 @@ async def _storage_resource_rows(
 
     # List backend buckets before building resource rows.
     try:
-        storage = adapters.storage(registry)
-        buckets = set(await storage.buckets())
+        buckets = set(await storage_utils.buckets(registry))
 
     # Convert storage listing failures to availability errors.
     except Exception as exc:
@@ -622,13 +559,13 @@ async def _storage_resource_rows(
     ]
     needs_usage.extend(orphans)
 
-    usage_by_name: dict[str, StorageBucketUsage] = {}
+    usage_by_name: dict[str, storage_utils.StorageBucketUsage] = {}
 
     # Fetch usage for every visible organization bucket.
     try:
         # Collect usage by bucket name for row construction.
         for bucket in needs_usage:
-            usage_by_name[bucket] = await storage.bucket_usage(bucket)
+            usage_by_name[bucket] = await storage_utils.usage(registry, bucket)
 
     # Convert storage usage failures to availability errors.
     except Exception as exc:

@@ -2,7 +2,7 @@ import secrets
 import contextlib
 from uuid import UUID
 from .base import Database, DatabaseRuntimeConnection
-from .types import DatabaseTableRows, DatabaseSchemaUsage, DatabaseTableColumn, DatabaseTableColumns
+from .types import DatabaseSchemaUsage, DatabaseTableColumn, DatabaseTableColumns
 from sqlalchemy import String, text, inspect
 from collections.abc import AsyncIterator
 from tenant.database import SHARED_SCHEMA, migrate_database
@@ -343,26 +343,6 @@ class Postgres(Database):
                 )
 
             return tables
-
-    async def table_rows(self, database_name: str, schema_name: str, table_name: str, *, limit: int = 100) -> DatabaseTableRows:
-        """Return preview rows for one table."""
-
-        # Keep the preview query scoped to the requested organization database.
-        async with self._connection(database_name) as conn:
-
-            # Quote schema and table identifiers because app schemas are UUID-derived values.
-            table_identifier = ".".join(self.quote(conn, value) for value in (schema_name, table_name))
-            rows_result = await conn.execute(
-                text(f"SELECT * FROM {table_identifier} LIMIT :limit"),
-                {"limit": limit},
-            )
-            rows: list[dict[str, str]] = []
-
-            # Convert every preview value to a string while preserving column names.
-            for row in rows_result.mappings().all():
-                rows.append({key: "NULL" if value is None else str(value) for key, value in row.items()})
-
-            return {"name": table_name, "schema_name": schema_name, "rows": rows}
 
     async def usage(self) -> dict[str, int]:
         """Return the total non-system database size in bytes."""

@@ -8,6 +8,7 @@ from src.schemas.requests import (PurchaseRequestRead, PurchaseRequestCreate,
                                   RequestAttachmentRead,
                                   PurchaseRequestStatusUpdate)
 from src.database.services import requests
+from src.database.models.requests import PurchaseRequest
 
 router = Router()
 
@@ -16,14 +17,14 @@ UPLOAD_CHUNK_SIZE = 1024 * 1024
 
 
 @router.get("/requests", response_model=list[PurchaseRequestRead])
-async def requests_get_endpoint() -> list[PurchaseRequestRead]:
+async def requests_get_endpoint():
     """Return purchase requests with their platform-managed audit users."""
 
     return await requests.list_requests()
 
 
 @router.post("/requests", response_model=PurchaseRequestRead)
-async def requests_post_endpoint(payload: PurchaseRequestCreate) -> PurchaseRequestRead:
+async def requests_post_endpoint(payload: PurchaseRequestCreate):
     """Create a purchase request and return its audit data."""
 
     return await requests.create_request(
@@ -35,14 +36,14 @@ async def requests_post_endpoint(payload: PurchaseRequestCreate) -> PurchaseRequ
 
 
 @router.get("/requests/{request_id}", response_model=PurchaseRequestRead)
-async def request_get_endpoint(request_id: int) -> PurchaseRequestRead:
+async def request_get_endpoint(request_id: int):
     """Return one purchase request for a dynamic XML detail page."""
 
     return await _require_request(request_id)
 
 
 @router.patch("/requests/{request_id}/status", response_model=PurchaseRequestRead)
-async def request_status_patch_endpoint(request_id: int, payload: PurchaseRequestStatusUpdate) -> PurchaseRequestRead:
+async def request_status_patch_endpoint(request_id: int, payload: PurchaseRequestStatusUpdate):
     """Update one purchase request workflow status."""
 
     request = await requests.update_request_status(request_id, payload.status)
@@ -133,7 +134,7 @@ async def request_attachment_delete_endpoint(request_id: int, file_id: str) -> R
     return Response(status_code=204)
 
 
-async def _require_request(request_id: int) -> PurchaseRequestRead:
+async def _require_request(request_id: int) -> PurchaseRequest:
     """Return one purchase request or raise a 404 response."""
 
     request = await requests.get_request(request_id)

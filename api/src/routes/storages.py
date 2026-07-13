@@ -1,8 +1,8 @@
-from src import adapters
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin, authsupport
 from src.utils import names
+from src.utils import storage as storage_utils
 from src.logger import logger
 from src.models.storages import StorageObjectResponse, StorageRegistryCreate, StorageRegistryResponse
 from src.database.services import storage
@@ -55,11 +55,9 @@ async def list_storage_buckets(registry_id: UUID, _: User = Depends(authsupport)
     if registry is None:
         raise HTTPException(status_code=404, detail="Storage registry not found")
 
-    storage_adapter = adapters.storage(registry)
-
-    # Inspect backend buckets through the adapter.
+    # Inspect backend buckets through a direct S3 connection.
     try:
-        bucket_names = await storage_adapter.buckets()
+        bucket_names = await storage_utils.buckets(registry)
     except Exception as exc:
         logger.exception("Failed to inspect storage buckets for registry '%s': %r", registry_id, exc)
         raise HTTPException(status_code=503, detail="Storage buckets unavailable") from exc
@@ -75,11 +73,9 @@ async def list_storage_bucket_objects(registry_id: UUID, bucket_name: str, _: Us
     if registry is None:
         raise HTTPException(status_code=404, detail="Storage registry not found")
 
-    adapter = adapters.storage(registry)
-
-    # Inspect backend objects through the adapter.
+    # Inspect backend objects through a direct S3 connection.
     try:
-        objects = await adapter.objects(bucket_name)
+        objects = await storage_utils.objects(registry, bucket_name)
     except Exception as exc:
         logger.exception("Failed to inspect objects in bucket '%s' for registry '%s': %r", bucket_name, registry_id, exc)
         raise HTTPException(status_code=503, detail="Storage objects unavailable") from exc

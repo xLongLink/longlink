@@ -43,23 +43,23 @@ async def provision_application_runtime_resources(
 
     # Ensure object storage exists before the workload receives backend credentials.
     storage = adapters.storage(storage_registry)
-    await storage.bucket(shared)
-    await storage.bucket(bucket)
+    await storage.create(shared)
+    await storage.create(bucket)
 
     # Reuse stored runtime credentials or create provider-scoped credentials for this application.
     credentials = applications.storage_runtime_credentials(application)
     if credentials is None:
-        credentials = await storage.runtime_credentials(f"longlink-{application.id.hex}", bucket, shared)
+        credentials = await storage.credentials(bucket, "write")
 
         # Persist credentials immediately so later cleanup operations can revoke them.
         try:
             persisted = await applications.set_storage_runtime_credentials(application.id, credentials)
         except Exception:
-            await storage.revoke_runtime_credentials(credentials)
+            await storage.revoke(bucket)
             raise
 
         if persisted is None:
-            await storage.revoke_runtime_credentials(credentials)
+            await storage.revoke(bucket)
             raise RuntimeError("Application no longer exists")
 
     connection = await db.schema(organization.id, application.id)

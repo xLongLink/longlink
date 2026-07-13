@@ -134,10 +134,9 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
                         """
                     ),
                     {"id": UUID("22222222-2222-2222-2222-222222222222")},
-                )
+        )
 
         tables = await adapter.table_columns(database_name, schema_name)
-        table_rows = await adapter.table_rows(database_name, schema_name, "runtime_items")
         schemas = await adapter.schemas(database_name)
         databases = await adapter.databases()
         schema_usage = await adapter.schema_usage(database_name)
@@ -156,7 +155,6 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         assert shared_user == {"email": "owner@example.com", "role": "owner"}
         assert deleted_at is not None
         assert [table["name"] for table in tables] == ["runtime_items"]
-        assert table_rows["rows"] == [{"id": "1", "name": "Widget"}]
         assert {schema_name, "shared"} <= set(schemas)
         assert database_name in databases
         assert {item["name"] for item in schema_usage} >= {schema_name, "shared"}

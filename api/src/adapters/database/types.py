@@ -24,11 +24,3 @@ class DatabaseTableColumns(TypedDict):
     name: str
     schema_name: str
     columns: list[DatabaseTableColumn]
-
-
-class DatabaseTableRows(TypedDict):
-    """Describe preview rows for one database table."""
-
-    name: str
-    schema_name: str
-    rows: list[dict[str, str]]

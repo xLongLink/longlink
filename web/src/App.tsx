@@ -132,14 +132,6 @@ export function getRoutes(mode = import.meta.env.MODE) {
             ),
         },
         {
-            path: 'orgs/:organization/database/:databaseResourceType/:databaseResource/tables/:databaseTable',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="database" />
-                </Auth>
-            ),
-        },
-        {
             path: 'orgs/:organization/storage',
             element: (
                 <Auth requiredRole="user">
@@ -197,14 +189,6 @@ export function getRoutes(mode = import.meta.env.MODE) {
         },
         {
             path: 'orgs/:organization/settings/database/:settingsDatabaseResourceType/:settingsDatabaseResource',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="settings" />
-                </Auth>
-            ),
-        },
-        {
-            path: 'orgs/:organization/settings/database/:settingsDatabaseResourceType/:settingsDatabaseResource/tables/:settingsDatabaseTable',
             element: (
                 <Auth requiredRole="user">
                     <Organization sectionName="settings" />

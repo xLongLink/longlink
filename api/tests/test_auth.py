@@ -1,7 +1,6 @@
 import pytest
 from src import auth as auth_module
 from uuid import UUID
-from types import SimpleNamespace
 from fastapi import HTTPException
 from src.routes import auth as auth_routes
 from src.routes import users as users_routes
@@ -33,11 +32,11 @@ class OidcCallbackClientStub:
         self.userinfo = userinfo
         self.authorize_calls = 0
 
-    async def authorize_access_token(self, request: RequestStub) -> SimpleNamespace:
+    async def authorize_access_token(self, request: RequestStub) -> dict[str, object]:
         """Record authorization-code exchange and return token claims."""
 
         self.authorize_calls += 1
-        return SimpleNamespace(userinfo=self.userinfo, model_dump=lambda mode="python": {})
+        return {"userinfo": self.userinfo}
 
 
 class OAuthStub:

@@ -75,27 +75,13 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
     )
     registry_id = create_response.json()["id"]
 
-    class FakeMinIO:
-        def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
-            """Store storage registry configuration for assertions."""
+    async def fake_buckets(registry) -> list[str]:
+        """Return fake bucket names from the storage backend."""
 
-            self.endpoint_url = endpoint_url
-            self.access_key_id = access_key_id
-            self.secret_access_key = secret_access_key
+        assert str(registry.id) == registry_id
+        return ["alpha", "acme-shared", "acme-dashboard"]
 
-        async def buckets(self) -> list[str]:
-            """Return fake bucket names from the storage backend."""
-
-            return ["alpha", "acme-shared", "acme-dashboard"]
-
-    monkeypatch.setattr(
-        "src.routes.storages.adapters.storage",
-        lambda registry: FakeMinIO(
-            registry.endpoint_url,
-            registry.access_key_id,
-            registry.secret_access_key,
-        ),
-    )
+    monkeypatch.setattr("src.routes.storages.storage_utils.buckets", fake_buckets)
 
     # Act
     response = client.get(f"/api/storages/{registry_id}/buckets")
@@ -129,35 +115,21 @@ async def test_storage_object_endpoint_returns_bucket_objects(
     )
     registry_id = create_response.json()["id"]
 
-    class FakeMinIO:
-        def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
-            """Store storage registry configuration for assertions."""
+    async def fake_objects(registry, bucket_name: str, *, limit: int = 1000) -> list[dict[str, object]]:
+        """Return fake object metadata for one bucket."""
 
-            self.endpoint_url = endpoint_url
-            self.access_key_id = access_key_id
-            self.secret_access_key = secret_access_key
+        assert str(registry.id) == registry_id
+        assert bucket_name == "alpha"
+        assert limit == 1000
+        return [
+            {
+                "key": "reports/july.csv",
+                "size": 123,
+                "etag": '"abc123"',
+            }
+        ]
 
-        async def objects(self, bucket_name: str, *, limit: int = 1000) -> list[dict[str, object]]:
-            """Return fake object metadata for one bucket."""
-
-            assert bucket_name == "alpha"
-            assert limit == 1000
-            return [
-                {
-                    "key": "reports/july.csv",
-                    "size": 123,
-                    "etag": '"abc123"',
-                }
-            ]
-
-    monkeypatch.setattr(
-        "src.routes.storages.adapters.storage",
-        lambda registry: FakeMinIO(
-            registry.endpoint_url,
-            registry.access_key_id,
-            registry.secret_access_key,
-        ),
-    )
+    monkeypatch.setattr("src.routes.storages.storage_utils.objects", fake_objects)
 
     # Act
     response = client.get(f"/api/storages/{registry_id}/buckets/alpha/objects")

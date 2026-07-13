@@ -12,9 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     useOrganizationDatabaseResourceTables,
     useOrganizationDatabaseResources,
-    useOrganizationDatabaseTableRows,
 } from '@/data/organization';
-import { DatabaseTableRows } from './DatabaseTableRows';
 
 type DatabaseProps = {
     organization: string;
@@ -22,10 +20,10 @@ type DatabaseProps = {
     isLoading: boolean;
 };
 
-/** Renders organization database resources and full-page table previews. */
+/** Renders organization database resources and table metadata. */
 export default function Database({ organization, organizationDetails, isLoading }: DatabaseProps) {
     const { t } = useTranslation();
-    const { databaseResource = '', databaseResourceType = '', databaseTable = '' } = useParams();
+    const { databaseResource = '', databaseResourceType = '' } = useParams();
     const {
         items: databaseResources,
         error: databaseResourcesError,
@@ -35,7 +33,6 @@ export default function Database({ organization, organizationDetails, isLoading 
     const organizationAvatar = organizationDetails?.avatar ?? '';
     const selectedKind = databaseResourceType === 'schemas' ? 'schema' : null;
     const isDetailPage = databaseResourceType.length > 0 || databaseResource.length > 0;
-    const isTablePage = databaseTable.length > 0;
 
     // Subpages are path-selected; the root page intentionally stays as a list-only view.
     const selectedResource =
@@ -53,34 +50,14 @@ export default function Database({ organization, organizationDetails, isLoading 
         error: databaseResourceTablesError,
         isLoading: databaseResourceTablesIsLoading,
     } = useOrganizationDatabaseResourceTables(organizationDetails?.id ?? '', databaseResourceTablesRequest);
-    const selectedTableName = databaseTable;
-    const selectedTable = databaseResourceTables.find((table) => table.name === selectedTableName) ?? null;
-    const databaseTableRowsRequest = selectedResource && selectedTable && isTablePage ? selectedResource : null;
-    const {
-        data: databaseTableRows,
-        error: databaseTableRowsError,
-        isLoading: databaseTableRowsIsLoading,
-    } = useOrganizationDatabaseTableRows(organizationDetails?.id ?? '', databaseTableRowsRequest, selectedTableName);
-    const tableDetailError =
-        detailError ??
-        (!databaseResourceTablesIsLoading && isTablePage && !selectedTable
-            ? new Error(t('resources.databaseTableNotFound', { name: selectedTableName }))
-            : null);
 
-    // Render schema and table detail pages before the root list.
+    // Render schema detail pages before the root list.
     if (isDetailPage) {
         const databaseTableColumns: Array<ColumnDef<ApiOrganizationDatabaseTable>> = [
             {
                 accessorKey: 'name',
                 header: t('columns.table'),
-                cell: ({ row, getValue }) => (
-                    <Link
-                        to={`/orgs/${organization}/database/${databaseResourceType}/${encodeURIComponent(databaseResource)}/tables/${encodeURIComponent(row.original.name)}`}
-                        className="font-medium text-primary underline-offset-4 hover:underline"
-                    >
-                        {getValue<string>()}
-                    </Link>
-                ),
+                cell: ({ getValue }) => <span className="font-medium text-foreground">{getValue<string>()}</span>,
                 meta: { className: 'min-w-52' },
             },
             {
@@ -99,16 +76,10 @@ export default function Database({ organization, organizationDetails, isLoading 
         return (
             <div className="space-y-6">
                 <Link
-                    to={
-                        isTablePage && selectedKind === 'schema'
-                            ? `/orgs/${organization}/database/${databaseResourceType}/${encodeURIComponent(databaseResource)}`
-                            : `/orgs/${organization}/database`
-                    }
+                    to={`/orgs/${organization}/database`}
                     className="inline-flex text-sm font-medium text-foreground hover:underline"
                 >
-                    {isTablePage && selectedKind === 'schema'
-                        ? t('resources.backToSchema')
-                        : t('resources.backToDatabase')}
+                    {t('resources.backToDatabase')}
                 </Link>
 
                 {isLoading || databaseResourcesIsLoading ? null : detailError ? (
@@ -117,16 +88,6 @@ export default function Database({ organization, organizationDetails, isLoading 
                     <div className="rounded-md border p-4 text-sm text-destructive">
                         {databaseResourceTablesError.message}
                     </div>
-                ) : isTablePage ? (
-                    tableDetailError ? (
-                        <div className="rounded-md border p-4 text-sm text-destructive">{tableDetailError.message}</div>
-                    ) : databaseTableRowsIsLoading ? null : databaseTableRowsError ? (
-                        <div className="rounded-md border p-4 text-sm text-destructive">
-                            {databaseTableRowsError.message}
-                        </div>
-                    ) : selectedTable && databaseTableRows ? (
-                        <DatabaseTableRows table={selectedTable} rows={databaseTableRows.rows} />
-                    ) : null
                 ) : databaseResourceTables.length ? (
                     <DataTable columns={databaseTableColumns} data={databaseResourceTables} />
                 ) : (
