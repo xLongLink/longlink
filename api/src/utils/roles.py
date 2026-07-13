@@ -14,12 +14,14 @@ def rank(value: RoleName | None) -> int:
     if value is None:
         return 0
 
+    role_type = type(value)
+
     # Platform roles resolve through their own rank scale.
-    if type(value) is PlatformRoles:
+    if role_type is PlatformRoles:
         return PlatformRoleRanks[value.name].value
 
     # Organization and application roles share the same rank scale.
-    if type(value) in {OrganizationRoles, ApplicationRoles}:
+    if role_type in {OrganizationRoles, ApplicationRoles}:
         return Ranks[value.name].value
 
     raise ValueError(f"Unknown role '{value}'")
