@@ -17,9 +17,19 @@ def create_fs(env: Envs, bucket: str) -> AbstractFileSystem:
 
     # Production uses remote object storage supplied by the platform.
     else:
+        # Require a bucket so production storage is never exposed from its backend root.
+        if not bucket:
+            raise ValueError("Production storage settings require a bucket")
+
         # Require all production storage credentials before constructing the backend.
-        if env.STORAGE_ENDPOINT_URL is None or env.STORAGE_USERNAME is None or env.STORAGE_PASSWORD is None:
-            raise ValueError("Production storage settings require endpoint URL, username, and password")
+        if (
+            env.STORAGE_ENDPOINT_URL is None
+            or env.STORAGE_USERNAME is None
+            or env.STORAGE_PASSWORD is None
+        ):
+            raise ValueError(
+                "Production storage settings require endpoint URL, username, and password"
+            )
 
         # Production runtimes receive S3 connection options from the LongLink Platform.
         filesystem = fsspec.filesystem(
@@ -29,7 +39,7 @@ def create_fs(env: Envs, bucket: str) -> AbstractFileSystem:
             secret=env.STORAGE_PASSWORD,
         )
 
-    # A bucket turns the filesystem into a scoped view; an empty bucket keeps the backend root.
+    # Scope configured buckets while keeping local storage roots available for development and tests.
     if bucket:
         return DirFileSystem(path=bucket, fs=filesystem)
 

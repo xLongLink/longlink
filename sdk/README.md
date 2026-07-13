@@ -37,11 +37,11 @@ This builds the SDK web bundle, recreates `sdk/dev`, links that generated app to
 ## Testing
 
 ```bash
-uv sync --extra runtime --extra cli --extra dev
+uv sync --extra dev
 uv run pytest tests
 ```
 
-The base `longlink` package contains the lightweight `longlink.tenant` models, database migrations, and storage contracts used by the Platform API. Applications install `longlink[runtime]` for FastAPI, database drivers, XML, and storage backends.
+The `longlink` package includes the application runtime and the shared tenant models and migrations used by the Platform API.
 
 <br/>
 <br/>

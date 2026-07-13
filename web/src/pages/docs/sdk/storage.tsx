@@ -86,7 +86,10 @@ export const content = (
         <Heading id="usage" level="h2">
             Usage
         </Heading>
-        <CodeBlock language="python">{`from longlink import fs
+        <CodeBlock language="python">{`from longlink import Envs, create_fs
+
+env = Envs()
+fs = create_fs(env, env.STORAGE_BUCKET or "")
 
 with fs.open("reports/example.txt", "wb") as f:
     f.write(b"hello")`}</CodeBlock>
@@ -96,10 +99,13 @@ with fs.open("reports/example.txt", "wb") as f:
         <P>
             Organization-level assets live in shared storage. The SDK exposes <Code>longlink.assets.logo()</Code> for
             the organization logo, using a bundled fallback in development and testing and the organization shared
-            bucket in production.
+            bucket in production. Pass the runtime environment and shared filesystem explicitly.
         </P>
-        <CodeBlock language="python">{`from longlink import assets
+        <CodeBlock language="python">{`import longlink.assets as assets
+from longlink import Envs, create_fs
 
-logo = assets.logo()`}</CodeBlock>
+env = Envs()
+shared_fs = create_fs(env, env.STORAGE_SHARED_BUCKET or "")
+logo = assets.logo(env, shared_fs)`}</CodeBlock>
     </Stack>
 );

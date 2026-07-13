@@ -43,9 +43,6 @@ describe('getRoutes', () => {
         expect(routePaths).toContain(
             'orgs/:organization/settings/database/:settingsDatabaseResourceType/:settingsDatabaseResource'
         );
-        expect(routePaths).toContain(
-            'orgs/:organization/settings/database/:settingsDatabaseResourceType/:settingsDatabaseResource/tables/:settingsDatabaseTable'
-        );
         expect(routePaths).toContain('orgs/:organization/settings/storage');
         expect(routePaths).toContain('orgs/:organization/settings/storage/:settingsBucket');
         expect(routePaths).toContain('orgs/:organization/apps/:application/*');

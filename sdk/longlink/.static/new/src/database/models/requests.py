@@ -1,9 +1,9 @@
 from typing import ClassVar
-from longlink import db
+from longlink import Table
 from sqlmodel import Field
 
 
-class PurchaseRequest(db.Table, table=True):
+class PurchaseRequest(Table, table=True):
     """Purchase request table owned by this application schema."""
 
     __tablename__: ClassVar[str] = "purchase_requests"

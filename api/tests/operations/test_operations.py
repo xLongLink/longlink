@@ -3,17 +3,17 @@ import asyncio
 from uuid import UUID
 from types import SimpleNamespace
 from datetime import UTC, datetime
+from src.utils import jobs as operation_worker
 from src.routes import operations as operation_routes
-from src.operations import worker as operation_worker
+from src.operations import applications as application_operations
+from src.operations import organizations as organization_operations
+from src.utils.jobs import OperationOutcomeState
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
 from src.models.locations import LocationProvider, LocationResponse
 from src.models.operations import OperationKind
-from src.operations.outcomes import OperationOutcomeState
 from src.models.organizations import OrganizationDetails
 from src.database.models.users import User
-from src.operations.implementation import applications as application_operations
-from src.operations.implementation import organizations as organization_operations
 from src.database.models.operations import Operation
 from src.database.models.applications import Application
 

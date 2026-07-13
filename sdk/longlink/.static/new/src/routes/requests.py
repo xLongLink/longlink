@@ -2,7 +2,8 @@ import urllib.parse
 from uuid import uuid4
 from fastapi import File, UploadFile, HTTPException
 from pathlib import PurePosixPath
-from longlink import Router, fs
+from longlink import Router
+from src.resources import fs
 from fastapi.responses import Response
 from src.schemas.requests import (PurchaseRequestRead, PurchaseRequestCreate,
                                   RequestAttachmentRead,

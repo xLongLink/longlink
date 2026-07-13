@@ -1,8 +1,8 @@
 import sys
 from types import SimpleNamespace
 from typing import Any
-from sqlmodel import SQLModel
 from longlink.database import migrations as database_migrations
+from longlink.database.base import database_metadata
 from longlink.database.migrations import (include_object,
                                           load_application_models)
 
@@ -15,10 +15,10 @@ def test_migration_loader_discovers_nested_database_models(tmp_path, monkeypatch
     model_path = tmp_path / "src" / "database" / "models" / "inventory.py"
     model_path.parent.mkdir(parents=True)
     model_path.write_text(
-        "from longlink import db\n"
+        "from longlink import Table\n"
         "from sqlmodel import Field\n"
         "\n\n"
-        "class NestedInventoryItem(db.Table, table=True):\n"
+        "class NestedInventoryItem(Table, table=True):\n"
         "    \"\"\"Nested inventory table.\"\"\"\n"
         "\n"
         f"    __tablename__ = \"{table_name}\"\n"
@@ -31,11 +31,11 @@ def test_migration_loader_discovers_nested_database_models(tmp_path, monkeypatch
     try:
         load_application_models()
 
-        assert table_name in SQLModel.metadata.tables
+        assert table_name in database_metadata.tables
     finally:
-        table = SQLModel.metadata.tables.get(table_name)
+        table = database_metadata.tables.get(table_name)
         if table is not None:
-            SQLModel.metadata.remove(table)
+            database_metadata.remove(table)
         sys.modules.pop(module_name, None)
 
 

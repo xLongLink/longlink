@@ -16,7 +16,7 @@ api\:install:
 
 # Install SDK Python development dependencies.
 sdk\:install:
-	cd sdk && uv sync --extra runtime --extra cli --extra dev
+	cd sdk && uv sync --extra dev
 
 
 # Install web JavaScript dependencies.

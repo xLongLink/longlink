@@ -18,7 +18,10 @@ class Application(SQLModel, table=True):
     """Represent an application installed in the platform."""
 
     __tablename__: ClassVar[str] = "applications"
-    __table_args__ = (UniqueConstraint("organization_id", "slug"),)
+    __table_args__ = (
+        UniqueConstraint("organization_id", "id", name="uq_applications_organization_id_id"),
+        UniqueConstraint("organization_id", "slug"),
+    )
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)

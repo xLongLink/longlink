@@ -8,4 +8,4 @@ def test_alembic_script_location_returns_packaged_migrations() -> None:
 
     assert script_location.name == "alembic"
     assert (script_location / "env.py").exists()
-    assert (script_location / "versions" / "20260706_0001_shared_users.py").exists()
+    assert (script_location / "versions" / "20260713_0001_initial.py").exists()

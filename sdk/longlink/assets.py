@@ -1,32 +1,29 @@
 from typing import cast
-from longlink.storage import create_fs
+from fsspec.spec import AbstractFileSystem
 from longlink.constants import ROOT
 from longlink.tenant.storage import assets as organization_assets
 from longlink.utils.settings import Envs
 
 LOCAL_LOGO_PATH = ROOT / ".static" / "assets" / "logo.svg"
 
-_env = Envs()
-_shared_fs = create_fs(_env, _env.STORAGE_SHARED_BUCKET or "")
 
-
-def logo() -> organization_assets.OrganizationAsset:
+def logo(env: Envs, shared_fs: AbstractFileSystem) -> organization_assets.OrganizationAsset:
     """Return the organization logo asset."""
 
     asset_path = organization_assets.logo_path()
 
     # Local runtimes use the SDK-managed fallback while production reads the organization bucket.
-    if _env.ENV in {"development", "testing"}:
+    if env.ENV in {"development", "testing"}:
         content = LOCAL_LOGO_PATH.read_bytes()
 
     # Production reads the organization asset from shared storage.
     else:
         # Fail early when production has no shared asset bucket configured.
-        if _env.STORAGE_SHARED_BUCKET is None:
+        if env.STORAGE_SHARED_BUCKET is None:
             raise ValueError("Organization assets require LONGLINK_STORAGE_SHARED_BUCKET in production")
 
         # Read the organization asset from shared storage.
-        with _shared_fs.open(asset_path, "rb") as asset_file:
+        with shared_fs.open(asset_path, "rb") as asset_file:
             content = cast(bytes, asset_file.read())
 
     return organization_assets.organization_asset(

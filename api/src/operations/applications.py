@@ -1,8 +1,6 @@
 from src import adapters
 from datetime import timedelta
-from src.utils import names
-from src.operations import outcomes as outcome
-from src.operations import registry
+from src.utils import jobs, names
 from src.models.statuses import ApplicationStatus
 from longlink.tenant.utils import utcnow
 from src.database.services import database, registries, applications, organizations
@@ -22,8 +20,8 @@ FAILED_CONTAINER_WAITING_REASONS = {
 }
 
 
-@registry.operation_handler(OperationKind.application_verify)
-async def verify(operation: Operation) -> outcome.OperationOutcome:
+@jobs.operation_handler(OperationKind.application_verify)
+async def verify(operation: Operation) -> jobs.OperationOutcome:
     """Verify one application runtime startup."""
 
     # Application verification operations must reference the application row.
@@ -45,9 +43,9 @@ async def verify(operation: Operation) -> outcome.OperationOutcome:
         expired = utcnow() - operation.created_at >= timedelta(seconds=15 * 60)
         if expired:
             await applications.set_status(application.id, ApplicationStatus.failed)
-            return outcome.fail("Application startup verification timed out")
+            return jobs.fail("Application startup verification timed out")
 
-        return outcome.defer()
+        return jobs.defer()
 
     # Missing compute registries leave verification pending until timeout.
     registry = await registries.application_compute(application, organization.location_id)
@@ -60,7 +58,7 @@ async def verify(operation: Operation) -> outcome.OperationOutcome:
             # A ready deployment is enough to complete verification without pod inspection.
             if await adapter.ready(application_id):
                 await applications.set_status(application.id, ApplicationStatus.running)
-                return outcome.complete()
+                return jobs.complete()
 
             current = await adapter.pod(application_id)
 
@@ -114,24 +112,24 @@ async def verify(operation: Operation) -> outcome.OperationOutcome:
     # Ready applications move to running and complete the operation.
     if ready:
         await applications.set_status(application.id, ApplicationStatus.running)
-        return outcome.complete()
+        return jobs.complete()
 
     # Dead applications fail both the application row and the operation.
     if dead:
         await applications.set_status(application.id, ApplicationStatus.failed)
-        return outcome.fail("Application crashed during startup")
+        return jobs.fail("Application crashed during startup")
 
     # Pending applications eventually fail if they never become ready.
     expired = utcnow() - operation.created_at >= timedelta(seconds=15 * 60)
     if expired:
         await applications.set_status(application.id, ApplicationStatus.failed)
-        return outcome.fail("Application startup verification timed out")
+        return jobs.fail("Application startup verification timed out")
 
-    return outcome.defer()
+    return jobs.defer()
 
 
-@registry.operation_handler(OperationKind.application_remove)
-async def remove(operation: Operation) -> outcome.OperationOutcome:
+@jobs.operation_handler(OperationKind.application_remove)
+async def remove(operation: Operation) -> jobs.OperationOutcome:
     """Remove runtime resources for one deleted application."""
 
     # Application removal operations must reference the application row.
@@ -141,12 +139,12 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
     # Look up deleted records before deciding whether runtime resources remain.
     application = await applications.get(operation.application_id, include_deleted=True)
     if application is None:
-        return outcome.complete()
+        return jobs.complete()
 
     # Look up the deleted organization before removing namespace resources.
     organization = await organizations.get(application.organization_id, include_deleted=True)
     if organization is None:
-        return outcome.complete()
+        return jobs.complete()
 
     # Remove workload resources only when the app has a compute backend to target.
     registry = await registries.application_compute(application, organization.location_id)
@@ -170,4 +168,4 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
         await adapter.revoke(bucket)
         await adapter.delete(bucket)
 
-    return outcome.complete()
+    return jobs.complete()

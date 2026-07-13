@@ -1,4 +1,4 @@
-from longlink import db
+from longlink import get_session
 from sqlmodel import select
 from sqlalchemy.orm import selectinload
 from src.database.models.requests import PurchaseRequest
@@ -7,7 +7,7 @@ from src.database.models.requests import PurchaseRequest
 async def list_requests() -> list[PurchaseRequest]:
     """Return purchase requests with their platform-managed audit users."""
 
-    async with db.get_session() as session:
+    async with get_session() as session:
         # Load audit relationships from LongLink's shared organization users for display.
         statement = (
             select(PurchaseRequest)
@@ -26,7 +26,7 @@ async def list_requests() -> list[PurchaseRequest]:
 async def get_request(request_id: int) -> PurchaseRequest | None:
     """Return one purchase request with its platform-managed audit users."""
 
-    async with db.get_session() as session:
+    async with get_session() as session:
         # Load audit relationships from LongLink's shared organization users for display.
         statement = (
             select(PurchaseRequest)
@@ -56,7 +56,7 @@ async def create_request(title: str, amount: float, vendor: str, justification: 
         justification=justification,
     )
 
-    async with db.get_session() as session:
+    async with get_session() as session:
         session.add(request)
         await session.commit()
         await session.refresh(request)
@@ -72,7 +72,7 @@ async def create_request(title: str, amount: float, vendor: str, justification: 
 async def update_request_status(request_id: int, status: str) -> PurchaseRequest | None:
     """Update one purchase request workflow status."""
 
-    async with db.get_session() as session:
+    async with get_session() as session:
         request = await session.get(PurchaseRequest, request_id)
         if request is None:
             return None

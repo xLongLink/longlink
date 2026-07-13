@@ -1,7 +1,7 @@
 import pytest
 from types import SimpleNamespace
 from typing import Any, ClassVar
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field
 from longlink.database import base as database_base
 from longlink.utils.settings import Envs
 
@@ -34,7 +34,7 @@ def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> Non
         assert hasattr(FeatureAuditItem, "updated_by")
         assert hasattr(FeatureAuditItem, "deleted_by")
     finally:
-        SQLModel.metadata.remove(getattr(FeatureAuditItem, "__table__"))
+        database_base.database_metadata.remove(getattr(FeatureAuditItem, "__table__"))
 
 
 def test_create_engine_selects_database_url_by_environment(monkeypatch) -> None:

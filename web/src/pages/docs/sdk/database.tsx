@@ -25,10 +25,10 @@ export const content = (
             Database
         </Heading>
         <P>
-            The SDK exposes a small database API for application-owned relational data. Use <Code>db.Table</Code> to
-            define <A href="https://sqlmodel.tiangolo.com/">SQLModel</A> tables with LongLink audit fields, and use{' '}
-            <Code>async with db.get_session()</Code> to open an async{' '}
-            <A href="https://www.sqlalchemy.org/">SQLAlchemy</A> database session.
+            The SDK exposes a small database API for application-owned relational data. Use <Code>Table</Code> to define{' '}
+            <A href="https://sqlmodel.tiangolo.com/">SQLModel</A> tables with LongLink audit fields, and use{' '}
+            <Code>async with get_session()</Code> to open an async <A href="https://www.sqlalchemy.org/">SQLAlchemy</A>{' '}
+            database session.
         </P>
         <div className="overflow-hidden rounded-md border">
             <Table>
@@ -88,15 +88,15 @@ export const content = (
         <Heading id="usage" level="h2">
             Usage
         </Heading>
-        <CodeBlock language="python">{`from longlink import db
+        <CodeBlock language="python">{`from longlink import Table, get_session
 from sqlmodel import Field
 
-class Project(db.Table, table=True):
+class Project(Table, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
 
 async def create_project() -> None:
-    async with db.get_session() as session:
+    async with get_session() as session:
         session.add(Project(name="Launch"))
         await session.commit()`}</CodeBlock>
         <Heading id="migrations" level="h2">
@@ -123,14 +123,14 @@ async def create_project() -> None:
             show who created or changed a row.
         </P>
         <P>
-            Models that inherit from <Code>db.Table</Code> expose user relationships such as <Code>created_by</Code> and{' '}
+            Models that inherit from <Code>Table</Code> expose user relationships such as <Code>created_by</Code> and{' '}
             <Code>updated_by</Code>. Keep your own domain fields separate from platform user data.
         </P>
-        <CodeBlock language="python">{`from longlink import User, db
+        <CodeBlock language="python">{`from longlink import User, get_session
 from sqlmodel import select
 
 async def list_project_creators() -> list[User | None]:
-    async with db.get_session() as session:
+    async with get_session() as session:
         result = await session.exec(select(Project))
         return [project.created_by for project in result.all()]`}</CodeBlock>
     </Stack>

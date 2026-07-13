@@ -1,15 +1,15 @@
 import asyncio
 from typing import Any
 from alembic import context
-from sqlmodel import SQLModel
 from sqlalchemy.engine import Connection
-from longlink.database.base import create_engine, validate_database_schema
+from longlink.database.base import (create_engine, database_metadata,
+                                    validate_database_schema)
 from longlink.utils.settings import Envs
 from longlink.database.migrations import include_object
 
 settings = Envs()
 engine = create_engine(settings)
-target_metadata = SQLModel.metadata
+target_metadata = database_metadata
 migration_context_options: dict[str, Any] = {
     "target_metadata": target_metadata,
     "include_object": include_object,

@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from src.operations import execute
+from src.utils.jobs import execute
 from src.database.services import users, compute, database, locations, operations, applications, organizations
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationStatus
@@ -80,11 +80,11 @@ async def test_execute_application_verify_operation_completes_running_applicatio
 
 
     monkeypatch.setattr(
-        "src.operations.implementation.applications.registries.application_compute",
+        "src.operations.applications.registries.application_compute",
         fake_application_compute,
     )
     monkeypatch.setattr(
-        "src.operations.implementation.applications.Kubernetes",
+        "src.operations.applications.Kubernetes",
         FakeKubernetes,
     )
 
@@ -156,11 +156,11 @@ async def test_execute_application_verify_operation_marks_failed_when_dead(monke
 
 
     monkeypatch.setattr(
-        "src.operations.implementation.applications.registries.application_compute",
+        "src.operations.applications.registries.application_compute",
         fake_application_compute,
     )
     monkeypatch.setattr(
-        "src.operations.implementation.applications.Kubernetes",
+        "src.operations.applications.Kubernetes",
         FakeKubernetes,
     )
 
@@ -230,11 +230,11 @@ async def test_execute_application_verify_operation_releases_when_not_ready(monk
 
 
     monkeypatch.setattr(
-        "src.operations.implementation.applications.registries.application_compute",
+        "src.operations.applications.registries.application_compute",
         fake_application_compute,
     )
     monkeypatch.setattr(
-        "src.operations.implementation.applications.Kubernetes",
+        "src.operations.applications.Kubernetes",
         FakeKubernetes,
     )
 

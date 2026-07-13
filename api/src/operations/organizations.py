@@ -1,8 +1,6 @@
 from src import adapters
 from uuid import UUID
-from src.utils import names
-from src.operations import outcomes as outcome
-from src.operations import registry
+from src.utils import jobs, names
 from src.database.services import database, registries, organizations
 from src.models.operations import OperationKind
 from src.runtime.kubernetes import Kubernetes
@@ -10,8 +8,8 @@ from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
 
-@registry.operation_handler(OperationKind.organization_remove)
-async def remove(operation: Operation) -> outcome.OperationOutcome:
+@jobs.operation_handler(OperationKind.organization_remove)
+async def remove(operation: Operation) -> jobs.OperationOutcome:
     """Remove runtime resources for one deleted organization."""
 
     # Organization removal operations must reference the organization row.
@@ -22,7 +20,7 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
     # Look up the deleted organization before removing runtime resources.
     organization = await organizations.get(organization_id, include_deleted=True)
     if organization is None:
-        return outcome.complete()
+        return jobs.complete()
 
     # Load deleted applications so their resources are removed before shared organization resources.
     apps = await organizations.applications(organization.id, include_deleted=True)
@@ -86,4 +84,4 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
         adapter = adapters.storage(registry)
         await adapter.delete(names.organization_shared_bucket(organization.slug))
 
-    return outcome.complete()
+    return jobs.complete()

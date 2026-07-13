@@ -6,7 +6,7 @@ from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel
 from contextlib import asynccontextmanager
 from sqlalchemy import Uuid, Column, String
-from sqlalchemy.orm import relationship, declared_attr
+from sqlalchemy.orm import registry, relationship, declared_attr
 from collections.abc import AsyncIterator
 from sqlalchemy.engine import URL
 from longlink.tenant.utils import utcnow
@@ -20,11 +20,14 @@ from longlink.tenant.database.types import UTCDateTime
 # SQLModel accepts the SQLAlchemy type instance, while Pyright needs a looser value.
 UTC_DATETIME_TYPE: Any = UTCDateTime()
 DATABASE_SCHEMA_PATTERN = re.compile(r"^[A-Za-z0-9_](?:[A-Za-z0-9_-]{0,61}[A-Za-z0-9_])?$")
+database_registry = registry()
+database_metadata = database_registry.metadata
 
 
-class Base(SQLModel):
+class Base(SQLModel, registry=database_registry):
     """Base SQLModel for DB tables."""
 
+    metadata = database_metadata
     model_config: ClassVar[ConfigDict] = ConfigDict(ignored_types=(declared_attr,))
 
 
@@ -236,6 +239,6 @@ async def get_session_maker() -> async_sessionmaker[AsyncSession]:
     if str(_engine.url).startswith("sqlite+"):
         # Create tables through a transactional SQLite connection.
         async with _engine.begin() as conn:
-            await conn.run_sync(SQLModel.metadata.create_all)
+            await conn.run_sync(database_metadata.create_all)
 
     return Session

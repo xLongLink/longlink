@@ -3,14 +3,14 @@ from alembic import op
 from collections.abc import Sequence
 
 # revision identifiers, used by Alembic.
-revision: str = "20260706_0001"
+revision: str = "20260713_0001"
 down_revision: str | Sequence[str] | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    """Create the tenant shared users table."""
+    """Create the initial tenant shared schema."""
 
     op.create_table(
         "users",
@@ -27,6 +27,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Drop the tenant shared users table."""
+    """Drop the initial tenant shared schema."""
 
     op.drop_table("users")
