@@ -1,8 +1,8 @@
 # Contributing to LongLink
 
-The control plane owns authentication, authorization, orchestration, storage, and application routing.
+The LongLink Platform owns authentication, authorization, orchestration, storage, and application routing.
 
-The web package owns the shared frontend runtime and the XML rendering path used by both the control plane and SDK bundles.
+The web package owns the shared frontend runtime and the XML rendering path used by both platform and SDK bundles.
 
 The SDK owns application-facing Python helpers, CLI commands, database helpers, and packaged XML schema assets.
 
@@ -49,7 +49,7 @@ make web:tests      # Run web tests, typecheck, and bundle builds
 make up             # Start the services, initialize the cluster
 make web            # Run the Vite web app
 make seed           # Prepare local services and seed data without starting the API server
-make api            # Run the control plane after seeding
+make api            # Run the LongLink Platform API after seeding
 
 make down           # Stop services, remove local volumes, and remove the cluster
 ```
@@ -64,8 +64,8 @@ make sdk            # Build the SDK web bundle and run the generated SDK app
 
 ```bash
 make seed           # Start local services, build/push the SDK app image, migrate, and seed
-make api            # Start the control plane API
-make web            # Start the Vite control-plane frontend
+make api            # Start the LongLink Platform API
+make web            # Start the Vite platform frontend
 ```
 
 After `make api` and `make web` are running, SDK image changes can be refreshed without restarting them:

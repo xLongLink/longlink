@@ -36,7 +36,7 @@ def compiled_sql(statement: CompilableStatement) -> str:
 
 
 async def test_sync_upserts_user_state_from_payload() -> None:
-    """Synchronize tenant users from the control-plane payload."""
+    """Synchronize tenant users from the platform payload."""
 
     connection = FakeConnection()
     timestamp = datetime(2026, 7, 6, tzinfo=UTC)
@@ -64,7 +64,7 @@ async def test_sync_upserts_user_state_from_payload() -> None:
 
 
 async def test_sync_does_not_infer_deactivation_from_an_empty_payload() -> None:
-    """Do nothing when the control plane sends no user rows."""
+    """Do nothing when the LongLink Platform sends no user rows."""
 
     connection = FakeConnection()
 

@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 from fastapi import HTTPException
 from datetime import UTC, datetime
 from src.utils import names
@@ -242,20 +242,26 @@ async def create(
     user: User,
     avatar: str | None = None,
     country: str = DEFAULT_COUNTRY,
+    shared_schema_url: str | None = None,
+    organization_id: UUID | None = None,
 ) -> Organization:
     """Create an organization."""
 
-    names.organization_database(slug)
+    # Validate deterministic runtime resource names before creating the row.
+    organization_id = organization_id or uuid4()
+    names.knames(slug)
     names.organization_shared_bucket(slug)
 
     # Create the organization and owner membership together.
     async with session_scope() as session:
         organization = Organization(
+            id=organization_id,
             name=name,
             slug=slug,
             avatar=avatar or "",
             country=country,
             location_id=location_id,
+            shared_schema_url=shared_schema_url,
         )
 
         # Attach the creator as the initial owner for every organization.

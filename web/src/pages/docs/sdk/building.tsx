@@ -17,13 +17,13 @@ export const content = (
             Building
         </Heading>
         <P>
-            Building turns a local SDK application into a container image that the control plane can inspect, register,
-            and deploy. The image carries LongLink metadata labels for application identity, SDK version, app version,
-            display text, and declared environment requirements.
+            Building turns a local SDK application into a container image that the LongLink Platform can inspect,
+            register, and deploy. The image carries LongLink metadata labels for application identity, SDK version,
+            application version, display text, and declared environment requirements.
         </P>
         <P>
             <Code>longlink build</Code> builds from a temporary Docker context and leaves the application folder
-            untouched. Push the resulting image to a registry the control plane can reach before creating the
+            untouched. Push the resulting image to a registry the LongLink Platform can reach before creating the
             application.
         </P>
         <CodeBlock language="bash">longlink build [--tag dev] [--registry localhost:15000] [--push]</CodeBlock>
@@ -75,7 +75,8 @@ name = "Private"`}</CodeBlock>
                     <Code>[project].version</Code>.
                 </Li>
                 <Li>
-                    <Code>title</Code> and <Code>summary</Code> provide display text for app views and registration.
+                    <Code>title</Code> and <Code>summary</Code> provide display text for application views and
+                    registration.
                 </Li>
                 <Li>
                     <Code>description</Code> falls back to <Code>[project].description</Code> when omitted from{' '}

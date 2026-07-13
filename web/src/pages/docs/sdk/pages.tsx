@@ -42,8 +42,8 @@ export const content = (
                 Folder conventions
             </Heading>
             <P>
-                SDK apps use conventional folders under <Code>src</Code>. LongLink registers these folders at startup
-                when they exist, so pages and translations can be added without writing Python route code.
+                SDK applications use conventional folders under <Code>src</Code>. LongLink registers these folders at
+                startup when they exist, so pages and translations can be added without writing Python route code.
             </P>
             <Ul>
                 <Li>
@@ -108,9 +108,9 @@ export const content = (
             </Heading>
             <P>
                 <Code>LongLink()</Code> registers XML pages and translation catalogs from conventional source folders.
-                The scaffolded app uses the defaults through <Code>LongLink()</Code>, which is equivalent to mounting
-                pages from <Code>src/pages</Code> at <Code>/pages</Code> and translations from <Code>src/i18n</Code> at{' '}
-                <Code>/i18n</Code>.
+                The scaffolded application uses the defaults through <Code>LongLink()</Code>, which is equivalent to
+                mounting pages from <Code>src/pages</Code> at <Code>/pages</Code> and translations from{' '}
+                <Code>src/i18n</Code> at <Code>/i18n</Code>.
             </P>
             <CodeBlock language="python">{`from longlink import LongLink
 
@@ -199,8 +199,8 @@ app = LongLink(
                 <Ul>
                     <Li>id: required literal query name.</Li>
                     <Li>
-                        path: required request path, resolved relative to the current app base URL and evaluated against
-                        the XML runtime scope.
+                        path: required request path, resolved relative to the current application base URL and evaluated
+                        against the XML runtime scope.
                     </Li>
                     <Li>Query is setup-only, does not render, and cannot have children.</Li>
                 </Ul>
@@ -219,7 +219,7 @@ app = LongLink(
             <Stack className="gap-2">
                 <P className="font-medium text-foreground">Parameters</P>
                 <Ul>
-                    <Li>action: optional app-relative request path.</Li>
+                    <Li>action: optional application-relative request path.</Li>
                     <Li>method: optional HTTP method. Defaults to POST.</Li>
                     <Li>json: optional expression payload sent as JSON.</Li>
                     <Li>invalidate: optional expression resolving to setup ids to refresh.</Li>

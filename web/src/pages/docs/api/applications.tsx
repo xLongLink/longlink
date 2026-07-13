@@ -81,8 +81,8 @@ export const content = (
             Applications
         </Heading>
         <P>
-            Applications are containerized LongLink SDK services deployed into an organization. The control plane reads
-            application metadata from the image, provisions runtime resources, verifies the rollout, and routes
+            Applications are containerized LongLink SDK services deployed into an organization. The LongLink Platform
+            reads application metadata from the image, provisions runtime resources, verifies the rollout, and routes
             authenticated users to the running service.
         </P>
         <P>

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class Organization(SQLModel, table=True):
-    """Represent an org namespace in the control plane."""
+    """Represent an organization namespace in the LongLink Platform."""
 
     __tablename__: ClassVar[str] = "organizations"
 
@@ -31,6 +31,9 @@ class Organization(SQLModel, table=True):
     # Location
     location: "Location" = Relationship()
     location_id: UUID = Field(foreign_key="locations.id")
+
+    # Database
+    shared_schema_url: str | None = Field(default=None, max_length=2048)
 
     # User
     created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))

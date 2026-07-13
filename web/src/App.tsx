@@ -61,7 +61,7 @@ function adminRoutes() {
 
 /** Builds the route tree for the current bundle mode. */
 export function getRoutes(mode = import.meta.env.MODE) {
-    // SDK bundle serves the app runtime without control-plane routes.
+    // SDK bundle serves the app runtime without platform routes.
     if (mode === 'sdk') {
         return [
             {
@@ -71,7 +71,7 @@ export function getRoutes(mode = import.meta.env.MODE) {
         ];
     }
 
-    // Default bundle serves the full app with control-plane routes.
+    // Default bundle serves the full app with platform routes.
     return [
         { path: '/', element: <Home /> },
         ...DOC_PAGES.map((page) => ({
@@ -242,7 +242,7 @@ export function getRoutes(mode = import.meta.env.MODE) {
     ];
 }
 
-/** Renders the SDK application without control-plane routes. */
+/** Renders the SDK application without platform routes. */
 function SdkApplicationView() {
     return <View metadata="/metadata.json" />;
 }

@@ -169,7 +169,7 @@ def create_engine(env: Envs) -> AsyncEngine:
         ):
             raise ValueError("Production database settings require host, port, name, username, and password")
 
-        # Production runtimes receive database connection components from the control plane.
+        # Production runtimes receive database connection components from the LongLink Platform.
         dburl = URL.create(
             "postgresql+asyncpg",
             username=database_username,

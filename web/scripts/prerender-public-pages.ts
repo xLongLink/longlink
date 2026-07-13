@@ -34,8 +34,12 @@ function renderHtml(shell: string, page: PublicSeoPage): string {
                   hasPart: [
                       { '@type': 'SiteNavigationElement', name: 'Pricing', url: `${SITE_URL}/pricing` },
                       { '@type': 'SiteNavigationElement', name: 'Documentation', url: `${SITE_URL}/docs` },
-                      { '@type': 'SiteNavigationElement', name: 'Application SDK Docs', url: `${SITE_URL}/docs/sdk` },
-                      { '@type': 'SiteNavigationElement', name: 'Control Plane Docs', url: `${SITE_URL}/docs/api` },
+                      {
+                          '@type': 'SiteNavigationElement',
+                          name: 'Applications / SDK Docs',
+                          url: `${SITE_URL}/docs/sdk`,
+                      },
+                      { '@type': 'SiteNavigationElement', name: 'Platform Docs', url: `${SITE_URL}/docs/api` },
                   ],
               })
             : JSON.stringify({

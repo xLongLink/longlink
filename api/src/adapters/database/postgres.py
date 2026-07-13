@@ -3,7 +3,6 @@ import contextlib
 from uuid import UUID
 from .base import Database, DatabaseRuntimeConnection
 from .types import DatabaseTableRows, DatabaseSchemaUsage, DatabaseTableColumn, DatabaseTableColumns
-from src.utils import names
 from sqlalchemy import String, text, inspect
 from collections.abc import AsyncIterator
 from tenant.database import SHARED_SCHEMA, migrate_database
@@ -62,8 +61,14 @@ class Postgres(Database):
 
         return conn.engine.sync_engine.dialect.identifier_preparer.quote(value)
 
+    def shared_schema_url(self, organization: UUID) -> str:
+        """Return the tenant shared-schema URL for one organization database."""
+
+        # The URL embeds search_path so tenant code can use unqualified shared table names.
+        return self.url(organization.hex, search_path=SHARED_SCHEMA).render_as_string(hide_password=False)
+
     @contextlib.asynccontextmanager
-    async def connection(
+    async def _connection(
         self,
         database: str,
         *,
@@ -99,27 +104,25 @@ class Postgres(Database):
         finally:
             await engine.dispose()
 
-    async def prepare_organization_database(self, organization: str) -> str:
+    async def prepare_organization_database(self, organization: UUID, shared_schema_url: str) -> None:
         """Ensure one organization's database and shared schema are ready."""
 
-        database_name = names.organization_database(organization)
-
         # Create the organization database from the maintenance database when it is missing.
-        async with self.connection(self._maintenance_database, autocommit=True) as conn:
-            result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": database_name})
+        async with self._connection(self._maintenance_database, autocommit=True) as conn:
+            result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
 
             # Create the database only when PostgreSQL does not already list it.
             if result.scalar_one_or_none() is None:
 
                 # CREATE DATABASE needs a quoted identifier, so compile it with SQLAlchemy's dialect preparer.
-                quoted_database_name = self.quote(conn, database_name)
+                quoted_database_name = self.quote(conn, organization.hex)
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
 
         # Tenant migrations create the organization schema before users or app schemas rely on it.
-        await migrate_database(self.url(database_name))
+        await migrate_database(shared_schema_url)
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.
-        async with self.connection(database_name) as conn:
+        async with self._connection(organization.hex) as conn:
             shared_schema = self.quote(conn, SHARED_SCHEMA)
             await conn.execute(text("REVOKE CREATE ON SCHEMA public FROM PUBLIC"))
             await conn.exec_driver_sql(f"REVOKE CREATE ON SCHEMA {shared_schema} FROM PUBLIC")
@@ -128,22 +131,16 @@ class Postgres(Database):
                 f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA {shared_schema} FROM PUBLIC"
             )
 
-        return database_name
-
-    async def schema(self, organization: str, application: str, *, organization_id: UUID, application_id: UUID) -> DatabaseRuntimeConnection:
+    async def schema(self, organization: UUID, application: UUID) -> DatabaseRuntimeConnection:
         """Create or replace the schema for one application and return runtime connection settings."""
 
-        # App schema provisioning assumes organization creation already prepared the database.
-        database_name = names.organization_database(organization)
-        schema_name = names.application_schema(application)
-
         # Generate an app-scoped role and password for the deployed runtime.
-        runtime_username = f"longlink_{organization_id.hex[:16]}_{application_id.hex[:16]}"
+        runtime_username = f"longlink_{organization.hex[:16]}_{application.hex[:16]}"
         role_password = secrets.token_urlsafe(24)
 
         # Create the app schema and bind the runtime role inside the organization database.
-        async with self.connection(database_name) as conn:
-            await conn.execute(CreateSchema(quoted_name(schema_name, True), if_not_exists=True))
+        async with self._connection(organization.hex) as conn:
+            await conn.execute(CreateSchema(quoted_name(application.hex, True), if_not_exists=True))
 
             # Create or rotate the app login role before granting schema permissions.
             result = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
@@ -165,8 +162,8 @@ class Postgres(Database):
                 await conn.exec_driver_sql(f"ALTER ROLE {role} LOGIN PASSWORD {password_literal}")
 
             # Quote all identifiers before composing role and privilege statements.
-            database = self.quote(conn, database_name)
-            schema = self.quote(conn, schema_name)
+            database = self.quote(conn, organization.hex)
+            schema = self.quote(conn, application.hex)
             shared_schema = self.quote(conn, SHARED_SCHEMA)
 
             # App roles write to their own schema and read organization shared tables.
@@ -191,28 +188,25 @@ class Postgres(Database):
             "port": self._port,
             "password": role_password,
             "username": runtime_username,
-            "database_name": database_name,
+            "database_name": organization.hex,
         }
 
-    async def delete_schema(self, organization: str, application: str, *, organization_id: UUID, application_id: UUID) -> None:
+    async def delete_schema(self, organization: UUID, application: UUID) -> None:
         """Delete an application schema and its runtime role when present."""
 
-        database_name = names.organization_database(organization)
-        schema_name = names.application_schema(application)
-
         # Skip cleanup when the organization database was already removed.
-        async with self.connection(self._maintenance_database, autocommit=True) as conn:
-            result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": database_name})
+        async with self._connection(self._maintenance_database, autocommit=True) as conn:
+            result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
 
             # Stop once PostgreSQL confirms the organization database is absent.
             if result.scalar_one_or_none() is None:
                 return
 
-        runtime_username = f"longlink_{organization_id.hex[:16]}_{application_id.hex[:16]}"
+        runtime_username = f"longlink_{organization.hex[:16]}_{application.hex[:16]}"
 
         # Drop app-owned objects before dropping the global role from the maintenance database.
-        async with self.connection(database_name) as conn:
-            schema = self.quote(conn, schema_name)
+        async with self._connection(organization.hex) as conn:
+            schema = self.quote(conn, application.hex)
             role = self.quote(conn, runtime_username)
             role_exists = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
             await conn.exec_driver_sql(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
@@ -222,18 +216,16 @@ class Postgres(Database):
                 await conn.exec_driver_sql(f"DROP OWNED BY {role}")
 
         # Roles are cluster-global, so drop them from the maintenance database with autocommit.
-        async with self.connection(self._maintenance_database, autocommit=True) as conn:
+        async with self._connection(self._maintenance_database, autocommit=True) as conn:
             role = self.quote(conn, runtime_username)
             await conn.exec_driver_sql(f"DROP ROLE IF EXISTS {role}")
 
-    async def delete_database(self, organization: str) -> None:
+    async def delete_database(self, organization: UUID) -> None:
         """Delete one organization database and tolerate missing databases."""
 
-        database_name_value = names.organization_database(organization)
-
         # Terminate active sessions so PostgreSQL can drop the organization database.
-        async with self.connection(self._maintenance_database, autocommit=True) as conn:
-            database_name = self.quote(conn, database_name_value)
+        async with self._connection(self._maintenance_database, autocommit=True) as conn:
+            database_name = self.quote(conn, organization.hex)
             await conn.execute(
                 text(
                     """
@@ -243,7 +235,7 @@ class Postgres(Database):
                     AND pid <> pg_backend_pid()
                     """
                 ),
-                {"database_name": database_name_value},
+                {"database_name": organization.hex},
             )
 
             # DROP DATABASE must run outside a transaction, so this uses the autocommit connection above.
@@ -253,7 +245,7 @@ class Postgres(Database):
         """List all databases on the server, excluding system databases."""
 
         # Query pg_database directly so the adapter can filter out PostgreSQL system databases.
-        async with self.connection(self._maintenance_database) as conn:
+        async with self._connection(self._maintenance_database) as conn:
             result = await conn.execute(
                 text(
                     "SELECT datname FROM pg_database WHERE datname NOT IN ('postgres', 'template0', 'template1') ORDER BY datname"
@@ -267,7 +259,7 @@ class Postgres(Database):
         """List all schemas in a database, excluding system schemas."""
 
         # SQLAlchemy schema inspection is synchronous, so run it through the async connection bridge.
-        async with self.connection(database_name) as conn:
+        async with self._connection(database_name) as conn:
             system_schemas = {"information_schema", "pg_catalog", "pg_toast"}
             return await conn.run_sync(
                 lambda sync_conn: sorted(
@@ -279,7 +271,7 @@ class Postgres(Database):
         """Return usage details for application schemas in a database."""
 
         # Aggregate storage and table usage from PostgreSQL catalog tables.
-        async with self.connection(database_name) as conn:
+        async with self._connection(database_name) as conn:
             result = await conn.execute(
                 text(
                     """
@@ -311,7 +303,7 @@ class Postgres(Database):
         """Return tables and columns for one schema."""
 
         # Inspect queryable table metadata in the target database.
-        async with self.connection(database_name) as conn:
+        async with self._connection(database_name) as conn:
 
             # Include materialized views because they are queryable like tables for previews.
             table_names = await conn.run_sync(
@@ -356,9 +348,9 @@ class Postgres(Database):
         """Return preview rows for one table."""
 
         # Keep the preview query scoped to the requested organization database.
-        async with self.connection(database_name) as conn:
+        async with self._connection(database_name) as conn:
 
-            # Quote schema and table identifiers because app schemas are user-derived slugs.
+            # Quote schema and table identifiers because app schemas are UUID-derived values.
             table_identifier = ".".join(self.quote(conn, value) for value in (schema_name, table_name))
             rows_result = await conn.execute(
                 text(f"SELECT * FROM {table_identifier} LIMIT :limit"),
@@ -376,7 +368,7 @@ class Postgres(Database):
         """Return the total non-system database size in bytes."""
 
         # Sum all non-system databases managed by this PostgreSQL backend.
-        async with self.connection(self._maintenance_database) as conn:
+        async with self._connection(self._maintenance_database) as conn:
             result = await conn.execute(
                 text(
                     """

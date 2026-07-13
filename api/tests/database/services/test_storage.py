@@ -23,10 +23,10 @@ async def test_create_get_and_fetch_return_active_storage_registries(users: tupl
 
     # Act
     registry = await db.storage.create(
-        StorageKind.s3,
+        StorageKind.minio,
         "Primary storage",
         "primary-storage",
-        "https://s3.example",
+        "https://minio.example",
         "access-key",
         "secret-key",
         location.id,
@@ -36,13 +36,13 @@ async def test_create_get_and_fetch_return_active_storage_registries(users: tupl
     reloaded = await db.storage.get(registry.id)
 
     # Assert
-    assert registry.kind == StorageKind.s3
+    assert registry.kind == StorageKind.minio
     assert registry.name == "Primary storage"
     assert registry.slug == "primary-storage"
-    assert registry.endpoint_url == "https://s3.example"
+    assert registry.endpoint_url == "https://minio.example"
     assert registry.access_key_id == "access-key"
     assert registry.secret_access_key == "secret-key"
-    assert registry.runtime_endpoint_url == "https://s3.example"
+    assert registry.runtime_endpoint_url == "https://minio.example"
     assert registry.location_id == location.id
     assert registry.created_by.id == owner.id
     assert registry.updated_by.id == owner.id
@@ -60,19 +60,19 @@ async def test_create_persists_storage_runtime_endpoint_override(users: tuple[Us
 
     # Act
     registry = await db.storage.create(
-        StorageKind.s3,
+        StorageKind.minio,
         "Primary storage",
         "primary-storage",
-        "https://s3.example",
+        "https://minio.example",
         "access-key",
         "secret-key",
         location.id,
         owner,
-        runtime_endpoint_url="https://s3.runtime",
+        runtime_endpoint_url="https://minio.runtime",
     )
 
     # Assert
-    assert registry.runtime_endpoint_url == "https://s3.runtime"
+    assert registry.runtime_endpoint_url == "https://minio.runtime"
 
 
 async def test_create_rejects_duplicate_storage_registry_names(users: tuple[User, User, User]) -> None:
@@ -82,10 +82,10 @@ async def test_create_rejects_duplicate_storage_registry_names(users: tuple[User
     owner = users[0]
     location = await db.locations.create("primary", "Primary", owner, "CH")
     await db.storage.create(
-        StorageKind.s3,
+        StorageKind.minio,
         "Primary storage",
         "primary-storage",
-        "https://s3.example",
+        "https://minio.example",
         "access-key",
         "secret-key",
         location.id,
@@ -95,10 +95,10 @@ async def test_create_rejects_duplicate_storage_registry_names(users: tuple[User
     # Act
     with pytest.raises(HTTPException) as exc:
         await db.storage.create(
-            StorageKind.s3,
+            StorageKind.minio,
             "Primary storage",
             "primary-storage",
-            "https://other-s3.example",
+            "https://other-minio.example",
             "other-access-key",
             "other-secret-key",
             location.id,
@@ -119,10 +119,10 @@ async def test_delete_soft_deletes_storage_registry_and_include_deleted_can_relo
     owner = users[0]
     location = await db.locations.create("primary", "Primary", owner, "CH")
     registry = await db.storage.create(
-        StorageKind.s3,
+        StorageKind.minio,
         "Primary storage",
         "primary-storage",
-        "https://s3.example",
+        "https://minio.example",
         "access-key",
         "secret-key",
         location.id,
@@ -154,10 +154,10 @@ async def test_delete_rejects_storage_registry_used_by_active_applications(users
     location = await db.locations.create("primary", "Primary", owner, "CH")
     organization = await db.organizations.create("acme", "acme", location.id, owner)
     registry = await db.storage.create(
-        StorageKind.s3,
+        StorageKind.minio,
         "Primary storage",
         "primary-storage",
-        "https://s3.example",
+        "https://minio.example",
         "access-key",
         "secret-key",
         location.id,

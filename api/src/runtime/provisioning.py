@@ -3,12 +3,12 @@ from typing import cast
 from datetime import UTC, datetime
 from src.utils import names
 from src.logger import logger
-from src.runtime import bootstrap, environments
+from src.runtime import environments
+from tenant.database import users as tenant_users
 from src.models.statuses import ApplicationStatus
-from src.database.services import operations, registries, applications
+from src.database.services import operations, registries, applications, organizations
 from src.runtime.kubernetes import Kubernetes
 from src.models.applications import ApplicationCreate
-from src.models.organizations import OrganizationDetails, OrganizationSummary
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -18,7 +18,7 @@ from src.database.models.organizations import Organization
 
 
 async def provision_application_runtime_resources(
-    organization: Organization | OrganizationDetails | OrganizationSummary,
+    organization: Organization,
     application: Application,
     payload: ApplicationCreate,
     runtime_image: str,
@@ -32,26 +32,37 @@ async def provision_application_runtime_resources(
     db = adapters.database(database_registry)
     bucket = names.application_bucket(organization.slug, application.slug)
     shared = names.organization_shared_bucket(organization.slug)
-    schema = names.application_schema(application.slug)
+    schema = application.id.hex
 
     await compute.namespace(organization.slug)
-    await bootstrap.sync_organization_users(organization, database_registry)
+
+    # Synchronize shared users through the stored tenant shared-schema URL.
+    if organization.shared_schema_url is None:
+        raise ValueError("Organization has no shared schema URL")
+    await tenant_users.sync_url(organization.shared_schema_url, await organizations.database_users(organization.id))
 
     # Ensure object storage exists before the workload receives backend credentials.
     storage = adapters.storage(storage_registry)
     await storage.bucket(shared)
     await storage.bucket(bucket)
-    credentials: adapters.StorageRuntimeCredentials = {
-        "access_key_id": storage_registry.access_key_id,
-        "secret_access_key": storage_registry.secret_access_key,
-    }
 
-    connection = await db.schema(
-        organization.slug,
-        schema,
-        organization_id=organization.id,
-        application_id=application.id,
-    )
+    # Reuse stored runtime credentials or create provider-scoped credentials for this application.
+    credentials = applications.storage_runtime_credentials(application)
+    if credentials is None:
+        credentials = await storage.runtime_credentials(f"longlink-{application.id.hex}", bucket, shared)
+
+        # Persist credentials immediately so later cleanup operations can revoke them.
+        try:
+            persisted = await applications.set_storage_runtime_credentials(application.id, credentials)
+        except Exception:
+            await storage.revoke_runtime_credentials(credentials)
+            raise
+
+        if persisted is None:
+            await storage.revoke_runtime_credentials(credentials)
+            raise RuntimeError("Application no longer exists")
+
+    connection = await db.schema(organization.id, application.id)
     envs = environments.runtime_environment(
         schema,
         connection,
@@ -69,7 +80,7 @@ async def provision_application_runtime_resources(
 
 
 async def create_application_runtime(
-    organization: Organization | OrganizationDetails | OrganizationSummary,
+    organization: Organization,
     application_slug: str,
     payload: ApplicationCreate,
     user: User,
@@ -91,6 +102,10 @@ async def create_application_runtime(
     db = await registries.database(organization.location_id)
     if db is None:
         raise RuntimeError("No database configured")
+
+    # Application provisioning requires the organization runtime URL created with the organization.
+    if organization.shared_schema_url is None:
+        raise RuntimeError("Organization has no shared schema URL")
 
     # Application runtime requires shared object storage in the organization location.
     storage = await registries.storage(organization.location_id)
@@ -173,7 +188,7 @@ async def create_application_runtime(
 
 async def sync_application_runtime(
     application: Application,
-    organization: Organization | OrganizationDetails | OrganizationSummary,
+    organization: Organization,
     payload: ApplicationCreate,
     user: User,
 ) -> Application:
@@ -199,6 +214,10 @@ async def sync_application_runtime(
     db = await registries.database(organization.location_id)
     if db is None:
         raise RuntimeError("No database configured")
+
+    # Runtime sync requires the organization runtime URL created with the organization.
+    if organization.shared_schema_url is None:
+        raise RuntimeError("Organization has no shared schema URL")
 
     # Existing apps without an assigned storage registry can adopt the organization storage backend.
     storage = await registries.application_storage(application)

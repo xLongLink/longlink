@@ -21,14 +21,14 @@ export const content = (
             <p>
                 This Privacy Policy explains how LongLink handles personal data when you visit our website, create an
                 account, join or manage an organization, add or deploy an application, connect infrastructure, use the
-                control plane, SDK, runtime, documentation, or support channels, or otherwise use the Service.
+                platform, SDK, runtime, documentation, or support channels, or otherwise use the Service.
             </p>
             <p>
                 The controller is LongLink SAGL, UID CHE-150.642.313. Privacy enquiries and requests may be sent to{' '}
                 <A href="mailto:info@longlink.ch">info@longlink.ch</A>.
             </p>
             <p>
-                In this Policy, "Service" means the LongLink website, hosted control plane, SDK, application runtime,
+                In this Policy, "Service" means the LongLink website, hosted platform, SDK, application runtime,
                 deployment tooling, and related support. If a separate service agreement or data processing agreement
                 applies, its definitions and data-processing terms also apply where relevant.
             </p>
@@ -71,8 +71,8 @@ export const content = (
                 <Li>
                     Authentication data: profile claims returned by the identity provider you choose, session account
                     identifiers, safe post-login redirect paths, and OIDC tokens used during sign-in. Passwords are
-                    handled by the configured identity provider; the LongLink control-plane database does not
-                    intentionally store account passwords or OAuth access tokens.
+                    handled by the configured identity provider; the LongLink Platform database does not intentionally
+                    store account passwords or OAuth access tokens.
                 </Li>
                 <Li>
                     Organization and access data: organization name, slug, avatar, selected location, memberships,

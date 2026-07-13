@@ -40,7 +40,6 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
 
     # Convert derived application runtime resource validation failures into route conflicts.
     try:
-        names.application_schema(application_slug)
         names.application_bucket(membership.organization.slug, application_slug)
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid application runtime resource name") from exc

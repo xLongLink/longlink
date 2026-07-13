@@ -21,7 +21,7 @@ function ApiAppShell() {
 
 /** Renders the bundle-specific app shell. */
 function AppShell() {
-    // SDK mode renders the local app shell; authentication is owned by the control plane.
+    // SDK mode renders the local app shell; authentication is owned by the LongLink Platform.
     if (import.meta.env.MODE === 'sdk') {
         return (
             <ApiI18nProvider language={DEFAULT_LANGUAGE}>

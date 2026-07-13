@@ -1,6 +1,6 @@
 import aioboto3
 import urllib.parse
-from .base import Storage, StorageObjectData, StorageBucketUsage
+from .base import Storage, StorageObjectData, StorageBucketUsage, StorageRuntimeCredentials
 from typing import TYPE_CHECKING, cast
 from contextlib import AbstractAsyncContextManager
 
@@ -10,8 +10,8 @@ if TYPE_CHECKING:
     from types_aiobotocore_s3.type_defs import ObjectIdentifierTypeDef
 
 
-class S3(Storage):
-    """S3-compatible storage adapter."""
+class MinIO(Storage):
+    """MinIO storage adapter for local development."""
 
     def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
         """Initialize the storage adapter."""
@@ -91,7 +91,7 @@ class S3(Storage):
         return objects
 
     async def bucket_usage(self, bucket_name: str) -> StorageBucketUsage:
-        """Return aggregate usage details for one S3 bucket."""
+        """Return aggregate usage details for one MinIO bucket."""
 
         object_count = 0
         space_used = 0
@@ -109,7 +109,7 @@ class S3(Storage):
         return {"object_count": object_count, "space_used": space_used}
 
     async def delete_bucket(self, bucket_name: str) -> None:
-        """Delete one S3 bucket and all listed objects."""
+        """Delete one MinIO bucket and all listed objects."""
 
         # Keep bucket cleanup in one client session.
         async with self._client() as client:
@@ -117,7 +117,9 @@ class S3(Storage):
 
             # Delete objects page by page before removing the bucket.
             async for page in paginator.paginate(Bucket=bucket_name):
-                objects: list[ObjectIdentifierTypeDef] = [{"Key": str(item["Key"])} for item in page.get("Contents", []) if "Key" in item]
+                objects: list[ObjectIdentifierTypeDef] = [
+                    {"Key": str(item["Key"])} for item in page.get("Contents", []) if "Key" in item
+                ]
 
                 # Skip empty pages from compatible storage backends.
                 if objects:
@@ -133,3 +135,17 @@ class S3(Storage):
             await client.create_bucket(Bucket=bucket_name)
 
         return bucket_name
+
+    async def runtime_credentials(self, name: str, bucket_name: str, shared_bucket_name: str) -> StorageRuntimeCredentials:
+        """Return local runtime credentials for one application."""
+
+        # Local MinIO uses the development root credentials until local policy management is needed.
+        return {
+            "access_key_id": self._access_key_id,
+            "secret_access_key": self._secret_access_key,
+        }
+
+    async def revoke_runtime_credentials(self, credentials: StorageRuntimeCredentials) -> None:
+        """Ignore local runtime credential revocation."""
+
+        # Local MinIO credentials are shared development credentials and are not application-scoped.

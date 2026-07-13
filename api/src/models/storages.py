@@ -11,7 +11,8 @@ from tenant.models.icons import Icon
 class StorageKind(StrEnum):
     """Supported storage registry kinds."""
 
-    s3 = "s3"
+    minio = "minio"
+    exoscale = "exoscale"
 
 
 class OrganizationStorageResourceKind(StrEnum):

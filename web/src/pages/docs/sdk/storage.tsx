@@ -80,8 +80,8 @@ export const content = (
             </Table>
         </div>
         <P>
-            Runtime storage credentials are scoped before deployment: apps can read and write their own bucket, and can
-            read the organization shared bucket without writing to it.
+            Runtime storage credentials are scoped before deployment: applications can read and write their own bucket,
+            and can read the organization shared bucket without writing to it.
         </P>
         <Heading id="usage" level="h2">
             Usage

@@ -50,13 +50,13 @@ const sharedFoundationItems = [
         icon: Palette,
     },
     {
-        name: 'App shell',
-        description: 'Consistent navigation around control-plane and runtime pages.',
+        name: 'Application shell',
+        description: 'Consistent navigation around platform and runtime pages.',
         icon: PanelTop,
     },
     {
-        name: 'Business logic',
-        description: 'Application-owned rules, workflows, validation, APIs, and pages.',
+        name: 'Application contract',
+        description: 'Metadata, routing, deployment, logs, and runtime access for application services.',
         icon: Code2,
     },
     {
@@ -71,7 +71,7 @@ const sharedFoundationItems = [
     },
     {
         name: 'Routing',
-        description: 'Gateway-backed routing from authenticated users to internal app services.',
+        description: 'Gateway-backed routing from authenticated users to internal application services.',
         icon: Route,
     },
     {
@@ -92,7 +92,7 @@ const sharedFoundationItems = [
 ] as const;
 
 /** Renders the production request flow diagram. */
-function ControlPlaneFlowDiagram() {
+function PlatformFlowDiagram() {
     return (
         <div className="rounded-md border bg-muted/10 p-4">
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_3rem_minmax(0,1fr)_3rem_minmax(0,1fr)] lg:items-center">
@@ -107,7 +107,7 @@ function ControlPlaneFlowDiagram() {
                     <div className="flex items-center justify-center gap-3 pt-1 text-muted-foreground">
                         <Languages aria-label="Languages" className="size-4" />
                         <Palette aria-label="Theming" className="size-4" />
-                        <PanelTop aria-label="App shell" className="size-4" />
+                        <PanelTop aria-label="Application shell" className="size-4" />
                     </div>
                 </div>
                 <div className="flex items-center justify-center text-muted-foreground">
@@ -122,7 +122,7 @@ function ControlPlaneFlowDiagram() {
                             <div className="font-medium text-foreground">
                                 <Wordmark />
                             </div>
-                            <div className="text-sm text-muted-foreground">Control Plane</div>
+                            <div className="text-sm text-muted-foreground">Platform</div>
                         </div>
                     </div>
                     <div className="grid gap-2 text-muted-foreground">
@@ -153,7 +153,7 @@ function ControlPlaneFlowDiagram() {
                         <div className="mt-1 text-sm text-muted-foreground">Runtime</div>
                     </div>
                     <div className="flex items-center justify-center gap-3 pt-1 text-muted-foreground">
-                        <Code2 aria-label="Business logic" className="size-4" />
+                        <Code2 aria-label="Application logic" className="size-4" />
                         <Database aria-label="Database logic" className="size-4" />
                         <HardDrive aria-label="File storage" className="size-4" />
                     </div>
@@ -170,16 +170,16 @@ export const metadata = {
 
 export const content = (
     <Stack>
-        <Heading id="control-plane" level="h2">
-            Control Plane
+        <Heading id="platform" level="h2">
+            Platform
         </Heading>
         <P>
-            The control plane is the platform service that owns LongLink's shared operating model. It stores users,
-            organizations, memberships, applications, locations, infrastructure registries, operations, and deployment
-            state, then exposes the API and web shell used to manage them.
+            The LongLink Platform owns the shared operating model. It stores users, organizations, memberships,
+            applications, locations, infrastructure registries, operations, and deployment state, then exposes the API
+            and web shell used to manage them.
         </P>
         <P>
-            It does not replace application code. Applications still run as separate SDK services; the control plane
+            It does not replace application code. Applications still run as separate SDK services; the LongLink Platform
             provides the governed layer around them: identity, access decisions, resource provisioning, routing, rollout
             verification, logs, and status.
         </P>
@@ -188,7 +188,7 @@ export const content = (
             user and forwards approved requests with trusted runtime headers; the gateway accepts only authenticated
             proxy traffic and routes it to the internal application service.
         </P>
-        <ControlPlaneFlowDiagram />
+        <PlatformFlowDiagram />
         <Heading id="shared-foundation" level="h2">
             Shared Foundation
         </Heading>
@@ -197,7 +197,7 @@ export const content = (
                 <TableHeader className="bg-muted/50">
                     <TableRow>
                         <TableHead className="bg-muted/50">Capability</TableHead>
-                        <TableHead className="bg-muted/50">Control plane responsibility</TableHead>
+                        <TableHead className="bg-muted/50">Platform responsibility</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>

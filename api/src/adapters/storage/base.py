@@ -1,4 +1,4 @@
-from typing import Protocol, TypedDict
+from typing import Protocol, TypedDict, NotRequired
 
 
 class StorageObjectData(TypedDict):
@@ -21,12 +21,13 @@ class StorageRuntimeCredentials(TypedDict):
 
     access_key_id: str
     secret_access_key: str
+    role_id: NotRequired[str | None]
 
 
 class Storage(Protocol):
     """Storage adapter root.
 
-    Storage Backend                     # Managed by the control plane
+    Storage Backend                     # Managed by the LongLink Platform
     ├── assigned organization bucket    # Optional organization-level shared objects
     ├── assigned App A bucket           # Isolated storage for App A
     └── assigned App B bucket           # Isolated storage for App B
@@ -52,4 +53,12 @@ class Storage(Protocol):
 
     async def bucket_usage(self, bucket_name: str) -> StorageBucketUsage:
         """Return aggregate usage details for one bucket."""
+        ...
+
+    async def runtime_credentials(self, name: str, bucket_name: str, shared_bucket_name: str) -> StorageRuntimeCredentials:
+        """Create credentials for one application bucket and one shared bucket."""
+        ...
+
+    async def revoke_runtime_credentials(self, credentials: StorageRuntimeCredentials) -> None:
+        """Revoke credentials previously created for one application runtime."""
         ...

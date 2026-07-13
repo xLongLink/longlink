@@ -24,7 +24,7 @@ async def test_storage_registry_endpoint_supports_create_and_list(
     create_response = client.post(
         "/api/storages",
         json={
-            "kind": "s3",
+            "kind": "minio",
             "name": "object-store",
             "endpoint_url": "https://storage.longlink.internal",
             "runtime_endpoint_url": "https://storage.runtime.longlink.internal",
@@ -65,7 +65,7 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
     create_response = client.post(
         "/api/storages",
         json={
-            "kind": "s3",
+            "kind": "minio",
             "name": "object-store",
             "endpoint_url": "https://storage.longlink.internal",
             "access_key_id": "access-key",
@@ -75,7 +75,7 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
     )
     registry_id = create_response.json()["id"]
 
-    class FakeS3:
+    class FakeMinIO:
         def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
             """Store storage registry configuration for assertions."""
 
@@ -90,7 +90,7 @@ async def test_storage_bucket_endpoint_returns_backend_buckets(
 
     monkeypatch.setattr(
         "src.routes.storages.adapters.storage",
-        lambda registry: FakeS3(
+        lambda registry: FakeMinIO(
             registry.endpoint_url,
             registry.access_key_id,
             registry.secret_access_key,
@@ -119,7 +119,7 @@ async def test_storage_object_endpoint_returns_bucket_objects(
     create_response = client.post(
         "/api/storages",
         json={
-            "kind": "s3",
+            "kind": "minio",
             "name": "object-store",
             "endpoint_url": "https://storage.longlink.internal",
             "access_key_id": "access-key",
@@ -129,7 +129,7 @@ async def test_storage_object_endpoint_returns_bucket_objects(
     )
     registry_id = create_response.json()["id"]
 
-    class FakeS3:
+    class FakeMinIO:
         def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
             """Store storage registry configuration for assertions."""
 
@@ -152,7 +152,7 @@ async def test_storage_object_endpoint_returns_bucket_objects(
 
     monkeypatch.setattr(
         "src.routes.storages.adapters.storage",
-        lambda registry: FakeS3(
+        lambda registry: FakeMinIO(
             registry.endpoint_url,
             registry.access_key_id,
             registry.secret_access_key,

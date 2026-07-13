@@ -16,12 +16,12 @@ export const content = (
             Self-hosted
         </Heading>
         <P>
-            Self-hosted mode runs the LongLink control plane and managed application workloads on infrastructure you
-            operate. You provide Kubernetes, PostgreSQL, S3-compatible object storage, OIDC, and public origins;
-            LongLink registers those backends and provisions organization and application resources through them.
+            Self-hosted mode runs the LongLink Platform and managed application workloads on infrastructure you operate.
+            You provide Kubernetes, PostgreSQL, S3-compatible object storage, OIDC, and public origins; LongLink
+            registers those backends and provisions organization and application resources through them.
         </P>
         <P>
-            The LongLink control-plane container is published at{' '}
+            The LongLink Platform container is published at{' '}
             <A href="https://github.com/xLongLink/longlink/pkgs/container/longlink">ghcr.io/xlonglink/longlink</A>.
         </P>
         <Heading id="api-environment-variables" level="h2">

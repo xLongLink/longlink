@@ -12,7 +12,7 @@ When listing improvement suggestions, use numbered lists.
 
 ```bash
 longlink/
-├── api/                          # Control plane: auth, organizations, applications, registries, orchestration
+├── api/                          # Platform API: auth, organizations, applications, registries, orchestration
 │   ├── main.py                   # FastAPI entrypoint
 │   ├── seed.py                   # Local development seed data
 │   ├── alembic/                  # Database migrations
@@ -30,6 +30,15 @@ longlink/
 │   │   ├── environments.py       # Environment configuration
 │   │   └── logger.py             # Logging setup
 │   └── tests/                    # API tests
+├── org/                          # Tenant-shared resources for organization databases
+│   ├── alembic/                  # Shared tenant database migrations
+│   ├── tenant/
+│   │   ├── database/             # Shared database tables, sessions, migrations, services
+│   │   ├── models/               # Shared tenant models
+│   │   ├── storage/              # Shared storage definitions
+│   │   ├── constants.py          # Shared tenant constants
+│   │   └── utils.py              # Tenant utility helpers
+│   └── tests/                    # Tenant package tests
 ├── sdk/                          # Python SDK: application runtime, CLI, scaffolding
 │   ├── longlink/
 │   │   ├── .static/
@@ -50,16 +59,16 @@ longlink/
 │   │   ├── hooks/                # React hooks
 │   │   ├── layout/               # Layout shells
 │   │   ├── lib/                  # API clients, theme, shared types
-│   │   ├── pages/                # Control-plane pages and docs
+│   │   ├── pages/                # Platform pages and docs
 │   │   └── xml/                  # XML parser, adapters, renderer, translations
 │   └── tests/                    # Web and XML tests
-└── dev/                            # Local services and reference material
+└── dev/                          # Local services and reference material
     ├── compose.yml                 # Local service dependencies
     ├── keycloak-realm-dev.json     # Local Keycloak realm
     └── rfc/                        # Reference RFC material
 ```
 
-Runtime resource model: one organization maps to one database derived from the organization slug. Each organization database contains one organization-owned shared schema that applications can read, plus one schema per application derived from the application slug where that application has read/write access. Organization and application storage bucket names are also derived from immutable slugs, not persisted separately. Organization creation owns database creation and tenant migrations; application creation owns only application schema and runtime role provisioning.
+Runtime resource model: one organization maps to one database named from the organization UUID hex. Each organization database contains one organization-owned shared schema that applications can read, plus one schema per application named from the application UUID hex where that application has read/write access. Organization and application storage bucket names are derived from immutable slugs, not persisted separately. The organization row stores the internal shared-schema URL used by tenant migrations and shared user synchronization. Organization creation owns database creation and tenant migrations; application creation owns only application schema and runtime role provisioning.
 
 ## Python Guidelines
 
@@ -70,6 +79,7 @@ Runtime resource model: one organization maps to one database derived from the o
 - Use `Protocol` for behavioral interfaces and dependency contracts.
 - Avoid `Any` and prefer precise type annotations.
 - Keep logic in one function unless extraction clearly improves reuse, readability, or separation of concerns, and avoid single-use helpers unless they hide a genuinely complex boundary.
+- Do not introduce private `_...` helper functions just to wrap a short local sequence, even when that sequence appears in two nearby call sites. Keep simple route/service flows inline unless extraction isolates a complex external boundary or creates reusable domain behavior.
 - Simplify control flow, remove dead or duplicated code, and review the final implementation for further simplifications.
 - Prefer concise local names when the surrounding scope already provides context; avoid repeating the domain in every variable name.
 - Avoid redundant validation or normalization calls for persisted or already-derived values; validate once at the boundary unless the transformed value is used.

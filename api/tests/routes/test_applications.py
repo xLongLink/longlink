@@ -1,7 +1,9 @@
 import httpx2
 import pytest
+from uuid import UUID
 from types import SimpleNamespace
 from datetime import UTC, datetime
+from src.utils import names
 from tenant.models import User as TenantUser
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from fastapi.testclient import TestClient
@@ -199,7 +201,16 @@ async def test_create_app_returns_app_response(
     user = users[0]
     local_location = await db.locations.create("local", "Local testing", user, "CH")
     remote_location = await db.locations.create("remote", "Remote testing", user, "CH")
-    organization = await db.organizations.create("acme", "acme", remote_location.id, user)
+    organization_id = UUID("11111111-1111-1111-1111-111111111111")
+    organization_database = organization_id.hex
+    organization = await db.organizations.create(
+        "acme",
+        "acme",
+        remote_location.id,
+        user,
+        organization_id=organization_id,
+        shared_schema_url=f"postgresql://shared/{organization_database}",
+    )
     await db.compute.create(
         name="local",
         slug="local",
@@ -239,7 +250,7 @@ async def test_create_app_returns_app_response(
         user=user,
     )
     await db.storage.create(
-        kind=StorageKind.s3,
+        kind=StorageKind.minio,
         name="remote",
         slug="remote",
         endpoint_url="http://storage.control.longlink.internal",
@@ -265,17 +276,6 @@ async def test_create_app_returns_app_response(
 
     captured: dict[str, object] = {}
     captured_buckets: list[tuple[str, ...]] = []
-
-    class FakeConnection:
-        """Fake database connection context for shared user synchronization."""
-
-        async def __aenter__(self) -> object:
-            """Return the fake connection."""
-
-            return self
-
-        async def __aexit__(self, *_args: object) -> None:
-            """Close the fake connection context."""
 
     class FakeCompute:
         """Fake compute adapter for app creation tests."""
@@ -320,51 +320,26 @@ async def test_create_app_returns_app_response(
                 "password": password,
             }
 
-        async def schema(
-            self,
-            organization: str,
-            application: str,
-            *,
-            organization_id,
-            application_id,
-        ) -> dict[str, str | int]:
+        async def schema(self, organization: UUID, application: UUID) -> dict[str, str | int]:
             """Record the requested application schema and return fake credentials."""
 
             captured["schema"] = {
                 "organization": organization,
                 "application": application,
-                "organization_id": organization_id,
-                "application_id": application_id,
             }
             return {
                 "host": "db.remote.longlink.internal",
                 "port": 5432,
                 "password": "runtime-secret",
-                "username": "longlink_acme_dashboard",
-                "database_name": "acme",
+                "username": f"longlink_{organization.hex[:16]}_{application.hex[:16]}",
+                "database_name": organization.hex,
             }
 
-        async def prepare_organization_database(self, organization: str) -> str:
-            """Record the prepared organization database."""
-
-            captured["prepared_database"] = organization
-            return organization
-
-        def connection(self, database: str, *, autocommit: bool = False, search_path: str | None = None) -> FakeConnection:
-            """Record the opened shared-schema database connection."""
-
-            captured["connection"] = {
-                "database": database,
-                "autocommit": autocommit,
-                "search_path": search_path,
-            }
-            return FakeConnection()
-
-    async def sync_tenant_users(connection: object, users: list[TenantUser]) -> None:
+    async def sync_tenant_users(shared_schema_url: str, users: list[TenantUser]) -> None:
         """Record synchronized tenant users for the organization."""
 
         captured["tenant_users"] = {
-            "connection": connection,
+            "shared_schema_url": shared_schema_url,
             "users": users,
         }
 
@@ -386,6 +361,19 @@ async def test_create_app_returns_app_response(
             captured_buckets.append(("bucket", bucket_name))
             return bucket_name
 
+        async def runtime_credentials(self, name: str, bucket_name: str, shared_bucket_name: str) -> dict[str, str]:
+            """Return fake scoped runtime credentials."""
+
+            captured["storage_credentials"] = {
+                "name": name,
+                "bucket_name": bucket_name,
+                "shared_bucket_name": shared_bucket_name,
+            }
+            return {
+                "access_key_id": "runtime-storage-access",
+                "secret_access_key": "runtime-storage-secret",
+            }
+
     monkeypatch.setattr("src.runtime.provisioning.Kubernetes", FakeCompute)
     monkeypatch.setattr(
         "src.runtime.provisioning.adapters.database",
@@ -396,16 +384,7 @@ async def test_create_app_returns_app_response(
             registry.password,
         ),
     )
-    monkeypatch.setattr(
-        "src.runtime.bootstrap.adapters.database",
-        lambda registry: FakeDatabase(
-            registry.host,
-            registry.port,
-            registry.username,
-            registry.password,
-        ),
-    )
-    monkeypatch.setattr("src.runtime.bootstrap.tenant_users.sync", sync_tenant_users)
+    monkeypatch.setattr("src.runtime.provisioning.tenant_users.sync_url", sync_tenant_users)
     monkeypatch.setattr(
         "src.runtime.provisioning.adapters.storage",
         lambda registry: FakeStorage(
@@ -443,21 +422,27 @@ async def test_create_app_returns_app_response(
     assert captured["proxy_secret"]
     schema_payload = captured["schema"]
     assert isinstance(schema_payload, dict)
-    assert schema_payload["organization"] == "acme"
-    assert schema_payload["application"] == "dashboard"
-    assert schema_payload["organization_id"] == organization.id
-    assert str(schema_payload["application_id"]) == payload["id"]
+    assert schema_payload["organization"] == organization.id
+    assert str(schema_payload["application"]) == payload["id"]
+    application_id = UUID(payload["id"])
+    application_database = organization.id.hex
+    database_schema = application_id.hex
+    application_username = f"longlink_{organization.id.hex[:16]}_{application_id.hex[:16]}"
     assert captured_buckets == [
         ("bucket", "acme-shared"),
         ("bucket", "acme-dashboard"),
     ]
+    assert captured["storage_credentials"] == {
+        "name": f"longlink-{application_id.hex}",
+        "bucket_name": "acme-dashboard",
+        "shared_bucket_name": "acme-shared",
+    }
     sync_payload = captured["tenant_users"]
     assert isinstance(sync_payload, dict)
     synced_users = sync_payload["users"]
     assert isinstance(synced_users, list)
     assert all(isinstance(synced_user, TenantUser) for synced_user in synced_users)
-    assert "prepared_database" not in captured
-    assert captured["connection"] == {"database": "acme", "autocommit": False, "search_path": "shared"}
+    assert sync_payload["shared_schema_url"] == f"postgresql://shared/{application_database}"
     assert synced_users[0].email == user.email
     application_payload = captured["application"]
     assert isinstance(application_payload, dict)
@@ -469,16 +454,16 @@ async def test_create_app_returns_app_response(
     assert application_secrets["API_KEY"] == "secret-value"
     assert application_secrets["LONGLINK_ENV"] == "production"
     assert application_secrets["LONGLINK_DATABASE_HOST"] == "db.remote.longlink.internal"
-    assert application_secrets["LONGLINK_DATABASE_NAME"] == "acme"
+    assert application_secrets["LONGLINK_DATABASE_NAME"] == application_database
     assert application_secrets["LONGLINK_DATABASE_PASSWORD"] == "runtime-secret"
     assert application_secrets["LONGLINK_DATABASE_PORT"] == "5432"
-    assert application_secrets["LONGLINK_DATABASE_SCHEMA"] == "dashboard"
-    assert application_secrets["LONGLINK_DATABASE_USERNAME"] == "longlink_acme_dashboard"
+    assert application_secrets["LONGLINK_DATABASE_SCHEMA"] == database_schema
+    assert application_secrets["LONGLINK_DATABASE_USERNAME"] == application_username
     assert application_secrets["LONGLINK_STORAGE_BUCKET"] == "acme-dashboard"
     assert application_secrets["LONGLINK_STORAGE_ENDPOINT_URL"] == "http://storage.runtime.longlink.internal:19000"
-    assert application_secrets["LONGLINK_STORAGE_PASSWORD"] == "storage-secret"
+    assert application_secrets["LONGLINK_STORAGE_PASSWORD"] == "runtime-storage-secret"
     assert application_secrets["LONGLINK_STORAGE_SHARED_BUCKET"] == "acme-shared"
-    assert application_secrets["LONGLINK_STORAGE_USERNAME"] == "storage-access"
+    assert application_secrets["LONGLINK_STORAGE_USERNAME"] == "runtime-storage-access"
 
 
 async def test_location_storage_returns_location_registry(users: tuple[User, User, User]) -> None:
@@ -488,7 +473,7 @@ async def test_location_storage_returns_location_registry(users: tuple[User, Use
     owner = users[0]
     location = await db.locations.create("local", "Local testing", owner, "CH")
     primary = await db.storage.create(
-        kind=StorageKind.s3,
+        kind=StorageKind.minio,
         name="primary",
         slug="primary",
         endpoint_url="http://storage-primary.local",

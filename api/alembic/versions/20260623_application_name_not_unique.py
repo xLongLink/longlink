@@ -222,7 +222,7 @@ def upgrade() -> None:
         sa.Column("updated_id", sa.Uuid(), nullable=True),
         sa.Column("deleted_at", sa.DateTime(), nullable=True),
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("kind", sa.Enum("s3", name="storage_kind_enum", native_enum=False), nullable=False),
+        sa.Column("kind", sa.Enum("minio", "exoscale", name="storage_kind_enum", native_enum=False), nullable=False),
         sa.Column("name", sa.String(length=128), nullable=False),
         sa.Column("slug", sa.String(length=128), nullable=False),
         sa.Column("protocol", sa.String(length=16), nullable=False),

@@ -5,8 +5,8 @@ from pathlib import Path
 from datetime import UTC, datetime
 from src.utils import names
 from src.routes import organizations as organization_routes
-from src.runtime import bootstrap
 from src.runtime import provisioning as resources
+from tenant.database import users as tenant_users
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import StorageKind
 from src.database.session import session_scope
@@ -139,7 +139,7 @@ async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) 
 
 
 async def seed_local_development() -> None:
-    """Seed the local control-plane database and runtime resources."""
+    """Seed the local platform database and runtime resources."""
 
     admin_user = await seed_local_administrator()
 
@@ -163,7 +163,7 @@ async def seed_local_development() -> None:
     # Find the local database registry before deciding whether to create or refresh it.
     database_registry = next((registry for registry in database_registries if registry.name == "local"), None)
     if database_registry is None:
-        await database_service.create(
+        database_registry = await database_service.create(
             kind=DatabaseKind.postgresql,
             name="local",
             slug=names.slugify("local"),
@@ -178,6 +178,12 @@ async def seed_local_development() -> None:
     # Keep reused local databases aligned with the current k3d network.
     elif database_registry.host != database_host or database_registry.port != LOCAL_DATABASE_PORT:
         await sync_local_database_host(database_registry.id, database_host)
+        database_registry.host = database_host
+        database_registry.port = LOCAL_DATABASE_PORT
+
+    # Runtime organization repair needs the local database registry URL details.
+    if database_registry is None:
+        raise RuntimeError("Local database registry could not be loaded")
 
     # Storage registry
     storage_registries = await storage_service.fetch()
@@ -185,7 +191,7 @@ async def seed_local_development() -> None:
     # Register local object storage when it is not already configured.
     if not any(registry.name == "local" for registry in storage_registries):
         await storage_service.create(
-            kind=StorageKind.s3,
+            kind=StorageKind.minio,
             name="local",
             slug=names.slugify("local"),
             endpoint_url="http://localhost:19000",
@@ -223,6 +229,7 @@ async def seed_local_development() -> None:
     organizations = await organization_service.fetch()
     # Find the local organization before deciding whether to create or repair it.
     organization = next((organization for organization in organizations if organization.name == LOCAL_ORG), None)
+    reused_organization = organization is not None
     if organization is None:
         # Use the organization endpoint implementation so seed creation follows API runtime bootstrap.
         organization = await organization_routes.create_organization(
@@ -238,7 +245,6 @@ async def seed_local_development() -> None:
     # Reused organizations need owner and shared-user state repaired.
     else:
         await ensure_local_organization_owner(organization.id, admin_user.id)
-        await bootstrap.sync_organization_users(organization)
 
     # Application
     # Load the full organization row required by runtime provisioning.
@@ -246,10 +252,14 @@ async def seed_local_development() -> None:
     if organization_record is None:
         raise RuntimeError("Seeded organization could not be loaded")
 
+    # Reused organizations need shared-user state repaired after owner repair.
+    if reused_organization:
+        if organization_record.shared_schema_url is None:
+            raise RuntimeError("Seeded organization has no shared schema URL")
+        await tenant_users.sync_url(organization_record.shared_schema_url, await organization_service.database_users(organization_record.id))
+
     application_payload = ApplicationCreate.model_validate(LOCAL_APP)
     application_slug = names.slugify(LOCAL_APP_NAME)
-    names.application_schema(application_slug)
-    names.organization_database(organization_record.slug)
 
     # Application storage isolation depends on deterministic runtime resource names.
     names.organization_shared_bucket(organization_record.slug)

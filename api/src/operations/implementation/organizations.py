@@ -3,7 +3,7 @@ from uuid import UUID
 from src.utils import names
 from src.operations import outcomes as outcome
 from src.operations import registry
-from src.database.services import database, registries, organizations
+from src.database.services import database, registries, applications, organizations
 from src.models.operations import OperationKind
 from src.runtime.kubernetes import Kubernetes
 from src.database.models.computes import ComputeRegistry
@@ -50,17 +50,16 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
             registry = await database.get(app.database_registry_id, include_deleted=True)
             if registry is not None:
                 adapter = adapters.database(registry)
-                await adapter.delete_schema(
-                    organization.slug,
-                    names.application_schema(app.slug),
-                    organization_id=organization.id,
-                    application_id=app.id,
-                )
+                await adapter.delete_schema(organization.id, app.id)
 
         # Remove the deterministic application bucket only when storage was assigned.
         registry = await registries.application_storage(app)
         if registry is not None:
             adapter = adapters.storage(registry)
+            credentials = applications.storage_runtime_credentials(app)
+            if credentials is not None:
+                await adapter.revoke_runtime_credentials(credentials)
+
             await adapter.delete_bucket(names.application_bucket(organization.slug, app.slug))
 
     current = await registries.compute(organization.location_id, include_deleted=True)
@@ -80,7 +79,7 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
     # Delete the tenant database after app schemas have been removed.
     if registry is not None:
         adapter = adapters.database(registry)
-        await adapter.delete_database(organization.slug)
+        await adapter.delete_database(organization.id)
 
     registry = await registries.storage(organization.location_id, include_deleted=True)
 

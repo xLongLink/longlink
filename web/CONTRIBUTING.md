@@ -1,6 +1,6 @@
 # Contributing
 
-The web folder contains the frontend runtime for LongLink. It owns the shared UI, XML runtime, docs, and control-plane rendering path.
+The web folder contains the frontend runtime for LongLink. It owns the shared UI, XML runtime, docs, and platform rendering path.
 
 ## Architecture
 
@@ -66,7 +66,7 @@ The combined repository architecture is maintained in `../AGENTS.md`.
 
 ```bash
 bun run dev         # Starts the Vite dev server on localhost for live preview.
-bun run build:api   # Builds the control-plane web bundle
+bun run build:api   # Builds the platform web bundle
 bun run build:sdk   # Builds the SDK embedded web bundle
 bun run format      # Format the code
 ```
@@ -107,7 +107,7 @@ Theme values are defined in `src/lib/theme.ts` and applied programmatically to t
 
 ## Keep changes aligned
 
-- Keep control-plane concerns in the API mode path.
+- Keep platform concerns in the API mode path.
 - Use shadcn/ui and the existing `src/components/ui/` primitives for reusable UI.
 - Keep the current shadcn/ui primitive set and related dependencies unless a component is proven obsolete by a product decision.
 - Keep XML runtime and compiler changes inside `src/xml/`.

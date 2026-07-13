@@ -15,14 +15,7 @@ import {
 } from '@/xml';
 import startCase from 'lodash/startCase';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import {
-    generatePath,
-    Link,
-    matchRoutes,
-    useNavigate,
-    useParams,
-    type RouteObject,
-} from 'react-router';
+import { generatePath, Link, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import NotFound from './NotFound';
 
 type ViewProps = {
@@ -207,7 +200,7 @@ function parsePageContent(content: string): PageParseResult {
 }
 
 /**
- * Renders metadata-backed XML pages for control-plane and application routes.
+ * Renders metadata-backed XML pages for platform and application routes.
  */
 export default function View({ applicationStatus, locale, metadata, runtimeContext, runtimeKey }: ViewProps) {
     const { t } = useTranslation();

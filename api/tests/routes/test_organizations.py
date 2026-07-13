@@ -1,5 +1,6 @@
 from uuid import UUID
 from types import SimpleNamespace
+from src.utils import names
 from tenant.models import User as TenantUser
 from src.models.roles import OrganizationRoles
 from fastapi.testclient import TestClient
@@ -52,7 +53,7 @@ async def create_required_location_registries(location_id: UUID, user: User) -> 
 
     # Create the storage registry attached to the location.
     await db.storage.create(
-        StorageKind.s3,
+        StorageKind.minio,
         "storage",
         "storage",
         "http://storage.local",
@@ -88,17 +89,6 @@ def patch_organization_runtime(monkeypatch, captured: dict[str, object]) -> None
 
             calls.append(("delete_namespace", organization))
 
-    class FakeConnection:
-        """Fake database connection context for shared user synchronization."""
-
-        async def __aenter__(self) -> object:
-            """Return the fake connection."""
-
-            return self
-
-        async def __aexit__(self, *_args: object) -> None:
-            """Close the fake connection context."""
-
     class FakeDatabase:
         """Fake database adapter for organization creation tests."""
 
@@ -110,23 +100,19 @@ def patch_organization_runtime(monkeypatch, captured: dict[str, object]) -> None
             self.username = username
             self.password = password
 
-        async def prepare_organization_database(self, organization: str) -> str:
+        def shared_schema_url(self, organization: UUID) -> str:
+            """Return a fake tenant shared-schema URL."""
+
+            return f"postgresql://shared/{organization.hex}"
+
+        async def prepare_organization_database(self, organization: UUID, shared_schema_url: str) -> None:
             """Record the prepared organization database."""
 
-            captured["prepared_database"] = organization
-            return organization
+            captured["prepared_database"] = organization.hex
+            captured["prepared_organization"] = organization
+            captured["prepared_shared_schema_url"] = shared_schema_url
 
-        def connection(self, database: str, *, autocommit: bool = False, search_path: str | None = None) -> FakeConnection:
-            """Record the opened shared-schema database connection."""
-
-            captured["connection"] = {
-                "database": database,
-                "autocommit": autocommit,
-                "search_path": search_path,
-            }
-            return FakeConnection()
-
-        async def delete_database(self, organization: str) -> None:
+        async def delete_database(self, organization: UUID) -> None:
             """Record database cleanup."""
 
             calls.append(("delete_database", organization))
@@ -152,16 +138,13 @@ def patch_organization_runtime(monkeypatch, captured: dict[str, object]) -> None
 
             calls.append(("delete_bucket", bucket_name))
 
-    async def sync_tenant_users(_connection: object, users: list[TenantUser]) -> None:
+    async def sync_tenant_users(shared_schema_url: str, users: list[TenantUser]) -> None:
         """Record synchronized tenant users for the organization."""
 
+        captured["tenant_users_url"] = shared_schema_url
         captured["tenant_users"] = users
 
     monkeypatch.setattr("src.routes.organizations.Kubernetes", FakeKubernetes)
-    monkeypatch.setattr(
-        "src.runtime.bootstrap.adapters.database",
-        lambda registry: FakeDatabase(registry.host, registry.port, registry.username, registry.password),
-    )
     monkeypatch.setattr(
         "src.routes.organizations.adapters.database",
         lambda registry: FakeDatabase(registry.host, registry.port, registry.username, registry.password),
@@ -170,7 +153,7 @@ def patch_organization_runtime(monkeypatch, captured: dict[str, object]) -> None
         "src.routes.organizations.adapters.storage",
         lambda registry: FakeStorage(registry.endpoint_url, registry.access_key_id, registry.secret_access_key),
     )
-    monkeypatch.setattr("src.runtime.bootstrap.tenant_users.sync", sync_tenant_users)
+    monkeypatch.setattr("src.routes.organizations.tenant_users.sync_url", sync_tenant_users)
 
 
 async def test_create_organization_returns_owner_role(
@@ -230,8 +213,12 @@ async def test_create_organization_initializes_database(
 
     # Assert
     assert response.status_code == 200
-    assert captured["prepared_database"] == "acme"
-    assert captured["connection"] == {"database": "acme", "autocommit": False, "search_path": "shared"}
+    organization_id = UUID(response.json()["id"])
+    organization_database = organization_id.hex
+    assert captured["prepared_database"] == organization_database
+    assert captured["prepared_organization"] == organization_id
+    assert captured["prepared_shared_schema_url"] == f"postgresql://shared/{organization_database}"
+    assert captured["tenant_users_url"] == f"postgresql://shared/{organization_database}"
     synced_users = captured["tenant_users"]
     assert isinstance(synced_users, list)
     assert synced_users[0].email == owner.email
@@ -311,7 +298,15 @@ async def test_delete_organization_soft_deletes_and_queues_removal(
     owner = users[0]
     client = clients[0]
     location = await db.locations.create("local", "Local testing", owner, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    organization_id = UUID("11111111-1111-1111-1111-111111111111")
+    organization = await db.organizations.create(
+        "acme",
+        "acme",
+        location.id,
+        owner,
+        organization_id=organization_id,
+        shared_schema_url=f"postgresql://shared/{organization_id.hex}",
+    )
     await db.applications.create(
         organization.id,
         "dashboard",
@@ -378,6 +373,7 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
         database_registry_id=registry.id,
         user=owner,
     )
+    dashboard_schema = dashboard.id.hex
 
     class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str) -> None:
@@ -391,7 +387,7 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
         async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
             """Return fake schema usage rows for the organization database."""
 
-            assert database_name == "acme"
+            assert database_name == organization.id.hex
             return [
                 {
                     "name": "shared",
@@ -399,7 +395,7 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
                     "table_count": 1,
                 },
                 {
-                    "name": "dashboard",
+                    "name": dashboard_schema,
                     "space_used": 2048,
                     "table_count": 2,
                 },
@@ -423,14 +419,14 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     payload = response.json()
     assert [(item["kind"], item["name"]) for item in payload] == [
         ("schema", "shared"),
-        ("schema", "dashboard"),
+        ("schema", dashboard_schema),
         ("schema", "stale"),
     ]
     assert payload[1]["application"]["id"] == str(dashboard.id)
     assert payload[1]["application"]["icon"] == "layout-dashboard"
     assert payload[1]["application"]["description"] == "Dashboard app"
     assert payload[1]["space_used"] == 2048
-    assert reports.slug not in [item["name"] for item in payload]
+    assert reports.id.hex not in [item["name"] for item in payload]
     assert payload[2]["space_used"] == 512
 
 
@@ -506,7 +502,7 @@ async def test_organization_storage_endpoint_returns_organization_buckets(
     location = await db.locations.create("local", "Local testing", owner, "CH")
     organization = await db.organizations.create("acme", "acme", location.id, owner)
     registry = await db.storage.create(
-        StorageKind.s3,
+        StorageKind.minio,
         "primary",
         "primary",
         "http://storage.local",
@@ -599,7 +595,7 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     location = await db.locations.create("local", "Local testing", owner, "CH")
     organization = await db.organizations.create("acme", "acme", location.id, owner)
     registry = await db.storage.create(
-        StorageKind.s3,
+        StorageKind.minio,
         "primary",
         "primary",
         "http://storage.local",
@@ -670,7 +666,7 @@ async def test_organization_database_resource_tables_endpoint_returns_columns_an
         location.id,
         owner,
     )
-    await db.applications.create(
+    dashboard = await db.applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -678,6 +674,7 @@ async def test_organization_database_resource_tables_endpoint_returns_columns_an
         database_registry_id=registry.id,
         user=owner,
     )
+    dashboard_schema = dashboard.id.hex
 
     class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str) -> None:
@@ -691,7 +688,7 @@ async def test_organization_database_resource_tables_endpoint_returns_columns_an
         async def table_columns(self, database_name: str, schema_name: str) -> list[dict[str, object]]:
             """Return fake table columns for shared and app schemas."""
 
-            assert database_name == "acme"
+            assert database_name == organization.id.hex
 
             # The route requests each schema separately, so mirror different backend columns per schema.
             if schema_name == "shared":
@@ -716,11 +713,11 @@ async def test_organization_database_resource_tables_endpoint_returns_columns_an
                     }
                 ]
 
-            assert schema_name == "dashboard"
+            assert schema_name == dashboard_schema
             return [
                 {
                     "name": "orders",
-                    "schema_name": "dashboard",
+                    "schema_name": dashboard_schema,
                     "columns": [
                         {
                             "name": "id",
@@ -748,7 +745,7 @@ async def test_organization_database_resource_tables_endpoint_returns_columns_an
         ) -> dict[str, object]:
             """Return fake preview rows for one table."""
 
-            assert database_name == "acme"
+            assert database_name == organization.id.hex
             assert limit == 100
 
             # The route requests one table at a time, so mirror backend rows per table.
@@ -760,11 +757,11 @@ async def test_organization_database_resource_tables_endpoint_returns_columns_an
                     "rows": [{"id": str(owner.id), "email": "owner@example.com"}],
                 }
 
-            assert schema_name == "dashboard"
+            assert schema_name == dashboard_schema
             assert table_name == "orders"
             return {
                 "name": "orders",
-                "schema_name": "dashboard",
+                "schema_name": dashboard_schema,
                 "rows": [{"id": "100", "total": "42.5"}],
             }
 
@@ -776,8 +773,8 @@ async def test_organization_database_resource_tables_endpoint_returns_columns_an
     # Act
     users_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/shared/tables")
     users_rows_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/shared/tables/users/rows")
-    schema_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/dashboard/tables")
-    schema_rows_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/dashboard/tables/orders/rows")
+    schema_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/{dashboard_schema}/tables")
+    schema_rows_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/{dashboard_schema}/tables/orders/rows")
 
     # Assert
     assert users_response.status_code == 200
@@ -995,7 +992,15 @@ async def test_update_organization_member_changes_role(
     captured: dict[str, object] = {}
     await create_required_location_registries(location.id, owner)
     patch_organization_runtime(monkeypatch, captured)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    organization_id = UUID("11111111-1111-1111-1111-111111111111")
+    organization = await db.organizations.create(
+        "acme",
+        "acme",
+        location.id,
+        owner,
+        organization_id=organization_id,
+        shared_schema_url=f"postgresql://shared/{organization_id.hex}",
+    )
 
     Session = await get_session()
     async with Session() as session:
@@ -1023,6 +1028,7 @@ async def test_update_organization_member_changes_role(
     updated_members = await db.organizations.members(organization.id)
     updated_member = next(membership for user, membership in updated_members if user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
+    assert captured["tenant_users_url"] == f"postgresql://shared/{organization.id.hex}"
 
 
 async def test_update_organization_member_returns_403_for_regular_member(

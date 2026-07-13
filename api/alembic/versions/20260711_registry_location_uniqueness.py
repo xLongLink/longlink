@@ -15,7 +15,7 @@ CONSTRAINTS = {
 def upgrade() -> None:
     """Allow only one compute, database, and storage registry per location."""
 
-    # Enforce location-owned registry capacity in the control-plane schema.
+    # Enforce location-owned registry capacity in the platform schema.
     for table, constraint in CONSTRAINTS.items():
         with op.batch_alter_table(table) as batch_op:
             batch_op.create_unique_constraint(constraint, ["location_id"])

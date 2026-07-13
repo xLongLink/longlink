@@ -1,12 +1,12 @@
 from src import adapters
-from uuid import UUID
+from uuid import UUID, uuid4
 from fastapi import Depends, APIRouter, HTTPException
 from datetime import UTC, datetime, timedelta
 from src.auth import authuser, authsupport
 from src.utils import names, roles
 from src.logger import logger
-from src.runtime import bootstrap
 from tenant.database import SHARED_SCHEMA
+from tenant.database import users as tenant_users
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import (OrganizationDatabaseResourceKind, OrganizationDatabaseResourceResponse,
@@ -61,11 +61,14 @@ async def _provision_organization_runtime(
     # Create the organization namespace before workloads can target it.
     await Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret).namespace(organization.slug)
 
-    # Create and migrate the organization database before syncing shared users into it.
-    await adapters.database(database_registry).prepare_organization_database(organization.slug)
+    # Create and migrate the organization database through its stored shared-schema URL.
+    shared_schema_url = organization.shared_schema_url
+    if shared_schema_url is None:
+        raise RuntimeError("Organization has no shared schema URL")
+    await adapters.database(database_registry).prepare_organization_database(organization.id, shared_schema_url)
 
     # Synchronize shared users into the existing organization schema.
-    await bootstrap.sync_organization_users(organization, database_registry)
+    await tenant_users.sync_url(shared_schema_url, await organizations.database_users(organization.id))
 
     # Create the shared organization storage bucket from the deterministic slug-derived name.
     storage = adapters.storage(storage_registry)
@@ -88,7 +91,7 @@ async def _cleanup_organization_runtime(
 
     # Remove the organization database even if user synchronization failed midway.
     try:
-        await adapters.database(database_registry).delete_database(organization.slug)
+        await adapters.database(database_registry).delete_database(organization.id)
     except Exception as exc:
         logger.exception("Failed to clean up database for organization '%s': %r", organization.slug, exc)
 
@@ -281,7 +284,7 @@ async def list_organization_database_resource_tables(
         raise HTTPException(status_code=404, detail="Database resource not found")
 
     db = adapters.database(registry)
-    database = names.organization_database(membership.organization.slug)
+    database = membership.organization.id.hex
 
     # Inspect adapter tables and normalize backend failures.
     try:
@@ -341,7 +344,7 @@ async def list_organization_database_resource_table_rows(
         raise HTTPException(status_code=404, detail="Database resource not found")
 
     db = adapters.database(registry)
-    database = names.organization_database(membership.organization.slug)
+    database = membership.organization.id.hex
 
     # Inspect adapter table rows and normalize backend failures.
     try:
@@ -434,7 +437,12 @@ async def update_organization_member(
 
     # Synchronize tenant users after role changes.
     try:
-        await bootstrap.sync_organization_users(membership.organization)
+        # Use the stored shared-schema URL because tenant code owns shared user writes.
+        shared_schema_url = membership.organization.shared_schema_url
+        if shared_schema_url is None:
+            raise RuntimeError("Organization has no shared schema URL")
+
+        await tenant_users.sync_url(shared_schema_url, await organizations.database_users(membership.organization_id))
 
     # Surface synchronization failures as unavailable.
     except Exception as exc:
@@ -477,8 +485,8 @@ async def _database_resource_rows(
 ) -> list[dict[str, object]]:
     """Inspect one organization database and return API resource rows."""
 
-    database = names.organization_database(organization.slug)
-    app_by_schema = {names.application_schema(app.slug): app for app in apps}
+    database = organization.id.hex
+    app_by_schema = {app.id.hex: app for app in apps}
 
     # Inspect backend schema usage for the organization database.
     try:
@@ -516,7 +524,7 @@ async def _database_resource_rows(
     # List active application schemas before orphaned schemas.
     for app in sorted(apps, key=lambda item: item.name):
         # Skip applications whose schema is not present.
-        schema = names.application_schema(app.slug)
+        schema = app.id.hex
         usage = usage_by_name.get(schema)
         if usage is None:
             continue
@@ -701,7 +709,7 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     # Validate derived resource names before creating the organization.
     try:
         slug = names.slugify(payload.name)
-        names.organization_database(slug)
+        names.knames(slug)
         names.organization_shared_bucket(slug)
 
     # Return invalid names as request conflicts.
@@ -711,13 +719,19 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     # Require the selected location to have all runtime backends before inserting the organization row.
     compute_registry, database_registry, storage_registry = await _location_runtime_registries(payload.location_id)
 
+    # Generate the row ID before insert so the stored tenant URL uses the final database name.
+    organization_id = uuid4()
+    shared_schema_url = adapters.database(database_registry).shared_schema_url(organization_id)
+
     organization = await organizations.create(
         payload.name,
         slug,
         payload.location_id,
         user,
         payload.avatar,
+        organization_id=organization_id,
         country=payload.country,
+        shared_schema_url=shared_schema_url,
     )
 
     # Runtime bootstrap is part of organization creation and must complete before the row is returned.
@@ -729,7 +743,7 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
         logger.exception("Failed to initialize runtime for organization '%s': %r", organization.slug, exc)
         await _cleanup_organization_runtime(organization, compute_registry, database_registry, storage_registry)
 
-        # Remove the just-created control-plane rows so a user can retry the same organization name.
+        # Remove the just-created platform rows so a user can retry the same organization name.
         try:
             await organizations.discard_created(organization.id)
         except Exception as cleanup_exc:

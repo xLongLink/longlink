@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 from fastapi import HTTPException
 from datetime import UTC, datetime
 from src.utils import names
@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from src.models.roles import ApplicationRoles
 from src.models.statuses import ApplicationStatus
 from src.database.session import session_scope
+from src.adapters.storage.base import StorageRuntimeCredentials
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.applications import Application
@@ -208,11 +209,12 @@ async def create(
         if slug_result.scalar_one_or_none() is not None:
             raise HTTPException(status_code=409, detail="Application slug already exists")
 
-        # Validate deterministic runtime resource names before creating the row.
-        names.application_schema(slug)
+        # Generate the application ID before validating slug-derived storage names.
+        application_id = uuid4()
         names.application_bucket(organization.slug, slug)
 
         application = Application(
+            id=application_id,
             organization_id=organization_id,
             compute_registry_id=compute_registry_id,
             database_registry_id=database_registry_id,
@@ -256,6 +258,44 @@ async def create(
         )
         result = await session.execute(statement)
         return result.scalar_one()
+
+
+def storage_runtime_credentials(application: Application) -> StorageRuntimeCredentials | None:
+    """Return persisted runtime storage credentials for one application."""
+
+    # Runtime credentials are usable only when both storage credential fields were stored.
+    if application.storage_runtime_key_id is None or application.storage_runtime_secret_access_key is None:
+        return None
+
+    credentials: StorageRuntimeCredentials = {
+        "access_key_id": application.storage_runtime_key_id,
+        "secret_access_key": application.storage_runtime_secret_access_key,
+    }
+
+    # Provider-specific role metadata is required for Exoscale cleanup.
+    if application.storage_runtime_role_id is not None:
+        credentials["role_id"] = application.storage_runtime_role_id
+
+    return credentials
+
+
+async def set_storage_runtime_credentials(application_id: UUID, credentials: StorageRuntimeCredentials) -> Application | None:
+    """Persist runtime storage credentials for one application."""
+
+    # Update only runtime storage credential fields.
+    async with session_scope() as session:
+        application = await session.get(Application, application_id)
+
+        # Ignore missing applications so callers can clean up generated credentials.
+        if application is None:
+            return None
+
+        application.storage_runtime_key_id = credentials["access_key_id"]
+        application.storage_runtime_role_id = credentials.get("role_id")
+        application.storage_runtime_secret_access_key = credentials["secret_access_key"]
+        await session.commit()
+        await session.refresh(application)
+        return application
 
 
 async def set_status(application_id: UUID, status: ApplicationStatus) -> Application | None:

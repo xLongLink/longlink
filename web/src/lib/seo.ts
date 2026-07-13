@@ -11,11 +11,11 @@ export const SITE_URL = 'https://longlink.dev';
 
 const descriptionsByPath: Record<string, string> = {
     '/docs': 'Learn how LongLink helps teams build and run structured business applications.',
-    '/docs/api': 'Understand the LongLink control plane for organizations, applications, locations, and operations.',
+    '/docs/api': 'Understand the LongLink Platform for organizations, applications, locations, and operations.',
     '/docs/api/organizations': 'Learn how LongLink organizations, memberships, and access boundaries work.',
     '/docs/api/applications': 'Learn how LongLink registers, deploys, routes, and manages business applications.',
     '/docs/api/self-hosted':
-        'Run the LongLink control plane with self-hosted infrastructure and required environment settings.',
+        'Run the LongLink Platform with self-hosted infrastructure and required environment settings.',
     '/docs/sdk':
         'Build LongLink applications locally with the Python SDK, XML pages, routes, storage, and database tools.',
     '/docs/sdk/environments':
@@ -41,8 +41,8 @@ const descriptionsByPath: Record<string, string> = {
 
 const titlesByPath: Record<string, string> = {
     '/docs': 'Documentation | LongLink',
-    '/docs/api': 'Control Plane Documentation | LongLink',
-    '/docs/sdk': 'Application SDK Documentation | LongLink',
+    '/docs/api': 'Platform Documentation | LongLink',
+    '/docs/sdk': 'Applications / SDK Documentation | LongLink',
     '/terms': 'Terms of Service | LongLink',
     '/privacy': 'Privacy | LongLink',
     '/impressum': 'Impressum | LongLink',

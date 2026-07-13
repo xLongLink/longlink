@@ -5,7 +5,7 @@ from tenant.utils import utcnow
 
 
 class User(BaseModel):
-    """Represent a tenant user shared by the control plane and SDK runtime."""
+    """Represent a tenant user shared by the LongLink Platform and SDK runtime."""
 
     model_config = ConfigDict(from_attributes=True)
 

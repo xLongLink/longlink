@@ -4,7 +4,7 @@ from containers import DockerRuntimeContainer
 from docker.errors import DockerException
 from collections.abc import AsyncIterator
 from botocore.exceptions import EndpointConnectionError
-from src.adapters.storage.s3 import S3
+from src.adapters.storage.minio import MinIO
 
 pytestmark = pytest.mark.no_db
 MINIO_ACCESS_KEY = "minioadmin"
@@ -13,8 +13,8 @@ MINIO_PORT = 9000
 
 
 @pytest.fixture
-async def minio_storage() -> AsyncIterator[S3]:
-    """Start a MinIO container and return an S3 adapter connected to it."""
+async def minio_storage() -> AsyncIterator[MinIO]:
+    """Start a MinIO container and return a MinIO adapter connected to it."""
 
     container = DockerRuntimeContainer(
         "minio/minio:latest",
@@ -28,10 +28,10 @@ async def minio_storage() -> AsyncIterator[S3]:
     try:
         container.start()
     except DockerException as exc:
-        pytest.skip(f"Docker is not available for S3 integration tests: {exc}")
+        pytest.skip(f"Docker is not available for MinIO integration tests: {exc}")
 
     endpoint_url = f"http://{container.host()}:{container.port(MINIO_PORT)}"
-    storage = S3(
+    storage = MinIO(
         endpoint_url=endpoint_url,
         access_key_id=MINIO_ACCESS_KEY,
         secret_access_key=MINIO_SECRET_KEY,
@@ -53,8 +53,8 @@ async def minio_storage() -> AsyncIterator[S3]:
 
 
 @pytest.mark.integration
-async def test_s3_adapter_manages_real_minio_buckets_objects_usage_and_cleanup(minio_storage: S3) -> None:
-    """Exercise S3 bucket, object, usage, and cleanup behavior against real MinIO."""
+async def test_minio_adapter_manages_real_buckets_objects_usage_and_cleanup(minio_storage: MinIO) -> None:
+    """Exercise MinIO bucket, object, usage, and cleanup behavior against real MinIO."""
 
     shared_bucket = await minio_storage.bucket("acme-shared")
     app_bucket = await minio_storage.bucket("acme-dashboard")

@@ -25,8 +25,8 @@ export const content = (
             <p>
                 These Terms form a binding agreement between you and LongLink SAGL. You accept them when you create an
                 account, create or join an organization, deploy or access an application, connect infrastructure, use
-                the SDK, CLI, hosted control plane, application runtime, documentation, support channels, or otherwise
-                use the Service.
+                the SDK, CLI, hosted platform, application runtime, documentation, support channels, or otherwise use
+                the Service.
             </p>
             <p>
                 You must be at least 18 years old and legally capable of entering into this agreement. If you use the
@@ -45,10 +45,10 @@ export const content = (
                 2. Definitions and contract documents
             </Heading>
             <p>
-                "Service" means the LongLink website, hosted control plane, SDK, CLI, application runtime, APIs,
-                proxying, deployment tooling, documentation, templates, and related support. "Application" means a
-                LongLink application or workload that is built, registered, deployed, proxied, rendered, tested, or
-                operated through the Service.
+                "Service" means the LongLink website, hosted platform, SDK, CLI, application runtime, APIs, proxying,
+                deployment tooling, documentation, templates, and related support. "Application" means a LongLink
+                application or workload that is built, registered, deployed, proxied, rendered, tested, or operated
+                through the Service.
             </p>
             <p>
                 "Organization" means a workspace or tenant boundary in LongLink. "Connected Infrastructure" means
@@ -72,8 +72,8 @@ export const content = (
             </Heading>
             <p>
                 The Service provides tools for building, deploying, routing, operating, and observing custom business
-                applications. Features, APIs, SDK behavior, control-plane screens, XML components, templates,
-                infrastructure adapters, and deployment behavior may change over time.
+                applications. Features, APIs, SDK behavior, platform screens, XML components, templates, infrastructure
+                adapters, and deployment behavior may change over time.
             </p>
             <p>
                 The Service is in active development and may be provided as alpha, beta, preview, self-hosted, local, or
@@ -181,7 +181,7 @@ export const content = (
                 6. Plans, fees and managed services
             </Heading>
             <p>
-                Some LongLink software may be available without charge, while hosted control-plane access, managed
+                Some LongLink software may be available without charge, while hosted platform access, managed
                 deployments, support, consulting, custom development, infrastructure operations, or other services may
                 be paid. Prices are in Swiss francs (CHF) unless stated otherwise.
             </p>
@@ -286,9 +286,9 @@ export const content = (
                 9. Our technology and feedback
             </Heading>
             <p>
-                We and our licensors retain all rights in the Service, documentation, branding, templates, SDK,
-                control-plane software, application runtime, XML renderer, infrastructure adapters, and underlying
-                technology. These Terms grant only the limited right to use the Service during the agreement.
+                We and our licensors retain all rights in the Service, documentation, branding, templates, SDK, platform
+                software, application runtime, XML renderer, infrastructure adapters, and underlying technology. These
+                Terms grant only the limited right to use the Service during the agreement.
             </p>
             <p>
                 If you voluntarily provide feedback, we may use it without restriction or payment, provided we do not

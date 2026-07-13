@@ -160,17 +160,16 @@ async def remove(operation: Operation) -> outcome.OperationOutcome:
         registry = await database.get(application.database_registry_id, include_deleted=True)
         if registry is not None:
             adapter = adapters.database(registry)
-            await adapter.delete_schema(
-                organization.slug,
-                names.application_schema(application.slug),
-                organization_id=organization.id,
-                application_id=application.id,
-            )
+            await adapter.delete_schema(organization.id, application.id)
 
     # Remove the deterministic application bucket only when storage was assigned.
     registry = await registries.application_storage(application)
     if registry is not None:
         adapter = adapters.storage(registry)
+        credentials = applications.storage_runtime_credentials(application)
+        if credentials is not None:
+            await adapter.revoke_runtime_credentials(credentials)
+
         await adapter.delete_bucket(names.application_bucket(organization.slug, application.slug))
 
     return outcome.complete()

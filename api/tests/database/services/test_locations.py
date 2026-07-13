@@ -153,10 +153,10 @@ async def test_delete_rejects_location_used_by_active_storage_registries(users: 
     owner = users[0]
     location = await db.locations.create("primary", "Primary", owner, "CH")
     await db.storage.create(
-        StorageKind.s3,
+        StorageKind.minio,
         "Primary storage",
         "primary-storage",
-        "https://s3.example",
+        "https://minio.example",
         "access-key",
         "secret-key",
         location.id,

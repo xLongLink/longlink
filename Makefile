@@ -196,7 +196,7 @@ down:
 	find . -type f -name '*.py[co]' -delete
 
 
-# Run the local control plane API server after `make seed`.
+# Run the local LongLink Platform API server after `make seed`.
 api:
 	cd api && uv sync --extra dev
 	cd api && DEVELOPMENT=true uv run alembic upgrade head

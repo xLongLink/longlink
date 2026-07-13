@@ -58,9 +58,7 @@ def test_knames_rejects_system_namespace() -> None:
 
 
 def test_runtime_names_are_derived_from_slugs() -> None:
-    """Derive runtime resource names from immutable organization and application slugs."""
+    """Derive storage names from organization and application slugs."""
 
-    assert names.organization_database("acme") == "acme"
     assert names.organization_shared_bucket("acme") == "acme-shared"
-    assert names.application_schema("dashboard") == "dashboard"
     assert names.application_bucket("acme", "dashboard") == "acme-dashboard"

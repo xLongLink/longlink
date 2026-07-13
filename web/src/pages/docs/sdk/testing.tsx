@@ -42,9 +42,9 @@ uv run longlink test tests/test_app.py -q`}</CodeBlock>
             Example
         </Heading>
         <P>
-            LongLink apps are FastAPI apps, and <Code>longlink.testing.TestClient</Code> is a compatible facade over{' '}
-            FastAPI's <A href="https://fastapi.tiangolo.com/tutorial/testing/">TestClient</A>. Use async pytest tests
-            for lower-level async services when needed.
+            LongLink applications are FastAPI applications, and <Code>longlink.testing.TestClient</Code> is a compatible
+            facade over FastAPI's <A href="https://fastapi.tiangolo.com/tutorial/testing/">TestClient</A>. Use async
+            pytest tests for lower-level async services when needed.
         </P>
         <CodeBlock language="python">{`from main import app
 from longlink.testing import TestClient

@@ -1,6 +1,6 @@
 <div align="center">
 
-# LongLink Control Panel
+# LongLink Platform API
 
 [Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://longlink.dev/docs) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
 
@@ -8,11 +8,11 @@
 
 ## Introduction
 
-The API folder contains the LongLink control plane. It manages authentication, permissions, organizations, applications, infrastructure connections, operations, and application routing.
+The API folder contains the LongLink Platform API. It manages authentication, permissions, organizations, applications, infrastructure connections, operations, and application routing.
 
 ```
 ┌───────────────────────────────────┐
-│           CONTROL PLANE           │
+│        LONGLINK PLATFORM          │
 ├───────────────────────────────────┤
 │ • Authentication                  │
 │ • Permissions                     │
@@ -25,11 +25,11 @@ The API folder contains the LongLink control plane. It manages authentication, p
 │           ORGANIZATIONS           │
 ├───────────────────────────────────┤
 │ • Users                           │
-│ •                                 │
+│ • Shared data                     │
 └───────────────────────────────────┘
                   ▼
 ┌───────────────────────────────────┐
-│               APPS                │
+│          APPLICATIONS             │
 ├───────────────────────────────────┤
 │ • Logic                           │
 │ • Storage                         │
@@ -40,6 +40,8 @@ The API folder contains the LongLink control plane. It manages authentication, p
 
 ## Development
 
+Run from `api/`:
+
 ```bash
 uv sync --extra dev
 uv run alembic upgrade head
@@ -47,13 +49,13 @@ uv run python seed.py
 DEVELOPMENT=true uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Run these commands from `api/`. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for migration, seeding, testing, and contribution details.
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for migration, seeding, testing, and contribution details.
 
 <br />
 
 ## Roles
 
-- Platform roles: apply across the full control plane.
+- Platform roles: apply across the LongLink Platform.
 - Organization roles: scope permissions within an organization.
 - Application roles: scope permissions within a single application.
 
@@ -61,9 +63,13 @@ Run these commands from `api/`. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for m
 
 ## Organizations
 
+Organizations are tenant boundaries for users, shared data, applications, and managed runtime resources. Organization creation owns database creation, tenant migrations, and shared storage setup.
+
 <br />
 
-## Apps
+## Applications
+
+Applications are LongLink SDK services deployed into an organization. Application creation owns application schema creation, runtime role provisioning, application storage setup, and deployment rollout.
 
 <br />
 

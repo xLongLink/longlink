@@ -1,7 +1,7 @@
+import { Link } from 'react-router';
 import { Package } from 'lucide-react';
 import { GitHub } from '@/svg/GitHub';
 import { LinkedIn } from '@/svg/LinkedIn';
-import { Link } from 'react-router';
 import { Wordmark } from '@/components/Wordmark';
 
 /** Renders the public landing page footer. */
@@ -11,7 +11,12 @@ export function Footer() {
             <div className="mx-auto w-full max-w-[620px] rounded-lg border border-border bg-card/80 px-4 py-3 text-card-foreground shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-md dark:shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_18px_60px_rgba(0,0,0,0.35)]">
                 <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
                     <div className="flex items-center gap-5">
-                        <Link to="/" className="inline-flex items-center leading-none" aria-label="LongLink home">
+                        <Link
+                            to="/"
+                            onClick={() => window.scrollTo({ left: 0, top: 0 })}
+                            className="inline-flex items-center leading-none"
+                            aria-label="LongLink home"
+                        >
                             <Wordmark className="gap-1.5 text-xs" />
                         </Link>
 

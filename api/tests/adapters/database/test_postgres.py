@@ -3,12 +3,12 @@ import pytest
 import psycopg
 from uuid import UUID
 from datetime import UTC, datetime
+from src.utils import names
 from containers import DockerRuntimeContainer
 from sqlalchemy import text
 from docker.errors import DockerException
 from tenant.models import User as TenantUser
 from sqlalchemy.exc import SQLAlchemyError
-from tenant.database import SHARED_SCHEMA
 from tenant.database import users as tenant_users
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -66,6 +66,9 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         password="secret",
     )
     runtime_engine = None
+    organization_id = UUID("33333333-3333-3333-3333-333333333333")
+    application_id = UUID("44444444-4444-4444-4444-444444444444")
+    schema_name = application_id.hex
 
     try:
         _wait_for_postgres(container, "longlink", "secret", "postgres")
@@ -78,20 +81,14 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             created_at=datetime(2026, 7, 1, tzinfo=UTC),
             updated_at=datetime(2026, 7, 1, tzinfo=UTC),
         )
-        database_name = await adapter.prepare_organization_database("acme")
-        async with adapter.connection(database_name, search_path=SHARED_SCHEMA) as conn:
-            await tenant_users.sync(conn, [active_user])
+        shared_schema_url = adapter.shared_schema_url(organization_id)
+        database_name = organization_id.hex
+        await adapter.prepare_organization_database(organization_id, shared_schema_url)
+        await tenant_users.sync_url(shared_schema_url, [active_user])
 
-        database_url = adapter.url("acme")
+        database_url = adapter.url(database_name)
 
-        organization_id = UUID("33333333-3333-3333-3333-333333333333")
-        application_id = UUID("44444444-4444-4444-4444-444444444444")
-        runtime_connection = await adapter.schema(
-            "acme",
-            "dashboard",
-            organization_id=organization_id,
-            application_id=application_id,
-        )
+        runtime_connection = await adapter.schema(organization_id, application_id)
         runtime_url = URL.create(
             "postgresql+psycopg",
             username=runtime_connection["username"],
@@ -113,8 +110,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
 
         inactive_at = datetime(2026, 7, 2, tzinfo=UTC)
         inactive_user = active_user.model_copy(update={"updated_at": inactive_at, "deleted_at": inactive_at})
-        async with adapter.connection(database_name, search_path=SHARED_SCHEMA) as conn:
-            await tenant_users.sync(conn, [inactive_user])
+        await tenant_users.sync_url(shared_schema_url, [inactive_user])
 
         maintenance_engine = create_async_engine(database_url)
         try:
@@ -140,46 +136,36 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
                     {"id": UUID("22222222-2222-2222-2222-222222222222")},
                 )
 
-        tables = await adapter.table_columns("acme", "dashboard")
-        table_rows = await adapter.table_rows("acme", "dashboard", "runtime_items")
-        schemas = await adapter.schemas("acme")
+        tables = await adapter.table_columns(database_name, schema_name)
+        table_rows = await adapter.table_rows(database_name, schema_name, "runtime_items")
+        schemas = await adapter.schemas(database_name)
         databases = await adapter.databases()
-        schema_usage = await adapter.schema_usage("acme")
+        schema_usage = await adapter.schema_usage(database_name)
         server_usage = await adapter.usage()
 
         await runtime_engine.dispose()
         runtime_engine = None
-        await adapter.delete_schema(
-            "acme",
-            "dashboard",
-            organization_id=organization_id,
-            application_id=application_id,
-        )
-        schemas_after_delete = await adapter.schemas("acme")
-        await adapter.delete_database("acme")
+        await adapter.delete_schema(organization_id, application_id)
+        schemas_after_delete = await adapter.schemas(database_name)
+        await adapter.delete_database(organization_id)
         databases_after_delete = await adapter.databases()
 
-        assert database_url.database == "acme"
+        assert database_url.database == organization_id.hex
         assert runtime_connection["username"].startswith("longlink_")
         assert len(runtime_connection["username"]) <= 63
         assert shared_user == {"email": "owner@example.com", "role": "owner"}
         assert deleted_at is not None
         assert [table["name"] for table in tables] == ["runtime_items"]
         assert table_rows["rows"] == [{"id": "1", "name": "Widget"}]
-        assert {"dashboard", "shared"} <= set(schemas)
-        assert "acme" in databases
-        assert {item["name"] for item in schema_usage} >= {"dashboard", "shared"}
+        assert {schema_name, "shared"} <= set(schemas)
+        assert database_name in databases
+        assert {item["name"] for item in schema_usage} >= {schema_name, "shared"}
         assert server_usage["space_used"] > 0
-        assert "dashboard" not in schemas_after_delete
-        assert "acme" not in databases_after_delete
+        assert schema_name not in schemas_after_delete
+        assert database_name not in databases_after_delete
     finally:
         if runtime_engine is not None:
             await runtime_engine.dispose()
-        await adapter.delete_schema(
-            "acme",
-            "dashboard",
-            organization_id=organization_id,
-            application_id=application_id,
-        )
-        await adapter.delete_database("acme")
+        await adapter.delete_schema(organization_id, application_id)
+        await adapter.delete_database(organization_id)
         container.stop()

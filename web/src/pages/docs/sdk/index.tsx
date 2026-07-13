@@ -33,7 +33,7 @@ function LocalRuntimeDiagram() {
                     <div className="flex items-center justify-center gap-3 pt-1 text-muted-foreground">
                         <Languages aria-label="Languages" className="size-4" />
                         <Palette aria-label="Theming" className="size-4" />
-                        <PanelTop aria-label="App shell" className="size-4" />
+                        <PanelTop aria-label="Application shell" className="size-4" />
                     </div>
                 </div>
                 <div className="flex flex-col items-center justify-center text-muted-foreground">
@@ -49,7 +49,7 @@ function LocalRuntimeDiagram() {
                         <div className="mt-1 text-sm text-muted-foreground">Runtime</div>
                     </div>
                     <div className="flex items-center justify-center gap-3 pt-1 text-muted-foreground">
-                        <Code2 aria-label="Business logic" className="size-4" />
+                        <Code2 aria-label="Application logic" className="size-4" />
                         <Database aria-label="Database logic" className="size-4" />
                         <HardDrive aria-label="File storage" className="size-4" />
                     </div>
@@ -67,22 +67,21 @@ export const metadata = {
 export const content = (
     <Stack>
         <Heading id="application-sdk" level="h2">
-            Application SDK
+            LongLink Applications / SDK
         </Heading>
         <P>
-            The Application SDK is the runtime and tooling layer for building LongLink applications as normal Python
-            services. It provides the application factory, route registration, database helpers, storage access, XML
-            page discovery, metadata endpoint, testing defaults, and image labels expected by the control plane.
+            The LongLink SDK is the runtime and tooling layer for LongLink Applications. It provides the application
+            factory, route registration, database helpers, storage access, XML page discovery, metadata endpoint,
+            testing defaults, and image labels expected by the LongLink Platform.
         </P>
         <P>
-            Process-specific behavior stays in application code. Developers define data models, validation, workflows,
-            actions, API routes, integrations, and XML pages using the Python ecosystem; LongLink provides the runtime
-            contract that lets the platform run the application consistently across local development, tests, and
-            production.
+            Application code owns the process-specific behavior: models, validation, workflows, actions, API routes,
+            integrations, and XML pages. The SDK provides the runtime contract that lets the LongLink Platform run the
+            application consistently across local development, tests, and production.
         </P>
         <P>
-            The packaged container image is the handoff from the SDK to the control plane. Local development uses the
-            SDK runtime and local services, while production receives platform-managed database, storage, routing,
+            The packaged container image is the handoff from the SDK to the LongLink Platform. Local development uses
+            the SDK runtime and local services, while production receives platform-managed database, storage, routing,
             identity, and deployment configuration.
         </P>
         <LocalRuntimeDiagram />

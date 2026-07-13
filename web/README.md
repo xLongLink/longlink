@@ -1,6 +1,6 @@
 # LongLink Web
 
-Frontend runtime, docs, and control-plane UI for LongLink.
+Frontend runtime, docs, and platform UI for LongLink.
 
 ## Development
 

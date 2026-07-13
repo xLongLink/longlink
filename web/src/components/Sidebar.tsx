@@ -154,6 +154,7 @@ export function Sidebar({ currentPath, groups }: SidebarProps) {
             <SidebarHeader className="h-[3.75rem] justify-center px-2 py-1.5 lg:h-[4.0625rem]">
                 <Link
                     to="/"
+                    onClick={() => window.scrollTo({ left: 0, top: 0 })}
                     className="flex cursor-pointer items-end justify-center gap-2 text-[1.375rem] font-semibold text-card-foreground transition-opacity hover:opacity-80"
                 >
                     <Wordmark className="text-xl" />

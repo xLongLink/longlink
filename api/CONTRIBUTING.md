@@ -1,6 +1,8 @@
 # Contributing in `api/`
 
-This folder contains the LongLink control plane. It is responsible for authentication, permissions, governance, and orchestration.
+This folder contains the LongLink Platform API. It is responsible for authentication, permissions, governance, and orchestration.
+
+Run from `api/`:
 
 ```bash
 uv sync --extra dev                # Create the development environment
@@ -35,7 +37,7 @@ The combined repository architecture is maintained in `../AGENTS.md`.
 
 - Use FastAPI `response_model` on route decorators for successful responses.
 - Return the plain Pydantic payload for normal endpoints.
-- Raise `HTTPException` for failures; the app handles error serialization centrally.
+- Raise `HTTPException` for failures; the FastAPI app handles error serialization centrally.
 - Keep error messages short, specific, and actionable.
 
 ## Testing

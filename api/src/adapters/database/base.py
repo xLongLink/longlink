@@ -2,8 +2,6 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 from typing import TypedDict
 from .types import DatabaseTableRows, DatabaseSchemaUsage, DatabaseTableColumns
-from contextlib import AbstractAsyncContextManager
-from sqlalchemy.ext.asyncio import AsyncConnection
 
 
 class DatabaseRuntimeConnection(TypedDict):
@@ -36,43 +34,23 @@ class Database(ABC):
     """
 
     @abstractmethod
-    def connection(
-        self,
-        database: str,
-        *,
-        autocommit: bool = False,
-        search_path: str | None = None,
-    ) -> AbstractAsyncContextManager[AsyncConnection]:
-        """Open one managed database connection."""
+    def shared_schema_url(self, organization: UUID) -> str:
+        """Return the shared-schema database URL for one organization."""
 
     @abstractmethod
-    async def prepare_organization_database(self, organization: str) -> str:
+    async def prepare_organization_database(self, organization: UUID, shared_schema_url: str) -> None:
         """Ensure one organization's database and shared schema are ready."""
 
     @abstractmethod
-    async def schema(
-        self,
-        organization: str,
-        application: str,
-        *,
-        organization_id: UUID,
-        application_id: UUID,
-    ) -> DatabaseRuntimeConnection:
+    async def schema(self, organization: UUID, application: UUID) -> DatabaseRuntimeConnection:
         """Create or replace the schema for one application and return runtime connection settings."""
 
     @abstractmethod
-    async def delete_schema(
-        self,
-        organization: str,
-        application: str,
-        *,
-        organization_id: UUID,
-        application_id: UUID,
-    ) -> None:
+    async def delete_schema(self, organization: UUID, application: UUID) -> None:
         """Delete the schema and runtime login role for one application."""
 
     @abstractmethod
-    async def delete_database(self, organization: str) -> None:
+    async def delete_database(self, organization: UUID) -> None:
         """Delete the database for one organization."""
 
     @abstractmethod

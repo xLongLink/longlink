@@ -26,13 +26,13 @@ def test_database_factory_builds_postgres_adapter() -> None:
     assert isinstance(adapters.database(registry), adapters.Postgres)
 
 
-def test_storage_factory_builds_s3_adapter() -> None:
-    """Build an S3 adapter from a registry record."""
+def test_storage_factory_builds_minio_adapter() -> None:
+    """Build a MinIO adapter from a registry record."""
 
     registry = StorageRegistry(
-        name="s3",
-        slug="s3",
-        kind=StorageKind.s3,
+        name="minio",
+        slug="minio",
+        kind=StorageKind.minio,
         endpoint_url="https://storage.example.test",
         access_key_id="access-key",
         secret_access_key="secret-key",
@@ -40,4 +40,4 @@ def test_storage_factory_builds_s3_adapter() -> None:
         location_id=UUID("11111111-1111-4111-8111-111111111111"),
     )
 
-    assert isinstance(adapters.storage(registry), adapters.S3)
+    assert isinstance(adapters.storage(registry), adapters.MinIO)

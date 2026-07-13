@@ -11,7 +11,7 @@ async def application_image_metadata(payload: ApplicationCreate) -> LongLinkMeta
 
     reserved_payload = sorted(name for name in payload.envs if name.startswith("LONGLINK_"))
 
-    # User payloads cannot provide values reserved for control-plane injection.
+    # User payloads cannot provide values reserved for platform injection.
     if reserved_payload:
         raise HTTPException(status_code=409, detail=f"Reserved platform environment variables: {', '.join(reserved_payload)}")
 
@@ -24,7 +24,7 @@ async def application_image_metadata(payload: ApplicationCreate) -> LongLinkMeta
     if metadata.digest is None or metadata.image is None:
         raise HTTPException(status_code=409, detail="Image digest could not be resolved")
 
-    # LongLink-prefixed values are always injected by the control plane, never declared by applications.
+    # LongLink-prefixed values are always injected by the LongLink Platform, never declared by applications.
     reserved_image: list[str] = []
     missing: list[str] = []
 
@@ -35,7 +35,7 @@ async def application_image_metadata(payload: ApplicationCreate) -> LongLinkMeta
         if not env.required:
             continue
 
-        # Runtime values with the platform prefix are injected later by the control plane.
+        # Runtime values with the platform prefix are injected later by the LongLink Platform.
         if env.name.startswith("LONGLINK_"):
             reserved_image.append(env.name)
             continue
@@ -87,7 +87,7 @@ def runtime_environment(
         if credentials is None:
             raise ValueError("Storage runtime credentials are required when storage is configured")
 
-        # Bucket names are assigned by the control plane before runtime provisioning.
+        # Bucket names are assigned by the LongLink Platform before runtime provisioning.
         if bucket is None or shared is None:
             raise ValueError("Assigned storage buckets are required when storage is configured")
 

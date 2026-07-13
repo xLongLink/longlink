@@ -52,7 +52,7 @@ import {
     Waypoints,
 } from 'lucide-react';
 
-type DocGroupTitle = 'Overview' | 'Control Plane' | 'Application SDK';
+type DocGroupTitle = 'Overview' | 'Platform' | 'Applications / SDK';
 
 type GroupedDocPage = ArticlePage & { group: DocGroupTitle };
 
@@ -70,12 +70,12 @@ type DocSection = {
 };
 
 const documentationBreadcrumb: ArticleBreadcrumb = { title: 'Documentation', path: '/docs' };
-const controlPlaneBreadcrumb: ArticleBreadcrumb = { title: 'Control Plane', path: '/docs/api' };
-const applicationSdkBreadcrumb: ArticleBreadcrumb = { title: 'Application SDK', path: '/docs/sdk' };
+const platformBreadcrumb: ArticleBreadcrumb = { title: 'Platform', path: '/docs/api' };
+const applicationsSdkBreadcrumb: ArticleBreadcrumb = { title: 'Applications / SDK', path: '/docs/sdk' };
 const docBreadcrumbsByGroup: Record<DocGroupTitle, ArticleBreadcrumb[]> = {
     Overview: [documentationBreadcrumb],
-    'Control Plane': [documentationBreadcrumb, controlPlaneBreadcrumb],
-    'Application SDK': [documentationBreadcrumb, applicationSdkBreadcrumb],
+    Platform: [documentationBreadcrumb, platformBreadcrumb],
+    'Applications / SDK': [documentationBreadcrumb, applicationsSdkBreadcrumb],
 };
 
 /** Builds a docs navigation page with breadcrumbs derived from its section. */
@@ -151,7 +151,7 @@ const DOC_SECTIONS: DocSection[] = [
             metadata: docsIndexMetadata,
         },
     ]),
-    docSection('Control Plane', [
+    docSection('Platform', [
         {
             title: 'Overview',
             path: '/docs/api',
@@ -181,7 +181,7 @@ const DOC_SECTIONS: DocSection[] = [
             metadata: docsApiSelfHostedMetadata,
         },
     ]),
-    docSection('Application SDK', [
+    docSection('Applications / SDK', [
         {
             title: 'Overview',
             path: '/docs/sdk',

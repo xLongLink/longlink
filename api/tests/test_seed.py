@@ -37,6 +37,7 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         name=seed.LOCAL_ORG,
         slug="test",
         location_id=location.id,
+        shared_schema_url="postgresql://shared/test",
     )
     compute_registry = fake_resource(
         id=UUID("44444444-4444-4444-4444-444444444444"),
@@ -173,7 +174,7 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         "user": user,
     }
     assert calls["storage"] == {
-        "kind": seed.StorageKind.s3,
+        "kind": seed.StorageKind.minio,
         "name": "local",
         "slug": "local",
         "endpoint_url": "http://localhost:19000",
@@ -216,6 +217,7 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
         name=seed.LOCAL_ORG,
         slug="test",
         location_id=location.id,
+        shared_schema_url="postgresql://shared/test",
     )
     application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
     kubeconfig = tmp_path / "kubeconfig.yaml"
@@ -262,10 +264,19 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
 
         calls["owner"] = (organization_id, user_id)
 
-    async def sync_organization_users(organization_argument: object) -> None:
+    async def sync_tenant_users(shared_schema_url: str, users: list[object]) -> None:
         """Record organization user synchronization."""
 
-        calls["organization_users"] = organization_argument
+        calls["organization_users"] = {
+            "shared_schema_url": shared_schema_url,
+            "users": users,
+        }
+
+    async def database_users(organization_id: UUID) -> list[object]:
+        """Return fake tenant users for shared synchronization."""
+
+        calls["database_users"] = organization_id
+        return [user]
 
     async def load_organization(organization_id: UUID) -> SimpleNamespace:
         """Return the existing organization details."""
@@ -300,7 +311,8 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
     monkeypatch.setattr(seed.organization_service, "fetch", fetch_organizations)
     monkeypatch.setattr(seed.organization_service, "get", load_organization)
     monkeypatch.setattr(seed, "ensure_local_organization_owner", ensure_owner)
-    monkeypatch.setattr(seed.bootstrap, "sync_organization_users", sync_organization_users)
+    monkeypatch.setattr(seed.organization_service, "database_users", database_users)
+    monkeypatch.setattr(seed.tenant_users, "sync_url", sync_tenant_users)
     monkeypatch.setattr(seed.organization_service, "applications", list_applications)
     monkeypatch.setattr(seed.resources, "create_application_runtime", create_application_runtime)
     monkeypatch.setattr(seed.resources, "sync_application_runtime", sync_application_runtime)
@@ -308,7 +320,8 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
     await seed.seed_local_development()
 
     assert calls["owner"] == (organization.id, user.id)
-    assert calls["organization_users"] == organization
+    assert calls["database_users"] == organization.id
+    assert calls["organization_users"] == {"shared_schema_url": "postgresql://shared/test", "users": [user]}
     assert calls["application_lookup"] == organization.id
     application_sync_call = cast(tuple[object, ...], calls["application_sync"])
     assert application_sync_call[0] == application

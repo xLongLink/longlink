@@ -126,7 +126,7 @@ def _migration_columns() -> dict[str, set[str]]:
 
 
 def test_alembic_migrations_have_single_linear_head() -> None:
-    """Keep the control-plane migration graph linear and predictable."""
+    """Keep the platform migration graph linear and predictable."""
 
     config = Config()
     config.set_main_option("script_location", str(Path(__file__).resolve().parents[2] / "alembic"))
@@ -137,7 +137,7 @@ def test_alembic_migrations_have_single_linear_head() -> None:
 
 
 def test_migrations_cover_current_control_plane_model_columns() -> None:
-    """Ensure all SQLModel control-plane tables and columns are represented in migrations."""
+    """Ensure all SQLModel platform tables and columns are represented in migrations."""
 
     migration_columns = _migration_columns()
     model_columns = {table.name: {column.name for column in table.columns} for table in SQLModel.metadata.sorted_tables}

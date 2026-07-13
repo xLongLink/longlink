@@ -82,8 +82,8 @@ export const content = (
             </Table>
         </div>
         <P>
-            In production, the control plane provisions the organization database, shared user schema, and application
-            schema, then injects the runtime connection settings into the application.
+            In production, the LongLink Platform provisions the organization database, shared user schema, and
+            application schema, then injects the runtime connection settings into the application.
         </P>
         <Heading id="usage" level="h2">
             Usage

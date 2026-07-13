@@ -15,7 +15,7 @@ import { useTranslation } from '@/lib/i18n';
 import { storagesQueryKey } from '@/lib/query-keys';
 
 const storageConnectionSchema = z.object({
-    kind: z.literal('s3'),
+    kind: z.enum(['minio', 'exoscale']),
     name: z.string().trim().min(1),
     endpointUrl: z.string().trim().url(),
     runtimeEndpointUrl: z.union([z.literal(''), z.string().trim().url()]),
@@ -28,7 +28,7 @@ type StorageConnectionInput = z.input<typeof storageConnectionSchema>;
 type StorageConnectionValues = z.output<typeof storageConnectionSchema>;
 
 const defaultStorageConnectionValues = {
-    kind: 's3',
+    kind: 'minio',
     name: '',
     endpointUrl: '',
     runtimeEndpointUrl: '',
@@ -125,15 +125,18 @@ export default function ConnectStorage() {
                 <Label htmlFor="storage-kind">{t('labels.kind')}</Label>
                 <Select
                     value={values.kind}
-                    onValueChange={(value) =>
-                        form.setValue('kind', value === 's3' ? value : 's3', { shouldValidate: true })
-                    }
+                    onValueChange={(value) => {
+                        if (value === 'minio' || value === 'exoscale') {
+                            form.setValue('kind', value, { shouldValidate: true });
+                        }
+                    }}
                 >
                     <SelectTrigger id="storage-kind" className="w-full">
                         <SelectValue placeholder={t('dialogs.chooseStorageKind')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="s3">S3</SelectItem>
+                        <SelectItem value="minio">MinIO</SelectItem>
+                        <SelectItem value="exoscale">Exoscale SOS</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -148,7 +151,7 @@ export default function ConnectStorage() {
                 <Input
                     id="storage-endpoint"
                     {...form.register('endpointUrl')}
-                    placeholder="https://s3.example.com"
+                    placeholder={values.kind === 'exoscale' ? 'https://sos-ch-dk-2.exo.io' : 'http://localhost:19000'}
                     autoComplete="off"
                 />
             </div>
@@ -158,7 +161,10 @@ export default function ConnectStorage() {
                 <Input
                     id="storage-runtime-endpoint"
                     {...form.register('runtimeEndpointUrl')}
-                    placeholder={values.endpointUrl || 'https://s3.example.com'}
+                    placeholder={
+                        values.endpointUrl ||
+                        (values.kind === 'exoscale' ? 'https://sos-ch-dk-2.exo.io' : 'http://localhost:19000')
+                    }
                     autoComplete="off"
                 />
             </div>

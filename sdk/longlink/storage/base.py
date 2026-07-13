@@ -21,7 +21,7 @@ def create_fs(env: Envs, bucket: str) -> AbstractFileSystem:
         if env.STORAGE_ENDPOINT_URL is None or env.STORAGE_USERNAME is None or env.STORAGE_PASSWORD is None:
             raise ValueError("Production storage settings require endpoint URL, username, and password")
 
-        # Production runtimes receive S3 connection options from the control plane.
+        # Production runtimes receive S3 connection options from the LongLink Platform.
         filesystem = fsspec.filesystem(
             "s3",
             endpoint_url=env.STORAGE_ENDPOINT_URL,

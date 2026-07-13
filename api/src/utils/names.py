@@ -43,25 +43,11 @@ def knames(value: str) -> str:
     return value
 
 
-def organization_database(organization_slug: str) -> str:
-    """Return the database name derived from an organization slug."""
-
-    # Organization databases use the immutable organization slug directly.
-    return knames(organization_slug)
-
-
 def organization_shared_bucket(organization_slug: str) -> str:
     """Return the shared storage bucket name derived from an organization slug."""
 
     # Shared buckets are scoped to the organization slug.
     return knames(f"{organization_slug}-shared")
-
-
-def application_schema(application_slug: str) -> str:
-    """Return the database schema name derived from an application slug."""
-
-    # Application schemas use the immutable application slug directly.
-    return knames(application_slug)
 
 
 def application_bucket(organization_slug: str, application_slug: str) -> str:

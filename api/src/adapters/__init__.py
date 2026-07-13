@@ -1,4 +1,4 @@
-from .storage import S3, Storage
+from .storage import MinIO, Storage, Exoscale
 from .database import Database, Postgres, DatabaseRuntimeConnection
 from .storage.base import StorageRuntimeCredentials
 from src.models.storages import StorageKind
@@ -25,9 +25,17 @@ def database(registry: DatabaseRegistry) -> Database:
 def storage(registry: StorageRegistry) -> Storage:
     """Build the storage adapter for one registry record."""
 
-    # Select the S3 adapter for supported storage registries.
-    if registry.kind == StorageKind.s3:
-        return S3(
+    # Select the MinIO adapter for local development storage registries.
+    if registry.kind == StorageKind.minio:
+        return MinIO(
+            registry.endpoint_url,
+            registry.access_key_id,
+            registry.secret_access_key,
+        )
+
+    # Select the Exoscale adapter for SOS storage registries.
+    if registry.kind == StorageKind.exoscale:
+        return Exoscale(
             registry.endpoint_url,
             registry.access_key_id,
             registry.secret_access_key,
