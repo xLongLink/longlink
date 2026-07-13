@@ -188,7 +188,7 @@ export function getRoutes(mode = import.meta.env.MODE) {
 
 /** Renders the SDK application without platform routes. */
 function SdkApplicationView() {
-    return <View metadata="/metadata.json" />;
+    return <View pages="/pages.json" />;
 }
 
 /** Resolves an organization application slug to its proxy-backed XML view. */
@@ -204,7 +204,7 @@ function OrganizationApplicationView() {
 
     // Show the shell while organization/application access is still resolving.
     if (isLoading) {
-        return <View applicationStatus="loading" metadata="" />;
+        return <View applicationStatus="loading" pages="" />;
     }
 
     // Hide unknown org/app combinations behind the shared 404 page.
@@ -215,8 +215,8 @@ function OrganizationApplicationView() {
     return (
         <View
             applicationStatus={organizationApplication.status}
-            metadata={`/api/applications/${organizationApplication.id}/proxy/metadata.json`}
             locale={language}
+            pages={`/api/applications/${organizationApplication.id}/proxy/pages.json`}
         />
     );
 }

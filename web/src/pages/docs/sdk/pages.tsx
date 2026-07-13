@@ -49,7 +49,7 @@ export const content = (
                 <Li>
                     <Code>src/pages</Code> contains XML page files. Files are registered recursively under{' '}
                     <Code>/pages</Code>, so <Code>src/pages/admin/users.xml</Code> is served as{' '}
-                    <Code>/pages/admin/users.xml</Code>, listed in <Code>/metadata.json</Code>, and available in the
+                    <Code>/pages/admin/users.xml</Code>, listed in <Code>/pages.json</Code>, and available in the
                     browser at <Code>/admin/users</Code>.
                 </Li>
                 <Li>
@@ -74,7 +74,7 @@ export const content = (
             <P>
                 Dynamic browser pages come from file names. Use square brackets around one path segment to declare a
                 route parameter; the SDK keeps serving the XML file from its literal <Code>/pages</Code> path and
-                exposes the derived browser route through <Code>/metadata.json</Code>.
+                exposes the derived browser route through <Code>/pages.json</Code>.
             </P>
             <Ul>
                 <Li>
@@ -132,7 +132,7 @@ app = LongLink(
             <P>
                 The root <Code>longlink</Code> element can define page tab metadata with <Code>name</Code> and{' '}
                 <Code>icon</Code>. During page registration, the SDK reads these values and includes them in{' '}
-                <Code>/metadata.json</Code> so the web runtime can render application navigation consistently.
+                <Code>/pages.json</Code> so the web runtime can render application navigation consistently.
             </P>
             <Ul>
                 <Li>

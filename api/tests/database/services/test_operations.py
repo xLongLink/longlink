@@ -142,7 +142,7 @@ async def test_operations_service_tracks_successful_operation_lifecycle() -> Non
 
     # Act
     operation = await db.operations.create(
-        OperationKind.application_verify,
+        OperationKind.application_create,
         application_id=application.id,
         user=user,
     )
@@ -178,7 +178,7 @@ async def test_operations_service_tracks_failed_operation_lifecycle() -> None:
 
     # Act
     operation = await db.operations.create(
-        OperationKind.application_verify,
+        OperationKind.application_create,
         application_id=application.id,
         user=user,
     )
@@ -213,7 +213,7 @@ async def test_operations_service_defers_active_operation() -> None:
 
     # Act
     operation = await db.operations.create(
-        OperationKind.application_verify,
+        OperationKind.application_create,
         application_id=application.id,
         user=user,
     )
@@ -283,7 +283,7 @@ async def test_operations_service_resets_active_operations(monkeypatch) -> None:
         user=user,
     )
     operation = await db.operations.create(
-        OperationKind.application_verify,
+        OperationKind.application_create,
         application_id=application.id,
         user=user,
     )

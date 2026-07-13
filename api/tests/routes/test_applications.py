@@ -4,6 +4,7 @@ from uuid import UUID
 from types import SimpleNamespace
 from datetime import UTC, datetime
 from src.utils import names
+from src.utils.jobs import execute
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from fastapi.testclient import TestClient
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
@@ -307,6 +308,12 @@ async def test_create_app_returns_app_response(
                 "secrets": secrets,
             }
 
+        async def ready(self, application_id: str) -> bool:
+            """Pretend the newly created workload is ready."""
+
+            captured["ready"] = application_id
+            return True
+
     class FakeDatabase:
         """Fake database adapter for app creation tests."""
 
@@ -373,9 +380,9 @@ async def test_create_app_returns_app_response(
                 "secret_access_key": "runtime-storage-secret",
             }
 
-    monkeypatch.setattr("src.kubernetes.provisioning.Kubernetes", FakeCompute)
+    monkeypatch.setattr("src.operations.applications.Kubernetes", FakeCompute)
     monkeypatch.setattr(
-        "src.kubernetes.provisioning.adapters.database",
+        "src.operations.applications.adapters.database",
         lambda registry: FakeDatabase(
             registry.host,
             registry.port,
@@ -383,9 +390,9 @@ async def test_create_app_returns_app_response(
             registry.password,
         ),
     )
-    monkeypatch.setattr("src.kubernetes.provisioning.tenant_users.sync_url", sync_tenant_users)
+    monkeypatch.setattr("src.operations.applications.tenant_users.sync_url", sync_tenant_users)
     monkeypatch.setattr(
-        "src.kubernetes.provisioning.adapters.storage",
+        "src.operations.applications.adapters.storage",
         lambda registry: FakeStorage(
             registry.endpoint_url,
             registry.access_key_id,
@@ -407,6 +414,10 @@ async def test_create_app_returns_app_response(
             },
         },
     )
+    queued = await db.operations.fetch()
+    claimed = await db.operations.claim(queued[0].id)
+    assert claimed is not None
+    await execute(claimed)
 
     # Assert
     assert response.status_code == 200
@@ -417,6 +428,7 @@ async def test_create_app_returns_app_response(
     assert payload["sdk"] == "0.1.0"
     assert payload["digest"] == "sha256:manifest"
     assert "gateway_url" not in payload
+    assert queued[0].kind == OperationKind.application_create
     assert captured["namespace"] == "acme"
     assert captured["proxy_secret"]
     schema_payload = captured["schema"]
@@ -999,7 +1011,7 @@ async def test_application_proxy_requires_application_role_for_regular_member(
     client = clients[1]
 
     # Act
-    response = client.get(f"/api/applications/{app.id}/proxy/metadata.json")
+    response = client.get(f"/api/applications/{app.id}/proxy/pages.json")
 
     # Assert
     assert response.status_code == 403
@@ -1284,7 +1296,7 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/applications/{app.id}/proxy/metadata.json")
+    response = client.get(f"/api/applications/{app.id}/proxy/pages.json")
 
     # Assert
     assert response.status_code == 503

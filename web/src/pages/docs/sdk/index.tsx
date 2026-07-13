@@ -71,7 +71,7 @@ export const content = (
         </Heading>
         <P>
             The LongLink SDK is the runtime and tooling layer for LongLink Applications. It provides the application
-            factory, route registration, database helpers, storage access, XML page discovery, metadata endpoint,
+            factory, route registration, database helpers, storage access, XML page discovery, page manifest endpoint,
             testing defaults, and image labels expected by the LongLink Platform.
         </P>
         <P>

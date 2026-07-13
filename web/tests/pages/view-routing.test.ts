@@ -1,7 +1,7 @@
 import { findPageRouteMatch, pageRoutePattern } from '@/pages/View';
 import { describe, expect, it } from 'bun:test';
 
-describe('View route metadata', () => {
+describe('View page routes', () => {
     it('matches exact routes before dynamic routes', () => {
         const pages = [
             { path: 'pages/issues/[issue].xml', route: 'issues/:issue', tab: 'issues' },
@@ -23,7 +23,7 @@ describe('View route metadata', () => {
         expect(match?.params).toEqual({ issue: '123' });
     });
 
-    it('uses explicit metadata routes', () => {
+    it('uses explicit page routes', () => {
         const pages = [{ path: 'pages/dashboard.xml', route: 'dashboard', tab: 'dashboard' }];
 
         expect(pageRoutePattern(pages[0])).toBe('dashboard');

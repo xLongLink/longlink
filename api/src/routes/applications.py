@@ -1,4 +1,5 @@
 import httpx2
+import asyncio
 from uuid import UUID
 from typing import cast
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
@@ -7,11 +8,11 @@ from src.auth import authuser, authadmin
 from src.utils import names, roles
 from src.logger import logger
 from src.kubernetes import environments
-from src.kubernetes import provisioning as resources
 from src.models.roles import APPLICATION_PROXY_METHODS, Ranks, ApplicationRoles, OrganizationRoles, ApplicationProxyMethodRanks
 from src.models.statuses import ApplicationStatus
 from src.database.services import operations, registries, applications
 from src.kubernetes.client import Kubernetes
+from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate, ApplicationResponse, ApplicationMemberUpdate, ApplicationMemberResponse
 from src.database.models.users import User
 from src.database.models.association import UserApplication
@@ -53,124 +54,48 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid application runtime resource name") from exc
 
-    # Create the application and convert infrastructure failures into API availability errors.
+    logger.info("Creating application %s/%s", organization.slug, application_slug)
+
+    # Resolve independent metadata and registry requirements concurrently.
+    metadata, compute, database, storage = await asyncio.gather(
+        environments.application_image_metadata(payload),
+        registries.compute(organization.location_id),
+        registries.database(organization.location_id),
+        registries.storage(organization.location_id),
+    )
+    digest = cast(str, metadata.digest)
+
+    # Application creation requires every assigned runtime backend.
+    if compute is None or database is None or storage is None or organization.shared_schema_url is None:
+        raise HTTPException(status_code=503, detail="Application runtime provisioning failed")
+
+    application = await applications.create(
+        organization.id,
+        payload.name,
+        application_slug,
+        image=payload.image,
+        compute_registry_id=compute.id,
+        database_registry_id=database.id,
+        storage_registry_id=storage.id,
+        sdk=metadata.sdk,
+        digest=digest,
+        version=metadata.version,
+        status=ApplicationStatus.creating,
+        description=payload.description,
+        icon=payload.icon.value if payload.icon is not None else None,
+        envs=payload.envs,
+        user=user,
+    )
+
+    # Queue external resource creation and readiness checks for the worker.
     try:
-        logger.info("Provisioning application %s/%s", organization.slug, application_slug)
-
-        metadata = await environments.application_image_metadata(payload)
-        digest = cast(str, metadata.digest)
-        image = cast(str, metadata.image)
-
-        # Application runtime requires a compute backend in the organization location.
-        compute = await registries.compute(organization.location_id)
-        if compute is None:
-            raise RuntimeError("No compute cluster configured")
-
-        # Application runtime requires a tenant database backend.
-        database = await registries.database(organization.location_id)
-        if database is None:
-            raise RuntimeError("No database configured")
-
-        # Application provisioning requires the organization runtime URL created with the organization.
-        if organization.shared_schema_url is None:
-            raise RuntimeError("Organization has no shared schema URL")
-
-        # Application runtime requires shared object storage in the organization location.
-        storage = await registries.storage(organization.location_id)
-        if storage is None:
-            raise RuntimeError("No storage configured")
-
-        application = await applications.create(
-            organization.id,
-            payload.name,
-            application_slug,
-            image=payload.image,
-            compute_registry_id=compute.id,
-            database_registry_id=database.id,
-            storage_registry_id=storage.id,
-            sdk=metadata.sdk,
-            digest=digest,
-            version=metadata.version,
-            status=ApplicationStatus.creating,
-            description=payload.description,
-            icon=payload.icon.value if payload.icon is not None else None,
-            user=user,
-        )
-
-        # Provision the namespace, schema, and workload in order so failures can mark the application as failed.
-        try:
-            await resources.provision_application_runtime_resources(
-                organization,
-                application,
-                payload,
-                image,
-                compute,
-                database,
-                storage,
-            )
-
-        # Failed provisioning leaves a failed application row and triggers best-effort cleanup.
-        except Exception as exc:
-            await applications.set_status(application.id, ApplicationStatus.failed)
-            logger.exception(
-                "Failed to initialize application runtime for %s/%s: %r",
-                organization.slug,
-                application_slug,
-                exc,
-            )
-
-            # Queue cleanup for any resources that were created before provisioning failed.
-            try:
-                await operations.queue_application_removal(application.id, scheduled_at=datetime.now(UTC), user=user)
-
-            # Cleanup failures should not hide the original provisioning error.
-            except Exception as cleanup_exc:
-                logger.exception(
-                    "Failed to queue partial application runtime cleanup for %s/%s: %r",
-                    organization.slug,
-                    application_slug,
-                    cleanup_exc,
-                )
-
-            raise RuntimeError("Failed to initialize the application") from exc
-
-        # Queue verification only after the workload has been applied.
-        try:
-            operation = await operations.queue_application_verification(application.id, user)
-
-        # If verification cannot be queued, the applied workload must be removed.
-        except Exception as exc:
-            await applications.set_status(application.id, ApplicationStatus.failed)
-
-            # The workload exists at this point, but without verification it must not be left running.
-            try:
-                await operations.queue_application_removal(application.id, scheduled_at=datetime.now(UTC), user=user)
-
-            # Cleanup failures should not hide the queueing error.
-            except Exception as cleanup_exc:
-                logger.exception(
-                    "Failed to queue unverified application runtime cleanup for %s/%s: %r",
-                    organization.slug,
-                    application_slug,
-                    cleanup_exc,
-                )
-
-            logger.exception(
-                "Failed to queue application verification for %s/%s: %r",
-                organization.slug,
-                payload.name,
-                exc,
-            )
-            raise RuntimeError("Failed to queue application verification") from exc
-
-        logger.info(
-            "Queued application verification %s for %s/%s",
-            operation.id,
-            organization.slug,
-            payload.name,
-        )
-    except RuntimeError as exc:
+        operation = await operations.create(OperationKind.application_create, application_id=application.id, user=user)
+    except Exception as exc:
+        await applications.set_status(application.id, ApplicationStatus.failed)
+        logger.exception("Failed to queue application creation for %s/%s: %r", organization.slug, application_slug, exc)
         raise HTTPException(status_code=503, detail="Application runtime provisioning failed") from exc
+
+    logger.info("Queued application creation %s for %s/%s", operation.id, organization.slug, payload.name)
 
     # Reload the row so response serialization includes relationships populated by the service layer.
     reloaded_application = await applications.get(application.id)
@@ -342,7 +267,12 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
         raise HTTPException(status_code=404, detail="Application not found")
 
     # Runtime cleanup is asynchronous so the delete request is not blocked by cluster calls.
-    await operations.queue_application_removal(application.id, scheduled_at=datetime.now(UTC), user=user)
+    await operations.create(
+        OperationKind.application_remove,
+        application_id=application.id,
+        scheduled_at=datetime.now(UTC),
+        user=user,
+    )
 
 
 @router.api_route("/api/applications/{application_id}/proxy", methods=APPLICATION_PROXY_METHODS)
@@ -379,7 +309,7 @@ async def proxy_application_request(request: Request, application_id: UUID, path
             detail=f"Application {required_application_role.value} access required",
         )
 
-    # Let the web runtime show a loading state while deployment verification is still pending.
+    # Let the web runtime show a loading state while application creation is still pending.
     if application.status != ApplicationStatus.running:
         return Response(status_code=503, headers={"cache-control": "no-store"})
 

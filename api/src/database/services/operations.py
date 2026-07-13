@@ -131,20 +131,6 @@ async def create(
         return operation
 
 
-async def queue_application_verification(application_id: UUID, user: User | None = None) -> Operation:
-    """Queue a metadata-only operation that verifies application runtime readiness."""
-
-    # Application verification only needs the application reference.
-    return await create(OperationKind.application_verify, application_id=application_id, user=user)
-
-
-async def queue_application_removal(application_id: UUID, scheduled_at: datetime | None = None, user: User | None = None) -> Operation:
-    """Queue a metadata-only operation that removes one deleted application's runtime resources."""
-
-    # Application cleanup only needs the application reference and optional schedule.
-    return await create(OperationKind.application_remove, application_id=application_id, scheduled_at=scheduled_at, user=user)
-
-
 async def queue_organization_removal(organization_id: UUID, scheduled_at: datetime | None = None, user: User | None = None) -> Operation:
     """Queue a metadata-only operation that removes one deleted organization's runtime resources."""
 

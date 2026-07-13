@@ -20,7 +20,7 @@ longlink/
 │   │   ├── .static/web/          # Built API-mode web bundle
 │   │   ├── adapters/             # Infrastructure adapters
 │   │   ├── database/             # Database session, models, services
-│   │   ├── kubernetes/           # Kubernetes client, provisioning, and templates
+│   │   ├── kubernetes/           # Kubernetes client and templates
 │   │   ├── models/               # FastAPI and domain schemas
 │   │   ├── operations/           # Operation orchestration
 │   │   ├── routes/               # FastAPI routes

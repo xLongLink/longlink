@@ -1,13 +1,15 @@
 import asyncio
 import subprocess
 from uuid import UUID
+from typing import cast
 from pathlib import Path
 from datetime import UTC, datetime
 from src.utils import names
 from src.routes import applications as application_routes
 from src.routes import organizations as organization_routes
-from src.kubernetes import provisioning as resources
+from src.kubernetes import environments
 from src.models.roles import PlatformRoles, OrganizationRoles
+from src.models.statuses import ApplicationStatus
 from src.models.storages import StorageKind
 from src.database.session import session_scope
 from src.models.databases import DatabaseKind
@@ -17,8 +19,12 @@ from src.database.services import compute as compute_service
 from src.database.services import storage as storage_service
 from src.database.services import database as database_service
 from src.database.services import locations as location_service
+from src.database.services import operations as operation_service
+from src.database.services import registries as registry_service
+from src.database.services import applications as application_service
 from src.database.services import organizations as organization_service
 from src.kubernetes.client import Kubernetes
+from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
 from longlink.tenant.database import users as tenant_users
 from src.models.organizations import OrganizationCreate
@@ -279,12 +285,40 @@ async def seed_local_development() -> None:
 
     # Reused sample apps should refresh their runtime image and metadata.
     else:
-        await resources.sync_application_runtime(
-            application,
-            organization_record,
-            application_payload,
-            admin_user,
+        metadata, application_compute, application_database, application_storage = await asyncio.gather(
+            environments.application_image_metadata(application_payload),
+            registry_service.application_compute(application, organization_record.location_id),
+            registry_service.database(organization_record.location_id),
+            registry_service.application_storage(application),
         )
+
+        # Existing applications without assigned storage adopt the location backend.
+        if application_storage is None:
+            application_storage = await registry_service.storage(organization_record.location_id)
+
+        # Runtime refresh requires all assigned registries before queueing external work.
+        if application_compute is None or application_database is None or application_storage is None:
+            raise RuntimeError("Seeded application runtime registry could not be loaded")
+
+        updated = await application_service.update_runtime(
+            application.id,
+            image=application_payload.image,
+            compute_registry_id=application_compute.id,
+            database_registry_id=application_database.id,
+            storage_registry_id=application_storage.id,
+            sdk=metadata.sdk,
+            digest=cast(str, metadata.digest),
+            version=metadata.version,
+            status=ApplicationStatus.creating,
+            description=application_payload.description,
+            icon=application_payload.icon.value if application_payload.icon is not None else None,
+            envs=application_payload.envs,
+            user=admin_user,
+        )
+        if updated is None:
+            raise RuntimeError("Seeded application could not be updated")
+
+        await operation_service.create(OperationKind.application_create, application_id=application.id, user=admin_user)
 
 
 def main() -> None:

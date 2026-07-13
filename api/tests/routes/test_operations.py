@@ -31,7 +31,7 @@ async def test_operations_endpoint_returns_recorded_operations(
         user=user,
     )
     operation = await db.operations.create(
-        OperationKind.application_verify,
+        OperationKind.application_create,
         application_id=application.id,
         user=user,
     )

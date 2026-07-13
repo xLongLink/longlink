@@ -16,8 +16,8 @@ class OperationStatus(StrEnum):
 class OperationKind(StrEnum):
     """Supported long-running operation types."""
 
+    application_create = "application.create"
     application_remove = "application.remove"
-    application_verify = "application.verify"
     organization_remove = "organization.remove"
 
 

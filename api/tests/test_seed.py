@@ -141,11 +141,6 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         calls["application_create"] = args
         return fake_resource(id=UUID("77777777-7777-7777-7777-777777777777"))
 
-    async def sync_application_runtime(*args: object) -> object:
-        """Fail if creation unexpectedly takes the sync path."""
-
-        raise AssertionError(f"Unexpected application sync: {args}")
-
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
     monkeypatch.setattr(seed, "local_database_host", local_database_host)
     monkeypatch.setattr(seed, "seed_local_administrator", seed_administrator)
@@ -164,7 +159,6 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
     monkeypatch.setattr(seed.organization_service, "applications", list_no_applications)
     monkeypatch.setattr(seed.users, "get", load_user)
     monkeypatch.setattr(seed.application_routes, "create_application", create_application)
-    monkeypatch.setattr(seed.resources, "sync_application_runtime", sync_application_runtime)
 
     await seed.seed_local_development()
 
@@ -229,6 +223,9 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
         shared_schema_url="postgresql://shared/test",
     )
     application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
+    application_compute = fake_resource(id=UUID("55555555-5555-5555-5555-555555555555"))
+    application_database = fake_resource(id=UUID("66666666-6666-6666-6666-666666666666"))
+    application_storage = fake_resource(id=UUID("77777777-7777-7777-7777-777777777777"))
     kubeconfig = tmp_path / "kubeconfig.yaml"
     kubeconfig.write_text("apiVersion: v1\nclusters: []\n", encoding="utf-8")
     calls: dict[str, object] = {}
@@ -304,11 +301,38 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
 
         raise AssertionError(f"Unexpected application create: {args}")
 
-    async def sync_application_runtime(*args: object) -> object:
-        """Record the application runtime sync request."""
+    async def application_metadata(payload: object) -> SimpleNamespace:
+        """Return refreshed metadata for the existing sample image."""
 
-        calls["application_sync"] = args
+        calls["application_metadata"] = payload
+        return fake_resource(sdk="0.1.0", digest="sha256:manifest", version="20260713_120000")
+
+    async def select_application_compute(*args: object) -> SimpleNamespace:
+        """Return the application's compute registry."""
+
+        return application_compute
+
+    async def select_application_database(*args: object) -> SimpleNamespace:
+        """Return the application's database registry."""
+
+        return application_database
+
+    async def select_application_storage(*args: object) -> SimpleNamespace:
+        """Return the application's storage registry."""
+
+        return application_storage
+
+    async def update_application_runtime(application_id: UUID, **kwargs: object) -> SimpleNamespace:
+        """Record the desired runtime update."""
+
+        calls["application_update"] = (application_id, kwargs)
         return application
+
+    async def create_operation(*args: object, **kwargs: object) -> SimpleNamespace:
+        """Record the queued application creation operation."""
+
+        calls["operation"] = (args, kwargs)
+        return fake_resource(id=UUID("88888888-8888-8888-8888-888888888888"))
 
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
     monkeypatch.setattr(seed, "local_database_host", local_database_host)
@@ -324,7 +348,12 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
     monkeypatch.setattr(seed.tenant_users, "sync_url", sync_tenant_users)
     monkeypatch.setattr(seed.organization_service, "applications", list_applications)
     monkeypatch.setattr(seed.application_routes, "create_application", create_application)
-    monkeypatch.setattr(seed.resources, "sync_application_runtime", sync_application_runtime)
+    monkeypatch.setattr(seed.environments, "application_image_metadata", application_metadata)
+    monkeypatch.setattr(seed.registry_service, "application_compute", select_application_compute)
+    monkeypatch.setattr(seed.registry_service, "database", select_application_database)
+    monkeypatch.setattr(seed.registry_service, "application_storage", select_application_storage)
+    monkeypatch.setattr(seed.application_service, "update_runtime", update_application_runtime)
+    monkeypatch.setattr(seed.operation_service, "create", create_operation)
 
     await seed.seed_local_development()
 
@@ -332,7 +361,10 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
     assert calls["database_users"] == organization.id
     assert calls["organization_users"] == {"shared_schema_url": "postgresql://shared/test", "users": [user]}
     assert calls["application_lookup"] == organization.id
-    application_sync_call = cast(tuple[object, ...], calls["application_sync"])
-    assert application_sync_call[0] == application
-    assert application_sync_call[1] == organization
-    assert application_sync_call[3] == user
+    application_update = cast(tuple[object, dict[str, object]], calls["application_update"])
+    assert application_update[0] == application.id
+    assert application_update[1]["digest"] == "sha256:manifest"
+    operation_args, operation_kwargs = cast(tuple[tuple[object, ...], dict[str, object]], calls["operation"])
+    assert operation_args == (seed.OperationKind.application_create,)
+    assert operation_kwargs["application_id"] == application.id
+    assert operation_kwargs["user"] == user

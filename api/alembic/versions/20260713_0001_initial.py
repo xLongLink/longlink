@@ -283,6 +283,7 @@ def upgrade() -> None:
         sa.Column("digest", sa.String(length=255), nullable=True),
         sa.Column("version", sa.String(length=128), nullable=True),
         sa.Column("description", sa.String(length=255), nullable=True),
+        sa.Column("envs", sa.JSON(), nullable=False),
         sa.Column("storage_runtime_key_id", sa.String(length=255), nullable=True),
         sa.Column("storage_runtime_role_id", sa.String(length=255), nullable=True),
         sa.Column("storage_runtime_secret_access_key", sa.String(length=255), nullable=True),
@@ -404,8 +405,8 @@ def upgrade() -> None:
         sa.Column(
             "kind",
             sa.Enum(
+                "application.create",
                 "application.remove",
-                "application.verify",
                 "organization.remove",
                 name="operation_kind_enum",
                 native_enum=False,

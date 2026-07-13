@@ -1,6 +1,6 @@
 import { buttonVariants } from '@/components/ui/button';
 import { createLucideIconComponent } from '@/components/ui/icon';
-import { useMetadata, type MetadataPage } from '@/hooks/use-metadata';
+import { usePages, type RuntimePage } from '@/hooks/use-pages';
 import XML from '@/layout/XmlLayout';
 import { ApiError, fetchApiText } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
@@ -20,8 +20,8 @@ import NotFound from './NotFound';
 
 type ViewProps = {
     applicationStatus?: ApiOrganizationApplication['status'] | 'loading';
-    metadata: string;
     locale?: string;
+    pages: string;
     runtimeContext?: ExecutionContext;
     runtimeKey?: string;
 };
@@ -57,13 +57,13 @@ type PageParseResult = {
 };
 
 type PageRouteMatch = {
-    page: MetadataPage;
+    page: RuntimePage;
     params: Record<string, string>;
     path: string;
 };
 
-type MetadataRoute = RouteObject & {
-    page: MetadataPage;
+type RuntimeRoute = RouteObject & {
+    page: RuntimePage;
 };
 
 const emptyRouteParams: Record<string, string> = {};
@@ -75,28 +75,28 @@ function normalizePath(path: string): string {
     return path.replace(/^\/+|\/+$/g, '');
 }
 
-/** Returns the route pattern exposed by metadata. */
-export function pageRoutePattern(page: MetadataPage): string {
+/** Returns the route pattern exposed by a runtime page. */
+export function pageRoutePattern(page: RuntimePage): string {
     return normalizePath(page.route);
 }
 
-/** Returns true when a metadata route contains dynamic path segments. */
-function pageRouteIsDynamic(page: MetadataPage): boolean {
+/** Returns true when a page route contains dynamic path segments. */
+function pageRouteIsDynamic(page: RuntimePage): boolean {
     return pageRoutePattern(page)
         .split('/')
         .some((segment) => segment.startsWith(':'));
 }
 
-/** Finds the best metadata page for the current app-relative browser path. */
-export function findPageRouteMatch(pages: MetadataPage[] | undefined, path: string): PageRouteMatch | null {
-    const routes = (pages ?? []).map<MetadataRoute>((page) => ({
+/** Finds the best runtime page for the current app-relative browser path. */
+export function findPageRouteMatch(pages: RuntimePage[] | undefined, path: string): PageRouteMatch | null {
+    const routes = (pages ?? []).map<RuntimeRoute>((page) => ({
         path: pageRoutePattern(page) || '/',
         page,
     }));
     const routePath = normalizePath(path);
     const [match] = matchRoutes(routes, `/${routePath}`) ?? [];
 
-    // Stop when no metadata route matches the path.
+    // Stop when no page route matches the path.
     if (!match) return null;
 
     return {
@@ -108,7 +108,7 @@ export function findPageRouteMatch(pages: MetadataPage[] | undefined, path: stri
     };
 }
 
-/** Builds an app-shell href for one metadata route path. */
+/** Builds an app-shell href for one page route path. */
 function resolveApplicationHref(routePath: string, organization?: string, application?: string): string {
     const normalizedRoutePath = normalizePath(routePath);
     const basePath =
@@ -200,9 +200,9 @@ function parsePageContent(content: string): PageParseResult {
 }
 
 /**
- * Renders metadata-backed XML pages for platform and application routes.
+ * Renders registered XML pages for platform and application routes.
  */
-export default function View({ applicationStatus, locale, metadata, runtimeContext, runtimeKey }: ViewProps) {
+export default function View({ applicationStatus, locale, pages, runtimeContext, runtimeKey }: ViewProps) {
     const { t } = useTranslation();
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
@@ -211,19 +211,19 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
     const inFlightPageKeysRef = useRef<Set<string>>(new Set());
     const runtimeContextRef = useRef<ExecutionContext | undefined>(runtimeContext);
     const routeParams = { organization, application } as Record<string, string | undefined>;
-    const resolvedMetadata = resolveTemplate(metadata, routeParams);
-    const resolvedMetadataBaseUrl = resolvedMetadata.replace(/metadata\.json(?:[?#].*)?$/i, '');
+    const resolvedPages = resolveTemplate(pages, routeParams);
+    const resolvedPagesBaseUrl = resolvedPages.replace(/pages\.json(?:[?#].*)?$/i, '');
     const navigationBaseUrl = resolveApplicationHref('', organization, application);
-    const pageCacheKey = `${resolvedMetadata}\u0000${runtimeKey ?? ''}`;
+    const pageCacheKey = `${resolvedPages}\u0000${runtimeKey ?? ''}`;
     const applicationIsLoading = applicationStatus !== undefined && applicationStatus !== 'running';
-    const { data: metadataDocument, isLoading, error } = useMetadata(resolvedMetadata, !applicationIsLoading);
+    const { data: registeredPages, isLoading, error } = usePages(resolvedPages, !applicationIsLoading);
     const normalizedRoutePath = normalizePath(wildcardPath ?? '');
     const activeRouteMatch = useMemo(
-        () => findPageRouteMatch(metadataDocument?.pages, normalizedRoutePath),
-        [metadataDocument?.pages, normalizedRoutePath]
+        () => findPageRouteMatch(registeredPages, normalizedRoutePath),
+        [registeredPages, normalizedRoutePath]
     );
     /* Resolve explicit browser routes first so dynamic detail views can share a tab with their list page. */
-    const activePage = activeRouteMatch?.page ?? (!normalizedRoutePath ? metadataDocument?.pages[0] : undefined);
+    const activePage = activeRouteMatch?.page ?? (!normalizedRoutePath ? registeredPages?.[0] : undefined);
     const activePagePath = activePage?.path;
     const activePageTab = activePage?.tab;
     let activeRoutePath = normalizedRoutePath;
@@ -241,8 +241,8 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
         activePageState?.cacheKey === pageCacheKey &&
         activePageState.path === activePagePath &&
         activePageState.routePath === activeRoutePath;
-    const isNotFound = Boolean(metadataDocument?.pages && normalizedRoutePath && !activeRouteMatch);
-    const metadataLoading = error instanceof ApiError && error.status === 503;
+    const isNotFound = Boolean(registeredPages && normalizedRoutePath && !activeRouteMatch);
+    const pagesLoading = error instanceof ApiError && error.status === 503;
 
     runtimeContextRef.current = runtimeContext;
 
@@ -255,18 +255,18 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
     // Make the first page explicit in the URL when the app loads without a selected view.
     useEffect(() => {
         // Skip redirects when the view is already selected.
-        if (!metadataDocument?.pages.length || normalizedRoutePath) {
+        if (!registeredPages?.length || normalizedRoutePath) {
             return;
         }
 
-        const firstPage = metadataDocument.pages[0];
+        const firstPage = registeredPages[0];
         const firstPageRoute = pageRoutePattern(firstPage);
 
-        // Prefer route navigation for static metadata routes.
+        // Prefer route navigation for static page routes.
         if (firstPageRoute && !pageRouteIsDynamic(firstPage)) {
             navigate(resolveApplicationHref(firstPageRoute, organization, application), { replace: true });
         }
-    }, [application, metadataDocument?.pages, navigate, normalizedRoutePath, organization]);
+    }, [application, navigate, normalizedRoutePath, organization, registeredPages]);
 
     const tabs = useMemo(() => {
         const tabGroups = new Map<
@@ -281,7 +281,7 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
         >();
 
         // Build one visible navigation target per tab.
-        for (const page of metadataDocument?.pages ?? []) {
+        for (const page of registeredPages ?? []) {
             const label = page.name?.trim() || startCase(page.tab);
             const iconName = page.icon?.trim();
             const icon = iconName ? createLucideIconComponent(iconName) : undefined;
@@ -322,7 +322,7 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
                     : { active: tab.active, href: tab.href },
             ])
         );
-    }, [activePageTab, application, metadataDocument?.pages, organization]);
+    }, [activePageTab, application, organization, registeredPages]);
 
     /* Load each XML page once for the active route instance. */
     useEffect(() => {
@@ -371,9 +371,9 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
         };
         let pageUrl: string;
 
-        // Validate metadata page paths before fetch so app metadata cannot request external URLs.
+        // Validate registered page paths before fetch so an app cannot request external URLs.
         try {
-            pageUrl = resolveRequestUrl(resolvedMetadataBaseUrl, activePagePath);
+            pageUrl = resolveRequestUrl(resolvedPagesBaseUrl, activePagePath);
         } catch (urlError: unknown) {
             const errorPageState = {
                 ...loadingPageState,
@@ -492,11 +492,11 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
         applicationIsLoading,
         navigationBaseUrl,
         pageCacheKey,
-        resolvedMetadataBaseUrl,
+        resolvedPagesBaseUrl,
     ]);
 
     // Show deployment loading before rendering runtime pages.
-    if (applicationIsLoading || metadataLoading) {
+    if (applicationIsLoading || pagesLoading) {
         return (
             <XML tabs={tabs}>
                 <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
@@ -506,7 +506,7 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
         );
     }
 
-    // Surface metadata loading failures in the shell.
+    // Surface page manifest loading failures in the shell.
     if (error) {
         return (
             <XML tabs={tabs}>
@@ -541,7 +541,7 @@ export default function View({ applicationStatus, locale, metadata, runtimeConte
                     key={`${runtimeKey ?? 'runtime'}-${pageState.stateKey}`}
                     active={pageIsActive}
                     ast={pageState.ast}
-                    baseUrl={resolvedMetadataBaseUrl}
+                    baseUrl={resolvedPagesBaseUrl}
                     ctx={pageState.runtimeContext}
                     locale={locale}
                 />

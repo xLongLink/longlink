@@ -12,19 +12,10 @@ def test_development_flag_enables_development(monkeypatch) -> None:
     assert _development_enabled() is True
 
 
-def test_environment_name_enables_development(monkeypatch) -> None:
-    """Enable development mode when the local environment name is used."""
+def test_environment_name_does_not_enable_development(monkeypatch) -> None:
+    """Ignore the generic environment name when enabling local development."""
 
     monkeypatch.delenv("DEVELOPMENT", raising=False)
-    monkeypatch.setenv("ENVIRONMENT", "development")
-
-    assert _development_enabled() is True
-
-
-def test_development_flag_overrides_environment_name(monkeypatch) -> None:
-    """Let an explicit development flag override the environment name."""
-
-    monkeypatch.setenv("DEVELOPMENT", "false")
     monkeypatch.setenv("ENVIRONMENT", "development")
 
     assert _development_enabled() is False

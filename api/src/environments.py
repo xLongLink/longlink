@@ -2,23 +2,14 @@ import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-def _development_enabled() -> bool:
-    """Return whether local development configuration should be enabled."""
-
-    development = os.getenv("DEVELOPMENT")
-
-    # Prefer the explicit development flag when it is set.
-    if development is not None:
-        return development.strip().lower() in {"1", "true", "yes", "on", "y"}
-
-    return os.getenv("ENVIRONMENT", "").strip().lower() == "development"
+DEVELOPMENT = os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
 
 
 class Env(BaseSettings):
     """Environment-backed API configuration loaded at startup."""
 
     # Runtime mode
-    DEVELOPMENT: bool = _development_enabled()
+    DEVELOPMENT: bool = DEVELOPMENT
 
     # Session cookies
     SESSION_KEY: str
@@ -36,8 +27,9 @@ class Env(BaseSettings):
     OIDC_CLIENT_SECRET: str
 
     model_config = SettingsConfigDict(
-        env_file=(".env.sample", ".env") if _development_enabled() else (".env",),
+        env_file=(".env.sample", ".env") if DEVELOPMENT else (".env",),
         env_file_encoding="utf-8",
     )
+
 
 env = Env(**{})

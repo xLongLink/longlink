@@ -27,8 +27,8 @@ describe('apiUrl', () => {
     });
 
     it('allows absolute HTTP gateway URLs', () => {
-        expect(apiUrl('https://apps.example.test/api/applications/app/proxy/metadata.json')).toBe(
-            'https://apps.example.test/api/applications/app/proxy/metadata.json'
+        expect(apiUrl('https://apps.example.test/api/applications/app/proxy/pages.json')).toBe(
+            'https://apps.example.test/api/applications/app/proxy/pages.json'
         );
         expect(() => apiUrl('mailto:help@example.test')).toThrow('API URL must use HTTP(S)');
         expect(() => apiUrl('https://apps.example.test\\evil')).toThrow('API path must not contain backslashes');

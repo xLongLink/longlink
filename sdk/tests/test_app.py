@@ -13,18 +13,18 @@ def test_longlink_app_serves_runtime_routes_frontend_and_development_cors() -> N
     app = LongLink(env=Envs(ENV="development"), i18n=None, pages=None)
     client = TestClient(app)
 
-    metadata_response = client.get("/metadata.json")
+    pages_response = client.get("/pages.json")
     frontend_response = client.get("/")
     frontend_route_response = client.get("/settings")
     cors_response = client.options(
-        "/metadata.json",
+        "/pages.json",
         headers={
             "origin": "http://localhost:5173",
             "access-control-request-method": "GET",
         },
     )
 
-    assert metadata_response.status_code == 200
+    assert pages_response.status_code == 200
     assert frontend_response.status_code == 200
     assert "text/html" in frontend_response.headers["content-type"]
     assert frontend_route_response.status_code == 200
@@ -60,7 +60,7 @@ def test_xml_pages_are_registered_from_default_pages_directory(monkeypatch: Monk
     client = TestClient(LongLink())
 
     response = client.get("/pages/dashboard.xml")
-    metadata_response = client.get("/metadata.json")
+    pages_response = client.get("/pages.json")
 
     assert response.status_code == 200
     assert response.text == (
@@ -72,9 +72,9 @@ def test_xml_pages_are_registered_from_default_pages_directory(monkeypatch: Monk
         and page["route"] == "dashboard"
         and page["name"] == "Dashboard"
         and page["icon"] == "layout-dashboard"
-        for page in metadata_response.json()["pages"]
+        for page in pages_response.json()
     )
-    assert all("content" not in page for page in metadata_response.json()["pages"])
+    assert all("content" not in page for page in pages_response.json())
 
 
 def test_nested_xml_pages_are_registered_from_default_pages_directory(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
@@ -88,18 +88,18 @@ def test_nested_xml_pages_are_registered_from_default_pages_directory(monkeypatc
     client = TestClient(LongLink())
 
     response = client.get("/pages/admin/users.xml")
-    metadata_response = client.get("/metadata.json")
+    pages_response = client.get("/pages.json")
 
     assert response.status_code == 200
     assert response.text == "<longlink><P i18n=\"users.title\" /></longlink>"
-    assert {page["path"] for page in metadata_response.json()["pages"]} >= {"pages/admin/users.xml"}
-    assert {page["tab"] for page in metadata_response.json()["pages"]} >= {"admin/users"}
-    assert {page["route"] for page in metadata_response.json()["pages"]} >= {"admin/users"}
-    assert all("content" not in page for page in metadata_response.json()["pages"])
+    assert {page["path"] for page in pages_response.json()} >= {"pages/admin/users.xml"}
+    assert {page["tab"] for page in pages_response.json()} >= {"admin/users"}
+    assert {page["route"] for page in pages_response.json()} >= {"admin/users"}
+    assert all("content" not in page for page in pages_response.json())
 
 
 def test_dynamic_xml_pages_derive_routes_and_tabs(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    """Expose `[parameter].xml` files as dynamic browser route metadata."""
+    """Expose `[parameter].xml` files as dynamic browser page routes."""
 
     page_path = tmp_path / "src" / "pages" / "issues" / "[issue].xml"
     page_path.parent.mkdir(parents=True, exist_ok=True)
@@ -109,14 +109,14 @@ def test_dynamic_xml_pages_derive_routes_and_tabs(monkeypatch: MonkeyPatch, tmp_
     client = TestClient(LongLink())
 
     response = client.get("/pages/issues/[issue].xml")
-    metadata_response = client.get("/metadata.json")
+    pages_response = client.get("/pages.json")
 
     assert response.status_code == 200
     assert any(
         page["tab"] == "issues"
         and page["path"] == "pages/issues/[issue].xml"
         and page["route"] == "issues/:issue"
-        for page in metadata_response.json()["pages"]
+        for page in pages_response.json()
     )
 
 

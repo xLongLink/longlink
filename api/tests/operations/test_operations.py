@@ -179,7 +179,7 @@ def application_model() -> Application:
     )
 
 
-def leased_operation(kind: OperationKind = OperationKind.application_verify) -> Operation:
+def leased_operation(kind: OperationKind = OperationKind.application_create) -> Operation:
     """Build one claimed operation."""
 
     return Operation(
@@ -195,7 +195,7 @@ def leased_operation(kind: OperationKind = OperationKind.application_verify) -> 
 async def test_operation_claim_sets_lease_token_and_expiry(monkeypatch: pytest.MonkeyPatch) -> None:
     """Claiming an operation assigns a lease token and expiration."""
 
-    operation = Operation(kind=OperationKind.application_verify)
+    operation = Operation(kind=OperationKind.application_create)
     session = FakeOperationSession(operation)
 
     monkeypatch.setattr(

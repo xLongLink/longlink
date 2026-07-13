@@ -188,6 +188,7 @@ async def create(
     description: str | None = None,
     digest: str | None = None,
     icon: str | None = None,
+    envs: dict[str, str] | None = None,
 ) -> Application:
     """Add a new application to the database for one organization."""
 
@@ -228,6 +229,7 @@ async def create(
             description=description,
             image=image,
             icon=icon,
+            envs=dict(envs or {}),
         )
         application.created_id = user.id
         application.updated_id = user.id
@@ -327,6 +329,7 @@ async def update_runtime(
     description: str | None = None,
     digest: str | None = None,
     icon: str | None = None,
+    envs: dict[str, str] | None = None,
 ) -> Application | None:
     """Update one existing application's runtime metadata."""
 
@@ -350,6 +353,10 @@ async def update_runtime(
         application.status = status
         application.image = image
         application.icon = icon
+
+        # Preserve existing environment configuration when callers do not replace it.
+        if envs is not None:
+            application.envs = dict(envs)
         await session.commit()
         await session.refresh(application)
         return application
