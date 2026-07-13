@@ -1,5 +1,5 @@
 import pytest
-from src.runtime.kubernetes import Kubernetes
+from src.kubernetes.client import Kubernetes
 
 pytestmark = pytest.mark.no_db
 

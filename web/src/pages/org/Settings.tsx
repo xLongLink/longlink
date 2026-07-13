@@ -8,11 +8,9 @@ import type {
     ApiInvitation,
     ApiOrganizationApplication,
     ApiOrganizationDatabaseResource,
-    ApiOrganizationDatabaseTable,
     ApiOrganizationDetails,
     ApiOrganizationMemberSummary,
     ApiOrganizationStorageResource,
-    ApiStorageObject,
 } from '@/lib/types';
 import { S3 } from '@/svg/S3';
 import { Icon } from '@/components/ui/icon';
@@ -24,7 +22,6 @@ import { PostgreSQL } from '@/svg/PostgreSQL';
 import { Button } from '@/components/ui/button';
 import { useUserProfile } from '@/hooks/use-user';
 import { DataTable } from '@/components/DataTable';
-import { useStorageObjects } from '@/data/storage';
 import { apiQueryKey, fetchApiVoid } from '@/lib/api';
 import { useOrganizationActions } from '@/hooks/use-organization';
 import { formatBytes, formatNumber, getInitials } from '@/lib/utils';
@@ -46,11 +43,7 @@ import {
     canViewApplicationLogs,
     type ApplicationRole,
 } from '@/lib/roles';
-import {
-    useOrganizationDatabaseResourceTables,
-    useOrganizationDatabaseResources,
-    useOrganizationStorageResources,
-} from '@/data/organization';
+import { useOrganizationDatabaseResources, useOrganizationStorageResources } from '@/data/organization';
 import People from './People';
 
 type SettingsProps = {
@@ -80,12 +73,7 @@ export default function Settings({
     const navigate = useNavigate();
     const location = useLocation();
     const { pathname } = location;
-    const {
-        settingsApplication = '',
-        settingsBucket = '',
-        settingsDatabaseResource = '',
-        settingsDatabaseResourceType = '',
-    } = useParams();
+    const { settingsApplication = '' } = useParams();
     const { role: platformRole, organizations: userOrganizations } = useUserProfile();
     const queryClient = useQueryClient();
     const { deleteApplication, isDeletingApplication } = useOrganizationActions(organization);
@@ -125,42 +113,6 @@ export default function Settings({
 
     const deleteTarget = applications.find((application) => application.id === deleteTargetId) ?? null;
     const selectedApplication = applications.find((application) => application.slug === settingsApplication) ?? null;
-    const selectedDatabaseKind = settingsDatabaseResourceType === 'schemas' ? 'schema' : null;
-    const isDatabaseDetailPage = settingsDatabaseResourceType.length > 0 || settingsDatabaseResource.length > 0;
-    const selectedDatabaseResource =
-        databaseResources.find(
-            (resource) =>
-                selectedDatabaseKind !== null &&
-                resource.kind === selectedDatabaseKind &&
-                resource.name === settingsDatabaseResource
-        ) ?? null;
-    const databaseDetailError =
-        databaseResourcesError ??
-        (!isLoading && databaseResourcesIsLoading === false && isDatabaseDetailPage && selectedDatabaseResource === null
-            ? new Error(t('resources.databaseResourceNotFound', { name: settingsDatabaseResource }))
-            : null);
-    const databaseTablesRequest = selectedDatabaseResource && isDatabaseDetailPage ? selectedDatabaseResource : null;
-    const {
-        items: databaseResourceTables,
-        error: databaseResourceTablesError,
-        isLoading: databaseResourceTablesIsLoading,
-    } = useOrganizationDatabaseResourceTables(organizationDetails?.id ?? '', databaseTablesRequest);
-    const isStorageDetailPage = settingsBucket.length > 0;
-    const selectedStorageResource =
-        storageResources.find((resource) => resource.bucket_name === settingsBucket) ?? null;
-    const storageDetailError =
-        storageResourcesError ??
-        (!isLoading && storageResourcesIsLoading === false && isStorageDetailPage && selectedStorageResource === null
-            ? new Error(t('resources.storageBucketNotFound', { name: settingsBucket }))
-            : null);
-    const {
-        items: storageObjects,
-        error: storageObjectsError,
-        isLoading: storageObjectsIsLoading,
-    } = useStorageObjects(
-        selectedStorageResource?.storage_registry_id ?? '',
-        selectedStorageResource?.bucket_name ?? ''
-    );
     const applicationMembersPath = selectedApplication ? `/api/applications/${selectedApplication.id}/members` : null;
     const organizationDetailsPath = organizationDetails ? `/api/organizations/${organizationDetails.id}` : null;
     const applicationMembersQuery = useApiQuery<ApiApplicationMember[]>(applicationMembersPath, {
@@ -428,12 +380,7 @@ export default function Settings({
                             className="size-10 shrink-0 rounded-md border border-border bg-background object-contain p-1"
                         />
                         <div className="min-w-0 space-y-1">
-                            <Link
-                                to={`/orgs/${organization}/settings/database/schemas/${encodeURIComponent(row.original.name)}`}
-                                className="block truncate font-medium text-foreground underline-offset-4 hover:underline"
-                            >
-                                {row.original.name}
-                            </Link>
+                            <div className="truncate font-medium text-foreground">{row.original.name}</div>
                             <div className="truncate text-xs text-muted-foreground">
                                 {space_used === null ? t('common.unknown') : formatBytes(space_used)} ·{' '}
                                 {table_count === null
@@ -515,12 +462,9 @@ export default function Settings({
                             className="size-10 shrink-0 rounded-md border border-border bg-background object-contain p-1"
                         />
                         <div className="min-w-0 space-y-1">
-                            <Link
-                                to={`/orgs/${organization}/settings/storage/${encodeURIComponent(row.original.bucket_name)}`}
-                                className="block truncate font-medium text-foreground underline-offset-4 hover:underline"
-                            >
+                            <div className="truncate font-medium text-foreground">
                                 {row.original.kind === 'shared_bucket' ? t('resources.shared') : row.original.name}
-                            </Link>
+                            </div>
                             <div className="truncate text-xs text-muted-foreground">{usageSummary}</div>
                         </div>
                     </div>
@@ -575,41 +519,6 @@ export default function Settings({
                 );
             },
             meta: { className: 'min-w-52' },
-        },
-    ];
-
-    const databaseTableColumns: Array<ColumnDef<ApiOrganizationDatabaseTable>> = [
-        {
-            accessorKey: 'name',
-            header: t('columns.table'),
-            cell: ({ getValue }) => <span className="font-medium text-foreground">{getValue<string>()}</span>,
-            meta: { className: 'min-w-52' },
-        },
-        {
-            accessorKey: 'schema_name',
-            header: t('columns.schema'),
-            meta: { className: 'min-w-44' },
-        },
-        {
-            id: 'columns',
-            header: t('columns.columns'),
-            cell: ({ row }) => formatNumber(row.original.columns.length),
-            meta: { className: 'w-32' },
-        },
-    ];
-
-    const storageObjectColumns: Array<ColumnDef<ApiStorageObject>> = [
-        {
-            accessorKey: 'key',
-            header: t('columns.object'),
-            cell: ({ getValue }) => <div className="truncate font-medium text-foreground">{getValue<string>()}</div>,
-            meta: { className: 'min-w-64' },
-        },
-        {
-            accessorKey: 'size',
-            header: t('columns.size'),
-            cell: ({ getValue }) => formatBytes(getValue<number>()),
-            meta: { className: 'w-32' },
         },
     ];
 
@@ -726,96 +635,32 @@ export default function Settings({
 
                 <MenuSection value="database" label={t('navigation.database')} icon={Database}>
                     <div className="space-y-4">
-                        {isDatabaseDetailPage ? (
-                            <>
-                                <div className="space-y-1">
-                                    <Link
-                                        to={`/orgs/${organization}/settings/database`}
-                                        className="inline-flex text-sm font-medium text-foreground hover:underline"
-                                    >
-                                        {t('resources.backToDatabase')}
-                                    </Link>
-                                </div>
-
-                                {isLoading || databaseResourcesIsLoading ? null : databaseDetailError ? (
-                                    <div className="rounded-md border p-4 text-sm text-destructive">
-                                        {databaseDetailError.message}
-                                    </div>
-                                ) : databaseResourceTablesIsLoading ? null : databaseResourceTablesError ? (
-                                    <div className="rounded-md border p-4 text-sm text-destructive">
-                                        {databaseResourceTablesError.message}
-                                    </div>
-                                ) : databaseResourceTables.length ? (
-                                    <DataTable columns={databaseTableColumns} data={databaseResourceTables} />
-                                ) : (
-                                    <div className="rounded-md border p-4 text-sm text-muted-foreground">
-                                        {t('resources.noTablesInResource')}
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <>
-                                <div className="space-y-1">
-                                    <h2 className="text-lg font-medium text-foreground">{t('navigation.database')}</h2>
-                                    <p className="text-sm text-muted-foreground">
-                                        {t('organizationSettings.reviewDatabase')}
-                                    </p>
-                                </div>
-                                <DataTable
-                                    columns={databaseResourceColumns}
-                                    data={databaseResources}
-                                    error={databaseResourcesError}
-                                    isLoading={isLoading || databaseResourcesIsLoading}
-                                />
-                            </>
-                        )}
+                        <div className="space-y-1">
+                            <h2 className="text-lg font-medium text-foreground">{t('navigation.database')}</h2>
+                            <p className="text-sm text-muted-foreground">{t('organizationSettings.reviewDatabase')}</p>
+                        </div>
+                        <DataTable
+                            columns={databaseResourceColumns}
+                            data={databaseResources}
+                            error={databaseResourcesError}
+                            isLoading={isLoading || databaseResourcesIsLoading}
+                        />
                     </div>
                 </MenuSection>
 
                 <MenuSection value="storage" label={t('navigation.storage')} icon={HardDrive}>
                     <div className="space-y-4">
-                        {isStorageDetailPage ? (
-                            <>
-                                <div className="space-y-1">
-                                    <Link
-                                        to={`/orgs/${organization}/settings/storage`}
-                                        className="inline-flex text-sm font-medium text-foreground hover:underline"
-                                    >
-                                        {t('resources.backToStorage')}
-                                    </Link>
-                                </div>
-
-                                {isLoading || storageResourcesIsLoading ? null : storageDetailError ? (
-                                    <div className="rounded-md border p-4 text-sm text-destructive">
-                                        {storageDetailError.message}
-                                    </div>
-                                ) : (
-                                    <DataTable
-                                        columns={storageObjectColumns}
-                                        data={storageObjects}
-                                        emptyMessage={t('resources.noObjects')}
-                                        error={storageObjectsError}
-                                        isLoading={storageObjectsIsLoading}
-                                    />
-                                )}
-                            </>
-                        ) : (
-                            <>
-                                <div className="space-y-1">
-                                    <h2 className="text-lg font-medium text-foreground">{t('navigation.storage')}</h2>
-                                    <p className="text-sm text-muted-foreground">
-                                        {t('organizationSettings.reviewStorage')}
-                                    </p>
-                                </div>
-                                <DataTable
-                                    columns={storageResourceColumns}
-                                    data={storageResources}
-                                    emptyMessage={t('resources.noStorageResources')}
-                                    error={storageResourcesError}
-                                    isLoading={isLoading || storageResourcesIsLoading}
-                                />
-                            </>
-                        )}
+                        <div className="space-y-1">
+                            <h2 className="text-lg font-medium text-foreground">{t('navigation.storage')}</h2>
+                            <p className="text-sm text-muted-foreground">{t('organizationSettings.reviewStorage')}</p>
+                        </div>
+                        <DataTable
+                            columns={storageResourceColumns}
+                            data={storageResources}
+                            emptyMessage={t('resources.noStorageResources')}
+                            error={storageResourcesError}
+                            isLoading={isLoading || storageResourcesIsLoading}
+                        />
                     </div>
                 </MenuSection>
             </Menu>

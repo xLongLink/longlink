@@ -9,14 +9,6 @@ if TYPE_CHECKING:
     from types_aiobotocore_s3.client import S3Client
 
 
-class StorageObjectData(TypedDict):
-    """Describe one object stored in a bucket."""
-
-    key: str
-    size: int
-    etag: str | None
-
-
 class StorageBucketUsage(TypedDict):
     """Describe aggregate storage usage for one bucket."""
 
@@ -52,46 +44,6 @@ async def buckets(registry: StorageRegistry) -> list[str]:
         response = await s3.list_buckets()
 
     return [name for bucket in response.get("Buckets", []) if (name := bucket.get("Name")) is not None]
-
-
-async def objects(registry: StorageRegistry, bucket_name: str, *, limit: int = 1000) -> list[StorageObjectData]:
-    """List object metadata for one bucket."""
-
-    rows: list[StorageObjectData] = []
-
-    # Use one client for paginated object listing.
-    async with client(registry) as s3:
-        paginator = s3.get_paginator("list_objects_v2")
-        pages = paginator.paginate(
-            Bucket=bucket_name,
-            PaginationConfig={
-                "MaxItems": limit,
-                "PageSize": min(1000, limit),
-            },
-        )
-
-        # The paginator owns continuation tokens; keep only the response normalization here.
-        async for page in pages:
-            # Normalize each object entry from the current page.
-            for item in page.get("Contents", []):
-                # Ignore entries that do not include object keys.
-                key = item.get("Key")
-                if key is None:
-                    continue
-
-                etag = item.get("ETag")
-                rows.append(
-                    cast(
-                        StorageObjectData,
-                        {
-                            "key": str(key),
-                            "size": int(item.get("Size", 0)),
-                            "etag": str(etag) if etag is not None else None,
-                        },
-                    )
-                )
-
-    return rows
 
 
 async def usage(registry: StorageRegistry, bucket_name: str) -> StorageBucketUsage:

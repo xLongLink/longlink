@@ -10,14 +10,10 @@ import AdminCompute from '@/pages/admin/Compute';
 import ComputeNamespaces from '@/pages/admin/ComputeNamespaces';
 import ComputePods from '@/pages/admin/ComputePods';
 import AdminDatabase from '@/pages/admin/Database';
-import DatabaseInstances from '@/pages/admin/DatabaseInstances';
-import DatabaseSchemas from '@/pages/admin/DatabaseSchemas';
 import AdminLocation from '@/pages/admin/Location';
 import AdminOperations from '@/pages/admin/Operations';
 import AdminOrganizations from '@/pages/admin/Organizations';
 import AdminStorage from '@/pages/admin/Storage';
-import StorageBuckets from '@/pages/admin/StorageBuckets';
-import StorageObjects from '@/pages/admin/StorageObjects';
 import AdminUsers from '@/pages/admin/Users';
 import { DOC_GROUPS, DOC_PAGES } from '@/pages/docs/catalog';
 import Home from '@/pages/Home';
@@ -46,11 +42,7 @@ function adminRoutes() {
             { path: 'organizations', element: <AdminOrganizations /> },
             { path: 'locations', element: <AdminLocation /> },
             { path: 'database', element: <AdminDatabase /> },
-            { path: 'database/:database', element: <DatabaseInstances /> },
-            { path: 'database/:database/databases/:databaseName', element: <DatabaseSchemas /> },
             { path: 'storage', element: <AdminStorage /> },
-            { path: 'storage/:storage', element: <StorageBuckets /> },
-            { path: 'storage/:storage/buckets/:bucket', element: <StorageObjects /> },
             { path: 'compute', element: <AdminCompute /> },
             { path: 'compute/:compute', element: <ComputeNamespaces /> },
             { path: 'compute/:compute/namespace/:namespace', element: <ComputePods /> },
@@ -124,23 +116,7 @@ export function getRoutes(mode = import.meta.env.MODE) {
             ),
         },
         {
-            path: 'orgs/:organization/database/:databaseResourceType/:databaseResource',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="database" />
-                </Auth>
-            ),
-        },
-        {
             path: 'orgs/:organization/storage',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="storage" />
-                </Auth>
-            ),
-        },
-        {
-            path: 'orgs/:organization/storage/buckets/:bucket',
             element: (
                 <Auth requiredRole="user">
                     <Organization sectionName="storage" />
@@ -188,23 +164,7 @@ export function getRoutes(mode = import.meta.env.MODE) {
             ),
         },
         {
-            path: 'orgs/:organization/settings/database/:settingsDatabaseResourceType/:settingsDatabaseResource',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="settings" />
-                </Auth>
-            ),
-        },
-        {
             path: 'orgs/:organization/settings/storage',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="settings" />
-                </Auth>
-            ),
-        },
-        {
-            path: 'orgs/:organization/settings/storage/:settingsBucket',
             element: (
                 <Auth requiredRole="user">
                     <Organization sectionName="settings" />

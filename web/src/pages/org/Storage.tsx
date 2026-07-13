@@ -6,7 +6,7 @@ import type { ApiOrganizationDetails, ApiOrganizationStorageResource } from '@/l
 import { formatBytes, formatNumber, getInitials } from '@/lib/utils';
 import { S3 } from '@/svg/S3';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Link, useParams } from 'react-router';
+import { Link } from 'react-router';
 
 type StorageProps = {
     organization: string;
@@ -14,26 +14,17 @@ type StorageProps = {
     isLoading: boolean;
 };
 
-/** Renders organization storage resources as a full-page view. */
+/** Renders organization storage resources and their usage. */
 export default function Storage({ organization, organizationDetails, isLoading }: StorageProps) {
     const { t } = useTranslation();
-    const { bucket = '' } = useParams();
     const {
         items: storageResources,
         error: storageResourcesError,
         isLoading: storageResourcesIsLoading,
     } = useOrganizationStorageResources(organizationDetails?.id ?? '');
-    const isDetailPage = bucket.length > 0;
     const organizationName = organizationDetails?.name ?? organization;
     const organizationAvatar = organizationDetails?.avatar ?? '';
 
-    // Subpages are bucket-selected; the root page intentionally stays as a list-only view.
-    const selectedResource = storageResources.find((resource) => resource.bucket_name === bucket) ?? null;
-    const detailError =
-        storageResourcesError ??
-        (!isLoading && !storageResourcesIsLoading && isDetailPage && !selectedResource
-            ? new Error(t('resources.storageBucketNotFound', { name: bucket }))
-            : null);
     const storageUsageColumn: ColumnDef<ApiOrganizationStorageResource> = {
         id: 'usage',
         header: t('columns.usage'),
@@ -56,49 +47,6 @@ export default function Storage({ organization, organizationDetails, isLoading }
         meta: { className: 'min-w-40' },
     };
 
-    // Render the selected bucket detail view.
-    if (isDetailPage) {
-        const storageDetailColumns: Array<ColumnDef<ApiOrganizationStorageResource>> = [
-            {
-                accessorKey: 'bucket_name',
-                header: t('columns.bucket'),
-                cell: ({ getValue }) => (
-                    <div className="flex items-center gap-3">
-                        <S3
-                            aria-hidden={true}
-                            className="size-10 shrink-0 rounded-md border border-border bg-background object-contain p-1"
-                        />
-                        <span className="break-all font-medium text-foreground">{getValue<string>()}</span>
-                    </div>
-                ),
-                meta: { className: 'min-w-56' },
-            },
-            {
-                accessorKey: 'storage_registry_name',
-                header: t('columns.registry'),
-                meta: { className: 'min-w-44' },
-            },
-            storageUsageColumn,
-        ];
-
-        return (
-            <div className="space-y-6">
-                <Link
-                    to={`/orgs/${organization}/storage`}
-                    className="inline-flex text-sm font-medium text-foreground hover:underline"
-                >
-                    {t('resources.backToStorage')}
-                </Link>
-
-                {isLoading || storageResourcesIsLoading ? null : detailError ? (
-                    <div className="rounded-md border p-4 text-sm text-destructive">{detailError.message}</div>
-                ) : selectedResource ? (
-                    <DataTable columns={storageDetailColumns} data={[selectedResource]} />
-                ) : null}
-            </div>
-        );
-    }
-
     const storageResourceColumns: Array<ColumnDef<ApiOrganizationStorageResource>> = [
         {
             id: 'resource',
@@ -117,12 +65,7 @@ export default function Storage({ organization, organizationDetails, isLoading }
                             className="size-10 shrink-0 rounded-md border border-border bg-background object-contain p-1"
                         />
                         <div className="min-w-0 space-y-1">
-                            <Link
-                                to={`/orgs/${organization}/storage/buckets/${encodeURIComponent(storageResource.bucket_name)}`}
-                                className="block truncate font-medium text-primary underline-offset-4 hover:underline"
-                            >
-                                {label}
-                            </Link>
+                            <div className="truncate font-medium text-foreground">{label}</div>
                             <div className="truncate text-xs text-muted-foreground">{storageResource.bucket_name}</div>
                         </div>
                     </div>

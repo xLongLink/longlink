@@ -8,10 +8,9 @@ from src.utils import storage as storage_utils
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
-from src.models.databases import (OrganizationDatabaseResourceKind, OrganizationDatabaseResourceResponse,
-                                  OrganizationDatabaseTableColumnsResponse)
+from src.models.databases import OrganizationDatabaseResourceKind, OrganizationDatabaseResourceResponse
 from src.database.services import locations, operations, registries, invitations, organizations
-from src.runtime.kubernetes import Kubernetes
+from src.kubernetes.client import Kubernetes
 from src.models.applications import ApplicationResponse
 from longlink.tenant.database import SHARED_SCHEMA
 from longlink.tenant.database import users as tenant_users
@@ -254,65 +253,6 @@ async def list_organization_storage_resources(organization_id: UUID, user: User 
 
     active_applications = await organizations.applications(membership.organization_id)
     return await _storage_resource_rows(membership.organization, registry, active_applications)
-
-
-@router.get(
-    "/api/organizations/{organization_id}/database/resources/{resource_kind}/{resource_name}/tables",
-    response_model=list[OrganizationDatabaseTableColumnsResponse],
-)
-async def list_organization_database_resource_tables(
-    organization_id: UUID,
-    resource_kind: OrganizationDatabaseResourceKind,
-    resource_name: str,
-    user: User = Depends(authuser),
-):
-    """Return tables and columns for one organization database resource."""
-
-    # Load organization access before exposing table metadata.
-    membership = roles.access(user, organization_id, "organization")
-    if membership is None:
-        raise HTTPException(status_code=403, detail="Access required")
-
-    # Restrict table inspection to maintainers.
-    if not roles.atleast(membership.role, OrganizationRoles.maintain):
-        raise HTTPException(status_code=403, detail="Permission required")
-
-    # Require an assigned database registry for table inspection.
-    registry = await registries.database(membership.organization.location_id)
-    if registry is None:
-        raise HTTPException(status_code=404, detail="Database resource not found")
-
-    db = adapters.database(registry)
-    database = membership.organization.id.hex
-
-    # Inspect adapter tables and normalize backend failures.
-    try:
-        # Hide internal PostgreSQL schemas from resource inspection.
-        if resource_name in {
-            "information_schema",
-            "pg_catalog",
-            "pg_toast",
-            "public",
-        } or resource_name.startswith("pg_"):
-            raise HTTPException(status_code=404, detail="Database resource not found")
-
-        tables = await db.table_columns(database, resource_name)
-
-    # Preserve explicit not-found errors.
-    except HTTPException:
-        raise
-
-    # Convert unexpected adapter failures to availability errors.
-    except Exception as exc:
-        logger.exception(
-            "Failed to inspect database resource '%s' for organization '%s': %r",
-            resource_name,
-            membership.organization.slug,
-            exc,
-        )
-        raise HTTPException(status_code=503, detail="Database resource unavailable") from exc
-
-    return tables
 
 
 @router.post("/api/organizations/{organization_id}/invitations", status_code=204)

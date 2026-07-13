@@ -3,9 +3,9 @@ from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin, authsupport
 from src.utils import names
 from src.logger import logger
-from src.runtime.kubernetes import Kubernetes
 from src.models.computes import PodResponse, ComputeRegistryCreate, ComputeRegistryResponse
 from src.database.services import compute
+from src.kubernetes.client import Kubernetes
 from src.database.models.users import User
 
 router = APIRouter()

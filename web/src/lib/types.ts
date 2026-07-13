@@ -13,12 +13,10 @@ import type {
     apiOperationSchema,
     apiOrganizationApplicationSchema,
     apiOrganizationDatabaseResourceSchema,
-    apiOrganizationDatabaseTableSchema,
     apiOrganizationDetailsSchema,
     apiOrganizationMemberSummarySchema,
     apiOrganizationStorageResourceSchema,
     apiOrganizationSummarySchema,
-    apiStorageObjectSchema,
     apiStorageRegistrySchema,
     apiUserListItemSchema,
     apiUserOrganizationMembershipSchema,
@@ -44,15 +42,12 @@ export type ApiOrganizationDatabaseApplication = NonNullable<
     z.infer<typeof apiOrganizationDatabaseResourceSchema>['application']
 >;
 export type ApiOrganizationDatabaseResource = z.infer<typeof apiOrganizationDatabaseResourceSchema>;
-export type ApiOrganizationDatabaseTableColumn = z.infer<typeof apiOrganizationDatabaseTableSchema>['columns'][number];
-export type ApiOrganizationDatabaseTable = z.infer<typeof apiOrganizationDatabaseTableSchema>;
 export type ApiOrganizationStorageApplication = NonNullable<
     z.infer<typeof apiOrganizationStorageResourceSchema>['application']
 >;
 export type ApiOrganizationStorageResource = z.infer<typeof apiOrganizationStorageResourceSchema>;
 export type ApiDatabaseRegistry = z.infer<typeof apiDatabaseRegistrySchema>;
 export type ApiStorageRegistry = z.infer<typeof apiStorageRegistrySchema>;
-export type ApiStorageObject = z.infer<typeof apiStorageObjectSchema>;
 export type ApiComputeRegistry = z.infer<typeof apiComputeRegistrySchema>;
 export type ApiComputePod = z.infer<typeof apiComputePodSchema>;
 export type ApiOperationStatus = z.infer<typeof apiOperationSchema>['status'];

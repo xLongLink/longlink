@@ -36,11 +36,7 @@ The combined repository architecture is maintained in `../AGENTS.md`.
 │   ├── organizations
 │   ├── locations
 │   ├── database
-│   │   ├── :database
-│   │   └── :database/databases/:databaseName
 │   ├── storage
-│   │   ├── :storage
-│   │   └── :storage/buckets/:bucket
 │   ├── compute
 │   │   ├── :compute
 │   │   └── :compute/namespace/:namespace
@@ -48,17 +44,13 @@ The combined repository architecture is maintained in `../AGENTS.md`.
 ├── orgs/:organization
 ├── orgs/:organization/applications
 ├── orgs/:organization/database
-│   └── :databaseResourceType/:databaseResource
 ├── orgs/:organization/storage
-│   └── buckets/:bucket
 ├── orgs/:organization/settings
 │   ├── applications
 │   │   └── :settingsApplication
 │   ├── people
 │   ├── database
-│   │   └── :settingsDatabaseResourceType/:settingsDatabaseResource
 │   └── storage
-│       └── :settingsBucket
 └── orgs/:organization/apps/:application/*
 ```
 

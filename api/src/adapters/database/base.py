@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 from typing import TypedDict
-from .types import DatabaseSchemaUsage, DatabaseTableColumns
+from .types import DatabaseSchemaUsage
 
 
 class DatabaseRuntimeConnection(TypedDict):
@@ -54,20 +54,8 @@ class Database(ABC):
         """Delete the database for one organization."""
 
     @abstractmethod
-    async def databases(self) -> list[str]:
-        """List all databases on the server."""
-
-    @abstractmethod
-    async def schemas(self, database_name: str) -> list[str]:
-        """List all schemas in a database."""
-
-    @abstractmethod
     async def schema_usage(self, database_name: str) -> list[DatabaseSchemaUsage]:
         """Return usage details for schemas in a database."""
-
-    @abstractmethod
-    async def table_columns(self, database_name: str, schema_name: str) -> list[DatabaseTableColumns]:
-        """Return tables and columns for one schema."""
 
     @abstractmethod
     async def usage(self) -> dict[str, int]:

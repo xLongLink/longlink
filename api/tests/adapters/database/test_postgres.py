@@ -136,31 +136,25 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
                     {"id": UUID("22222222-2222-2222-2222-222222222222")},
         )
 
-        tables = await adapter.table_columns(database_name, schema_name)
-        schemas = await adapter.schemas(database_name)
-        databases = await adapter.databases()
         schema_usage = await adapter.schema_usage(database_name)
         server_usage = await adapter.usage()
 
         await runtime_engine.dispose()
         runtime_engine = None
         await adapter.delete_schema(organization_id, application_id)
-        schemas_after_delete = await adapter.schemas(database_name)
+        schema_usage_after_delete = await adapter.schema_usage(database_name)
         await adapter.delete_database(organization_id)
-        databases_after_delete = await adapter.databases()
+        server_usage_after_delete = await adapter.usage()
 
         assert database_url.database == organization_id.hex
         assert runtime_connection["username"].startswith("longlink_")
         assert len(runtime_connection["username"]) <= 63
         assert shared_user == {"email": "owner@example.com", "role": "owner"}
         assert deleted_at is not None
-        assert [table["name"] for table in tables] == ["runtime_items"]
-        assert {schema_name, "shared"} <= set(schemas)
-        assert database_name in databases
         assert {item["name"] for item in schema_usage} >= {schema_name, "shared"}
         assert server_usage["space_used"] > 0
-        assert schema_name not in schemas_after_delete
-        assert database_name not in databases_after_delete
+        assert schema_name not in {item["name"] for item in schema_usage_after_delete}
+        assert server_usage_after_delete["space_used"] == 0
     finally:
         if runtime_engine is not None:
             await runtime_engine.dispose()

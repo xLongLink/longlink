@@ -2,8 +2,8 @@ import secrets
 import contextlib
 from uuid import UUID
 from .base import Database, DatabaseRuntimeConnection
-from .types import DatabaseSchemaUsage, DatabaseTableColumn, DatabaseTableColumns
-from sqlalchemy import String, text, inspect
+from .types import DatabaseSchemaUsage
+from sqlalchemy import String, text
 from collections.abc import AsyncIterator
 from src.environments import env
 from sqlalchemy.engine import URL
@@ -241,32 +241,6 @@ class Postgres(Database):
             # DROP DATABASE must run outside a transaction, so this uses the autocommit connection above.
             await conn.exec_driver_sql(f"DROP DATABASE IF EXISTS {database_name}")
 
-    async def databases(self) -> list[str]:
-        """List all databases on the server, excluding system databases."""
-
-        # Query pg_database directly so the adapter can filter out PostgreSQL system databases.
-        async with self._connection(self._maintenance_database) as conn:
-            result = await conn.execute(
-                text(
-                    "SELECT datname FROM pg_database WHERE datname NOT IN ('postgres', 'template0', 'template1') ORDER BY datname"
-                )
-            )
-
-            # Return plain names for API serialization.
-            return [row[0] for row in result.fetchall()]
-
-    async def schemas(self, database_name: str) -> list[str]:
-        """List all schemas in a database, excluding system schemas."""
-
-        # SQLAlchemy schema inspection is synchronous, so run it through the async connection bridge.
-        async with self._connection(database_name) as conn:
-            system_schemas = {"information_schema", "pg_catalog", "pg_toast"}
-            return await conn.run_sync(
-                lambda sync_conn: sorted(
-                    name for name in inspect(sync_conn).get_schema_names() if name not in system_schemas
-                )
-            )
-
     async def schema_usage(self, database_name: str) -> list[DatabaseSchemaUsage]:
         """Return usage details for application schemas in a database."""
 
@@ -298,51 +272,6 @@ class Postgres(Database):
                 }
                 for row in result.mappings().all()
             ]
-
-    async def table_columns(self, database_name: str, schema_name: str) -> list[DatabaseTableColumns]:
-        """Return tables and columns for one schema."""
-
-        # Inspect queryable table metadata in the target database.
-        async with self._connection(database_name) as conn:
-
-            # Include materialized views because they are queryable like tables for previews.
-            table_names = await conn.run_sync(
-                lambda sync_conn: sorted(
-                    set(inspect(sync_conn).get_table_names(schema=schema_name))
-                    | set(inspect(sync_conn).get_materialized_view_names(schema=schema_name))
-                )
-            )
-
-            tables: list[DatabaseTableColumns] = []
-
-            # Build one column payload for each queryable table.
-            for table_name in table_names:
-
-                # Load column metadata through SQLAlchemy's synchronous inspection bridge.
-                columns: list[DatabaseTableColumn] = await conn.run_sync(
-                    lambda sync_conn: [
-                        {
-                            "name": str(column["name"]),
-                            "type": str(column["type"]).lower(),
-                            "nullable": bool(column.get("nullable", True)),
-                            "position": position,
-                        }
-                        for position, column in enumerate(
-                            inspect(sync_conn).get_columns(table_name, schema=schema_name), start=1
-                        )
-                    ]
-                )
-
-                # Append one table payload after its columns have been inspected.
-                tables.append(
-                    {
-                        "name": table_name,
-                        "schema_name": schema_name,
-                        "columns": columns,
-                    }
-                )
-
-            return tables
 
     async def usage(self) -> dict[str, int]:
         """Return the total non-system database size in bytes."""

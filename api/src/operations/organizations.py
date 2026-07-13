@@ -2,8 +2,8 @@ from src import adapters
 from uuid import UUID
 from src.utils import jobs, names
 from src.database.services import database, registries, organizations
+from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
-from src.runtime.kubernetes import Kubernetes
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 

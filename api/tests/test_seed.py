@@ -129,8 +129,14 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
         calls["application_lookup"] = organization_id
         return []
 
-    async def create_application_runtime(*args: object) -> object:
-        """Record the application runtime creation request."""
+    async def load_user(oidc: str, include_access: bool = False) -> SimpleNamespace:
+        """Return the seeded administrator with loaded access relationships."""
+
+        calls["loaded_user"] = (oidc, include_access)
+        return user
+
+    async def create_application(*args: object) -> object:
+        """Record the application endpoint creation request."""
 
         calls["application_create"] = args
         return fake_resource(id=UUID("77777777-7777-7777-7777-777777777777"))
@@ -156,7 +162,8 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
     monkeypatch.setattr(seed.organization_routes, "create_organization", create_organization)
     monkeypatch.setattr(seed.organization_service, "get", load_organization)
     monkeypatch.setattr(seed.organization_service, "applications", list_no_applications)
-    monkeypatch.setattr(seed.resources, "create_application_runtime", create_application_runtime)
+    monkeypatch.setattr(seed.users, "get", load_user)
+    monkeypatch.setattr(seed.application_routes, "create_application", create_application)
     monkeypatch.setattr(seed.resources, "sync_application_runtime", sync_application_runtime)
 
     await seed.seed_local_development()
@@ -200,8 +207,10 @@ async def test_seed_local_development_creates_local_resources(monkeypatch: pytes
     assert organization_payload.location_id == location.id
     assert organization_user == user
     assert calls["application_lookup"] == organization.id
+    assert calls["loaded_user"] == (seed.LOCAL_ADMIN_OIDC, True)
     application_create_call = cast(tuple[object, ...], calls["application_create"])
-    assert application_create_call[0] == organization
+    assert application_create_call[0] == organization.id
+    assert application_create_call[2] == user
 
 
 async def test_seed_local_development_refreshes_existing_application_runtime(
@@ -290,7 +299,7 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
         calls["application_lookup"] = organization_id
         return [application]
 
-    async def create_application_runtime(*args: object) -> object:
+    async def create_application(*args: object) -> object:
         """Fail if an existing application is recreated."""
 
         raise AssertionError(f"Unexpected application create: {args}")
@@ -314,7 +323,7 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
     monkeypatch.setattr(seed.organization_service, "database_users", database_users)
     monkeypatch.setattr(seed.tenant_users, "sync_url", sync_tenant_users)
     monkeypatch.setattr(seed.organization_service, "applications", list_applications)
-    monkeypatch.setattr(seed.resources, "create_application_runtime", create_application_runtime)
+    monkeypatch.setattr(seed.application_routes, "create_application", create_application)
     monkeypatch.setattr(seed.resources, "sync_application_runtime", sync_application_runtime)
 
     await seed.seed_local_development()

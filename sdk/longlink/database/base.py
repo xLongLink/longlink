@@ -1,4 +1,3 @@
-import re
 from uuid import UUID
 from typing import Any, ClassVar
 from datetime import datetime
@@ -10,16 +9,13 @@ from sqlalchemy.orm import registry, relationship, declared_attr
 from collections.abc import AsyncIterator
 from sqlalchemy.engine import URL
 from longlink.tenant.utils import utcnow
-from sqlalchemy.ext.asyncio import (AsyncEngine, async_sessionmaker,
-                                    create_async_engine)
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 from longlink.utils.settings import Envs
 from longlink.tenant.constants import SHARED_SCHEMA
 from sqlmodel.ext.asyncio.session import AsyncSession
 from longlink.tenant.database.types import UTCDateTime
 
-# SQLModel accepts the SQLAlchemy type instance, while Pyright needs a looser value.
-UTC_DATETIME_TYPE: Any = UTCDateTime()
-DATABASE_SCHEMA_PATTERN = re.compile(r"^[A-Za-z0-9_](?:[A-Za-z0-9_-]{0,61}[A-Za-z0-9_])?$")
+
 database_registry = registry()
 database_metadata = database_registry.metadata
 
@@ -46,46 +42,9 @@ class User(Base, table=True):
     avatar: str = Field(default="", sa_column=Column(String(2048), nullable=False))
 
     # Audit
-    created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTC_DATETIME_TYPE)
-    updated_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTC_DATETIME_TYPE)
-    deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTC_DATETIME_TYPE)
-
-
-def validate_database_schema(database_schema: str) -> str:
-    """Return a database schema name after rejecting unsafe search path input."""
-
-    # Reject schema names that could alter the search path.
-    if not DATABASE_SCHEMA_PATTERN.fullmatch(database_schema):
-        raise ValueError(
-            "Database schema must be 1-63 letters, numbers, underscores, or hyphens, "
-            "and must not start or end with a hyphen"
-        )
-
-    return database_schema
-
-
-def database_schema_search_path(database_schema: str) -> str:
-    """Return a PostgreSQL search path for one validated app schema and shared users."""
-
-    return f'"{validate_database_schema(database_schema)}",{SHARED_SCHEMA}'
-
-
-def created_by_relationship(cls: Any):
-    """Return the creator relationship for mapped subclasses."""
-
-    return relationship(User, foreign_keys=[cls.created_id], lazy="selectin")
-
-
-def updated_by_relationship(cls: Any):
-    """Return the updater relationship for mapped subclasses."""
-
-    return relationship(User, foreign_keys=[cls.updated_id], lazy="selectin")
-
-
-def deleted_by_relationship(cls: Any):
-    """Return the deleter relationship for mapped subclasses."""
-
-    return relationship(User, foreign_keys=[cls.deleted_id], lazy="selectin")
+    created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
+    updated_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
+    deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
 
 
 class Table(Base):
@@ -99,40 +58,16 @@ class Table(Base):
         cls.__allow_unmapped__ = True
         super().__init_subclass__(**kwargs)
 
-    created_at: datetime | None = Field(
-        default_factory=utcnow,
-        nullable=True,
-        sa_type=UTC_DATETIME_TYPE,
-    )
-    updated_at: datetime | None = Field(
-        default_factory=utcnow,
-        nullable=True,
-        sa_type=UTC_DATETIME_TYPE,
-    )
-    deleted_at: datetime | None = Field(
-        default=None,
-        nullable=True,
-        sa_type=UTC_DATETIME_TYPE,
-    )
-    created_id: UUID | None = Field(
-        default=None,
-        foreign_key="users.id",
-        nullable=True,
-    )
-    updated_id: UUID | None = Field(
-        default=None,
-        foreign_key="users.id",
-        nullable=True,
-    )
-    deleted_id: UUID | None = Field(
-        default=None,
-        foreign_key="users.id",
-        nullable=True,
-    )
+    created_at: datetime | None = Field(default_factory=utcnow, nullable=True, sa_type=UTCDateTime)
+    updated_at: datetime | None = Field(default_factory=utcnow, nullable=True, sa_type=UTCDateTime)
+    deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
+    created_id: UUID | None = Field(default=None, foreign_key="users.id", nullable=True)
+    updated_id: UUID | None = Field(default=None, foreign_key="users.id", nullable=True)
+    deleted_id: UUID | None = Field(default=None, foreign_key="users.id", nullable=True)
 
-    created_by = declared_attr(created_by_relationship)
-    updated_by = declared_attr(updated_by_relationship)
-    deleted_by = declared_attr(deleted_by_relationship)
+    created_by = declared_attr(lambda cls: relationship(User, foreign_keys=[cls.created_id], lazy="selectin"))
+    updated_by = declared_attr(lambda cls: relationship(User, foreign_keys=[cls.updated_id], lazy="selectin"))
+    deleted_by = declared_attr(lambda cls: relationship(User, foreign_keys=[cls.deleted_id], lazy="selectin"))
 
 
 _engine: AsyncEngine | None = None
@@ -157,30 +92,14 @@ def create_engine(env: Envs) -> AsyncEngine:
 
     # Production builds the URL from injected database settings.
     else:
-        database_host = env.DATABASE_HOST
-        database_name = env.DATABASE_NAME
-        database_port = env.DATABASE_PORT
-        database_password = env.DATABASE_PASSWORD
-        database_username = env.DATABASE_USERNAME
-
-        # Require all production connection settings before building the URL.
-        if (
-            database_host is None
-            or database_name is None
-            or database_port is None
-            or database_password is None
-            or database_username is None
-        ):
-            raise ValueError("Production database settings require host, port, name, username, and password")
-
         # Production runtimes receive database connection components from the LongLink Platform.
         dburl = URL.create(
             "postgresql+asyncpg",
-            username=database_username,
-            password=database_password,
-            host=database_host,
-            port=database_port,
-            database=database_name,
+            username=env.DATABASE_USERNAME,
+            password=env.DATABASE_PASSWORD,
+            host=env.DATABASE_HOST,
+            port=env.DATABASE_PORT,
+            database=env.DATABASE_NAME,
         ).render_as_string(hide_password=False)
 
     engine_kwargs: dict[str, Any] = {
@@ -199,7 +118,7 @@ def create_engine(env: Envs) -> AsyncEngine:
         # while still resolving the shared organization users table from shared.
         engine_kwargs["connect_args"] = {
             "server_settings": {
-                "search_path": database_schema_search_path(env.DATABASE_SCHEMA),
+                "search_path": f'"{env.DATABASE_SCHEMA}",{SHARED_SCHEMA}',
             },
         }
 

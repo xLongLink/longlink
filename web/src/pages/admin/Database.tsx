@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
-import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
 import { DataTable } from '@/components/DataTable';
@@ -30,10 +29,7 @@ function createDatabaseColumnsBase(t: TFunction): Array<ColumnDef<ApiDatabaseReg
                 const address = `${database.host}:${database.port}`;
 
                 return (
-                    <Link
-                        to={`/admin/database/${encodeURIComponent(database.slug)}`}
-                        className="flex items-center gap-3"
-                    >
+                    <div className="flex items-center gap-3">
                         <PostgreSQL
                             aria-hidden={true}
                             className="size-10 rounded-md border border-border bg-background object-contain p-1"
@@ -42,7 +38,7 @@ function createDatabaseColumnsBase(t: TFunction): Array<ColumnDef<ApiDatabaseReg
                             <div className="truncate font-medium text-foreground">{database.username}</div>
                             <div className="truncate text-xs text-muted-foreground">{address}</div>
                         </div>
-                    </Link>
+                    </div>
                 );
             },
         },

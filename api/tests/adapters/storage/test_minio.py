@@ -65,10 +65,10 @@ async def minio_storage() -> AsyncIterator[tuple[MinIO, StorageRegistry]]:
 
 
 @pytest.mark.integration
-async def test_minio_adapter_manages_real_buckets_objects_usage_and_cleanup(
+async def test_minio_adapter_manages_real_bucket_usage_and_cleanup(
     minio_storage: tuple[MinIO, StorageRegistry],
 ) -> None:
-    """Exercise MinIO lifecycle and S3 inspection behavior against real MinIO."""
+    """Exercise MinIO lifecycle and usage reporting against real MinIO."""
 
     minio, registry = minio_storage
 
@@ -79,8 +79,6 @@ async def test_minio_adapter_manages_real_buckets_objects_usage_and_cleanup(
         await client.put_object(Bucket=app_bucket, Key="reports/august.csv", Body=b"id,total\n2,84\n")
 
     buckets = await storage_utils.buckets(registry)
-    objects = await storage_utils.objects(registry, app_bucket)
-    limited_objects = await storage_utils.objects(registry, app_bucket, limit=1)
     usage = await storage_utils.usage(registry, app_bucket)
 
     await minio.delete(app_bucket)
@@ -88,12 +86,6 @@ async def test_minio_adapter_manages_real_buckets_objects_usage_and_cleanup(
     final_buckets = await storage_utils.buckets(registry)
 
     assert {shared_bucket, app_bucket} <= set(buckets)
-    assert {(item["key"], item["size"], item["etag"] is not None) for item in objects} == {
-        ("reports/august.csv", 14, True),
-        ("reports/july.csv", 14, True),
-    }
-    assert len(limited_objects) == 1
-    assert limited_objects[0]["key"] in {"reports/august.csv", "reports/july.csv"}
     assert usage == {"object_count": 2, "space_used": 28}
     assert app_bucket not in final_buckets
     assert shared_bucket not in final_buckets

@@ -106,17 +106,6 @@ class OrganizationStorageResourceResponse(BaseModel):
     object_count: int | None = None
 
 
-class StorageObjectResponse(BaseModel):
-    """Represent one object in a storage bucket."""
-
-    # Metadata
-    key: str
-    etag: str | None = None
-
-    # Usage
-    size: int
-
-
 class StorageRegistryResponse(BaseModel):
     """Represent one storage registry in API responses."""
 

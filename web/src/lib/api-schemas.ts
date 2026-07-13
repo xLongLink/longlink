@@ -222,12 +222,6 @@ export const apiOperationSchema = z.object({
     stopped_at: z.string().nullable(),
 });
 
-export const apiStorageObjectSchema = z.object({
-    key: z.string(),
-    size: z.number(),
-    etag: z.string().nullable(),
-});
-
 export const apiComputePodSchema = z.object({
     name: z.string(),
     status: z.string(),
@@ -272,19 +266,6 @@ export const apiOrganizationStorageResourceSchema = z.object({
     storage_registry_name: z.string(),
     space_used: z.number().nullable(),
     object_count: z.number().nullable(),
-});
-
-export const apiOrganizationDatabaseTableSchema = z.object({
-    name: z.string(),
-    schema_name: z.string(),
-    columns: z.array(
-        z.object({
-            name: z.string(),
-            type: z.string(),
-            nullable: z.boolean(),
-            position: z.number(),
-        })
-    ),
 });
 
 /** Validates an API response value with a Zod schema. */

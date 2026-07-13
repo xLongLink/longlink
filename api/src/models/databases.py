@@ -105,31 +105,6 @@ class OrganizationDatabaseResourceResponse(BaseModel):
     table_count: int | None = None
 
 
-class OrganizationDatabaseTableColumnResponse(BaseModel):
-    """Represent one column in a database table preview."""
-
-    # Metadata
-    name: str
-    type: str
-
-    # State
-    nullable: bool
-
-    # Position
-    position: int
-
-
-class OrganizationDatabaseTableColumnsResponse(BaseModel):
-    """Represent one database table with its columns."""
-
-    # Metadata
-    name: str
-    schema_name: str
-
-    # Relationships
-    columns: list[OrganizationDatabaseTableColumnResponse]
-
-
 class DatabaseRegistryResponse(BaseModel):
     """Represent one database registry in API responses."""
 

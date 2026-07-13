@@ -1,12 +1,7 @@
-import type {
-    ApiOrganizationDatabaseResource,
-    ApiOrganizationDatabaseTable,
-    ApiOrganizationStorageResource,
-} from '@/lib/types';
+import type { ApiOrganizationDatabaseResource, ApiOrganizationStorageResource } from '@/lib/types';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import {
     apiOrganizationDatabaseResourceSchema,
-    apiOrganizationDatabaseTableSchema,
     apiOrganizationStorageResourceSchema,
     parseApiCollection,
 } from '@/lib/api-schemas';
@@ -22,22 +17,6 @@ export function useOrganizationDatabaseResources(organizationId: string) {
             parse: (value) => parseApiCollection(apiOrganizationDatabaseResourceSchema, value),
         }
     );
-}
-
-/** Fetches table columns for one organization database resource. */
-export function useOrganizationDatabaseResourceTables(
-    organizationId: string,
-    resource: ApiOrganizationDatabaseResource | null
-) {
-    const enabled = organizationId.length > 0 && resource !== null;
-    const path = enabled
-        ? `/api/organizations/${organizationId}/database/resources/${resource.kind}/${encodeURIComponent(resource.name)}/tables`
-        : null;
-
-    return useCollectionQuery<ApiOrganizationDatabaseTable>(path, {
-        enabled,
-        parse: (value) => parseApiCollection(apiOrganizationDatabaseTableSchema, value),
-    });
 }
 
 /** Fetches storage resources for one organization. */

@@ -4,8 +4,9 @@ from uuid import UUID
 from pathlib import Path
 from datetime import UTC, datetime
 from src.utils import names
+from src.routes import applications as application_routes
 from src.routes import organizations as organization_routes
-from src.runtime import provisioning as resources
+from src.kubernetes import provisioning as resources
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import StorageKind
 from src.database.session import session_scope
@@ -17,7 +18,7 @@ from src.database.services import storage as storage_service
 from src.database.services import database as database_service
 from src.database.services import locations as location_service
 from src.database.services import organizations as organization_service
-from src.runtime.kubernetes import Kubernetes
+from src.kubernetes.client import Kubernetes
 from src.models.applications import ApplicationCreate
 from longlink.tenant.database import users as tenant_users
 from src.models.organizations import OrganizationCreate
@@ -269,12 +270,12 @@ async def seed_local_development() -> None:
     organization_applications = await organization_service.applications(organization_record.id)
     application = next((application for application in organization_applications if application.slug == application_slug), None)
     if application is None:
-        await resources.create_application_runtime(
-            organization_record,
-            application_slug,
-            application_payload,
-            admin_user,
-        )
+
+        # Reload access relationships before invoking the application endpoint directly.
+        endpoint_user = await users.get(LOCAL_ADMIN_OIDC, include_access=True)
+        if endpoint_user is None:
+            raise RuntimeError("Seeded administrator could not be loaded")
+        await application_routes.create_application(organization_record.id, application_payload, endpoint_user)
 
     # Reused sample apps should refresh their runtime image and metadata.
     else:

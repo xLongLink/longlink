@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
-import { Link } from 'react-router';
 import { toast } from 'sonner';
 import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
 import { DataTable } from '@/components/DataTable';
@@ -28,7 +27,7 @@ function createStorageColumnsBase(t: TFunction): Array<ColumnDef<ApiStorageRegis
                 const storage = row.original;
 
                 return (
-                    <Link to={`/admin/storage/${encodeURIComponent(storage.slug)}`} className="flex items-center gap-3">
+                    <div className="flex items-center gap-3">
                         <S3
                             aria-hidden={true}
                             className="size-10 rounded-md border border-border bg-background object-contain p-1"
@@ -42,7 +41,7 @@ function createStorageColumnsBase(t: TFunction): Array<ColumnDef<ApiStorageRegis
                                 </div>
                             ) : null}
                         </div>
-                    </Link>
+                    </div>
                 );
             },
             meta: { className: 'min-w-64' },

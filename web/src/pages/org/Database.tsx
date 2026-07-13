@@ -1,18 +1,11 @@
-import { Link, useParams } from 'react-router';
+import { Link } from 'react-router';
 import { type ColumnDef } from '@tanstack/react-table';
-import type {
-    ApiOrganizationDatabaseResource,
-    ApiOrganizationDatabaseTable,
-    ApiOrganizationDetails,
-} from '@/lib/types';
+import type { ApiOrganizationDatabaseResource, ApiOrganizationDetails } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n';
 import { DataTable } from '@/components/DataTable';
 import { formatBytes, formatNumber, getInitials } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-    useOrganizationDatabaseResourceTables,
-    useOrganizationDatabaseResources,
-} from '@/data/organization';
+import { useOrganizationDatabaseResources } from '@/data/organization';
 
 type DatabaseProps = {
     organization: string;
@@ -20,10 +13,9 @@ type DatabaseProps = {
     isLoading: boolean;
 };
 
-/** Renders organization database resources and table metadata. */
+/** Renders organization database resources and their usage. */
 export default function Database({ organization, organizationDetails, isLoading }: DatabaseProps) {
     const { t } = useTranslation();
-    const { databaseResource = '', databaseResourceType = '' } = useParams();
     const {
         items: databaseResources,
         error: databaseResourcesError,
@@ -31,73 +23,6 @@ export default function Database({ organization, organizationDetails, isLoading 
     } = useOrganizationDatabaseResources(organizationDetails?.id ?? '');
     const organizationName = organizationDetails?.name ?? organization;
     const organizationAvatar = organizationDetails?.avatar ?? '';
-    const selectedKind = databaseResourceType === 'schemas' ? 'schema' : null;
-    const isDetailPage = databaseResourceType.length > 0 || databaseResource.length > 0;
-
-    // Subpages are path-selected; the root page intentionally stays as a list-only view.
-    const selectedResource =
-        databaseResources.find(
-            (resource) => selectedKind !== null && resource.kind === selectedKind && resource.name === databaseResource
-        ) ?? null;
-    const detailError =
-        databaseResourcesError ??
-        (!isLoading && !databaseResourcesIsLoading && isDetailPage && !selectedResource
-            ? new Error(t('resources.databaseResourceNotFound', { name: databaseResource }))
-            : null);
-    const databaseResourceTablesRequest = selectedResource && isDetailPage ? selectedResource : null;
-    const {
-        items: databaseResourceTables,
-        error: databaseResourceTablesError,
-        isLoading: databaseResourceTablesIsLoading,
-    } = useOrganizationDatabaseResourceTables(organizationDetails?.id ?? '', databaseResourceTablesRequest);
-
-    // Render schema detail pages before the root list.
-    if (isDetailPage) {
-        const databaseTableColumns: Array<ColumnDef<ApiOrganizationDatabaseTable>> = [
-            {
-                accessorKey: 'name',
-                header: t('columns.table'),
-                cell: ({ getValue }) => <span className="font-medium text-foreground">{getValue<string>()}</span>,
-                meta: { className: 'min-w-52' },
-            },
-            {
-                accessorKey: 'schema_name',
-                header: t('columns.schema'),
-                meta: { className: 'min-w-44' },
-            },
-            {
-                id: 'columns',
-                header: t('columns.columns'),
-                cell: ({ row }) => formatNumber(row.original.columns.length),
-                meta: { className: 'w-32' },
-            },
-        ];
-
-        return (
-            <div className="space-y-6">
-                <Link
-                    to={`/orgs/${organization}/database`}
-                    className="inline-flex text-sm font-medium text-foreground hover:underline"
-                >
-                    {t('resources.backToDatabase')}
-                </Link>
-
-                {isLoading || databaseResourcesIsLoading ? null : detailError ? (
-                    <div className="rounded-md border p-4 text-sm text-destructive">{detailError.message}</div>
-                ) : databaseResourceTablesIsLoading ? null : databaseResourceTablesError ? (
-                    <div className="rounded-md border p-4 text-sm text-destructive">
-                        {databaseResourceTablesError.message}
-                    </div>
-                ) : databaseResourceTables.length ? (
-                    <DataTable columns={databaseTableColumns} data={databaseResourceTables} />
-                ) : (
-                    <div className="rounded-md border p-4 text-sm text-muted-foreground">
-                        {t('resources.noTablesInSchema')}
-                    </div>
-                )}
-            </div>
-        );
-    }
 
     const databaseResourceColumns: Array<ColumnDef<ApiOrganizationDatabaseResource>> = [
         {
@@ -108,12 +33,7 @@ export default function Database({ organization, organizationDetails, isLoading 
 
                 return (
                     <div className="min-w-0 space-y-1">
-                        <Link
-                            to={`/orgs/${organization}/database/schemas/${encodeURIComponent(databaseResource.name)}`}
-                            className="block truncate font-medium text-primary underline-offset-4 hover:underline"
-                        >
-                            {databaseResource.name}
-                        </Link>
+                        <div className="truncate font-medium text-foreground">{databaseResource.name}</div>
                         <div className="truncate text-xs text-muted-foreground">{databaseResource.database_name}</div>
                     </div>
                 );

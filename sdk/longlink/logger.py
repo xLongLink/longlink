@@ -2,8 +2,6 @@ import copy
 import logging
 from uvicorn.config import LOGGING_CONFIG
 
-logger = logging.getLogger("longlink")
-
 log_config = copy.deepcopy(LOGGING_CONFIG)
 
 
@@ -55,6 +53,24 @@ class ApiAccessFilter(logging.Filter):
         return True
 
 
+def configure_logger(name: str) -> logging.Logger:
+    """Return a stream-configured LongLink logger."""
+
+    # Resolve the requested logger so SDK and API entrypoints share one setup path.
+    configured = logging.getLogger(name)
+
+    # Install a fallback handler only when the logger has not already been configured.
+    if not configured.handlers:
+        handler = logging.StreamHandler()
+        handler.setFormatter(ColorFormatter("%(levelname)s:     %(message)s"))
+        configured.addHandler(handler)
+
+    configured.setLevel(logging.INFO)
+    configured.propagate = False
+
+    return configured
+
+
 log_config["formatters"]["default"] = {
     "()": ColorFormatter,
     "fmt": "%(levelname)s:     %(message)s",
@@ -67,11 +83,4 @@ log_config.setdefault("filters", {})["api_access"] = {"()": ApiAccessFilter}
 log_config["handlers"]["access"]["filters"] = ["api_access"]
 
 
-# Install a fallback handler only when the package logger has not already been configured.
-if not logger.handlers:
-    handler = logging.StreamHandler()
-    handler.setFormatter(ColorFormatter("%(levelname)s:     %(message)s"))
-    logger.addHandler(handler)
-
-logger.setLevel(logging.INFO)
-logger.propagate = False
+logger = configure_logger("longlink")

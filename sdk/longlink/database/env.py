@@ -2,8 +2,7 @@ import asyncio
 from typing import Any
 from alembic import context
 from sqlalchemy.engine import Connection
-from longlink.database.base import (create_engine, database_metadata,
-                                    validate_database_schema)
+from longlink.database.base import create_engine, database_metadata
 from longlink.utils.settings import Envs
 from longlink.database.migrations import include_object
 
@@ -19,9 +18,7 @@ migration_context_options: dict[str, Any] = {
 
 # Keep app migration state out of the shared schema resolved by the production search path.
 if settings.DATABASE_SCHEMA and str(engine.url).startswith("postgresql+"):
-    migration_context_options["version_table_schema"] = validate_database_schema(
-        settings.DATABASE_SCHEMA
-    )
+    migration_context_options["version_table_schema"] = settings.DATABASE_SCHEMA
 
 
 def run_migrations_offline() -> None:

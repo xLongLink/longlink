@@ -272,7 +272,7 @@ async def test_create_app_returns_app_response(
         image_metadata.image = "ghcr.io/longlink/dashboard@sha256:manifest"
         return image_metadata
 
-    monkeypatch.setattr("src.runtime.environments.images.metadata", fake_metadata)
+    monkeypatch.setattr("src.kubernetes.environments.images.metadata", fake_metadata)
 
     captured: dict[str, object] = {}
     captured_buckets: list[tuple[str, ...]] = []
@@ -373,9 +373,9 @@ async def test_create_app_returns_app_response(
                 "secret_access_key": "runtime-storage-secret",
             }
 
-    monkeypatch.setattr("src.runtime.provisioning.Kubernetes", FakeCompute)
+    monkeypatch.setattr("src.kubernetes.provisioning.Kubernetes", FakeCompute)
     monkeypatch.setattr(
-        "src.runtime.provisioning.adapters.database",
+        "src.kubernetes.provisioning.adapters.database",
         lambda registry: FakeDatabase(
             registry.host,
             registry.port,
@@ -383,9 +383,9 @@ async def test_create_app_returns_app_response(
             registry.password,
         ),
     )
-    monkeypatch.setattr("src.runtime.provisioning.tenant_users.sync_url", sync_tenant_users)
+    monkeypatch.setattr("src.kubernetes.provisioning.tenant_users.sync_url", sync_tenant_users)
     monkeypatch.setattr(
-        "src.runtime.provisioning.adapters.storage",
+        "src.kubernetes.provisioning.adapters.storage",
         lambda registry: FakeStorage(
             registry.endpoint_url,
             registry.access_key_id,
@@ -506,7 +506,7 @@ async def test_create_app_returns_409_when_image_metadata_is_missing(
 
         return None
 
-    monkeypatch.setattr("src.runtime.environments.images.metadata", fake_metadata)
+    monkeypatch.setattr("src.kubernetes.environments.images.metadata", fake_metadata)
     client = clients[0]
 
     # Act
@@ -566,7 +566,7 @@ async def test_create_app_rejects_reserved_platform_environment_requirements(
         image_metadata.image = "ghcr.io/longlink/dashboard@sha256:manifest"
         return image_metadata
 
-    monkeypatch.setattr("src.runtime.environments.images.metadata", fake_metadata)
+    monkeypatch.setattr("src.kubernetes.environments.images.metadata", fake_metadata)
     client = clients[0]
 
     # Act
@@ -632,14 +632,14 @@ async def test_create_app_returns_403_for_regular_member(
         )
         await session.commit()
 
-    async def fail_create_application_runtime(*args, **kwargs):
+    async def fail_application_metadata(*args, **kwargs):
         """Fail if the authorization check lets provisioning start."""
 
         raise AssertionError("Regular organization members must not start provisioning")
 
     monkeypatch.setattr(
-        "src.routes.applications.resources.create_application_runtime",
-        fail_create_application_runtime,
+        "src.routes.applications.environments.application_image_metadata",
+        fail_application_metadata,
     )
     client = clients[1]
 

@@ -2,9 +2,7 @@ from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authadmin, authsupport
 from src.utils import names
-from src.utils import storage as storage_utils
-from src.logger import logger
-from src.models.storages import StorageObjectResponse, StorageRegistryCreate, StorageRegistryResponse
+from src.models.storages import StorageRegistryCreate, StorageRegistryResponse
 from src.database.services import storage
 from src.database.models.users import User
 
@@ -45,39 +43,3 @@ async def create_storage_registry(payload: StorageRegistryCreate, user: User = D
     # Build a stable slug from the submitted name.
     slug = names.slugify(payload.name)
     return await storage.create(**payload.model_dump(), slug=slug, user=user)
-
-
-@router.get("/api/storages/{registry_id}/buckets", response_model=list[str])
-async def list_storage_buckets(registry_id: UUID, _: User = Depends(authsupport)):
-    """List all buckets on a storage backend."""
-
-    registry = await storage.get(registry_id)
-    if registry is None:
-        raise HTTPException(status_code=404, detail="Storage registry not found")
-
-    # Inspect backend buckets through a direct S3 connection.
-    try:
-        bucket_names = await storage_utils.buckets(registry)
-    except Exception as exc:
-        logger.exception("Failed to inspect storage buckets for registry '%s': %r", registry_id, exc)
-        raise HTTPException(status_code=503, detail="Storage buckets unavailable") from exc
-
-    return bucket_names
-
-
-@router.get("/api/storages/{registry_id}/buckets/{bucket_name}/objects", response_model=list[StorageObjectResponse])
-async def list_storage_bucket_objects(registry_id: UUID, bucket_name: str, _: User = Depends(authsupport)):
-    """List object metadata for one storage bucket."""
-
-    registry = await storage.get(registry_id)
-    if registry is None:
-        raise HTTPException(status_code=404, detail="Storage registry not found")
-
-    # Inspect backend objects through a direct S3 connection.
-    try:
-        objects = await storage_utils.objects(registry, bucket_name)
-    except Exception as exc:
-        logger.exception("Failed to inspect objects in bucket '%s' for registry '%s': %r", bucket_name, registry_id, exc)
-        raise HTTPException(status_code=503, detail="Storage objects unavailable") from exc
-
-    return objects

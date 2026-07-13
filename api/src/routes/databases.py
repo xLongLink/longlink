@@ -49,46 +49,6 @@ async def create_database_registry(payload: DatabaseRegistryCreate, user: User =
     return registry
 
 
-@router.get("/api/databases/{registry_id}/databases", response_model=list[str])
-async def list_database_databases(registry_id: UUID, _: User = Depends(authsupport)):
-    """List all databases on a database backend."""
-
-    registry = await database.get(registry_id)
-    if registry is None:
-        raise HTTPException(status_code=404, detail="Database registry not found")
-
-    adapter = adapters.database(registry)
-
-    # Inspect backend databases through the adapter.
-    try:
-        database_names = await adapter.databases()
-    except Exception as exc:
-        logger.exception("Failed to inspect databases for registry '%s': %r", registry_id, exc)
-        raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
-
-    return database_names
-
-
-@router.get("/api/databases/{registry_id}/databases/{database_name}/schemas", response_model=list[str])
-async def list_database_schemas(registry_id: UUID, database_name: str, _: User = Depends(authsupport)):
-    """List all schemas in a database on a database backend."""
-
-    registry = await database.get(registry_id)
-    if registry is None:
-        raise HTTPException(status_code=404, detail="Database registry not found")
-
-    adapter = adapters.database(registry)
-
-    # Inspect backend schemas through the adapter.
-    try:
-        schema_names = await adapter.schemas(database_name)
-    except Exception as exc:
-        logger.exception("Failed to inspect schemas for database '%s' in registry '%s': %r", database_name, registry_id, exc)
-        raise HTTPException(status_code=503, detail="Database schemas unavailable") from exc
-
-    return schema_names
-
-
 @router.get("/api/databases/{registry_id}/usage", response_model=int)
 async def get_database_usage(registry_id: UUID, _user: User = Depends(authsupport)):
     """Return used storage bytes for one database backend."""

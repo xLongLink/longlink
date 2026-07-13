@@ -425,12 +425,12 @@ class Kubernetes:
             "gateway_volume_mounts": json.dumps(volume_mounts),
             "gateway_volumes": json.dumps(volumes),
         }
-        manifests = templates.readyml_list(ROOT / "templates" / "gateway.yml", **template_context)
+        manifests = templates.readyml_list(ROOT / "kubernetes" / "templates" / "gateway.yml", **template_context)
 
         # Development needs an Ingress resource because the local gateway service stays ClusterIP.
         if use_development_ingress:
             ingress_manifests = templates.readyml_list(
-                ROOT / "templates" / "gateway_development_ingress.yml",
+                ROOT / "kubernetes" / "templates" / "gateway_development_ingress.yml",
                 **template_context,
             )
             manifests.extend(ingress_manifests)
@@ -628,7 +628,7 @@ class Kubernetes:
         await self._replace(secret_body)
 
         application_manifests = templates.readyml_list(
-            ROOT / "templates" / "application.yml",
+            ROOT / "kubernetes" / "templates" / "application.yml",
             image=image,
             namespace=namespace,
             application_id=application_id,

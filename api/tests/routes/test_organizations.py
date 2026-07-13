@@ -617,123 +617,11 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     assert response.json() == {"detail": "Storage resources unavailable"}
 
 
-async def test_organization_database_resource_tables_endpoint_returns_columns_and_rows(
-    clients: tuple[TestClient, TestClient, TestClient],
-    monkeypatch,
-    users: tuple[User, User, User],
-) -> None:
-    """Return dynamic columns and rows for shared and app schemas."""
-
-    # Arrange
-    owner = users[0]
-    client = clients[0]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
-    registry = await db.database.create(
-        DatabaseKind.postgresql,
-        "primary",
-        "primary",
-        "db.longlink.internal",
-        5432,
-        "longlink",
-        "secret",
-        location.id,
-        owner,
-    )
-    dashboard = await db.applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        database_registry_id=registry.id,
-        user=owner,
-    )
-    dashboard_schema = dashboard.id.hex
-
-    class FakePostgres:
-        def __init__(self, host: str, port: int, username: str, password: str) -> None:
-            """Store database registry configuration for assertions."""
-
-            self.host = host
-            self.port = port
-            self.username = username
-            self.password = password
-
-        async def table_columns(self, database_name: str, schema_name: str) -> list[dict[str, object]]:
-            """Return fake table columns for shared and app schemas."""
-
-            assert database_name == organization.id.hex
-
-            # The route requests each schema separately, so mirror different backend columns per schema.
-            if schema_name == "shared":
-                return [
-                    {
-                        "name": "users",
-                        "schema_name": "shared",
-                        "columns": [
-                            {
-                                "name": "id",
-                                "type": "uuid",
-                                "nullable": False,
-                                "position": 1,
-                            },
-                            {
-                                "name": "email",
-                                "type": "character varying",
-                                "nullable": False,
-                                "position": 2,
-                            },
-                        ],
-                    }
-                ]
-
-            assert schema_name == dashboard_schema
-            return [
-                {
-                    "name": "orders",
-                    "schema_name": dashboard_schema,
-                    "columns": [
-                        {
-                            "name": "id",
-                            "type": "integer",
-                            "nullable": False,
-                            "position": 1,
-                        },
-                        {
-                            "name": "total",
-                            "type": "numeric",
-                            "nullable": True,
-                            "position": 2,
-                        },
-                    ],
-                }
-            ]
-
-    monkeypatch.setattr(
-        "src.routes.organizations.adapters.database",
-        lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
-    )
-
-    # Act
-    users_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/shared/tables")
-    schema_response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/{dashboard_schema}/tables")
-
-    # Assert
-    assert users_response.status_code == 200
-    user_tables = users_response.json()
-    assert user_tables[0]["name"] == "users"
-    assert [column["name"] for column in user_tables[0]["columns"]] == ["id", "email"]
-    assert schema_response.status_code == 200
-    schema_tables = schema_response.json()
-    assert schema_tables[0]["name"] == "orders"
-    assert [column["name"] for column in schema_tables[0]["columns"]] == ["id", "total"]
-
-
-async def test_organization_database_resource_tables_endpoint_requires_elevated_role(
+async def test_organization_resource_endpoints_require_elevated_role(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Reject table previews for organization members without inspection permissions."""
+    """Reject resource usage for organization members without inspection permissions."""
 
     # Arrange
     owner, regular_member, _ = users
@@ -756,15 +644,12 @@ async def test_organization_database_resource_tables_endpoint_requires_elevated_
     # Act
     database_response = client.get(f"/api/organizations/{organization.id}/database")
     storage_response = client.get(f"/api/organizations/{organization.id}/storage")
-    response = client.get(f"/api/organizations/{organization.id}/database/resources/schema/dashboard/tables")
 
     # Assert
     assert database_response.status_code == 403
     assert database_response.json() == {"detail": "Permission required"}
     assert storage_response.status_code == 403
     assert storage_response.json() == {"detail": "Permission required"}
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Permission required"}
 
 
 async def test_get_organization_returns_invitations(

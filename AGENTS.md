@@ -20,10 +20,10 @@ longlink/
 │   │   ├── .static/web/          # Built API-mode web bundle
 │   │   ├── adapters/             # Infrastructure adapters
 │   │   ├── database/             # Database session, models, services
+│   │   ├── kubernetes/           # Kubernetes client, provisioning, and templates
 │   │   ├── models/               # FastAPI and domain schemas
 │   │   ├── operations/           # Operation orchestration
 │   │   ├── routes/               # FastAPI routes
-│   │   ├── templates/            # Kubernetes and infrastructure templates
 │   │   ├── utils/                # Shared utilities
 │   │   ├── auth.py               # Authentication helpers
 │   │   ├── constants.py          # Shared constants

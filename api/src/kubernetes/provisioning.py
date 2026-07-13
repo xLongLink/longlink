@@ -1,12 +1,11 @@
 from src import adapters
 from typing import cast
-from datetime import UTC, datetime
 from src.utils import names
 from src.logger import logger
-from src.runtime import environments
+from src.kubernetes import environments
 from src.models.statuses import ApplicationStatus
 from src.database.services import operations, registries, applications, organizations
-from src.runtime.kubernetes import Kubernetes
+from src.kubernetes.client import Kubernetes
 from src.models.applications import ApplicationCreate
 from longlink.tenant.database import users as tenant_users
 from src.database.models.users import User
@@ -63,127 +62,28 @@ async def provision_application_runtime_resources(
             raise RuntimeError("Application no longer exists")
 
     connection = await db.schema(organization.id, application.id)
-    envs = environments.runtime_environment(
-        schema,
-        connection,
-        storage_registry,
-        bucket,
-        shared,
-        credentials,
-    )
+
+    # Inject platform-managed database and storage settings into the workload.
+    envs = {
+        "LONGLINK_ENV": "production",
+        "LONGLINK_DATABASE_HOST": connection["host"],
+        "LONGLINK_DATABASE_NAME": connection["database_name"],
+        "LONGLINK_DATABASE_PASSWORD": connection["password"],
+        "LONGLINK_DATABASE_PORT": str(connection["port"]),
+        "LONGLINK_DATABASE_SCHEMA": schema,
+        "LONGLINK_DATABASE_USERNAME": connection["username"],
+        "LONGLINK_STORAGE_BUCKET": bucket,
+        "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.runtime_endpoint_url or storage_registry.endpoint_url,
+        "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
+        "LONGLINK_STORAGE_SHARED_BUCKET": shared,
+        "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
+    }
     await compute.create(
         organization.slug,
         str(application.id),
         runtime_image,
         {**payload.envs, **envs},
     )
-
-
-async def create_application_runtime(
-    organization: Organization,
-    application_slug: str,
-    payload: ApplicationCreate,
-    user: User,
-) -> Application:
-    """Create the application row, provision runtime resources, and queue verification."""
-
-    logger.info("Provisioning application %s/%s", organization.slug, application_slug)
-
-    metadata = await environments.application_image_metadata(payload)
-    digest = cast(str, metadata.digest)
-    image = cast(str, metadata.image)
-
-    # Application runtime requires a compute backend in the organization location.
-    compute = await registries.compute(organization.location_id)
-    if compute is None:
-        raise RuntimeError("No compute cluster configured")
-
-    # Application runtime requires a tenant database backend.
-    db = await registries.database(organization.location_id)
-    if db is None:
-        raise RuntimeError("No database configured")
-
-    # Application provisioning requires the organization runtime URL created with the organization.
-    if organization.shared_schema_url is None:
-        raise RuntimeError("Organization has no shared schema URL")
-
-    # Application runtime requires shared object storage in the organization location.
-    storage = await registries.storage(organization.location_id)
-    if storage is None:
-        raise RuntimeError("No storage configured")
-
-    app = await applications.create(
-        organization.id,
-        payload.name,
-        application_slug,
-        image=payload.image,
-        compute_registry_id=compute.id,
-        database_registry_id=db.id,
-        storage_registry_id=storage.id,
-        sdk=metadata.sdk,
-        digest=digest,
-        version=metadata.version,
-        status=ApplicationStatus.creating,
-        description=payload.description,
-        icon=payload.icon.value if payload.icon is not None else None,
-        user=user,
-    )
-
-    # Provision the namespace, schema, and workload in order so failures can mark the application as failed.
-    try:
-        await provision_application_runtime_resources(
-            organization,
-            app,
-            payload,
-            image,
-            compute,
-            db,
-            storage,
-        )
-
-    # Failed provisioning leaves a failed application row and triggers best-effort cleanup.
-    except Exception as exc:
-        await applications.set_status(app.id, ApplicationStatus.failed)
-        logger.exception("Failed to initialize application runtime for %s/%s: %r", organization.slug, application_slug, exc)
-
-        # Queue cleanup for any resources that were created before provisioning failed.
-        try:
-            await operations.queue_application_removal(app.id, scheduled_at=datetime.now(UTC), user=user)
-
-        # Cleanup failures should not hide the original provisioning error.
-        except Exception as cleanup_exc:
-            logger.exception("Failed to queue partial application runtime cleanup for %s/%s: %r", organization.slug, application_slug, cleanup_exc)
-
-        raise RuntimeError("Failed to initialize the application") from exc
-
-    # Queue verification only after the workload has been applied.
-    try:
-        operation = await operations.queue_application_verification(app.id, user)
-
-    # If verification cannot be queued, the applied workload must be removed.
-    except Exception as exc:
-        await applications.set_status(app.id, ApplicationStatus.failed)
-
-        # The workload exists at this point, but without verification it must not be left running.
-        try:
-            await operations.queue_application_removal(app.id, scheduled_at=datetime.now(UTC), user=user)
-
-        # Cleanup failures should not hide the queueing error.
-        except Exception as cleanup_exc:
-            logger.exception(
-                "Failed to queue unverified application runtime cleanup for %s/%s: %r", organization.slug, application_slug, cleanup_exc
-            )
-
-        logger.exception("Failed to queue application verification for %s/%s: %r", organization.slug, payload.name, exc)
-        raise RuntimeError("Failed to queue application verification") from exc
-
-    logger.info(
-        "Queued application verification %s for %s/%s",
-        operation.id,
-        organization.slug,
-        payload.name,
-    )
-    return app
 
 
 async def sync_application_runtime(

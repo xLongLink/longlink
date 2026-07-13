@@ -4,8 +4,8 @@ from src.utils import jobs, names
 from src.models.statuses import ApplicationStatus
 from longlink.tenant.utils import utcnow
 from src.database.services import database, registries, applications, organizations
+from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
-from src.runtime.kubernetes import Kubernetes
 from src.database.models.operations import Operation
 
 POD_STARTUP_FAILURE_GRACE_SECONDS = 2 * 60
