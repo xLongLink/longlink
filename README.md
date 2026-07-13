@@ -21,7 +21,7 @@ AI has changed the economics and cost structure of software creation. As applica
 LongLink provides that foundation. It turns real-world processes into production-grade Python codebases while handling the common layer around every app: authentication, permissions, deployment, storage, routing, logs, governance, and operational structure. Users define how the work should happen; developers focus on the application logic.
 
 Specific workflows can be customized like software, built quickly like modern AI-assisted applications, and maintained with the discipline of proper engineering. LongLink brings software-development principles to the broader world of work, making valuable processes structured, deployable, reviewable, and cheap to maintain over time.
-
+ 
 <br />
 
 ## Get Started
