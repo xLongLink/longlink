@@ -91,58 +91,6 @@ Run from `sdk/`:
 uv run pytest tests
 ```
 
-### API References
-
-When documenting API behavior, include the route, required authentication, relevant roles, request shape, response shape, and important error cases.
-
-**Good**
-
-```text
-GET /api/organizations/{organization_id}
-Requires an authenticated organization member.
-Returns organization details, users, applications, and visible pending invitations.
-```
-
-### SDK References
-
-When documenting SDK behavior, make the application boundary clear. SDK examples should show normal Python/FastAPI code, LongLink helpers, XML pages, environment settings, tests, or build commands as appropriate.
-
-### XML References
-
-When documenting XML pages, include supported tags and attributes, expected data shape, expression behavior, query invalidation, and a minimal runnable example.
-
-## Python Style
-
-- Target the supported project Python version, currently Python 3.14 or newer.
-- Use safe defaults that minimize required configuration.
-- Validate inputs at system boundaries.
-- Prefer precise type annotations and avoid `Any`.
-- Use `Protocol` for behavioral interfaces and dependency contracts.
-- Represent state explicitly with typed models, enums, or structured objects.
-- Keep logic inline unless extraction improves reuse, readability, or separation of concerns.
-- Avoid private `_...` helpers that only wrap short local sequences.
-- Add a docstring to every Python function.
-- Add a descriptive `# ...` comment before each logic block and leave one blank line before the comment.
-- Keep a lookup and its immediate existence check in the same logic block.
-- Use two blank lines between function definitions.
-- Do not use `from __future__` imports.
-- Do not add `__all__` unless the module has a concrete star-import contract.
-- Prefer namespaced module APIs, such as `adapters.database(...)`, over importing many related factory functions directly.
-- Declare `response_model` on FastAPI routes and return raw ORM objects, dictionaries, lists, or primitive values.
-- Avoid manually instantiating response models only to validate route output.
-
-## TypeScript and React Style
-
-- Validate inputs at system boundaries.
-- Avoid `any`; prefer precise types, generics, `unknown` with narrowing, and discriminated unions.
-- Avoid unsafe assertions and truthiness checks when `0`, `false`, or empty strings are valid.
-- Keep logic inline unless extraction improves reuse, readability, or separation of concerns.
-- Extract components only for meaningful UI boundaries.
-- Inline simple single-use prop types and `className` expressions.
-- Avoid unnecessary cards, duplicated derived state, index-based keys, and effects that do not synchronize with external systems.
-- Prefer explicit `async` and `await`.
-- Handle every promise and clean up timers, listeners, subscriptions, and observers.
-- Use established libraries for validation, routing, forms, dates, URLs, parsing, and internationalization when they simplify the implementation.
 
 ## Testing and Verification
 

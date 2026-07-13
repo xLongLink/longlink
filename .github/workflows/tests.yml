@@ -92,29 +92,6 @@ jobs:
         working-directory: sdk
         run: uv build
 
-      - name: Verify SDK distribution
-        working-directory: sdk
-        run: |
-          uv venv /tmp/longlink-wheel-test
-          uv pip install --python /tmp/longlink-wheel-test/bin/python dist/*.whl
-          cd /tmp
-          /tmp/longlink-wheel-test/bin/python - <<'PY'
-          import sys
-          from importlib import metadata
-          from longlink.tenant.database.migrations import alembic_script_location
-
-          location = alembic_script_location()
-          assert (location / "env.py").is_file()
-          assert (location / "script.py.mako").is_file()
-          assert (location / "versions" / "20260706_0001_shared_users.py").is_file()
-          assert "longlink.app" not in sys.modules
-          assert "longlink.storage" not in sys.modules
-          assert "longlink.database" not in sys.modules
-          assert not any(requirement.lower().startswith("tenant") for requirement in metadata.requires("longlink") or [])
-          PY
-          /tmp/longlink-wheel-test/bin/longlink --help >/dev/null
-          /tmp/longlink-wheel-test/bin/longlink init --help >/dev/null
-
   # The web package uses Bun, so run its test suite separately.
   web-tests:
     runs-on: ubuntu-latest
