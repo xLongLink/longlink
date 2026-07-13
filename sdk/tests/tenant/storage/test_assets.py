@@ -1,5 +1,5 @@
 import pytest
-from tenant.storage import assets
+from longlink.tenant.storage import assets
 
 
 def test_logo_path_returns_shared_logo_key() -> None:

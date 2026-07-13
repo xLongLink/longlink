@@ -30,15 +30,6 @@ longlink/
 │   │   ├── environments.py       # Environment configuration
 │   │   └── logger.py             # Logging setup
 │   └── tests/                    # API tests
-├── org/                          # Tenant-shared resources for organization databases
-│   ├── alembic/                  # Shared tenant database migrations
-│   ├── tenant/
-│   │   ├── database/             # Shared database tables, sessions, migrations, services
-│   │   ├── models/               # Shared tenant models
-│   │   ├── storage/              # Shared storage definitions
-│   │   ├── constants.py          # Shared tenant constants
-│   │   └── utils.py              # Tenant utility helpers
-│   └── tests/                    # Tenant package tests
 ├── sdk/                          # Python SDK: application runtime, CLI, scaffolding
 │   ├── longlink/
 │   │   ├── .static/
@@ -48,6 +39,7 @@ longlink/
 │   │   ├── database/             # Database helpers and migrations
 │   │   ├── routes/               # Runtime routes
 │   │   ├── storage/              # Storage abstraction
+│   │   ├── tenant/               # Shared tenant models, migrations, services, and storage definitions
 │   │   ├── utils/                # Helpers and settings
 │   │   ├── app.py                # FastAPI application factory
 │   │   ├── pages.py              # Page metadata helpers
@@ -68,7 +60,7 @@ longlink/
     └── rfc/                        # Reference RFC material
 ```
 
-Runtime resource model: one organization maps to one database named from the organization UUID hex. Each organization database contains one organization-owned shared schema that applications can read, plus one schema per application named from the application UUID hex where that application has read/write access. Organization and application storage bucket names are derived from immutable slugs, not persisted separately. The organization row stores the internal shared-schema URL used by tenant migrations and shared user synchronization. Organization creation owns database creation and tenant migrations; application creation owns only application schema and runtime role provisioning.
+Runtime resource model: one organization maps to one database named from the organization UUID hex. Each organization database contains one organization-owned shared schema that applications can read, plus one schema per application named from the application UUID hex where that application has read/write access. Organization and application storage bucket names are derived from immutable slugs, not persisted separately. The organization row stores the internal shared-schema URL used by tenant migrations and shared user synchronization. Organization creation owns database creation and executes the tenant migrations packaged by the SDK; application creation owns only application schema and runtime role provisioning.
 
 ## Python Guidelines
 

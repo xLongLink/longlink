@@ -3,12 +3,12 @@ from fastapi import HTTPException
 from datetime import UTC, datetime
 from src.utils import names
 from sqlalchemy import delete, select
-from tenant.models import User as TenantUser
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
 from src.models.countries import DEFAULT_COUNTRY
+from longlink.tenant.models import User as TenantUser
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.invitations import OrganizationInvitation

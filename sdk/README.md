@@ -2,7 +2,7 @@
 
 # LongLink SDK
 
-Python SDK for building and packaging LongLink applications.
+Python SDK for building and packaging LongLink applications, including shared organization contracts and migrations used by the Platform API.
 
 [![PyPI version](https://img.shields.io/pypi/v/longlink)](https://pypi.org/project/longlink/)
 [![Python versions](https://img.shields.io/pypi/pyversions/longlink)](https://pypi.org/project/longlink/)
@@ -37,9 +37,11 @@ This builds the SDK web bundle, recreates `sdk/dev`, links that generated app to
 ## Testing
 
 ```bash
-uv sync --extra dev
+uv sync --extra runtime --extra cli --extra dev
 uv run pytest tests
 ```
+
+The base `longlink` package contains the lightweight `longlink.tenant` models, database migrations, and storage contracts used by the Platform API. Applications install `longlink[runtime]` for FastAPI, database drivers, XML, and storage backends.
 
 <br/>
 <br/>

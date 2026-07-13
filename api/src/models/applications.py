@@ -3,11 +3,11 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.utils import images
-from tenant.models.icons import Icon
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
 from src.models.organizations import OrganizationSummary
+from longlink.tenant.models.icons import Icon
 
 APPLICATION_ENVIRONMENT_COUNT_MAX = 100
 APPLICATION_ENVIRONMENT_NAME_MAX_LENGTH = 253

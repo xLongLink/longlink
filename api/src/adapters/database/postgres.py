@@ -5,12 +5,12 @@ from .base import Database, DatabaseRuntimeConnection
 from .types import DatabaseSchemaUsage, DatabaseTableColumn, DatabaseTableColumns
 from sqlalchemy import String, text, inspect
 from collections.abc import AsyncIterator
-from tenant.database import SHARED_SCHEMA, migrate_database
 from src.environments import env
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
 from sqlalchemy.sql.elements import quoted_name
+from longlink.tenant.database import SHARED_SCHEMA, migrate_database
 
 
 class Postgres(Database):

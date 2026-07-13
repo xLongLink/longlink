@@ -4,12 +4,12 @@ from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Column
-from tenant.utils import utcnow
 from src.models.roles import PlatformRoles
 from src.models.users import Theme, Accent, Radius
-from tenant.database.types import UTCDateTime
-from tenant.models.languages import Language
+from longlink.tenant.utils import utcnow
+from longlink.tenant.database.types import UTCDateTime
 from src.database.models.association import UserApplication, UserOrganization
+from longlink.tenant.models.languages import Language
 
 
 class User(SQLModel, table=True):

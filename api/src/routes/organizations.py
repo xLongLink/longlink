@@ -6,8 +6,6 @@ from src.auth import authuser, authsupport
 from src.utils import names, roles
 from src.utils import storage as storage_utils
 from src.logger import logger
-from tenant.database import SHARED_SCHEMA
-from tenant.database import users as tenant_users
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import (OrganizationDatabaseResourceKind, OrganizationDatabaseResourceResponse,
@@ -15,6 +13,8 @@ from src.models.databases import (OrganizationDatabaseResourceKind, Organization
 from src.database.services import locations, operations, registries, invitations, organizations
 from src.runtime.kubernetes import Kubernetes
 from src.models.applications import ApplicationResponse
+from longlink.tenant.database import SHARED_SCHEMA
+from longlink.tenant.database import users as tenant_users
 from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary, OrganizationMemberUpdate,
                                       OrganizationInvitationCreate)
 from src.database.models.users import User

@@ -3,8 +3,8 @@ from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel
 from sqlalchemy import Uuid, Table, Column, String, MetaData
-from tenant.constants import SHARED_USERS_TABLE
-from tenant.database.types import UTCDateTime
+from longlink.tenant.constants import SHARED_USERS_TABLE
+from longlink.tenant.database.types import UTCDateTime
 
 shared_metadata = MetaData()
 
@@ -28,5 +28,6 @@ class SharedUser(SQLModel, table=True):
     created_at: datetime = Field(sa_column=Column(UTCDateTime(), nullable=False))
     updated_at: datetime = Field(sa_column=Column(UTCDateTime(), nullable=False))
     deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime()))
+
 
 shared_users_table: Table = getattr(SharedUser, "__table__")

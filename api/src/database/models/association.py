@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING, ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum, Column, ForeignKeyConstraint
-from tenant.utils import utcnow
 from src.models.roles import ApplicationRoles, OrganizationRoles
-from tenant.database.types import UTCDateTime
+from longlink.tenant.utils import utcnow
+from longlink.tenant.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:

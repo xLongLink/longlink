@@ -7,11 +7,11 @@ from src.utils import names
 from containers import DockerRuntimeContainer
 from sqlalchemy import text
 from docker.errors import DockerException
-from tenant.models import User as TenantUser
 from sqlalchemy.exc import SQLAlchemyError
-from tenant.database import users as tenant_users
 from sqlalchemy.engine import URL
+from longlink.tenant.models import User as TenantUser
 from sqlalchemy.ext.asyncio import create_async_engine
+from longlink.tenant.database import users as tenant_users
 from src.adapters.database.postgres import Postgres
 
 pytestmark = pytest.mark.no_db

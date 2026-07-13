@@ -2,10 +2,10 @@ import asyncio
 from typing import Any
 from alembic import context
 from sqlalchemy import pool, text, engine_from_config
-from tenant.constants import SHARED_SCHEMA
 from sqlalchemy.engine import Connection, make_url
 from sqlalchemy.ext.asyncio import create_async_engine
-from tenant.database.models import shared_metadata
+from longlink.tenant.constants import SHARED_SCHEMA
+from longlink.tenant.database.models import shared_metadata
 
 config = context.config
 target_metadata = shared_metadata
@@ -41,9 +41,11 @@ def do_run_migrations(connection: Connection) -> None:
     """Run tenant database migrations on one synchronous connection."""
 
     connection.execute(text(f"CREATE SCHEMA IF NOT EXISTS {SHARED_SCHEMA}"))
+
     # Alembic creates its version table before running revisions, so the schema bootstrap must be committed first.
     connection.commit()
     connection.execute(text(f"SET search_path TO {SHARED_SCHEMA}"))
+
     # Keep Alembic in charge of the migration transaction instead of reusing the SET statement transaction.
     connection.commit()
     context.configure(connection=connection, **context_options())

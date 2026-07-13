@@ -1,10 +1,10 @@
 from uuid import UUID
 from typing import Any, Protocol, cast
 from datetime import UTC, datetime
-from tenant.models import User
 from sqlalchemy.dialects import postgresql
+from longlink.tenant.models import User
 from sqlalchemy.ext.asyncio import AsyncConnection
-from tenant.database.services.users import users
+from longlink.tenant.database.services.users import users
 
 
 class CompilableStatement(Protocol):

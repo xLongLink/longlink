@@ -1,7 +1,7 @@
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
-from tenant.utils import utcnow
+from longlink.tenant.utils import utcnow
 
 
 class User(BaseModel):

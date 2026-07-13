@@ -1,10 +1,10 @@
 from src import adapters
 from datetime import timedelta
 from src.utils import names
-from tenant.utils import utcnow
 from src.operations import outcomes as outcome
 from src.operations import registry
 from src.models.statuses import ApplicationStatus
+from longlink.tenant.utils import utcnow
 from src.database.services import database, registries, applications, organizations
 from src.models.operations import OperationKind
 from src.runtime.kubernetes import Kubernetes

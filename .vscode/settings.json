@@ -7,7 +7,6 @@
   ],
   "python.analysis.extraPaths": [
     "${workspaceFolder}/api/src",
-    "${workspaceFolder}/org",
     "${workspaceFolder}/sdk",
     "${workspaceFolder}/api/.venv/lib/python3.14/site-packages",
     "${workspaceFolder}/sdk/.venv/lib/python3.14/site-packages",

@@ -471,24 +471,15 @@ wheels = [
 name = "longlink"
 source = { editable = "." }
 dependencies = [
-    { name = "aiosqlite" },
     { name = "alembic" },
-    { name = "asyncpg" },
     { name = "click" },
-    { name = "fastapi" },
-    { name = "fsspec" },
-    { name = "lxml" },
     { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "s3fs" },
+    { name = "sqlalchemy" },
     { name = "sqlmodel" },
-    { name = "tenant" },
-    { name = "uvicorn" },
 ]
 
 [package.optional-dependencies]
 cli = [
-    { name = "click" },
     { name = "rich" },
 ]
 dev = [
@@ -502,6 +493,16 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-mock" },
     { name = "ruff" },
+]
+runtime = [
+    { name = "aiosqlite" },
+    { name = "asyncpg" },
+    { name = "fastapi" },
+    { name = "fsspec" },
+    { name = "lxml" },
+    { name = "pydantic-settings" },
+    { name = "s3fs" },
+    { name = "uvicorn" },
 ]
 
 [package.dev-dependencies]
@@ -520,20 +521,19 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiosqlite", specifier = ">=0.22.1" },
+    { name = "aiosqlite", marker = "extra == 'runtime'", specifier = ">=0.22.1" },
     { name = "alembic", specifier = ">=1.18.5" },
-    { name = "asyncpg", specifier = ">=0.31.0" },
+    { name = "asyncpg", marker = "extra == 'runtime'", specifier = ">=0.31.0" },
     { name = "click", specifier = ">=8.3.3" },
-    { name = "click", marker = "extra == 'cli'", specifier = ">=8.3.3" },
-    { name = "fastapi", specifier = ">=0.138.0" },
-    { name = "fsspec", specifier = ">=2026.4.0" },
+    { name = "fastapi", marker = "extra == 'runtime'", specifier = ">=0.138.0" },
+    { name = "fsspec", marker = "extra == 'runtime'", specifier = ">=2026.4.0" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28.1" },
     { name = "httpx2", marker = "extra == 'dev'", specifier = ">=2.3.0" },
     { name = "isort", marker = "extra == 'dev'", specifier = ">=8.0.1" },
-    { name = "lxml", specifier = ">=6.1.0" },
+    { name = "lxml", marker = "extra == 'runtime'", specifier = ">=6.1.0" },
     { name = "lxml-stubs", marker = "extra == 'dev'", specifier = ">=0.5.1" },
     { name = "pydantic", specifier = ">=2.13.4" },
-    { name = "pydantic-settings", specifier = ">=2.14.0" },
+    { name = "pydantic-settings", marker = "extra == 'runtime'", specifier = ">=2.14.0" },
     { name = "pyright", marker = "extra == 'dev'", specifier = ">=1.1.411" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=9.1.1" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=1.3.0" },
@@ -541,12 +541,12 @@ requires-dist = [
     { name = "pytest-mock", marker = "extra == 'dev'", specifier = ">=3.14.1" },
     { name = "rich", marker = "extra == 'cli'", specifier = ">=15.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.15.20" },
-    { name = "s3fs", specifier = ">=2026.4.0" },
+    { name = "s3fs", marker = "extra == 'runtime'", specifier = ">=2026.4.0" },
+    { name = "sqlalchemy", specifier = ">=2.0.51" },
     { name = "sqlmodel", specifier = ">=0.0.39" },
-    { name = "tenant", editable = "../org" },
-    { name = "uvicorn", specifier = ">=0.46.0" },
+    { name = "uvicorn", marker = "extra == 'runtime'", specifier = ">=0.46.0" },
 ]
-provides-extras = ["cli", "dev"]
+provides-extras = ["cli", "runtime", "dev"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -1073,31 +1073,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/eb/e3/7c1dc7381d9f8ab7d
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ec/bb/2799cc2ede3ed41131f8975621e7213dfc7ef4acbbaadfa440f32500c370/starlette-1.3.1-py3-none-any.whl", hash = "sha256:c7372aae11c3c3f26a42df7bd626cec2f47d03483d261d369516a615a53714c6", size = 73632, upload-time = "2026-06-12T09:23:10.017Z" },
 ]
-
-[[package]]
-name = "tenant"
-version = "0.0.0"
-source = { editable = "../org" }
-dependencies = [
-    { name = "alembic" },
-    { name = "pydantic" },
-    { name = "sqlalchemy" },
-    { name = "sqlmodel" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "alembic", specifier = ">=1.18.5,<2" },
-    { name = "isort", marker = "extra == 'dev'", specifier = "==8.0.1" },
-    { name = "pydantic", specifier = ">=2.13.4,<3" },
-    { name = "pyright", marker = "extra == 'dev'", specifier = "==1.1.411" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = "==9.1.1" },
-    { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = "==1.4.0" },
-    { name = "pytest-cov", marker = "extra == 'dev'", specifier = "==7.1.0" },
-    { name = "sqlalchemy", specifier = ">=2.0.51,<2.1" },
-    { name = "sqlmodel", specifier = ">=0.0.39,<0.0.40" },
-]
-provides-extras = ["dev"]
 
 [[package]]
 name = "truststore"

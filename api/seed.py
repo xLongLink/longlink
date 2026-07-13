@@ -6,7 +6,6 @@ from datetime import UTC, datetime
 from src.utils import names
 from src.routes import organizations as organization_routes
 from src.runtime import provisioning as resources
-from tenant.database import users as tenant_users
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import StorageKind
 from src.database.session import session_scope
@@ -20,6 +19,7 @@ from src.database.services import locations as location_service
 from src.database.services import organizations as organization_service
 from src.runtime.kubernetes import Kubernetes
 from src.models.applications import ApplicationCreate
+from longlink.tenant.database import users as tenant_users
 from src.models.organizations import OrganizationCreate
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry

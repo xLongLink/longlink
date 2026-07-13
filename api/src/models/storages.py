@@ -5,7 +5,7 @@ from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
-from tenant.models.icons import Icon
+from longlink.tenant.models.icons import Icon
 
 
 class StorageKind(StrEnum):

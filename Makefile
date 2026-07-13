@@ -1,12 +1,12 @@
-.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean org\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format org\:format web\:format api web sdk install api\:install sdk\:install org\:install web\:install tests tests\:all api\:tests sdk\:tests org\:tests web\:tests pyright api\:pyright sdk\:pyright org\:pyright
+.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all api\:tests sdk\:tests web\:tests pyright api\:pyright sdk\:pyright
 
 LOCAL_SDK_IMAGE := localhost:15000/longlink-app:dev
 LOCAL_SDK_IMAGE_LABEL := longlink.name=longlink-app
 API_PYTEST_MARK ?=
 
 
-# Install all API, SDK, org, and web dependencies.
-install: api\:install sdk\:install org\:install web\:install
+# Install all API, SDK, and web dependencies.
+install: api\:install sdk\:install web\:install
 
 
 # Install API Python development dependencies.
@@ -16,12 +16,7 @@ api\:install:
 
 # Install SDK Python development dependencies.
 sdk\:install:
-	cd sdk && uv sync --extra dev
-
-
-# Install org Python development dependencies.
-org\:install:
-	cd org && uv sync --extra dev
+	cd sdk && uv sync --extra runtime --extra cli --extra dev
 
 
 # Install web JavaScript dependencies.
@@ -29,8 +24,8 @@ web\:install:
 	bun i --cwd web
 
 
-# Format API, SDK, org, and web/docs code.
-format: api\:format sdk\:format org\:format web\:format
+# Format API, SDK, and web/docs code.
+format: api\:format sdk\:format web\:format
 
 
 # Format API imports.
@@ -43,26 +38,20 @@ sdk\:format: sdk\:install
 	cd sdk && uv run isort .
 
 
-# Format org imports.
-org\:format: org\:install
-	cd org && uv run isort .
-
-
 # Format web code and repository docs.
 web\:format: web\:install
 	cd web && bunx prettier --log-level warn --write . $$(cd .. && find . -name '*.md' -o -name '*.yml' -o -name '*.yaml' | sed 's#^./#../#')
 
 
-# Run all API, SDK, org, and web tests/checks without container-backed integration tests.
+# Run all API, SDK, and web tests/checks without container-backed integration tests.
 tests:
 	$(MAKE) api:tests API_PYTEST_MARK='-m "not integration"'
 	$(MAKE) sdk:tests
-	$(MAKE) org:tests
 	$(MAKE) web:tests
 
 
-# Run all API, SDK, org, and web tests/checks, including container-backed integration tests.
-tests\:all: api\:tests sdk\:tests org\:tests web\:tests
+# Run all API, SDK, and web tests/checks, including container-backed integration tests.
+tests\:all: api\:tests sdk\:tests web\:tests
 
 
 # Run all API tests with coverage, including container-backed integration tests.
@@ -75,11 +64,6 @@ sdk\:tests: sdk\:install
 	cd sdk && uv run pytest --cov=longlink --cov-report=term-missing tests
 
 
-# Run org tests with coverage.
-org\:tests: org\:install
-	cd org && uv run pytest --cov=tenant --cov-report=term-missing tests
-
-
 # Run web tests, typecheck, and bundle builds.
 web\:tests: web\:install
 	bun test tests --cwd web
@@ -88,8 +72,8 @@ web\:tests: web\:install
 	bun run --cwd web vite build --mode sdk --logLevel warn
 
 
-# Run API, SDK, and org Pyright checks.
-pyright: api\:pyright sdk\:pyright org\:pyright
+# Run API and SDK Pyright checks.
+pyright: api\:pyright sdk\:pyright
 
 
 # Run API Pyright checks.
@@ -100,11 +84,6 @@ api\:pyright:
 # Run SDK Pyright checks.
 sdk\:pyright:
 	cd sdk && uv run --group dev pyright
-
-
-# Run org Pyright checks.
-org\:pyright:
-	cd org && uv run --extra dev pyright
 
 
 # Typecheck and build both web bundle modes.
@@ -125,7 +104,7 @@ sdk\:build: web\:install
 
 
 # Remove generated build and test artifacts for every workspace.
-clean: api\:clean sdk\:clean org\:clean sdk\:image\:clean web\:clean
+clean: api\:clean sdk\:clean sdk\:image\:clean web\:clean
 	rm -rf .coverage .coverage.* coverage.xml htmlcov .pytest_cache .ruff_cache .mypy_cache
 
 
@@ -141,13 +120,6 @@ sdk\:clean:
 	rm -rf sdk/.coverage sdk/.coverage.* sdk/coverage.xml sdk/htmlcov sdk/build sdk/dev sdk/dist sdk/*.egg-info sdk/longlink/.static/web
 	find sdk -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache -o -name .mypy_cache \) -prune -exec rm -rf {} +
 	find sdk -type f -name '*.py[co]' -delete
-
-
-# Remove generated org build and test artifacts.
-org\:clean:
-	rm -rf org/.coverage org/.coverage.* org/coverage.xml org/htmlcov org/build org/dist org/*.egg-info
-	find org -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache -o -name .mypy_cache \) -prune -exec rm -rf {} +
-	find org -type f -name '*.py[co]' -delete
 
 
 # Remove local Docker images produced by `make seed`.

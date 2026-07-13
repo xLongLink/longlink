@@ -70,7 +70,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: sdk
-        run: uv sync --extra dev
+        run: uv sync --extra runtime --extra cli --extra dev
 
       - name: Install web dependencies
         working-directory: web
@@ -88,35 +88,32 @@ jobs:
         working-directory: sdk
         run: uv run --group dev pyright
 
-  # The org package owns shared tenant database primitives used by runtimes.
-  org-tests:
-    runs-on: ubuntu-latest
+      - name: Build SDK distribution
+        working-directory: sdk
+        run: uv build
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
+      - name: Verify SDK distribution
+        working-directory: sdk
+        run: |
+          uv venv /tmp/longlink-wheel-test
+          uv pip install --python /tmp/longlink-wheel-test/bin/python dist/*.whl
+          cd /tmp
+          /tmp/longlink-wheel-test/bin/python - <<'PY'
+          import sys
+          from importlib import metadata
+          from longlink.tenant.database.migrations import alembic_script_location
 
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.14"
-
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-
-      - name: Install dependencies
-        working-directory: org
-        run: uv sync --extra dev
-
-      - name: Run tests
-        working-directory: org
-        run: uv run pytest --cov=tenant --cov-report=term-missing tests
-
-      - name: Run Pyright
-        working-directory: org
-        run: uv run --extra dev pyright
+          location = alembic_script_location()
+          assert (location / "env.py").is_file()
+          assert (location / "script.py.mako").is_file()
+          assert (location / "versions" / "20260706_0001_shared_users.py").is_file()
+          assert "longlink.app" not in sys.modules
+          assert "longlink.storage" not in sys.modules
+          assert "longlink.database" not in sys.modules
+          assert not any(requirement.lower().startswith("tenant") for requirement in metadata.requires("longlink") or [])
+          PY
+          /tmp/longlink-wheel-test/bin/longlink --help >/dev/null
+          /tmp/longlink-wheel-test/bin/longlink init --help >/dev/null
 
   # The web package uses Bun, so run its test suite separately.
   web-tests:

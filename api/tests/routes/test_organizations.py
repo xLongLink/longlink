@@ -1,7 +1,6 @@
 from uuid import UUID
 from types import SimpleNamespace
 from src.utils import names
-from tenant.models import User as TenantUser
 from src.models.roles import OrganizationRoles
 from fastapi.testclient import TestClient
 from src.models.storages import StorageKind
@@ -9,6 +8,7 @@ from src.database.session import get_session
 from src.models.databases import DatabaseKind
 from src.database.services import users, compute, storage, database, locations, operations, invitations, applications, organizations
 from src.models.operations import OperationKind
+from longlink.tenant.models import User as TenantUser
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 

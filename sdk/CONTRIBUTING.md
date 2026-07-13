@@ -22,7 +22,7 @@ The combined repository architecture is maintained in `../AGENTS.md`.
 Before working locally:
 
 ```bash
-uv sync --extra dev    # Create the development environment
+uv sync --extra runtime --extra cli --extra dev    # Create the development environment
 uv run isort .         # Format imports
 uv run pytest tests    # Run tests
 ```

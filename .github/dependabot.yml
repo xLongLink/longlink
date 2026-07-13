@@ -9,7 +9,6 @@ updates:
     directories:
       - "/api"
       - "/sdk"
-      - "/org"
     schedule:
       interval: "weekly"
 

@@ -3,9 +3,9 @@ from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel
 from sqlalchemy import Enum, Column, String
-from tenant.utils import utcnow
+from longlink.tenant.utils import utcnow
 from src.models.operations import OperationKind, OperationStatus
-from tenant.database.types import UTCDateTime
+from longlink.tenant.database.types import UTCDateTime
 
 
 class Operation(SQLModel, table=True):

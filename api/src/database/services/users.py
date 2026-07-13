@@ -3,9 +3,9 @@ from sqlalchemy.orm import selectinload
 from src.models.roles import PlatformRoles
 from src.models.users import Theme, Accent, Radius
 from src.database.session import session_scope
-from tenant.models.languages import Language
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
+from longlink.tenant.models.languages import Language
 from src.database.models.organizations import Organization
 
 

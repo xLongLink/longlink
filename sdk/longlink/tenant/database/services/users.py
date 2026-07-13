@@ -1,8 +1,8 @@
-from tenant.models.users import User
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import AsyncConnection, create_async_engine
-from tenant.database.models.users import shared_users_table
+from longlink.tenant.models.users import User
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
+from longlink.tenant.database.models.users import shared_users_table
 
 
 class UsersService:

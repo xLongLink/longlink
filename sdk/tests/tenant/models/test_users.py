@@ -1,7 +1,7 @@
 from uuid import UUID
 from pydantic import BaseModel
 from sqlmodel import SQLModel
-from tenant.models import User
+from longlink.tenant.models import User
 
 
 def test_user_is_plain_pydantic_model() -> None:

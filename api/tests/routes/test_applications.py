@@ -4,7 +4,6 @@ from uuid import UUID
 from types import SimpleNamespace
 from datetime import UTC, datetime
 from src.utils import names
-from tenant.models import User as TenantUser
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from fastapi.testclient import TestClient
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
@@ -13,6 +12,7 @@ from src.database.session import get_session
 from src.models.databases import DatabaseKind
 from src.database.services import users, compute, storage, database, locations, operations, registries, applications, organizations
 from src.models.operations import OperationKind
+from longlink.tenant.models import User as TenantUser
 from src.models.applications import ApplicationStatus
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization

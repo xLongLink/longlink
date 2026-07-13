@@ -4,11 +4,11 @@ from datetime import UTC, datetime
 from src.utils import names
 from src.logger import logger
 from src.runtime import environments
-from tenant.database import users as tenant_users
 from src.models.statuses import ApplicationStatus
 from src.database.services import operations, registries, applications, organizations
 from src.runtime.kubernetes import Kubernetes
 from src.models.applications import ApplicationCreate
+from longlink.tenant.database import users as tenant_users
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry

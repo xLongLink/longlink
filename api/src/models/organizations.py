@@ -1,12 +1,12 @@
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field, EmailStr, BaseModel, ConfigDict
-from tenant.models.icons import Icon
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
 from src.models.countries import DEFAULT_COUNTRY, Country
 from src.models.locations import LocationResponse
+from longlink.tenant.models.icons import Icon
 
 
 class OrganizationCreate(BaseModel):

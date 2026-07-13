@@ -5,7 +5,7 @@ description = "Minimal LongLink office operations application."
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-  "longlink",
+  "longlink[runtime]",
   "python-multipart",
 ]
 

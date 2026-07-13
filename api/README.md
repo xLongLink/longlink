@@ -63,7 +63,7 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for migration, seeding, testing, and 
 
 ## Organizations
 
-Organizations are tenant boundaries for users, shared data, applications, and managed runtime resources. Organization creation owns database creation, tenant migrations, and shared storage setup.
+Organizations are tenant boundaries for users, shared data, applications, and managed runtime resources. Organization creation owns database creation, executes the shared-schema migrations packaged by the SDK, and provisions shared storage.
 
 <br />
 

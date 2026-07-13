@@ -11,6 +11,8 @@ RUN bun run build:api
 
 FROM python:3.14-slim
 
+ARG VERSION=v0.0.0
+
 LABEL org.opencontainers.image.title="longlink-api"
 LABEL org.opencontainers.image.description="LongLink backend API"
 LABEL org.opencontainers.image.source="https://github.com/xLongLink/longlink"
@@ -20,9 +22,9 @@ ENV PATH="/app/.venv/bin:${PATH}"
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 
-COPY org/ /org/
+COPY sdk/ /sdk/
 COPY api/ /app/
-RUN uv sync --frozen --no-dev --no-editable --no-cache
+RUN SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK=${VERSION} uv sync --frozen --no-dev --no-editable --no-cache
 COPY --from=web-builder /repo/api/src/.static/web /app/src/.static/web
 
 EXPOSE 8000

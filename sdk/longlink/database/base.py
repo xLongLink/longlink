@@ -6,15 +6,16 @@ from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel
 from contextlib import asynccontextmanager
 from sqlalchemy import Uuid, Column, String
-from tenant.utils import utcnow
 from sqlalchemy.orm import relationship, declared_attr
 from collections.abc import AsyncIterator
 from sqlalchemy.engine import URL
-from tenant.database.types import UTCDateTime
+from longlink.tenant.utils import utcnow
 from sqlalchemy.ext.asyncio import (AsyncEngine, async_sessionmaker,
                                     create_async_engine)
 from longlink.utils.settings import Envs
+from longlink.tenant.constants import SHARED_SCHEMA
 from sqlmodel.ext.asyncio.session import AsyncSession
+from longlink.tenant.database.types import UTCDateTime
 
 # SQLModel accepts the SQLAlchemy type instance, while Pyright needs a looser value.
 UTC_DATETIME_TYPE: Any = UTCDateTime()
@@ -63,7 +64,7 @@ def validate_database_schema(database_schema: str) -> str:
 def database_schema_search_path(database_schema: str) -> str:
     """Return a PostgreSQL search path for one validated app schema and shared users."""
 
-    return f'"{validate_database_schema(database_schema)}",shared'
+    return f'"{validate_database_schema(database_schema)}",{SHARED_SCHEMA}'
 
 
 def created_by_relationship(cls: Any):

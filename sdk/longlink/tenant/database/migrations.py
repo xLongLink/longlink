@@ -1,30 +1,24 @@
 import asyncio
-import sysconfig
 from alembic import command
 from pathlib import Path
 from alembic.config import Config
 from sqlalchemy.engine import URL
+from importlib.resources import files
 
 ALEMBIC_DIRECTORY = "alembic"
-CURRENT_FILE = Path(__file__).resolve()
 
 
 def alembic_script_location(script_location: Path | None = None) -> Path:
-    """Return the Alembic script directory for tenant database migrations."""
+    """Return the packaged Alembic script directory for tenant migrations."""
 
+    # Keep an explicit location available for migration tests and administrative callers.
     if script_location is not None:
         return script_location
 
-    source_tree_location = CURRENT_FILE.parents[2] / ALEMBIC_DIRECTORY
-    installed_locations = []
-    for scheme in ("data", "purelib"):
-        configured_path = sysconfig.get_path(scheme)
-        if configured_path is not None:
-            installed_locations.append(Path(configured_path) / "tenant" / ALEMBIC_DIRECTORY)
-
-    for candidate in (source_tree_location, *installed_locations):
-        if (candidate / "env.py").exists() and (candidate / "versions").is_dir():
-            return candidate
+    # Tenant migrations are package data in the SDK distribution.
+    packaged_location = Path(str(files("longlink.tenant.database").joinpath(ALEMBIC_DIRECTORY)))
+    if (packaged_location / "env.py").exists() and (packaged_location / "versions").is_dir():
+        return packaged_location
 
     raise RuntimeError("LongLink tenant Alembic migrations could not be located")
 
