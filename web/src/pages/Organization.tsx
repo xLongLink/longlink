@@ -1,16 +1,14 @@
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { useOrganization } from '@/hooks/use-organization';
+import { useParams } from 'react-router';
+import { LayoutGrid, Settings2 } from 'lucide-react';
 import Layout from '@/layout/Layout';
 import { useTranslation } from '@/lib/i18n';
-import { Database, HardDrive, LayoutGrid, Settings2 } from 'lucide-react';
-import { useParams } from 'react-router';
+import { useOrganization } from '@/hooks/use-organization';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
-import OrganizationDatabase from './org/Database';
 import OrganizationSettings, { type SettingsRouteSection } from './org/Settings';
-import OrganizationStorage from './org/Storage';
 
-type OrganizationSection = 'applications' | 'database' | 'settings' | 'storage';
+type OrganizationSection = 'applications' | 'settings';
 
 type OrganizationProps = {
     sectionName?: OrganizationSection;
@@ -71,8 +69,6 @@ export default function Organization({ sectionName, settingsSection = 'organizat
         <Layout
             tabs={{
                 [t('navigation.applications')]: { href: `/orgs/${organization}`, icon: LayoutGrid },
-                [t('navigation.database')]: { href: `/orgs/${organization}/database`, icon: Database },
-                [t('navigation.storage')]: { href: `/orgs/${organization}/storage`, icon: HardDrive },
                 [t('navigation.settings')]: { href: `/orgs/${organization}/settings`, icon: Settings2 },
             }}
         >
@@ -84,20 +80,6 @@ export default function Organization({ sectionName, settingsSection = 'organizat
                         applications={applications}
                         isLoading={isLoading}
                         error={error}
-                    />
-                ) : null}
-                {section === 'database' ? (
-                    <OrganizationDatabase
-                        organization={organization}
-                        organizationDetails={organizationDetails}
-                        isLoading={isLoading}
-                    />
-                ) : null}
-                {section === 'storage' ? (
-                    <OrganizationStorage
-                        organization={organization}
-                        organizationDetails={organizationDetails}
-                        isLoading={isLoading}
                     />
                 ) : null}
                 {section === 'settings' ? (

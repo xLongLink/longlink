@@ -2,13 +2,14 @@ import pytest
 import asyncio
 from uuid import UUID
 from types import SimpleNamespace
-from datetime import UTC, datetime
+from datetime import datetime
 from src.utils import jobs as operation_worker
 from src.routes import operations as operation_routes
 from src.operations import applications as application_operations
 from src.operations import organizations as organization_operations
 from src.utils.jobs import OperationOutcomeState
 from src.models.users import UserSummary
+from longlink.utils.time import utcnow
 from src.models.statuses import ApplicationStatus
 from src.models.locations import LocationProvider, LocationResponse
 from src.models.operations import OperationKind
@@ -179,7 +180,7 @@ def application_model() -> Application:
     )
 
 
-def leased_operation(kind: OperationKind = OperationKind.application_create) -> Operation:
+def leased_operation(kind: OperationKind = OperationKind.application_verify) -> Operation:
     """Build one claimed operation."""
 
     return Operation(
@@ -195,7 +196,7 @@ def leased_operation(kind: OperationKind = OperationKind.application_create) -> 
 async def test_operation_claim_sets_lease_token_and_expiry(monkeypatch: pytest.MonkeyPatch) -> None:
     """Claiming an operation assigns a lease token and expiration."""
 
-    operation = Operation(kind=OperationKind.application_create)
+    operation = Operation(kind=OperationKind.application_verify)
     session = FakeOperationSession(operation)
 
     monkeypatch.setattr(
@@ -264,7 +265,7 @@ async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytes
 
     operation = leased_operation()
     completed = leased_operation()
-    completed.stopped_at = datetime.now(UTC)
+    completed.stopped_at = utcnow()
     claims = [operation, None]
     executed: list[Operation] = []
     renewals: list[tuple[UUID, str]] = []
@@ -336,18 +337,10 @@ async def test_application_and_organization_remove_handlers_remove_runtime(monke
         assert include_deleted
         return [application]
 
-    async def fake_application_compute(registry_application: Application, location_id: UUID) -> SimpleNamespace:
-        """Return the application's original compute registry."""
-
-        assert registry_application.id == application.id
-        assert location_id == organization.location_id
-        return compute_registry
-
     async def fake_compute(location_id: UUID, include_deleted: bool = False) -> SimpleNamespace:
-        """Return the current organization location compute registry."""
+        """Return the organization location compute registry."""
 
         assert location_id == organization.location_id
-        assert include_deleted
         return compute_registry
 
     async def fake_database(
@@ -394,10 +387,10 @@ async def test_application_and_organization_remove_handlers_remove_runtime(monke
     monkeypatch.setattr(application_operations.organizations, "get", fake_get_organization)
     monkeypatch.setattr(organization_operations.organizations, "get", fake_get_organization)
     monkeypatch.setattr(organization_operations.organizations, "applications", fake_organization_applications)
-    monkeypatch.setattr(organization_operations.registries, "application_compute", fake_application_compute)
-    monkeypatch.setattr(organization_operations.registries, "compute", fake_compute)
-    monkeypatch.setattr(organization_operations.registries, "database", fake_database)
-    monkeypatch.setattr(organization_operations.registries, "storage", fake_storage)
+    monkeypatch.setattr(application_operations.compute, "location", fake_compute)
+    monkeypatch.setattr(organization_operations.compute, "location", fake_compute)
+    monkeypatch.setattr(organization_operations.database, "location", fake_database)
+    monkeypatch.setattr(organization_operations.storage, "location", fake_storage)
     monkeypatch.setattr(application_operations, "Kubernetes", FakeKubernetes)
     monkeypatch.setattr(organization_operations, "Kubernetes", FakeKubernetes)
 

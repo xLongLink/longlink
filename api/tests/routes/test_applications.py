@@ -2,17 +2,15 @@ import httpx2
 import pytest
 from uuid import UUID
 from types import SimpleNamespace
-from datetime import UTC, datetime
 from src.utils import names
-from src.utils.jobs import execute
-from longlink.shared import users as shared_users
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from fastapi.testclient import TestClient
+from longlink.utils.time import utcnow
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 from src.models.storages import StorageKind
 from src.database.session import get_session
 from src.models.databases import DatabaseKind
-from src.database.services import users, compute, storage, database, locations, operations, registries, applications, organizations
+from src.database.services import users, compute, storage, database, locations, operations, applications, organizations
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationStatus
 from src.database.models.users import User
@@ -288,11 +286,6 @@ async def test_create_app_returns_app_response(
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
 
-        async def namespace(self, organization: str) -> None:
-            """Record the namespace requested for the organization."""
-
-            captured["namespace"] = organization
-
         async def create(
             self,
             organization: str,
@@ -308,12 +301,6 @@ async def test_create_app_returns_app_response(
                 "image": image,
                 "secrets": secrets,
             }
-
-        async def ready(self, application_id: str) -> bool:
-            """Pretend the newly created workload is ready."""
-
-            captured["ready"] = application_id
-            return True
 
     class FakeDatabase:
         """Fake database adapter for app creation tests."""
@@ -342,14 +329,6 @@ async def test_create_app_returns_app_response(
                 "username": f"longlink_{organization.hex[:16]}_{application.hex[:16]}",
                 "database_name": organization.hex,
             }
-
-    async def sync_shared_users(shared_schema_url: str, users: list[shared_users.UserRow]) -> None:
-        """Record synchronized shared users for the organization."""
-
-        captured["shared_users"] = {
-            "shared_schema_url": shared_schema_url,
-            "users": users,
-        }
 
     class FakeStorage:
         """Fake storage adapter for app creation tests."""
@@ -381,9 +360,9 @@ async def test_create_app_returns_app_response(
                 "secret_access_key": "runtime-storage-secret",
             }
 
-    monkeypatch.setattr("src.operations.applications.Kubernetes", FakeCompute)
+    monkeypatch.setattr("src.routes.applications.Kubernetes", FakeCompute)
     monkeypatch.setattr(
-        "src.operations.applications.adapters.database",
+        "src.routes.applications.adapters.database",
         lambda registry: FakeDatabase(
             registry.host,
             registry.port,
@@ -391,9 +370,8 @@ async def test_create_app_returns_app_response(
             registry.password,
         ),
     )
-    monkeypatch.setattr("src.operations.applications.shared_users.sync_url", sync_shared_users)
     monkeypatch.setattr(
-        "src.operations.applications.adapters.storage",
+        "src.routes.applications.adapters.storage",
         lambda registry: FakeStorage(
             registry.endpoint_url,
             registry.access_key_id,
@@ -416,9 +394,6 @@ async def test_create_app_returns_app_response(
         },
     )
     queued = await db.operations.fetch()
-    claimed = await db.operations.claim(queued[0].id)
-    assert claimed is not None
-    await execute(claimed)
 
     # Assert
     assert response.status_code == 200
@@ -429,8 +404,7 @@ async def test_create_app_returns_app_response(
     assert payload["sdk"] == "0.1.0"
     assert payload["digest"] == "sha256:manifest"
     assert "gateway_url" not in payload
-    assert queued[0].kind == OperationKind.application_create
-    assert captured["namespace"] == "acme"
+    assert queued[0].kind == OperationKind.application_verify
     assert captured["proxy_secret"]
     schema_payload = captured["schema"]
     assert isinstance(schema_payload, dict)
@@ -440,21 +414,11 @@ async def test_create_app_returns_app_response(
     application_database = organization.id.hex
     database_schema = application_id.hex
     application_username = f"longlink_{organization.id.hex[:16]}_{application_id.hex[:16]}"
-    assert captured_buckets == [
-        ("bucket", "acme-shared"),
-        ("bucket", "acme-dashboard"),
-    ]
+    assert captured_buckets == [("bucket", application_id.hex)]
     assert captured["storage_credentials"] == {
-        "bucket": "acme-dashboard",
+        "bucket": application_id.hex,
         "access": "write",
     }
-    sync_payload = captured["shared_users"]
-    assert isinstance(sync_payload, dict)
-    synced_users = sync_payload["users"]
-    assert isinstance(synced_users, list)
-    assert all(isinstance(synced_user, dict) for synced_user in synced_users)
-    assert sync_payload["shared_schema_url"] == f"postgresql://shared/{application_database}"
-    assert synced_users[0]["email"] == user.email
     application_payload = captured["application"]
     assert isinstance(application_payload, dict)
     assert application_payload["organization"] == "acme"
@@ -470,10 +434,10 @@ async def test_create_app_returns_app_response(
     assert application_secrets["LONGLINK_DATABASE_PORT"] == "5432"
     assert application_secrets["LONGLINK_DATABASE_SCHEMA"] == database_schema
     assert application_secrets["LONGLINK_DATABASE_USERNAME"] == application_username
-    assert application_secrets["LONGLINK_STORAGE_BUCKET"] == "acme-dashboard"
+    assert application_secrets["LONGLINK_STORAGE_BUCKET"] == application_id.hex
     assert application_secrets["LONGLINK_STORAGE_ENDPOINT_URL"] == "http://storage.runtime.longlink.internal:19000"
     assert application_secrets["LONGLINK_STORAGE_PASSWORD"] == "runtime-storage-secret"
-    assert application_secrets["LONGLINK_STORAGE_SHARED_BUCKET"] == "acme-shared"
+    assert application_secrets["LONGLINK_STORAGE_SHARED_BUCKET"] == organization.id.hex
     assert application_secrets["LONGLINK_STORAGE_USERNAME"] == "runtime-storage-access"
 
 
@@ -495,7 +459,7 @@ async def test_location_storage_returns_location_registry(users: tuple[User, Use
     )
 
     # Act
-    selected = await registries.storage(location.id)
+    selected = await storage.location(location.id)
 
     # Assert
     assert selected is not None
@@ -597,11 +561,11 @@ async def test_create_app_rejects_reserved_platform_environment_requirements(
     assert await db.organizations.applications(organization.id) == []
 
 
-async def test_create_app_returns_409_for_overlong_runtime_bucket_name(
+async def test_create_app_returns_409_for_overlong_slug(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Reject app creation when combined runtime resource names exceed backend limits."""
+    """Reject app creation when the URL slug exceeds one DNS label."""
 
     # Arrange
     owner = users[0]
@@ -612,12 +576,12 @@ async def test_create_app_returns_409_for_overlong_runtime_bucket_name(
     # Act
     response = client.post(
         f"/api/organizations/{organization.id}/applications",
-        json={"name": "a" * 59, "image": "ghcr.io/longlink/dashboard:latest"},
+        json={"name": "a" * 64, "image": "ghcr.io/longlink/dashboard:latest"},
     )
 
     # Assert
     assert response.status_code == 409
-    assert response.json() == {"detail": "Invalid application runtime resource name"}
+    assert response.json() == {"detail": "Invalid name"}
     assert await db.organizations.applications(organization.id) == []
 
 
@@ -781,7 +745,7 @@ async def test_delete_application_soft_deletes_and_queues_removal(
     assert len(recorded_operations) == 1
     assert recorded_operations[0].kind == OperationKind.application_remove
     assert recorded_operations[0].application_id == app.id
-    assert recorded_operations[0].scheduled_at is not None
+    assert recorded_operations[0].scheduled_at is None
 
 
 async def test_application_proxy_forwards_safe_content_and_rejects_active_content(
@@ -1249,7 +1213,7 @@ async def test_organization_access_rejects_soft_deleted_membership(
                 user_id=user.id,
                 organization_id=organization.id,
                 role=OrganizationRoles.read,
-                deleted_at=datetime.now(UTC),
+                deleted_at=utcnow(),
             )
         )
         await session.commit()

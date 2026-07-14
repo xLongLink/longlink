@@ -1,8 +1,8 @@
 from uuid import UUID
 from fastapi import HTTPException
-from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
+from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.models.locations import LocationProvider
 from src.database.models.users import User
@@ -85,7 +85,7 @@ async def delete(location_id: UUID, user: User) -> bool:
             if result.scalars().first() is not None:
                 raise HTTPException(status_code=409, detail=f"Location is used by {label}")
 
-        now = datetime.now(UTC)
+        now = utcnow()
         location.deleted_at = now
         location.deleted_id = user.id
         location.updated_at = now

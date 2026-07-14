@@ -1,12 +1,11 @@
 from uuid import UUID, uuid4
 from fastapi import HTTPException
-from datetime import UTC, datetime
 from src.utils import names
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from longlink.shared import users as shared_users
 from src.models.roles import OrganizationRoles
+from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.models.countries import DEFAULT_COUNTRY
 from src.database.models.users import User
@@ -79,60 +78,6 @@ async def invitations(organization_id: UUID) -> list[OrganizationInvitation]:
         return result.scalars().all()
 
 
-async def database_users(organization_id: UUID) -> list[shared_users.UserRow]:
-    """Return organization user state for shared user synchronization."""
-
-    # Load memberships for shared user synchronization.
-    async with session_scope() as session:
-        statement = (
-            select(
-                User,
-                UserOrganization.role,
-                UserOrganization.created_at,
-                UserOrganization.updated_at,
-                UserOrganization.deleted_at,
-            )
-            .join(UserOrganization, UserOrganization.user_id == User.id)
-            .where(UserOrganization.organization_id == organization_id)
-            .order_by(User.email)
-        )
-        result = await session.execute(statement)
-        rows = result.all()
-
-        database_users: list[shared_users.UserRow] = []
-
-        # Convert each membership row to the SDK-owned shared user shape.
-        for user, role, created_at, updated_at, membership_deleted_at in rows:
-            # A shared user becomes inactive when either the account or organization membership is inactive.
-            deleted_at = user.deleted_at
-
-            # Use the newest deletion timestamp for the tenant row.
-            if membership_deleted_at is not None and (deleted_at is None or membership_deleted_at > deleted_at):
-                deleted_at = membership_deleted_at
-
-            # The tenant row should advance when profile, membership, or deactivation state changes.
-            tenant_updated_at = max(user.updated_at, updated_at)
-
-            # Include deletion changes in the tenant update timestamp.
-            if deleted_at is not None and deleted_at > tenant_updated_at:
-                tenant_updated_at = deleted_at
-
-            database_users.append(
-                {
-                    "id": user.id,
-                    "name": user.name,
-                    "email": user.email,
-                    "avatar": user.avatar,
-                    "role": role.value,
-                    "created_at": created_at,
-                    "updated_at": tenant_updated_at,
-                    "deleted_at": deleted_at,
-                }
-            )
-
-        return database_users
-
-
 async def get(organization_id: UUID, include_deleted: bool = False) -> Organization | None:
     """Return one organization by id with related rows loaded."""
 
@@ -158,19 +103,18 @@ async def get(organization_id: UUID, include_deleted: bool = False) -> Organizat
         return result.scalar_one_or_none()
 
 
-async def members(organization_id: UUID) -> list[tuple[User, UserOrganization]]:
-    """Return active organization member rows for one organization."""
+async def members(organization_id: UUID, include_deleted: bool = False) -> list[tuple[User, UserOrganization]]:
+    """Return organization member rows for one organization."""
 
     # Query memberships with user rows so routes can shape API payloads.
     async with session_scope() as session:
-        statement = (
-            select(User, UserOrganization)
-            .join(UserOrganization, UserOrganization.user_id == User.id)
-            .where(
-                UserOrganization.organization_id == organization_id,
-                UserOrganization.deleted_at.is_(None),
-            )
-        )
+        conditions = [UserOrganization.organization_id == organization_id]
+
+        # Include deleted memberships only when requested by control-plane orchestration.
+        if not include_deleted:
+            conditions.append(UserOrganization.deleted_at.is_(None))
+
+        statement = select(User, UserOrganization).join(UserOrganization, UserOrganization.user_id == User.id).where(*conditions)
         result = await session.execute(statement)
         return [(user, membership) for user, membership in result.all()]
 
@@ -228,7 +172,7 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
             if len(owner_result.scalars().all()) <= 1:
                 raise HTTPException(status_code=409, detail="Organization must have at least one owner")
 
-        membership.updated_at = datetime.now(UTC)
+        membership.updated_at = utcnow()
         membership.updated_id = user.id
         membership.role = role
         await session.commit()
@@ -250,7 +194,7 @@ async def create(
     # Validate deterministic runtime resource names before creating the row.
     organization_id = organization_id or uuid4()
     names.knames(slug)
-    names.organization_shared_bucket(slug)
+    names.organization_shared_bucket(organization_id)
 
     # Create the organization and owner membership together.
     async with session_scope() as session:
@@ -325,7 +269,7 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
         if organization is None or organization.deleted_at is not None:
             return None
 
-        now = datetime.now(UTC)
+        now = utcnow()
         organization.deleted_at = now
         organization.deleted_id = user.id
         organization.updated_at = now

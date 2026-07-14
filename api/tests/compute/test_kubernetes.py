@@ -2,8 +2,7 @@ import time
 import base64
 import pytest
 import asyncio
-from containers import DockerRuntimeContainer, wait_for_container_log
-from docker.errors import DockerException
+from containers import DockerRuntimeContainer, require_docker_daemon, wait_for_container_log
 from collections.abc import Iterator
 from kr8s.asyncio.objects import Secret, Ingress, Service, ConfigMap, NetworkPolicy
 from src.kubernetes.client import Kubernetes
@@ -35,7 +34,16 @@ class K3SRuntimeContainer(DockerRuntimeContainer):
         """Start k3s and wait until the server reports readiness."""
 
         super().start()
-        wait_for_container_log(self, "Node controller sync successful", 120)
+        ready = False
+        try:
+            wait_for_container_log(self, "Node controller sync successful", 120)
+            ready = True
+        finally:
+
+            # Remove a failed k3s container without hiding its startup or readiness error.
+            if not ready:
+                self.stop()
+
         return self
 
     def config_yaml(self) -> str:
@@ -55,12 +63,12 @@ class K3SRuntimeContainer(DockerRuntimeContainer):
 def kubernetes_compute() -> Iterator[Kubernetes]:
     """Start a k3s container and return a Kubernetes compute client connected to it."""
 
+    # Skip only when the Docker daemon cannot be reached.
+    require_docker_daemon()
+
     # Avoid binding host cgroups so nested pod sandboxes start reliably under Docker.
     container = K3SRuntimeContainer(K3S_IMAGE)
-    try:
-        container.start()
-    except DockerException as exc:
-        pytest.skip(f"Docker/k3s is not available for Kubernetes integration tests: {exc}")
+    container.start()
 
     try:
         yield Kubernetes(container.config_yaml(), "shared-secret")

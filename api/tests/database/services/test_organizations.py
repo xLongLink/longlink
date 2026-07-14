@@ -2,9 +2,9 @@ import pytest
 from uuid import uuid4
 from types import SimpleNamespace
 from fastapi import HTTPException
-from datetime import UTC, datetime
 from sqlalchemy import select
 from src.models.roles import ApplicationRoles, OrganizationRoles
+from longlink.utils.time import utcnow
 from src.database.session import get_session
 from src.database.services import users, compute, storage, database, locations, operations, invitations, applications, organizations
 from src.database.models.users import User
@@ -179,12 +179,12 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
     assert await db.organizations.membership_role(organization.id, owner.id) == OrganizationRoles.owner
 
 
-async def test_database_users_returns_member_state_ordered_by_email(users: tuple[User, User, User]) -> None:
-    """Return organization member state for shared database synchronization."""
+async def test_members_can_include_deleted_memberships(users: tuple[User, User, User]) -> None:
+    """Return every organization membership when deleted rows are requested."""
 
     # Arrange
     owner, member, deleted_member = users
-    deleted_at = datetime.now(UTC)
+    deleted_at = utcnow()
     location = await db.locations.create("local", "Local testing", owner, "CH")
     organization = await db.organizations.create("acme", "acme", location.id, owner)
 
@@ -208,16 +208,17 @@ async def test_database_users_returns_member_state_ordered_by_email(users: tuple
         await session.commit()
 
     # Act
-    database_users = await db.organizations.database_users(organization.id)
+    members = await db.organizations.members(organization.id, include_deleted=True)
 
     # Assert
-    assert [user["email"] for user in database_users] == [owner.email, member.email, deleted_member.email]
-    assert [user["role"] for user in database_users] == [
-        OrganizationRoles.owner.value,
-        OrganizationRoles.write.value,
-        OrganizationRoles.read.value,
-    ]
-    assert [user["deleted_at"] is not None for user in database_users] == [False, False, True]
+    memberships = {user.email: membership for user, membership in members}
+    assert set(memberships) == {owner.email, member.email, deleted_member.email}
+    assert memberships[owner.email].role == OrganizationRoles.owner
+    assert memberships[member.email].role == OrganizationRoles.write
+    assert memberships[deleted_member.email].role == OrganizationRoles.read
+    assert memberships[owner.email].deleted_at is None
+    assert memberships[member.email].deleted_at is None
+    assert memberships[deleted_member.email].deleted_at is not None
 
 
 async def test_get_includes_application_role_for_requested_user(users: tuple[User, User, User]) -> None:
@@ -276,7 +277,7 @@ async def test_create_rejects_duplicate_organization_names(users: tuple[User, Us
 
 
 async def test_create_rejects_organization_with_overlong_runtime_name(users: tuple[User, User, User]) -> None:
-    """Reject organizations whose managed runtime resource names would exceed backend limits."""
+    """Reject organizations whose namespace slug exceeds backend limits."""
 
     # Arrange
     owner = users[0]
@@ -284,7 +285,7 @@ async def test_create_rejects_organization_with_overlong_runtime_name(users: tup
 
     # Act
     with pytest.raises(ValueError, match="Value must be at most 63 characters"):
-        await db.organizations.create("a" * 57, "a" * 57, location.id, owner)
+        await db.organizations.create("a" * 64, "a" * 64, location.id, owner)
 
     # Assert
     assert await db.organizations.fetch() == []

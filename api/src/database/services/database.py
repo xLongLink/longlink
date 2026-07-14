@@ -1,9 +1,9 @@
 from uuid import UUID
 from fastapi import HTTPException
-from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
+from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.models.databases import DatabaseKind
 from src.database.models.users import User
@@ -161,7 +161,7 @@ async def delete(registry_id: UUID, user: User) -> bool:
         if active_application.scalars().first() is not None:
             raise HTTPException(status_code=409, detail="Database registry is used by active applications")
 
-        now = datetime.now(UTC)
+        now = utcnow()
         registry.deleted_at = now
         registry.deleted_id = user.id
         registry.updated_at = now

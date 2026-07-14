@@ -8,5 +8,5 @@ def test_operation_handlers_are_registered_by_decorator() -> None:
 
     # Importing the implementation modules runs the decorators and fills the registry.
     assert jobs.handlers[OperationKind.application_remove] is applications.remove
-    assert jobs.handlers[OperationKind.application_create] is applications.create
+    assert jobs.handlers[OperationKind.application_verify] is applications.verify
     assert jobs.handlers[OperationKind.organization_remove] is organizations.remove

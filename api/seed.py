@@ -1,14 +1,15 @@
 import asyncio
 import subprocess
+from src import projections
 from uuid import UUID
+from typing import cast
 from pathlib import Path
-from datetime import UTC, datetime
 from src.utils import names
 from src.routes import applications as application_routes
 from src.routes import organizations as organization_routes
 from src.kubernetes import environments
-from longlink.shared import users as shared_users
 from src.models.roles import PlatformRoles, OrganizationRoles
+from longlink.utils.time import utcnow
 from src.models.statuses import ApplicationStatus
 from src.models.storages import StorageKind
 from src.database.session import session_scope
@@ -19,12 +20,9 @@ from src.database.services import compute as compute_service
 from src.database.services import storage as storage_service
 from src.database.services import database as database_service
 from src.database.services import locations as location_service
-from src.database.services import operations as operation_service
-from src.database.services import registries as registry_service
 from src.database.services import applications as application_service
 from src.database.services import organizations as organization_service
 from src.kubernetes.client import Kubernetes
-from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
 from src.models.organizations import OrganizationCreate
 from src.database.models.users import User
@@ -120,7 +118,7 @@ async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) 
             UserOrganization,
             {"organization_id": organization_id, "user_id": user_id},
         )
-        now = datetime.now(UTC)
+        now = utcnow()
 
         # Create the owner membership when old local data lacks it.
         if membership is None:
@@ -248,7 +246,7 @@ async def seed_local_development() -> None:
             admin_user,
         )
 
-    # Reused organizations need owner and shared-user state repaired.
+    # Reused organizations need their owner membership repaired in the API database.
     else:
         await ensure_local_organization_owner(organization.id, admin_user.id)
 
@@ -258,24 +256,20 @@ async def seed_local_development() -> None:
     if organization_record is None:
         raise RuntimeError("Seeded organization could not be loaded")
 
-    # Reused organizations need shared-user state repaired after owner repair.
+    # Reused organizations need their API-owned users projected after owner repair.
     if reused_organization:
-        if organization_record.shared_schema_url is None:
-            raise RuntimeError("Seeded organization has no shared schema URL")
-        await shared_users.sync_url(organization_record.shared_schema_url, await organization_service.database_users(organization_record.id))
+        await projections.sync_organization_users(organization_record)
 
     application_payload = ApplicationCreate.model_validate(LOCAL_APP)
     application_slug = names.slugify(LOCAL_APP_NAME)
 
-    # Application storage isolation depends on deterministic runtime resource names.
-    names.organization_shared_bucket(organization_record.slug)
-    names.application_bucket(organization_record.slug, application_slug)
+    # Shared storage isolation depends on deterministic UUID-derived resource names.
+    names.organization_shared_bucket(organization_record.id)
 
     # Load the sample app before deciding whether to create or refresh it.
     organization_applications = await organization_service.applications(organization_record.id)
     application = next((application for application in organization_applications if application.slug == application_slug), None)
     if application is None:
-
         # Reload access relationships before invoking the application endpoint directly.
         endpoint_user = await users.get(LOCAL_ADMIN_OIDC, include_access=True)
         if endpoint_user is None:
@@ -284,16 +278,26 @@ async def seed_local_development() -> None:
 
     # Reused sample apps should refresh their runtime image and metadata.
     else:
-        metadata, application_compute, application_database, application_storage = await asyncio.gather(
+        metadata, application_database = await asyncio.gather(
             environments.application_image_metadata(application_payload),
-            registry_service.application_compute(application, organization_record.location_id),
-            registry_service.database(organization_record.location_id),
-            registry_service.application_storage(application),
+            database_service.location(organization_record.location_id),
         )
+
+        # Prefer the application's assigned compute registry and fall back when the assignment is absent or dangling.
+        application_compute = None
+        if application.compute_registry_id is not None:
+            application_compute = await compute_service.get(application.compute_registry_id, include_deleted=True)
+        if application_compute is None:
+            application_compute = await compute_service.location(organization_record.location_id)
+
+        # Reuse assigned storage when available.
+        application_storage = None
+        if application.storage_registry_id is not None:
+            application_storage = await storage_service.get(application.storage_registry_id, include_deleted=True)
 
         # Existing applications without assigned storage adopt the location backend.
         if application_storage is None:
-            application_storage = await registry_service.storage(organization_record.location_id)
+            application_storage = await storage_service.location(organization_record.location_id)
 
         # Runtime refresh requires all assigned registries before queueing external work.
         if application_compute is None or application_database is None or application_storage is None:
@@ -317,7 +321,15 @@ async def seed_local_development() -> None:
         if updated is None:
             raise RuntimeError("Seeded application could not be updated")
 
-        await operation_service.create(OperationKind.application_create, application_id=application.id, user=admin_user)
+        await application_routes.provision_application_runtime(
+            organization_record,
+            updated,
+            cast(str, metadata.image),
+            application_compute,
+            application_database,
+            application_storage,
+            admin_user,
+        )
 
 
 def main() -> None:

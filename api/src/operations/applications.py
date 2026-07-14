@@ -1,11 +1,9 @@
-import asyncio
 from src import adapters
 from datetime import timedelta
-from src.utils import jobs, names, images
-from longlink.shared import users as shared_users
+from src.utils import jobs, names
 from longlink.utils.time import utcnow
 from src.models.statuses import ApplicationStatus
-from src.database.services import database, operations, registries, applications, organizations
+from src.database.services import compute, storage, database, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
 from src.database.models.operations import Operation
@@ -22,15 +20,15 @@ FAILED_CONTAINER_WAITING_REASONS = {
 }
 
 
-@jobs.operation_handler(OperationKind.application_create)
-async def create(operation: Operation) -> jobs.OperationOutcome:
-    """Create one application runtime and wait for startup."""
+@jobs.operation_handler(OperationKind.application_verify)
+async def verify(operation: Operation) -> jobs.OperationOutcome:
+    """Wait for one application runtime to finish starting."""
 
-    # Application creation operations must reference the application row.
+    # Application verification operations must reference the application row.
     if operation.application_id is None:
         raise ValueError("Operation missing application reference")
 
-    # Load the application row required by the creation operation.
+    # Load the application row required by the verification operation.
     application = await applications.get(operation.application_id)
     if application is None:
         raise ValueError(f"Application '{operation.application_id}' not found")
@@ -41,98 +39,31 @@ async def create(operation: Operation) -> jobs.OperationOutcome:
         await applications.set_status(application.id, ApplicationStatus.failed)
         return jobs.fail("Application organization not found")
 
-    registry = await registries.application_compute(application, organization.location_id)
+    # Prefer the application's assigned compute registry and fall back when the assignment is absent or dangling.
+    registry = None
+    if application.compute_registry_id is not None:
+        registry = await compute.get(application.compute_registry_id, include_deleted=True)
+    if registry is None:
+        registry = await compute.location(organization.location_id)
     if registry is None:
         await applications.set_status(application.id, ApplicationStatus.failed)
         return jobs.fail("Application compute registry not found")
 
-    compute = Kubernetes(registry.kubeconfig, registry.proxy_secret)
+    compute_client = Kubernetes(registry.kubeconfig, registry.proxy_secret)
     application_id = str(application.id)
 
-    # The first operation attempt creates every external runtime resource.
-    if operation.scheduled_at is None:
-
-        # Provisioning requires immutable image metadata and assigned database and storage registries.
-        if application.digest is None or application.database_registry_id is None or application.storage_registry_id is None:
-            await applications.set_status(application.id, ApplicationStatus.failed)
-            return jobs.fail("Application runtime configuration is incomplete")
-
-        database_registry, storage_registry = await asyncio.gather(
-            database.get(application.database_registry_id, include_deleted=True),
-            registries.application_storage(application),
-        )
-        if database_registry is None or storage_registry is None or organization.shared_schema_url is None:
-            await applications.set_status(application.id, ApplicationStatus.failed)
-            return jobs.fail("Application runtime registry not found")
-
-        db = adapters.database(database_registry)
-        storage = adapters.storage(storage_registry)
-        bucket = names.application_bucket(organization.slug, application.slug)
-        shared = names.organization_shared_bucket(organization.slug)
-
-        # Create independent namespace, schema, storage, and user inputs concurrently.
-        try:
-            connection, organization_users, _, _, _ = await asyncio.gather(
-                db.schema(organization.id, application.id),
-                organizations.database_users(organization.id),
-                compute.namespace(organization.slug),
-                storage.create(shared),
-                storage.create(bucket),
-            )
-            await shared_users.sync_url(organization.shared_schema_url, organization_users)
-
-            # Reuse stored runtime credentials or create provider-scoped credentials for this application.
-            credentials = applications.storage_runtime_credentials(application)
-            if credentials is None:
-                credentials = await storage.credentials(bucket, "write")
-
-                # Persist generated credentials before applying the workload so cleanup can revoke them.
-                try:
-                    persisted = await applications.set_storage_runtime_credentials(application.id, credentials)
-                except Exception:
-                    await storage.revoke(bucket)
-                    raise
-
-                if persisted is None:
-                    await storage.revoke(bucket)
-                    raise RuntimeError("Application no longer exists")
-
-            reference = images.parse_reference(application.image)
-            runtime_image = f"{reference.registry}/{reference.repository}@{application.digest}"
-            envs = {
-                "LONGLINK_ENV": "production",
-                "LONGLINK_DATABASE_HOST": connection["host"],
-                "LONGLINK_DATABASE_NAME": connection["database_name"],
-                "LONGLINK_DATABASE_PASSWORD": connection["password"],
-                "LONGLINK_DATABASE_PORT": str(connection["port"]),
-                "LONGLINK_DATABASE_SCHEMA": application.id.hex,
-                "LONGLINK_DATABASE_USERNAME": connection["username"],
-                "LONGLINK_STORAGE_BUCKET": bucket,
-                "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.runtime_endpoint_url or storage_registry.endpoint_url,
-                "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
-                "LONGLINK_STORAGE_SHARED_BUCKET": shared,
-                "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
-            }
-            await compute.applications.create(organization.slug, application_id, runtime_image, {**application.envs, **envs})
-
-        # Failed external provisioning marks the application failed and queues partial cleanup.
-        except Exception:
-            await applications.set_status(application.id, ApplicationStatus.failed)
-            await operations.create(OperationKind.application_remove, application_id=application.id)
-            raise
-
-    # Track runtime signals observed during this creation attempt.
+    # Track runtime signals observed during this verification attempt.
     ready = False
     dead = False
 
     # Unexpected cluster failures are terminal; absent or pending resources return normal values.
     try:
-        # A ready deployment is enough to complete creation without pod inspection.
-        if await compute.applications.ready(application_id):
+        # A ready deployment is enough to complete verification without pod inspection.
+        if await compute_client.applications.ready(application_id):
             await applications.set_status(application.id, ApplicationStatus.running)
             return jobs.complete()
 
-        current = await compute.applications.pod(application_id)
+        current = await compute_client.applications.pod(application_id)
 
         # Inspect the current pod when Kubernetes has created one for this rollout.
         if current is not None:
@@ -195,7 +126,7 @@ async def create(operation: Operation) -> jobs.OperationOutcome:
     expired = utcnow() - operation.created_at >= timedelta(seconds=15 * 60)
     if expired:
         await applications.set_status(application.id, ApplicationStatus.failed)
-        return jobs.fail("Application startup timed out")
+        return jobs.fail("Application startup verification timed out")
 
     return jobs.defer()
 
@@ -219,7 +150,12 @@ async def remove(operation: Operation) -> jobs.OperationOutcome:
         return jobs.complete()
 
     # Remove workload resources only when the app has a compute backend to target.
-    registry = await registries.application_compute(application, organization.location_id)
+    # Prefer the application's assigned compute registry and fall back when the assignment is absent or dangling.
+    registry = None
+    if application.compute_registry_id is not None:
+        registry = await compute.get(application.compute_registry_id, include_deleted=True)
+    if registry is None:
+        registry = await compute.location(organization.location_id)
     if registry is not None:
         adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
         await adapter.applications.delete(str(application.id))
@@ -233,10 +169,12 @@ async def remove(operation: Operation) -> jobs.OperationOutcome:
             await adapter.delete_schema(organization.id, application.id)
 
     # Remove the deterministic application bucket only when storage was assigned.
-    registry = await registries.application_storage(application)
+    registry = None
+    if application.storage_registry_id is not None:
+        registry = await storage.get(application.storage_registry_id, include_deleted=True)
     if registry is not None:
         adapter = adapters.storage(registry)
-        bucket = names.application_bucket(organization.slug, application.slug)
+        bucket = names.application_bucket(application.id)
         await adapter.revoke(bucket)
         await adapter.delete(bucket)
 

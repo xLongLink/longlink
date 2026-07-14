@@ -1,8 +1,33 @@
 import time
 import docker
+import pytest
+import psycopg
 import urllib.parse
 from typing import Any
 from collections.abc import Sequence
+from docker.constants import DEFAULT_DOCKER_API_VERSION
+from requests.exceptions import Timeout, SSLError, ConnectionError
+
+
+def require_docker_daemon() -> None:
+    """Skip the current test only when the configured Docker daemon cannot be reached."""
+
+    # Use a fixed client API version so construction validates configuration without contacting the daemon.
+    client = docker.from_env(version=DEFAULT_DOCKER_API_VERSION)
+    try:
+
+        # A reachable daemon may still reject the API version or request; those errors must fail the test.
+        try:
+            client.ping()
+        except (ConnectionError, Timeout) as exc:
+
+            # TLS failures indicate invalid client configuration rather than an unavailable daemon.
+            if isinstance(exc, SSLError):
+                raise
+
+            pytest.skip(f"Docker daemon is not available: {exc}")
+    finally:
+        client.close()
 
 
 class DockerRuntimeContainer:
@@ -39,7 +64,7 @@ class DockerRuntimeContainer:
             for source, target, mode in self._volumes
         }
 
-        # Keep cleanup under test control so failed starts can still surface useful Docker errors.
+        # Close the Docker client after any failed pull or start while preserving the original error.
         try:
             self._container = self._client.containers.run(
                 self._image,
@@ -51,24 +76,28 @@ class DockerRuntimeContainer:
                 volumes=volume_bindings or None,
                 **self._kwargs,
             )
-        except Exception:
-            self._client.close()
-            self._client = None
-            raise
+        finally:
+            if self._container is None:
+                self._client.close()
+                self._client = None
 
         return self
 
     def stop(self) -> None:
         """Remove the Docker container and close the client."""
 
-        # Docker remove with force covers both running and exited containers.
-        if self._container is not None:
-            self._container.remove(force=True, v=True)
-            self._container = None
+        container = self._container
+        client = self._client
+        self._container = None
+        self._client = None
 
-        if self._client is not None:
-            self._client.close()
-            self._client = None
+        # Docker remove with force covers both running and exited containers.
+        try:
+            if container is not None:
+                container.remove(force=True, v=True)
+        finally:
+            if client is not None:
+                client.close()
 
     def host(self) -> str:
         """Return the host where Docker publishes container ports."""
@@ -120,6 +149,37 @@ class DockerRuntimeContainer:
 
         result = self._container.exec_run(list(command))
         return result.exit_code, result.output.decode("utf-8", errors="replace")
+
+
+def wait_for_postgres(
+    container: DockerRuntimeContainer,
+    username: str,
+    password: str,
+    database: str,
+    port: int = 5432,
+) -> None:
+    """Wait until a PostgreSQL container accepts connections."""
+
+    deadline = time.monotonic() + 60
+
+    # Poll the actual database connection until PostgreSQL finishes initialization.
+    while time.monotonic() < deadline:
+        try:
+            with psycopg.connect(
+                host=container.host(),
+                port=container.port(port),
+                user=username,
+                password=password,
+                dbname=database,
+                connect_timeout=1,
+            ) as connection:
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT 1")
+            return
+        except psycopg.OperationalError:
+            time.sleep(0.5)
+
+    pytest.fail("PostgreSQL container did not become ready")
 
 
 def wait_for_container_log(container: DockerRuntimeContainer, text: str, timeout: float) -> None:

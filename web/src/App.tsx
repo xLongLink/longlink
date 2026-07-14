@@ -1,31 +1,31 @@
-import { Auth } from '@/components/Auth';
-import { Toaster } from '@/components/ui/sonner';
-import { useOrganization } from '@/hooks/use-organization';
-import { useUserProfile } from '@/hooks/use-user';
-import ArticleLayout from '@/layout/ArticleLayout';
-import { canAccessApplication } from '@/lib/roles';
-import Admin from '@/pages/Admin';
-import AdminApplications from '@/pages/admin/Applications';
-import AdminCompute from '@/pages/admin/Compute';
-import ComputeNamespaces from '@/pages/admin/ComputeNamespaces';
-import ComputePods from '@/pages/admin/ComputePods';
-import AdminDatabase from '@/pages/admin/Database';
-import AdminLocation from '@/pages/admin/Location';
-import AdminOperations from '@/pages/admin/Operations';
-import AdminOrganizations from '@/pages/admin/Organizations';
-import AdminStorage from '@/pages/admin/Storage';
-import AdminUsers from '@/pages/admin/Users';
-import { DOC_GROUPS, DOC_PAGES } from '@/pages/docs/catalog';
-import Home from '@/pages/Home';
-import { LEGAL_GROUPS, LEGAL_PAGES } from '@/pages/legal/catalog';
-import NotFound from '@/pages/NotFound';
-import Organization from '@/pages/Organization';
-import Organizations from '@/pages/Organizations';
-import Pricing from '@/pages/Pricing';
-import Settings from '@/pages/Settings';
-import View from '@/pages/View';
 import type { RouteObject } from 'react-router';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
+import Home from '@/pages/Home';
+import View from '@/pages/View';
+import Admin from '@/pages/Admin';
+import Pricing from '@/pages/Pricing';
+import NotFound from '@/pages/NotFound';
+import Settings from '@/pages/Settings';
+import { Auth } from '@/components/Auth';
+import AdminUsers from '@/pages/admin/Users';
+import Organization from '@/pages/Organization';
+import { Toaster } from '@/components/ui/sonner';
+import AdminCompute from '@/pages/admin/Compute';
+import AdminStorage from '@/pages/admin/Storage';
+import { useUserProfile } from '@/hooks/use-user';
+import Organizations from '@/pages/Organizations';
+import ArticleLayout from '@/layout/ArticleLayout';
+import { canAccessApplication } from '@/lib/roles';
+import AdminDatabase from '@/pages/admin/Database';
+import AdminLocation from '@/pages/admin/Location';
+import ComputePods from '@/pages/admin/ComputePods';
+import AdminOperations from '@/pages/admin/Operations';
+import { useOrganization } from '@/hooks/use-organization';
+import AdminApplications from '@/pages/admin/Applications';
+import AdminOrganizations from '@/pages/admin/Organizations';
+import { DOC_GROUPS, DOC_PAGES } from '@/pages/docs/catalog';
+import ComputeNamespaces from '@/pages/admin/ComputeNamespaces';
+import { LEGAL_GROUPS, LEGAL_PAGES } from '@/pages/legal/catalog';
 
 type AppRouter = ReturnType<typeof createBrowserRouter>;
 
@@ -95,22 +95,6 @@ export function getRoutes(mode = import.meta.env.MODE): RouteObject[] {
             element: (
                 <Auth requiredRole="user">
                     <Organization />
-                </Auth>
-            ),
-        },
-        {
-            path: 'orgs/:organization/database',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="database" />
-                </Auth>
-            ),
-        },
-        {
-            path: 'orgs/:organization/storage',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="storage" />
                 </Auth>
             ),
         },

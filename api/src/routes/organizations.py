@@ -1,16 +1,14 @@
-from src import adapters
+from src import adapters, projections
 from uuid import UUID, uuid4
 from fastapi import Depends, APIRouter, HTTPException
-from datetime import UTC, datetime
 from src.auth import authuser, authsupport
 from src.utils import names, roles
 from src.utils import storage as storage_utils
 from src.logger import logger
-from longlink.shared import users as shared_users
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import OrganizationDatabaseResourceResponse
-from src.database.services import locations, operations, registries, invitations, organizations
+from src.database.services import compute, storage, database, locations, operations, invitations, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.applications import ApplicationResponse
 from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary, OrganizationMemberUpdate,
@@ -43,12 +41,12 @@ async def _provision_organization_runtime(
         raise RuntimeError("Organization has no shared schema URL")
     await adapters.database(database_registry).prepare_organization_database(organization.id, shared_schema_url)
 
-    # Synchronize shared users into the existing organization schema.
-    await shared_users.sync_url(shared_schema_url, await organizations.database_users(organization.id))
+    # Project API-owned users into the existing organization schema.
+    await projections.sync_organization_users(organization)
 
-    # Create the shared organization storage bucket from the deterministic slug-derived name.
+    # Create the shared organization storage bucket from the deterministic UUID-derived name.
     storage = adapters.storage(storage_registry)
-    await storage.create(names.organization_shared_bucket(organization.slug))
+    await storage.create(names.organization_shared_bucket(organization.id))
 
 
 async def _cleanup_organization_runtime(
@@ -61,7 +59,7 @@ async def _cleanup_organization_runtime(
 
     # Remove the shared bucket first because it is independent of compute and database resources.
     try:
-        await adapters.storage(storage_registry).delete(names.organization_shared_bucket(organization.slug))
+        await adapters.storage(storage_registry).delete(names.organization_shared_bucket(organization.id))
     except Exception as exc:
         logger.exception("Failed to clean up storage for organization '%s': %r", organization.slug, exc)
 
@@ -199,7 +197,7 @@ async def list_organization_database_resources(organization_id: UUID, user: User
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Skip resources when no database registry is assigned.
-    registry = await registries.database(membership.organization.location_id)
+    registry = await database.location(membership.organization.location_id)
     if registry is None:
         return []
 
@@ -224,7 +222,7 @@ async def list_organization_storage_resources(organization_id: UUID, user: User 
         raise HTTPException(status_code=403, detail="Permission required")
 
     # Skip resources when no storage registry is assigned.
-    registry = await registries.storage(membership.organization.location_id)
+    registry = await storage.location(membership.organization.location_id)
     if registry is None:
         return []
 
@@ -290,14 +288,9 @@ async def update_organization_member(
     if not updated:
         raise HTTPException(status_code=404, detail="Organization member not found")
 
-    # Synchronize shared users after role changes.
+    # Project the changed API membership into the organization database.
     try:
-        # Use the stored shared-schema URL because tenant code owns shared user writes.
-        shared_schema_url = membership.organization.shared_schema_url
-        if shared_schema_url is None:
-            raise RuntimeError("Organization has no shared schema URL")
-
-        await shared_users.sync_url(shared_schema_url, await organizations.database_users(membership.organization_id))
+        await projections.sync_organization_users(membership.organization)
 
     # Surface synchronization failures as unavailable.
     except Exception as exc:
@@ -324,7 +317,6 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
 
     await operations.queue_organization_removal(
         organization_id,
-        scheduled_at=datetime.now(UTC),
         user=user,
     )
 
@@ -426,7 +418,7 @@ async def _storage_usage_rows(
 
     rows: list[dict[str, object]] = []
     needs_usage: list[str] = []
-    shared = names.organization_shared_bucket(organization.slug)
+    shared = names.organization_shared_bucket(organization.id)
     visible: list[tuple[Application, str]] = []
 
     # Inspect usage only for shared buckets that exist.
@@ -435,7 +427,7 @@ async def _storage_usage_rows(
 
     # Compare expected app buckets against the backend listing so only existing resources are visible.
     for app in sorted(apps, key=lambda item: item.name):
-        bucket = names.application_bucket(organization.slug, app.slug)
+        bucket = names.application_bucket(app.id)
 
         # Only show application buckets present in the backend.
         if bucket not in buckets:
@@ -482,7 +474,7 @@ async def _storage_usage_rows(
         rows.append(
             {
                 "kind": OrganizationStorageResourceKind.application_bucket,
-                "name": app.slug,
+                "name": bucket,
                 "bucket_name": bucket,
                 "application": app,
                 "space_used": usage["space_used"],
@@ -501,33 +493,35 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     if await locations.get(payload.location_id) is None:
         raise HTTPException(status_code=404, detail="Location not found")
 
+    # Generate the row ID before insert so derived resource names use the final UUID.
+    organization_id = uuid4()
+
     # Validate derived resource names before creating the organization.
     try:
         slug = names.slugify(payload.name)
         names.knames(slug)
-        names.organization_shared_bucket(slug)
+        names.organization_shared_bucket(organization_id)
 
     # Return invalid names as request conflicts.
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
 
     # Organizations require a compute namespace in their location.
-    compute_registry = await registries.compute(payload.location_id)
+    compute_registry = await compute.location(payload.location_id)
     if compute_registry is None:
         raise HTTPException(status_code=409, detail="Location has no compute registry")
 
-    # Organizations require a tenant database in their location.
-    database_registry = await registries.database(payload.location_id)
+    # Organizations require a database in their location.
+    database_registry = await database.location(payload.location_id)
     if database_registry is None:
         raise HTTPException(status_code=409, detail="Location has no database registry")
 
     # Organizations require shared object storage in their location.
-    storage_registry = await registries.storage(payload.location_id)
+    storage_registry = await storage.location(payload.location_id)
     if storage_registry is None:
         raise HTTPException(status_code=409, detail="Location has no storage registry")
 
-    # Generate the row ID before insert so the stored tenant URL uses the final database name.
-    organization_id = uuid4()
+    # Store the shared-schema URL with the final database name.
     shared_schema_url = adapters.database(database_registry).shared_schema_url(organization_id)
 
     organization = await organizations.create(

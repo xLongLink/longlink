@@ -1,5 +1,5 @@
-import { getRoutes } from '@/App';
 import { describe, expect, it } from 'bun:test';
+import { getRoutes } from '@/App';
 
 type RouteLike = {
     index?: boolean;
@@ -36,8 +36,8 @@ describe('getRoutes', () => {
         expect(routePaths).toContain('admin/locations');
         expect(routePaths).toContain('organizations');
         expect(routePaths).toContain('orgs/:organization');
-        expect(routePaths).toContain('orgs/:organization/database');
-        expect(routePaths).toContain('orgs/:organization/storage');
+        expect(routePaths).not.toContain('orgs/:organization/database');
+        expect(routePaths).not.toContain('orgs/:organization/storage');
         expect(routePaths).toContain('orgs/:organization/settings');
         expect(routePaths).toContain('orgs/:organization/settings/applications');
         expect(routePaths).toContain('orgs/:organization/settings/applications/:settingsApplication');

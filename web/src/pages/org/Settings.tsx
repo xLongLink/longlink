@@ -31,6 +31,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { apiApplicationMemberSchema, parseApiCollection } from '@/lib/api-schemas';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { useOrganizationDatabaseResources, useOrganizationStorageResources } from '@/data/organization';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -43,7 +44,6 @@ import {
     canViewApplicationLogs,
     type ApplicationRole,
 } from '@/lib/roles';
-import { useOrganizationDatabaseResources, useOrganizationStorageResources } from '@/data/organization';
 import People from './People';
 
 type SettingsProps = {
@@ -191,15 +191,6 @@ export default function Settings({
                     </div>
                 );
             },
-        },
-        {
-            accessorKey: 'role',
-            header: t('columns.appRole'),
-            cell: ({ row }) =>
-                row.original.role ?? (
-                    <span className="text-muted-foreground">{t('organizationSettings.notAssigned')}</span>
-                ),
-            meta: { className: 'w-32' },
         },
         {
             id: 'action',

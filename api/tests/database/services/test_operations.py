@@ -1,5 +1,6 @@
 from types import SimpleNamespace
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
+from longlink.utils.time import utcnow
 from src.database.session import get_session
 from src.database.services import users, locations, operations, applications, organizations
 from src.models.operations import OperationKind
@@ -28,8 +29,8 @@ async def test_operations_service_fetch_returns_newest_operations_first(users) -
         newer_row = await session.get(Operation, newer_operation.id)
         assert older_row is not None
         assert newer_row is not None
-        older_row.created_at = datetime.now(UTC) - timedelta(days=1)
-        newer_row.created_at = datetime.now(UTC)
+        older_row.created_at = utcnow() - timedelta(days=1)
+        newer_row.created_at = utcnow()
         await session.commit()
 
     # Act
@@ -56,8 +57,8 @@ async def test_operations_service_claim_next_claims_oldest_available_operation(u
         newer_row = await session.get(Operation, newer_operation.id)
         assert older_row is not None
         assert newer_row is not None
-        older_row.created_at = datetime.now(UTC) - timedelta(days=1)
-        newer_row.created_at = datetime.now(UTC)
+        older_row.created_at = utcnow() - timedelta(days=1)
+        newer_row.created_at = utcnow()
         await session.commit()
 
     # Act
@@ -77,7 +78,7 @@ async def test_operations_service_claim_ignores_future_active_and_stopped_operat
     owner = users[0]
     future_operation = await db.operations.create(
         OperationKind.application_remove,
-        scheduled_at=datetime.now(UTC) + timedelta(days=1),
+        scheduled_at=utcnow() + timedelta(days=1),
         user=owner,
     )
     active_operation = await db.operations.create(OperationKind.organization_remove, user=owner)
@@ -142,7 +143,7 @@ async def test_operations_service_tracks_successful_operation_lifecycle() -> Non
 
     # Act
     operation = await db.operations.create(
-        OperationKind.application_create,
+        OperationKind.application_verify,
         application_id=application.id,
         user=user,
     )
@@ -178,7 +179,7 @@ async def test_operations_service_tracks_failed_operation_lifecycle() -> None:
 
     # Act
     operation = await db.operations.create(
-        OperationKind.application_create,
+        OperationKind.application_verify,
         application_id=application.id,
         user=user,
     )
@@ -213,7 +214,7 @@ async def test_operations_service_defers_active_operation() -> None:
 
     # Act
     operation = await db.operations.create(
-        OperationKind.application_create,
+        OperationKind.application_verify,
         application_id=application.id,
         user=user,
     )
@@ -255,7 +256,7 @@ async def test_operations_service_skips_future_scheduled_operations() -> None:
     operation = await db.operations.create(
         OperationKind.application_remove,
         application_id=application.id,
-        scheduled_at=datetime.now(UTC) + timedelta(days=7),
+        scheduled_at=utcnow() + timedelta(days=7),
         user=user,
     )
 
@@ -283,7 +284,7 @@ async def test_operations_service_resets_active_operations(monkeypatch) -> None:
         user=user,
     )
     operation = await db.operations.create(
-        OperationKind.application_create,
+        OperationKind.application_verify,
         application_id=application.id,
         user=user,
     )

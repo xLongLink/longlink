@@ -8,6 +8,31 @@ When working in this repo, keep changes practical, small, and aligned with the e
 
 When listing improvement suggestions, use numbered lists.
 
+## Product Language
+
+Use LongLink terminology consistently.
+
+| Term                  | Use                                                                                                                                             |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| LongLink              | The product as a whole.                                                                                                                         |
+| LongLink Platform     | The shared platform layer that owns authentication, organizations, infrastructure registries, operations, deployments, and application routing. |
+| LongLink Applications | Process-specific Python applications running on LongLink.                                                                                       |
+| LongLink SDK          | The Python package that provides the application runtime, CLI, database helpers, storage helpers, XML page discovery, and packaged assets.      |
+| Web frontend          | The Vite/React frontend for public pages, docs, the platform UI, and XML rendering.                                                             |
+| Organization          | A tenant boundary for users, shared data, applications, and managed runtime resources.                                                          |
+| XML pages             | Declarative page definitions rendered by the LongLink web runtime.                                                                              |
+
+
+## Audience and Tone
+
+- Write for developers and technical operators who may not know LongLink internals.
+- Be direct, practical, and mature.
+- Start with the outcome, requirements, and shortest working path before adding deeper detail.
+- Prefer active voice and short sentences.
+- Use `you` for the reader and `LongLink` for the product.
+- Avoid ambiguous `we`; name the actor instead, such as `contributors`, `the LongLink Platform`, or `the LongLink SDK`.
+- Avoid jokes, cultural references, and in-jokes that age poorly or exclude readers.
+
 ## Architecture
 
 ```bash
@@ -60,7 +85,6 @@ longlink/
     └── rfc/                        # Reference RFC material
 ```
 
-Runtime resource model: one organization maps to one database named from the organization UUID hex. Each organization database contains one organization-owned shared schema that applications can read, plus one schema per application named from the application UUID hex where that application has read/write access. Organization and application storage bucket names are derived from immutable slugs, not persisted separately. The organization row stores the internal shared-schema URL used by control-plane shared migrations and user synchronization. Organization creation owns database creation and executes the shared migrations packaged by the SDK; application creation owns only application schema and runtime role provisioning. SDK application migrations manage only application-owned schemas.
 
 ## Python Guidelines
 

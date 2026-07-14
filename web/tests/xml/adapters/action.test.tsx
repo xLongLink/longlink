@@ -1,15 +1,19 @@
-import { executeAction } from '@/xml/adapters/Action';
-import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
+import type { ExecutionContext } from '@/xml/types';
+import { executeAction } from '@/xml/adapters/Action';
 
 describe('Action', () => {
     /* The action shell should send a request with a JSON payload. */
     it('sends a request and invalidates after success', async () => {
-        let invalidateCalls = 0;
+        const events: string[] = [];
+        const invalidations: Array<string | string[]> = [];
+        const successMessages: string[] = [];
+        const errorMessages: string[] = [];
         const ctx: ExecutionContext = {
             setups: {},
-            invalidate: async () => {
-                invalidateCalls += 1;
+            invalidate: async (ids) => {
+                events.push('invalidate');
+                invalidations.push(ids);
             },
             values: {
                 fullName: 'Ada Lovelace',
@@ -23,6 +27,7 @@ describe('Action', () => {
         let fetchCalls = 0;
 
         const fetchImpl = (async (input: RequestInfo | URL, init?: RequestInit) => {
+            events.push('fetch');
             fetchCalls += 1;
             requestUrl = String(input);
             requestInit = init;
@@ -34,12 +39,21 @@ describe('Action', () => {
             {
                 action: '/example/profile',
                 json: '${{ fullName: fullName, email: email, notes: notes }}',
-                invalidate: '${["profile"]}',
+                invalidate: '${["profile", "activity"]}',
             },
             ctx,
             '',
             fetchImpl,
-            { success: () => {}, error: () => {} }
+            {
+                success: (message) => {
+                    events.push('success');
+                    successMessages.push(message);
+                },
+                error: (message) => {
+                    events.push('error');
+                    errorMessages.push(message);
+                },
+            }
         );
 
         expect(requestUrl).toBe('/example/profile');
@@ -57,7 +71,56 @@ describe('Action', () => {
             })
         );
         expect(fetchCalls).toBe(1);
-        expect(invalidateCalls).toBe(1);
+        expect(invalidations).toEqual([['profile', 'activity']]);
+        expect(successMessages).toEqual(['Request completed with status 204']);
+        expect(errorMessages).toEqual([]);
+        expect(events).toEqual(['fetch', 'invalidate', 'success']);
+    });
+
+    /* Failed HTTP responses must stop before invalidation and success notification. */
+    it('reports non-2xx responses without invalidating', async () => {
+        const events: string[] = [];
+        const invalidations: Array<string | string[]> = [];
+        const successMessages: string[] = [];
+        const errorMessages: string[] = [];
+        const ctx: ExecutionContext = {
+            setups: {},
+            invalidate: async (ids) => {
+                events.push('invalidate');
+                invalidations.push(ids);
+            },
+            values: {},
+        };
+        const fetchImpl = (async () => {
+            events.push('fetch');
+
+            return new Response('', { status: 422 });
+        }) as unknown as typeof fetch;
+
+        await executeAction(
+            {
+                action: '/example/profile',
+                invalidate: '${["profile", "activity"]}',
+            },
+            ctx,
+            '',
+            fetchImpl,
+            {
+                success: (message) => {
+                    events.push('success');
+                    successMessages.push(message);
+                },
+                error: (message) => {
+                    events.push('error');
+                    errorMessages.push(message);
+                },
+            }
+        );
+
+        expect(invalidations).toEqual([]);
+        expect(successMessages).toEqual([]);
+        expect(errorMessages).toEqual(['Request failed with status 422']);
+        expect(events).toEqual(['fetch', 'error']);
     });
 
     /* The action shell should send multipart form data without a JSON content type. */

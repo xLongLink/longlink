@@ -1,4 +1,4 @@
-.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all api\:tests sdk\:tests web\:tests pyright api\:pyright sdk\:pyright
+.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests pyright api\:pyright sdk\:pyright
 
 LOCAL_SDK_IMAGE := localhost:15000/longlink-app:dev
 LOCAL_SDK_IMAGE_LABEL := longlink.name=longlink-app
@@ -11,12 +11,12 @@ install: api\:install sdk\:install web\:install
 
 # Install API Python development dependencies.
 api\:install:
-	cd api && uv sync --extra dev
+	cd api && uv sync --locked --extra dev
 
 
 # Install SDK Python development dependencies.
 sdk\:install:
-	cd sdk && uv sync --extra dev
+	cd sdk && uv sync --locked --extra dev
 
 
 # Install web JavaScript dependencies.
@@ -30,12 +30,12 @@ format: api\:format sdk\:format web\:format
 
 # Format API imports.
 api\:format: api\:install
-	cd api && uv run isort .
+	cd api && uv run --locked isort .
 
 
 # Format SDK imports.
 sdk\:format: sdk\:install
-	cd sdk && uv run isort .
+	cd sdk && uv run --locked isort .
 
 
 # Format web code and repository docs.
@@ -56,12 +56,18 @@ tests\:all: api\:tests sdk\:tests web\:tests
 
 # Run all API tests with coverage, including container-backed integration tests.
 api\:tests: api\:install api\:build
-	cd api && ENVIRONMENT=testing uv run pytest $(API_PYTEST_MARK) --cov=src --cov-report=term-missing tests
+	cd api && ENVIRONMENT=testing uv run --locked pytest $(API_PYTEST_MARK) --cov=src --cov-report=term-missing tests
 
 
-# Run SDK tests with coverage.
-sdk\:tests: sdk\:install
-	cd sdk && uv run pytest --cov=longlink --cov-report=term-missing tests
+# Build the embedded web bundle, then run SDK and generated scaffold tests.
+sdk\:tests: sdk\:install sdk\:build
+	cd sdk && uv run --locked pytest --cov=longlink --cov-report=term-missing tests
+	cd sdk && sh tests/scaffold-smoke.sh
+
+
+# Generate an isolated application and run its shipped tests.
+sdk\:scaffold\:tests: sdk\:install sdk\:build
+	cd sdk && sh tests/scaffold-smoke.sh
 
 
 # Run web tests, typecheck, and bundle builds.
@@ -78,12 +84,12 @@ pyright: api\:pyright sdk\:pyright
 
 # Run API Pyright checks.
 api\:pyright:
-	cd api && uv run --extra dev pyright
+	cd api && uv run --locked --extra dev pyright
 
 
 # Run SDK Pyright checks.
 sdk\:pyright:
-	cd sdk && uv run --group dev pyright
+	cd sdk && uv run --locked --group dev pyright
 
 
 # Typecheck and build both web bundle modes.
@@ -170,19 +176,19 @@ down:
 
 # Run the local LongLink Platform API server after `make seed`.
 api:
-	cd api && uv sync --extra dev
-	cd api && DEVELOPMENT=true uv run alembic upgrade head
-	cd api && DEVELOPMENT=true uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+	cd api && uv sync --locked --extra dev
+	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
+	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 
 # Build and push the SDK app image, then run migrations and seed data after `make up`.
 seed:
-	cd api && uv sync --extra dev
-	if [ ! -d sdk/dev ]; then cd sdk && uv run longlink init --folder dev; fi
+	cd api && uv sync --locked --extra dev
+	if [ ! -d sdk/dev ]; then cd sdk && uv run --locked longlink init --folder dev; fi
 	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'
 	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
-	cd api && DEVELOPMENT=true uv run alembic upgrade head
-	cd api && DEVELOPMENT=true uv run python seed.py
+	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
+	cd api && DEVELOPMENT=true uv run --locked python seed.py
 
 
 # Run the Vite web app.
@@ -194,6 +200,6 @@ web:
 # Build the SDK web bundle, then recreate and run the generated SDK development app.
 sdk: sdk\:build
 	rm -rf sdk/dev
-	cd sdk && uv run longlink init --folder dev
+	cd sdk && uv run --locked longlink init --folder dev
 	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'
 	cd sdk/dev && uv run longlink dev

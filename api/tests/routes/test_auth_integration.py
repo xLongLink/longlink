@@ -5,10 +5,9 @@ import pytest
 from src import auth as auth_module
 from main import app
 from pathlib import Path
-from containers import DockerRuntimeContainer
+from containers import DockerRuntimeContainer, require_docker_daemon
 from src.routes import auth as auth_routes
 from urllib.parse import parse_qs, urlsplit
-from docker.errors import DockerException
 from collections.abc import Iterator
 from fastapi.testclient import TestClient
 from authlib.integrations.starlette_client import OAuth
@@ -44,6 +43,8 @@ def _wait_for_keycloak(issuer_url: str) -> None:
 def keycloak_issuer() -> Iterator[str]:
     """Start Keycloak with the local test realm and return its issuer URL."""
 
+    # Skip only when the Docker daemon cannot be reached.
+    require_docker_daemon()
     container = DockerRuntimeContainer(
         KEYCLOAK_IMAGE,
         command="start-dev --http-port=8080 --import-realm",
@@ -56,17 +57,13 @@ def keycloak_issuer() -> Iterator[str]:
             "KC_BOOTSTRAP_ADMIN_PASSWORD": KEYCLOAK_ADMIN_PASSWORD,
         },
     )
+    container.start()
 
     try:
-        container.start()
-    except DockerException as exc:
-        pytest.skip(f"Docker is not available for Keycloak integration tests: {exc}")
-
-    issuer = (
-        f"http://{container.host()}:{container.port(KEYCLOAK_PORT)}/"
-        f"realms/{KEYCLOAK_REALM_NAME}"
-    )
-    try:
+        issuer = (
+            f"http://{container.host()}:{container.port(KEYCLOAK_PORT)}/"
+            f"realms/{KEYCLOAK_REALM_NAME}"
+        )
         _wait_for_keycloak(issuer)
         yield issuer
     finally:

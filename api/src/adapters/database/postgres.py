@@ -63,9 +63,9 @@ class Postgres(Database):
         return conn.engine.sync_engine.dialect.identifier_preparer.quote(value)
 
     def shared_schema_url(self, organization: UUID) -> str:
-        """Return the tenant shared-schema URL for one organization database."""
+        """Return the control-plane shared-schema URL for one organization database."""
 
-        # The URL embeds search_path so tenant code can use unqualified shared table names.
+        # The URL embeds search_path so API orchestration can use unqualified shared table names.
         return self.url(organization.hex, search_path=SHARED_SCHEMA).render_as_string(hide_password=False)
 
     @contextlib.asynccontextmanager
@@ -119,7 +119,7 @@ class Postgres(Database):
                 quoted_database_name = self.quote(conn, organization.hex)
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
 
-        # Tenant migrations create the organization schema before users or app schemas rely on it.
+        # SDK migrations create the organization schema before users or application schemas rely on it.
         await shared_migrations.migrate_database(shared_schema_url)
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.

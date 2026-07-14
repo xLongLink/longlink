@@ -3,8 +3,7 @@ import asyncio
 from types import SimpleNamespace
 from typing import cast
 from src.utils import storage as storage_utils
-from containers import DockerRuntimeContainer
-from docker.errors import DockerException
+from containers import DockerRuntimeContainer, require_docker_daemon
 from collections.abc import AsyncIterator
 from botocore.exceptions import EndpointConnectionError
 from src.adapters.storage.minio import MinIO
@@ -20,6 +19,8 @@ MINIO_PORT = 9000
 async def minio_storage() -> AsyncIterator[tuple[MinIO, StorageRegistry]]:
     """Start a MinIO container and return its adapter plus registry details."""
 
+    # Skip only when the Docker daemon cannot be reached.
+    require_docker_daemon()
     container = DockerRuntimeContainer(
         "minio/minio:latest",
         command="server /data",
@@ -29,27 +30,24 @@ async def minio_storage() -> AsyncIterator[tuple[MinIO, StorageRegistry]]:
             "MINIO_ROOT_PASSWORD": MINIO_SECRET_KEY,
         },
     )
-    try:
-        container.start()
-    except DockerException as exc:
-        pytest.skip(f"Docker is not available for MinIO integration tests: {exc}")
+    container.start()
 
-    endpoint_url = f"http://{container.host()}:{container.port(MINIO_PORT)}"
-    storage = MinIO(
-        endpoint_url=endpoint_url,
-        access_key_id=MINIO_ACCESS_KEY,
-        secret_access_key=MINIO_SECRET_KEY,
-    )
-    registry = cast(
-        StorageRegistry,
-        SimpleNamespace(
+    try:
+        endpoint_url = f"http://{container.host()}:{container.port(MINIO_PORT)}"
+        storage = MinIO(
             endpoint_url=endpoint_url,
             access_key_id=MINIO_ACCESS_KEY,
             secret_access_key=MINIO_SECRET_KEY,
-        ),
-    )
+        )
+        registry = cast(
+            StorageRegistry,
+            SimpleNamespace(
+                endpoint_url=endpoint_url,
+                access_key_id=MINIO_ACCESS_KEY,
+                secret_access_key=MINIO_SECRET_KEY,
+            ),
+        )
 
-    try:
         for _ in range(60):
             try:
                 await storage_utils.buckets(registry)

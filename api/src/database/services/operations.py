@@ -1,8 +1,9 @@
 import re
 import secrets
 from uuid import UUID
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from sqlalchemy import or_, select, update
+from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.models.operations import OperationKind
 from src.database.models.users import User
@@ -74,7 +75,7 @@ async def reset_active() -> None:
 
     # Reset expired leases inside one transaction.
     async with session_scope() as session:
-        now = datetime.now(UTC)
+        now = utcnow()
 
         # Only expired leases are reset so healthy workers keep ownership while the API scales out.
         statement = (
@@ -147,7 +148,7 @@ async def claim(operation_id: UUID) -> Operation | None:
 
     # Claim the requested operation inside one transaction.
     async with session_scope() as session:
-        now = datetime.now(UTC)
+        now = utcnow()
         statement = (
             select(Operation)
             .where(
@@ -187,7 +188,7 @@ async def defer(operation_id: UUID, lease_token: str, delay_seconds: int | None 
     async with session_scope() as session:
 
         # Waiting work should be retried later without blocking the worker.
-        now = datetime.now(UTC)
+        now = utcnow()
         retry_delay_seconds = OPERATION_RETRY_DELAY_SECONDS if delay_seconds is None else delay_seconds
         scheduled_at = now + timedelta(seconds=max(0, retry_delay_seconds))
         statement = (
@@ -227,7 +228,7 @@ async def claim_next() -> Operation | None:
 
     # Claim the next available operation inside one transaction.
     async with session_scope() as session:
-        now = datetime.now(UTC)
+        now = utcnow()
 
         # Select the oldest claimable row so work is processed in submission order.
         statement = (
@@ -270,7 +271,7 @@ async def renew_lease(operation_id: UUID, lease_token: str) -> Operation | None:
 
     # Extend the lease inside one transaction.
     async with session_scope() as session:
-        now = datetime.now(UTC)
+        now = utcnow()
         statement = (
             update(Operation)
             .where(
@@ -306,7 +307,7 @@ async def complete(operation_id: UUID, lease_token: str) -> Operation | None:
     async with session_scope() as session:
 
         # Finalize the row once after successful execution.
-        now = datetime.now(UTC)
+        now = utcnow()
         statement = (
             update(Operation)
             .where(
@@ -345,7 +346,7 @@ async def fail(operation_id: UUID, error: str, lease_token: str) -> Operation | 
     async with session_scope() as session:
 
         # Persist the failure exactly once so the row remains a reliable audit trail.
-        now = datetime.now(UTC)
+        now = utcnow()
         sanitized_error = sanitize_operation_error(error)
         statement = (
             update(Operation)

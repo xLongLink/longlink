@@ -1,10 +1,10 @@
 from uuid import UUID, uuid4
 from fastapi import HTTPException
-from datetime import UTC, datetime
 from src.utils import names
 from sqlalchemy import and_, select
 from sqlalchemy.orm import selectinload
 from src.models.roles import ApplicationRoles
+from longlink.utils.time import utcnow
 from src.models.statuses import ApplicationStatus
 from src.database.session import session_scope
 from src.adapters.storage.base import StorageRuntimeCredentials
@@ -138,7 +138,7 @@ async def set_member_role(application_id: UUID, organization_id: UUID, member_id
                 "user_id": member_id,
             },
         )
-        now = datetime.now(UTC)
+        now = utcnow()
 
         # Remove application access when no role is provided.
         if role is None:
@@ -210,9 +210,9 @@ async def create(
         if slug_result.scalar_one_or_none() is not None:
             raise HTTPException(status_code=409, detail="Application slug already exists")
 
-        # Generate the application ID before validating slug-derived storage names.
+        # Generate the application ID before validating UUID-derived storage names.
         application_id = uuid4()
-        names.application_bucket(organization.slug, slug)
+        names.application_bucket(application_id)
 
         application = Application(
             id=application_id,
@@ -373,7 +373,7 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
         if application is None or application.deleted_at is not None:
             return None
 
-        now = datetime.now(UTC)
+        now = utcnow()
         application.deleted_at = now
         application.deleted_id = user.id
         application.updated_at = now

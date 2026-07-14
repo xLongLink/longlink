@@ -1,3 +1,4 @@
+import pytest
 from uuid import UUID
 from types import SimpleNamespace
 from src.utils import names
@@ -64,7 +65,11 @@ async def create_required_location_registries(location_id: UUID, user: User) -> 
     )
 
 
-def patch_organization_runtime(monkeypatch, captured: dict[str, object]) -> None:
+def patch_organization_runtime(
+    monkeypatch: pytest.MonkeyPatch,
+    captured: dict[str, object],
+    fail_bucket_create: bool = False,
+) -> None:
     """Patch organization runtime adapters with lightweight test doubles."""
 
     calls: list[tuple[str, object]] = []
@@ -101,7 +106,7 @@ def patch_organization_runtime(monkeypatch, captured: dict[str, object]) -> None
             self.password = password
 
         def shared_schema_url(self, organization: UUID) -> str:
-            """Return a fake tenant shared-schema URL."""
+            """Return a fake control-plane shared-schema URL."""
 
             return f"postgresql://shared/{organization.hex}"
 
@@ -131,6 +136,11 @@ def patch_organization_runtime(monkeypatch, captured: dict[str, object]) -> None
             """Record bucket creation and return the bucket name."""
 
             calls.append(("bucket", bucket))
+
+            # Inject a failure at the final provisioning stage when requested.
+            if fail_bucket_create:
+                raise RuntimeError("bucket creation failed")
+
             return bucket
 
         async def delete(self, bucket: str) -> None:
@@ -153,7 +163,7 @@ def patch_organization_runtime(monkeypatch, captured: dict[str, object]) -> None
         "src.routes.organizations.adapters.storage",
         lambda registry: FakeStorage(registry.endpoint_url, registry.access_key_id, registry.secret_access_key),
     )
-    monkeypatch.setattr("src.routes.organizations.shared_users.sync_url", sync_shared_users)
+    monkeypatch.setattr("src.projections.shared_users.sync_url", sync_shared_users)
 
 
 async def test_create_organization_returns_owner_role(
@@ -248,9 +258,49 @@ async def test_create_organization_initializes_storage(
 
     # Assert
     assert response.status_code == 200
+    payload = response.json()
     calls = captured["calls"]
     assert isinstance(calls, list)
-    assert ("bucket", "acme-shared") in calls
+    assert ("bucket", UUID(payload["id"]).hex) in calls
+
+
+async def test_create_organization_rolls_back_platform_and_runtime_after_late_failure(
+    clients: tuple[TestClient, TestClient, TestClient],
+    monkeypatch: pytest.MonkeyPatch,
+    users: tuple[User, User, User],
+) -> None:
+    """Remove platform rows and attempted runtime resources after late provisioning failure."""
+
+    # Arrange a complete location and fail only the final bucket creation stage.
+    owner = users[0]
+    client = clients[0]
+    captured: dict[str, object] = {}
+    location = await db.locations.create("local", "Local testing", owner, "CH")
+    await create_required_location_registries(location.id, owner)
+    patch_organization_runtime(monkeypatch, captured, fail_bucket_create=True)
+
+    # Attempt synchronous organization provisioning.
+    response = client.post(
+        "/api/organizations",
+        json={"name": "acme", "location_id": str(location.id)},
+    )
+
+    # Verify platform rollback and every runtime cleanup attempt.
+    organization_id = captured["prepared_organization"]
+    calls = captured["calls"]
+    assert isinstance(organization_id, UUID)
+    assert isinstance(calls, list)
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Organization runtime provisioning failed"}
+    assert await db.organizations.get(organization_id, include_deleted=True) is None
+    assert await db.organizations.members(organization_id, include_deleted=True) == []
+    assert calls == [
+        ("namespace", "acme"),
+        ("bucket", organization_id.hex),
+        ("delete_bucket", organization_id.hex),
+        ("delete_database", organization_id),
+        ("delete_namespace", "acme"),
+    ]
 
 
 async def test_get_organization_returns_member_payload(
@@ -329,7 +379,46 @@ async def test_delete_organization_soft_deletes_and_queues_removal(
     assert len(recorded_operations) == 1
     assert recorded_operations[0].kind == OperationKind.organization_remove
     assert recorded_operations[0].organization_id == organization.id
-    assert recorded_operations[0].scheduled_at is not None
+    assert recorded_operations[0].scheduled_at is None
+
+
+async def test_other_organization_user_cannot_manage_application_members_or_delete_application(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject member reads, member updates, and deletion across organization boundaries."""
+
+    # Create isolated organizations owned by different users.
+    target_owner, other_owner, _ = users
+    location = await db.locations.create("local", "Local testing", target_owner, "CH")
+    target_organization = await db.organizations.create("acme", "acme", location.id, target_owner)
+    await db.organizations.create("globex", "globex", location.id, other_owner)
+    target_application = await db.applications.create(
+        target_organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        user=target_owner,
+    )
+    client = clients[1]
+
+    # Attempt every application-management route with only another organization's access.
+    members_response = client.get(f"/api/applications/{target_application.id}/members")
+    update_response = client.patch(
+        f"/api/applications/{target_application.id}/members/{target_owner.id}",
+        json={"role": "read"},
+    )
+    delete_response = client.delete(f"/api/applications/{target_application.id}")
+
+    # Verify denied requests leave the target application and operation queue unchanged.
+    assert members_response.status_code == 403
+    assert members_response.json() == {"detail": "Access required"}
+    assert update_response.status_code == 403
+    assert update_response.json() == {"detail": "Access required"}
+    assert delete_response.status_code == 403
+    assert delete_response.json() == {"detail": "Access required"}
+    assert await db.applications.get(target_application.id) is not None
+    assert await db.operations.fetch() == []
 
 
 async def test_organization_database_endpoint_returns_schemas_and_shared_users(
@@ -530,19 +619,13 @@ async def test_organization_storage_endpoint_returns_organization_buckets(
         """Return fake bucket names from the storage backend."""
 
         assert registry_argument.id == registry.id
-        return [
-            "acme-shared",
-            "acme-dashboard",
-            "acme-stale",
-            "acme-west-shared",
-            "other-shared",
-        ]
+        return [organization.id.hex, dashboard.id.hex, "acme-stale", "acme-west-shared", "other-shared"]
 
     async def fake_usage(registry_argument, bucket_name: str) -> dict[str, int]:
         """Return fake usage counters for one bucket."""
 
         assert registry_argument.id == registry.id
-        assert bucket_name.startswith("acme-")
+        assert bucket_name in {organization.id.hex, dashboard.id.hex}
         return {"space_used": len(bucket_name), "object_count": 2}
 
     monkeypatch.setattr("src.routes.organizations.storage_utils.buckets", fake_buckets)
@@ -556,13 +639,13 @@ async def test_organization_storage_endpoint_returns_organization_buckets(
     payload = response.json()
     assert [(item["kind"], item["name"]) for item in payload] == [
         ("shared_bucket", "shared"),
-        ("application_bucket", "dashboard"),
+        ("application_bucket", dashboard.id.hex),
     ]
     assert payload[1]["application"]["id"] == str(dashboard.id)
     assert payload[1]["application"]["icon"] == "layout-dashboard"
     assert payload[1]["application"]["description"] == "Dashboard app"
-    assert reports.slug not in [item["name"] for item in payload]
-    assert payload[0]["space_used"] == len("acme-shared")
+    assert reports.id.hex not in [item["name"] for item in payload]
+    assert payload[0]["space_used"] == len(organization.id.hex)
     assert payload[0]["object_count"] == 2
 
 

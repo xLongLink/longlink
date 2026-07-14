@@ -34,8 +34,8 @@ def pod_status(phase: str, containers: list[dict[str, object]]) -> SimpleNamespa
     return SimpleNamespace(raw={"status": {"phase": phase, "containerStatuses": containers}})
 
 
-async def test_execute_application_create_operation_completes_running_application(monkeypatch) -> None:
-    """Complete an application.create operation once the application is alive."""
+async def test_execute_application_verify_operation_completes_running_application(monkeypatch) -> None:
+    """Complete an application.verify operation once the application is alive."""
 
     # Arrange
     user = await db.users.upsert(
@@ -54,18 +54,17 @@ async def test_execute_application_create_operation_completes_running_applicatio
         user=user,
     )
     operation = await db.operations.create(
-        OperationKind.application_create,
+        OperationKind.application_verify,
         application_id=application.id,
-        scheduled_at=application.created_at,
         user=user,
     )
     calls: list[str] = []
 
-    async def fake_application_compute(application, location_id):
+    async def fake_compute(location_id, include_deleted: bool = False):
         """Return a fake compute registry for startup verification."""
 
+        assert not include_deleted
         return SimpleNamespace(kubeconfig="apiVersion: v1\nclusters: []\n", proxy_secret="proxy-secret")
-
 
     class FakeKubernetes:
         """Fake Kubernetes client for startup verification."""
@@ -81,10 +80,9 @@ async def test_execute_application_create_operation_completes_running_applicatio
             calls.append("startup-check")
             return True
 
-
     monkeypatch.setattr(
-        "src.operations.applications.registries.application_compute",
-        fake_application_compute,
+        "src.operations.applications.compute.location",
+        fake_compute,
     )
     monkeypatch.setattr(
         "src.operations.applications.Kubernetes",
@@ -108,8 +106,8 @@ async def test_execute_application_create_operation_completes_running_applicatio
     assert refreshed.stopped_at is not None
 
 
-async def test_execute_application_create_operation_marks_failed_when_dead(monkeypatch) -> None:
-    """Fail an application.create operation when the application crashes during startup."""
+async def test_execute_application_verify_operation_marks_failed_when_dead(monkeypatch) -> None:
+    """Fail an application.verify operation when the application crashes during startup."""
 
     # Arrange
     user = await db.users.upsert(
@@ -128,18 +126,17 @@ async def test_execute_application_create_operation_marks_failed_when_dead(monke
         user=user,
     )
     operation = await db.operations.create(
-        OperationKind.application_create,
+        OperationKind.application_verify,
         application_id=application.id,
-        scheduled_at=application.created_at,
         user=user,
     )
     calls: list[str] = []
 
-    async def fake_application_compute(application, location_id):
+    async def fake_compute(location_id, include_deleted: bool = False):
         """Return a fake compute registry for startup verification."""
 
+        assert not include_deleted
         return SimpleNamespace(kubeconfig="apiVersion: v1\nclusters: []\n", proxy_secret="proxy-secret")
-
 
     class FakeKubernetes:
         """Fake Kubernetes client for startup verification."""
@@ -160,10 +157,9 @@ async def test_execute_application_create_operation_marks_failed_when_dead(monke
             calls.append("startup-check")
             return pod_status("Pending", [container_status(waiting_reason="ImagePullBackOff")])
 
-
     monkeypatch.setattr(
-        "src.operations.applications.registries.application_compute",
-        fake_application_compute,
+        "src.operations.applications.compute.location",
+        fake_compute,
     )
     monkeypatch.setattr(
         "src.operations.applications.Kubernetes",
@@ -187,8 +183,8 @@ async def test_execute_application_create_operation_marks_failed_when_dead(monke
     assert refreshed.stopped_at is not None
 
 
-async def test_execute_application_create_operation_releases_when_not_ready(monkeypatch) -> None:
-    """Release application.create when the application is still starting."""
+async def test_execute_application_verify_operation_releases_when_not_ready(monkeypatch) -> None:
+    """Release application.verify when the application is still starting."""
 
     # Arrange
     user = await db.users.upsert(
@@ -207,17 +203,16 @@ async def test_execute_application_create_operation_releases_when_not_ready(monk
         user=user,
     )
     operation = await db.operations.create(
-        OperationKind.application_create,
+        OperationKind.application_verify,
         application_id=application.id,
-        scheduled_at=application.created_at,
         user=user,
     )
 
-    async def fake_application_compute(application, location_id):
+    async def fake_compute(location_id, include_deleted: bool = False):
         """Return a fake compute registry for startup verification."""
 
+        assert not include_deleted
         return SimpleNamespace(kubeconfig="apiVersion: v1\nclusters: []\n", proxy_secret="proxy-secret")
-
 
     class FakeKubernetes:
         """Fake Kubernetes client for startup verification."""
@@ -237,10 +232,9 @@ async def test_execute_application_create_operation_releases_when_not_ready(monk
 
             return None
 
-
     monkeypatch.setattr(
-        "src.operations.applications.registries.application_compute",
-        fake_application_compute,
+        "src.operations.applications.compute.location",
+        fake_compute,
     )
     monkeypatch.setattr(
         "src.operations.applications.Kubernetes",

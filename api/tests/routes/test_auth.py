@@ -1,12 +1,16 @@
+import httpx2
 import pytest
 from main import app
 from fastapi import Request, Response
 from conftest import session_cookie
 from src.routes import auth as auth_routes
+from collections.abc import Mapping
 from src.environments import env
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
+from src.database.services import users as users_service
 from src.database.models.users import User
+from authlib.integrations.base_client import OAuthError
 
 
 class OidcClientStub:
@@ -30,19 +34,55 @@ class OidcClientStub:
         return Response(status_code=204)
 
 
+class OidcCallbackClientStub:
+    """Return configured token and userinfo values from the OAuth boundary."""
+
+    def __init__(self, token_response: object, userinfo_response: object | None = None) -> None:
+        """Store callback responses or exceptions for the OIDC client calls."""
+
+        self.token_response = token_response
+        self.userinfo_response = userinfo_response
+
+    async def authorize_access_token(self, request: Request) -> object:
+        """Return or raise the configured token exchange result."""
+
+        # Surface provider failures from the mocked external OAuth boundary.
+        if isinstance(self.token_response, Exception):
+            raise self.token_response
+
+        return self.token_response
+
+    async def userinfo(self, *, token: Mapping[str, object]) -> object:
+        """Return or raise the configured userinfo result."""
+
+        # Surface provider failures from the mocked external OAuth boundary.
+        if isinstance(self.userinfo_response, Exception):
+            raise self.userinfo_response
+
+        return self.userinfo_response
+
+
 class OAuthStub:
     """Return the test OIDC client from the OAuth registry."""
 
-    def __init__(self, oidc_client: OidcClientStub) -> None:
+    def __init__(self, oidc_client: object) -> None:
         """Store the OIDC client stub returned by create_client."""
 
         self.oidc_client = oidc_client
 
-    def create_client(self, name: str) -> OidcClientStub:
+    def create_client(self, name: str) -> object:
         """Return the configured OIDC test client."""
 
         assert name == "oidc"
         return self.oidc_client
+
+
+def _http_status_error(path: str) -> httpx2.HTTPStatusError:
+    """Build one provider HTTP response failure for an OAuth client stub."""
+
+    request = httpx2.Request("POST", f"https://identity.example{path}")
+    response = httpx2.Response(503, request=request)
+    return httpx2.HTTPStatusError("Provider request failed", request=request, response=response)
 
 
 def test_login_oidc_forwards_social_provider_hint(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -65,6 +105,107 @@ def test_login_oidc_forwards_social_provider_hint(monkeypatch: pytest.MonkeyPatc
             "redirect_uri": env.OIDC_REDIRECT_URI,
         }
     ]
+
+
+@pytest.mark.parametrize(
+    ("token_response", "userinfo_response", "expected_status", "expected_detail"),
+    [
+        (
+            OAuthError(error="invalid_grant"),
+            None,
+            401,
+            "OIDC callback could not be validated",
+        ),
+        (
+            _http_status_error("/token"),
+            None,
+            503,
+            "OIDC token exchange failed. Verify provider URL and client credentials.",
+        ),
+        (
+            "invalid-token-response",
+            None,
+            503,
+            "OIDC provider returned an invalid token response",
+        ),
+        (
+            {},
+            _http_status_error("/userinfo"),
+            503,
+            "OIDC userinfo endpoint failed. Verify provider URL and client credentials.",
+        ),
+        (
+            {},
+            OAuthError(error="invalid_token"),
+            401,
+            "OIDC userinfo response could not be validated",
+        ),
+        (
+            {"userinfo": {"email": "malformed@example.com"}},
+            None,
+            503,
+            "Authentication provider returned an invalid user profile",
+        ),
+        (
+            {
+                "userinfo": {
+                    "sub": "unverified-subject",
+                    "email": "unverified@example.com",
+                    "email_verified": False,
+                    "name": "Unverified User",
+                }
+            },
+            None,
+            401,
+            "Authentication provider returned an unverified email",
+        ),
+    ],
+)
+async def test_auth_oidc_rejects_callback_failures_without_authenticating(
+    monkeypatch: pytest.MonkeyPatch,
+    token_response: object,
+    userinfo_response: object | None,
+    expected_status: int,
+    expected_detail: str,
+) -> None:
+    """Map callback failures without creating a user or authenticating the session."""
+
+    # Replace only the external OAuth client while retaining the real route and user service.
+    oidc_client = OidcCallbackClientStub(token_response, userinfo_response)
+    monkeypatch.setattr(auth_routes, "oauth", OAuthStub(oidc_client))
+    client = TestClient(app)
+    try:
+        response = client.get("/auth/oidc")
+        profile_response = client.get("/api/me")
+    finally:
+        client.close()
+
+    # Every rejected callback must preserve an unauthenticated, empty local state.
+    assert response.status_code == expected_status
+    assert response.json() == {"detail": expected_detail}
+    assert profile_response.status_code == 401
+    assert await users_service.fetch() == []
+
+
+async def test_auth_oidc_userinfo_transport_failure_does_not_authenticate(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Leave the session and user table empty when userinfo transport fails."""
+
+    # Raise the transport error that the production callback currently does not map.
+    request = httpx2.Request("GET", "https://identity.example/userinfo")
+    oidc_client = OidcCallbackClientStub({}, httpx2.RequestError("Provider is unreachable", request=request))
+    monkeypatch.setattr(auth_routes, "oauth", OAuthStub(oidc_client))
+    client = TestClient(app, raise_server_exceptions=False)
+    try:
+        response = client.get("/auth/oidc")
+        profile_response = client.get("/api/me")
+    finally:
+        client.close()
+
+    # The unhandled transport failure is a production defect, but it must not authenticate or upsert a user.
+    assert response.status_code == 500
+    assert response.text == "Internal Server Error"
+    assert profile_response.status_code == 401
+    assert await users_service.fetch() == []
 
 
 @pytest.mark.parametrize(

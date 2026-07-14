@@ -223,7 +223,12 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
         location_id=location.id,
         shared_schema_url="postgresql://shared/test",
     )
-    application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
+    application = fake_resource(
+        id=UUID("44444444-4444-4444-4444-444444444444"),
+        slug=seed.LOCAL_APP_NAME,
+        compute_registry_id=UUID("55555555-5555-5555-5555-555555555555"),
+        storage_registry_id=UUID("77777777-7777-7777-7777-777777777777"),
+    )
     application_compute = fake_resource(id=UUID("55555555-5555-5555-5555-555555555555"))
     application_database = fake_resource(id=UUID("66666666-6666-6666-6666-666666666666"))
     application_storage = fake_resource(id=UUID("77777777-7777-7777-7777-777777777777"))
@@ -271,19 +276,10 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
 
         calls["owner"] = (organization_id, user_id)
 
-    async def sync_shared_users(shared_schema_url: str, users: list[object]) -> None:
+    async def sync_organization_users(organization_record: object) -> None:
         """Record organization user synchronization."""
 
-        calls["organization_users"] = {
-            "shared_schema_url": shared_schema_url,
-            "users": users,
-        }
-
-    async def database_users(organization_id: UUID) -> list[object]:
-        """Return fake shared users for synchronization."""
-
-        calls["database_users"] = organization_id
-        return [user]
+        calls["organization_users"] = organization_record
 
     async def load_organization(organization_id: UUID) -> SimpleNamespace:
         """Return the existing organization details."""
@@ -306,21 +302,32 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
         """Return refreshed metadata for the existing sample image."""
 
         calls["application_metadata"] = payload
-        return fake_resource(sdk="0.1.0", digest="sha256:manifest", version="20260713_120000")
+        return fake_resource(
+            sdk="0.1.0",
+            digest="sha256:manifest",
+            image="localhost:15000/longlink-app@sha256:manifest",
+            version="20260713_120000",
+        )
 
-    async def select_application_compute(*args: object) -> SimpleNamespace:
+    async def select_application_compute(registry_id: UUID, include_deleted: bool = False) -> SimpleNamespace:
         """Return the application's compute registry."""
 
+        assert registry_id == application.compute_registry_id
+        assert include_deleted
         return application_compute
 
-    async def select_application_database(*args: object) -> SimpleNamespace:
+    async def select_application_database(location_id: UUID, include_deleted: bool = False) -> SimpleNamespace:
         """Return the application's database registry."""
 
+        assert location_id == organization.location_id
+        assert not include_deleted
         return application_database
 
-    async def select_application_storage(*args: object) -> SimpleNamespace:
+    async def select_application_storage(registry_id: UUID, include_deleted: bool = False) -> SimpleNamespace:
         """Return the application's storage registry."""
 
+        assert registry_id == application.storage_registry_id
+        assert include_deleted
         return application_storage
 
     async def update_application_runtime(application_id: UUID, **kwargs: object) -> SimpleNamespace:
@@ -329,10 +336,10 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
         calls["application_update"] = (application_id, kwargs)
         return application
 
-    async def create_operation(*args: object, **kwargs: object) -> SimpleNamespace:
-        """Record the queued application creation operation."""
+    async def provision_application_runtime(*args: object) -> SimpleNamespace:
+        """Record synchronous runtime provisioning and verification queueing."""
 
-        calls["operation"] = (args, kwargs)
+        calls["provision"] = args
         return fake_resource(id=UUID("88888888-8888-8888-8888-888888888888"))
 
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
@@ -345,27 +352,31 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
     monkeypatch.setattr(seed.organization_service, "fetch", fetch_organizations)
     monkeypatch.setattr(seed.organization_service, "get", load_organization)
     monkeypatch.setattr(seed, "ensure_local_organization_owner", ensure_owner)
-    monkeypatch.setattr(seed.organization_service, "database_users", database_users)
-    monkeypatch.setattr(seed.shared_users, "sync_url", sync_shared_users)
+    monkeypatch.setattr(seed.projections, "sync_organization_users", sync_organization_users)
     monkeypatch.setattr(seed.organization_service, "applications", list_applications)
     monkeypatch.setattr(seed.application_routes, "create_application", create_application)
     monkeypatch.setattr(seed.environments, "application_image_metadata", application_metadata)
-    monkeypatch.setattr(seed.registry_service, "application_compute", select_application_compute)
-    monkeypatch.setattr(seed.registry_service, "database", select_application_database)
-    monkeypatch.setattr(seed.registry_service, "application_storage", select_application_storage)
+    monkeypatch.setattr(seed.compute_service, "get", select_application_compute)
+    monkeypatch.setattr(seed.database_service, "location", select_application_database)
+    monkeypatch.setattr(seed.storage_service, "get", select_application_storage)
     monkeypatch.setattr(seed.application_service, "update_runtime", update_application_runtime)
-    monkeypatch.setattr(seed.operation_service, "create", create_operation)
+    monkeypatch.setattr(seed.application_routes, "provision_application_runtime", provision_application_runtime)
 
     await seed.seed_local_development()
 
     assert calls["owner"] == (organization.id, user.id)
-    assert calls["database_users"] == organization.id
-    assert calls["organization_users"] == {"shared_schema_url": "postgresql://shared/test", "users": [user]}
+    assert calls["organization_users"] == organization
     assert calls["application_lookup"] == organization.id
     application_update = cast(tuple[object, dict[str, object]], calls["application_update"])
     assert application_update[0] == application.id
     assert application_update[1]["digest"] == "sha256:manifest"
-    operation_args, operation_kwargs = cast(tuple[tuple[object, ...], dict[str, object]], calls["operation"])
-    assert operation_args == (seed.OperationKind.application_create,)
-    assert operation_kwargs["application_id"] == application.id
-    assert operation_kwargs["user"] == user
+    provision_call = cast(tuple[object, ...], calls["provision"])
+    assert provision_call == (
+        organization,
+        application,
+        "localhost:15000/longlink-app@sha256:manifest",
+        application_compute,
+        application_database,
+        application_storage,
+        user,
+    )

@@ -1,20 +1,27 @@
 import httpx2
 import asyncio
+from src import adapters
 from uuid import UUID
+from typing import cast
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
-from datetime import UTC, datetime
 from src.auth import authuser, authadmin
 from src.utils import names, roles
 from src.logger import logger
 from src.kubernetes import environments
 from src.models.roles import APPLICATION_PROXY_METHODS, Ranks, ApplicationRoles, OrganizationRoles, ApplicationProxyMethodRanks
 from src.models.statuses import ApplicationStatus
-from src.database.services import operations, registries, applications
+from src.database.services import compute, storage, database, operations, applications
 from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate, ApplicationResponse, ApplicationMemberUpdate, ApplicationMemberResponse
 from src.database.models.users import User
+from src.database.models.computes import ComputeRegistry
+from src.database.models.storages import StorageRegistry
+from src.database.models.databases import DatabaseRegistry
+from src.database.models.operations import Operation
 from src.database.models.association import UserApplication
+from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 
 router = APIRouter()
 BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
@@ -22,6 +29,112 @@ PROXY_RESPONSE_SECURITY_HEADERS = {
     "content-security-policy": "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
     "x-content-type-options": "nosniff",
 }
+
+
+async def provision_application_runtime(
+    organization: Organization,
+    application: Application,
+    runtime_image: str,
+    compute_registry: ComputeRegistry,
+    database_registry: DatabaseRegistry,
+    storage_registry: StorageRegistry,
+    user: User,
+) -> Operation:
+    """Provision one application runtime and queue startup verification."""
+
+    # Build application-scoped adapters and deterministic resource names.
+    compute = Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret)
+    database = adapters.database(database_registry)
+    storage = adapters.storage(storage_registry)
+    bucket = names.application_bucket(application.id)
+    shared = names.organization_shared_bucket(organization.id)
+
+    # Create application-owned resources sequentially so compensation cannot race unfinished setup.
+    try:
+        connection = await database.schema(organization.id, application.id)
+        await storage.create(bucket)
+
+        # Reuse stored runtime credentials or create provider-scoped credentials for this application.
+        credentials = applications.storage_runtime_credentials(application)
+        if credentials is None:
+            credentials = await storage.credentials(bucket, "write")
+
+            # Persist generated credentials before applying the workload so cleanup can revoke them.
+            try:
+                persisted = await applications.set_storage_runtime_credentials(application.id, credentials)
+            except Exception:
+                await storage.revoke(bucket)
+                raise
+
+            if persisted is None:
+                await storage.revoke(bucket)
+                raise RuntimeError("Application no longer exists")
+
+        # Inject platform-managed database and storage settings into the workload.
+        envs = {
+            "LONGLINK_ENV": "production",
+            "LONGLINK_DATABASE_HOST": connection["host"],
+            "LONGLINK_DATABASE_NAME": connection["database_name"],
+            "LONGLINK_DATABASE_PASSWORD": connection["password"],
+            "LONGLINK_DATABASE_PORT": str(connection["port"]),
+            "LONGLINK_DATABASE_SCHEMA": application.id.hex,
+            "LONGLINK_DATABASE_USERNAME": connection["username"],
+            "LONGLINK_STORAGE_BUCKET": bucket,
+            "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.runtime_endpoint_url or storage_registry.endpoint_url,
+            "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
+            "LONGLINK_STORAGE_SHARED_BUCKET": shared,
+            "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
+        }
+        await compute.applications.create(
+            organization.slug,
+            str(application.id),
+            runtime_image,
+            {**application.envs, **envs},
+        )
+
+    # Failed provisioning marks the application failed and queues partial cleanup.
+    except Exception as exc:
+        await applications.set_status(application.id, ApplicationStatus.failed)
+        logger.exception("Failed to initialize application runtime for %s/%s: %r", organization.slug, application.slug, exc)
+
+        # Cleanup queue failures must not hide the original provisioning error.
+        try:
+            await operations.create(
+                OperationKind.application_remove,
+                application_id=application.id,
+                user=user,
+            )
+        except Exception as cleanup_exc:
+            logger.exception(
+                "Failed to queue partial application runtime cleanup for %s/%s: %r",
+                organization.slug,
+                application.slug,
+                cleanup_exc,
+            )
+        raise
+
+    # Queue startup verification only after the desired workload has been applied.
+    try:
+        return await operations.create(OperationKind.application_verify, application_id=application.id, user=user)
+    except Exception as exc:
+        await applications.set_status(application.id, ApplicationStatus.failed)
+        logger.exception("Failed to queue application verification for %s/%s: %r", organization.slug, application.slug, exc)
+
+        # An unverified workload must be removed even when verification queueing fails.
+        try:
+            await operations.create(
+                OperationKind.application_remove,
+                application_id=application.id,
+                user=user,
+            )
+        except Exception as cleanup_exc:
+            logger.exception(
+                "Failed to queue unverified application runtime cleanup for %s/%s: %r",
+                organization.slug,
+                application.slug,
+                cleanup_exc,
+            )
+        raise
 
 
 @router.get("/api/applications", response_model=list[ApplicationResponse])
@@ -33,7 +146,7 @@ async def list_applications(_user: User = Depends(authadmin)):
 
 @router.post("/api/organizations/{organization_id}/applications", response_model=ApplicationResponse)
 async def create_application(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)):
-    """Register a new application and queue runtime provisioning."""
+    """Register and provision a new application runtime."""
 
     # Resolve access inside the handler so body validation can reject malformed payloads first.
     membership = roles.access(user, organization_id, "organization")
@@ -47,24 +160,18 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
     organization = membership.organization
     application_slug = names.slugify(payload.name)
 
-    # Convert derived application runtime resource validation failures into route conflicts.
-    try:
-        names.application_bucket(organization.slug, application_slug)
-    except ValueError as exc:
-        raise HTTPException(status_code=409, detail="Invalid application runtime resource name") from exc
-
     logger.info("Creating application %s/%s", organization.slug, application_slug)
 
     # Resolve independent metadata and registry requirements concurrently.
-    metadata, compute, database, storage = await asyncio.gather(
+    metadata, compute_registry, database_registry, storage_registry = await asyncio.gather(
         environments.application_image_metadata(payload),
-        registries.compute(organization.location_id),
-        registries.database(organization.location_id),
-        registries.storage(organization.location_id),
+        compute.location(organization.location_id),
+        database.location(organization.location_id),
+        storage.location(organization.location_id),
     )
 
     # Application creation requires every assigned runtime backend.
-    if compute is None or database is None or storage is None or organization.shared_schema_url is None:
+    if compute_registry is None or database_registry is None or storage_registry is None or organization.shared_schema_url is None:
         raise HTTPException(status_code=503, detail="Application runtime provisioning failed")
 
     application = await applications.create(
@@ -72,9 +179,9 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         payload.name,
         application_slug,
         image=payload.image,
-        compute_registry_id=compute.id,
-        database_registry_id=database.id,
-        storage_registry_id=storage.id,
+        compute_registry_id=compute_registry.id,
+        database_registry_id=database_registry.id,
+        storage_registry_id=storage_registry.id,
         sdk=metadata.sdk,
         digest=metadata.digest,
         version=metadata.version,
@@ -85,15 +192,21 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         user=user,
     )
 
-    # Queue external resource creation and readiness checks for the worker.
+    # Provision application-owned resources synchronously so the operation only verifies startup.
     try:
-        operation = await operations.create(OperationKind.application_create, application_id=application.id, user=user)
+        operation = await provision_application_runtime(
+            organization,
+            application,
+            cast(str, metadata.image),
+            compute_registry,
+            database_registry,
+            storage_registry,
+            user,
+        )
     except Exception as exc:
-        await applications.set_status(application.id, ApplicationStatus.failed)
-        logger.exception("Failed to queue application creation for %s/%s: %r", organization.slug, application_slug, exc)
         raise HTTPException(status_code=503, detail="Application runtime provisioning failed") from exc
 
-    logger.info("Queued application creation %s for %s/%s", operation.id, organization.slug, payload.name)
+    logger.info("Queued application verification %s for %s/%s", operation.id, organization.slug, payload.name)
     return application
 
 
@@ -124,7 +237,12 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
         if not roles.atleast(membership.role, OrganizationRoles.maintain):
             raise HTTPException(status_code=403, detail="Permission required")
 
-    registry = await registries.application_compute(application, location_id)
+    # Prefer the application's assigned compute registry and fall back when the assignment is absent or dangling.
+    registry = None
+    if application.compute_registry_id is not None:
+        registry = await compute.get(application.compute_registry_id, include_deleted=True)
+    if registry is None:
+        registry = await compute.location(location_id)
     if registry is None:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
@@ -251,7 +369,6 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
     await operations.create(
         OperationKind.application_remove,
         application_id=application_id,
-        scheduled_at=datetime.now(UTC),
         user=user,
     )
 
@@ -295,12 +412,17 @@ async def proxy_application_request(request: Request, application_id: UUID, path
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
     # Use the app's assigned compute registry so the proxy targets the correct cluster gateway.
-    registry = await registries.application_compute(application, location_id)
+    # Prefer the application's assigned compute registry and fall back when the assignment is absent or dangling.
+    registry = None
+    if application.compute_registry_id is not None:
+        registry = await compute.get(application.compute_registry_id, include_deleted=True)
+    if registry is None:
+        registry = await compute.location(location_id)
     if registry is None:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
     # The gateway receives only the application path; API routing stays outside the cluster.
-    upstream_url = f"{registry.gateway_url.rstrip('/')}{f"/{path}" if path else "/"}"
+    upstream_url = f"{registry.gateway_url.rstrip('/')}{f'/{path}' if path else '/'}"
     if request.url.query:
         upstream_url = f"{upstream_url}?{request.url.query}"
     request_headers = {
@@ -332,10 +454,7 @@ async def proxy_application_request(request: Request, application_id: UUID, path
 
     # Reject active documents before they can execute under the authenticated platform origin.
     if response_content_type is not None:
-        response_media_types = {
-            value.partition(";")[0].strip()
-            for value in response_content_type.lower().split(",")
-        }
+        response_media_types = {value.partition(";")[0].strip() for value in response_content_type.lower().split(",")}
         if not response_media_types.isdisjoint(BLOCKED_PROXY_CONTENT_TYPES):
             raise HTTPException(status_code=502, detail="Application proxy returned an unsupported content type")
 

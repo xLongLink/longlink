@@ -2,8 +2,14 @@ name: Tests
 
 on:
   push:
+    branches:
+      - "**"
   pull_request:
   workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
 
 jobs:
   # The API is packaged into a container, so test it on the supported Python runtime.
@@ -29,7 +35,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: api
-        run: uv sync --extra dev
+        run: uv sync --locked --extra dev
 
       - name: Install web dependencies
         working-directory: web
@@ -41,11 +47,11 @@ jobs:
 
       - name: Run tests
         working-directory: api
-        run: ENVIRONMENT=testing uv run pytest --cov=src --cov-report=term-missing tests
+        run: ENVIRONMENT=testing uv run --locked pytest --cov=src --cov-report=term-missing tests
 
       - name: Run Pyright
         working-directory: api
-        run: uv run --extra dev pyright
+        run: uv run --locked --extra dev pyright
 
   # The SDK requires Python 3.14 or newer.
   sdk-tests:
@@ -70,7 +76,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: sdk
-        run: uv sync --extra dev
+        run: uv sync --locked --extra dev
 
       - name: Install web dependencies
         working-directory: web
@@ -82,11 +88,15 @@ jobs:
 
       - name: Run tests
         working-directory: sdk
-        run: uv run pytest --cov=longlink --cov-report=term-missing tests
+        run: uv run --locked pytest --cov=longlink --cov-report=term-missing tests
+
+      - name: Run generated scaffold tests
+        working-directory: sdk
+        run: sh tests/scaffold-smoke.sh
 
       - name: Run Pyright
         working-directory: sdk
-        run: uv run --group dev pyright
+        run: uv run --locked --group dev pyright
 
       - name: Build SDK distribution
         working-directory: sdk

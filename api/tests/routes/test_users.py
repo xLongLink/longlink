@@ -1,6 +1,7 @@
 from main import app
 from types import SimpleNamespace
 from conftest import session_cookie
+from src.models.roles import PlatformRoles
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
 from src.database.services import users, compute, storage, database, locations, operations, applications, organizations
@@ -117,6 +118,38 @@ async def test_list_users_returns_admin_user_summaries(
 
     expected_payload = [UserListItem.model_validate(user).model_dump(mode="json") for user in users]
     assert response.json() == expected_payload
+
+
+async def test_platform_roles_separate_support_reads_from_admin_mutations(
+    clients: tuple[TestClient, TestClient, TestClient],
+) -> None:
+    """Allow support reads while denying support mutations and ordinary-user support access."""
+
+    # Create a dedicated support account without changing the shared user fixture roles.
+    support = await db.users.upsert(
+        oidc="oidc-support",
+        email="support@example.com",
+        name="Support User",
+        role=PlatformRoles.support,
+    )
+    support_client = TestClient(app, cookies=session_cookie(str(support.oidc)))
+    ordinary_client = clients[1]
+
+    # Exercise representative support and administrator route dependencies.
+    support_read_response = support_client.get("/api/users")
+    ordinary_read_response = ordinary_client.get("/api/users")
+    support_mutation_response = support_client.post(
+        "/api/locations",
+        json={"name": "Support location", "country": "CH"},
+    )
+
+    # Verify support can read but neither support nor ordinary users receive excess privileges.
+    assert support_read_response.status_code == 200
+    assert str(support.id) in {item["id"] for item in support_read_response.json()}
+    assert ordinary_read_response.status_code == 403
+    assert ordinary_read_response.json() == {"detail": "Permission required"}
+    assert support_mutation_response.status_code == 403
+    assert support_mutation_response.json() == {"detail": "Permission required"}
 
 
 async def test_patch_me_updates_authenticated_user_profile(

@@ -2,8 +2,8 @@ import pytest
 from uuid import uuid4
 from types import SimpleNamespace
 from fastapi import HTTPException
-from datetime import UTC, datetime
 from src.models.roles import OrganizationRoles
+from longlink.utils.time import utcnow
 from src.database.session import get_session
 from src.database.services import locations, invitations, organizations
 from src.database.models.users import User
@@ -107,7 +107,7 @@ async def test_organization_invitations_ignore_deleted_invitations(users: tuple[
     async with Session() as session:
         deleted_invitation = await session.get(OrganizationInvitation, invitation.id)
         assert deleted_invitation is not None
-        deleted_invitation.deleted_at = datetime.now(UTC)
+        deleted_invitation.deleted_at = utcnow()
         deleted_invitation.deleted_id = owner.id
         await session.commit()
 

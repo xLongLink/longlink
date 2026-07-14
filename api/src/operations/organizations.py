@@ -1,7 +1,7 @@
 from src import adapters
 from uuid import UUID
 from src.utils import jobs, names
-from src.database.services import database, registries, organizations
+from src.database.services import compute, storage, database, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
 from src.database.models.computes import ComputeRegistry
@@ -26,20 +26,24 @@ async def remove(operation: Operation) -> jobs.OperationOutcome:
     apps = await organizations.applications(organization.id, include_deleted=True)
 
     # Track compute registries that need organization-level namespace cleanup.
-    computes: list[ComputeRegistry] = []
+    compute_registries: list[ComputeRegistry] = []
     seen: set[UUID] = set()
 
     # Delete application-scoped resources before deleting shared organization resources.
     for app in apps:
         # Remove workload resources only when the app has a compute backend to target.
-        registry = await registries.application_compute(app, organization.location_id)
+        registry = None
+        if app.compute_registry_id is not None:
+            registry = await compute.get(app.compute_registry_id, include_deleted=True)
+        if registry is None:
+            registry = await compute.location(organization.location_id)
         if registry is not None:
             adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
             await adapter.applications.delete(str(app.id))
 
             # Deduplicate registries so namespace deletion runs once per backend.
             if registry.id not in seen:
-                computes.append(registry)
+                compute_registries.append(registry)
                 seen.add(registry.id)
 
         # Remove the application schema from the database registry that originally hosted it.
@@ -51,37 +55,39 @@ async def remove(operation: Operation) -> jobs.OperationOutcome:
                 await adapter.delete_schema(organization.id, app.id)
 
         # Remove the deterministic application bucket only when storage was assigned.
-        registry = await registries.application_storage(app)
+        registry = None
+        if app.storage_registry_id is not None:
+            registry = await storage.get(app.storage_registry_id, include_deleted=True)
         if registry is not None:
             adapter = adapters.storage(registry)
-            bucket = names.application_bucket(organization.slug, app.slug)
+            bucket = names.application_bucket(app.id)
             await adapter.revoke(bucket)
             await adapter.delete(bucket)
 
-    current = await registries.compute(organization.location_id, include_deleted=True)
+    current = await compute.location(organization.location_id, include_deleted=True)
 
     # Include the current location registry for organizations created before any applications existed.
     if current is not None and current.id not in seen:
-        computes.append(current)
+        compute_registries.append(current)
         seen.add(current.id)
 
     # Namespace deletion removes shared gateway/runtime resources for the organization.
-    for compute in computes:
-        adapter = Kubernetes(compute.kubeconfig, compute.proxy_secret)
+    for registry in compute_registries:
+        adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
         await adapter.delete_namespace(organization.slug)
 
-    registry = await registries.database(organization.location_id, include_deleted=True)
+    registry = await database.location(organization.location_id, include_deleted=True)
 
-    # Delete the tenant database after app schemas have been removed.
+    # Delete the organization database after application schemas have been removed.
     if registry is not None:
         adapter = adapters.database(registry)
         await adapter.delete_database(organization.id)
 
-    registry = await registries.storage(organization.location_id, include_deleted=True)
+    registry = await storage.location(organization.location_id, include_deleted=True)
 
     # Delete the shared bucket only when one was assigned.
     if registry is not None:
         adapter = adapters.storage(registry)
-        await adapter.delete(names.organization_shared_bucket(organization.slug))
+        await adapter.delete(names.organization_shared_bucket(organization.id))
 
     return jobs.complete()

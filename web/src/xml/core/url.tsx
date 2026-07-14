@@ -1,5 +1,5 @@
-import { createContext as createReactContext, useContext as useReactContext } from 'react';
 import { hasProtocol, parsePath, parseURL } from 'ufo';
+import { createContext as createReactContext, useContext as useReactContext } from 'react';
 
 export const BaseUrlContext = createReactContext<string>('');
 const SAFE_ANCHOR_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
@@ -77,8 +77,8 @@ export function resolveRequestUrl(baseUrl: string, path: string): string {
 export function resolveAnchorUrl(baseUrl: string, path: string): string {
     const value = path.trim();
 
-    // Drop empty and protocol-relative anchors.
-    if (!value || value.startsWith('//')) return '';
+    // Drop empty, protocol-relative, and backslash-containing anchors.
+    if (!value || value.startsWith('//') || value.includes('\\')) return '';
 
     // Validate absolute browser links before returning them.
     if (hasProtocol(value)) {

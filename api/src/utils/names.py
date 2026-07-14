@@ -1,4 +1,5 @@
 import re
+from uuid import UUID
 from fastapi import HTTPException
 from slugify import slugify as text_slugify
 
@@ -43,15 +44,15 @@ def knames(value: str) -> str:
     return value
 
 
-def organization_shared_bucket(organization_slug: str) -> str:
-    """Return the shared storage bucket name derived from an organization slug."""
+def organization_shared_bucket(organization_id: UUID) -> str:
+    """Return the shared storage bucket name derived from an organization ID."""
 
-    # Shared buckets are scoped to the organization slug.
-    return knames(f"{organization_slug}-shared")
+    # Shared buckets use the same UUID-hex nomenclature as organization databases.
+    return knames(organization_id.hex)
 
 
-def application_bucket(organization_slug: str, application_slug: str) -> str:
-    """Return the storage bucket name derived from organization and application slugs."""
+def application_bucket(application_id: UUID) -> str:
+    """Return the storage bucket name derived from an application ID."""
 
-    # Application buckets are namespaced by the owning organization slug.
-    return knames(f"{organization_slug}-{application_slug}")
+    # Application buckets use the same UUID-hex nomenclature as application schemas.
+    return knames(application_id.hex)

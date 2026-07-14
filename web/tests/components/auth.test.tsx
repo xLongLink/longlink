@@ -1,89 +1,85 @@
-import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import { createElement, type ReactNode } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router';
+import { describe, expect, it } from 'bun:test';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { HydrationBoundary, QueryClient, QueryClientProvider, dehydrate } from '@tanstack/react-query';
+import type { PlatformRole } from '@/lib/roles';
+import { Auth } from '@/components/Auth';
+import { ApiI18nProvider } from '@/lib/i18n';
+import { UserProvider, type User } from '@/hooks/use-user';
+import { accountsQueryKey, userOrganizationsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 
-type MockedUserState = {
-    isLoading: boolean;
-    role: 'user' | 'support' | 'administrator';
-    signOut: () => Promise<void>;
-    switchAccount: () => Promise<void>;
-    user: { avatar: string; email: string; id: string; name: string; role: string } | null;
+const administrator: User = {
+    id: '1',
+    name: 'Admin',
+    oidc: 'admin-oidc',
+    role: 'administrator',
+    email: 'admin@example.com',
+    theme: 'dark',
+    accent: 'neutral',
+    avatar: '',
+    radius: 'medium',
+    language: 'en',
 };
 
-let mockedUserState: MockedUserState;
+/** Renders Auth with isolated, hydrated production providers. */
+function renderAuth(user: User | null, path: string, requiredRole?: PlatformRole): string {
+    const sourceClient = new QueryClient();
+    const queryClient = new QueryClient();
 
-mock.module('@/components/SignInCard', () => ({
-    SignInCard: ({ redirectTo }: { redirectTo: string }) => createElement('div', null, `sign in ${redirectTo}`),
-}));
+    // Seed every user query consumed by Auth and its anonymous sign-in shell.
+    sourceClient.setQueryData(userProfileQueryKey(), user);
+    sourceClient.setQueryData(userOrganizationsQueryKey(), []);
+    sourceClient.setQueryData(accountsQueryKey(), []);
 
-mock.module('@/layout/Layout', () => ({
-    default: ({ children }: { children: ReactNode }) => children,
-}));
-
-mock.module('@/hooks/use-user', () => ({
-    UserProvider: ({ children }: { children: ReactNode }) => children,
-    useUser: () => mockedUserState,
-    useUserProfile: () => mockedUserState,
-}));
-
-const { Auth } = await import('@/components/Auth');
+    try {
+        return renderToStaticMarkup(
+            <QueryClientProvider client={queryClient}>
+                <HydrationBoundary state={dehydrate(sourceClient)}>
+                    <UserProvider>
+                        <ApiI18nProvider language="en">
+                            <MemoryRouter initialEntries={[path]}>
+                                <Auth requiredRole={requiredRole}>
+                                    <div>ok</div>
+                                </Auth>
+                            </MemoryRouter>
+                        </ApiI18nProvider>
+                    </UserProvider>
+                </HydrationBoundary>
+            </QueryClientProvider>
+        );
+    } finally {
+        sourceClient.clear();
+        queryClient.clear();
+    }
+}
 
 describe('Auth', () => {
-    beforeEach(() => {
-        mockedUserState = {
-            isLoading: false,
-            role: 'administrator',
-            signOut: async () => {},
-            switchAccount: async () => {},
-            user: { avatar: '', email: 'admin@example.com', id: '1', name: 'Admin', role: 'administrator' },
-        };
-    });
-
     it('shows sign-in for anonymous users', () => {
-        mockedUserState = {
-            ...mockedUserState,
-            role: 'user',
-            user: null,
-        };
+        const output = renderAuth(null, '/settings?tab=profile#top');
 
-        const output = renderToStaticMarkup(
-            createElement(
-                MemoryRouter,
-                { initialEntries: ['/settings?tab=profile#top'] },
-                createElement(Auth, { children: createElement('div', null, 'ok') })
-            )
-        );
-
-        expect(output).toContain('sign in /settings?tab=profile#top');
+        expect(output).toContain('Welcome to');
+        expect(output).toContain('Sign In');
+        expect(output).not.toContain('>ok<');
     });
 
     it('allows administrators to access user routes', () => {
-        const output = renderToStaticMarkup(
-            createElement(
-                MemoryRouter,
-                { initialEntries: ['/orgs/test'] },
-                createElement(Auth, { requiredRole: 'user', children: createElement('div', null, 'ok') })
-            )
-        );
+        const output = renderAuth(administrator, '/orgs/test', 'user');
 
-        expect(output).toContain('ok');
-        expect(output).not.toContain('not found');
+        expect(output).toBe('<div>ok</div>');
     });
 
     it('renders not found for users below the required platform role', () => {
-        mockedUserState = {
-            ...mockedUserState,
-            role: 'user',
-            user: { avatar: '', email: 'user@example.com', id: '2', name: 'User', role: 'user' },
-        };
-
-        const output = renderToStaticMarkup(
-            createElement(
-                MemoryRouter,
-                { initialEntries: ['/admin'] },
-                createElement(Auth, { requiredRole: 'support', children: createElement('div', null, 'ok') })
-            )
+        const output = renderAuth(
+            {
+                ...administrator,
+                id: '2',
+                name: 'User',
+                oidc: 'user-oidc',
+                role: 'user',
+                email: 'user@example.com',
+            },
+            '/admin',
+            'support'
         );
 
         expect(output).toContain('We can&#x27;t find that page');

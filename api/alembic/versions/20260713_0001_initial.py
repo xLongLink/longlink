@@ -405,7 +405,7 @@ def upgrade() -> None:
         sa.Column(
             "kind",
             sa.Enum(
-                "application.create",
+                "application.verify",
                 "application.remove",
                 "organization.remove",
                 name="operation_kind_enum",
