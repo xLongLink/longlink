@@ -45,7 +45,7 @@ async def _oidc_userinfo(oidc: OidcClient, token: Mapping[str, object]) -> objec
     # Request profile claims from the userinfo endpoint.
     try:
         return await oidc.userinfo(token=token)
-    except httpx2.HTTPStatusError as exc:
+    except (httpx2.HTTPStatusError, httpx2.RequestError) as exc:
         raise HTTPException(
             status_code=503,
             detail="OIDC userinfo endpoint failed. Verify provider URL and client credentials.",
@@ -150,7 +150,7 @@ async def auth_oidc(request: Request) -> RedirectResponse:
     # Exchange the callback code for a provider token.
     try:
         raw_token = await oidc.authorize_access_token(request)
-    except httpx2.HTTPStatusError as exc:
+    except (httpx2.HTTPStatusError, httpx2.RequestError) as exc:
         raise HTTPException(
             status_code=503,
             detail="OIDC token exchange failed. Verify provider URL and client credentials.",

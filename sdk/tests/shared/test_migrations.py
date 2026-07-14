@@ -149,6 +149,7 @@ def test_alembic_script_location_returns_sdk_owned_migrations() -> None:
     assert (script_location / "versions" / "20260713_0001_initial.py").exists()
 
 
+@pytest.mark.integration
 async def test_shared_migrations_and_user_sync_use_postgresql_shared_schema(postgresql_url: URL) -> None:
     """Migrate and synchronize shared users against an isolated PostgreSQL database."""
 

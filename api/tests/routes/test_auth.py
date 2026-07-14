@@ -77,14 +77,6 @@ class OAuthStub:
         return self.oidc_client
 
 
-def _http_status_error(path: str) -> httpx2.HTTPStatusError:
-    """Build one provider HTTP response failure for an OAuth client stub."""
-
-    request = httpx2.Request("POST", f"https://identity.example{path}")
-    response = httpx2.Response(503, request=request)
-    return httpx2.HTTPStatusError("Provider request failed", request=request, response=response)
-
-
 def test_login_oidc_forwards_social_provider_hint(monkeypatch: pytest.MonkeyPatch) -> None:
     """Pass the selected social provider to Keycloak as an identity-provider hint."""
 
@@ -117,7 +109,20 @@ def test_login_oidc_forwards_social_provider_hint(monkeypatch: pytest.MonkeyPatc
             "OIDC callback could not be validated",
         ),
         (
-            _http_status_error("/token"),
+            httpx2.HTTPStatusError(
+                "Provider request failed",
+                request=httpx2.Request("POST", "https://identity.example/token"),
+                response=httpx2.Response(503),
+            ),
+            None,
+            503,
+            "OIDC token exchange failed. Verify provider URL and client credentials.",
+        ),
+        (
+            httpx2.RequestError(
+                "Provider is unreachable",
+                request=httpx2.Request("POST", "https://identity.example/token"),
+            ),
             None,
             503,
             "OIDC token exchange failed. Verify provider URL and client credentials.",
@@ -130,7 +135,20 @@ def test_login_oidc_forwards_social_provider_hint(monkeypatch: pytest.MonkeyPatc
         ),
         (
             {},
-            _http_status_error("/userinfo"),
+            httpx2.HTTPStatusError(
+                "Provider request failed",
+                request=httpx2.Request("GET", "https://identity.example/userinfo"),
+                response=httpx2.Response(503),
+            ),
+            503,
+            "OIDC userinfo endpoint failed. Verify provider URL and client credentials.",
+        ),
+        (
+            {},
+            httpx2.RequestError(
+                "Provider is unreachable",
+                request=httpx2.Request("GET", "https://identity.example/userinfo"),
+            ),
             503,
             "OIDC userinfo endpoint failed. Verify provider URL and client credentials.",
         ),
@@ -183,27 +201,6 @@ async def test_auth_oidc_rejects_callback_failures_without_authenticating(
     # Every rejected callback must preserve an unauthenticated, empty local state.
     assert response.status_code == expected_status
     assert response.json() == {"detail": expected_detail}
-    assert profile_response.status_code == 401
-    assert await users_service.fetch() == []
-
-
-async def test_auth_oidc_userinfo_transport_failure_does_not_authenticate(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Leave the session and user table empty when userinfo transport fails."""
-
-    # Raise the transport error that the production callback currently does not map.
-    request = httpx2.Request("GET", "https://identity.example/userinfo")
-    oidc_client = OidcCallbackClientStub({}, httpx2.RequestError("Provider is unreachable", request=request))
-    monkeypatch.setattr(auth_routes, "oauth", OAuthStub(oidc_client))
-    client = TestClient(app, raise_server_exceptions=False)
-    try:
-        response = client.get("/auth/oidc")
-        profile_response = client.get("/api/me")
-    finally:
-        client.close()
-
-    # The unhandled transport failure is a production defect, but it must not authenticate or upsert a user.
-    assert response.status_code == 500
-    assert response.text == "Internal Server Error"
     assert profile_response.status_code == 401
     assert await users_service.fetch() == []
 

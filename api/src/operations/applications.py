@@ -52,8 +52,7 @@ async def verify(operation: Operation) -> jobs.OperationOutcome:
     compute_client = Kubernetes(registry.kubeconfig, registry.proxy_secret)
     application_id = str(application.id)
 
-    # Track runtime signals observed during this verification attempt.
-    ready = False
+    # Track terminal runtime signals observed during this verification attempt.
     dead = False
 
     # Unexpected cluster failures are terminal; absent or pending resources return normal values.
@@ -71,51 +70,42 @@ async def verify(operation: Operation) -> jobs.OperationOutcome:
             containers = status.get("containerStatuses", [])
             phase = status.get("phase")
 
-            # Kubernetes marks the pod running before every container is necessarily ready.
-            ready = phase == "Running" and bool(containers) and all(container.get("ready") for container in containers)
+            # Pod state is diagnostic only; Deployment readiness is the authoritative success signal.
+            dead = phase in {"Failed", "Unknown"}
 
-            if not ready:
-                # Failed or unknown pod phases are terminal for this rollout.
-                dead = phase in {"Failed", "Unknown"}
+            # Container states expose more specific startup failures than the pod phase.
+            for container in containers:
+                state = container.get("state", {})
+                waiting = state.get("waiting", {})
+                reason = waiting.get("reason")
 
-                # Container states expose more specific startup failures than the pod phase.
-                for container in containers:
-                    state = container.get("state", {})
-                    waiting = state.get("waiting", {})
-                    reason = waiting.get("reason")
+                # Known unrecoverable waiting reasons fail the rollout unless the grace period says otherwise.
+                if reason in FAILED_CONTAINER_WAITING_REASONS:
+                    grace_expired = utcnow() - operation.created_at >= timedelta(seconds=POD_STARTUP_FAILURE_GRACE_SECONDS)
 
-                    # Known unrecoverable waiting reasons fail the rollout unless the grace period says otherwise.
-                    if reason in FAILED_CONTAINER_WAITING_REASONS:
-                        grace_expired = utcnow() - operation.created_at >= timedelta(seconds=POD_STARTUP_FAILURE_GRACE_SECONDS)
+                    # Crash loops can recover after transient startup dependencies, such as DNS or database readiness.
+                    if reason == "CrashLoopBackOff" and not grace_expired:
+                        continue
 
-                        # Crash loops can recover after transient startup dependencies, such as DNS or database readiness.
-                        if reason == "CrashLoopBackOff" and not grace_expired:
-                            continue
+                    dead = True
+                    break
 
-                        dead = True
-                        break
+                terminated = state.get("terminated")
 
-                    terminated = state.get("terminated")
+                # Non-zero container exits are terminal after the startup grace period.
+                if terminated is not None and terminated.get("exitCode") != 0:
+                    grace_expired = utcnow() - operation.created_at >= timedelta(seconds=POD_STARTUP_FAILURE_GRACE_SECONDS)
 
-                    # Non-zero container exits are terminal after the startup grace period.
-                    if terminated is not None and terminated.get("exitCode") != 0:
-                        grace_expired = utcnow() - operation.created_at >= timedelta(seconds=POD_STARTUP_FAILURE_GRACE_SECONDS)
+                    # Early exits may be transient while dependencies finish starting.
+                    if not grace_expired:
+                        continue
 
-                        # Early exits may be transient while dependencies finish starting.
-                        if not grace_expired:
-                            continue
-
-                        dead = True
-                        break
+                    dead = True
+                    break
 
     except Exception:
         await applications.set_status(application.id, ApplicationStatus.failed)
         raise
-
-    # Ready applications move to running and complete the operation.
-    if ready:
-        await applications.set_status(application.id, ApplicationStatus.running)
-        return jobs.complete()
 
     # Dead applications fail both the application row and the operation.
     if dead:

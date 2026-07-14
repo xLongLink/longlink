@@ -151,13 +151,7 @@ class DockerRuntimeContainer:
         return result.exit_code, result.output.decode("utf-8", errors="replace")
 
 
-def wait_for_postgres(
-    container: DockerRuntimeContainer,
-    username: str,
-    password: str,
-    database: str,
-    port: int = 5432,
-) -> None:
+def wait_for_postgres(container: DockerRuntimeContainer, username: str, password: str, database: str, port: int = 5432) -> None:
     """Wait until a PostgreSQL container accepts connections."""
 
     deadline = time.monotonic() + 60

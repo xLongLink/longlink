@@ -183,8 +183,8 @@ async def test_execute_application_verify_operation_marks_failed_when_dead(monke
     assert refreshed.stopped_at is not None
 
 
-async def test_execute_application_verify_operation_releases_when_not_ready(monkeypatch) -> None:
-    """Release application.verify when the application is still starting."""
+async def test_execute_application_verify_operation_releases_when_only_pod_is_ready(monkeypatch) -> None:
+    """Release application.verify until the current Deployment reports readiness."""
 
     # Arrange
     user = await db.users.upsert(
@@ -227,10 +227,10 @@ async def test_execute_application_verify_operation_releases_when_not_ready(monk
 
             return False
 
-        async def pod(self, application: str) -> None:
-            """Return no current pod yet."""
+        async def pod(self, application: str) -> SimpleNamespace:
+            """Return a ready pod before the Deployment status catches up."""
 
-            return None
+            return pod_status("Running", [container_status(ready=True)])
 
     monkeypatch.setattr(
         "src.operations.applications.compute.location",

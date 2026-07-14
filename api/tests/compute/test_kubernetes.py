@@ -95,7 +95,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
             {"LONG_LINK_REQUIRED": "value", "PORT": "8000"},
         )
 
-        # Wait for the image pull, deployment scheduling, and readiness probe-free startup to finish.
+        # Wait for the image pull, deployment scheduling, and readiness probe to finish.
         deadline = time.monotonic() + 180
         ready_pod_name: str | None = None
         while time.monotonic() < deadline:
@@ -142,14 +142,16 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         assert f"/api/applications/{application_id}/proxy/" not in gateway_config
         assert "x-longlink-application-id" in gateway_config
         assert application_id in gateway_config
-        assert f"{application_id}.acme.svc.cluster.local" in gateway_config
+        assert f"app-{application_id}.acme.svc.cluster.local" in gateway_config
         assert "shared-secret" not in gateway_config
         assert "__LONG_LINK_GATEWAY_SECRET__" in gateway_config
         assert base64.b64decode(gateway_secret.data["gateway-secret"]).decode("utf-8") == "shared-secret"
         assert gateway_service.spec.type == "ClusterIP"
         assert gateway_ingress.spec.rules[0].http.paths[0].backend.service.name == "longlink-gateway"
         assert gateway_policy.spec.podSelector.matchLabels == {"app": "longlink-gateway"}
-        assert isinstance(logs, str)
+        assert logs
+        assert all(isinstance(line, str) for line in logs)
+        assert any("Listening on port 8000." in line for line in logs)
         application_pod = next((pod for pod in namespace_pods if pod.name == ready_pod_name), None)
         assert application_pod is not None
         assert application_pod.raw.get("status", {}).get("phase") == "Running"

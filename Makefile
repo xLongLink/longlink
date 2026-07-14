@@ -3,6 +3,7 @@
 LOCAL_SDK_IMAGE := localhost:15000/longlink-app:dev
 LOCAL_SDK_IMAGE_LABEL := longlink.name=longlink-app
 API_PYTEST_MARK ?=
+SDK_PYTEST_MARK ?=
 
 
 # Install all API, SDK, and web dependencies.
@@ -46,7 +47,7 @@ web\:format: web\:install
 # Run all API, SDK, and web tests/checks without container-backed integration tests.
 tests:
 	$(MAKE) api:tests API_PYTEST_MARK='-m "not integration"'
-	$(MAKE) sdk:tests
+	$(MAKE) sdk:tests SDK_PYTEST_MARK='-m "not integration"'
 	$(MAKE) web:tests
 
 
@@ -61,7 +62,7 @@ api\:tests: api\:install api\:build
 
 # Build the embedded web bundle, then run SDK and generated scaffold tests.
 sdk\:tests: sdk\:install sdk\:build
-	cd sdk && uv run --locked pytest --cov=longlink --cov-report=term-missing tests
+	cd sdk && uv run --locked pytest $(SDK_PYTEST_MARK) --cov=longlink --cov-report=term-missing tests
 	cd sdk && sh tests/scaffold-smoke.sh
 
 
