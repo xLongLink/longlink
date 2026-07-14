@@ -42,7 +42,6 @@ type PageState = {
     path: string;
     routePath: string;
     stateKey: string;
-    tab: string;
     ast: ASTNode[] | null;
     parseError: string | null;
     error: string | null;
@@ -161,7 +160,6 @@ function createPageState(
     stateKey: string,
     path: string,
     routePath: string,
-    tab: string,
     params: Record<string, string>,
     navigationBaseUrl: string,
     runtimeContext?: ExecutionContext
@@ -176,7 +174,6 @@ function createPageState(
         path,
         routePath,
         stateKey,
-        tab,
         ast: null,
         error: null,
         loading: false,
@@ -210,7 +207,7 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
     const pageStatesRef = useRef<Record<string, PageState>>({});
     const inFlightPageKeysRef = useRef<Set<string>>(new Set());
     const runtimeContextRef = useRef<ExecutionContext | undefined>(runtimeContext);
-    const routeParams = { organization, application } as Record<string, string | undefined>;
+    const routeParams: Record<string, string | undefined> = { organization, application };
     const resolvedPages = resolveTemplate(pages, routeParams);
     const resolvedPagesBaseUrl = resolvedPages.replace(/pages\.json(?:[?#].*)?$/i, '');
     const navigationBaseUrl = resolveApplicationHref('', organization, application);
@@ -273,7 +270,6 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
             string,
             {
                 active: boolean;
-                dynamic: boolean;
                 href: string;
                 icon?: ReturnType<typeof createLucideIconComponent>;
                 label: string;
@@ -303,7 +299,6 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
             if (!currentGroup) {
                 tabGroups.set(page.tab, {
                     active: page.tab === activePageTab,
-                    dynamic,
                     href,
                     icon,
                     label,
@@ -362,7 +357,6 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
                 activePageStateKey,
                 activePagePath,
                 activeRoutePath,
-                activePageTab,
                 activeRouteParams,
                 navigationBaseUrl,
                 runtimeContextRef.current

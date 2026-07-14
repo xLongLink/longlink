@@ -3,10 +3,10 @@ from typing import Any, ClassVar
 from datetime import datetime
 from sqlmodel import Field
 from sqlalchemy import Uuid, Table, Column, String
-from longlink.tenant.utils import utcnow
+from longlink.utils.time import utcnow
+from longlink.database.types import UTCDateTime
 from longlink.shared.constants import SHARED_USERS_TABLE, SHARED_TABLE_INFO_KEY
 from longlink.database.registry import Base, database_metadata
-from longlink.tenant.database.types import UTCDateTime
 
 
 class User(Base, table=True):

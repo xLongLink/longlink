@@ -28,10 +28,11 @@ async def test_compute_registry_endpoint_supports_create_and_list(
         def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             """Capture constructor arguments passed by the route."""
 
+            self.gateway = self
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
 
-        async def sync_gateway(self) -> None:
+        async def sync(self) -> None:
             """Capture gateway sync calls."""
 
             sync_calls = captured.get("sync_calls")

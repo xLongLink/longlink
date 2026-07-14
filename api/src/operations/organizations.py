@@ -35,7 +35,7 @@ async def remove(operation: Operation) -> jobs.OperationOutcome:
         registry = await registries.application_compute(app, organization.location_id)
         if registry is not None:
             adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
-            await adapter.delete(str(app.id))
+            await adapter.applications.delete(str(app.id))
 
             # Deduplicate registries so namespace deletion runs once per backend.
             if registry.id not in seen:

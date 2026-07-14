@@ -80,7 +80,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         await compute.namespace("acme")
         await compute.namespace("acme")
         application_id = "00000000-0000-4000-8000-000000000001"
-        route = await compute.create(
+        route = await compute.applications.create(
             "acme",
             application_id,
             ECHO_SERVER_IMAGE,
@@ -91,7 +91,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         deadline = time.monotonic() + 180
         ready_pod_name: str | None = None
         while time.monotonic() < deadline:
-            pod = await compute.pod(application_id)
+            pod = await compute.applications.pod(application_id)
 
             # The application pod is created asynchronously by the deployment controller.
             if pod is not None and pod.raw.get("status", {}).get("phase") == "Running" and any(
@@ -104,7 +104,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
                 break
             await asyncio.sleep(2)
         else:
-            pod = await compute.pod(application_id)
+            pod = await compute.applications.pod(application_id)
             pod_statuses = [
                 {
                     "name": pod.name,
@@ -114,12 +114,18 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
             ] if pod is not None else []
             pytest.fail(f"k3s application pod did not become ready before timeout: {pod_statuses}")
 
-        gateway_config = (await compute._read(ConfigMap, "longlink-gateway", "longlink-system")).data["envoy.yaml"]
-        gateway_secret = await compute._read(Secret, "longlink-gateway-auth", "longlink-system")
-        gateway_service = await compute._read(Service, "longlink-gateway", "longlink-system")
-        gateway_policy = await compute._read(NetworkPolicy, "longlink-gateway-ingress", "longlink-system")
-        gateway_ingress = await compute._read(Ingress, "longlink-gateway", "longlink-system")
-        logs = await compute.logs(application_id, lines=50)
+        gateway_config_map = await compute._resources.read(ConfigMap, "longlink-gateway", "longlink-system")
+        gateway_secret = await compute._resources.read(Secret, "longlink-gateway-auth", "longlink-system")
+        gateway_service = await compute._resources.read(Service, "longlink-gateway", "longlink-system")
+        gateway_policy = await compute._resources.read(NetworkPolicy, "longlink-gateway-ingress", "longlink-system")
+        gateway_ingress = await compute._resources.read(Ingress, "longlink-gateway", "longlink-system")
+        assert gateway_config_map is not None
+        assert gateway_secret is not None
+        assert gateway_service is not None
+        assert gateway_policy is not None
+        assert gateway_ingress is not None
+        gateway_config = gateway_config_map.data["envoy.yaml"]
+        logs = await compute.applications.logs(application_id, lines=50)
         namespaces = await compute.namespaces()
         namespace_pods = await compute.pods("acme")
 
@@ -136,9 +142,9 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         assert gateway_ingress.spec.rules[0].http.paths[0].backend.service.name == "longlink-gateway"
         assert gateway_policy.spec.podSelector.matchLabels == {"app": "longlink-gateway"}
         assert isinstance(logs, str)
-        application_pod = next((pod for pod in namespace_pods if pod["name"] == ready_pod_name), None)
+        application_pod = next((pod for pod in namespace_pods if pod.name == ready_pod_name), None)
         assert application_pod is not None
-        assert application_pod["status"] == "Running"
+        assert application_pod.raw.get("status", {}).get("phase") == "Running"
     finally:
-        await compute.delete(application_id)
+        await compute.applications.delete(application_id)
         await compute.delete_namespace("acme")

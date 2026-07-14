@@ -4,10 +4,10 @@ from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Column, String
+from longlink.utils.time import utcnow
 from src.models.countries import DEFAULT_COUNTRY
 from src.models.locations import LocationProvider
-from longlink.tenant.utils import utcnow
-from longlink.tenant.database.types import UTCDateTime
+from longlink.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:

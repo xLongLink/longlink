@@ -36,10 +36,10 @@ longlink/
 │   │   │   └── xsd/              # XML schema definitions
 │   │   ├── cli/                  # CLI commands
 │   │   ├── database/             # Database helpers and migrations
+│   │   ├── models/               # Shared runtime enums and value models
 │   │   ├── routes/               # Runtime routes
 │   │   ├── shared/               # Shared-schema models, migrations, and synchronization
-│   │   ├── storage/              # Storage abstraction
-│   │   ├── tenant/               # Shared runtime constants, types, models, and storage definitions
+│   │   ├── storage/              # Storage abstractions and organization assets
 │   │   ├── utils/                # Helpers and settings
 │   │   ├── app.py                # FastAPI application factory
 │   │   ├── pages.py              # Page metadata helpers

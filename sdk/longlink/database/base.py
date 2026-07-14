@@ -6,14 +6,14 @@ from contextlib import asynccontextmanager
 from sqlalchemy.orm import relationship, declared_attr
 from collections.abc import AsyncIterator
 from sqlalchemy.engine import URL
-from longlink.tenant.utils import utcnow
+from longlink.utils.time import utcnow
 from longlink.shared.models import User
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
+from longlink.database.types import UTCDateTime
 from longlink.utils.settings import Envs
 from longlink.shared.constants import SHARED_SCHEMA
 from longlink.database.registry import Base, database_metadata
 from sqlmodel.ext.asyncio.session import AsyncSession
-from longlink.tenant.database.types import UTCDateTime
 
 
 class Table(Base):

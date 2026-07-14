@@ -1,12 +1,13 @@
 import contextlib
 from uuid import UUID
-from .base import Table, utcnow
+from .base import Table
 from typing import Any
 from fastapi import FastAPI, Request
 from sqlmodel import Session as SyncSession
 from sqlalchemy import event
 from contextvars import ContextVar
 from collections.abc import Callable, Awaitable, Generator
+from longlink.utils.time import utcnow
 from starlette.responses import Response
 
 _current_user_id: ContextVar[UUID | None] = ContextVar("current_user_id", default=None)

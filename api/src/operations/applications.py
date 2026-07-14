@@ -3,8 +3,8 @@ from src import adapters
 from datetime import timedelta
 from src.utils import jobs, names, images
 from longlink.shared import users as shared_users
+from longlink.utils.time import utcnow
 from src.models.statuses import ApplicationStatus
-from longlink.tenant.utils import utcnow
 from src.database.services import database, operations, registries, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
@@ -113,7 +113,7 @@ async def create(operation: Operation) -> jobs.OperationOutcome:
                 "LONGLINK_STORAGE_SHARED_BUCKET": shared,
                 "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
             }
-            await compute.create(organization.slug, application_id, runtime_image, {**application.envs, **envs})
+            await compute.applications.create(organization.slug, application_id, runtime_image, {**application.envs, **envs})
 
         # Failed external provisioning marks the application failed and queues partial cleanup.
         except Exception:
@@ -125,14 +125,14 @@ async def create(operation: Operation) -> jobs.OperationOutcome:
     ready = False
     dead = False
 
-    # Runtime adapters raise while deployments or pods are still being created.
+    # Unexpected cluster failures are terminal; absent or pending resources return normal values.
     try:
         # A ready deployment is enough to complete creation without pod inspection.
-        if await compute.ready(application_id):
+        if await compute.applications.ready(application_id):
             await applications.set_status(application.id, ApplicationStatus.running)
             return jobs.complete()
 
-        current = await compute.pod(application_id)
+        current = await compute.applications.pod(application_id)
 
         # Inspect the current pod when Kubernetes has created one for this rollout.
         if current is not None:
@@ -177,9 +177,9 @@ async def create(operation: Operation) -> jobs.OperationOutcome:
                         dead = True
                         break
 
-    except RuntimeError:
-        # Runtime creation is still pending.
-        pass
+    except Exception:
+        await applications.set_status(application.id, ApplicationStatus.failed)
+        raise
 
     # Ready applications move to running and complete the operation.
     if ready:
@@ -222,7 +222,7 @@ async def remove(operation: Operation) -> jobs.OperationOutcome:
     registry = await registries.application_compute(application, organization.location_id)
     if registry is not None:
         adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
-        await adapter.delete(str(application.id))
+        await adapter.applications.delete(str(application.id))
 
     # Remove the application schema from the database registry that originally hosted it.
     if application.database_registry_id is not None:

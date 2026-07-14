@@ -378,6 +378,7 @@ async def test_application_and_organization_remove_handlers_remove_runtime(monke
 
             assert kubeconfig == compute_registry.kubeconfig
             assert proxy_secret == compute_registry.proxy_secret
+            self.applications = self
 
         async def delete_namespace(self, namespace: str) -> None:
             """Record namespace deletion."""

@@ -7,7 +7,7 @@ import asyncio
 import hashlib
 import urllib.parse
 from .base import StorageAccess, StorageRuntimeCredentials
-from typing import Literal, cast
+from typing import Literal
 from .minio import MinIO
 from contextlib import suppress
 
@@ -147,7 +147,7 @@ class Exoscale(MinIO):
         response.raise_for_status()
         data = response.json()
         if isinstance(data, dict):
-            return cast(JsonObject, data)
+            return {str(key): value for key, value in data.items()}
 
         raise RuntimeError("Exoscale API returned a non-object response")
 

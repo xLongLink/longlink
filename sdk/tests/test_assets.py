@@ -2,7 +2,7 @@ import pytest
 import longlink.assets as assets
 from pathlib import Path
 from longlink import Envs, create_fs
-from longlink.tenant.storage import assets as organization_assets
+from longlink.storage import assets as organization_assets
 
 
 def test_logo_returns_development_fallback_asset(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

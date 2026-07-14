@@ -1,5 +1,5 @@
+from longlink.models.icons import Icon
 from src.models.applications import ApplicationCreate
-from longlink.tenant.models.icons import Icon
 
 
 def test_icon_enum_exposes_typed_members() -> None:

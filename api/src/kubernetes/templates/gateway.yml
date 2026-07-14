@@ -1,6 +1,11 @@
 # Template for the per-cluster Envoy gateway resources.
 ---
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: longlink-system
+---
+apiVersion: v1
 kind: Secret
 metadata:
   name: longlink-gateway-auth

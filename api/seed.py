@@ -1,7 +1,6 @@
 import asyncio
 import subprocess
 from uuid import UUID
-from typing import cast
 from pathlib import Path
 from datetime import UTC, datetime
 from src.utils import names
@@ -226,7 +225,7 @@ async def seed_local_development() -> None:
             location_id=location.id,
             user=admin_user,
         )
-        await Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret).sync_gateway()
+        await Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret).gateway.sync()
 
     # Reused registries may need their gateway URL refreshed after port changes.
     elif compute_registry.gateway_url != LOCAL_COMPUTE_GATEWAY_URL:
@@ -307,7 +306,7 @@ async def seed_local_development() -> None:
             database_registry_id=application_database.id,
             storage_registry_id=application_storage.id,
             sdk=metadata.sdk,
-            digest=cast(str, metadata.digest),
+            digest=metadata.digest,
             version=metadata.version,
             status=ApplicationStatus.creating,
             description=application_payload.description,

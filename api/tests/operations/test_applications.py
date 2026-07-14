@@ -73,6 +73,8 @@ async def test_execute_application_create_operation_completes_running_applicatio
         def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             """Accept the compute registry connection fields."""
 
+            self.applications = self
+
         async def ready(self, application: str) -> bool:
             """Pretend the application is already ready."""
 
@@ -144,6 +146,8 @@ async def test_execute_application_create_operation_marks_failed_when_dead(monke
 
         def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             """Accept the compute registry connection fields."""
+
+            self.applications = self
 
         async def ready(self, application: str) -> bool:
             """Pretend the deployment is not ready yet."""
@@ -220,6 +224,8 @@ async def test_execute_application_create_operation_releases_when_not_ready(monk
 
         def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             """Accept the compute registry connection fields."""
+
+            self.applications = self
 
         async def ready(self, application: str) -> bool:
             """Pretend the deployment is not ready yet."""

@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Text, Column, UniqueConstraint
-from longlink.tenant.utils import utcnow
-from longlink.tenant.database.types import UTCDateTime
+from longlink.utils.time import utcnow
+from longlink.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:

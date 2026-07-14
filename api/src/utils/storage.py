@@ -60,4 +60,4 @@ async def usage(registry: StorageRegistry, bucket_name: str) -> StorageBucketUsa
             object_count += len(contents)
             space_used += sum(int(item.get("Size", 0)) for item in contents)
 
-    return cast(StorageBucketUsage, {"object_count": object_count, "space_used": space_used})
+    return {"object_count": object_count, "space_used": space_used}

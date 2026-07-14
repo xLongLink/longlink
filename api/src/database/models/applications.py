@@ -5,9 +5,9 @@ from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import JSON
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Column, UniqueConstraint
+from longlink.utils.time import utcnow
 from src.models.statuses import ApplicationStatus
-from longlink.tenant.utils import utcnow
-from longlink.tenant.database.types import UTCDateTime
+from longlink.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:

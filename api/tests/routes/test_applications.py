@@ -284,6 +284,7 @@ async def test_create_app_returns_app_response(
         def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             """Capture compute registry configuration."""
 
+            self.applications = self
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
 
@@ -719,6 +720,7 @@ async def test_get_app_logs_returns_pod_logs(
         def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
             """Capture compute registry configuration."""
 
+            self.applications = self
             captured["kubeconfig"] = kubeconfig
             captured["proxy_secret"] = proxy_secret
 

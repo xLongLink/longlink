@@ -2,7 +2,6 @@ import asyncio
 import contextlib
 from enum import StrEnum
 from uuid import UUID
-from typing import cast
 from fastapi import HTTPException
 from src.logger import logger
 from dataclasses import dataclass
@@ -177,7 +176,12 @@ async def run_operation_scheduler() -> None:
             continue
 
         logger.info("Executing operation %s (%s)", operation.id, operation.kind)
-        lease_token = cast(str, operation.lease_token)
+
+        # Invalid claimed rows must not stop the scheduler while their lease expires.
+        lease_token = operation.lease_token
+        if lease_token is None:
+            logger.error("Claimed operation %s is missing its lease token", operation.id)
+            continue
         heartbeat = asyncio.create_task(renew_operation_lease(operation.id, lease_token))
 
         # Execute one claimed operation without stopping the worker on failure.

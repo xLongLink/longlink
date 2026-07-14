@@ -665,7 +665,6 @@ export default function Settings({
                             setLogsTarget(null);
                         }
                     }}
-                    trigger={null}
                 />
             ) : null}
 

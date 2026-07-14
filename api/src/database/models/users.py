@@ -6,10 +6,10 @@ from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Column
 from src.models.roles import PlatformRoles
 from src.models.users import Theme, Accent, Radius
-from longlink.tenant.utils import utcnow
-from longlink.tenant.database.types import UTCDateTime
+from longlink.utils.time import utcnow
+from longlink.database.types import UTCDateTime
+from longlink.models.languages import Language
 from src.database.models.association import UserApplication, UserOrganization
-from longlink.tenant.models.languages import Language
 
 
 class User(SQLModel, table=True):

@@ -6,7 +6,7 @@ from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus
 from src.models.countries import DEFAULT_COUNTRY, Country
 from src.models.locations import LocationResponse
-from longlink.tenant.models.icons import Icon
+from longlink.models.icons import Icon
 
 
 class OrganizationCreate(BaseModel):

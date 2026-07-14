@@ -13,9 +13,10 @@ class FakeKubernetes:
     def __init__(self) -> None:
         """Initialize call tracking."""
 
+        self.gateway = self
         self.sync_gateway_calls = 0
 
-    async def sync_gateway(self) -> None:
+    async def sync(self) -> None:
         """Record one gateway synchronization call."""
 
         self.sync_gateway_calls += 1

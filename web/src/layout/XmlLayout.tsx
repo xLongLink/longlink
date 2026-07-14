@@ -105,18 +105,11 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
         </>
     );
 
-    // Use a taller content container in SDK mode.
-    if (isSdkMode) {
-        return (
-            <TopLayout header={header}>
-                <div className="mx-auto flex min-h-full w-full max-w-[1000px] flex-1 flex-col">{children}</div>
-            </TopLayout>
-        );
-    }
-
     return (
         <TopLayout header={header}>
-            <div className="mx-auto flex w-full max-w-[1000px] flex-1 flex-col">{children}</div>
+            <div className={cn('mx-auto flex w-full max-w-[1000px] flex-1 flex-col', isSdkMode && 'min-h-full')}>
+                {children}
+            </div>
         </TopLayout>
     );
 }

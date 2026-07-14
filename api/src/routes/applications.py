@@ -1,7 +1,6 @@
 import httpx2
 import asyncio
 from uuid import UUID
-from typing import cast
 from fastapi import Depends, Request, Response, APIRouter, HTTPException
 from datetime import UTC, datetime
 from src.auth import authuser, authadmin
@@ -63,7 +62,6 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         registries.database(organization.location_id),
         registries.storage(organization.location_id),
     )
-    digest = cast(str, metadata.digest)
 
     # Application creation requires every assigned runtime backend.
     if compute is None or database is None or storage is None or organization.shared_schema_url is None:
@@ -78,7 +76,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         database_registry_id=database.id,
         storage_registry_id=storage.id,
         sdk=metadata.sdk,
-        digest=digest,
+        digest=metadata.digest,
         version=metadata.version,
         status=ApplicationStatus.creating,
         description=payload.description,
@@ -134,8 +132,9 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
-        logs = await compute_client.logs(str(application.id))
-    except ValueError as exc:
+        logs = await compute_client.applications.logs(str(application.id))
+    except Exception as exc:
+        logger.exception("Failed to load logs for application '%s': %r", application.id, exc)
         raise HTTPException(status_code=503, detail="Application logs unavailable") from exc
 
     return logs

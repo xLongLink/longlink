@@ -49,7 +49,7 @@ async def create_compute_registry(payload: ComputeRegistryCreate, user: User = D
     # Initialize the cluster immediately so unavailable backends fail fast.
     try:
         adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
-        await adapter.sync_gateway()
+        await adapter.gateway.sync()
     except Exception as exc:
         raise HTTPException(status_code=503, detail="Failed to initialize the compute cluster") from exc
 
@@ -99,9 +99,16 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
 
     # Ask the backend for pods in the namespace.
     try:
-        pods = await adapter.pods(namespace)
+        pod_resources = await adapter.pods(namespace)
     except Exception as exc:
         logger.exception("Failed to inspect pods in namespace '%s' for registry '%s': %r", namespace, registry_id, exc)
         raise HTTPException(status_code=503, detail="Compute pods unavailable") from exc
 
-    return pods
+    return [
+        {
+            "name": pod.name,
+            "status": pod.raw.get("status", {}).get("phase"),
+            "node": pod.raw.get("spec", {}).get("nodeName"),
+        }
+        for pod in pod_resources
+    ]
