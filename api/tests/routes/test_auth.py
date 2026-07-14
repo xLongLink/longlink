@@ -77,8 +77,78 @@ class OAuthStub:
         return self.oidc_client
 
 
-def test_login_oidc_forwards_social_provider_hint(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Pass the selected social provider to Keycloak as an identity-provider hint."""
+OIDC_REDIRECT_CASES = [
+    pytest.param(
+        "/auth/login/oidc?provider=github&next=/orgs/acme",
+        "/orgs/acme",
+        {"kc_idp_hint": "github"},
+        id="safe-social-provider",
+    ),
+    pytest.param(
+        "/auth/login/oidc?next=%2Forgs%2Facme%3Ftab%3DApps%23top",
+        "/orgs/acme?tab=Apps#top",
+        {},
+        id="safe-path-with-query-and-fragment",
+    ),
+    pytest.param(
+        "/auth/login/oidc?next=%2F%2Fevil.example",
+        "/organizations",
+        {},
+        id="protocol-relative-path",
+    ),
+    pytest.param(
+        "/auth/login/oidc?next=%2F%2F%2Fevil.example",
+        "/organizations",
+        {},
+        id="triple-slash-path",
+    ),
+    pytest.param(
+        "/auth/login/oidc?next=https%3A%2F%2Fevil.example",
+        "/organizations",
+        {},
+        id="absolute-url",
+    ),
+    pytest.param(
+        "/auth/login/oidc?next=%2F%5Cevil.example",
+        "/organizations",
+        {},
+        id="backslash-path",
+    ),
+    pytest.param(
+        "/auth/login/oidc?next=settings",
+        "/organizations",
+        {},
+        id="non-relative-path",
+    ),
+    pytest.param(
+        "/auth/login/oidc",
+        "/organizations",
+        {},
+        id="missing-path",
+    ),
+    pytest.param(
+        "/auth/login/oidc?provider=google&next=%2F%2Fevil.example",
+        "/organizations",
+        {"kc_idp_hint": "google"},
+        id="unsafe-social-provider-path",
+    ),
+    pytest.param(
+        "/auth/login/oidc?next=%2Fsafe%0ASet-Cookie%3Aevil",
+        "/organizations",
+        {},
+        id="newline-path",
+    ),
+]
+
+
+@pytest.mark.parametrize(("request_target", "expected_path", "expected_kwargs"), OIDC_REDIRECT_CASES)
+def test_login_oidc_sanitizes_next_path(
+    monkeypatch: pytest.MonkeyPatch,
+    request_target: str,
+    expected_path: str,
+    expected_kwargs: dict[str, str],
+) -> None:
+    """Constrain redirects to safe paths while retaining social-provider hints."""
 
     # Arrange
     oidc_client = OidcClientStub()
@@ -86,14 +156,14 @@ def test_login_oidc_forwards_social_provider_hint(monkeypatch: pytest.MonkeyPatc
     client = TestClient(app)
 
     # Act
-    response = client.get("/auth/login/oidc?provider=github&next=/orgs/acme")
+    response = client.get(request_target)
 
     # Assert
     assert response.status_code == 204
     assert oidc_client.calls == [
         {
-            "kwargs": {"kc_idp_hint": "github"},
-            "next_path": "/orgs/acme",
+            "kwargs": expected_kwargs,
+            "next_path": expected_path,
             "redirect_uri": env.OIDC_REDIRECT_URI,
         }
     ]
@@ -203,80 +273,6 @@ async def test_auth_oidc_rejects_callback_failures_without_authenticating(
     assert response.json() == {"detail": expected_detail}
     assert profile_response.status_code == 401
     assert await users_service.fetch() == []
-
-
-@pytest.mark.parametrize(
-    ("next_path", "expected_path"),
-    [
-        ("/orgs/acme?tab=Apps#top", "/orgs/acme?tab=Apps#top"),
-        ("//evil.example", "/organizations"),
-        ("///evil.example", "/organizations"),
-        ("https://evil.example", "/organizations"),
-        ("/\\evil.example", "/organizations"),
-        ("settings", "/organizations"),
-        (None, "/organizations"),
-    ],
-)
-def test_login_oidc_sanitizes_next_path(monkeypatch: pytest.MonkeyPatch, next_path: str | None, expected_path: str) -> None:
-    """Keep post-login redirects constrained to same-origin relative paths."""
-
-    # Arrange
-    oidc_client = OidcClientStub()
-    monkeypatch.setattr(auth_routes, "oauth", OAuthStub(oidc_client))
-    client = TestClient(app)
-    params = {"next": next_path} if next_path is not None else {}
-
-    # Act
-    response = client.get("/auth/login/oidc", params=params)
-
-    # Assert
-    assert response.status_code == 204
-    assert oidc_client.calls[0]["next_path"] == expected_path
-
-
-def test_login_oidc_rejects_unsafe_next_path(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Fallback to the default page when an unsafe post-login path is supplied."""
-
-    # Arrange
-    oidc_client = OidcClientStub()
-    monkeypatch.setattr(auth_routes, "oauth", OAuthStub(oidc_client))
-    client = TestClient(app)
-
-    # Act
-    response = client.get("/auth/login/oidc?provider=google&next=%2F%2Fevil.example")
-
-    # Assert
-    assert response.status_code == 204
-    assert oidc_client.calls == [
-        {
-            "kwargs": {"kc_idp_hint": "google"},
-            "next_path": "/organizations",
-            "redirect_uri": env.OIDC_REDIRECT_URI,
-        }
-    ]
-
-
-@pytest.mark.parametrize("unsafe_next_path", ["%2F%5Cevil.example", "%2Fsafe%0ASet-Cookie%3Aevil"])
-def test_login_oidc_rejects_malformed_next_path(monkeypatch: pytest.MonkeyPatch, unsafe_next_path: str) -> None:
-    """Fallback to the default page when the next path contains unsafe characters."""
-
-    # Arrange
-    oidc_client = OidcClientStub()
-    monkeypatch.setattr(auth_routes, "oauth", OAuthStub(oidc_client))
-    client = TestClient(app)
-
-    # Act
-    response = client.get(f"/auth/login/oidc?next={unsafe_next_path}")
-
-    # Assert
-    assert response.status_code == 204
-    assert oidc_client.calls == [
-        {
-            "kwargs": {},
-            "next_path": "/organizations",
-            "redirect_uri": env.OIDC_REDIRECT_URI,
-        }
-    ]
 
 
 async def test_list_accounts_returns_current_active_account(users: tuple[User, User, User]) -> None:

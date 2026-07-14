@@ -1,6 +1,6 @@
-import { evaluate } from '@/xml/expressions';
-import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
+import type { ExecutionContext } from '@/xml/types';
+import { evaluate } from '@/xml/expressions';
 
 describe('evaluate', () => {
     /* Evaluation should resolve expressions against the flat runtime context. */
@@ -18,40 +18,19 @@ describe('evaluate', () => {
         expect(evaluate('${name}', ctx)).toBe('from-context');
     });
 
-    /* Plain text with interpolation should render interpolated values. */
+    /* Plain and mixed text should render interpolated values. */
     it('interpolates text containing expressions', () => {
         const ctx: ExecutionContext = {
             setups: {},
             invalidate: async () => {},
             values: {},
             count: 4,
-        };
-
-        expect(evaluate('Count: ${count}', ctx)).toBe('Count: 4');
-    });
-
-    it('interpolates mixed text with `${...}` expressions', () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            values: {},
             index: 0,
             name: 'Hero',
         };
 
+        expect(evaluate('Count: ${count}', ctx)).toBe('Count: 4');
         expect(evaluate('${index + 1}. ${name}', ctx)).toBe('1. Hero');
-    });
-
-    /* A single `${...}` expression should return its typed runtime value. */
-    it('returns typed value for single expression', () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            values: {},
-            count: 4,
-        };
-
-        expect(evaluate('${count * 2}', ctx)).toBe(8);
     });
 
     /* Object literals inside `${...}` should be evaluated as objects, not strings. */

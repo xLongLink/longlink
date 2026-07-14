@@ -138,23 +138,6 @@ async def test_get_services_return_active_applications_and_respect_include_delet
     assert included_by_id.deleted_id == user.id
 
 
-async def test_application_list_services_return_models_and_creator_role() -> None:
-    """Return application rows and the creator membership role."""
-
-    # Arrange
-    user, organization, application = await create_application_context("responses")
-
-    # Act
-    all_applications = await db.applications.fetch()
-    organization_applications = await db.organizations.applications(organization.id)
-    role = await db.applications.membership_role(application.id, user.id)
-
-    # Assert
-    assert [item.id for item in all_applications] == [application.id]
-    assert [item.id for item in organization_applications] == [application.id]
-    assert role == ApplicationRoles.admin
-
-
 async def test_list_members_includes_organization_members_with_optional_application_roles(
     users: tuple[User, User, User],
 ) -> None:

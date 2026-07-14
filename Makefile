@@ -73,7 +73,7 @@ sdk\:scaffold\:tests: sdk\:install sdk\:build
 
 # Run web tests, typecheck, and bundle builds.
 web\:tests: web\:install
-	bun test tests --cwd web
+	bun run --cwd web test
 	bun run --cwd web typecheck
 	bun run --cwd web vite build --mode api --logLevel warn
 	bun run --cwd web vite build --mode sdk --logLevel warn

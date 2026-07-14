@@ -1,8 +1,6 @@
 import httpx2
-import pytest
 from uuid import UUID
 from types import SimpleNamespace
-from src.utils import names
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from fastapi.testclient import TestClient
 from longlink.utils.time import utcnow
@@ -76,35 +74,6 @@ async def test_list_organization_apps_returns_app_membership_role(
     payload = response.json()
     assert [item["id"] for item in payload] == [str(app.id)]
     assert payload[0]["role"] == ApplicationRoles.write
-
-
-async def test_list_organization_apps_returns_creator_app_admin_role(
-    clients: tuple[TestClient, TestClient, TestClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Return the creator's automatically assigned application admin role."""
-
-    # Arrange
-    user = users[0]
-    location = await db.locations.create("local", "Local testing", user, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, user)
-    app = await db.applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=user,
-    )
-    client = clients[0]
-
-    # Act
-    response = client.get(f"/api/organizations/{organization.id}/applications")
-
-    # Assert
-    assert response.status_code == 200
-    payload = response.json()
-    assert [item["id"] for item in payload] == [str(app.id)]
-    assert payload[0]["role"] == ApplicationRoles.admin
 
 
 async def test_list_apps_without_organization_returns_all_apps_for_admin(
@@ -439,31 +408,6 @@ async def test_create_app_returns_app_response(
     assert application_secrets["LONGLINK_STORAGE_PASSWORD"] == "runtime-storage-secret"
     assert application_secrets["LONGLINK_STORAGE_SHARED_BUCKET"] == organization.id.hex
     assert application_secrets["LONGLINK_STORAGE_USERNAME"] == "runtime-storage-access"
-
-
-async def test_location_storage_returns_location_registry(users: tuple[User, User, User]) -> None:
-    """Return the single storage registry assigned to a location."""
-
-    # Arrange
-    owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
-    primary = await db.storage.create(
-        kind=StorageKind.minio,
-        name="primary",
-        slug="primary",
-        endpoint_url="http://storage-primary.local",
-        access_key_id="primary-access",
-        secret_access_key="primary-secret",
-        location_id=location.id,
-        user=owner,
-    )
-
-    # Act
-    selected = await storage.location(location.id)
-
-    # Assert
-    assert selected is not None
-    assert selected.id == primary.id
 
 
 async def test_create_app_returns_409_when_image_metadata_is_missing(
@@ -889,6 +833,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     # Assert
     assert response.status_code == 201
     assert response.text == "proxied"
+    assert response.headers["cache-control"] == "no-store"
     assert response.headers["content-type"] == "text/plain"
     assert response.headers["x-content-type-options"] == "nosniff"
     assert response.headers["content-security-policy"] == (

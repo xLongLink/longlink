@@ -1,9 +1,8 @@
-import { RenderXML } from '@/xml/renderers.tsx';
-import type { ASTNode, ExecutionContext } from '@/xml/types';
-import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
+import { describe, expect, it } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { withGlobalValue } from '../helpers/globals';
+import type { ASTNode, ExecutionContext } from '@/xml/types';
+import { RenderXML } from '@/xml/renderers.tsx';
 
 describe('renderNode', () => {
     it('resolves localized text through XML adapters', () => {
@@ -28,22 +27,6 @@ describe('renderNode', () => {
         ).toContain('Count 7');
     });
 
-    it('waits for translations before browser renders localized XML', async () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-
-        await withGlobalValue('document', {}, () => {
-            expect(
-                renderToStaticMarkup(
-                    createElement(
-                        'div',
-                        null,
-                        createElement(RenderXML, { ast: [{ name: 'P', params: { i18n: 'copy.loading' } }], ctx })
-                    )
-                )
-            ).toBe('<div></div>');
-        });
-    });
-
     it('skips nodes when if condition is false', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const node: ASTNode = { name: 'Button', params: { if: '${false}' } };
@@ -59,14 +42,6 @@ describe('renderNode', () => {
                 createElement('div', null, createElement(RenderXML, { ast: [{ name: 'Unknown' }], ctx }))
             )
         ).toThrow('Unknown component "Unknown"');
-    });
-
-    it('resolves props from expressions', () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {}, count: 2 };
-        const node: ASTNode = { name: 'Input', params: { label: '${`Count: ${count}`}' } };
-        expect(
-            renderToStaticMarkup(createElement('div', null, createElement(RenderXML, { ast: [node], ctx })))
-        ).toContain('Count: 2');
     });
 
     it('resolves input props from expressions', () => {

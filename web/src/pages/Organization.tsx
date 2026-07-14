@@ -8,18 +8,15 @@ import NotFound from './NotFound';
 import Applications from './org/Applications';
 import OrganizationSettings, { type SettingsRouteSection } from './org/Settings';
 
-type OrganizationSection = 'applications' | 'settings';
-
 type OrganizationProps = {
-    sectionName?: OrganizationSection;
     settingsSection?: SettingsRouteSection;
 };
 
 /** Renders the organization page shell and tab-specific hero content. */
-export default function Organization({ sectionName, settingsSection = 'organization' }: OrganizationProps) {
+export default function Organization({ settingsSection }: OrganizationProps) {
     const { t } = useTranslation();
     const { organization = '', settingsApplication = '' } = useParams();
-    const section = sectionName ?? 'applications';
+    const section = settingsSection === undefined ? 'applications' : 'settings';
     const {
         organization: organizationDetails,
         people,
@@ -89,7 +86,7 @@ export default function Organization({ sectionName, settingsSection = 'organizat
                         applications={applications}
                         people={people}
                         invitations={invitations}
-                        routeSection={settingsSection}
+                        routeSection={settingsSection ?? 'organization'}
                         isLoading={isLoading}
                         error={error}
                     />

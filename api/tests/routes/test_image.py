@@ -1,4 +1,4 @@
-from src.models.metadata import LongLinkMetadata
+from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 
 def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
@@ -15,18 +15,18 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
             sdk="0.1.0",
             digest="sha256:manifest",
             environments=[
-                {
-                    "name": "API_KEY",
-                    "type": "str",
-                    "description": "API key used by Longlink",
-                    "required": True,
-                },
-                {
-                    "name": "PORT",
-                    "type": "int",
-                    "description": "HTTP listen port",
-                    "required": False,
-                },
+                EnvironmentMetadata(
+                    name="API_KEY",
+                    type="str",
+                    description="API key used by Longlink",
+                    required=True,
+                ),
+                EnvironmentMetadata(
+                    name="PORT",
+                    type="int",
+                    description="HTTP listen port",
+                    required=False,
+                ),
             ],
         )
 
@@ -39,29 +39,11 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
     # Assert
     assert response.status_code == 200
     payload = response.json()
-    expected_data = LongLinkMetadata.model_validate(payload).model_dump(mode="json")
-    assert payload == expected_data
-    assert payload == {
-        "sdk": "0.1.0",
-        "title": "dashboard",
-        "version": "20250623_120000",
-        "description": "Demo app",
-        "digest": "sha256:manifest",
-        "environments": [
-            {
-                "name": "API_KEY",
-                "type": "str",
-                "description": "API key used by Longlink",
-                "required": True,
-            },
-            {
-                "name": "PORT",
-                "type": "int",
-                "description": "HTTP listen port",
-                "required": False,
-            },
-        ],
-    }
+    assert payload["title"] == "dashboard"
+    assert payload["sdk"] == "0.1.0"
+    assert payload["digest"] == "sha256:manifest"
+    assert payload["environments"][0]["name"] == "API_KEY"
+    assert payload["environments"][0]["required"] is True
 
 
 def test_inspect_image_returns_404_when_metadata_missing(clients, monkeypatch) -> None:

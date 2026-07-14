@@ -35,16 +35,11 @@ def test_role_atleast_allows_roles_inside_scope() -> None:
     assert roles.atleast(PlatformRoles.administrator, PlatformRoles.support) is True
 
 
-def test_role_atleast_returns_false_for_insufficient_roles() -> None:
-    """Return false for insufficient roles."""
-
-    assert roles.atleast(ApplicationRoles.read, ApplicationRoles.maintain) is False
-
-
 @pytest.mark.parametrize(
     ("role_value", "required_role"),
     [
         (None, OrganizationRoles.read),
+        (ApplicationRoles.read, ApplicationRoles.maintain),
         (OrganizationRoles.write, OrganizationRoles.maintain),
         (OrganizationRoles.owner, ApplicationRoles.admin),
         (PlatformRoles.administrator, OrganizationRoles.read),

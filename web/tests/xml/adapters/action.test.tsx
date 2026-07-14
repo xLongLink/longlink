@@ -199,114 +199,57 @@ describe('Action', () => {
         expect(fetchCalls).toBe(0);
     });
 
-    /* The invalidation list must be an array expression so runtime refreshes stay predictable. */
-    it('shows an error when invalidate is not an array', async () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            values: {},
-        };
-        let errorMessage = '';
-
-        await executeAction(
+    /* Invalid action configuration must fail before sending a request. */
+    it('rejects invalid actions before fetching', async () => {
+        const cases: Array<{
+            props: Record<string, string>;
+            values: Record<string, unknown>;
+            expectedError: string;
+        }> = [
             {
-                invalidate: 'selectedUsers',
+                props: { invalidate: 'selectedUsers' },
+                values: {},
+                expectedError: 'invalidate must evaluate to an array',
             },
-            ctx,
-            '',
-            fetch,
-            { success: () => {}, error: (message) => (errorMessage = message) }
-        );
-
-        expect(errorMessage).toBe('invalidate must evaluate to an array');
-    });
-
-    /* The runtime should still reject methods outside the supported action set. */
-    it('rejects unsupported methods', async () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            values: {},
-        };
-        let fetchCalls = 0;
-        let errorMessage = '';
-        const fetchImpl = (async () => {
-            fetchCalls += 1;
-
-            return new Response('', { status: 204 });
-        }) as unknown as typeof fetch;
-
-        await executeAction(
             {
-                action: '/example/profile',
-                method: 'TRACE',
+                props: { action: '/example/profile', method: 'TRACE' },
+                values: {},
+                expectedError: 'Unsupported action method TRACE',
             },
-            ctx,
-            '',
-            fetchImpl,
-            { success: () => {}, error: (message) => (errorMessage = message) }
-        );
-
-        expect(fetchCalls).toBe(0);
-        expect(errorMessage).toBe('Unsupported action method TRACE');
-    });
-
-    it('rejects external action URLs before fetching', async () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            values: {},
-        };
-        let fetchCalls = 0;
-        let errorMessage = '';
-        const fetchImpl = (async () => {
-            fetchCalls += 1;
-
-            return new Response('', { status: 204 });
-        }) as unknown as typeof fetch;
-
-        await executeAction(
             {
-                action: 'https://example.com/profile',
+                props: { action: 'https://example.com/profile' },
+                values: {},
+                expectedError: 'Action URL must be app-relative',
             },
-            ctx,
-            '',
-            fetchImpl,
-            { success: () => {}, error: (message) => (errorMessage = message) }
-        );
-
-        expect(fetchCalls).toBe(0);
-        expect(errorMessage).toBe('Action URL must be app-relative');
-    });
-
-    it('rejects GET payloads before fetching', async () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            values: { name: 'Ada' },
-        };
-        let fetchCalls = 0;
-        let errorMessage = '';
-        const fetchImpl = (async () => {
-            fetchCalls += 1;
-
-            return new Response('', { status: 204 });
-        }) as unknown as typeof fetch;
-
-        await executeAction(
             {
-                action: '/profile',
-                json: '${{ name }}',
-                method: 'GET',
+                props: { action: '/profile', json: '${{ name }}', method: 'GET' },
+                values: { name: 'Ada' },
+                expectedError: 'GET actions cannot send payloads',
             },
-            ctx,
-            '',
-            fetchImpl,
-            { success: () => {}, error: (message) => (errorMessage = message) }
-        );
+        ];
 
-        expect(fetchCalls).toBe(0);
-        expect(errorMessage).toBe('GET actions cannot send payloads');
+        for (const testCase of cases) {
+            const ctx: ExecutionContext = {
+                setups: {},
+                invalidate: async () => {},
+                values: testCase.values,
+            };
+            let fetchCalls = 0;
+            let errorMessage = '';
+            const fetchImpl = (async () => {
+                fetchCalls += 1;
+
+                return new Response('', { status: 204 });
+            }) as unknown as typeof fetch;
+
+            await executeAction(testCase.props, ctx, '', fetchImpl, {
+                success: () => {},
+                error: (message) => (errorMessage = message),
+            });
+
+            expect(fetchCalls).toBe(0);
+            expect(errorMessage).toBe(testCase.expectedError);
+        }
     });
 
     it('shows an error when the request throws', async () => {

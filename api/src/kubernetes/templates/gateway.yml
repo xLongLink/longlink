@@ -83,7 +83,7 @@ spec:
             readOnlyRootFilesystem: true
       containers:
         - name: longlink-gateway
-          image: envoyproxy/envoy:v1.31.5
+          image: envoyproxy/envoy:v1.38.1@sha256:4e3c734cbe9892a3513c97cf3974ff73cfef5d784f5cceed9ea758a2b80e0c31
           args:
             - -c
             - /etc/envoy/envoy.yaml

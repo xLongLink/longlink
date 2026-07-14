@@ -1,8 +1,8 @@
+import pytest
 from pathlib import Path
 from longlink.cli import build
 from click.testing import CliRunner
-from longlink.cli.build import (build_app, build_command, read_env_spec,
-                                render_dockerfile, resolve_image_tag)
+from longlink.cli.build import build_app, build_command, read_env_spec, render_dockerfile, resolve_image_tag
 
 
 def test_render_dockerfile_copies_full_workspace_for_editable_sources() -> None:
@@ -40,24 +40,22 @@ def test_render_dockerfile_uses_production_safe_runtime_defaults() -> None:
     assert "--log-level debug" not in dockerfile
 
 
-def test_resolve_image_tag_keeps_existing_local_tag_format() -> None:
-    """Build the default local image tag without a registry prefix."""
+@pytest.mark.parametrize(
+    ("name", "version", "registry", "expected"),
+    [
+        ("LongLink App", "0.1.0", None, "longlink-app:0.1.0"),
+        ("LongLink_App", "dev", "localhost:15000/", "localhost:15000/longlink-app:dev"),
+    ],
+    ids=["local", "registry"],
+)
+def test_resolve_image_tag_formats_local_and_registry_tags(name: str, version: str, registry: str | None, expected: str) -> None:
+    """Build normalized local and registry-prefixed image tags."""
 
     # Act
-    image_tag = resolve_image_tag("LongLink App", "0.1.0")
+    image_tag = resolve_image_tag(name, version, registry)
 
     # Assert
-    assert image_tag == "longlink-app:0.1.0"
-
-
-def test_resolve_image_tag_adds_registry_prefix() -> None:
-    """Build a registry-prefixed image tag for local pushes."""
-
-    # Act
-    image_tag = resolve_image_tag("LongLink_App", "dev", "localhost:15000/")
-
-    # Assert
-    assert image_tag == "localhost:15000/longlink-app:dev"
+    assert image_tag == expected
 
 
 def test_build_reports_missing_project_file_before_docker() -> None:

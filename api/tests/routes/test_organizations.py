@@ -1,7 +1,6 @@
 import pytest
 from uuid import UUID
 from types import SimpleNamespace
-from src.utils import names
 from longlink.shared import users as shared_users
 from src.models.roles import OrganizationRoles
 from fastapi.testclient import TestClient
@@ -166,46 +165,12 @@ def patch_organization_runtime(
     monkeypatch.setattr("src.projections.shared_users.sync_url", sync_shared_users)
 
 
-async def test_create_organization_returns_owner_role(
+async def test_create_organization_initializes_database_and_storage(
     clients: tuple[TestClient, TestClient, TestClient],
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
-    """Create a new organization and return the owner role in the payload."""
-
-    # Arrange
-    owner = users[0]
-    client = clients[0]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
-    captured: dict[str, object] = {}
-    await create_required_location_registries(location.id, owner)
-    patch_organization_runtime(monkeypatch, captured)
-    avatar = "https://example.com/organizations/acme.png"
-
-    # Act
-    response = client.post(
-        "/api/organizations",
-        json={"name": "acme", "avatar": avatar, "country": "DE", "location_id": str(location.id)},
-    )
-
-    # Assert
-    assert response.status_code == 200
-    organization = await db.organizations.get(UUID(response.json()["id"]))
-    assert organization is not None
-    payload = response.json()
-    assert payload["id"] == str(organization.id)
-    assert payload["name"] == "acme"
-    assert payload["avatar"] == avatar
-    assert payload["country"] == "DE"
-    assert payload["location_id"] == str(location.id)
-
-
-async def test_create_organization_initializes_database(
-    clients: tuple[TestClient, TestClient, TestClient],
-    monkeypatch,
-    users: tuple[User, User, User],
-) -> None:
-    """Create the organization database and shared users during organization creation."""
+    """Create the organization database, shared users, and bucket."""
 
     # Arrange
     owner = users[0]
@@ -233,35 +198,9 @@ async def test_create_organization_initializes_database(
     assert isinstance(synced_users, list)
     assert synced_users[0]["email"] == owner.email
     assert synced_users[0]["role"] == "owner"
-
-
-async def test_create_organization_initializes_storage(
-    clients: tuple[TestClient, TestClient, TestClient],
-    monkeypatch,
-    users: tuple[User, User, User],
-) -> None:
-    """Create the organization shared bucket during organization creation."""
-
-    # Arrange
-    owner = users[0]
-    client = clients[0]
-    captured: dict[str, object] = {}
-    location = await db.locations.create("local", "Local testing", owner, "CH")
-    await create_required_location_registries(location.id, owner)
-    patch_organization_runtime(monkeypatch, captured)
-
-    # Act
-    response = client.post(
-        "/api/organizations",
-        json={"name": "acme", "location_id": str(location.id)},
-    )
-
-    # Assert
-    assert response.status_code == 200
-    payload = response.json()
     calls = captured["calls"]
     assert isinstance(calls, list)
-    assert ("bucket", UUID(payload["id"]).hex) in calls
+    assert ("bucket", organization_database) in calls
 
 
 async def test_create_organization_rolls_back_platform_and_runtime_after_late_failure(
@@ -816,53 +755,40 @@ async def test_get_organization_returns_404_for_non_member(
     assert response.json() == {"detail": "Access required"}
 
 
+@pytest.mark.parametrize(
+    ("caller_index", "invitee_index", "caller_role"),
+    [
+        pytest.param(0, 1, None, id="owner"),
+        pytest.param(1, 2, OrganizationRoles.maintain, id="maintainer"),
+    ],
+)
 async def test_create_organization_invitation_returns_204(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
+    caller_index: int,
+    invitee_index: int,
+    caller_role: OrganizationRoles | None,
 ) -> None:
-    """Create a pending invitation for an organization member."""
+    """Allow owners and maintainers to create pending invitations."""
 
     # Arrange
-    owner, invitee = users[0], users[1]
+    owner = users[0]
+    invitee = users[invitee_index]
     location = await db.locations.create("local", "Local testing", owner, "CH")
     organization = await db.organizations.create("acme", "acme", location.id, owner)
-    client = clients[0]
-
-    # Act
-    response = client.post(
-        f"/api/organizations/{organization.id}/invitations",
-        json={"email": invitee.email, "role": "write"},
-    )
-
-    # Assert
-    assert response.status_code == 204
-    invitations_list = await db.organizations.invitations(organization.id)
-    assert [item.email for item in invitations_list] == [invitee.email]
-
-
-async def test_create_organization_invitation_returns_204_for_maintainer(
-    clients: tuple[TestClient, TestClient, TestClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Allow a maintainer to create invitations."""
-
-    # Arrange
-    owner, maintainer, invitee = users[0], users[1], users[2]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
-
-    Session = await get_session()
-    async with Session() as session:
-        session.add(
-            UserOrganization(
-                user_id=maintainer.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.maintain,
+    if caller_role is not None:
+        Session = await get_session()
+        async with Session() as session:
+            session.add(
+                UserOrganization(
+                    user_id=users[caller_index].id,
+                    organization_id=organization.id,
+                    role=caller_role,
+                )
             )
-        )
-        await session.commit()
+            await session.commit()
 
-    client = clients[1]
+    client = clients[caller_index]
 
     # Act
     response = client.post(

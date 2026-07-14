@@ -17,7 +17,7 @@ export function Footer() {
                             className="inline-flex items-center leading-none"
                             aria-label="LongLink home"
                         >
-                            <Wordmark className="gap-1.5 text-xs" />
+                            <Wordmark className="text-xs" />
                         </Link>
 
                         <ul className="flex items-center justify-center gap-4 text-muted-foreground">

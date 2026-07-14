@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url><loc>https://longlink.dev/</loc></url>
-    <url><loc>https://longlink.dev/pricing</loc></url>
-    <url><loc>https://longlink.dev/docs</loc></url>
-    <url><loc>https://longlink.dev/docs/api</loc></url>
-    <url><loc>https://longlink.dev/docs/api/organizations</loc></url>
-    <url><loc>https://longlink.dev/docs/api/applications</loc></url>
-    <url><loc>https://longlink.dev/docs/api/self-hosted</loc></url>
-    <url><loc>https://longlink.dev/docs/sdk</loc></url>
-    <url><loc>https://longlink.dev/docs/sdk/environments</loc></url>
-    <url><loc>https://longlink.dev/docs/sdk/routes</loc></url>
-    <url><loc>https://longlink.dev/docs/sdk/storage</loc></url>
-    <url><loc>https://longlink.dev/docs/sdk/database</loc></url>
-    <url><loc>https://longlink.dev/docs/sdk/testing</loc></url>
-    <url><loc>https://longlink.dev/docs/sdk/building</loc></url>
-    <url><loc>https://longlink.dev/docs/sdk/pages</loc></url>
-    <url><loc>https://longlink.dev/docs/sdk/pages/expressions</loc></url>
-    <url><loc>https://longlink.dev/docs/sdk/pages/layout</loc></url>
-    <url><loc>https://longlink.dev/docs/sdk/pages/components</loc></url>
-    <url><loc>https://longlink.dev/terms</loc></url>
-    <url><loc>https://longlink.dev/privacy</loc></url>
-    <url><loc>https://longlink.dev/impressum</loc></url>
+    <url><loc>https://longlink.dev/pricing/</loc></url>
+    <url><loc>https://longlink.dev/docs/</loc></url>
+    <url><loc>https://longlink.dev/docs/api/</loc></url>
+    <url><loc>https://longlink.dev/docs/api/organizations/</loc></url>
+    <url><loc>https://longlink.dev/docs/api/applications/</loc></url>
+    <url><loc>https://longlink.dev/docs/api/self-hosted/</loc></url>
+    <url><loc>https://longlink.dev/docs/sdk/</loc></url>
+    <url><loc>https://longlink.dev/docs/sdk/environments/</loc></url>
+    <url><loc>https://longlink.dev/docs/sdk/routes/</loc></url>
+    <url><loc>https://longlink.dev/docs/sdk/storage/</loc></url>
+    <url><loc>https://longlink.dev/docs/sdk/database/</loc></url>
+    <url><loc>https://longlink.dev/docs/sdk/testing/</loc></url>
+    <url><loc>https://longlink.dev/docs/sdk/building/</loc></url>
+    <url><loc>https://longlink.dev/docs/sdk/pages/</loc></url>
+    <url><loc>https://longlink.dev/docs/sdk/pages/expressions/</loc></url>
+    <url><loc>https://longlink.dev/docs/sdk/pages/layout/</loc></url>
+    <url><loc>https://longlink.dev/docs/sdk/pages/components/</loc></url>
+    <url><loc>https://longlink.dev/terms/</loc></url>
+    <url><loc>https://longlink.dev/privacy/</loc></url>
+    <url><loc>https://longlink.dev/impressum/</loc></url>
 </urlset>

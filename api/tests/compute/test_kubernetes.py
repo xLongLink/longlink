@@ -143,6 +143,8 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         assert "x-longlink-application-id" in gateway_config
         assert application_id in gateway_config
         assert f"app-{application_id}.acme.svc.cluster.local" in gateway_config
+        assert "REQ_WITHOUT_QUERY(:PATH)" in gateway_config
+        assert "REQ(:PATH)" not in gateway_config
         assert "shared-secret" not in gateway_config
         assert "__LONG_LINK_GATEWAY_SECRET__" in gateway_config
         assert base64.b64decode(gateway_secret.data["gateway-secret"]).decode("utf-8") == "shared-secret"

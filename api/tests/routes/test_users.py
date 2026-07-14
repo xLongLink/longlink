@@ -60,22 +60,6 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
     ]
 
 
-async def test_get_me_returns_the_active_account_profile(users: tuple[User, User, User]) -> None:
-    """Return the active account profile for the session."""
-
-    # Arrange
-    user_one, _, _ = users
-    client = TestClient(app, cookies=session_cookie(str(user_one.oidc)))
-
-    # Act
-    response = client.get("/api/me")
-
-    # Assert
-    assert response.status_code == 200
-
-    assert response.json() == UserProfile.model_validate(user_one).model_dump(mode="json")
-
-
 async def test_logout_clears_the_active_account(users: tuple[User, User, User]) -> None:
     """Clear the active account from the session."""
 

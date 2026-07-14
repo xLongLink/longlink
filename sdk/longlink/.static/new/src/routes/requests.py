@@ -1,5 +1,6 @@
 import urllib.parse
 from uuid import uuid4
+from typing import BinaryIO, cast
 from fastapi import File, UploadFile, HTTPException
 from pathlib import PurePosixPath
 from longlink import Router
@@ -55,7 +56,7 @@ async def request_status_patch_endpoint(request_id: int, payload: PurchaseReques
 
 
 @router.get("/requests/{request_id}/attachments", response_model=list[RequestAttachmentRead])
-async def request_attachments_get_endpoint(request_id: int) -> list[RequestAttachmentRead]:
+async def request_attachments_get_endpoint(request_id: int):
     """Return files attached to one purchase request."""
 
     await _require_request(request_id)
@@ -74,7 +75,7 @@ async def request_attachments_get_endpoint(request_id: int) -> list[RequestAttac
 
 
 @router.post("/requests/{request_id}/attachments", response_model=RequestAttachmentRead)
-async def request_attachments_post_endpoint(request_id: int, file: UploadFile = File(...)) -> RequestAttachmentRead:
+async def request_attachments_post_endpoint(request_id: int, file: UploadFile = File(...)):
     """Upload one file attachment for a purchase request."""
 
     await _require_request(request_id)
@@ -86,7 +87,7 @@ async def request_attachments_post_endpoint(request_id: int, file: UploadFile = 
     try:
         fs.makedirs(_attachments_directory(request_id), exist_ok=True)
 
-        with fs.open(storage_path, "wb") as stored_file:
+        with cast(BinaryIO, fs.open(storage_path, "wb")) as stored_file:
             # Stream the upload into fsspec so local, test, and S3 storage all work.
             while chunk := await file.read(UPLOAD_CHUNK_SIZE):
                 stored_file.write(chunk)
@@ -94,12 +95,12 @@ async def request_attachments_post_endpoint(request_id: int, file: UploadFile = 
     finally:
         await file.close()
 
-    return RequestAttachmentRead(
-        id=file_id,
-        name=file_name,
-        size=uploaded_size,
-        download_url=f"/api/requests/{request_id}/attachments/{file_id}",
-    )
+    return {
+        "id": file_id,
+        "name": file_name,
+        "size": uploaded_size,
+        "download_url": f"/api/requests/{request_id}/attachments/{file_id}",
+    }
 
 
 @router.get("/requests/{request_id}/attachments/{file_id}")
@@ -173,18 +174,23 @@ def _safe_file_name(file_name: str | None) -> str:
     return normalized_name.strip(".-") or "attachment.bin"
 
 
-def _attachment_from_entry(request_id: int, entry: dict[str, object]) -> RequestAttachmentRead:
+def _attachment_from_entry(request_id: int, entry: dict[str, object]) -> dict[str, object]:
     """Return API metadata for one fsspec attachment listing entry."""
 
     storage_path = str(entry.get("name", ""))
     file_id = PurePosixPath(storage_path).name
 
-    return RequestAttachmentRead(
-        id=file_id,
-        name=_display_file_name(file_id),
-        size=int(entry.get("size") or 0),
-        download_url=f"/api/requests/{request_id}/attachments/{file_id}",
-    )
+    # Accept integer sizes from fsspec and safely default malformed external metadata.
+    size = entry.get("size")
+    if not isinstance(size, int):
+        size = 0
+
+    return {
+        "id": file_id,
+        "name": _display_file_name(file_id),
+        "size": size,
+        "download_url": f"/api/requests/{request_id}/attachments/{file_id}",
+    }
 
 
 def _display_file_name(file_id: str) -> str:

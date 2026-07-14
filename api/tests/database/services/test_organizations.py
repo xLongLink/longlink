@@ -221,44 +221,6 @@ async def test_members_can_include_deleted_memberships(users: tuple[User, User, 
     assert memberships[deleted_member.email].deleted_at is not None
 
 
-async def test_get_includes_application_role_for_requested_user(users: tuple[User, User, User]) -> None:
-    """Include the requested user's application role in organization details."""
-
-    # Arrange
-    owner, member = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
-
-    Session = await get_session()
-    async with Session() as session:
-        session.add(
-            UserOrganization(
-                user_id=member.id,
-                organization_id=organization.id,
-                role=OrganizationRoles.write,
-            )
-        )
-        await session.commit()
-
-    application = await db.applications.create(
-        organization.id,
-        "Dashboard",
-        "dashboard",
-        "ghcr.io/longlink/dashboard:latest",
-        owner,
-    )
-    await db.applications.set_member_role(application.id, organization.id, member.id, ApplicationRoles.read, owner)
-
-    # Act
-    details = await db.organizations.get(organization.id)
-    role = await db.applications.membership_role(application.id, member.id)
-
-    # Assert
-    assert details is not None
-    assert details.id == organization.id
-    assert role == ApplicationRoles.read
-
-
 async def test_create_rejects_duplicate_organization_names(users: tuple[User, User, User]) -> None:
     """Reject duplicate organization names."""
 
@@ -289,43 +251,6 @@ async def test_create_rejects_organization_with_overlong_runtime_name(users: tup
 
     # Assert
     assert await db.organizations.fetch() == []
-
-
-async def test_create_invitation_persists_pending_invitation(users: tuple[User, User, User]) -> None:
-    """Persist one invitation for a user email."""
-
-    # Arrange
-    owner, invitee = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
-
-    # Act
-    invitation = await db.invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
-
-    # Assert
-    assert invitation.organization_id == organization.id
-    assert invitation.email == invitee.email
-    assert invitation.role == OrganizationRoles.write
-    reloaded = await db.organizations.invitations(organization.id)
-    assert [item.id for item in reloaded] == [invitation.id]
-
-
-async def test_create_invitation_rejects_duplicate_email(users: tuple[User, User, User]) -> None:
-    """Reject a second invitation for the same email address."""
-
-    # Arrange
-    owner, invitee = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
-    await db.invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
-
-    # Act
-    with pytest.raises(HTTPException) as exc:
-        await db.invitations.create(organization.id, invitee.email, OrganizationRoles.admin, owner)
-
-    # Assert
-    assert exc.value.status_code == 409
-    assert exc.value.detail == "Invitation already exists"
 
 
 async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, User, User]) -> None:

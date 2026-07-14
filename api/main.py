@@ -10,6 +10,7 @@ from src.operations import organizations as operation_organizations
 from src.utils.jobs import run_operation_scheduler
 from collections.abc import AsyncIterator
 from src.environments import env
+from longlink.middleware import install_frontend_middleware
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -41,6 +42,7 @@ app.add_middleware(
     same_site="lax",
     https_only=not env.DEVELOPMENT,
 )
+install_frontend_middleware(app)
 
 # Register API routes after importing the endpoint and operation modules so their decorators run.
 app.include_router(auth.router)

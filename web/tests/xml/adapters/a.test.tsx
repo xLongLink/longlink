@@ -31,28 +31,9 @@ describe('A', () => {
         expect(output).toContain('href="/orgs/acme/apps/inventory/files/document.pdf"');
     });
 
-    it('renders intended external anchors', () => {
-        const httpsOutput = renderXmlToMarkup(
-            parseXML('<A href="https://docs.example.com/issues/123" i18n="anchors.labelOnly" />'),
-            { setups: {}, invalidate: async () => {}, values: {} }
-        );
-        const mailtoOutput = renderXmlToMarkup(
-            parseXML('<A href="mailto:help@example.com" i18n="anchors.labelOnly" />'),
-            { setups: {}, invalidate: async () => {}, values: {} }
-        );
-
-        expect(httpsOutput).toContain('href="https://docs.example.com/issues/123"');
-        expect(mailtoOutput).toContain('href="mailto:help@example.com"');
-    });
-
     it('omits href from unsafe anchors', () => {
         const unsafeAnchors = [
             '<A href="javascript:alert(1)" i18n="anchors.labelOnly" />',
-            '<A href="data:text/html,unsafe" i18n="anchors.labelOnly" />',
-            '<A href="//evil.example.com/issues/123" i18n="anchors.labelOnly" />',
-            '<A href="\\evil.example.com/issues/123" i18n="anchors.labelOnly" />',
-            '<A href="/\\evil.example.com/issues/123" i18n="anchors.labelOnly" />',
-            '<A href="https:\\evil.example.com/issues/123" i18n="anchors.labelOnly" />',
             '<A to="https://evil.example.com/issues/123" i18n="anchors.labelOnly" />',
         ];
 

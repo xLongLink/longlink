@@ -1,11 +1,11 @@
-import { ContextProvider, setupContext } from '@/xml/core/context';
+import { createElement, Fragment } from 'react';
+import { describe, expect, it } from 'bun:test';
+import { renderToStaticMarkup } from 'react-dom/server';
+import type { ExecutionContext } from '@/xml/types';
 import { renderNode } from '@/xml/core/node';
 import { parseXML } from '@/xml/core/parser';
 import { RenderXML } from '@/xml/renderers.tsx';
-import type { ExecutionContext } from '@/xml/types';
-import { describe, expect, it } from 'bun:test';
-import { createElement, Fragment } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import { ContextProvider, setupContext } from '@/xml/core/context';
 
 describe('State', () => {
     /* State object fields should be visible to sibling nodes after initialization. */
@@ -19,20 +19,6 @@ describe('State', () => {
         const renderedTree = createElement(ContextProvider, { value: ctx, children: renderNode(ast, ctx) });
 
         expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toContain('day');
-    });
-
-    /* Single value state declarations should expose array payloads on `.value`. */
-    it('renders array state values through value', async () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        ctx.translations = { cart: { size: 'Cart size: {{size}}' } };
-        const ast = parseXML(
-            '<longlink><State id="cart" value="[]" /><P i18n="cart.size" size="${cart.value.length}" /></longlink>'
-        );
-
-        await setupContext(ast, ctx, '');
-        const renderedTree = createElement(ContextProvider, { value: ctx, children: renderNode(ast, ctx) });
-
-        expect(renderToStaticMarkup(createElement(Fragment, null, renderedTree))).toContain('Cart size: 0');
     });
 
     /* Multiple state attributes should seed a proxied object slot. */

@@ -1,7 +1,5 @@
-import { Footer } from '@/components/Footer';
-import { Navbar } from '@/components/Navbar';
-import { Wordmark } from '@/components/Wordmark';
-import { buttonVariants } from '@/components/ui/button';
+import type { CSSProperties, SVGProps } from 'react';
+import { Link } from 'react-router';
 import {
     Activity,
     ArrowRight,
@@ -28,8 +26,10 @@ import {
     Users,
     Wrench,
 } from 'lucide-react';
-import type { CSSProperties, SVGProps } from 'react';
-import { Link } from 'react-router';
+import { Footer } from '@/components/Footer';
+import { Navbar } from '@/components/Navbar';
+import { Wordmark } from '@/components/Wordmark';
+import { buttonVariants } from '@/components/ui/button';
 
 /** Renders the FastAPI mark used in the Python card. */
 const FastAPI = (props: SVGProps<SVGSVGElement>) => (
@@ -127,13 +127,13 @@ const homepageCards = [
 function XmlShowcaseVisual() {
     return (
         <div aria-hidden="true" className="relative h-44 overflow-hidden">
-            <div className="absolute inset-0 rounded-md p-3 transition-all duration-500 ease-out group-hover:-translate-y-4 group-hover:scale-[0.97] group-hover:opacity-0">
+            <div className="absolute inset-0 rounded-md p-3 transition-[transform,opacity] duration-500 ease-out group-hover:-translate-y-4 group-hover:scale-[0.97] group-hover:opacity-0 motion-reduce:transition-none">
                 <div className="mb-2 flex gap-1.5">
                     <span className="size-1.5 rounded-full bg-[#d99c64]/80" />
                     <span className="size-1.5 rounded-full bg-[#84e2d1]/70" />
                     <span className="size-1.5 rounded-full bg-muted-foreground/40" />
                 </div>
-                <pre className="whitespace-pre-wrap break-words font-mono text-[10px] leading-4 text-muted-foreground">
+                <pre className="whitespace-pre-wrap break-words font-mono text-[10px] leading-4 text-[#a3a3a3]">
                     <code>{`<longlink name="Access">
   <Form title="Access request">
     <Input label="Email" />
@@ -144,21 +144,17 @@ function XmlShowcaseVisual() {
                 </pre>
             </div>
 
-            <div className="absolute inset-0 translate-y-6 scale-[0.96] rounded-md p-3 opacity-0 transition-all duration-500 ease-out group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100">
-                <div className="mb-3 text-sm font-medium text-foreground">Access request</div>
+            <div className="absolute inset-0 translate-y-6 scale-[0.96] rounded-md p-3 opacity-0 transition-[transform,opacity] duration-500 ease-out group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 motion-reduce:transition-none">
+                <div className="mb-3 text-sm font-medium text-[#f5f5f5]">Access request</div>
                 <div className="space-y-2">
                     <div className="space-y-1">
-                        <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                            Email
-                        </div>
+                        <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#a3a3a3]">Email</div>
                         <div className="rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-card-foreground">
                             alex@company.com
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
-                            Role
-                        </div>
+                        <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#a3a3a3]">Role</div>
                         <div className="flex items-center justify-between rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-card-foreground">
                             Reviewer
                             <ChevronDown className="size-3 text-muted-foreground" strokeWidth={1.8} />
@@ -309,7 +305,7 @@ function FoundationCardVisual() {
                                 className="relative flex size-9 items-center justify-center rounded-md border border-[#29534d] bg-[#14211f]/92 text-[#84e2d1] shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_10px_30px_rgba(0,0,0,0.35),0_0_26px_rgba(70,190,170,0.16)]"
                             >
                                 <TileIcon
-                                    className="size-4 transition-transform duration-300 group-hover:scale-110"
+                                    className="size-4 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
                                     strokeWidth={1.8}
                                 />
                                 <span className="absolute inset-0 rounded-md bg-gradient-to-br from-white/10 to-transparent" />
@@ -336,7 +332,7 @@ function CliCardVisual() {
     return (
         <div aria-hidden="true" className="relative h-40 overflow-hidden">
             <div className="absolute left-1/2 top-0 h-40 w-[280px] -translate-x-1/2">
-                <div className="absolute left-1/2 top-1/2 h-28 w-60 -translate-x-1/2 -translate-y-1/2 rounded-[28px] bg-[#d9b469]/5 shadow-[0_0_42px_rgba(217,180,105,0.08)] transition-transform duration-500 group-hover:scale-[1.03]" />
+                <div className="absolute left-1/2 top-1/2 h-28 w-60 -translate-x-1/2 -translate-y-1/2 rounded-[28px] bg-[#d9b469]/5 shadow-[0_0_42px_rgba(217,180,105,0.08)] transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" />
                 {cliWorkflowConnectors.map(({ key, className }) => (
                     <svg
                         key={key}
@@ -361,7 +357,7 @@ function CliCardVisual() {
                             stroke="#f4c878"
                             strokeLinecap="round"
                             strokeWidth="5"
-                            className="opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-20"
+                            className="opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-20 motion-reduce:transition-none"
                         />
                         <path
                             d="M10 2 C2 17 4 30 20 30 H50"
@@ -370,7 +366,7 @@ function CliCardVisual() {
                             stroke="#d9b469"
                             strokeLinecap="round"
                             strokeWidth="1.4"
-                            className="opacity-55 transition-opacity duration-300 group-hover:opacity-85"
+                            className="opacity-55 transition-opacity duration-300 group-hover:opacity-85 motion-reduce:transition-none"
                         />
                     </svg>
                 ))}
@@ -381,7 +377,7 @@ function CliCardVisual() {
                         className={`absolute z-20 flex w-20 items-center gap-1.5 rounded-full border border-[#4b3d25] bg-[#18130d]/95 px-2.5 py-2 shadow-[0_10px_28px_rgba(0,0,0,0.32),0_0_20px_rgba(215,171,89,0.12)] ${className}`}
                     >
                         <StepIcon
-                            className="size-3.5 shrink-0 text-[#f4c878] transition-transform duration-300 group-hover:scale-110"
+                            className="size-3.5 shrink-0 text-[#f4c878] transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
                             strokeWidth={1.8}
                         />
                         <div className="min-w-0">
@@ -406,12 +402,12 @@ function WorkNetworkVisual() {
                     strokeLinecap="round"
                     strokeWidth="1.2"
                     strokeDasharray="4 6"
-                    className="opacity-40 transition-opacity duration-300 group-hover:opacity-80"
+                    className="opacity-40 transition-opacity duration-300 group-hover:opacity-80 motion-reduce:transition-none"
                 />
             </svg>
 
             <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-md border border-[#6a3e49] bg-[#181013]/95 px-5 py-3 shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_16px_36px_rgba(0,0,0,0.38),0_0_30px_rgba(224,151,166,0.2)]">
-                <Wordmark className="text-sm" />
+                <Wordmark className="[&>span:first-child]:text-[#f0a6b6] [&>span:last-child]:text-[#f5f5f5]" />
                 <span className="pointer-events-none absolute inset-0 rounded-md bg-gradient-to-br from-white/10 to-transparent" />
             </div>
 
@@ -421,7 +417,7 @@ function WorkNetworkVisual() {
                     className={`absolute z-20 flex min-w-[84px] items-center gap-1.5 rounded-full border border-[#56333d] bg-[#181013]/95 px-2.5 py-1.5 shadow-[0_10px_28px_rgba(0,0,0,0.32),0_0_20px_rgba(224,151,166,0.12)] ${className}`}
                 >
                     <NodeIcon
-                        className="size-3.5 shrink-0 text-[#f0a6b6] transition-transform duration-300 group-hover:scale-110"
+                        className="size-3.5 shrink-0 text-[#f0a6b6] transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
                         strokeWidth={1.8}
                     />
                     <span className="text-[10px] font-medium leading-3 text-[#f6c0ca]">{label}</span>
@@ -444,7 +440,7 @@ function PythonCardVisual() {
             <div className="absolute left-1/2 top-1/2 h-px w-40 -translate-x-1/2 -rotate-45 bg-[#8a5a35]/25" />
 
             <div className="absolute left-1/2 top-1/2 z-20 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#6a4a33] bg-[#4f3523]/95 text-[#f5c18b] shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_12px_32px_rgba(0,0,0,0.38),0_0_34px_rgba(226,147,78,0.26)]">
-                <Python className="size-6 transition-transform duration-300 group-hover:scale-110" />
+                <Python className="size-6 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none" />
                 <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/12 to-transparent" />
             </div>
 
@@ -454,7 +450,7 @@ function PythonCardVisual() {
                     className={`absolute z-20 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#5c4030] bg-[#2a1d15]/90 text-[#f5c18b] shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_10px_28px_rgba(0,0,0,0.35),0_0_24px_rgba(226,147,78,0.18)] ${className}`}
                 >
                     <LibraryIcon
-                        className="size-4 transition-transform duration-300 group-hover:scale-110"
+                        className="size-4 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
                         strokeWidth={1.8}
                     />
                     <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/10 to-transparent" />
@@ -560,7 +556,7 @@ export default function Home() {
                         return (
                             <article
                                 key={title}
-                                className={`group relative overflow-hidden rounded-lg border p-5 text-card-foreground shadow-[0_24px_80px_rgba(0,0,0,0.12)] backdrop-blur-md ${layoutClassName} ${
+                                className={`group relative overflow-hidden rounded-lg border p-5 text-card-foreground shadow-[0_24px_80px_rgba(0,0,0,0.12)] ${layoutClassName} ${
                                     isFoundationCard
                                         ? 'border-[#294943] bg-[#0d1214]'
                                         : isPythonCard
@@ -608,10 +604,8 @@ export default function Home() {
                                 <div className="relative flex h-full flex-col justify-between gap-6">
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <h3 className="text-lg font-medium text-card-foreground">{title}</h3>
-                                            <p className="max-w-md text-sm leading-6 text-muted-foreground">
-                                                {description}
-                                            </p>
+                                            <h2 className="text-lg font-medium text-[#f5f5f5]">{title}</h2>
+                                            <p className="max-w-md text-sm leading-6 text-[#a3a3a3]">{description}</p>
                                         </div>
                                         {isXmlCard ? (
                                             <XmlShowcaseVisual />
@@ -634,7 +628,9 @@ export default function Home() {
             <section className="relative z-10 bg-background px-6 py-24 text-center sm:py-28">
                 <div className="mx-auto flex max-w-2xl flex-col items-center gap-8">
                     <div className="space-y-3">
-                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent">Next step</p>
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                            Next step
+                        </p>
                         <h2 className="text-2xl font-medium tracking-tight text-foreground sm:text-4xl">
                             Start building on LongLink
                         </h2>
@@ -645,7 +641,7 @@ export default function Home() {
 
                     <div className="flex flex-wrap justify-center gap-3">
                         <Link to="/docs/sdk" className={buttonVariants({ size: 'lg', className: 'px-4' })}>
-                            Get Started
+                            Read the SDK guide
                             <ArrowRight className="size-4" aria-hidden="true" />
                         </Link>
                         <a

@@ -11,7 +11,7 @@ type CodeTabItem = {
 /** Renders connected tabs for switching between equivalent code snippets. */
 export function CodeTabs({ defaultValue, items }: { defaultValue: string; items: CodeTabItem[] }) {
     return (
-        <TabsPrimitive.Root className="w-full max-w-2xl -mb-4" defaultValue={defaultValue}>
+        <TabsPrimitive.Root className="w-full -mb-4" defaultValue={defaultValue}>
             <TabsPrimitive.List className="relative z-10 inline-flex h-8 w-fit items-stretch rounded-t-md border border-b-0 border-border bg-muted/30 px-0.5 pt-0.5 text-muted-foreground">
                 {items.map((item) => (
                     <TabsPrimitive.Tab

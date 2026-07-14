@@ -1,199 +1,152 @@
+import type { ComponentType } from 'react';
 import type { RouteObject } from 'react-router';
-import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
-import Home from '@/pages/Home';
-import View from '@/pages/View';
-import Admin from '@/pages/Admin';
-import Pricing from '@/pages/Pricing';
-import NotFound from '@/pages/NotFound';
-import Settings from '@/pages/Settings';
-import { Auth } from '@/components/Auth';
-import AdminUsers from '@/pages/admin/Users';
-import Organization from '@/pages/Organization';
+import { RouterProvider, createBrowserRouter } from 'react-router';
+import type { SettingsRouteSection } from '@/pages/org/Settings';
 import { Toaster } from '@/components/ui/sonner';
-import AdminCompute from '@/pages/admin/Compute';
-import AdminStorage from '@/pages/admin/Storage';
-import { useUserProfile } from '@/hooks/use-user';
-import Organizations from '@/pages/Organizations';
-import ArticleLayout from '@/layout/ArticleLayout';
-import { canAccessApplication } from '@/lib/roles';
-import AdminDatabase from '@/pages/admin/Database';
-import AdminLocation from '@/pages/admin/Location';
-import ComputePods from '@/pages/admin/ComputePods';
-import AdminOperations from '@/pages/admin/Operations';
-import { useOrganization } from '@/hooks/use-organization';
-import AdminApplications from '@/pages/admin/Applications';
-import AdminOrganizations from '@/pages/admin/Organizations';
-import { DOC_GROUPS, DOC_PAGES } from '@/pages/docs/catalog';
-import ComputeNamespaces from '@/pages/admin/ComputeNamespaces';
-import { LEGAL_GROUPS, LEGAL_PAGES } from '@/pages/legal/catalog';
 
 type AppRouter = ReturnType<typeof createBrowserRouter>;
+type PageModule = { default: ComponentType };
 
 let appRouter: AppRouter | null = null;
 
 /** Builds admin routes with a persistent shell around tab-specific pages. */
 function adminRoutes() {
     return {
-        element: <Admin />,
+        lazy: loadPage(() => import('@/pages/Admin')),
         children: [
-            { path: 'admin/users', element: <AdminUsers /> },
-            { path: 'admin/applications', element: <AdminApplications /> },
-            { path: 'admin/organizations', element: <AdminOrganizations /> },
-            { path: 'admin/locations', element: <AdminLocation /> },
-            { path: 'admin/database', element: <AdminDatabase /> },
-            { path: 'admin/storage', element: <AdminStorage /> },
-            { path: 'admin/compute', element: <AdminCompute /> },
-            { path: 'admin/compute/:compute', element: <ComputeNamespaces /> },
-            { path: 'admin/compute/:compute/namespace/:namespace', element: <ComputePods /> },
-            { path: 'admin/operations', element: <AdminOperations /> },
+            { path: 'admin/users', lazy: loadPage(() => import('@/pages/admin/Users')) },
+            { path: 'admin/applications', lazy: loadPage(() => import('@/pages/admin/Applications')) },
+            { path: 'admin/organizations', lazy: loadPage(() => import('@/pages/admin/Organizations')) },
+            { path: 'admin/locations', lazy: loadPage(() => import('@/pages/admin/Location')) },
+            { path: 'admin/database', lazy: loadPage(() => import('@/pages/admin/Database')) },
+            { path: 'admin/storage', lazy: loadPage(() => import('@/pages/admin/Storage')) },
+            { path: 'admin/compute', lazy: loadPage(() => import('@/pages/admin/Compute')) },
+            { path: 'admin/compute/:compute', lazy: loadPage(() => import('@/pages/admin/ComputeNamespaces')) },
+            {
+                path: 'admin/compute/:compute/namespace/:namespace',
+                lazy: loadPage(() => import('@/pages/admin/ComputePods')),
+            },
+            { path: 'admin/operations', lazy: loadPage(() => import('@/pages/admin/Operations')) },
         ],
     };
 }
 
-/** Builds the route tree for the current bundle mode. */
-export function getRoutes(mode = import.meta.env.MODE): RouteObject[] {
-    // SDK bundle serves the app runtime without platform routes.
-    if (mode === 'sdk') {
-        return [
-            {
-                path: '*',
-                element: <SdkApplicationView />,
-            },
-        ];
-    }
+/** Converts a default page export into a React Router lazy route. */
+function loadPage(loader: () => Promise<PageModule>) {
+    return async () => {
+        const { default: Component } = await loader();
 
-    // Default bundle serves the full app with platform routes.
+        return { Component };
+    };
+}
+
+/** Loads one authenticated page without placing its implementation in the entry bundle. */
+function loadAuthenticatedPage(loader: () => Promise<PageModule>) {
+    return async () => {
+        const [{ default: Page }, { Auth }] = await Promise.all([loader(), import('@/components/Auth')]);
+
+        return {
+            element: (
+                <Auth>
+                    <Page />
+                </Auth>
+            ),
+        };
+    };
+}
+
+/** Loads one authenticated organization settings route. */
+function loadOrganizationRoute(settingsSection?: SettingsRouteSection) {
+    return async () => {
+        const [{ default: Organization }, { Auth }] = await Promise.all([
+            import('@/pages/Organization'),
+            import('@/components/Auth'),
+        ]);
+
+        return {
+            element: (
+                <Auth requiredRole="user">
+                    <Organization settingsSection={settingsSection} />
+                </Auth>
+            ),
+        };
+    };
+}
+
+/** Loads the SDK XML application runtime. */
+async function loadSdkApplicationRoute() {
+    const { default: View } = await import('@/pages/View');
+
+    return { element: <View pages="/pages.json" /> };
+}
+
+/** Builds the LongLink Platform route tree. */
+export function getApiRoutes(): RouteObject[] {
+    const loadLegalPage = loadPage(() => import('@/pages/legal/routes'));
+
     return [
-        { path: '/', element: <Home /> },
-        ...DOC_PAGES.map((page) => ({
-            path: page.path.replace(/^\//, ''),
-            element: <ArticleLayout page={page} navigationGroups={DOC_GROUPS} />,
-        })),
-        ...LEGAL_PAGES.map((page) => ({
-            path: page.path.replace(/^\//, ''),
-            element: <ArticleLayout page={page} navigationGroups={LEGAL_GROUPS} />,
-        })),
+        { path: '/', lazy: loadPage(() => import('@/pages/Home')) },
+        {
+            path: 'docs/*',
+            lazy: loadPage(() => import('@/pages/docs/routes')),
+        },
+        ...['terms', 'privacy', 'impressum'].map((path) => ({ path, lazy: loadLegalPage })),
         {
             path: 'pricing',
-            element: <Pricing />,
+            lazy: loadPage(() => import('@/pages/Pricing')),
         },
         {
             path: 'organizations',
-            element: <Organizations />,
+            lazy: loadPage(() => import('@/pages/Organizations')),
         },
         {
             path: 'settings',
-            element: (
-                <Auth>
-                    <Settings />
-                </Auth>
-            ),
+            lazy: loadAuthenticatedPage(() => import('@/pages/Settings')),
         },
         adminRoutes(),
         {
             path: 'orgs/:organization',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization />
-                </Auth>
-            ),
+            lazy: loadOrganizationRoute(),
         },
         {
             path: 'orgs/:organization/settings',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="settings" settingsSection="organization" />
-                </Auth>
-            ),
+            lazy: loadOrganizationRoute('organization'),
         },
         {
-            path: 'orgs/:organization/settings/applications',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="settings" settingsSection="applications" />
-                </Auth>
-            ),
-        },
-        {
-            path: 'orgs/:organization/settings/applications/:settingsApplication',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="settings" settingsSection="applications" />
-                </Auth>
-            ),
+            path: 'orgs/:organization/settings/applications/:settingsApplication?',
+            lazy: loadOrganizationRoute('applications'),
         },
         {
             path: 'orgs/:organization/settings/people',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="settings" settingsSection="people" />
-                </Auth>
-            ),
+            lazy: loadOrganizationRoute('people'),
         },
         {
             path: 'orgs/:organization/settings/database',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="settings" settingsSection="database" />
-                </Auth>
-            ),
+            lazy: loadOrganizationRoute('database'),
         },
         {
             path: 'orgs/:organization/settings/storage',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="settings" settingsSection="storage" />
-                </Auth>
-            ),
+            lazy: loadOrganizationRoute('storage'),
         },
         {
             path: 'orgs/:organization/apps/:application/*',
-            element: (
-                <Auth requiredRole="user">
-                    <OrganizationApplicationView />
-                </Auth>
-            ),
+            lazy: loadPage(() => import('@/pages/OrganizationApplication')),
         },
         {
             path: '*',
-            element: <NotFound />,
+            lazy: loadPage(() => import('@/pages/NotFound')),
         },
     ];
 }
 
-/** Renders the SDK application without platform routes. */
-function SdkApplicationView() {
-    return <View pages="/pages.json" />;
+/** Builds the standalone LongLink Application route tree. */
+function getSdkRoutes(): RouteObject[] {
+    return [{ path: '*', lazy: loadSdkApplicationRoute }];
 }
 
-/** Resolves an organization application slug to its proxy-backed XML view. */
-function OrganizationApplicationView() {
-    const { organization = '', application = '' } = useParams();
-    const { organization: organizationDetails, isLoading, error } = useOrganization(organization);
-    const { organizations: userOrganizations, language } = useUserProfile();
-    const organizationApplication = organizationDetails?.applications.find((item) => item.slug === application);
-    const organizationMembership = userOrganizations.find((item) => item.slug === organization);
-    const organizationRole = organizationMembership?.role ?? null;
-    const applicationRole = organizationApplication?.role ?? null;
-    const hasApplicationAccess = canAccessApplication(organizationRole, applicationRole);
-
-    // Show the shell while organization/application access is still resolving.
-    if (isLoading) {
-        return <View applicationStatus="loading" pages="" />;
-    }
-
-    // Hide unknown org/app combinations behind the shared 404 page.
-    if (error?.status === 404 || !organizationDetails || !organizationApplication || !hasApplicationAccess) {
-        return <NotFound />;
-    }
-
-    return (
-        <View
-            applicationStatus={organizationApplication.status}
-            locale={language}
-            pages={`/api/applications/${organizationApplication.id}/proxy/pages.json`}
-        />
-    );
+/** Selects the route graph at build time so SDK bundles exclude Platform pages. */
+function getRoutes(): RouteObject[] {
+    return import.meta.env.MODE === 'sdk' ? getSdkRoutes() : getApiRoutes();
 }
 
 /** Returns the browser router, creating it lazily in the browser runtime. */
@@ -203,12 +156,42 @@ function getRouter(): AppRouter {
     return appRouter;
 }
 
-/** Renders the app shell, router, and global toaster. */
-export default function App() {
+/** Waits until the current route's lazy module has loaded. */
+export function waitForRouter(router: AppRouter): Promise<void> {
+    // Synchronous routes are ready as soon as the router is created.
+    if (router.state.initialized) {
+        return Promise.resolve();
+    }
+
+    return new Promise((resolve) => {
+        const unsubscribe = router.subscribe((state) => {
+            // Keep waiting while React Router resolves the initial lazy route.
+            if (!state.initialized) {
+                return;
+            }
+
+            unsubscribe();
+            resolve();
+        });
+    });
+}
+
+/** Prepares the browser router before mounting or hydrating the app. */
+export async function initializeApp(): Promise<void> {
+    await waitForRouter(getRouter());
+}
+
+/** Renders one router with the global application UI. */
+export function RoutedApp({ router }: { router: AppRouter }) {
     return (
         <>
-            <RouterProvider router={getRouter()} />
+            <RouterProvider router={router} />
             <Toaster position="bottom-right" />
         </>
     );
+}
+
+/** Renders the browser application router. */
+export default function App() {
+    return <RoutedApp router={getRouter()} />;
 }

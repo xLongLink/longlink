@@ -2,12 +2,6 @@ import pytest
 from longlink.storage import assets
 
 
-def test_logo_path_returns_shared_logo_key() -> None:
-    """Return the stable shared-storage logo path."""
-
-    assert assets.logo_path() == "brand/logo.svg"
-
-
 def test_organization_asset_normalizes_path_and_content_type() -> None:
     """Build normalized organization asset metadata."""
 

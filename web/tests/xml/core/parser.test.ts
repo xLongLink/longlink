@@ -1,12 +1,7 @@
-import { parseXML } from '@/xml/core/parser';
 import { describe, expect, it } from 'bun:test';
+import { parseXML } from '@/xml/core/parser';
 
 describe('parseXML', () => {
-    /* A single XML root should compile into the matching AST element. */
-    it('parses a root element', () => {
-        expect(parseXML('<longlink />')).toEqual([{ name: 'longlink', children: [] }]);
-    });
-
     /* XML attributes are component props and must stay as strings for runtime resolution. */
     it('keeps attributes as string params', () => {
         expect(parseXML('<Button disabled="false" count="5" label="Save" />')).toEqual([
@@ -22,22 +17,17 @@ describe('parseXML', () => {
         ]);
     });
 
-    /* Nested XML tags should remain nested AST children in source order. */
-    it('parses nested child elements', () => {
-        expect(parseXML('<longlink><Button i18n="actions.save" /></longlink>')).toEqual([
-            {
-                name: 'longlink',
-                children: [{ name: 'Button', params: { i18n: 'actions.save' }, children: [] }],
-            },
-        ]);
-    });
-
-    /* Repeated sibling tags are represented as repeated AST nodes, not merged props. */
-    it('flattens repeated sibling elements', () => {
-        expect(parseXML('<longlink><State id="first" /><State id="second" /></longlink>')).toEqual([
+    /* Preserve nested and repeated elements while omitting compiler metadata. */
+    it('parses page structure', () => {
+        expect(
+            parseXML(
+                '<?xml version="1.0"?><longlink><!-- hidden --><Button i18n="actions.save" /><State id="first" /><State id="second" /></longlink>'
+            )
+        ).toEqual([
             {
                 name: 'longlink',
                 children: [
+                    { name: 'Button', params: { i18n: 'actions.save' }, children: [] },
                     { name: 'State', params: { id: 'first' }, children: [] },
                     { name: 'State', params: { id: 'second' }, children: [] },
                 ],
@@ -65,17 +55,5 @@ describe('parseXML', () => {
         expect(() => parseXML('<longlink><Button></longlink>')).toThrow('XML is invalid');
         expect(() => parseXML('<!DOCTYPE longlink><longlink />')).toThrow('XML DOCTYPE');
         expect(() => parseXML('<longlink><![CDATA[hidden]]></longlink>')).toThrow('XML DOCTYPE');
-    });
-
-    /* Compiler output should only include page elements, not XML declarations or comments. */
-    it('ignores declarations and comments', () => {
-        expect(
-            parseXML('<?xml version="1.0"?><longlink><!-- hidden --><Button i18n="actions.save" /></longlink>')
-        ).toEqual([
-            {
-                name: 'longlink',
-                children: [{ name: 'Button', params: { i18n: 'actions.save' }, children: [] }],
-            },
-        ]);
     });
 });

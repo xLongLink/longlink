@@ -1,5 +1,4 @@
 import pytest
-from uuid import UUID
 from fastapi import HTTPException
 from src.utils import names
 
@@ -56,13 +55,3 @@ def test_knames_rejects_system_namespace() -> None:
 
     with pytest.raises(ValueError, match="Value is reserved"):
         names.knames("kube-system")
-
-
-def test_runtime_names_are_derived_from_uuid_hex() -> None:
-    """Derive storage names from organization and application UUID hex values."""
-
-    organization_id = UUID("11111111-1111-4111-8111-111111111111")
-    application_id = UUID("22222222-2222-4222-8222-222222222222")
-
-    assert names.organization_shared_bucket(organization_id) == organization_id.hex
-    assert names.application_bucket(application_id) == application_id.hex

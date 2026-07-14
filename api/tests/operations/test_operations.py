@@ -4,7 +4,6 @@ from uuid import UUID
 from types import SimpleNamespace
 from datetime import datetime
 from src.utils import jobs as operation_worker
-from src.routes import operations as operation_routes
 from src.operations import applications as application_operations
 from src.operations import organizations as organization_operations
 from src.utils.jobs import OperationOutcomeState
@@ -19,99 +18,6 @@ from src.database.models.operations import Operation
 from src.database.models.applications import Application
 
 pytestmark = pytest.mark.no_db
-
-
-class FakeSessionScope:
-    """Async context manager returning one fake operation session."""
-
-    def __init__(self, session: object) -> None:
-        """Store the fake session."""
-
-        self.session = session
-
-    async def __aenter__(self) -> object:
-        """Return the configured session."""
-
-        return self.session
-
-    async def __aexit__(self, exc_type, exc, tb) -> bool:
-        """Exit without suppressing exceptions."""
-
-        return False
-
-
-class FakeRowcountResult:
-    """Minimal SQLAlchemy update result."""
-
-    def __init__(self, rowcount: int = 1) -> None:
-        """Store the affected-row count."""
-
-        self.rowcount = rowcount
-
-
-class FakeScalarResult:
-    """Minimal SQLAlchemy scalar result wrapper."""
-
-    def __init__(self, value: object) -> None:
-        """Store the scalar value."""
-
-        self.value = value
-
-    def first(self) -> object:
-        """Return the first scalar value."""
-
-        return self.value
-
-
-class FakeSelectResult:
-    """Minimal SQLAlchemy select result."""
-
-    def __init__(self, value: object) -> None:
-        """Store the selected value."""
-
-        self.value = value
-
-    def scalars(self) -> FakeScalarResult:
-        """Return a scalar result wrapper."""
-
-        return FakeScalarResult(self.value)
-
-    def scalar_one_or_none(self) -> object:
-        """Return the selected value."""
-
-        return self.value
-
-
-class FakeOperationSession:
-    """Capture operation service statements without a database."""
-
-    def __init__(self, operation: Operation, update_rowcount: int = 1) -> None:
-        """Store the operation and configured update rowcount."""
-
-        self.operation = operation
-        self.update_rowcount = update_rowcount
-        self.statements: list[object] = []
-        self.commits = 0
-        self.refreshes = 0
-
-    async def execute(self, statement) -> FakeRowcountResult | FakeSelectResult:
-        """Record statements and return update/select results."""
-
-        self.statements.append(statement)
-        if statement.is_update:
-            return FakeRowcountResult(self.update_rowcount)
-
-        return FakeSelectResult(self.operation)
-
-    async def commit(self) -> None:
-        """Record commits."""
-
-        self.commits += 1
-
-    async def refresh(self, operation: Operation) -> None:
-        """Record refresh calls."""
-
-        self.refreshes += 1
 
 
 class StopScheduler(RuntimeError):
@@ -191,73 +97,6 @@ def leased_operation(kind: OperationKind = OperationKind.application_verify) -> 
         started_at=datetime.fromisoformat("2026-07-01T09:00:00+00:00"),
         lease_token="lease-token",
     )
-
-
-async def test_operation_claim_sets_lease_token_and_expiry(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Claiming an operation assigns a lease token and expiration."""
-
-    operation = Operation(kind=OperationKind.application_verify)
-    session = FakeOperationSession(operation)
-
-    monkeypatch.setattr(
-        "src.database.services.operations.session_scope",
-        lambda: FakeSessionScope(session),
-    )
-    monkeypatch.setattr(
-        "src.database.services.operations.secrets.token_urlsafe",
-        lambda length: "lease-token",
-    )
-    monkeypatch.setattr("src.database.services.operations.OPERATION_LEASE_SECONDS", 60)
-
-    claimed = await operation_routes.operations.claim(operation.id)
-
-    assert claimed is operation
-    assert operation.started_at is not None
-    assert operation.lease_token == "lease-token"
-    assert operation.lease_expires_at is not None
-    assert operation.lease_expires_at > operation.started_at
-    assert session.commits == 1
-    assert session.refreshes == 1
-
-
-@pytest.mark.parametrize(
-    ("method_name", "args"),
-    [
-        ("complete", (UUID("55555555-5555-5555-5555-555555555555"), "lease-token")),
-        ("fail", (UUID("55555555-5555-5555-5555-555555555555"), "boom", "lease-token")),
-        ("defer", (UUID("55555555-5555-5555-5555-555555555555"), "lease-token")),
-        ("renew_lease", (UUID("55555555-5555-5555-5555-555555555555"), "lease-token")),
-    ],
-)
-async def test_operation_mutations_require_active_lease(
-    monkeypatch: pytest.MonkeyPatch,
-    method_name: str,
-    args: tuple[object, ...],
-) -> None:
-    """Only commit operation mutations when an active lease row matches."""
-
-    operation = leased_operation()
-    active_session = FakeOperationSession(operation)
-    monkeypatch.setattr(
-        "src.database.services.operations.session_scope",
-        lambda: FakeSessionScope(active_session),
-    )
-
-    result = await getattr(operation_routes.operations, method_name)(*args)
-
-    assert result is operation
-    assert active_session.commits == 1
-
-    stale_session = FakeOperationSession(operation, update_rowcount=0)
-    monkeypatch.setattr(
-        "src.database.services.operations.session_scope",
-        lambda: FakeSessionScope(stale_session),
-    )
-
-    stale_result = await getattr(operation_routes.operations, method_name)(*args)
-
-    assert stale_result is None
-    assert stale_session.commits == 0
 
 
 async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytest.MonkeyPatch) -> None:

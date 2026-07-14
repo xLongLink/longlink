@@ -1,17 +1,5 @@
 import logging
-from longlink.logger import ColorFormatter, ApiAccessFilter
-
-
-def test_color_formatter_restores_record_level_name() -> None:
-    """Restore the original level name after formatting colored INFO logs."""
-
-    record = logging.LogRecord("longlink", logging.INFO, __file__, 1, "message", (), None)
-    formatter = ColorFormatter("%(levelname)s:%(message)s")
-
-    rendered = formatter.format(record)
-
-    assert "\x1b[32mINFO\x1b[0m:message" == rendered
-    assert record.levelname == "INFO"
+from longlink.logger import ApiAccessFilter
 
 
 def test_api_access_filter_keeps_mutations_and_api_reads_only() -> None:

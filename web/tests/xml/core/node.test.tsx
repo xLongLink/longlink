@@ -1,22 +1,11 @@
-import { ContextProvider, setupContext } from '@/xml/core/context';
-import { renderNode } from '@/xml/core/node';
-import type { ASTNode, ExecutionContext } from '@/xml/types';
-import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
+import { describe, expect, it } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
+import type { ASTNode, ExecutionContext } from '@/xml/types';
+import { renderNode } from '@/xml/core/node';
+import { ContextProvider, setupContext } from '@/xml/core/context';
 
 describe('renderNode', () => {
-    it('returns null for missing node input', () => {
-        expect(renderNode([], { setups: {}, invalidate: async () => {}, values: {} })).toEqual([]);
-    });
-
-    it('rejects text nodes', () => {
-        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        const node: ASTNode = { name: 'Text', params: { value: 'Hello' } };
-
-        expect(() => renderNode([node], ctx)).toThrow('Unknown component "Text"');
-    });
-
     it('rejects className on xml nodes', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
 

@@ -26,6 +26,7 @@ from src.database.models.organizations import Organization
 router = APIRouter()
 BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
 PROXY_RESPONSE_SECURITY_HEADERS = {
+    "cache-control": "no-store",
     "content-security-policy": "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
     "x-content-type-options": "nosniff",
 }

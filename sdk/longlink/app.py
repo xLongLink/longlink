@@ -12,6 +12,7 @@ from longlink.routes import routes
 from longlink.constants import ROOT
 from longlink.utils.xml import Longlink as LonglinkXml
 from fastapi.staticfiles import StaticFiles
+from longlink.middleware import install_frontend_middleware
 from fastapi.middleware.cors import CORSMiddleware
 from longlink.database.audit import install_audit_middleware
 
@@ -90,6 +91,9 @@ class LongLink(FastAPI):
         environments = env if isinstance(env, Envs) else Envs()
         page_registry: list[PageDefinition] = []
         self.state.page_registry = page_registry
+
+        # Compress the embedded frontend and apply safe browser cache policies.
+        install_frontend_middleware(self)
 
         # Production containers attach API access filtering here.
         if environments.ENV == "production":

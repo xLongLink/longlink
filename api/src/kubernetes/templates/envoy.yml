@@ -32,7 +32,7 @@ static_resources:
                       log_format:
                         text_format_source:
                           inline_string: |
-                            [%START_TIME%] "%REQ(:METHOD)% %REQ(:PATH)%" %RESPONSE_CODE% %DURATION%ms %UPSTREAM_HOST%
+                            [%START_TIME%] "%REQ(:METHOD)% %REQ_WITHOUT_QUERY(:PATH)%" %RESPONSE_CODE% %DURATION%ms %UPSTREAM_HOST%
                 route_config:
                   name: local_route
                   virtual_hosts:

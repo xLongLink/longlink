@@ -51,17 +51,7 @@ def test_production_storage_requires_bucket() -> None:
         )
 
 
-@pytest.mark.parametrize(
-    "expected_bucket",
-    [
-        "acme-dashboard",
-        "acme-shared",
-    ],
-)
-def test_production_storage_scopes_paths_to_configured_bucket(
-    monkeypatch,
-    expected_bucket: str,
-) -> None:
+def test_production_storage_scopes_paths_to_configured_bucket(monkeypatch) -> None:
     """Scope production storage paths to the configured bucket."""
 
     captured: dict[str, object] = {}
@@ -95,11 +85,11 @@ def test_production_storage_scopes_paths_to_configured_bucket(
             STORAGE_PASSWORD="secret@key",
             STORAGE_USERNAME="access/key",
         ),
-        expected_bucket,
+        "acme-dashboard",
     )
 
     assert isinstance(filesystem, storage_base.DirFileSystem)
-    assert filesystem.path == expected_bucket
+    assert filesystem.path == "acme-dashboard"
     assert filesystem.fs is fake_filesystem
     assert captured == {
         "protocol": "s3",

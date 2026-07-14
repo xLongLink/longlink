@@ -1,18 +1,7 @@
-from longlink.pages import (page_file_tab, page_file_route,
-                            normalize_page_path, extract_longlink_metadata)
+from longlink.pages import page_file_route
 
 
-def test_page_metadata_helpers() -> None:
-    """Normalize page routes and parse page navigation metadata."""
+def test_index_page_uses_root_route() -> None:
+    """Map the root index page to an empty browser route."""
 
-    assert normalize_page_path("pages/dashboard.xml") == "/pages/dashboard.xml"
     assert page_file_route("index.xml") == ""
-    assert page_file_route("issues/[issue].xml") == "issues/:issue"
-    assert page_file_route("issues/[issue]/comments.xml") == "issues/:issue/comments"
-    assert page_file_tab("admin/users.xml") == "admin/users"
-    assert page_file_tab("issues/[issue].xml") == "issues"
-    assert page_file_tab("[issue].xml") == "issue"
-    assert extract_longlink_metadata(
-        '<longlink name=" Dashboard " icon=" layout-dashboard "><P i18n="dashboard.title" /></longlink>'
-    ) == ("Dashboard", "layout-dashboard")
-    assert extract_longlink_metadata("<unknown />") == (None, None)

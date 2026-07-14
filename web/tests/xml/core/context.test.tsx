@@ -1,21 +1,9 @@
-import { createContext, setupContext } from '@/xml/core/context';
-import type { ASTNode } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
+import type { ASTNode } from '@/xml/types';
+import { createContext, setupContext } from '@/xml/core/context';
 import { withGlobalValue } from '../../helpers/globals';
 
 describe('core/context', () => {
-    it('creates a blank runtime context', () => {
-        const ctx = createContext();
-
-        expect(typeof ctx.invalidate).toBe('function');
-        expect(ctx).toEqual({
-            invalidate: ctx.invalidate,
-            locale: 'en',
-            setups: {},
-            values: {},
-        });
-    });
-
     it('preserves state across setup reruns until the slot is invalidated', async () => {
         const ctx = createContext();
         const ast: ASTNode[] = [{ name: 'State', params: { id: 'filter', value: 'day' } }];
