@@ -78,7 +78,7 @@ export function Breadcrumb() {
     const isOrganizationSection = segments[0] === 'orgs' && segments.length >= 2;
 
     const crumbs = isAdminSection
-        ? [{ href: '/admin', label: 'Admin' }]
+        ? [{ href: '/admin/users', label: 'Admin' }]
         : isOrganizationSection
           ? buildOrganizationCrumbs(segments)
           : buildDefaultCrumbs(segments);

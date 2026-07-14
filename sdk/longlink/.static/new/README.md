@@ -19,6 +19,8 @@ uv run longlink dev
 
 ## Migrate
 
+Application migrations manage only this application's schema. The LongLink Platform executes the SDK-owned shared migrations for tables such as `users`; applications can read those tables but cannot write them.
+
 ```bash
 uv run longlink migrate
 ```

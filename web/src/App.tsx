@@ -24,6 +24,7 @@ import Organizations from '@/pages/Organizations';
 import Pricing from '@/pages/Pricing';
 import Settings from '@/pages/Settings';
 import View from '@/pages/View';
+import type { RouteObject } from 'react-router';
 import { RouterProvider, createBrowserRouter, useParams } from 'react-router';
 
 type AppRouter = ReturnType<typeof createBrowserRouter>;
@@ -33,26 +34,24 @@ let appRouter: AppRouter | null = null;
 /** Builds admin routes with a persistent shell around tab-specific pages. */
 function adminRoutes() {
     return {
-        path: 'admin',
         element: <Admin />,
         children: [
-            { index: true, element: <AdminUsers /> },
-            { path: 'users', element: <AdminUsers /> },
-            { path: 'applications', element: <AdminApplications /> },
-            { path: 'organizations', element: <AdminOrganizations /> },
-            { path: 'locations', element: <AdminLocation /> },
-            { path: 'database', element: <AdminDatabase /> },
-            { path: 'storage', element: <AdminStorage /> },
-            { path: 'compute', element: <AdminCompute /> },
-            { path: 'compute/:compute', element: <ComputeNamespaces /> },
-            { path: 'compute/:compute/namespace/:namespace', element: <ComputePods /> },
-            { path: 'operations', element: <AdminOperations /> },
+            { path: 'admin/users', element: <AdminUsers /> },
+            { path: 'admin/applications', element: <AdminApplications /> },
+            { path: 'admin/organizations', element: <AdminOrganizations /> },
+            { path: 'admin/locations', element: <AdminLocation /> },
+            { path: 'admin/database', element: <AdminDatabase /> },
+            { path: 'admin/storage', element: <AdminStorage /> },
+            { path: 'admin/compute', element: <AdminCompute /> },
+            { path: 'admin/compute/:compute', element: <ComputeNamespaces /> },
+            { path: 'admin/compute/:compute/namespace/:namespace', element: <ComputePods /> },
+            { path: 'admin/operations', element: <AdminOperations /> },
         ],
     };
 }
 
 /** Builds the route tree for the current bundle mode. */
-export function getRoutes(mode = import.meta.env.MODE) {
+export function getRoutes(mode = import.meta.env.MODE): RouteObject[] {
     // SDK bundle serves the app runtime without platform routes.
     if (mode === 'sdk') {
         return [
@@ -100,14 +99,6 @@ export function getRoutes(mode = import.meta.env.MODE) {
             ),
         },
         {
-            path: 'orgs/:organization/applications',
-            element: (
-                <Auth requiredRole="user">
-                    <Organization sectionName="applications" />
-                </Auth>
-            ),
-        },
-        {
             path: 'orgs/:organization/database',
             element: (
                 <Auth requiredRole="user">
@@ -127,7 +118,7 @@ export function getRoutes(mode = import.meta.env.MODE) {
             path: 'orgs/:organization/settings',
             element: (
                 <Auth requiredRole="user">
-                    <Organization sectionName="settings" />
+                    <Organization sectionName="settings" settingsSection="organization" />
                 </Auth>
             ),
         },
@@ -135,7 +126,7 @@ export function getRoutes(mode = import.meta.env.MODE) {
             path: 'orgs/:organization/settings/applications',
             element: (
                 <Auth requiredRole="user">
-                    <Organization sectionName="settings" />
+                    <Organization sectionName="settings" settingsSection="applications" />
                 </Auth>
             ),
         },
@@ -143,7 +134,7 @@ export function getRoutes(mode = import.meta.env.MODE) {
             path: 'orgs/:organization/settings/applications/:settingsApplication',
             element: (
                 <Auth requiredRole="user">
-                    <Organization sectionName="settings" />
+                    <Organization sectionName="settings" settingsSection="applications" />
                 </Auth>
             ),
         },
@@ -151,7 +142,7 @@ export function getRoutes(mode = import.meta.env.MODE) {
             path: 'orgs/:organization/settings/people',
             element: (
                 <Auth requiredRole="user">
-                    <Organization sectionName="settings" />
+                    <Organization sectionName="settings" settingsSection="people" />
                 </Auth>
             ),
         },
@@ -159,7 +150,7 @@ export function getRoutes(mode = import.meta.env.MODE) {
             path: 'orgs/:organization/settings/database',
             element: (
                 <Auth requiredRole="user">
-                    <Organization sectionName="settings" />
+                    <Organization sectionName="settings" settingsSection="database" />
                 </Auth>
             ),
         },
@@ -167,7 +158,7 @@ export function getRoutes(mode = import.meta.env.MODE) {
             path: 'orgs/:organization/settings/storage',
             element: (
                 <Auth requiredRole="user">
-                    <Organization sectionName="settings" />
+                    <Organization sectionName="settings" settingsSection="storage" />
                 </Auth>
             ),
         },

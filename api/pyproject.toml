@@ -60,6 +60,9 @@ py-modules = ['main']
 [tool.setuptools.packages.find]
 include = ['src*']
 
+[tool.setuptools.package-data]
+"src.kubernetes.templates" = ["*.yml"]
+
 [tool.ruff]
 line-length = 140
 target-version = "py314"

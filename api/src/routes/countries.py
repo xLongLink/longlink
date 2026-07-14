@@ -13,6 +13,6 @@ async def list_countries(_user: User = Depends(authuser)):
 
     # Sort selectable countries by the same display name returned to clients.
     return [
-        CountryOption(code=country.alpha_2, name=getattr(country, "common_name", country.name))
+        {"code": country.alpha_2, "name": getattr(country, "common_name", country.name)}
         for country in sorted(pycountry.countries, key=lambda item: getattr(item, "common_name", item.name))
     ]

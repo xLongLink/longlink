@@ -1,32 +1,27 @@
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { useOrganization } from '@/hooks/use-organization';
-import { useUserProfile } from '@/hooks/use-user';
 import Layout from '@/layout/Layout';
 import { useTranslation } from '@/lib/i18n';
-import { LayoutGrid, Settings2 } from 'lucide-react';
-import { Navigate, useLocation, useParams } from 'react-router';
+import { Database, HardDrive, LayoutGrid, Settings2 } from 'lucide-react';
+import { useParams } from 'react-router';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
 import OrganizationDatabase from './org/Database';
-import OrganizationSettings from './org/Settings';
+import OrganizationSettings, { type SettingsRouteSection } from './org/Settings';
 import OrganizationStorage from './org/Storage';
 
 type OrganizationSection = 'applications' | 'database' | 'settings' | 'storage';
 
-/** Renders the organization page shell and tab-specific hero content. */
-export default function Organization({ sectionName }: { sectionName?: OrganizationSection }) {
-    const { t } = useTranslation();
-    const { organization: routeOrganization = '' } = useParams();
-    const { pathname } = useLocation();
-    const { organizations } = useUserProfile();
-    const organization = routeOrganization || organizations[0]?.slug || '';
-    const pathSection = pathname.split('/')[3] ?? '';
-    const pathSectionIsOrganizationSection =
-        pathSection === 'database' || pathSection === 'storage' || pathSection === 'settings';
+type OrganizationProps = {
+    sectionName?: OrganizationSection;
+    settingsSection?: SettingsRouteSection;
+};
 
-    // Direct organization routes infer the active section from the path when one was not passed explicitly.
-    const section =
-        sectionName ?? (pathSectionIsOrganizationSection ? (pathSection as OrganizationSection) : 'applications');
+/** Renders the organization page shell and tab-specific hero content. */
+export default function Organization({ sectionName, settingsSection = 'organization' }: OrganizationProps) {
+    const { t } = useTranslation();
+    const { organization = '', settingsApplication = '' } = useParams();
+    const section = sectionName ?? 'applications';
     const {
         organization: organizationDetails,
         people,
@@ -36,23 +31,23 @@ export default function Organization({ sectionName }: { sectionName?: Organizati
         error,
     } = useOrganization(organization);
 
-    // Redirect stale organization slugs to the canonical URL.
-    if (organizationDetails && routeOrganization && organizationDetails.slug !== routeOrganization) {
-        return (
-            <Navigate
-                replace
-                to={`/orgs/${organizationDetails.slug}${pathname.slice(`/orgs/${routeOrganization}`.length)}`}
-            />
-        );
-    }
-
     // Hide missing or inaccessible orgs behind the shared 404 page.
     if (error?.status === 404) {
         return <NotFound />;
     }
 
-    let content =
-        section === 'database' || section === 'storage' ? null : (
+    // Reject unknown application settings routes after organization data resolves.
+    if (
+        !isLoading &&
+        error === null &&
+        settingsApplication.length > 0 &&
+        !applications.some((application) => application.slug === settingsApplication)
+    ) {
+        return <NotFound />;
+    }
+
+    const content =
+        section === 'applications' ? (
             <Hero icon="layout-grid" className="w-full">
                 <div className="flex w-full items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
@@ -61,11 +56,7 @@ export default function Organization({ sectionName }: { sectionName?: Organizati
                     </div>
                 </div>
             </Hero>
-        );
-
-    // Swap the hero based on the active path segment.
-    if (section === 'settings') {
-        content = (
+        ) : section === 'settings' ? (
             <Hero icon="settings-2" className="w-full">
                 <div className="flex w-full items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
@@ -74,13 +65,14 @@ export default function Organization({ sectionName }: { sectionName?: Organizati
                     </div>
                 </div>
             </Hero>
-        );
-    }
+        ) : null;
 
     return (
         <Layout
             tabs={{
                 [t('navigation.applications')]: { href: `/orgs/${organization}`, icon: LayoutGrid },
+                [t('navigation.database')]: { href: `/orgs/${organization}/database`, icon: Database },
+                [t('navigation.storage')]: { href: `/orgs/${organization}/storage`, icon: HardDrive },
                 [t('navigation.settings')]: { href: `/orgs/${organization}/settings`, icon: Settings2 },
             }}
         >
@@ -115,6 +107,7 @@ export default function Organization({ sectionName }: { sectionName?: Organizati
                         applications={applications}
                         people={people}
                         invitations={invitations}
+                        routeSection={settingsSection}
                         isLoading={isLoading}
                         error={error}
                     />

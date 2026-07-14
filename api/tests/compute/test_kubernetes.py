@@ -5,8 +5,8 @@ import asyncio
 from containers import DockerRuntimeContainer, wait_for_container_log
 from docker.errors import DockerException
 from collections.abc import Iterator
+from kr8s.asyncio.objects import Secret, Ingress, Service, ConfigMap, NetworkPolicy
 from src.kubernetes.client import Kubernetes
-from src.kubernetes.library import Secret, Ingress, Service, ConfigMap, NetworkPolicy
 
 pytestmark = pytest.mark.no_db
 K3S_IMAGE = "rancher/k3s:v1.31.5-k3s1"

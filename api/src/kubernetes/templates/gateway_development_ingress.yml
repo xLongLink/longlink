@@ -19,11 +19,11 @@ spec:
               service:
                 name: longlink-gateway
                 port:
-                  number: $gateway_service_port
+                  number: 80
           - path: /ready
             pathType: Exact
             backend:
               service:
                 name: longlink-gateway
                 port:
-                  number: $gateway_service_port
+                  number: 80

@@ -37,6 +37,13 @@ You are working on a LongLink application.
 └── pyproject.toml    # Project configuration
 ```
 
+## Database ownership
+
+- Application models and migrations own only the application schema.
+- The SDK owns shared schema definitions and migrations, which the LongLink Platform executes.
+- `longlink.User` is a read-only mapping to the platform-owned shared users table.
+- Do not create, update, delete, or migrate shared tables from application code.
+
 ## Testing
 
 Structure:

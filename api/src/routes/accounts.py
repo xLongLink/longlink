@@ -28,9 +28,18 @@ async def activate_account(oidc: str, request: Request):
 async def deactivate_account(request: Request):
     """Clear the active account without removing saved accounts."""
 
-    SessionAccountsService(request).deactivate()
-    
-    return await list_accounts(request)
+    session_accounts = SessionAccountsService(request)
+    session_accounts.deactivate()
+    accounts: list[User] = []
+
+    # Load each saved session account after clearing the active selection.
+    for oidc in session_accounts.list():
+        # Skip stale session account references.
+        user = await users.get(oidc)
+        if user is not None:
+            accounts.append(user)
+
+    return accounts
 
 
 @router.get("/auth/accounts", response_model=list[UserListItem], include_in_schema=False)

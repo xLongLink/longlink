@@ -89,12 +89,13 @@ exclude = ["sample*"]
 
 [tool.setuptools.package-data]
 longlink = [".static/**"]
-"longlink.tenant.database" = ["alembic/*.py", "alembic/*.mako", "alembic/versions/*.py"]
+"longlink.shared" = ["alembic/*.py", "alembic/*.mako", "alembic/versions/*.py"]
 
 [tool.setuptools.exclude-package-data]
 longlink = [".static/new/.venv", ".static/new/.venv/*", ".static/new/.venv/**"]
 
 [tool.ruff]
+line-length = 140
 target-version = "py314"
 
 [tool.ruff.lint]
@@ -102,6 +103,7 @@ select = ["UP", "D300"]
 
 [tool.isort]
 from_first = false
+line_length = 140
 no_sections = true
 lines_between_types = 0
 length_sort = true
@@ -115,7 +117,7 @@ asyncio_default_fixture_loop_scope = "function"
 omit = [
     "longlink/__main__.py",
     "longlink/database/env.py",
-    "longlink/tenant/database/alembic/*",
+    "longlink/shared/alembic/*",
 ]
 
 [tool.pyright]

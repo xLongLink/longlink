@@ -180,7 +180,7 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
 
 
 async def test_database_users_returns_member_state_ordered_by_email(users: tuple[User, User, User]) -> None:
-    """Return organization member state for tenant database synchronization."""
+    """Return organization member state for shared database synchronization."""
 
     # Arrange
     owner, member, deleted_member = users
@@ -211,13 +211,13 @@ async def test_database_users_returns_member_state_ordered_by_email(users: tuple
     database_users = await db.organizations.database_users(organization.id)
 
     # Assert
-    assert [user.email for user in database_users] == [owner.email, member.email, deleted_member.email]
-    assert [user.role for user in database_users] == [
+    assert [user["email"] for user in database_users] == [owner.email, member.email, deleted_member.email]
+    assert [user["role"] for user in database_users] == [
         OrganizationRoles.owner.value,
         OrganizationRoles.write.value,
         OrganizationRoles.read.value,
     ]
-    assert [user.deleted_at is not None for user in database_users] == [False, False, True]
+    assert [user["deleted_at"] is not None for user in database_users] == [False, False, True]
 
 
 async def test_get_includes_application_role_for_requested_user(users: tuple[User, User, User]) -> None:

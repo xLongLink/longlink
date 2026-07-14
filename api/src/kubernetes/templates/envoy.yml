@@ -1,0 +1,63 @@
+# Template for the Envoy gateway configuration.
+admin:
+  access_log_path: /tmp/envoy-admin.log
+  address:
+    socket_address:
+      address: 127.0.0.1
+      port_value: 9901
+static_resources:
+  listeners:
+    - name: listener_0
+      per_connection_buffer_limit_bytes: 1048576
+      address:
+        socket_address:
+          address: 0.0.0.0
+          port_value: 8443
+      filter_chains:
+        - filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: longlink_gateway
+                codec_type: AUTO
+                max_request_headers_kb: 64
+                stream_idle_timeout: 300s
+                request_timeout: 300s
+                common_http_protocol_options:
+                  idle_timeout: 300s
+                access_log:
+                  - name: envoy.access_loggers.stdout
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog
+                      log_format:
+                        text_format_source:
+                          inline_string: |
+                            [%START_TIME%] "%REQ(:METHOD)% %REQ(:PATH)%" %RESPONSE_CODE% %DURATION%ms %UPSTREAM_HOST%
+                route_config:
+                  name: local_route
+                  virtual_hosts:
+                    - name: applications
+                      domains:
+                        - "*"
+                      routes: $routes
+                http_filters:
+                  - name: envoy.filters.http.local_ratelimit
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                      stat_prefix: longlink_gateway_rate_limit
+                      token_bucket:
+                        max_tokens: 1000
+                        tokens_per_fill: 1000
+                        fill_interval: 1s
+                      filter_enabled:
+                        default_value:
+                          numerator: 100
+                          denominator: HUNDRED
+                      filter_enforced:
+                        default_value:
+                          numerator: 100
+                          denominator: HUNDRED
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+  clusters: $clusters

@@ -2,12 +2,14 @@ import yaml
 from string import Template
 from typing import Any
 from pathlib import Path
+from importlib.resources.abc import Traversable
 
 
-def readyml(template_path: str | Path, **context: object) -> dict[str, Any] | list[dict[str, Any]]:
+def readyml(template_path: str | Path | Traversable, **context: object) -> dict[str, Any] | list[dict[str, Any]]:
     """Render one YAML template file into a manifest dictionary or list."""
 
-    rendered = Template(Path(template_path).read_text(encoding="utf-8")).safe_substitute(**context)
+    source = Path(template_path) if isinstance(template_path, str) else template_path
+    rendered = Template(source.read_text(encoding="utf-8")).safe_substitute(**context)
     docs: list[dict[str, Any]] = []
 
     # Parse each rendered YAML document separately.
@@ -30,7 +32,7 @@ def readyml(template_path: str | Path, **context: object) -> dict[str, Any] | li
     return docs if len(docs) > 1 else docs[0]
 
 
-def readyml_list(template_path: str | Path, **context: object) -> list[dict[str, Any]]:
+def readyml_list(template_path: str | Path | Traversable, **context: object) -> list[dict[str, Any]]:
     """Render one YAML template file into a manifest list."""
 
     rendered = readyml(template_path, **context)

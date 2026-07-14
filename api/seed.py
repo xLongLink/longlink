@@ -8,6 +8,7 @@ from src.utils import names
 from src.routes import applications as application_routes
 from src.routes import organizations as organization_routes
 from src.kubernetes import environments
+from longlink.shared import users as shared_users
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
 from src.models.storages import StorageKind
@@ -26,7 +27,6 @@ from src.database.services import organizations as organization_service
 from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
-from longlink.tenant.database import users as tenant_users
 from src.models.organizations import OrganizationCreate
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -263,7 +263,7 @@ async def seed_local_development() -> None:
     if reused_organization:
         if organization_record.shared_schema_url is None:
             raise RuntimeError("Seeded organization has no shared schema URL")
-        await tenant_users.sync_url(organization_record.shared_schema_url, await organization_service.database_users(organization_record.id))
+        await shared_users.sync_url(organization_record.shared_schema_url, await organization_service.database_users(organization_record.id))
 
     application_payload = ApplicationCreate.model_validate(LOCAL_APP)
     application_slug = names.slugify(LOCAL_APP_NAME)

@@ -1,14 +1,17 @@
 import json
+import kr8s
 import yaml
 import base64
 import hashlib
+from io import StringIO
 from typing import Any, TypeVar, cast
-from .library import Pod, Secret, Service, APIObject, Namespace, Deployment, kr8s, object_from_spec
 from src.utils import names, templates
-from src.constants import ROOT
 from src.environments import env
+from importlib.resources import files
+from kr8s.asyncio.objects import Pod, Secret, Service, APIObject, Namespace, Deployment, object_from_spec
 
 KubernetesResource = TypeVar("KubernetesResource", bound=APIObject)
+TEMPLATES = files("src.kubernetes.templates")
 
 
 class Kubernetes:
@@ -293,147 +296,34 @@ class Kubernetes:
             },
         ]
 
-        # Envoy only fronts API-authenticated app traffic and forwards to internal ClusterIP services.
-        http_connection_manager = {
-            "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
-            "stat_prefix": "longlink_gateway",
-            "codec_type": "AUTO",
-            "max_request_headers_kb": 64,
-            "stream_idle_timeout": "300s",
-            "request_timeout": "300s",
-            "common_http_protocol_options": {"idle_timeout": "300s"},
-            "access_log": [
-                {
-                    "name": "envoy.access_loggers.stdout",
-                    "typed_config": {
-                        "@type": "type.googleapis.com/envoy.extensions.access_loggers.stream.v3.StdoutAccessLog",
-                        "log_format": {
-                            "text_format_source": {
-                                "inline_string": '[%START_TIME%] "%REQ(:METHOD)% %REQ(:PATH)%" %RESPONSE_CODE% %DURATION%ms %UPSTREAM_HOST%\n'
-                            }
-                        },
-                    },
-                }
-            ],
-            "route_config": {
-                "name": "local_route",
-                "virtual_hosts": [
-                    {
-                        "name": "applications",
-                        "domains": ["*"],
-                        "routes": routes,
-                    }
-                ],
-            },
-            "http_filters": [
-                {
-                    "name": "envoy.filters.http.local_ratelimit",
-                    "typed_config": {
-                        "@type": "type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit",
-                        "stat_prefix": "longlink_gateway_rate_limit",
-                        "token_bucket": {
-                            "max_tokens": 1000,
-                            "tokens_per_fill": 1000,
-                            "fill_interval": "1s",
-                        },
-                        "filter_enabled": {
-                            "default_value": {"numerator": 100, "denominator": "HUNDRED"}
-                        },
-                        "filter_enforced": {
-                            "default_value": {"numerator": 100, "denominator": "HUNDRED"}
-                        },
-                    },
-                },
-                {
-                    "name": "envoy.filters.http.router",
-                    "typed_config": {
-                        "@type": "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router"
-                    },
-                },
-            ],
-        }
-        filter_chain: dict[str, Any] = {
-            "filters": [
-                {
-                    "name": "envoy.filters.network.http_connection_manager",
-                    "typed_config": http_connection_manager,
-                }
-            ]
-        }
-
-        config = {
-            "admin": {
-                "access_log_path": "/tmp/envoy-admin.log",
-                "address": {
-                    "socket_address": {"address": "127.0.0.1", "port_value": 9901}
-                },
-            },
-            "static_resources": {
-                "listeners": [
-                    {
-                        "name": "listener_0",
-                        "per_connection_buffer_limit_bytes": 1024 * 1024,
-                        "address": {
-                            "socket_address": {"address": "0.0.0.0", "port_value": 8443}
-                        },
-                        "filter_chains": [filter_chain],
-                    }
-                ],
-                "clusters": application_clusters,
-            }
-        }
-        return yaml.safe_dump(config, sort_keys=False)
+        # Render static Envoy configuration with the discovered routes and clusters.
+        config = templates.readyml_list(
+            TEMPLATES.joinpath("envoy.yml"),
+            routes=json.dumps(routes),
+            clusters=json.dumps(application_clusters),
+        )[0]
+        stream = StringIO()
+        yaml.safe_dump(config, stream=stream, sort_keys=False)
+        return stream.getvalue()
 
     def _gateway_manifests(self, envoy_config: str) -> list[dict[str, Any]]:
         """Return Kubernetes manifests for the per-cluster Envoy gateway."""
 
         config_hash = hashlib.sha256(envoy_config.encode("utf-8")).hexdigest()
-        gateway_scheme = "HTTP"
-        volume_mounts: list[dict[str, Any]] = [
-            {"name": "config", "mountPath": "/etc/envoy"},
-            {"name": "tmp", "mountPath": "/tmp"},
-        ]
-        volumes: list[dict[str, Any]] = [
-            {"name": "template", "configMap": {"name": "longlink-gateway"}},
-            {"name": "config", "emptyDir": {}},
-            {"name": "tmp", "emptyDir": {}},
-        ]
-
-        # Local development can use an Ingress; managed clusters keep the gateway private.
-        use_development_ingress = env.DEVELOPMENT
-        gateway_service_port = 80
-        service_spec: dict[str, Any] = {
-            "type": "ClusterIP",
-            "selector": {"app": "longlink-gateway"},
-            "ports": [
-                {
-                    "name": "gateway",
-                    "protocol": "TCP",
-                    "port": gateway_service_port,
-                    "targetPort": "gateway",
-                }
-            ],
-        }
-
-        template_context: dict[str, object] = {
-            "config_hash": config_hash,
-            "envoy_config": json.dumps(envoy_config),
-            "gateway_scheme": gateway_scheme,
-            "gateway_secret": base64.b64encode(self._proxy_secret.encode("utf-8")).decode("ascii"),
-            "gateway_service_port": gateway_service_port,
-            "gateway_service_spec": json.dumps(service_spec),
-            "gateway_volume_mounts": json.dumps(volume_mounts),
-            "gateway_volumes": json.dumps(volumes),
-        }
-        manifests = templates.readyml_list(ROOT / "kubernetes" / "templates" / "gateway.yml", **template_context)
+        manifests = templates.readyml_list(
+            TEMPLATES.joinpath("gateway.yml"),
+            config_hash=config_hash,
+            envoy_config=json.dumps(envoy_config),
+            gateway_secret=base64.b64encode(self._proxy_secret.encode("utf-8")).decode("ascii"),
+        )
 
         # Development needs an Ingress resource because the local gateway service stays ClusterIP.
-        if use_development_ingress:
-            ingress_manifests = templates.readyml_list(
-                ROOT / "kubernetes" / "templates" / "gateway_development_ingress.yml",
-                **template_context,
+        if env.DEVELOPMENT:
+            manifests.extend(
+                templates.readyml_list(
+                    TEMPLATES.joinpath("gateway_development_ingress.yml"),
+                )
             )
-            manifests.extend(ingress_manifests)
 
         return manifests
 
@@ -471,28 +361,10 @@ class Kubernetes:
         """Create the namespace for an organization if it does not exist."""
 
         namespace = names.knames(organization)
-        policy = {
-            "apiVersion": "networking.k8s.io/v1",
-            "kind": "NetworkPolicy",
-            "metadata": {
-                "name": "longlink-gateway-ingress",
-                "namespace": namespace,
-            },
-            "spec": {
-                "podSelector": {"matchLabels": {"compute-role": "application"}},
-                "policyTypes": ["Ingress"],
-                "ingress": [
-                    {
-                        "from": [
-                            {
-                                "namespaceSelector": {"matchLabels": {"kubernetes.io/metadata.name": "longlink-system"}},
-                                "podSelector": {"matchLabels": {"app": "longlink-gateway"}},
-                            }
-                        ]
-                    }
-                ],
-            },
-        }
+        policy = templates.readyml_list(
+            TEMPLATES.joinpath("application_network_policy.yml"),
+            namespace=namespace,
+        )[0]
 
         # Reuse an existing namespace or create it when Kubernetes reports it missing.
         try:
@@ -628,7 +500,7 @@ class Kubernetes:
         await self._replace(secret_body)
 
         application_manifests = templates.readyml_list(
-            ROOT / "kubernetes" / "templates" / "application.yml",
+            TEMPLATES.joinpath("application.yml"),
             image=image,
             namespace=namespace,
             application_id=application_id,

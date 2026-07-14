@@ -8,8 +8,7 @@ router = APIRouter()
 
 
 @router.get("/api/operations", response_model=list[OperationResponse])
-async def list_operations(_: User = Depends(authsupport)):
+async def list_operations(_user: User = Depends(authsupport)):
     """Return all recorded long-running operations."""
 
-    records = await operations.fetch()
-    return records
+    return await operations.fetch()

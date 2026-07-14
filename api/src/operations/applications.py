@@ -2,12 +2,12 @@ import asyncio
 from src import adapters
 from datetime import timedelta
 from src.utils import jobs, names, images
+from longlink.shared import users as shared_users
 from src.models.statuses import ApplicationStatus
 from longlink.tenant.utils import utcnow
 from src.database.services import database, operations, registries, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
-from longlink.tenant.database import users as tenant_users
 from src.database.models.operations import Operation
 
 POD_STARTUP_FAILURE_GRACE_SECONDS = 2 * 60
@@ -79,7 +79,7 @@ async def create(operation: Operation) -> jobs.OperationOutcome:
                 storage.create(shared),
                 storage.create(bucket),
             )
-            await tenant_users.sync_url(organization.shared_schema_url, organization_users)
+            await shared_users.sync_url(organization.shared_schema_url, organization_users)
 
             # Reuse stored runtime credentials or create provider-scoped credentials for this application.
             credentials = applications.storage_runtime_credentials(application)

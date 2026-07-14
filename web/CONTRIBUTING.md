@@ -42,7 +42,6 @@ The combined repository architecture is maintained in `../AGENTS.md`.
 │   │   └── :compute/namespace/:namespace
 │   └── operations
 ├── orgs/:organization
-├── orgs/:organization/applications
 ├── orgs/:organization/database
 ├── orgs/:organization/storage
 ├── orgs/:organization/settings

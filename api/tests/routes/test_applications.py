@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from datetime import UTC, datetime
 from src.utils import names
 from src.utils.jobs import execute
+from longlink.shared import users as shared_users
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from fastapi.testclient import TestClient
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
@@ -13,7 +14,6 @@ from src.database.session import get_session
 from src.models.databases import DatabaseKind
 from src.database.services import users, compute, storage, database, locations, operations, registries, applications, organizations
 from src.models.operations import OperationKind
-from longlink.tenant.models import User as TenantUser
 from src.models.applications import ApplicationStatus
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
@@ -342,10 +342,10 @@ async def test_create_app_returns_app_response(
                 "database_name": organization.hex,
             }
 
-    async def sync_tenant_users(shared_schema_url: str, users: list[TenantUser]) -> None:
-        """Record synchronized tenant users for the organization."""
+    async def sync_shared_users(shared_schema_url: str, users: list[shared_users.UserRow]) -> None:
+        """Record synchronized shared users for the organization."""
 
-        captured["tenant_users"] = {
+        captured["shared_users"] = {
             "shared_schema_url": shared_schema_url,
             "users": users,
         }
@@ -390,7 +390,7 @@ async def test_create_app_returns_app_response(
             registry.password,
         ),
     )
-    monkeypatch.setattr("src.operations.applications.tenant_users.sync_url", sync_tenant_users)
+    monkeypatch.setattr("src.operations.applications.shared_users.sync_url", sync_shared_users)
     monkeypatch.setattr(
         "src.operations.applications.adapters.storage",
         lambda registry: FakeStorage(
@@ -447,13 +447,13 @@ async def test_create_app_returns_app_response(
         "bucket": "acme-dashboard",
         "access": "write",
     }
-    sync_payload = captured["tenant_users"]
+    sync_payload = captured["shared_users"]
     assert isinstance(sync_payload, dict)
     synced_users = sync_payload["users"]
     assert isinstance(synced_users, list)
-    assert all(isinstance(synced_user, TenantUser) for synced_user in synced_users)
+    assert all(isinstance(synced_user, dict) for synced_user in synced_users)
     assert sync_payload["shared_schema_url"] == f"postgresql://shared/{application_database}"
-    assert synced_users[0].email == user.email
+    assert synced_users[0]["email"] == user.email
     application_payload = captured["application"]
     assert isinstance(application_payload, dict)
     assert application_payload["organization"] == "acme"

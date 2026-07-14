@@ -52,12 +52,14 @@ type SettingsProps = {
     applications: ApiOrganizationApplication[];
     people: ApiOrganizationMemberSummary[];
     invitations: ApiInvitation[];
+    routeSection: SettingsRouteSection;
     isLoading: boolean;
     error: Error | null;
 };
 
 type PeopleSection = 'members' | 'invitations';
-type SettingsSection = 'organization' | 'applications' | 'database' | 'storage' | PeopleSection;
+export type SettingsRouteSection = 'organization' | 'applications' | 'people' | 'database' | 'storage';
+type SettingsSection = Exclude<SettingsRouteSection, 'people'> | PeopleSection;
 
 /** Renders the organization settings page body. */
 export default function Settings({
@@ -66,13 +68,13 @@ export default function Settings({
     applications,
     people,
     invitations,
+    routeSection,
     isLoading,
     error,
 }: SettingsProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
-    const { pathname } = location;
     const { settingsApplication = '' } = useParams();
     const { role: platformRole, organizations: userOrganizations } = useUserProfile();
     const queryClient = useQueryClient();
@@ -96,20 +98,9 @@ export default function Settings({
 
     const organizationMembership = userOrganizations.find((item) => item.slug === organization);
     const organizationRole = organizationMembership?.role ?? null;
-    const routeSettingsSection = pathname.split('/')[4] ?? '';
     const hashValue = location.hash.replace(/^#/, '');
-    const isPeopleSection = routeSettingsSection === 'people';
     const settingsPeopleSection: PeopleSection = hashValue === 'invitations' ? 'invitations' : 'members';
-    const settingsSection: SettingsSection =
-        routeSettingsSection === 'applications'
-            ? 'applications'
-            : routeSettingsSection === 'database'
-              ? 'database'
-              : routeSettingsSection === 'storage'
-                ? 'storage'
-                : isPeopleSection
-                  ? settingsPeopleSection
-                  : 'organization';
+    const settingsSection: SettingsSection = routeSection === 'people' ? settingsPeopleSection : routeSection;
 
     const deleteTarget = applications.find((application) => application.id === deleteTargetId) ?? null;
     const selectedApplication = applications.find((application) => application.slug === settingsApplication) ?? null;
@@ -168,10 +159,8 @@ export default function Settings({
         }
 
         // Route people subsections through their hash anchors.
-        if (nextSection === 'people' || nextSection === 'members' || nextSection === 'invitations') {
-            const section = nextSection === 'people' || nextSection === 'members' ? 'members' : 'invitations';
-
-            navigate(`/orgs/${organization}/settings/people#${section}`);
+        if (nextSection === 'members' || nextSection === 'invitations') {
+            navigate(`/orgs/${organization}/settings/people#${nextSection}`);
         }
     }
 

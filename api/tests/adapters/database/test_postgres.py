@@ -8,10 +8,9 @@ from containers import DockerRuntimeContainer
 from sqlalchemy import text
 from docker.errors import DockerException
 from sqlalchemy.exc import SQLAlchemyError
+from longlink.shared import users as shared_users
 from sqlalchemy.engine import URL
-from longlink.tenant.models import User as TenantUser
 from sqlalchemy.ext.asyncio import create_async_engine
-from longlink.tenant.database import users as tenant_users
 from src.adapters.database.postgres import Postgres
 
 pytestmark = pytest.mark.no_db
@@ -72,19 +71,20 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
 
     try:
         _wait_for_postgres(container, "longlink", "secret", "postgres")
-        active_user = TenantUser(
-            id=UUID("11111111-1111-1111-1111-111111111111"),
-            name="Owner User",
-            email="owner@example.com",
-            avatar="",
-            role="owner",
-            created_at=datetime(2026, 7, 1, tzinfo=UTC),
-            updated_at=datetime(2026, 7, 1, tzinfo=UTC),
-        )
+        active_user: shared_users.UserRow = {
+            "id": UUID("11111111-1111-1111-1111-111111111111"),
+            "name": "Owner User",
+            "email": "owner@example.com",
+            "avatar": "",
+            "role": "owner",
+            "created_at": datetime(2026, 7, 1, tzinfo=UTC),
+            "updated_at": datetime(2026, 7, 1, tzinfo=UTC),
+            "deleted_at": None,
+        }
         shared_schema_url = adapter.shared_schema_url(organization_id)
         database_name = organization_id.hex
         await adapter.prepare_organization_database(organization_id, shared_schema_url)
-        await tenant_users.sync_url(shared_schema_url, [active_user])
+        await shared_users.sync_url(shared_schema_url, [active_user])
 
         database_url = adapter.url(database_name)
 
@@ -104,13 +104,13 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             shared_user = (
                 await conn.execute(
                     text("SELECT email, role FROM shared.users WHERE id = :user_id"),
-                    {"user_id": active_user.id},
+                    {"user_id": active_user["id"]},
                 )
             ).mappings().one()
 
         inactive_at = datetime(2026, 7, 2, tzinfo=UTC)
-        inactive_user = active_user.model_copy(update={"updated_at": inactive_at, "deleted_at": inactive_at})
-        await tenant_users.sync_url(shared_schema_url, [inactive_user])
+        inactive_user: shared_users.UserRow = {**active_user, "updated_at": inactive_at, "deleted_at": inactive_at}
+        await shared_users.sync_url(shared_schema_url, [inactive_user])
 
         maintenance_engine = create_async_engine(database_url)
         try:
@@ -118,7 +118,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
                 deleted_at = (
                     await conn.execute(
                         text("SELECT deleted_at FROM shared.users WHERE id = :user_id"),
-                        {"user_id": active_user.id},
+                        {"user_id": active_user["id"]},
                     )
                 ).scalar_one()
         finally:

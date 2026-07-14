@@ -91,17 +91,21 @@ spec:
             httpGet:
               path: /ready
               port: gateway
-              scheme: $gateway_scheme
+              scheme: HTTP
             periodSeconds: 5
             failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /ready
               port: gateway
-              scheme: $gateway_scheme
+              scheme: HTTP
             periodSeconds: 10
             failureThreshold: 3
-          volumeMounts: $gateway_volume_mounts
+          volumeMounts:
+            - name: config
+              mountPath: /etc/envoy
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
               cpu: 100m
@@ -115,7 +119,14 @@ spec:
               drop:
                 - ALL
             readOnlyRootFilesystem: true
-      volumes: $gateway_volumes
+      volumes:
+        - name: template
+          configMap:
+            name: longlink-gateway
+        - name: config
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
@@ -124,7 +135,15 @@ metadata:
   namespace: longlink-system
   labels:
     app: longlink-gateway
-spec: $gateway_service_spec
+spec:
+  type: ClusterIP
+  selector:
+    app: longlink-gateway
+  ports:
+    - name: gateway
+      protocol: TCP
+      port: 80
+      targetPort: gateway
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

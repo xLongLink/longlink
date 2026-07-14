@@ -38,13 +38,7 @@ export type ApiCountryOption = z.infer<typeof apiCountryOptionSchema>;
 export type ApiOrganizationSummary = z.infer<typeof apiOrganizationSummarySchema>;
 export type ApiOrganizationDetails = z.infer<typeof apiOrganizationDetailsSchema>;
 export type ApiLocation = z.infer<typeof apiLocationSchema>;
-export type ApiOrganizationDatabaseApplication = NonNullable<
-    z.infer<typeof apiOrganizationDatabaseResourceSchema>['application']
->;
 export type ApiOrganizationDatabaseResource = z.infer<typeof apiOrganizationDatabaseResourceSchema>;
-export type ApiOrganizationStorageApplication = NonNullable<
-    z.infer<typeof apiOrganizationStorageResourceSchema>['application']
->;
 export type ApiOrganizationStorageResource = z.infer<typeof apiOrganizationStorageResourceSchema>;
 export type ApiDatabaseRegistry = z.infer<typeof apiDatabaseRegistrySchema>;
 export type ApiStorageRegistry = z.infer<typeof apiStorageRegistrySchema>;

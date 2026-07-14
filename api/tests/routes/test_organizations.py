@@ -1,6 +1,7 @@
 from uuid import UUID
 from types import SimpleNamespace
 from src.utils import names
+from longlink.shared import users as shared_users
 from src.models.roles import OrganizationRoles
 from fastapi.testclient import TestClient
 from src.models.storages import StorageKind
@@ -8,7 +9,6 @@ from src.database.session import get_session
 from src.models.databases import DatabaseKind
 from src.database.services import users, compute, storage, database, locations, operations, invitations, applications, organizations
 from src.models.operations import OperationKind
-from longlink.tenant.models import User as TenantUser
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 
@@ -138,11 +138,11 @@ def patch_organization_runtime(monkeypatch, captured: dict[str, object]) -> None
 
             calls.append(("delete_bucket", bucket))
 
-    async def sync_tenant_users(shared_schema_url: str, users: list[TenantUser]) -> None:
-        """Record synchronized tenant users for the organization."""
+    async def sync_shared_users(shared_schema_url: str, users: list[shared_users.UserRow]) -> None:
+        """Record synchronized shared users for the organization."""
 
-        captured["tenant_users_url"] = shared_schema_url
-        captured["tenant_users"] = users
+        captured["shared_users_url"] = shared_schema_url
+        captured["shared_users"] = users
 
     monkeypatch.setattr("src.routes.organizations.Kubernetes", FakeKubernetes)
     monkeypatch.setattr(
@@ -153,7 +153,7 @@ def patch_organization_runtime(monkeypatch, captured: dict[str, object]) -> None
         "src.routes.organizations.adapters.storage",
         lambda registry: FakeStorage(registry.endpoint_url, registry.access_key_id, registry.secret_access_key),
     )
-    monkeypatch.setattr("src.routes.organizations.tenant_users.sync_url", sync_tenant_users)
+    monkeypatch.setattr("src.routes.organizations.shared_users.sync_url", sync_shared_users)
 
 
 async def test_create_organization_returns_owner_role(
@@ -218,11 +218,11 @@ async def test_create_organization_initializes_database(
     assert captured["prepared_database"] == organization_database
     assert captured["prepared_organization"] == organization_id
     assert captured["prepared_shared_schema_url"] == f"postgresql://shared/{organization_database}"
-    assert captured["tenant_users_url"] == f"postgresql://shared/{organization_database}"
-    synced_users = captured["tenant_users"]
+    assert captured["shared_users_url"] == f"postgresql://shared/{organization_database}"
+    synced_users = captured["shared_users"]
     assert isinstance(synced_users, list)
-    assert synced_users[0].email == owner.email
-    assert synced_users[0].role == "owner"
+    assert synced_users[0]["email"] == owner.email
+    assert synced_users[0]["role"] == "owner"
 
 
 async def test_create_organization_initializes_storage(
@@ -417,11 +417,7 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     # Assert
     assert response.status_code == 200
     payload = response.json()
-    assert [(item["kind"], item["name"]) for item in payload] == [
-        ("schema", "shared"),
-        ("schema", dashboard_schema),
-        ("schema", "stale"),
-    ]
+    assert [item["name"] for item in payload] == ["shared", dashboard_schema, "stale"]
     assert payload[1]["application"]["id"] == str(dashboard.id)
     assert payload[1]["application"]["icon"] == "layout-dashboard"
     assert payload[1]["application"]["description"] == "Dashboard app"
@@ -494,7 +490,7 @@ async def test_organization_storage_endpoint_returns_organization_buckets(
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
-    """Return existing shared, application, and orphaned storage buckets for one organization."""
+    """Return existing shared and application storage buckets for one organization."""
 
     # Arrange
     owner = users[0]
@@ -538,6 +534,7 @@ async def test_organization_storage_endpoint_returns_organization_buckets(
             "acme-shared",
             "acme-dashboard",
             "acme-stale",
+            "acme-west-shared",
             "other-shared",
         ]
 
@@ -560,7 +557,6 @@ async def test_organization_storage_endpoint_returns_organization_buckets(
     assert [(item["kind"], item["name"]) for item in payload] == [
         ("shared_bucket", "shared"),
         ("application_bucket", "dashboard"),
-        ("application_bucket", "stale"),
     ]
     assert payload[1]["application"]["id"] == str(dashboard.id)
     assert payload[1]["application"]["icon"] == "layout-dashboard"
@@ -846,7 +842,7 @@ async def test_update_organization_member_changes_role(
     updated_members = await db.organizations.members(organization.id)
     updated_member = next(membership for user, membership in updated_members if user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
-    assert captured["tenant_users_url"] == f"postgresql://shared/{organization.id.hex}"
+    assert captured["shared_users_url"] == f"postgresql://shared/{organization.id.hex}"
 
 
 async def test_update_organization_member_returns_403_for_regular_member(

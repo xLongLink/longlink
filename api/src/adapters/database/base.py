@@ -27,7 +27,7 @@ class Database(ABC):
     ├── app_a Schema   # Application-owned tables, writable by app_a.
     └── app_n Schema   # Application-owned tables, writable by app_n.
 
-    Organization creation owns database creation and tenant migrations. Application creation owns
+    Organization creation owns database creation and executes SDK-owned shared migrations. Application creation owns
     only the application schema and runtime role inside the already-prepared organization database.
 
     Each application has read/write access to its own schema, and read-only access to shared tables.

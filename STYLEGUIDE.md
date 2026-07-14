@@ -48,8 +48,8 @@ Avoid language from unrelated projects, especially React Native, mobile, native-
 
 ### Package Boundaries
 
-- `api/` owns the LongLink Platform API: authentication, organizations, applications, infrastructure registries, orchestration, logs, status, and application proxying.
-- `sdk/` owns the LongLink SDK: tenant-shared contracts and migrations, application-facing helpers, CLI commands, database helpers, storage helpers, XML page discovery, scaffolding, and packaged static assets.
+- `api/` owns the LongLink Platform API: authentication, organizations, applications, execution of shared-schema migrations and writes, infrastructure registries, orchestration, logs, status, and application proxying.
+- `sdk/` owns the LongLink SDK: shared-schema models and migrations, application-facing helpers and migrations, CLI commands, database helpers, storage helpers, XML page discovery, scaffolding, and packaged static assets.
 - `web/` owns the shared frontend runtime, documentation UI, platform UI, and XML renderer used by platform and SDK bundles.
 - `dev/` owns local services and reference material.
 
@@ -61,8 +61,9 @@ Document resource behavior using the actual LongLink model.
 - Each organization database contains one shared organization schema that applications can read.
 - Each application gets a schema named from the application UUID hex with application read/write access.
 - Organization and application storage bucket names are derived from immutable slugs.
-- Organization creation owns database creation and executes tenant migrations packaged by the SDK.
+- Organization creation owns database creation and executes shared migrations packaged by the SDK.
 - Application creation owns application schema creation and runtime role provisioning.
+- SDK migrations manage only application-owned tables in the application schema.
 
 ## Markdown Style
 

@@ -5,10 +5,10 @@ from src.utils import names
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
+from longlink.shared import users as shared_users
 from src.models.roles import OrganizationRoles
 from src.database.session import session_scope
 from src.models.countries import DEFAULT_COUNTRY
-from longlink.tenant.models import User as TenantUser
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -79,10 +79,10 @@ async def invitations(organization_id: UUID) -> list[OrganizationInvitation]:
         return result.scalars().all()
 
 
-async def database_users(organization_id: UUID) -> list[TenantUser]:
+async def database_users(organization_id: UUID) -> list[shared_users.UserRow]:
     """Return organization user state for shared user synchronization."""
 
-    # Load memberships for tenant user synchronization.
+    # Load memberships for shared user synchronization.
     async with session_scope() as session:
         statement = (
             select(
@@ -99,9 +99,9 @@ async def database_users(organization_id: UUID) -> list[TenantUser]:
         result = await session.execute(statement)
         rows = result.all()
 
-        database_users: list[TenantUser] = []
+        database_users: list[shared_users.UserRow] = []
 
-        # Convert each membership row to the tenant-facing user snapshot.
+        # Convert each membership row to the SDK-owned shared user shape.
         for user, role, created_at, updated_at, membership_deleted_at in rows:
             # A shared user becomes inactive when either the account or organization membership is inactive.
             deleted_at = user.deleted_at
@@ -118,16 +118,16 @@ async def database_users(organization_id: UUID) -> list[TenantUser]:
                 tenant_updated_at = deleted_at
 
             database_users.append(
-                TenantUser(
-                    id=user.id,
-                    name=user.name,
-                    email=user.email,
-                    avatar=user.avatar,
-                    role=role.value,
-                    created_at=created_at,
-                    updated_at=tenant_updated_at,
-                    deleted_at=deleted_at,
-                )
+                {
+                    "id": user.id,
+                    "name": user.name,
+                    "email": user.email,
+                    "avatar": user.avatar,
+                    "role": role.value,
+                    "created_at": created_at,
+                    "updated_at": tenant_updated_at,
+                    "deleted_at": deleted_at,
+                }
             )
 
         return database_users

@@ -1,8 +1,8 @@
-from longlink.tenant.database.migrations import alembic_script_location
+from longlink.shared.migrations import alembic_script_location
 
 
-def test_alembic_script_location_returns_packaged_migrations() -> None:
-    """Locate the tenant Alembic script directory from the SDK package."""
+def test_alembic_script_location_returns_sdk_owned_migrations() -> None:
+    """Locate the shared-schema Alembic directory from the SDK package."""
 
     script_location = alembic_script_location()
 

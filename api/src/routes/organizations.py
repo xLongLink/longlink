@@ -1,21 +1,21 @@
 from src import adapters
 from uuid import UUID, uuid4
 from fastapi import Depends, APIRouter, HTTPException
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from src.auth import authuser, authsupport
 from src.utils import names, roles
 from src.utils import storage as storage_utils
 from src.logger import logger
+from longlink.shared import users as shared_users
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
-from src.models.databases import OrganizationDatabaseResourceKind, OrganizationDatabaseResourceResponse
+from src.models.databases import OrganizationDatabaseResourceResponse
 from src.database.services import locations, operations, registries, invitations, organizations
 from src.kubernetes.client import Kubernetes
 from src.models.applications import ApplicationResponse
-from longlink.tenant.database import SHARED_SCHEMA
-from longlink.tenant.database import users as tenant_users
 from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary, OrganizationMemberUpdate,
                                       OrganizationInvitationCreate)
+from longlink.shared.constants import SHARED_SCHEMA
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -24,28 +24,6 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 router = APIRouter()
-ORGANIZATION_DELETE_DELAY_DAYS = 0
-
-
-async def _location_runtime_registries(location_id: UUID) -> tuple[ComputeRegistry, DatabaseRegistry, StorageRegistry]:
-    """Return the required runtime registries for one location."""
-
-    # Organizations require a compute namespace in their location.
-    compute_registry = await registries.compute(location_id)
-    if compute_registry is None:
-        raise HTTPException(status_code=409, detail="Location has no compute registry")
-
-    # Organizations require a tenant database in their location.
-    database_registry = await registries.database(location_id)
-    if database_registry is None:
-        raise HTTPException(status_code=409, detail="Location has no database registry")
-
-    # Organizations require shared object storage in their location.
-    storage_registry = await registries.storage(location_id)
-    if storage_registry is None:
-        raise HTTPException(status_code=409, detail="Location has no storage registry")
-
-    return compute_registry, database_registry, storage_registry
 
 
 async def _provision_organization_runtime(
@@ -66,7 +44,7 @@ async def _provision_organization_runtime(
     await adapters.database(database_registry).prepare_organization_database(organization.id, shared_schema_url)
 
     # Synchronize shared users into the existing organization schema.
-    await tenant_users.sync_url(shared_schema_url, await organizations.database_users(organization.id))
+    await shared_users.sync_url(shared_schema_url, await organizations.database_users(organization.id))
 
     # Create the shared organization storage bucket from the deterministic slug-derived name.
     storage = adapters.storage(storage_registry)
@@ -104,8 +82,7 @@ async def _cleanup_organization_runtime(
 async def list_organizations(_user: User = Depends(authsupport)):
     """Return all organizations for support and administrator views."""
 
-    records = await organizations.fetch()
-    return records
+    return await organizations.fetch()
 
 
 @router.get("/api/organizations/{organization_id}", response_model=OrganizationDetails)
@@ -131,7 +108,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     active_invitations = []
 
     # Show invitations only to organization managers.
-    if membership.role in {OrganizationRoles.admin, OrganizationRoles.maintain, OrganizationRoles.owner}:
+    if roles.atleast(membership.role, OrganizationRoles.maintain):
         active_invitations = await organizations.invitations(organization.id)
 
     return {
@@ -154,10 +131,10 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
                 "name": member.name,
                 "email": member.email,
                 "avatar": member.avatar,
-                "role": membership.role,
-                "last_access_at": membership.updated_at,
+                "role": member_membership.role,
+                "last_access_at": member_membership.updated_at,
             }
-            for member, membership in memberships
+            for member, member_membership in memberships
         ],
         "invitations": active_invitations,
         "applications": [
@@ -196,8 +173,8 @@ async def list_organization_applications(organization_id: UUID, user: User = Dep
         {
             **application.model_dump(),
             "organization": application.organization,
-            "created_by": application.created_by or user,
-            "updated_by": application.updated_by or application.created_by or user,
+            "created_by": application.created_by,
+            "updated_by": application.updated_by,
             "deleted_by": application.deleted_by,
             "role": application_roles.get(application.id),
         }
@@ -210,7 +187,7 @@ async def list_organization_applications(organization_id: UUID, user: User = Dep
     response_model=list[OrganizationDatabaseResourceResponse],
 )
 async def list_organization_database_resources(organization_id: UUID, user: User = Depends(authuser)):
-    """Return database schemas for one organization."""
+    """Return database usage for one organization."""
 
     # Load organization access before exposing database resources.
     membership = roles.access(user, organization_id, "organization")
@@ -227,7 +204,7 @@ async def list_organization_database_resources(organization_id: UUID, user: User
         return []
 
     active_applications = await organizations.applications(membership.organization_id)
-    return await _database_resource_rows(membership.organization, registry, active_applications)
+    return await _database_usage_rows(membership.organization, registry, active_applications)
 
 
 @router.get(
@@ -235,7 +212,7 @@ async def list_organization_database_resources(organization_id: UUID, user: User
     response_model=list[OrganizationStorageResourceResponse],
 )
 async def list_organization_storage_resources(organization_id: UUID, user: User = Depends(authuser)):
-    """Return storage buckets for one organization."""
+    """Return storage usage for one organization."""
 
     # Load organization access before exposing storage resources.
     membership = roles.access(user, organization_id, "organization")
@@ -252,7 +229,7 @@ async def list_organization_storage_resources(organization_id: UUID, user: User 
         return []
 
     active_applications = await organizations.applications(membership.organization_id)
-    return await _storage_resource_rows(membership.organization, registry, active_applications)
+    return await _storage_usage_rows(membership.organization, registry, active_applications)
 
 
 @router.post("/api/organizations/{organization_id}/invitations", status_code=204)
@@ -313,14 +290,14 @@ async def update_organization_member(
     if not updated:
         raise HTTPException(status_code=404, detail="Organization member not found")
 
-    # Synchronize tenant users after role changes.
+    # Synchronize shared users after role changes.
     try:
         # Use the stored shared-schema URL because tenant code owns shared user writes.
         shared_schema_url = membership.organization.shared_schema_url
         if shared_schema_url is None:
             raise RuntimeError("Organization has no shared schema URL")
 
-        await tenant_users.sync_url(shared_schema_url, await organizations.database_users(membership.organization_id))
+        await shared_users.sync_url(shared_schema_url, await organizations.database_users(membership.organization_id))
 
     # Surface synchronization failures as unavailable.
     except Exception as exc:
@@ -331,12 +308,8 @@ async def update_organization_member(
 async def delete_organization(organization_id: UUID, user: User = Depends(authuser)):
     """Soft-delete one organization and queue runtime resource removal."""
 
-    # Let platform administrators delete any organization.
-    if user.role == PlatformRoles.administrator:
-        organization = await organizations.get(organization_id)
-        if organization is None:
-            raise HTTPException(status_code=404, detail="Organization not found")
-    else:
+    # Require organization ownership unless the caller is a platform administrator.
+    if user.role != PlatformRoles.administrator:
         membership = roles.access(user, organization_id, "organization")
         if membership is None:
             raise HTTPException(status_code=403, detail="Access required")
@@ -351,17 +324,17 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
 
     await operations.queue_organization_removal(
         organization_id,
-        scheduled_at=datetime.now(UTC) + timedelta(days=ORGANIZATION_DELETE_DELAY_DAYS),
+        scheduled_at=datetime.now(UTC),
         user=user,
     )
 
 
-async def _database_resource_rows(
-    organization: Organization | OrganizationDetails,
+async def _database_usage_rows(
+    organization: Organization,
     registry: DatabaseRegistry,
     apps: list[Application],
 ) -> list[dict[str, object]]:
-    """Inspect one organization database and return API resource rows."""
+    """Inspect one organization database and return usage rows."""
 
     database = organization.id.hex
     app_by_schema = {app.id.hex: app for app in apps}
@@ -377,12 +350,6 @@ async def _database_resource_rows(
         raise HTTPException(status_code=503, detail="Database resources unavailable") from exc
 
     rows: list[dict[str, object]] = []
-    fields: dict[str, object] = {
-        "kind": OrganizationDatabaseResourceKind.schema,
-        "database_name": database,
-        "database_registry_id": registry.id,
-        "database_registry_name": registry.name,
-    }
 
     usage_by_name = {item["name"]: item for item in schemas}
     shared = usage_by_name.get(SHARED_SCHEMA)
@@ -391,8 +358,8 @@ async def _database_resource_rows(
     if shared is not None:
         rows.append(
             {
-                **fields,
                 "name": SHARED_SCHEMA,
+                "database_name": database,
                 "application": None,
                 "space_used": shared["space_used"],
                 "table_count": shared["table_count"],
@@ -409,16 +376,9 @@ async def _database_resource_rows(
 
         rows.append(
             {
-                **fields,
                 "name": schema,
-                "application": {
-                    "id": app.id,
-                    "name": app.name,
-                    "slug": app.slug,
-                    "icon": app.icon,
-                    "description": app.description,
-                    "status": app.status,
-                },
+                "database_name": database,
+                "application": app,
                 "space_used": usage["space_used"],
                 "table_count": usage["table_count"],
             }
@@ -432,8 +392,8 @@ async def _database_resource_rows(
 
         rows.append(
             {
-                **fields,
                 "name": usage["name"],
+                "database_name": database,
                 "application": None,
                 "space_used": usage["space_used"],
                 "table_count": usage["table_count"],
@@ -443,12 +403,12 @@ async def _database_resource_rows(
     return rows
 
 
-async def _storage_resource_rows(
-    organization: Organization | OrganizationDetails,
+async def _storage_usage_rows(
+    organization: Organization,
     registry: StorageRegistry,
     apps: list[Application],
 ) -> list[dict[str, object]]:
-    """Inspect one storage backend and return organization bucket rows."""
+    """Inspect one storage backend and return organization usage rows."""
 
     # List backend buckets before building resource rows.
     try:
@@ -464,14 +424,10 @@ async def _storage_resource_rows(
         )
         raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
 
-    expected: set[str] = set()
     rows: list[dict[str, object]] = []
     needs_usage: list[str] = []
     shared = names.organization_shared_bucket(organization.slug)
     visible: list[tuple[Application, str]] = []
-
-    # Track the expected shared bucket derived from the organization slug.
-    expected.add(shared)
 
     # Inspect usage only for shared buckets that exist.
     if shared in buckets:
@@ -481,23 +437,12 @@ async def _storage_resource_rows(
     for app in sorted(apps, key=lambda item: item.name):
         bucket = names.application_bucket(organization.slug, app.slug)
 
-        expected.add(bucket)
-
         # Only show application buckets present in the backend.
         if bucket not in buckets:
             continue
 
         visible.append((app, bucket))
         needs_usage.append(bucket)
-
-    # Keep stale organization buckets visible as orphaned resources.
-    prefix = f"{organization.slug}-"
-    orphans = [
-        bucket
-        for bucket in sorted(buckets)
-        if bucket not in expected and bucket.startswith(prefix)
-    ]
-    needs_usage.extend(orphans)
 
     usage_by_name: dict[str, storage_utils.StorageBucketUsage] = {}
 
@@ -526,8 +471,6 @@ async def _storage_resource_rows(
                 "name": "shared",
                 "bucket_name": shared,
                 "application": None,
-                "storage_registry_id": registry.id,
-                "storage_registry_name": registry.name,
                 "space_used": usage["space_used"],
                 "object_count": usage["object_count"],
             }
@@ -541,32 +484,7 @@ async def _storage_resource_rows(
                 "kind": OrganizationStorageResourceKind.application_bucket,
                 "name": app.slug,
                 "bucket_name": bucket,
-                "application": {
-                    "id": app.id,
-                    "name": app.name,
-                    "slug": app.slug,
-                    "icon": app.icon,
-                    "description": app.description,
-                    "status": app.status,
-                },
-                "storage_registry_id": registry.id,
-                "storage_registry_name": registry.name,
-                "space_used": usage["space_used"],
-                "object_count": usage["object_count"],
-            }
-        )
-
-    # Add stale organization buckets as orphaned resources.
-    for bucket in orphans:
-        usage = usage_by_name[bucket]
-        rows.append(
-            {
-                "kind": OrganizationStorageResourceKind.application_bucket,
-                "name": bucket.removeprefix(prefix),
-                "bucket_name": bucket,
-                "application": None,
-                "storage_registry_id": registry.id,
-                "storage_registry_name": registry.name,
+                "application": app,
                 "space_used": usage["space_used"],
                 "object_count": usage["object_count"],
             }
@@ -593,8 +511,20 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
 
-    # Require the selected location to have all runtime backends before inserting the organization row.
-    compute_registry, database_registry, storage_registry = await _location_runtime_registries(payload.location_id)
+    # Organizations require a compute namespace in their location.
+    compute_registry = await registries.compute(payload.location_id)
+    if compute_registry is None:
+        raise HTTPException(status_code=409, detail="Location has no compute registry")
+
+    # Organizations require a tenant database in their location.
+    database_registry = await registries.database(payload.location_id)
+    if database_registry is None:
+        raise HTTPException(status_code=409, detail="Location has no database registry")
+
+    # Organizations require shared object storage in their location.
+    storage_registry = await registries.storage(payload.location_id)
+    if storage_registry is None:
+        raise HTTPException(status_code=409, detail="Location has no storage registry")
 
     # Generate the row ID before insert so the stored tenant URL uses the final database name.
     organization_id = uuid4()

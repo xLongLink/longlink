@@ -228,7 +228,7 @@ export const apiComputePodSchema = z.object({
     node: z.string().nullable(),
 });
 
-const apiOrganizationDatabaseApplicationSchema = z.object({
+const apiOrganizationResourceApplicationSchema = z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
@@ -239,31 +239,17 @@ const apiOrganizationDatabaseApplicationSchema = z.object({
 
 export const apiOrganizationDatabaseResourceSchema = z.object({
     name: z.string(),
-    kind: z.literal('schema'),
     database_name: z.string(),
     space_used: z.number().nullable(),
     table_count: z.number().nullable(),
-    application: apiOrganizationDatabaseApplicationSchema.nullable(),
-    database_registry_id: z.string(),
-    database_registry_name: z.string(),
-});
-
-const apiOrganizationStorageApplicationSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    slug: z.string(),
-    icon: iconNameSchema,
-    description: z.string().nullable(),
-    status: applicationStatusSchema,
+    application: apiOrganizationResourceApplicationSchema.nullable(),
 });
 
 export const apiOrganizationStorageResourceSchema = z.object({
     kind: z.enum(['shared_bucket', 'application_bucket']),
     name: z.string(),
     bucket_name: z.string(),
-    application: apiOrganizationStorageApplicationSchema.nullable(),
-    storage_registry_id: z.string(),
-    storage_registry_name: z.string(),
+    application: apiOrganizationResourceApplicationSchema.nullable(),
     space_used: z.number().nullable(),
     object_count: z.number().nullable(),
 });

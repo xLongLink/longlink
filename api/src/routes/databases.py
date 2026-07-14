@@ -19,7 +19,7 @@ async def list_database_registries(_user: User = Depends(authsupport)):
 
 
 @router.get("/api/databases/{registry_id}", response_model=DatabaseRegistryResponse)
-async def get_database_registry(registry_id: UUID, _: User = Depends(authsupport)):
+async def get_database_registry(registry_id: UUID, _user: User = Depends(authsupport)):
     """Return one database backend registration."""
 
     registry = await database.get(registry_id)
@@ -45,8 +45,7 @@ async def create_database_registry(payload: DatabaseRegistryCreate, user: User =
     # Build a stable slug from the submitted name.
     slug = names.slugify(payload.name)
 
-    registry = await database.create(**payload.model_dump(), slug=slug, user=user)
-    return registry
+    return await database.create(**payload.model_dump(), slug=slug, user=user)
 
 
 @router.get("/api/databases/{registry_id}/usage", response_model=int)

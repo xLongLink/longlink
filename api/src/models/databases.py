@@ -4,20 +4,13 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.users import UserSummary
-from src.models.statuses import ApplicationStatus
-from longlink.tenant.models.icons import Icon
+from src.models.resources import OrganizationResourceApplicationResponse
 
 
 class DatabaseKind(StrEnum):
     """Supported database registry kinds."""
 
     postgresql = "postgresql"
-
-
-class OrganizationDatabaseResourceKind(StrEnum):
-    """Supported organization database resource kinds."""
-
-    schema = "schema"
 
 
 class DatabaseRegistryCreate(BaseModel):
@@ -69,36 +62,17 @@ class DatabaseRegistryCreate(BaseModel):
         return value
 
 
-class OrganizationDatabaseApplicationResponse(BaseModel):
-    """Represent the application using one database resource."""
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    name: str
-    slug: str
-    icon: Icon | None = None
-    description: str | None = None
-
-    # State
-    status: ApplicationStatus
-
-
 class OrganizationDatabaseResourceResponse(BaseModel):
     """Represent one database resource owned by an organization."""
 
     # Metadata
-    kind: OrganizationDatabaseResourceKind
     name: str
 
     # Database
     database_name: str
-    database_registry_id: UUID
-    database_registry_name: str
 
     # Relationships
-    application: OrganizationDatabaseApplicationResponse | None = None
+    application: OrganizationResourceApplicationResponse | None = None
 
     # Usage
     space_used: int | None = None

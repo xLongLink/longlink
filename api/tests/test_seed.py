@@ -270,7 +270,7 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
 
         calls["owner"] = (organization_id, user_id)
 
-    async def sync_tenant_users(shared_schema_url: str, users: list[object]) -> None:
+    async def sync_shared_users(shared_schema_url: str, users: list[object]) -> None:
         """Record organization user synchronization."""
 
         calls["organization_users"] = {
@@ -279,7 +279,7 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
         }
 
     async def database_users(organization_id: UUID) -> list[object]:
-        """Return fake tenant users for shared synchronization."""
+        """Return fake shared users for synchronization."""
 
         calls["database_users"] = organization_id
         return [user]
@@ -345,7 +345,7 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
     monkeypatch.setattr(seed.organization_service, "get", load_organization)
     monkeypatch.setattr(seed, "ensure_local_organization_owner", ensure_owner)
     monkeypatch.setattr(seed.organization_service, "database_users", database_users)
-    monkeypatch.setattr(seed.tenant_users, "sync_url", sync_tenant_users)
+    monkeypatch.setattr(seed.shared_users, "sync_url", sync_shared_users)
     monkeypatch.setattr(seed.organization_service, "applications", list_applications)
     monkeypatch.setattr(seed.application_routes, "create_application", create_application)
     monkeypatch.setattr(seed.environments, "application_image_metadata", application_metadata)

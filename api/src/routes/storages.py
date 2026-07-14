@@ -10,14 +10,14 @@ router = APIRouter()
 
 
 @router.get("/api/storages", response_model=list[StorageRegistryResponse])
-async def list_storage_registries(_: User = Depends(authsupport)):
+async def list_storage_registries(_user: User = Depends(authsupport)):
     """Return all registered storage backends."""
 
     return await storage.fetch()
 
 
 @router.get("/api/storages/{registry_id}", response_model=StorageRegistryResponse)
-async def get_storage_registry(registry_id: UUID, _: User = Depends(authsupport)):
+async def get_storage_registry(registry_id: UUID, _user: User = Depends(authsupport)):
     """Return one storage backend registration."""
 
     registry = await storage.get(registry_id)

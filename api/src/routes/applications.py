@@ -34,7 +34,7 @@ async def list_applications(_user: User = Depends(authadmin)):
 
 @router.post("/api/organizations/{organization_id}/applications", response_model=ApplicationResponse)
 async def create_application(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)):
-    """Register a new application in the database and deploy it on the compute cluster."""
+    """Register a new application and queue runtime provisioning."""
 
     # Resolve access inside the handler so body validation can reject malformed payloads first.
     membership = roles.access(user, organization_id, "organization")
@@ -96,13 +96,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         raise HTTPException(status_code=503, detail="Application runtime provisioning failed") from exc
 
     logger.info("Queued application creation %s for %s/%s", operation.id, organization.slug, payload.name)
-
-    # Reload the row so response serialization includes relationships populated by the service layer.
-    reloaded_application = await applications.get(application.id)
-    if reloaded_application is None:
-        raise HTTPException(status_code=404, detail="Application not found")
-
-    return reloaded_application
+    return application
 
 
 @router.get("/api/applications/{application_id}/logs", response_model=list[str])
@@ -156,13 +150,7 @@ async def list_application_members(application_id: UUID, user: User = Depends(au
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
 
-    # Resolve the application from the membership that granted access.
-    if isinstance(membership, UserApplication):
-        application = membership.application
-    else:
-        application = next(item for item in membership.organization.applications if item.id == application_id)
-
-    member_rows = await applications.members(application.id, application.organization_id)
+    member_rows = await applications.members(application_id, membership.organization_id)
     return [
         {
             "id": member.id,
@@ -192,7 +180,6 @@ async def update_application_member(
 
     # Direct application memberships provide application role access.
     if isinstance(membership, UserApplication):
-        application = membership.application
         application_role = membership.role
         organization_membership = roles.access(user, membership.organization_id, "organization")
         organization_membership_role = organization_membership.role if organization_membership is not None else None
@@ -208,15 +195,13 @@ async def update_application_member(
         if roles.rank(organization_membership_role) >= roles.rank(OrganizationRoles.maintain):
             caller_role_rank = max(caller_role_rank, roles.rank(organization_membership_role))
     else:
-        application = next(item for item in membership.organization.applications if item.id == application_id)
-
         # Organization memberships grant inherited application management authority.
         if not roles.atleast(membership.role, OrganizationRoles.maintain):
             raise HTTPException(status_code=403, detail="Permission required")
 
         caller_role_rank = roles.rank(membership.role)
 
-    member_application_role = await applications.membership_role(application.id, member_id)
+    member_application_role = await applications.membership_role(application_id, member_id)
 
     # Managers cannot modify roles above their authority.
     if roles.rank(member_application_role) > caller_role_rank:
@@ -227,8 +212,8 @@ async def update_application_member(
         raise HTTPException(status_code=403, detail="Application role management permissions required")
 
     updated = await applications.set_member_role(
-        application.id,
-        application.organization_id,
+        application_id,
+        membership.organization_id,
         member_id,
         payload.role,
         user,
@@ -248,7 +233,6 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
 
     # Direct application memberships provide application role access.
     if isinstance(membership, UserApplication):
-        application = membership.application
         organization_membership = roles.access(user, membership.organization_id, "organization")
         organization_role = organization_membership.role if organization_membership is not None else None
 
@@ -256,20 +240,18 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
             if not roles.atleast(organization_role, OrganizationRoles.maintain):
                 raise HTTPException(status_code=403, detail="Permission required")
     else:
-        application = next(item for item in membership.organization.applications if item.id == application_id)
-
         # Organization memberships must satisfy the organization role requirement.
         if not roles.atleast(membership.role, OrganizationRoles.maintain):
             raise HTTPException(status_code=403, detail="Permission required")
 
-    deleted = await applications.soft_delete(application.id, user)
+    deleted = await applications.soft_delete(application_id, user)
     if deleted is None:
         raise HTTPException(status_code=404, detail="Application not found")
 
     # Runtime cleanup is asynchronous so the delete request is not blocked by cluster calls.
     await operations.create(
         OperationKind.application_remove,
-        application_id=application.id,
+        application_id=application_id,
         scheduled_at=datetime.now(UTC),
         user=user,
     )

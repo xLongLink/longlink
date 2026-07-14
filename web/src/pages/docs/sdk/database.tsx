@@ -113,7 +113,10 @@ async def create_project() -> None:
                 { code: 'uv run longlink migrate', label: 'uv', value: 'uv' },
             ]}
         />
-        <P>This keeps schema changes synchronized with application code.</P>
+        <P>
+            This manages only application-owned tables in the application schema. The LongLink Platform separately
+            executes the SDK-owned migrations for shared tables such as <Code>users</Code>.
+        </P>
         <Heading id="users" level="h2">
             Users
         </Heading>

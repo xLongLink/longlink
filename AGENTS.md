@@ -26,7 +26,6 @@ longlink/
 │   │   ├── routes/               # FastAPI routes
 │   │   ├── utils/                # Shared utilities
 │   │   ├── auth.py               # Authentication helpers
-│   │   ├── constants.py          # Shared constants
 │   │   ├── environments.py       # Environment configuration
 │   │   └── logger.py             # Logging setup
 │   └── tests/                    # API tests
@@ -38,8 +37,9 @@ longlink/
 │   │   ├── cli/                  # CLI commands
 │   │   ├── database/             # Database helpers and migrations
 │   │   ├── routes/               # Runtime routes
+│   │   ├── shared/               # Shared-schema models, migrations, and synchronization
 │   │   ├── storage/              # Storage abstraction
-│   │   ├── tenant/               # Shared tenant models, migrations, services, and storage definitions
+│   │   ├── tenant/               # Shared runtime constants, types, models, and storage definitions
 │   │   ├── utils/                # Helpers and settings
 │   │   ├── app.py                # FastAPI application factory
 │   │   ├── pages.py              # Page metadata helpers
@@ -60,7 +60,7 @@ longlink/
     └── rfc/                        # Reference RFC material
 ```
 
-Runtime resource model: one organization maps to one database named from the organization UUID hex. Each organization database contains one organization-owned shared schema that applications can read, plus one schema per application named from the application UUID hex where that application has read/write access. Organization and application storage bucket names are derived from immutable slugs, not persisted separately. The organization row stores the internal shared-schema URL used by tenant migrations and shared user synchronization. Organization creation owns database creation and executes the tenant migrations packaged by the SDK; application creation owns only application schema and runtime role provisioning.
+Runtime resource model: one organization maps to one database named from the organization UUID hex. Each organization database contains one organization-owned shared schema that applications can read, plus one schema per application named from the application UUID hex where that application has read/write access. Organization and application storage bucket names are derived from immutable slugs, not persisted separately. The organization row stores the internal shared-schema URL used by control-plane shared migrations and user synchronization. Organization creation owns database creation and executes the shared migrations packaged by the SDK; application creation owns only application schema and runtime role provisioning. SDK application migrations manage only application-owned schemas.
 
 ## Python Guidelines
 

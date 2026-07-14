@@ -27,18 +27,21 @@ describe('getRoutes', () => {
         expect(routes[0].path).toBe('*');
     });
 
-    it('builds the API-mode public, organization, admin, and gateway-backed app routes', () => {
+    it('builds the API-mode public, organization, admin, and proxy-backed app routes', () => {
         const routes = getRoutes('api');
         const routePaths = collectRoutePaths(routes);
 
         expect(routePaths).toContain('/');
-        expect(routePaths).toContain('admin');
         expect(routePaths).toContain('admin/users');
         expect(routePaths).toContain('admin/locations');
         expect(routePaths).toContain('organizations');
         expect(routePaths).toContain('orgs/:organization');
+        expect(routePaths).toContain('orgs/:organization/database');
+        expect(routePaths).toContain('orgs/:organization/storage');
+        expect(routePaths).toContain('orgs/:organization/settings');
         expect(routePaths).toContain('orgs/:organization/settings/applications');
         expect(routePaths).toContain('orgs/:organization/settings/applications/:settingsApplication');
+        expect(routePaths).toContain('orgs/:organization/settings/people');
         expect(routePaths).toContain('orgs/:organization/settings/database');
         expect(routePaths).toContain('orgs/:organization/settings/storage');
         expect(routePaths).toContain('orgs/:organization/apps/:application/*');

@@ -5,12 +5,13 @@ from .base import Database, DatabaseRuntimeConnection
 from .types import DatabaseSchemaUsage
 from sqlalchemy import String, text
 from collections.abc import AsyncIterator
+from longlink.shared import migrations as shared_migrations
 from src.environments import env
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
 from sqlalchemy.sql.elements import quoted_name
-from longlink.tenant.database import SHARED_SCHEMA, migrate_database
+from longlink.shared.constants import SHARED_SCHEMA
 
 
 class Postgres(Database):
@@ -119,7 +120,7 @@ class Postgres(Database):
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
 
         # Tenant migrations create the organization schema before users or app schemas rely on it.
-        await migrate_database(shared_schema_url)
+        await shared_migrations.migrate_database(shared_schema_url)
 
         # Re-apply shared schema restrictions because migrations can recreate schema-owned objects.
         async with self._connection(organization.hex) as conn:

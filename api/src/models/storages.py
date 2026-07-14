@@ -4,8 +4,7 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.users import UserSummary
-from src.models.statuses import ApplicationStatus
-from longlink.tenant.models.icons import Icon
+from src.models.resources import OrganizationResourceApplicationResponse
 
 
 class StorageKind(StrEnum):
@@ -20,22 +19,6 @@ class OrganizationStorageResourceKind(StrEnum):
 
     shared_bucket = "shared_bucket"
     application_bucket = "application_bucket"
-
-
-class OrganizationStorageApplicationResponse(BaseModel):
-    """Represent an application associated with a storage resource."""
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    name: str
-    slug: str
-    icon: Icon | None = None
-    description: str | None = None
-
-    # State
-    status: ApplicationStatus
 
 
 class StorageRegistryCreate(BaseModel):
@@ -97,9 +80,7 @@ class OrganizationStorageResourceResponse(BaseModel):
     bucket_name: str
 
     # Relationships
-    application: OrganizationStorageApplicationResponse | None
-    storage_registry_id: UUID
-    storage_registry_name: str
+    application: OrganizationResourceApplicationResponse | None
 
     # Usage
     space_used: int | None = None

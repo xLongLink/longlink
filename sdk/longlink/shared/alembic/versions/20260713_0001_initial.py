@@ -10,7 +10,7 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    """Create the initial tenant shared schema."""
+    """Create the initial organization shared schema."""
 
     op.create_table(
         "users",
@@ -27,6 +27,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Drop the initial tenant shared schema."""
+    """Drop the initial organization shared schema."""
 
     op.drop_table("users")
