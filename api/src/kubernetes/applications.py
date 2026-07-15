@@ -51,7 +51,10 @@ class Applications:
         location_id: str,
         platform_version: str,
     ) -> OrganizationManifests:
-        """Render an owned organization Namespace and gateway ingress policy."""
+        """Render the organization tenant boundary as an owned Namespace plus a gateway-only ingress policy.
+
+        Both manifests share a revision derived from organization identity and template content.
+        """
 
         # Include template source and identity in the revision applied to both resources.
         source = TEMPLATES.joinpath("application_network_policy.yml")
@@ -83,7 +86,10 @@ class Applications:
         revision_key: str,
         platform_version: str,
     ) -> ApplicationManifests:
-        """Render one desired application Secret, Deployment, and Service."""
+        """Render one application's Secret, Deployment, and Service from its authoritative workload input.
+
+        The Secret is an exact snapshot, so omitted environment keys are removed, while its revision rolls dependent Pods.
+        """
 
         # Hash the source and complete runtime input so image and Secret changes roll the pods.
         source = TEMPLATES.joinpath("application.yml")

@@ -20,7 +20,6 @@ from src.models.applications import (
 )
 from src.database.models.users import User
 from src.database.models.association import UserApplication
-from src.database.models.applications import Application
 
 router = APIRouter()
 BLOCKED_PROXY_CONTENT_TYPES = {"application/xhtml+xml", "image/svg+xml", "text/html"}
@@ -235,7 +234,10 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
 @router.api_route("/api/applications/{application_id}/proxy", methods=APPLICATION_PROXY_METHODS)
 @router.api_route("/api/applications/{application_id}/proxy/{path:path}", methods=APPLICATION_PROXY_METHODS)
 async def proxy_application_request(request: Request, application_id: UUID, path: str = "", user: User = Depends(authuser)) -> Response:
-    """Authenticate and forward one application runtime request through the cluster gateway."""
+    """Enforce HTTP-method-specific LongLink Application roles before traffic enters the location's cluster gateway.
+
+    The API is the trust boundary: it injects authenticated identity and trusts only the persisted location CA.
+    """
 
     # Load application access before proxying runtime traffic.
     membership = roles.access(user, application_id, "application")

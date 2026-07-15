@@ -14,7 +14,10 @@ from longlink.shared.constants import SHARED_SCHEMA
 
 
 class Postgres(Database):
-    """PostgreSQL database adapter."""
+    """Implement the database tenant topology on PostgreSQL using registry credentials for control-plane provisioning.
+
+    Runtime roles can write their application schema and read the organization's shared schema.
+    """
 
     def __init__(self, host: str, port: int, username: str, password: str) -> None:
         """Initialize the PostgreSQL database adapter.
@@ -104,7 +107,10 @@ class Postgres(Database):
             await engine.dispose()
 
     async def prepare_organization_database(self, organization: UUID, shared_schema_url: str) -> None:
-        """Ensure one organization's database and shared schema are ready."""
+        """Converge one organization database, run SDK-owned shared-schema migrations, and restore shared-schema restrictions.
+
+        Repeated calls resume the same topology after partial provisioning.
+        """
 
         # Create the organization database from the maintenance database when it is missing.
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
@@ -128,7 +134,10 @@ class Postgres(Database):
             await conn.exec_driver_sql(f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA {shared_schema} FROM PUBLIC")
 
     async def schema(self, organization: UUID, application: UUID, password: str) -> DatabaseRuntimeConnection:
-        """Create or update one application schema using its stable runtime password."""
+        """Converge one application schema and runtime role, rotating to the supplied password on every retry.
+
+        Grant writes only to the application schema and reads to shared tables, then return non-administrator connection material.
+        """
 
         # Derive the app-scoped role while keeping the persisted password stable across retries.
         runtime_username = f"longlink_{organization.hex[:16]}_{application.hex[:16]}"

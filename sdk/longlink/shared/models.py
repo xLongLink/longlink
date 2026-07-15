@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Any, ClassVar
+from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field
 from sqlalchemy import Uuid, Table, Column, String
@@ -12,7 +12,7 @@ from longlink.database.registry import Base, database_metadata
 class User(Base, table=True):
     """Represent one platform-owned organization user readable by applications."""
 
-    __tablename__: ClassVar[Any] = SHARED_USERS_TABLE
+    __tablename__: ClassVar[str] = SHARED_USERS_TABLE
     __table_args__: ClassVar[dict[str, object]] = {"info": {SHARED_TABLE_INFO_KEY: True}}
 
     # Identifier

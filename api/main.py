@@ -16,7 +16,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Start the API and background operation worker."""
+    """Run one serial operation scheduler and one drift scan for this API replica. Durable queue coalescing and leased claims coordinate the tasks across replicas until shutdown."""
 
     worker = asyncio.create_task(run_operation_scheduler(operation_locations.reconcile))
     reconciler = asyncio.create_task(operation_locations.run_periodic_reconciliation())

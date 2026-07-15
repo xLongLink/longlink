@@ -9,7 +9,10 @@ from src.database.models.databases import DatabaseRegistry
 
 
 def database(registry: DatabaseRegistry) -> Database:
-    """Build the database adapter for one registry record."""
+    """Construct the provisioning adapter selected by one database registry record.
+
+    Registry credentials remain at this control-plane boundary instead of being returned as runtime connection material.
+    """
 
     # Select the PostgreSQL adapter for supported database registries.
     if registry.kind == DatabaseKind.postgresql:
@@ -24,7 +27,10 @@ def database(registry: DatabaseRegistry) -> Database:
 
 
 def storage(registry: StorageRegistry) -> Storage:
-    """Build the storage adapter for one registry record."""
+    """Construct the storage provider selected by a registry record, enforcing development-only MinIO at this boundary.
+
+    Registry credentials provision resources; provider adapters define the narrower runtime credential contract.
+    """
 
     # Select the MinIO adapter for local development storage registries.
     if registry.kind == StorageKind.minio:

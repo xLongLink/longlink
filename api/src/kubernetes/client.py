@@ -25,7 +25,10 @@ class Kubernetes:
         fence: Callable[[], Awaitable[None]] | None = None,
         stage_tls: Callable[[GatewayTLSMaterial], Awaitable[None]] | None = None,
     ) -> ReconcileResult:
-        """Converge the connected cluster to one location's complete desired state."""
+        """Forward an authoritative location snapshot to the cluster reconciler and return gateway connection material.
+
+        Optional fencing and TLS staging preserve operation ownership and trust ordering.
+        """
 
         return await self._reconciler.reconcile(desired, proxy_secret, existing_tls, fence, stage_tls)
 
@@ -42,6 +45,3 @@ class Kubernetes:
         """List all pods in one namespace for diagnostics."""
 
         return await self._resources.list(Pod, namespace)
-
-
-from collections.abc import Callable, Awaitable

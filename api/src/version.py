@@ -4,7 +4,7 @@ PLATFORM_VERSION_PATTERN = r"^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)
 
 
 def platform_version_key(version: str) -> tuple[int, int, int]:
-    """Return a sortable semantic release key for one Platform version."""
+    """Validate a strict LongLink Platform release tag and return its numeric ordering key."""
 
     # Persisted and configured versions use the exact release-tag format.
     match = re.fullmatch(PLATFORM_VERSION_PATTERN, version)
@@ -15,7 +15,7 @@ def platform_version_key(version: str) -> tuple[int, int, int]:
 
 
 def latest_platform_version(*versions: str) -> str:
-    """Return the newest Platform version without changing its stored spelling."""
+    """Select the newest validated LongLink Platform release for reconciliation affinity."""
 
     if not versions:
         raise ValueError("At least one Platform version is required")

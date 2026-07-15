@@ -5,7 +5,10 @@ from .types import DatabaseSchemaUsage
 
 
 class DatabaseRuntimeConnection(TypedDict):
-    """Describe database connection settings safe to inject into one application runtime."""
+    """Describe least-privilege connection material injected into one application runtime.
+
+    It targets an organization database through an application role, not through registry administrator credentials.
+    """
 
     host: str
     port: int
@@ -15,35 +18,31 @@ class DatabaseRuntimeConnection(TypedDict):
 
 
 class Database(ABC):
-    """Database adapter.
+    """Define the retry-safe provider contract for one database per organization and one writable schema and role per application.
 
-    Server              # Connected to the database server, e.g. PostgreSQL, MySQL
-    └── Database        # One for each organization
-        └── Schema      # One for each application
-            └── Tables  # Managed by the application ORM, e.g. Prisma, SQLAlchemy
-
-    Database structure for one organization:
-    ├── shared Schema  # Organization-owned tables, readable by every application.
-    ├── app_a Schema   # Application-owned tables, writable by app_a.
-    └── app_n Schema   # Application-owned tables, writable by app_n.
-
-    Organization creation owns database creation and executes SDK-owned shared migrations. Application creation owns
-    only the application schema and runtime role inside the already-prepared organization database.
-
-    Each application has read/write access to its own schema, and read-only access to shared tables.
+    Provisioning uses registry authority, while runtime roles receive read-only access to the organization's shared schema.
     """
 
     @abstractmethod
     def shared_schema_url(self, organization: UUID) -> str:
-        """Return the shared-schema database URL for one organization."""
+        """Return a control-plane URL targeting one organization's shared schema for SDK migrations.
+
+        This URL carries provisioning authority and must not be injected into application runtimes.
+        """
 
     @abstractmethod
     async def prepare_organization_database(self, organization: UUID, shared_schema_url: str) -> None:
-        """Ensure one organization's database and shared schema are ready."""
+        """Idempotently prepare the organization database and SDK-owned shared schema for the supplied migration URL.
+
+        Implementations must safely converge when orchestration retries the operation.
+        """
 
     @abstractmethod
     async def schema(self, organization: UUID, application: UUID, password: str) -> DatabaseRuntimeConnection:
-        """Create or update one application schema using its stable runtime password."""
+        """Idempotently converge one application's schema, runtime role, password, and least-privilege grants.
+
+        Return only application-scoped connection material within the organization database.
+        """
 
     @abstractmethod
     async def delete_schema(self, organization: UUID, application: UUID) -> None:

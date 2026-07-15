@@ -1,23 +1,20 @@
 import asyncio
 from src import adapters, projections
 from typing import cast
-from fastapi import HTTPException
-from src.utils import jobs, names
+from src.utils import jobs, names, images
 from src.logger import logger
-from src.kubernetes import environments
-from src.environments import env
 from src.version import platform_version_key
+from src.environments import env
 from src.models.statuses import ApplicationStatus, OrganizationStatus
 from src.database.services import compute, storage, database, locations, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayTLSMaterial
-from src.models.applications import ApplicationCreate
 from src.kubernetes.reconcile import DesiredLocation, DesiredApplication, DesiredOrganization
 from src.database.models.operations import Operation
 
 
 async def run_periodic_reconciliation() -> None:
-    """Continuously enqueue drift repair for every active location."""
+    """Periodically request drift repair for every active or incompletely deleted Location. Each API replica may scan because Location queueing coalesces duplicate requests."""
 
     # Every API replica may scan because the open-operation index coalesces duplicate requests.
     while True:
@@ -32,7 +29,7 @@ async def run_periodic_reconciliation() -> None:
 
 
 async def reconcile(operation: Operation) -> jobs.OperationOutcome:
-    """Converge database, storage, and Kubernetes state for one location."""
+    """Converge one Location's desired Organization and LongLink Application state across its database, storage, and Kubernetes backends. The claimed attempt fences provider writes, while tombstones drive cleanup before observed state advances. Release mismatches and incomplete readiness request retry."""
 
     # Every external mutation is fenced by the unexpired lease claimed for this attempt.
     attempt_count = operation.attempt_count
@@ -118,15 +115,8 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
 
             # Resolve and persist the immutable image before creating provider credentials.
             if application.digest is None:
-                payload = ApplicationCreate(
-                    name=application.name,
-                    image=application.image,
-                    description=application.description,
-                    envs=application.envs,
-                )
-                try:
-                    metadata = await environments.application_image_metadata(payload)
-                except HTTPException:
+                metadata = await images.metadata(application.image, application.envs)
+                if metadata is None:
                     await applications.set_status(application.id, ApplicationStatus.failed)
                     continue
                 updated = await applications.update_runtime(

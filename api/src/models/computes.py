@@ -5,7 +5,10 @@ from src.models.users import UserSummary
 
 
 class ComputeRegistryResponse(BaseModel):
-    """Represent one compute registry in API responses."""
+    """Describe the compute backend owned by one location without exposing its kubeconfig or gateway secrets.
+
+    The gateway URL is non-secret connection state observed during reconciliation.
+    """
 
     model_config = ConfigDict(from_attributes=True)
 

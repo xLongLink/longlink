@@ -7,7 +7,10 @@ from src.models.infrastructure import ComputeConfiguration, StorageConfiguration
 
 
 class LocationCreate(BaseModel):
-    """Request body for creating a location."""
+    """Define one immutable aggregate of compute, database, and storage configuration.
+
+    Connection secrets are accepted for LongLink Platform use but excluded from location and registry responses.
+    """
 
     # Metadata
     name: str = Field(min_length=1, max_length=255)
@@ -20,7 +23,10 @@ class LocationCreate(BaseModel):
 
 
 class LocationResponse(BaseModel):
-    """Represent one location in API responses."""
+    """Expose the identity and observed reconciliation state of one location.
+
+    The location owns its immutable infrastructure registries without exposing their connection secrets.
+    """
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -38,7 +44,10 @@ class LocationResponse(BaseModel):
 
 
 class LocationMutationResponse(BaseModel):
-    """Return a changed location and its coalesced reconciliation operation."""
+    """Pair an accepted location desired-state change with its reconciliation operation.
+
+    Acceptance confirms persistence and queueing, not completed infrastructure convergence.
+    """
 
     # Result
     location: LocationResponse

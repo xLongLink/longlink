@@ -14,7 +14,10 @@ class OperationStatus(StrEnum):
 
 
 class OperationResponse(BaseModel):
-    """Represent one long-running operation in API responses."""
+    """Expose asynchronous reconciliation for one location's desired state.
+
+    Only completion confirms convergence; failures include sanitized diagnostics without backend credentials.
+    """
 
     model_config = ConfigDict(from_attributes=True)
 

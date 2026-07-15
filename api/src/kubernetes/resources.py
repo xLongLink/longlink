@@ -87,7 +87,10 @@ def _comparable_secret(body: KubernetesDocument) -> KubernetesDocument:
 
 
 class KubernetesResources:
-    """Provide shared low-level resource operations for one Kubernetes cluster."""
+    """Provide the low-level cluster boundary for apply, exact Secret replacement, discovery, and conditional deletion.
+
+    Higher layers must establish ownership and canonical identity before mutating discovered resources.
+    """
 
     def __init__(self, kubeconfig: str) -> None:
         """Initialize lazy access to one configured cluster."""
@@ -110,7 +113,10 @@ class KubernetesResources:
         return self._api_client
 
     async def apply(self, body: KubernetesDocument) -> APIObject:
-        """Create or update one resource with Kubernetes server-side apply."""
+        """Server-side apply one resource under LongLink's field manager.
+
+        Apply forces field conflicts, so callers must establish authority over any existing resource first.
+        """
 
         # Resolve the resource class once so its endpoint and scope drive the PATCH request.
         api = await self.api()
@@ -133,7 +139,11 @@ class KubernetesResources:
             return type(resource)(document, api=api)
 
     async def replace_secret(self, body: KubernetesDocument) -> Secret:
-        """Create or exactly replace one Secret while preserving provider metadata."""
+        """Create or replace a Secret with authoritative data, so omitted keys are removed rather than retained by field ownership.
+
+        Preserve existing labels plus non-LongLink annotations and finalizers, allowing desired labels to override matching keys. Retry
+        resource-version conflicts from a fresh read.
+        """
 
         # Validate the body and resolve the namespace before entering the conflict retry loop.
         api = await self.api()
@@ -287,7 +297,10 @@ class KubernetesResources:
         location_id: str,
         namespace: str | None = None,
     ) -> list[KubernetesResource]:
-        """List resources managed by LongLink for one location."""
+        """List resources only when both LongLink manager and location labels match.
+
+        This selector is the first ownership boundary; callers still validate kind-specific identity before mutation.
+        """
 
         # Both labels are required so another controller's resources cannot be adopted accidentally.
         return await self.list(

@@ -213,10 +213,11 @@ async def test_execute_location_reconcile_operation_converges_complete_desired_s
 
         events.append(("sync-users", organization.id))
 
-    async def image_metadata(payload) -> LongLinkMetadata:
+    async def image_metadata(image: str, envs: dict[str, str]) -> LongLinkMetadata:
         """Resolve the submitted tag to one immutable image reference."""
 
-        assert payload.image == "ghcr.io/longlink/dashboard:latest"
+        assert image == "ghcr.io/longlink/dashboard:latest"
+        assert envs == {"CUSTOM_VALUE": "configured"}
         metadata = LongLinkMetadata(digest="sha256:resolved")
         metadata.image = "ghcr.io/longlink/dashboard@sha256:resolved"
         return metadata
@@ -224,7 +225,7 @@ async def test_execute_location_reconcile_operation_converges_complete_desired_s
     monkeypatch.setattr(location_operations.adapters, "database", database_adapter)
     monkeypatch.setattr(location_operations.adapters, "storage", storage_adapter)
     monkeypatch.setattr(location_operations.projections, "sync_organization_users", sync_organization_users)
-    monkeypatch.setattr(location_operations.environments, "application_image_metadata", image_metadata)
+    monkeypatch.setattr(location_operations.images, "metadata", image_metadata)
     monkeypatch.setattr(location_operations, "Kubernetes", FakeKubernetes)
     operation = await operations.enqueue(location.id)
     claimed = await operations.claim_next()

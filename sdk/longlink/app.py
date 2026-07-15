@@ -2,9 +2,7 @@ import logging
 from typing import Any
 from fastapi import FastAPI, APIRouter
 from pathlib import Path
-from longlink.pages import (XMLResponse, PageDefinition, page_file_tab,
-                            page_file_route, normalize_page_path,
-                            extract_longlink_metadata)
+from longlink.pages import XMLResponse, PageDefinition, page_file_tab, page_file_route, normalize_page_path, extract_longlink_metadata
 from longlink.utils import Envs
 from collections.abc import Callable
 from longlink.logger import ApiAccessFilter
@@ -240,9 +238,9 @@ class LongLink(FastAPI):
         for page_file in sorted(pages_directory.rglob("*.xml")):
             relative_path = page_file.relative_to(pages_directory).as_posix()
             route_path = f"{normalized_prefix}/{relative_path}"
-            LonglinkXml(page_file).validate()
-            page_content = page_file.read_text(encoding="utf-8")
-            page_name, page_icon = extract_longlink_metadata(page_content)
+            page = LonglinkXml(page_file)
+            page.validate()
+            page_name, page_icon = extract_longlink_metadata(page.content)
 
             async def page_endpoint(page_path: Path = page_file) -> str:
                 """Return XML page content from disk."""

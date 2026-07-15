@@ -6,6 +6,7 @@ import urllib.parse
 from typing import Any
 from src.logger import logger
 from dataclasses import dataclass
+from collections.abc import Mapping
 from src.environments import env
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
@@ -38,8 +39,12 @@ class ImageReference:
     tag_or_digest: str
 
 
-async def metadata(image: str) -> LongLinkMetadata | None:
+async def metadata(image: str, envs: Mapping[str, str] | None = None) -> LongLinkMetadata | None:
     """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
+
+    # Reject application values reserved for Platform injection before accessing the registry.
+    if envs is not None and any(name.startswith("LONGLINK_") for name in envs):
+        return None
 
     # Parse the image reference before opening a registry client.
     try:
@@ -131,6 +136,13 @@ async def metadata(image: str) -> LongLinkMetadata | None:
                     result.environments = [EnvironmentMetadata.model_validate(item) for item in parsed_environments]
                 except json.JSONDecodeError, TypeError, ValueError:
                     return None
+
+            # Validate deployment values against required image metadata when they are available.
+            if envs is not None and any(
+                item.required and (item.name.startswith("LONGLINK_") or not envs.get(item.name, "").strip())
+                for item in result.environments
+            ):
+                return None
 
             return result
         except (httpx2.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:

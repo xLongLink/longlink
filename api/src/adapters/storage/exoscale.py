@@ -31,7 +31,10 @@ class Exoscale(MinIO):
         self._api_url = f"https://api-{self._zone}.exoscale.com/v2"
 
     async def credentials(self, bucket: str, access: StorageAccess) -> StorageRuntimeCredentials:
-        """Create IAM role and API key credentials scoped to one bucket."""
+        """Replace deterministic prior IAM material and issue a new key constrained to the requested bucket and access level.
+
+        Cleanup-first provisioning makes retries converge without accumulating active keys or roles.
+        """
 
         name = self._credential_name(bucket)
 

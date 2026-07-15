@@ -30,7 +30,10 @@ async def upsert(
     radius: Radius | None = None,
     language: Language | None = None,
 ) -> User:
-    """Create a new OIDC user or update an existing one."""
+    """Create or patch a LongLink Platform user by OIDC subject.
+
+    Unless explicitly assigned, the first persisted user becomes the LongLink Platform administrator.
+    """
 
     async with session_scope() as session:
         result = await session.execute(select(User).where(User.oidc == oidc))
@@ -114,7 +117,7 @@ async def upsert(
 
 
 async def get(oidc: str, include_deleted: bool = False, include_access: bool = False) -> User | None:
-    """Retrieve a user by OIDC subject."""
+    """Load a user by OIDC subject, optionally with Organization and LongLink Application access for authentication. Soft-deleted users are hidden by default."""
 
     # Read the user through a managed database session.
     async with session_scope() as session:

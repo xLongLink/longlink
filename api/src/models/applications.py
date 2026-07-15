@@ -103,7 +103,10 @@ class ApplicationResponse(BaseModel):
 
 
 class ApplicationMutationResponse(BaseModel):
-    """Return a changed application and its location reconciliation operation."""
+    """Pair an accepted LongLink Application desired-state change with its location reconciliation operation.
+
+    The operation must complete before the desired state is confirmed in the runtime.
+    """
 
     # Result
     application: ApplicationResponse

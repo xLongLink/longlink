@@ -7,7 +7,10 @@ from src.models.infrastructure import DatabaseKind
 
 
 class OrganizationDatabaseResourceResponse(BaseModel):
-    """Represent one database resource owned by an organization."""
+    """Represent a live database schema and usage within one Organization database.
+
+    A missing application association identifies shared or orphaned backend state, not additional desired state.
+    """
 
     # Metadata
     name: str
@@ -24,7 +27,10 @@ class OrganizationDatabaseResourceResponse(BaseModel):
 
 
 class DatabaseRegistryResponse(BaseModel):
-    """Represent one database registry in API responses."""
+    """Describe the database backend owned by one location while filtering its administrator password.
+
+    Non-secret connection metadata remains available for support and diagnostics.
+    """
 
     model_config = ConfigDict(from_attributes=True)
 

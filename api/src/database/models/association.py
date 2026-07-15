@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 class UserOrganization(SQLModel, table=True):
-    """Represent one user's membership in an organization."""
+    """Persist the authoritative Organization role assigned to one LongLink Platform user."""
 
     __tablename__: ClassVar[str] = "user_organizations"
 
@@ -47,7 +47,7 @@ class UserOrganization(SQLModel, table=True):
 
 
 class UserApplication(SQLModel, table=True):
-    """Represent one user's membership in an application."""
+    """Persist an optional Application-specific role that supplements access inherited from Organization membership."""
 
     __tablename__: ClassVar[str] = "user_applications"
 

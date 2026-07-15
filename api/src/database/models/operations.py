@@ -9,7 +9,10 @@ from longlink.database.types import UTCDateTime
 
 
 class Operation(SQLModel, table=True):
-    """Represent one location-scoped platform operation."""
+    """Persist one durable Location reconciliation request and its renewable worker lease.
+
+    Each Location admits one open request; its target release and attempt generation coordinate and fence API replicas.
+    """
 
     __tablename__: ClassVar[str] = "operations"
     __table_args__ = (
@@ -44,7 +47,7 @@ class Operation(SQLModel, table=True):
 
     @property
     def status(self) -> OperationStatus:
-        """Return the derived operation lifecycle state."""
+        """Derive lifecycle state from terminal timestamps, error state, and the current lease expiry."""
 
         # Stopped operations are terminal.
         if self.stopped_at is not None:

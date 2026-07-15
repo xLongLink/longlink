@@ -227,7 +227,7 @@ async def create(
     icon: str | None = None,
     envs: dict[str, str] | None = None,
 ) -> Application:
-    """Add a new application to the database for one organization."""
+    """Create an Organization-owned LongLink Application and administrator membership. The desired-state change and its Location reconciliation request commit atomically."""
 
     # Create the application and owner membership transactionally.
     async with session_scope() as session:
@@ -312,7 +312,7 @@ async def create(
 
 
 def storage_credentials(application: Application) -> StorageRuntimeCredentials | None:
-    """Return persisted storage credentials for one application."""
+    """Return complete persisted credentials for a LongLink Application's stable storage identity."""
 
     # Credentials are usable only when both storage credential fields were stored.
     if application.storage_access_key_id is None or application.storage_secret_access_key is None:
@@ -325,7 +325,7 @@ def storage_credentials(application: Application) -> StorageRuntimeCredentials |
 
 
 async def set_storage_credentials(application_id: UUID, credentials: StorageRuntimeCredentials) -> Application | None:
-    """Persist storage credentials for one application."""
+    """Persist generated credentials for a LongLink Application's stable storage identity. A missing row lets reconciliation revoke the unclaimed credentials."""
 
     # Update only storage credential fields.
     async with session_scope() as session:
@@ -370,7 +370,7 @@ async def update_runtime(
     icon: str | None = None,
     envs: dict[str, str] | None = None,
 ) -> Application | None:
-    """Update one existing application's runtime metadata."""
+    """Persist runtime metadata resolved by reconciliation without reviving a deleted LongLink Application."""
 
     # Update runtime metadata in one session.
     async with session_scope() as session:
@@ -400,7 +400,7 @@ async def update_runtime(
 
 
 async def soft_delete(application_id: UUID, user: User) -> Application | None:
-    """Soft-delete one application and its application memberships."""
+    """Tombstone a LongLink Application and its memberships, then atomically queue Location cleanup. Reconciliation retains the tombstone until external resources are removed."""
 
     # Soft-delete the application and memberships together.
     async with session_scope() as session:

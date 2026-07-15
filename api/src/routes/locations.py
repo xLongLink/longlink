@@ -41,7 +41,10 @@ async def delete_location(location_id: UUID, user: User = Depends(authadmin)):
 
 @router.post("/api/locations", response_model=LocationMutationResponse, status_code=202)
 async def create_location(payload: LocationCreate, user: User = Depends(authadmin)):
-    """Create one complete location aggregate and queue provisioning."""
+    """Persist a location and its immutable infrastructure registries as one desired-state aggregate.
+
+    The 202 response confirms acceptance and queueing; only operation completion confirms provisioning.
+    """
 
     # Build a stable slug from the submitted name.
     slug = names.slugify(payload.name)

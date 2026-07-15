@@ -67,7 +67,10 @@ async def enqueue_in_session(
     location_id: UUID,
     desired_change: bool = True,
 ) -> Operation:
-    """Queue one location reconciliation inside a caller-owned transaction."""
+    """Coalesce Location reconciliation inside the caller's desired-state transaction.
+
+    Location locking keeps the release target monotonic and queueing atomic across LongLink Platform replicas.
+    """
 
     # Serialize queue changes through the aggregate so release targets remain monotonic across Platform replicas.
     location = (await session.execute(select(Location).where(Location.id == location_id).with_for_update())).scalar_one_or_none()
@@ -132,7 +135,10 @@ async def enqueue(location_id: UUID, desired_change: bool = True) -> Operation:
 
 
 async def claim_next() -> Operation | None:
-    """Claim the oldest ready operation, including work with a stale lease."""
+    """Claim the oldest due Operation targeting this LongLink Platform release and start its next fenced lease.
+
+    Row locking coordinates replicas, stale leases are reclaimable, and exhausted work becomes terminal.
+    """
 
     # Skip exhausted crash recovery rows while selecting one attempt this worker may execute.
     while True:

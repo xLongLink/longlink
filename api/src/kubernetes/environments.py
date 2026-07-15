@@ -5,7 +5,10 @@ from src.models.applications import ApplicationCreate
 
 
 async def application_image_metadata(payload: ApplicationCreate) -> LongLinkMetadata:
-    """Inspect image metadata and validate required environment values."""
+    """Resolve immutable image metadata before provisioning a LongLink Application runtime.
+
+    Reject application and image declarations of Platform-reserved variables and require every required application-managed value.
+    """
 
     reserved_payload = sorted(name for name in payload.envs if name.startswith("LONGLINK_"))
 

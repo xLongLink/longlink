@@ -25,7 +25,7 @@ IMMUTABLE_IMAGE = re.compile(r"@sha256:[0-9a-f]{64}$")
 
 @dataclass(frozen=True, slots=True)
 class DesiredOrganization:
-    """Represent one organization Namespace in location desired state."""
+    """Describe one Organization Namespace and tenant identity in a Location's authoritative snapshot."""
 
     id: UUID
     slug: str
@@ -33,7 +33,10 @@ class DesiredOrganization:
 
 @dataclass(frozen=True, slots=True)
 class DesiredApplication:
-    """Represent one application workload in location desired state."""
+    """Describe one application workload within its organization's Namespace.
+
+    These fields are the authoritative workload inputs for a location snapshot.
+    """
 
     id: UUID
     organization_id: UUID
@@ -44,7 +47,10 @@ class DesiredApplication:
 
 @dataclass(frozen=True, slots=True)
 class DesiredLocation:
-    """Represent the complete desired Kubernetes state for one immutable location."""
+    """Describe the authoritative, complete snapshot for one immutable location.
+
+    Omitted managed organizations and applications are pruned, and deleting snapshots must be empty.
+    """
 
     id: UUID
     organizations: tuple[DesiredOrganization, ...]
@@ -54,7 +60,10 @@ class DesiredLocation:
 
 @dataclass(frozen=True, slots=True)
 class ReconcileResult:
-    """Return gateway connection material produced by reconciliation."""
+    """Carry the gateway endpoint and TLS identity, including its sensitive private key, across reconciliation.
+
+    All fields are absent after location deletion.
+    """
 
     gateway_url: str | None
     gateway_ca_certificate: str | None
@@ -210,7 +219,11 @@ class Reconciler:
         fence: Callable[[], Awaitable[None]] | None = None,
         stage_tls: Callable[[gateway.GatewayTLSMaterial], Awaitable[None]] | None = None,
     ) -> ReconcileResult:
-        """Apply, verify, and then prune one full location desired state."""
+        """Converge one cluster from an authoritative location snapshot, applying desired resources before pruning owned omissions.
+
+        When configured, stage rotated TLS trust before deploying the new gateway identity. The optional fence guards mutations
+        against stale operation ownership.
+        """
 
         # Validate the entire desired graph before connecting to or changing the cluster.
         self._validate(desired, proxy_secret)
@@ -351,7 +364,10 @@ class Reconciler:
         location_id: str,
         fence: Callable[[], Awaitable[None]] | None,
     ) -> None:
-        """Create or update a Namespace only when its location ownership is unambiguous."""
+        """Claim a Namespace only after validating that any existing object belongs to the same LongLink location.
+
+        Refuse adoption across the cluster ownership boundary.
+        """
 
         # Read and validate ownership before server-side apply can claim metadata fields.
         metadata = body.get("metadata")
@@ -465,7 +481,10 @@ class Reconciler:
             await asyncio.sleep(POLL_INTERVAL_SECONDS)
 
     async def _prune(self, desired: DesiredLocation, fence: Callable[[], Awaitable[None]] | None) -> None:
-        """Delete obsolete known resources and organization Namespaces with UID preconditions."""
+        """Delete only recognized, location-owned resources omitted from the authoritative snapshot, using UID preconditions.
+
+        Remove child resources before organization Namespaces and wait for termination before reporting pruning complete.
+        """
 
         location_id = str(desired.id)
         desired_namespaces = {organization.slug for organization in desired.organizations}
@@ -555,7 +574,10 @@ class Reconciler:
         namespaces: set[str],
         deleting_gateway: bool,
     ) -> None:
-        """Wait boundedly for pruned workloads and Namespaces to disappear."""
+        """Wait boundedly until pruned application resources, active Pods, and Namespaces disappear.
+
+        Include gateway Pods during deletion so downstream provider cleanup cannot race live workloads.
+        """
 
         deadline = time.monotonic() + PRUNE_TIMEOUT_SECONDS
         while True:

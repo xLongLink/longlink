@@ -31,7 +31,10 @@ class OrganizationStorageResourceResponse(BaseModel):
 
 
 class StorageRegistryResponse(BaseModel):
-    """Represent one storage registry in API responses."""
+    """Describe the object-storage backend owned by one location while filtering its secret access key.
+
+    Endpoints and the access-key identifier remain available as operational metadata.
+    """
 
     model_config = ConfigDict(from_attributes=True)
 

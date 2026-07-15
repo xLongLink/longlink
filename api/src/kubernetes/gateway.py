@@ -31,7 +31,10 @@ EnvoyDocument = dict[str, Any]
 
 @dataclass(frozen=True, slots=True)
 class GatewayTLSMaterial:
-    """Hold the PEM material used by one location gateway."""
+    """Carry the per-location CA certificate, server certificate, and sensitive private key used by the public gateway.
+
+    Reconciliation persists and stages this identity before deployment when rotation changes its trust chain.
+    """
 
     ca_certificate: str
     certificate: str
@@ -52,7 +55,10 @@ class GatewayManifests:
 
 
 class Gateway:
-    """Render the desired Envoy gateway and its TLS identity."""
+    """Render the location gateway boundary for public TLS termination and authenticated application routing.
+
+    Routing inputs come from desired state rather than cluster discovery.
+    """
 
     def system_namespace(self, location_id: str, platform_version: str) -> KubernetesDocument:
         """Render the exclusively claimed LongLink system Namespace."""
@@ -69,7 +75,10 @@ class Gateway:
         )[0]
 
     def service(self, location_id: str, runtime_revision: str, platform_version: str) -> KubernetesDocument:
-        """Render the public LoadBalancer Service for the gateway."""
+        """Render the stable public LoadBalancer Service that establishes the location endpoint.
+
+        Reconciliation applies it before TLS generation because the endpoint determines the certificate SAN.
+        """
 
         return templates.readyml_list(
             TEMPLATES.joinpath("gateway_service.yml"),
@@ -85,7 +94,10 @@ class Gateway:
         return hashlib.sha256(TEMPLATES.joinpath("gateway_service.yml").read_bytes()).hexdigest()
 
     def config(self, applications: tuple[DesiredApplication, ...]) -> str:
-        """Render deterministic Envoy routes from desired applications only."""
+        """Render deterministic authenticated Envoy routes from the authoritative application snapshot.
+
+        Omitted applications receive no route even if stale Services still exist.
+        """
 
         # Every application gets one authenticated route and one DNS-backed cluster.
         routes: list[EnvoyDocument] = []
@@ -164,7 +176,10 @@ class Gateway:
         return stream.getvalue()
 
     def tls(self, location_id: str, endpoint: str, existing: GatewayTLSMaterial | None = None) -> GatewayTLSMaterial:
-        """Reuse valid endpoint TLS material or generate a per-location CA and certificate."""
+        """Reuse persisted TLS only after validating its location identity, key, chain, lifetime, and endpoint SAN.
+
+        Otherwise generate a per-location CA and server certificate for the caller to stage before deployment.
+        """
 
         # Existing material is reusable only when its chain, key, location, lifetime, and SAN all remain valid.
         if existing is not None and self._valid_tls(location_id, endpoint, existing):
@@ -256,7 +271,10 @@ class Gateway:
         envoy_config: str,
         platform_version: str,
     ) -> GatewayManifests:
-        """Render all gateway resources with one rollout revision."""
+        """Render exact gateway Secrets and applied resources under one revision derived from behavior and secret inputs.
+
+        Exact Secret replacement removes omitted keys, while revision annotations roll Pods when trust, auth, or config changes.
+        """
 
         # Hash rendered behavior and secret material so every relevant change rolls the gateway pods.
         sources = "".join(

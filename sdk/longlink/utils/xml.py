@@ -1,12 +1,20 @@
 import re
 from lxml import etree
-from typing import Any
+from typing import Protocol, cast
 from pathlib import Path
 from functools import cache
+from collections.abc import Iterable
 from longlink.constants import ROOT
 
 XSD_NAMESPACE = {"xsd": "http://www.w3.org/2001/XMLSchema"}
 UNSUPPORTED_XML_MARKUP_PATTERN = re.compile(r"<!\s*(?:DOCTYPE|ENTITY)\b|<!\[CDATA\[", re.IGNORECASE)
+
+
+class XmlErrorEntry(Protocol):
+    """Describe the lxml validation error fields used in API messages."""
+
+    line: int
+    message: str
 
 
 @cache
@@ -87,7 +95,7 @@ class Element:
 
         # Surface schema validation details instead of a generic lxml failure.
         if not schema.validate(xml_doc):
-            error_log: Any = schema.error_log
+            error_log = cast(Iterable[XmlErrorEntry], schema.error_log)
             messages = [f"Line {error.line}: {error.message}" for error in error_log]
             raise ValueError("XML is invalid: " + "; ".join(messages))
 

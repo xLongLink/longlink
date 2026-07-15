@@ -13,7 +13,10 @@ if TYPE_CHECKING:
 
 
 class StorageRegistry(SQLModel, table=True):
-    """Represent a registered storage backend."""
+    """Persist the object-storage member of a Location's immutable infrastructure aggregate.
+
+    Reconciliation manages shared Organization buckets, Application buckets, and runtime credentials through this configuration.
+    """
 
     __tablename__: ClassVar[str] = "storage_registries"
     __table_args__ = (UniqueConstraint("location_id", name="uq_storage_registries_location_id"),)

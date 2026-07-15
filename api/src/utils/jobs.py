@@ -69,7 +69,7 @@ def fail(error: str) -> OperationOutcome:
 
 
 async def execute(operation: Operation, handler: JobHandler) -> Operation:
-    """Run one claimed handler attempt and persist its requested outcome."""
+    """Run one claimed attempt and persist exactly one lease-fenced outcome. Handler exceptions and timeouts retry with bounded backoff, while explicit failures and exhausted attempts are terminal."""
 
     # Claimed operations must carry the attempt generation needed for fenced state transitions.
     attempt_count = operation.attempt_count
@@ -158,7 +158,10 @@ async def run_claimed_operation(operation: Operation, handler: JobHandler) -> Op
 
 
 async def run_operation_scheduler(handler: JobHandler) -> None:
-    """Continuously claim and execute one leased operation action at a time."""
+    """Run this replica's serial queue worker for Operations targeting its LongLink Platform release.
+
+    Leases coordinate replicas and make crashed work reclaimable, while polling survives transient failures.
+    """
 
     # Keep polling after transient database failures so the worker remains available.
     while True:

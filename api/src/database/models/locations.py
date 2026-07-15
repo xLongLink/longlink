@@ -15,7 +15,10 @@ if TYPE_CHECKING:
 
 
 class Location(SQLModel, table=True):
-    """Represent a physical or cloud location where infrastructure runs."""
+    """Persist the root of an immutable compute, database, and storage infrastructure aggregate.
+
+    Status summarizes reconciliation, while version records the last fully applied LongLink Platform release.
+    """
 
     __tablename__: ClassVar[str] = "locations"
 

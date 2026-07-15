@@ -57,7 +57,10 @@ async def record_success(
     operation_id: UUID | None = None,
     attempt_count: int | None = None,
 ) -> bool:
-    """Persist one successfully applied Platform release and gateway connection state."""
+    """Persist successful observed state without allowing a LongLink Platform release regression.
+
+    Optional claim identity fences gateway state, release status, and teardown observations to the current attempt.
+    """
 
     # Update release observation and TLS material in one Platform transaction.
     async with session_scope() as session:
@@ -113,7 +116,7 @@ async def record_failure(
     attempt_count: int | None = None,
     platform_version: str | None = None,
 ) -> None:
-    """Mark one location failed while the caller owns its reconciliation lease."""
+    """Mark a Location's observed state failed, optionally fenced to the current release attempt. Detailed retry diagnostics remain owned by the Operation."""
 
     # Detailed diagnostics remain on the operation row to avoid duplicated error state.
     async with session_scope() as session:

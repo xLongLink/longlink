@@ -8,7 +8,7 @@ from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import OrganizationDatabaseResourceResponse
-from src.database.services import compute, storage, database, locations, operations, invitations, organizations
+from src.database.services import storage, database, locations, operations, invitations, organizations
 from src.models.applications import ApplicationResponse
 from src.models.organizations import (
     OrganizationCreate,
@@ -20,7 +20,6 @@ from src.models.organizations import (
 )
 from longlink.shared.constants import SHARED_SCHEMA
 from src.database.models.users import User
-from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.applications import Application
@@ -139,7 +138,10 @@ async def list_organization_applications(organization_id: UUID, user: User = Dep
     response_model=list[OrganizationDatabaseResourceResponse],
 )
 async def list_organization_database_resources(organization_id: UUID, user: User = Depends(authuser)):
-    """Return database usage for one organization."""
+    """Build a maintainer-only live inventory through the database registry owned by the Organization's location.
+
+    Rows include shared and orphaned schemas currently present, not only LongLink Application desired state.
+    """
 
     # Load organization access before exposing database resources.
     membership = roles.access(user, organization_id, "organization")
@@ -164,7 +166,10 @@ async def list_organization_database_resources(organization_id: UUID, user: User
     response_model=list[OrganizationStorageResourceResponse],
 )
 async def list_organization_storage_resources(organization_id: UUID, user: User = Depends(authuser)):
-    """Return storage usage for one organization."""
+    """Build a maintainer-only live inventory through the storage registry owned by the Organization's location.
+
+    Rows reflect currently present managed buckets rather than persisted desired state alone.
+    """
 
     # Load organization access before exposing storage resources.
     membership = roles.access(user, organization_id, "organization")
@@ -272,7 +277,10 @@ async def _database_usage_rows(
     registry: DatabaseRegistry,
     apps: list[Application],
 ) -> list[dict[str, object]]:
-    """Inspect one organization database and return usage rows."""
+    """Join live schema usage with active LongLink Applications in one Organization database.
+
+    Shared and orphaned schemas remain unassociated so backend drift stays visible.
+    """
 
     database = organization.id.hex
     app_by_schema = {app.id.hex: app for app in apps}
@@ -346,7 +354,10 @@ async def _storage_usage_rows(
     registry: StorageRegistry,
     apps: list[Application],
 ) -> list[dict[str, object]]:
-    """Inspect one storage backend and return organization usage rows."""
+    """Join live bucket usage with expected shared and active-application buckets for one Organization.
+
+    Only buckets currently present are returned, so missing desired resources are not synthesized.
+    """
 
     # List backend buckets before building resource rows.
     try:

@@ -13,7 +13,10 @@ if TYPE_CHECKING:
 
 
 class DatabaseRegistry(SQLModel, table=True):
-    """Represent a registered database backend."""
+    """Persist the database member of a Location's immutable infrastructure aggregate.
+
+    Reconciliation creates one database per Organization and one isolated schema and runtime role per LongLink Application.
+    """
 
     __tablename__: ClassVar[str] = "database_registries"
     __table_args__ = (UniqueConstraint("location_id", name="uq_database_registries_location_id"),)

@@ -30,7 +30,10 @@ async def get_database_registry(registry_id: UUID, _user: User = Depends(authsup
 
 @router.get("/api/databases/{registry_id}/usage", response_model=int)
 async def get_database_usage(registry_id: UUID, _user: User = Depends(authsupport)):
-    """Return used storage bytes for one database backend."""
+    """Query point-in-time storage usage from the live database backend, not persisted desired state.
+
+    The result is diagnostic and depends on backend availability.
+    """
 
     registry = await database.get(registry_id)
     if registry is None:

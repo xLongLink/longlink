@@ -16,7 +16,10 @@ if TYPE_CHECKING:
 
 
 class Organization(SQLModel, table=True):
-    """Represent an organization namespace in the LongLink Platform."""
+    """Persist the tenant boundary for users, shared state, and LongLink Applications within one Location.
+
+    A deletion tombstone remains until reconciliation removes the Organization's external resources.
+    """
 
     __tablename__: ClassVar[str] = "organizations"
 

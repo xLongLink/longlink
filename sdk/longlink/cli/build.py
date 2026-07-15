@@ -8,7 +8,6 @@ import tomllib
 import tempfile
 import subprocess
 import urllib.parse
-from typing import Any
 from pathlib import Path
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
@@ -207,7 +206,7 @@ def read_env_spec(root: Path) -> dict[str, list[dict[str, object]]]:
     return {"environments": environments}
 
 
-def read_pyproject(root: Path) -> dict[str, Any]:
+def read_pyproject(root: Path) -> dict[str, object]:
     """Read and parse the application `pyproject.toml`."""
 
     pyproject = root / "pyproject.toml"

@@ -83,7 +83,7 @@ async def ensure_local_organization_owner(organization_id, user_id) -> None:
 
 
 async def reconcile_until_complete(location_id) -> None:
-    """Execute queued local work until one location reconciliation completes."""
+    """Drain the durable queue through normal leased execution until the target Location succeeds or fails. Other Location work may be processed while no lifespan scheduler is running."""
 
     # The seed process has no lifespan worker, so it drains the same durable queue explicitly.
     while True:
@@ -102,7 +102,7 @@ async def reconcile_until_complete(location_id) -> None:
 
 
 async def seed_local_development() -> None:
-    """Seed a complete local location and its sample tenant desired state."""
+    """Create or repair local desired state through normal control-plane service boundaries. Reconcile each newly created Location, Organization, and sample LongLink Application before proceeding."""
 
     admin = await seed_local_administrator()
     location = next((item for item in await location_service.fetch() if item.slug == "local"), None)

@@ -189,7 +189,7 @@ async def membership_role(organization_id: UUID, user_id: UUID) -> OrganizationR
 
 
 async def update_member_role(organization_id: UUID, member_id: UUID, role: OrganizationRoles, user: User) -> bool:
-    """Update one active organization member role."""
+    """Change an active Organization membership while preserving at least one owner. The access change and Location reconciliation request commit atomically."""
 
     # Update the member role inside one transaction.
     async with session_scope() as session:
@@ -254,7 +254,7 @@ async def create(
     shared_schema_url: str | None = None,
     organization_id: UUID | None = None,
 ) -> Organization:
-    """Create an organization."""
+    """Create an Organization aggregate with its creator as owner in a ready Location. The desired state and initial reconciliation request commit atomically."""
 
     # Validate deterministic runtime resource names before creating the row.
     organization_id = organization_id or uuid4()
@@ -320,7 +320,7 @@ async def create(
 
 
 async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
-    """Soft-delete an organization and all nested access rows."""
+    """Tombstone an Organization, its LongLink Applications, and nested access state while atomically queueing Location cleanup. Reconciliation retains tombstones until external resources are removed."""
 
     # Soft-delete organization data in one transaction.
     async with session_scope() as session:

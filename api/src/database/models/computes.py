@@ -12,7 +12,10 @@ if TYPE_CHECKING:
 
 
 class ComputeRegistry(SQLModel, table=True):
-    """Represent a registered compute backend."""
+    """Persist the compute and private-gateway member of a Location's immutable infrastructure aggregate.
+
+    Reconciliation uses its kubeconfig to manage Kubernetes and its gateway state to proxy authenticated Application traffic.
+    """
 
     __tablename__: ClassVar[str] = "compute_registries"
     __table_args__ = (UniqueConstraint("location_id", name="uq_compute_registries_location_id"),)

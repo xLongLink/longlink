@@ -7,7 +7,10 @@ DEVELOPMENT = os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes
 
 
 class Env(BaseSettings):
-    """Environment-backed API configuration loaded at startup."""
+    """Define startup-validated settings for one LongLink Platform API replica.
+
+    VERSION supplies the release affinity used when claiming reconciliation Operations.
+    """
 
     # Runtime mode
     VERSION: str = Field(default="v0.0.0", pattern=PLATFORM_VERSION_PATTERN)

@@ -30,7 +30,10 @@ async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)
 
 @router.get("/api/computes/{registry_id}/namespaces", response_model=list[str])
 async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsupport)):
-    """List all namespaces on a compute backend."""
+    """Query a compute backend directly for live support diagnostics rather than persisted desired state.
+
+    Results may include unmanaged or not-yet-reconciled namespaces.
+    """
 
     registry = await compute.get(registry_id)
     if registry is None:
@@ -50,7 +53,10 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
 
 @router.get("/api/computes/{registry_id}/namespaces/{namespace}/pods", response_model=list[PodResponse])
 async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depends(authsupport)):
-    """List all pods in a namespace on a compute backend."""
+    """Query live pods within a namespace currently visible on the compute backend.
+
+    Pod phase and node placement may differ from persisted desired state during reconciliation.
+    """
 
     registry = await compute.get(registry_id)
     if registry is None:

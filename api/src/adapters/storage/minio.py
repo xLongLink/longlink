@@ -12,7 +12,10 @@ if TYPE_CHECKING:
 
 
 class MinIO(Storage):
-    """MinIO storage adapter for local development."""
+    """Provide the development-only S3-compatible storage adapter.
+
+    It intentionally reuses registry credentials for runtimes and does not provide production tenant credential isolation.
+    """
 
     def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
         """Initialize the storage adapter."""
@@ -85,7 +88,10 @@ class MinIO(Storage):
         return bucket
 
     async def credentials(self, bucket: str, access: StorageAccess) -> StorageRuntimeCredentials:
-        """Return local runtime credentials for one bucket."""
+        """Return shared development credentials regardless of the requested bucket access level.
+
+        This local-only shortcut is not a least-privilege production contract.
+        """
 
         # Local MinIO uses the development root credentials until local policy management is needed.
         return {

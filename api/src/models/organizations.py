@@ -87,7 +87,10 @@ class OrganizationSummary(BaseModel):
 
 
 class OrganizationMutationResponse(BaseModel):
-    """Return a changed organization and its location reconciliation operation."""
+    """Pair an accepted Organization desired-state change with its location reconciliation operation.
+
+    The operation must complete before the desired state is confirmed in managed infrastructure.
+    """
 
     # Result
     organization: OrganizationSummary

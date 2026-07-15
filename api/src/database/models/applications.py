@@ -16,7 +16,10 @@ if TYPE_CHECKING:
 
 
 class Application(SQLModel, table=True):
-    """Represent an application installed in the platform."""
+    """Persist desired and observed runtime state for one Organization-owned LongLink Application.
+
+    A deletion tombstone remains until reconciliation removes the Application's external resources.
+    """
 
     __tablename__: ClassVar[str] = "applications"
     __table_args__ = (

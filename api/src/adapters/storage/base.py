@@ -4,21 +4,19 @@ StorageAccess = Literal["read", "write"]
 
 
 class StorageRuntimeCredentials(TypedDict):
-    """Describe credentials safe to inject into one application runtime."""
+    """Describe access keys injected into one application runtime.
+
+    Production providers must scope them to the assigned bucket and access level instead of exposing registry credentials.
+    """
 
     access_key_id: str
     secret_access_key: str
 
 
 class Storage(Protocol):
-    """Storage adapter root.
+    """Define the retry-safe provider contract for assigned organization or application buckets and access-specific credentials.
 
-    Storage Backend                     # Managed by the LongLink Platform
-    ├── assigned organization bucket    # Optional organization-level shared objects
-    ├── assigned App A bucket           # Isolated storage for App A
-    └── assigned App B bucket           # Isolated storage for App B
-
-    Each application has read/write access to its own bucket, and read-only access to shared bucket.
+    Provisioning uses registry authority, while production runtimes receive bucket-scoped least-privilege keys.
     """
 
     async def create(self, bucket: str) -> str:
@@ -30,9 +28,15 @@ class Storage(Protocol):
         ...
 
     async def credentials(self, bucket: str, access: StorageAccess) -> StorageRuntimeCredentials:
-        """Create credentials for one bucket access level."""
+        """Converge and return runtime credentials scoped to one bucket and requested read or write access.
+
+        Implementations must converge after partial prior attempts so retries do not accumulate active credentials.
+        """
         ...
 
     async def revoke(self, bucket: str) -> None:
-        """Revoke credentials previously created for one bucket."""
+        """Revoke runtime credentials for one bucket and tolerate already-absent provider state.
+
+        The operation must be safe to retry during cleanup.
+        """
         ...
