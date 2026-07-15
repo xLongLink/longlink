@@ -1,7 +1,7 @@
-import { Slider as UISlider } from '@/components/ui/slider';
-import { useXmlContext } from '@/xml/core/context';
-import type { Props } from '@/xml/types';
 import { getVersion, useSnapshot } from 'valtio';
+import type { Props } from '@/xml/types';
+import { useXmlContext } from '@/xml/core/context';
+import { Slider as UISlider } from '@/components/ui/slider';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Renders a shadcn-backed slider with optional reactive state binding. */

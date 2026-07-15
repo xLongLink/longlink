@@ -65,6 +65,7 @@
         "locationDeleted": "Sede eliminata",
         "locationId": "ID sede",
         "locationLabel": "sede {{name}}",
+        "locationReconciliation": "Riconciliazione della sede",
         "locationsDescription": "Gestisci datacenter e regioni cloud per le distribuzioni infrastrutturali.",
         "locationsTitle": "Sedi",
         "operationsTitle": "Operazioni",

@@ -1,3 +1,9 @@
+import type { Props } from '@/xml/types';
+import { renderNode } from '@/xml/core/node';
+import { evaluate } from '@/xml/expressions';
+import { resolveAnchorUrl } from '@/xml/core/url';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
 import { Button as UIButton } from '@/components/ui/button';
 import {
     Dialog as UIDialog,
@@ -6,14 +12,8 @@ import {
     DialogTitle as UIDialogTitle,
     DialogTrigger as UIDialogTrigger,
 } from '@/components/ui/dialog';
-import { useXmlContext } from '@/xml/core/context';
-import { resolveTranslation } from '@/xml/core/i18n';
-import { renderNode } from '@/xml/core/node';
-import { resolveAnchorUrl } from '@/xml/core/url';
-import { evaluate } from '@/xml/expressions';
-import type { Props } from '@/xml/types';
-import { resolveButtonSize, resolveButtonVariant } from './Button';
 import { resolveXmlBoolean, resolveXmlString } from './props';
+import { resolveButtonSize, resolveButtonVariant } from './Button';
 
 /** Renders a dialog root that groups trigger and content slots. */
 export function Dialog({ props, nodes }: Props) {

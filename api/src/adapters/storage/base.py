@@ -1,4 +1,4 @@
-from typing import Literal, Protocol, TypedDict, NotRequired
+from typing import Literal, Protocol, TypedDict
 
 StorageAccess = Literal["read", "write"]
 
@@ -8,7 +8,6 @@ class StorageRuntimeCredentials(TypedDict):
 
     access_key_id: str
     secret_access_key: str
-    role_id: NotRequired[str | None]
 
 
 class Storage(Protocol):

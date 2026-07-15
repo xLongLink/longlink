@@ -1,8 +1,8 @@
-import { Input as UIInput } from '@/components/ui/input';
-import { useXmlContext } from '@/xml/core/context';
 import type { Props } from '@/xml/types';
-import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
+import { useXmlContext } from '@/xml/core/context';
+import { Input as UIInput } from '@/components/ui/input';
 import { readBindableFileInputValue, useBindableValue } from './binding';
+import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 
 /** Renders a minimal XML input control. */
 export function Input({ props, nodes }: Props) {

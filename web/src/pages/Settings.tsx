@@ -1,31 +1,31 @@
-import { DataTable } from '@/components/DataTable';
-import CreateOrganization from '@/components/dialogs/CreateOrganization';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useDeleteOrganization } from '@/hooks/use-organization';
-import { useUpdateUser, useUserProfile } from '@/hooks/use-user';
+import { toast } from 'sonner';
+import { Link } from 'react-router';
+import { useEffect, useState } from 'react';
+import { type ColumnDef } from '@tanstack/react-table';
+import { Building2, MoreVertical, Paintbrush, Settings2, UserRound } from 'lucide-react';
 import Layout from '@/layout/Layout';
 import { useTranslation } from '@/lib/i18n';
-import { LANGUAGE_OPTIONS, resolveSupportedLanguage, type Language } from '@/lib/languages';
-import { ACCENT_OPTIONS, RADIUS_OPTIONS, THEME_OPTIONS, type Accent, type Radius, type Theme } from '@/lib/theme';
-import { getInitials, useDeleteDialog } from '@/lib/utils';
-import { type ColumnDef } from '@tanstack/react-table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { DataTable } from '@/components/DataTable';
+import { Menu, MenuSection } from '@/components/ui/menu';
+import { getInitials, useDeleteDialog } from '@/lib/utils';
+import { useDeleteOrganization } from '@/hooks/use-organization';
+import { useUpdateUser, useUserProfile } from '@/hooks/use-user';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import CreateOrganization from '@/components/dialogs/CreateOrganization';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { LANGUAGE_OPTIONS, resolveSupportedLanguage, type Language } from '@/lib/languages';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ACCENT_OPTIONS, RADIUS_OPTIONS, THEME_OPTIONS, type Accent, type Radius, type Theme } from '@/lib/theme';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Menu, MenuSection } from '@/components/ui/menu';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, MoreVertical, Paintbrush, Settings2, UserRound } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
-import { toast } from 'sonner';
 
 /** Renders the authenticated settings page. */
 export default function Settings() {

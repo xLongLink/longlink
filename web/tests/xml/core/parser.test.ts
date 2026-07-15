@@ -21,7 +21,13 @@ describe('parseXML', () => {
     it('parses page structure', () => {
         expect(
             parseXML(
-                '<?xml version="1.0"?><longlink><!-- hidden --><Button i18n="actions.save" /><State id="first" /><State id="second" /></longlink>'
+                `<?xml version="1.0"?>
+                <longlink>
+                    <!-- hidden -->
+                    <Button i18n="actions.save" />
+                    <State id="first" />
+                    <State id="second" />
+                </longlink>`
             )
         ).toEqual([
             {
@@ -35,16 +41,6 @@ describe('parseXML', () => {
         ]);
     });
 
-    /* Whitespace-only nodes are removed while visible character data is rejected. */
-    it('drops blank text nodes', () => {
-        expect(parseXML('<longlink>   </longlink>')).toEqual([
-            {
-                name: 'longlink',
-                children: [],
-            },
-        ]);
-    });
-
     it('rejects visible text nodes', () => {
         expect(() => parseXML('<longlink>  Hello, ${user.name}  </longlink>')).toThrow(
             'Literal text is not supported in XML; use i18n attributes instead'
@@ -53,7 +49,17 @@ describe('parseXML', () => {
 
     it('rejects malformed XML', () => {
         expect(() => parseXML('<longlink><Button></longlink>')).toThrow('XML is invalid');
-        expect(() => parseXML('<!DOCTYPE longlink><longlink />')).toThrow('XML DOCTYPE');
-        expect(() => parseXML('<longlink><![CDATA[hidden]]></longlink>')).toThrow('XML DOCTYPE');
+    });
+
+    it('rejects unsupported XML constructs', () => {
+        const unsupportedXml = [
+            '<!DOCTYPE longlink><longlink />',
+            '<!ENTITY hidden "value"><longlink />',
+            '<longlink><![CDATA[hidden]]></longlink>',
+        ];
+
+        for (const xml of unsupportedXml) {
+            expect(() => parseXML(xml)).toThrow('XML DOCTYPE, ENTITY, and CDATA constructs are not supported');
+        }
     });
 });

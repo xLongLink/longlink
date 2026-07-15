@@ -13,14 +13,6 @@ class OperationStatus(StrEnum):
     scheduled = "scheduled"
 
 
-class OperationKind(StrEnum):
-    """Supported long-running operation types."""
-
-    application_verify = "application.verify"
-    application_remove = "application.remove"
-    organization_remove = "organization.remove"
-
-
 class OperationResponse(BaseModel):
     """Represent one long-running operation in API responses."""
 
@@ -29,17 +21,17 @@ class OperationResponse(BaseModel):
     # Identifier
     id: UUID
 
-    # Metadata
-    kind: OperationKind
+    # Reference
+    location_id: UUID
+
+    # State
     error: str | None = None
     status: OperationStatus
+    attempt_count: int
+    platform_version: str
 
-    # Relationships
-    application_id: UUID | None = None
-    organization_id: UUID | None = None
-
-    # Audit
+    # Timestamps
     created_at: datetime
     started_at: datetime | None = None
     stopped_at: datetime | None = None
-    scheduled_at: datetime | None = None
+    scheduled_at: datetime

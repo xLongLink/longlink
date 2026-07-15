@@ -6,7 +6,7 @@ from click.testing import CliRunner
 
 
 def test_generate_updates_current_app_translation_catalog(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    """Generate current application catalog keys from current application XML pages."""
+    """Generate current application keys while preserving existing and plural values."""
 
     # Arrange
     pages_directory = tmp_path / "src" / "pages"
@@ -20,8 +20,17 @@ def test_generate_updates_current_app_translation_catalog(monkeypatch: MonkeyPat
     catalog_path.parent.mkdir(parents=True)
     ignored_static_page.parent.mkdir(parents=True)
     (pages_directory / "dashboard.xml").write_text('<P i18n="dashboard.title" />', encoding="utf-8")
+    (pages_directory / "tasks.xml").write_text('<P i18n="tasks.count" />', encoding="utf-8")
     (nested_pages_directory / "users.xml").write_text('<P i18n="admin.users.title" />', encoding="utf-8")
-    catalog_path.write_text(json.dumps({"dashboard": {"title": "Dashboard"}}), encoding="utf-8")
+    catalog_path.write_text(
+        json.dumps(
+            {
+                "dashboard": {"title": "Dashboard"},
+                "tasks": {"count": {"one": "One task", "other": "{count} tasks"}},
+            }
+        ),
+        encoding="utf-8",
+    )
     ignored_static_page.write_text('<P i18n="examples.ignored.title" />', encoding="utf-8")
     monkeypatch.chdir(tmp_path)
 
@@ -34,34 +43,9 @@ def test_generate_updates_current_app_translation_catalog(monkeypatch: MonkeyPat
     assert catalog == {
         "admin": {"users": {"title": ""}},
         "dashboard": {"title": "Dashboard"},
+        "tasks": {"count": {"one": "One task", "other": "{count} tasks"}},
     }
-    assert "Generated src/i18n/en.json from 2 translation keys." in result.output
-
-
-def test_generate_preserves_plural_translation_leaves(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    """Keep existing plural category translations when regenerating catalogs."""
-
-    # Arrange
-    pages_directory = tmp_path / "src" / "pages"
-    catalog_path = tmp_path / "src" / "i18n" / "en.json"
-    runner = CliRunner()
-
-    pages_directory.mkdir(parents=True)
-    catalog_path.parent.mkdir(parents=True)
-    (pages_directory / "tasks.xml").write_text('<P i18n="tasks.count" />', encoding="utf-8")
-    catalog_path.write_text(
-        json.dumps({"tasks": {"count": {"one": "One task", "other": "{count} tasks"}}}),
-        encoding="utf-8",
-    )
-    monkeypatch.chdir(tmp_path)
-
-    # Act
-    result = runner.invoke(translations.generate_command)
-
-    # Assert
-    assert result.exit_code == 0
-    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
-    assert catalog == {"tasks": {"count": {"one": "One task", "other": "{count} tasks"}}}
+    assert "Generated src/i18n/en.json from 3 translation keys." in result.output
 
 
 def test_generate_rejects_translation_key_collisions(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:

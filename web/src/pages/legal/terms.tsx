@@ -1,7 +1,7 @@
 import { A } from '@/components/ui/a';
-import { Heading } from '@/components/ui/heading';
 import { Li } from '@/components/ui/li';
 import { Ul } from '@/components/ui/ul';
+import { Heading } from '@/components/ui/heading';
 
 export const metadata = {
     lastUpdated: '2026-06-20',

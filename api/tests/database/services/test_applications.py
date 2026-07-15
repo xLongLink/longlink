@@ -2,10 +2,13 @@ import pytest
 from uuid import uuid4
 from types import SimpleNamespace
 from fastapi import HTTPException
+from factories import create_ready_location, mark_organization_running
+from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
-from src.models.statuses import ApplicationStatus
+from src.models.statuses import LocationStatus, ApplicationStatus
 from src.database.session import get_session
-from src.database.services import users, locations, applications, organizations
+from src.database.services import users, locations, operations, applications, organizations
+from src.models.operations import OperationStatus
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
@@ -14,6 +17,7 @@ from src.database.models.organizations import Organization
 db = SimpleNamespace(
     applications=applications,
     locations=locations,
+    operations=operations,
     organizations=organizations,
     users=users,
 )
@@ -28,8 +32,9 @@ async def create_application_context(prefix: str) -> tuple[User, Organization, A
         name=f"{prefix} User",
         avatar="",
     )
-    location = await db.locations.create(f"{prefix}-location", f"{prefix} location", user, "CH")
+    location = await create_ready_location(user, slug=f"{prefix}-location", name=f"{prefix} location")
     organization = await db.organizations.create(f"{prefix}-org", f"{prefix}-org", location.id, user)
+    await mark_organization_running(organization)
     application = await db.applications.create(
         organization.id,
         "Dashboard",
@@ -40,36 +45,51 @@ async def create_application_context(prefix: str) -> tuple[User, Organization, A
     return user, organization, application
 
 
-async def test_create_allows_duplicate_application_names_across_organizations() -> None:
-    """Allow the same application name in different organizations."""
+async def test_create_requires_running_organization_and_coalesces_location_reconciliation() -> None:
+    """Create applications only for running organizations and coalesce location work."""
 
     # Arrange
     user = await db.users.upsert(oidc="app-oidc", email="app@longlink.dev", name="App User", avatar="")
-    location = await db.locations.create("local", "Local testing", user, "CH")
-    first_org = await db.organizations.create("acme", "acme", location.id, user)
-    second_org = await db.organizations.create("globex", "globex", location.id, user)
+    location = await create_ready_location(user)
+    organization = await db.organizations.create("acme", "acme", location.id, user)
+    open_before = [item for item in await db.operations.fetch() if item.stopped_at is None]
 
     # Act
-    first_app = await db.applications.create(
-        first_org.id,
-        "dashboard",
+    with pytest.raises(HTTPException) as exc:
+        await db.applications.create(
+            organization.id,
+            "Dashboard",
+            slug="dashboard",
+            image="ghcr.io/longlink/dashboard:latest",
+            user=user,
+        )
+    await mark_organization_running(organization)
+    application = await db.applications.create(
+        organization.id,
+        "Dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         user=user,
     )
-    second_app = await db.applications.create(
-        second_org.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=user,
-    )
+    reloaded_location = await db.locations.get(location.id)
+    open_after = [item for item in await db.operations.fetch() if item.stopped_at is None]
 
     # Assert
-    assert first_app.name == "dashboard"
-    assert second_app.name == "dashboard"
-    assert first_app.organization_id == first_org.id
-    assert second_app.organization_id == second_org.id
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Organization is not ready"
+    assert application.name == "Dashboard"
+    assert application.organization_id == organization.id
+    assert not hasattr(application, "compute_registry_id")
+    assert not hasattr(application, "database_registry_id")
+    assert not hasattr(application, "storage_registry_id")
+    assert reloaded_location is not None
+    assert reloaded_location.status == LocationStatus.ready
+    assert reloaded_location.version == env.VERSION
+    assert len(open_before) == 1
+    assert [item.id for item in open_after] == [open_before[0].id]
+    assert open_after[0].location_id == location.id
+    assert open_after[0].platform_version == env.VERSION
+    assert open_after[0].status == OperationStatus.scheduled
 
 
 async def test_create_rejects_duplicate_application_slug_within_organization() -> None:
@@ -145,8 +165,9 @@ async def test_list_members_includes_organization_members_with_optional_applicat
 
     # Arrange
     owner, member = users[0], users[1]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
+    location = await create_ready_location(owner)
     organization = await db.organizations.create("acme", "acme", location.id, owner)
+    await mark_organization_running(organization)
     application = await db.applications.create(
         organization.id,
         "Dashboard",
@@ -169,8 +190,7 @@ async def test_list_members_includes_organization_members_with_optional_applicat
     # Act
     members = await db.applications.members(application.id, organization.id)
     members_by_id = {
-        member.id: (organization_membership, application_membership)
-        for member, organization_membership, application_membership in members
+        member.id: (organization_membership, application_membership) for member, organization_membership, application_membership in members
     }
 
     # Assert
@@ -190,8 +210,9 @@ async def test_set_member_role_creates_updates_removes_and_restores_memberships(
 
     # Arrange
     owner, member, non_member = users
-    location = await db.locations.create("local", "Local testing", owner, "CH")
+    location = await create_ready_location(owner)
     organization = await db.organizations.create("acme", "acme", location.id, owner)
+    await mark_organization_running(organization)
     application = await db.applications.create(
         organization.id,
         "Dashboard",
@@ -305,7 +326,7 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     """Soft-delete an application and its application memberships."""
 
     # Arrange
-    user, _, application = await create_application_context("delete")
+    user, organization, application = await create_application_context("delete")
 
     # Act
     deleted = await db.applications.soft_delete(application.id, user)
@@ -314,6 +335,8 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     role = await db.applications.membership_role(application.id, user.id)
     second_delete = await db.applications.soft_delete(application.id, user)
     missing_delete = await db.applications.soft_delete(uuid4(), user)
+    location_after = await db.locations.get(organization.location_id)
+    open_operations = [item for item in await db.operations.fetch() if item.stopped_at is None]
 
     # Assert
     assert deleted is not None
@@ -324,3 +347,10 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     assert role is None
     assert second_delete is None
     assert missing_delete is None
+    assert location_after is not None
+    assert location_after.status == LocationStatus.ready
+    assert location_after.version == env.VERSION
+    assert len(open_operations) == 1
+    assert open_operations[0].location_id == organization.location_id
+    assert open_operations[0].platform_version == env.VERSION
+    assert open_operations[0].status == OperationStatus.scheduled

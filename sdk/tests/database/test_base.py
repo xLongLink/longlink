@@ -37,55 +37,64 @@ def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> Non
         database_base.database_metadata.remove(getattr(FeatureAuditItem, "__table__"))
 
 
-def test_create_engine_selects_database_url_by_environment(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Use testing, development, and component-built production database URLs."""
-
-    captured: list[tuple[str, dict[str, object]]] = []
-
-    def fake_create_async_engine(database_url: str, **kwargs: object) -> object:
-        """Capture async engine settings without opening a database connection."""
-
-        captured.append((database_url, kwargs))
-        return SimpleNamespace(url=database_url)
-
-    monkeypatch.setattr(database_base, "create_async_engine", fake_create_async_engine)
-    environments = [
-        Envs(ENV="testing"),
-        Envs(ENV="development"),
-        Envs(
-            ENV="production",
-            DATABASE_HOST="db",
-            DATABASE_NAME="longlink",
-            DATABASE_PORT=5432,
-            DATABASE_PASSWORD="secret",
-            DATABASE_USERNAME="app",
-        ),
-    ]
-
-    try:
-        for env in environments:
-            database_base._engine = None
-            database_base.create_engine(env)
-
-        assert captured[0] == (
+@pytest.mark.parametrize(
+    ("env", "expected_url", "expected_kwargs"),
+    [
+        pytest.param(
+            Envs(ENV="testing"),
             "sqlite+aiosqlite:///:memory:",
             {"pool_pre_ping": True, "pool_recycle": 20},
-        )
-        assert captured[1] == (
+            id="testing",
+        ),
+        pytest.param(
+            Envs(ENV="development"),
             "sqlite+aiosqlite:///./dev.db",
             {"pool_pre_ping": True, "pool_recycle": 20},
-        )
-        assert captured[2] == (
+            id="development",
+        ),
+        pytest.param(
+            Envs(
+                ENV="production",
+                DATABASE_HOST="db",
+                DATABASE_NAME="longlink",
+                DATABASE_PORT=5432,
+                DATABASE_PASSWORD="secret",
+                DATABASE_USERNAME="app",
+            ),
             "postgresql+asyncpg://app:secret@db:5432/longlink",
             {"pool_pre_ping": True, "pool_recycle": 20, "pool_use_lifo": True},
-        )
-    finally:
-        database_base._engine = None
+            id="production",
+        ),
+        pytest.param(
+            Envs(
+                ENV="production",
+                DATABASE_HOST="db",
+                DATABASE_NAME="longlink",
+                DATABASE_PORT=5432,
+                DATABASE_SCHEMA="dashboard",
+                DATABASE_PASSWORD="secret",
+                DATABASE_USERNAME="app",
+            ),
+            "postgresql+asyncpg://app:secret@db:5432/longlink",
+            {
+                "pool_pre_ping": True,
+                "pool_recycle": 20,
+                "pool_use_lifo": True,
+                "connect_args": {"server_settings": {"search_path": '"dashboard",shared'}},
+            },
+            id="production-schema",
+        ),
+    ],
+)
+def test_create_engine_selects_database_url_and_options(
+    monkeypatch: pytest.MonkeyPatch,
+    env: Envs,
+    expected_url: str,
+    expected_kwargs: dict[str, object],
+) -> None:
+    """Use environment-specific database URLs and engine options."""
 
-
-def test_create_engine_sets_production_schema_search_path(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Use the application schema plus shared for PostgreSQL production apps."""
-
+    # Arrange
     captured: dict[str, object] = {}
 
     def fake_create_async_engine(database_url: str, **kwargs: object) -> object:
@@ -96,27 +105,10 @@ def test_create_engine_sets_production_schema_search_path(monkeypatch: pytest.Mo
         return SimpleNamespace(url=database_url)
 
     monkeypatch.setattr(database_base, "create_async_engine", fake_create_async_engine)
-    database_base._engine = None
+    monkeypatch.setattr(database_base, "_engine", None)
 
-    try:
-        database_base.create_engine(
-            Envs(
-                ENV="production",
-                DATABASE_HOST="db",
-                DATABASE_NAME="longlink",
-                DATABASE_PORT=5432,
-                DATABASE_SCHEMA="dashboard",
-                DATABASE_PASSWORD="secret",
-                DATABASE_USERNAME="app",
-            )
-        )
+    # Act
+    database_base.create_engine(env)
 
-        assert captured["database_url"] == "postgresql+asyncpg://app:secret@db:5432/longlink"
-        assert captured["kwargs"] == {
-            "pool_pre_ping": True,
-            "pool_recycle": 20,
-            "pool_use_lifo": True,
-            "connect_args": {"server_settings": {"search_path": '"dashboard",shared'}},
-        }
-    finally:
-        database_base._engine = None
+    # Assert
+    assert captured == {"database_url": expected_url, "kwargs": expected_kwargs}

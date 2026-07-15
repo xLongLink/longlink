@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { getVersion, proxy, ref, useSnapshot } from 'valtio';
-import { isReference, isSafePropertyName, resolvePath } from '../expressions';
 import type { ASTProps, ExecutionContext, XmlBindableValue } from '../types';
 import { resolveXmlValue } from './props';
+import { isReference, isSafePropertyName, resolvePath } from '../expressions';
 
 const EMPTY_BINDING = proxy({ value: undefined }) as Record<string, unknown>;
 

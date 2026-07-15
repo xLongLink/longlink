@@ -5,8 +5,7 @@ from pathlib import Path
 from src.routes import auth, icons, image, users, health, accounts, branding, computes, storages, countries, databases, locations
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
-from src.operations import applications as operation_applications
-from src.operations import organizations as operation_organizations
+from src.operations import locations as operation_locations
 from src.utils.jobs import run_operation_scheduler
 from collections.abc import AsyncIterator
 from src.environments import env
@@ -19,12 +18,14 @@ from starlette.middleware.sessions import SessionMiddleware
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Start the API and background operation worker."""
 
-    worker = asyncio.create_task(run_operation_scheduler())
+    worker = asyncio.create_task(run_operation_scheduler(operation_locations.reconcile))
+    reconciler = asyncio.create_task(operation_locations.run_periodic_reconciliation())
     yield
 
+    reconciler.cancel()
     worker.cancel()
     with contextlib.suppress(asyncio.CancelledError):
-        await worker
+        await asyncio.gather(worker, reconciler)
 
 
 app = FastAPI(
@@ -44,7 +45,7 @@ app.add_middleware(
 )
 install_frontend_middleware(app)
 
-# Register API routes after importing the endpoint and operation modules so their decorators run.
+# Register API routes after constructing the application.
 app.include_router(auth.router)
 app.include_router(accounts.router)
 app.include_router(applications.router)

@@ -1,9 +1,9 @@
-import { Icon as UIIcon } from '@/components/ui/icon';
+import type { Props } from '@/xml/types';
 import { isIconName } from '@/lib/icons';
 import { useXmlContext } from '@/xml/core/context';
-import type { Props } from '@/xml/types';
-import { useActionHandler } from './Action';
+import { Icon as UIIcon } from '@/components/ui/icon';
 import { resolveXmlString } from './props';
+import { useActionHandler } from './Action';
 
 /** Renders a Lucide icon by XML name. */
 export function Icon({ props }: Props) {

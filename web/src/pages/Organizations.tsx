@@ -1,17 +1,17 @@
-import { DataTable } from '@/components/DataTable';
-import CreateOrganization from '@/components/dialogs/CreateOrganization';
-import { SignInCard } from '@/components/SignInCard';
-import { useUserProfile } from '@/hooks/use-user';
-import Layout from '@/layout/Layout';
-import { useTranslation } from '@/lib/i18n';
-import { sanitizeRedirectPath } from '@/lib/redirects';
-import { getInitials } from '@/lib/utils';
+import { Link, useLocation } from 'react-router';
+import { Building2, Settings2 } from 'lucide-react';
 import { type ColumnDef } from '@tanstack/react-table';
+import type { ApiUserOrganizationMembership } from '@/lib/types';
+import Layout from '@/layout/Layout';
+import { getInitials } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
+import { useUserProfile } from '@/hooks/use-user';
+import { DataTable } from '@/components/DataTable';
+import { SignInCard } from '@/components/SignInCard';
+import { sanitizeRedirectPath } from '@/lib/redirects';
+import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Hero, HeroAction, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { Building2, Settings2 } from 'lucide-react';
-import { Link, useLocation } from 'react-router';
-import type { ApiUserOrganizationMembership } from '@/lib/types';
 
 /** Renders the organizations landing page for signed-in and anonymous users. */
 export default function Organizations() {

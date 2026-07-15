@@ -1,20 +1,16 @@
 from main import app
 from types import SimpleNamespace
 from conftest import session_cookie
+from factories import create_ready_location
+from src.environments import env
 from src.models.roles import PlatformRoles
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
-from src.database.services import users, compute, storage, database, locations, operations, applications, organizations
+from src.database.services import users, organizations
 from src.database.models.users import User
 
 db = SimpleNamespace(
-    applications=applications,
-    compute=compute,
-    database=database,
-    locations=locations,
-    operations=operations,
     organizations=organizations,
-    storage=storage,
     users=users,
 )
 
@@ -27,7 +23,7 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user, "CH")
+    location = await create_ready_location(user)
     organization = await db.organizations.create("acme", "acme", location.id, user, avatar="https://example.com/organizations/acme.png")
     client = clients[0]
 
@@ -50,10 +46,11 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
             "country": "CH",
             "location": {
                 "id": str(location.id),
-                "name": "Local testing",
-                "slug": "local",
-                "country": "CH",
-                "provider": "local",
+                    "name": "Local testing",
+                    "slug": "local",
+                    "country": "CH",
+                    "status": "ready",
+                "version": env.VERSION,
             },
             "role": "owner",
         }
@@ -89,7 +86,7 @@ async def test_list_users_returns_admin_user_summaries(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user, "CH")
+    location = await create_ready_location(user)
     await db.organizations.create("acme", "acme", location.id, user)
 
     client = clients[0]

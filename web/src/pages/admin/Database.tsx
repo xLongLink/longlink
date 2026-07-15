@@ -1,24 +1,16 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
-import { toast } from 'sonner';
-import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
-import { DataTable } from '@/components/DataTable';
-import ConnectDatabase from '@/components/dialogs/ConnectDatabase';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useLocations } from '@/data/admin';
-import { useDatabases } from '@/data/database';
-import { useUserProfile } from '@/hooks/use-user';
-import { fetchApiVoid } from '@/lib/api';
-import { useTranslation } from '@/lib/i18n';
-import { databasesQueryKey } from '@/lib/query-keys';
+import { type ColumnDef } from '@tanstack/react-table';
 import type { ApiDatabaseRegistry, ApiLocation } from '@/lib/types';
-import { useDeleteDialog } from '@/lib/utils';
+import { useLocations } from '@/data/admin';
+import { useTranslation } from '@/lib/i18n';
 import { PostgreSQL } from '@/svg/PostgreSQL';
+import { useDatabases } from '@/data/database';
+import { DataTable } from '@/components/DataTable';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import { AdminLocationBadge } from '@/components/admin/AdminTableElements';
 
 /** Returns localized admin database table columns. */
-function createDatabaseColumnsBase(t: TFunction): Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation }>> {
+function createDatabaseColumns(t: TFunction): Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation }>> {
     return [
         {
             id: 'database',
@@ -56,22 +48,6 @@ function createDatabaseColumnsBase(t: TFunction): Array<ColumnDef<ApiDatabaseReg
 /** Renders the admin database page. */
 export default function AdminDatabase() {
     const { t } = useTranslation();
-    const { role } = useUserProfile();
-    const queryClient = useQueryClient();
-    const canManage = role === 'administrator';
-
-    const deleteDatabase = useMutation({
-        mutationFn: async (registryId: string) => {
-            await fetchApiVoid(`/api/databases/${registryId}`, {
-                method: 'DELETE',
-            });
-        },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
-            toast.success(t('admin.databaseDeleted'));
-        },
-    });
-
     const { items: databases, error: databasesError, isLoading: databasesIsLoading } = useDatabases();
     const { items: locations, error: locationsError, isLoading: locationsIsLoading } = useLocations();
 
@@ -80,50 +56,16 @@ export default function AdminDatabase() {
         ...row,
         location: locationById.get(row.location_id),
     }));
-    const deleteDialog = useDeleteDialog({
-        title: t('admin.deleteDatabaseTitle'),
-        mutation: deleteDatabase,
-        items: databaseTableRows,
-        getId: (database) => database.id,
-        description: (database) => t('admin.deleteDatabaseDescription', { slug: database.slug }),
-        errorMessage: t('admin.failedDeleteDatabase'),
-        fallbackDescription: t('admin.deleteDatabaseFallback'),
-    });
-    const databaseColumnsBase = createDatabaseColumnsBase(t);
-    const databaseColumns = canManage
-        ? ([
-              ...databaseColumnsBase,
-              {
-                  id: 'actions',
-                  header: t('columns.action'),
-                  meta: { className: 'w-24 text-right' },
-                  cell: ({ row }) => {
-                      const database = row.original;
-
-                      return (
-                          <AdminActionMenu
-                              label={database.name}
-                              copyLabel={t('admin.copyDatabaseSlug')}
-                              copyValue={database.slug}
-                              onDelete={() => deleteDialog.openFor(database)}
-                          />
-                      );
-                  },
-              },
-          ] satisfies Array<ColumnDef<ApiDatabaseRegistry & { location?: ApiLocation }>>)
-        : databaseColumnsBase;
+    const databaseColumns = createDatabaseColumns(t);
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <Hero icon="database">
-                    <div>
-                        <HeroTitle>{t('admin.databaseTitle')}</HeroTitle>
-                        <HeroDescription>{t('admin.databaseDescription')}</HeroDescription>
-                    </div>
-                </Hero>
-                {canManage ? <ConnectDatabase /> : null}
-            </div>
+            <Hero icon="database">
+                <div>
+                    <HeroTitle>{t('admin.databaseTitle')}</HeroTitle>
+                    <HeroDescription>{t('admin.databaseDescription')}</HeroDescription>
+                </div>
+            </Hero>
             <DataTable
                 columns={databaseColumns}
                 data={databaseTableRows}
@@ -131,7 +73,6 @@ export default function AdminDatabase() {
                 isLoading={databasesIsLoading || locationsIsLoading}
                 pageSize={25}
             />
-            <DeleteConfirmation {...deleteDialog.dialogProps} />
         </div>
     );
 }

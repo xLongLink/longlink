@@ -1,18 +1,9 @@
-from enum import StrEnum
 from uuid import UUID
 from pydantic import Field, BaseModel, ConfigDict
+from src.models.statuses import LocationStatus
 from src.models.countries import Country
-
-
-class LocationProvider(StrEnum):
-    """Supported datacenter providers for locations."""
-
-    local = "local"
-    infomaniak = "infomaniak"
-    ovh = "ovh"
-    scaleway = "scaleway"
-    hetzner = "hetzner"
-    exoscale = "exoscale"
+from src.models.operations import OperationResponse
+from src.models.infrastructure import ComputeConfiguration, StorageConfiguration, DatabaseConfiguration
 
 
 class LocationCreate(BaseModel):
@@ -21,7 +12,11 @@ class LocationCreate(BaseModel):
     # Metadata
     name: str = Field(min_length=1, max_length=255)
     country: Country
-    provider: LocationProvider = LocationProvider.local
+
+    # Immutable infrastructure
+    compute: ComputeConfiguration
+    storage: StorageConfiguration
+    database: DatabaseConfiguration
 
 
 class LocationResponse(BaseModel):
@@ -36,4 +31,15 @@ class LocationResponse(BaseModel):
     name: str
     slug: str
     country: Country
-    provider: LocationProvider
+
+    # State
+    status: LocationStatus
+    version: str | None
+
+
+class LocationMutationResponse(BaseModel):
+    """Return a changed location and its coalesced reconciliation operation."""
+
+    # Result
+    location: LocationResponse
+    operation: OperationResponse

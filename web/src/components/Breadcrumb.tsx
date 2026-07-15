@@ -1,3 +1,7 @@
+import { Fragment } from 'react';
+import startCase from 'lodash/startCase';
+import { Link, useLocation } from 'react-router';
+import { Wordmark } from '@/components/Wordmark';
 import {
     BreadcrumbItem,
     BreadcrumbLink,
@@ -5,10 +9,6 @@ import {
     BreadcrumbSeparator,
     Breadcrumb as UIBreadcrumb,
 } from '@/components/ui/breadcrumb';
-import startCase from 'lodash/startCase';
-import { Fragment } from 'react';
-import { Link, useLocation } from 'react-router';
-import { Wordmark } from '@/components/Wordmark';
 
 type BreadcrumbTrailItem = {
     href: string;

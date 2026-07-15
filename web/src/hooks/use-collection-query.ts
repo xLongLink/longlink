@@ -3,6 +3,7 @@ import { useApiQuery } from '@/hooks/use-api';
 
 type UseCollectionQueryOptions<TData> = {
     retry?: boolean;
+    refetchInterval?: number;
     refetchOnMount?: boolean | 'always';
     enabled?: boolean;
     parse?: (value: unknown) => TData[];
@@ -21,6 +22,7 @@ export function useCollectionQuery<TData>(
     const query = useApiQuery<Array<TData>>(path, {
         retry: options.retry ?? false,
         refetchOnMount: options.refetchOnMount,
+        refetchInterval: options.refetchInterval,
         enabled: options.enabled,
         parse: options.parse,
         request: options.request,

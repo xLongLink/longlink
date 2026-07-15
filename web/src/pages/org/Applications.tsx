@@ -1,9 +1,9 @@
-import { useTranslation } from '@/lib/i18n';
-import { type ColumnDef } from '@tanstack/react-table';
 import { Link } from 'react-router';
-import { DataTable } from '@/components/DataTable';
-import { Icon } from '@/components/ui/icon';
+import { type ColumnDef } from '@tanstack/react-table';
 import type { ApiOrganizationApplication } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
+import { Icon } from '@/components/ui/icon';
+import { DataTable } from '@/components/DataTable';
 
 /** Renders the organization applications table. */
 export default function Applications({

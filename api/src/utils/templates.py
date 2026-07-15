@@ -9,12 +9,11 @@ def readyml(template_path: str | Path | Traversable, **context: object) -> dict[
     """Render one YAML template file into a manifest dictionary or list."""
 
     source = Path(template_path) if isinstance(template_path, str) else template_path
-    rendered = Template(source.read_text(encoding="utf-8")).safe_substitute(**context)
+    rendered = Template(source.read_text(encoding="utf-8")).substitute(**context)
     docs: list[dict[str, Any]] = []
 
     # Parse each rendered YAML document separately.
     for document in yaml.safe_load_all(rendered):
-
         # Ignore empty YAML documents from separators.
         if document is None:
             continue

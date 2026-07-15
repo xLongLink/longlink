@@ -1,15 +1,15 @@
-import { DataTable } from '@/components/DataTable';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { Icon } from '@/components/ui/icon';
-import { useApplications, useLocations } from '@/data/admin';
-import { useTranslation } from '@/lib/i18n';
-import type { ApiApplicationResponse, ApiLocation } from '@/lib/types';
-import { formatDateTime, getInitials } from '@/lib/utils';
-import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
 import { Link } from 'react-router';
+import { type ColumnDef } from '@tanstack/react-table';
+import type { ApiApplicationResponse, ApiLocation } from '@/lib/types';
+import { Icon } from '@/components/ui/icon';
+import { useTranslation } from '@/lib/i18n';
+import { Badge } from '@/components/ui/badge';
+import { DataTable } from '@/components/DataTable';
+import { formatDateTime, getInitials } from '@/lib/utils';
+import { useApplications, useLocations } from '@/data/admin';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type AdminApplicationResponse = ApiApplicationResponse & {
     organization: ApiApplicationResponse['organization'] & { location?: ApiLocation };

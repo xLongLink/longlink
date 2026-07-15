@@ -1,23 +1,23 @@
-import { useTranslation } from '@/lib/i18n';
-import { CheckIcon, ClipboardCopyIcon } from 'lucide-react';
-import { useEffect, useRef, useState, type ComponentType, type CSSProperties } from 'react';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { CheckIcon, ClipboardCopyIcon } from 'lucide-react';
 // @ts-expect-error react-syntax-highlighter does not ship declarations for this optimized subpath.
 import PrismLight from 'react-syntax-highlighter/dist/esm/prism-light';
+// @ts-expect-error react-syntax-highlighter does not ship declarations for this optimized subpath.
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 // @ts-expect-error react-syntax-highlighter does not ship declarations for this optimized subpath.
 import bash from 'react-syntax-highlighter/dist/esm/languages/prism/bash';
 // @ts-expect-error react-syntax-highlighter does not ship declarations for this optimized subpath.
 import json from 'react-syntax-highlighter/dist/esm/languages/prism/json';
 // @ts-expect-error react-syntax-highlighter does not ship declarations for this optimized subpath.
+import toml from 'react-syntax-highlighter/dist/esm/languages/prism/toml';
+// @ts-expect-error react-syntax-highlighter does not ship declarations for this optimized subpath.
 import markup from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
 // @ts-expect-error react-syntax-highlighter does not ship declarations for this optimized subpath.
 import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
-// @ts-expect-error react-syntax-highlighter does not ship declarations for this optimized subpath.
-import toml from 'react-syntax-highlighter/dist/esm/languages/prism/toml';
-// @ts-expect-error react-syntax-highlighter does not ship declarations for this optimized subpath.
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useEffect, useRef, useState, type ComponentType, type CSSProperties } from 'react';
+import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
+import { Button } from '@/components/ui/button';
 
 type SyntaxHighlighterComponent = ComponentType<{
     children: string;

@@ -1,6 +1,7 @@
 from .storage import MinIO, Storage, Exoscale
 from .database import Database, Postgres, DatabaseRuntimeConnection
 from .storage.base import StorageRuntimeCredentials
+from src.environments import env
 from src.models.storages import StorageKind
 from src.models.databases import DatabaseKind
 from src.database.models.storages import StorageRegistry
@@ -27,6 +28,8 @@ def storage(registry: StorageRegistry) -> Storage:
 
     # Select the MinIO adapter for local development storage registries.
     if registry.kind == StorageKind.minio:
+        if not env.DEVELOPMENT:
+            raise ValueError("MinIO storage is supported only for local development")
         return MinIO(
             registry.endpoint_url,
             registry.access_key_id,

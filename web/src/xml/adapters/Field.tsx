@@ -1,3 +1,7 @@
+import type { Props } from '@/xml/types';
+import { renderNode } from '@/xml/core/node';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
 import {
     Field as UIField,
     FieldContent as UIFieldContent,
@@ -6,10 +10,6 @@ import {
     FieldLegend as UIFieldLegend,
     FieldTitle as UIFieldTitle,
 } from '@/components/ui/field';
-import { useXmlContext } from '@/xml/core/context';
-import { resolveTranslation } from '@/xml/core/i18n';
-import { renderNode } from '@/xml/core/node';
-import type { Props } from '@/xml/types';
 import { resolveXmlString } from './props';
 
 /** Renders the field legend slot. */

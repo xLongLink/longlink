@@ -1,6 +1,7 @@
 import os
+from pydantic import Field
+from src.version import PLATFORM_VERSION_PATTERN
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 
 DEVELOPMENT = os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
 
@@ -9,6 +10,7 @@ class Env(BaseSettings):
     """Environment-backed API configuration loaded at startup."""
 
     # Runtime mode
+    VERSION: str = Field(default="v0.0.0", pattern=PLATFORM_VERSION_PATTERN)
     DEVELOPMENT: bool = DEVELOPMENT
 
     # Session cookies
@@ -19,6 +21,9 @@ class Env(BaseSettings):
 
     # PostgreSQL adapter defaults.
     DATABASE_SSLMODE: str = "require"
+
+    # Reconciliation
+    RECONCILE_INTERVAL_SECONDS: int = Field(default=300, ge=30, le=86400)
 
     # OIDC bridge credentials
     OIDC_ISSUER: str

@@ -1,20 +1,8 @@
 import pytest
-from types import SimpleNamespace
 from src.models.roles import PlatformRoles
 from src.models.users import Theme, Accent, Radius, Language
-from src.database.services import users, compute, storage, database, locations, operations, applications, organizations
+from src.database.services import users as user_service
 from src.database.models.users import User
-
-db = SimpleNamespace(
-    applications=applications,
-    compute=compute,
-    database=database,
-    locations=locations,
-    operations=operations,
-    organizations=organizations,
-    storage=storage,
-    users=users,
-)
 
 
 async def test_fetch_and_get_return_persisted_users(users: tuple[User, User, User]) -> None:
@@ -24,9 +12,9 @@ async def test_fetch_and_get_return_persisted_users(users: tuple[User, User, Use
     first_user, second_user, third_user = users
 
     # Act
-    fetched = await db.users.fetch()
-    by_second_oidc = await db.users.get(second_user.oidc)
-    by_oidc = await db.users.get(third_user.oidc)
+    fetched = await user_service.fetch()
+    by_second_oidc = await user_service.get(second_user.oidc)
+    by_oidc = await user_service.get(third_user.oidc)
 
     # Assert
     assert {user.id for user in fetched} == {first_user.id, second_user.id, third_user.id}
@@ -40,7 +28,7 @@ async def test_missing_user_reads_return_none() -> None:
     """Return None when user read services cannot find a user."""
 
     # Act
-    by_oidc = await db.users.get("missing-oidc")
+    by_oidc = await user_service.get("missing-oidc")
 
     # Assert
     assert by_oidc is None
@@ -49,10 +37,8 @@ async def test_missing_user_reads_return_none() -> None:
 async def test_upsert_creates_user_when_no_existing_match() -> None:
     """Create a new user when no OIDC subject matches exist."""
 
-    # Arrange
-
     # Act
-    user = await db.users.upsert(
+    user = await user_service.upsert(
         oidc="oidc-subject-create",
         email="create@example.com",
         name="Create User",
@@ -71,22 +57,20 @@ async def test_upsert_creates_user_when_no_existing_match() -> None:
 async def test_upsert_requires_identity_fields_for_new_user() -> None:
     """Require name and email when creating a new user."""
 
-    # Arrange
-
     # Act
     with pytest.raises(ValueError) as exc:
-        await db.users.upsert(oidc="oidc-subject-missing-fields")
+        await user_service.upsert(oidc="oidc-subject-missing-fields")
 
     # Assert
     assert str(exc.value) == "Missing user fields"
-    assert await db.users.fetch() == []
+    assert await user_service.fetch() == []
 
 
 async def test_upsert_does_not_mark_second_user_as_admin() -> None:
     """Keep later users non-admin by default."""
 
     # Arrange
-    await db.users.upsert(
+    await user_service.upsert(
         oidc="oidc-subject-first",
         email="first@example.com",
         name="First User",
@@ -94,7 +78,7 @@ async def test_upsert_does_not_mark_second_user_as_admin() -> None:
     )
 
     # Act
-    user = await db.users.upsert(
+    user = await user_service.upsert(
         oidc="oidc-subject-second",
         email="second@example.com",
         name="Second User",
@@ -110,7 +94,7 @@ async def test_upsert_applies_explicit_user_settings_and_preserves_omitted_value
     """Apply explicit profile settings without overwriting omitted values later."""
 
     # Arrange
-    original_user = await db.users.upsert(
+    original_user = await user_service.upsert(
         oidc="oidc-subject-settings",
         email="settings@example.com",
         name="Settings User",
@@ -123,7 +107,7 @@ async def test_upsert_applies_explicit_user_settings_and_preserves_omitted_value
     )
 
     # Act
-    updated_user = await db.users.upsert(
+    updated_user = await user_service.upsert(
         oidc="oidc-subject-settings",
         name="Settings User Updated",
     )
@@ -144,7 +128,7 @@ async def test_upsert_updates_existing_user_by_oidc() -> None:
     """Update the existing user when the OIDC subject already exists."""
 
     # Arrange
-    original_user = await db.users.upsert(
+    original_user = await user_service.upsert(
         oidc="oidc-subject-update",
         email="original@example.com",
         name="Original User",
@@ -152,7 +136,7 @@ async def test_upsert_updates_existing_user_by_oidc() -> None:
     )
 
     # Act
-    updated_user = await db.users.upsert(
+    updated_user = await user_service.upsert(
         oidc="oidc-subject-update",
         email="updated@example.com",
         name="Updated User",

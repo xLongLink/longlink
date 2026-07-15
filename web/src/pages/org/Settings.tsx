@@ -30,6 +30,7 @@ import { Menu, MenuSection, MenuSubSection } from '@/components/ui/menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { apiApplicationMemberSchema, parseApiCollection } from '@/lib/api-schemas';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import { APPLICATION_ROLE_NAMES, hasMinimumRole, type ApplicationRole } from '@/lib/roles';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useOrganizationDatabaseResources, useOrganizationStorageResources } from '@/data/organization';
 import {
@@ -38,12 +39,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    APPLICATION_ROLE_NAMES,
-    canManageApplication,
-    canViewApplicationLogs,
-    type ApplicationRole,
-} from '@/lib/roles';
 import People from './People';
 
 type SettingsProps = {
@@ -98,6 +93,7 @@ export default function Settings({
 
     const organizationMembership = userOrganizations.find((item) => item.slug === organization);
     const organizationRole = organizationMembership?.role ?? null;
+    const hasOrganizationApplicationAccess = hasMinimumRole(organizationRole, 'maintain');
     const hashValue = location.hash.replace(/^#/, '');
     const settingsPeopleSection: PeopleSection = hashValue === 'invitations' ? 'invitations' : 'members';
     const settingsSection: SettingsSection = routeSection === 'people' ? settingsPeopleSection : routeSection;
@@ -111,7 +107,7 @@ export default function Settings({
         retry: false,
     });
     const canManageSelectedApplication = selectedApplication
-        ? canManageApplication(organizationRole, selectedApplication.role)
+        ? hasMinimumRole(selectedApplication.role, 'maintain') || hasOrganizationApplicationAccess
         : false;
 
     const changeApplicationMemberRole = useMutation({
@@ -198,12 +194,12 @@ export default function Settings({
             meta: { className: 'w-44 text-right' },
             cell: ({ row }) => {
                 const application = row.original;
-                const canReadLogs =
-                    platformRole === 'administrator' || canViewApplicationLogs(organizationRole, application.role);
-                const canDelete = canManageApplication(organizationRole, application.role);
+                const canManageApplication =
+                    hasMinimumRole(application.role, 'maintain') || hasOrganizationApplicationAccess;
+                const canReadLogs = platformRole === 'administrator' || canManageApplication;
 
                 // Hide the action menu when no actions are available.
-                if (!canReadLogs && !canDelete) {
+                if (!canReadLogs && !canManageApplication) {
                     return <span className="text-muted-foreground">—</span>;
                 }
 
@@ -234,7 +230,7 @@ export default function Settings({
                                         {t('organizationSettings.logs')}
                                     </DropdownMenuItem>
                                 ) : null}
-                                {canDelete ? (
+                                {canManageApplication ? (
                                     <DropdownMenuItem
                                         className="cursor-pointer"
                                         variant="destructive"

@@ -1,7 +1,7 @@
-import { cva } from 'class-variance-authority';
-import startCase from 'lodash/startCase';
-import { ChevronDownIcon, type LucideIcon } from 'lucide-react';
 import * as React from 'react';
+import startCase from 'lodash/startCase';
+import { cva } from 'class-variance-authority';
+import { ChevronDownIcon, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type MenuProps = {

@@ -62,7 +62,9 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
 
         database_url = adapter.url(database_name)
 
-        runtime_connection = await adapter.schema(organization_id, application_id)
+        runtime_password = "stable-runtime-password"
+        runtime_connection = await adapter.schema(organization_id, application_id, runtime_password)
+        retried_runtime_connection = await adapter.schema(organization_id, application_id, runtime_password)
         runtime_url = URL.create(
             "postgresql+psycopg",
             username=runtime_connection["username"],
@@ -121,6 +123,8 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         server_usage_after_delete = await adapter.usage()
 
         assert database_url.database == organization_id.hex
+        assert retried_runtime_connection == runtime_connection
+        assert runtime_connection["password"] == runtime_password
         assert runtime_connection["username"].startswith("longlink_")
         assert len(runtime_connection["username"]) <= 63
         assert shared_user == {"email": "owner@example.com", "role": "owner"}

@@ -1,123 +1,157 @@
 import pytest
-from uuid import uuid4
 from types import SimpleNamespace
 from fastapi import HTTPException
-from collections.abc import Callable, Awaitable
-from src.models.storages import StorageKind
-from src.models.databases import DatabaseKind
-from src.models.locations import LocationProvider
-from src.database.services import users, compute, storage, database, locations, organizations
+from factories import create_ready_location
+from src.environments import env
+from src.models.statuses import LocationStatus
+from src.models.locations import LocationCreate
+from src.database.services import compute, storage, database, locations, operations, organizations
+from src.models.operations import OperationStatus
 from src.database.models.users import User
+from src.models.infrastructure import StorageKind, DatabaseKind, ComputeConfiguration, StorageConfiguration, DatabaseConfiguration
 
 db = SimpleNamespace(
     compute=compute,
     database=database,
     locations=locations,
+    operations=operations,
     organizations=organizations,
     storage=storage,
-    users=users,
 )
 
-LOCATION_DEPENDENCY_CASES = [
-    pytest.param(
-        db.organizations.create,
-        ("acme", "acme"),
-        "Location is used by active organizations",
-        id="organization",
+LOCATION_PAYLOAD = LocationCreate(
+    name="Primary",
+    country="CH",
+    compute=ComputeConfiguration(kubeconfig="apiVersion: v1\nclusters: []\n"),
+    database=DatabaseConfiguration(
+        kind=DatabaseKind.postgresql,
+        host="postgres.example",
+        port=5432,
+        username="longlink",
+        password="secret",
     ),
-    pytest.param(
-        db.compute.create,
-        ("Primary compute", "primary-compute", "kubeconfig", "https://apps.example"),
-        "Location is used by active compute registries",
-        id="compute-registry",
+    storage=StorageConfiguration(
+        kind=StorageKind.minio,
+        endpoint_url="https://minio.example",
+        runtime_endpoint_url="https://minio.internal",
+        access_key_id="access-key",
+        secret_access_key="secret-key",
     ),
-    pytest.param(
-        db.database.create,
-        (DatabaseKind.postgresql, "Primary database", "primary-database", "postgres.example", 5432, "longlink", "secret"),
-        "Location is used by active database registries",
-        id="database-registry",
-    ),
-    pytest.param(
-        db.storage.create,
-        (StorageKind.minio, "Primary storage", "primary-storage", "https://minio.example", "access-key", "secret-key"),
-        "Location is used by active storage registries",
-        id="storage-registry",
-    ),
-]
+)
 
 
-async def test_create_get_and_fetch_return_active_locations(users: tuple[User, User, User]) -> None:
-    """Persist a location and return it through read services."""
+async def test_create_get_and_fetch_return_complete_location_aggregate(users: tuple[User, User, User]) -> None:
+    """Persist a complete location aggregate and queue its reconciliation."""
 
     # Arrange
     owner = users[0]
 
     # Act
-    location = await db.locations.create("primary", "Primary", owner, "CH", LocationProvider.hetzner)
+    location, operation = await db.locations.create("primary", LOCATION_PAYLOAD, owner)
     fetched = await db.locations.fetch()
     reloaded = await db.locations.get(location.id)
+    compute_registry = await db.compute.location(location.id)
+    database_registry = await db.database.location(location.id)
+    storage_registry = await db.storage.location(location.id)
+    open_operations = [item for item in await db.operations.fetch() if item.stopped_at is None]
 
     # Assert
     assert location.name == "Primary"
     assert location.slug == "primary"
     assert location.country == "CH"
-    assert location.provider == LocationProvider.hetzner
+    assert location.status == LocationStatus.provisioning
+    assert location.version is None
     assert location.created_id == owner.id
     assert location.updated_id == owner.id
     assert [item.id for item in fetched] == [location.id]
     assert reloaded is not None
     assert reloaded.id == location.id
+    assert compute_registry is not None
+    assert compute_registry.slug == "primary-compute"
+    assert compute_registry.kubeconfig == LOCATION_PAYLOAD.compute.kubeconfig
+    assert database_registry is not None
+    assert database_registry.slug == "primary-database"
+    assert database_registry.host == LOCATION_PAYLOAD.database.host
+    assert storage_registry is not None
+    assert storage_registry.slug == "primary-storage"
+    assert storage_registry.runtime_endpoint_url == LOCATION_PAYLOAD.storage.runtime_endpoint_url
+    assert [item.id for item in open_operations] == [operation.id]
+    assert operation.location_id == location.id
+    assert operation.platform_version == env.VERSION
+    assert operation.status == OperationStatus.scheduled
 
 
-async def test_create_rejects_duplicate_location_slug(users: tuple[User, User, User]) -> None:
-    """Reject a second location with the same slug."""
-
-    # Arrange
-    owner = users[0]
-    await db.locations.create("primary", "Primary", owner, "CH")
-
-    # Act
-    with pytest.raises(HTTPException) as exc:
-        await db.locations.create("primary", "Primary!", owner, "CH")
-
-    # Assert
-    assert exc.value.status_code == 409
-    assert exc.value.detail == "Location already exists"
-
-
-async def test_delete_soft_deletes_location_and_read_services_ignore_it(users: tuple[User, User, User]) -> None:
-    """Soft-delete an unused location and hide it from active read services."""
+async def test_record_success_observes_complete_location_version(users: tuple[User, User, User]) -> None:
+    """Record a successfully reconciled Platform version across the location aggregate."""
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, "CH")
+    location, operation = await db.locations.create("primary", LOCATION_PAYLOAD, owner)
 
     # Act
-    deleted = await db.locations.delete(location.id, owner)
-    second_delete = await db.locations.delete(location.id, owner)
-    missing_delete = await db.locations.delete(uuid4(), owner)
+    observed = await db.locations.record_success(
+        location.id,
+        env.VERSION,
+        "https://gateway.example",
+        "gateway-ca",
+        "gateway-certificate",
+        "gateway-private-key",
+    )
+    reloaded = await db.locations.get(location.id)
+    compute_registry = await db.compute.location(location.id)
+    open_operations = [item for item in await db.operations.fetch() if item.stopped_at is None]
 
     # Assert
-    assert deleted is True
-    assert second_delete is False
-    assert missing_delete is False
-    assert await db.locations.get(location.id) is None
+    assert observed is True
+    assert reloaded is not None
+    assert reloaded.status == LocationStatus.ready
+    assert reloaded.version == env.VERSION
+    assert compute_registry is not None
+    assert compute_registry.gateway_url == "https://gateway.example"
+    assert compute_registry.gateway_ca_certificate == "gateway-ca"
+    assert compute_registry.gateway_tls_certificate == "gateway-certificate"
+    assert compute_registry.gateway_tls_private_key == "gateway-private-key"
+    assert [item.id for item in open_operations] == [operation.id]
+    assert operation.platform_version == env.VERSION
+    assert operation.status == OperationStatus.scheduled
+
+
+async def test_delete_marks_location_for_reconciliation(users: tuple[User, User, User]) -> None:
+    """Tombstone an unused location aggregate and queue its teardown."""
+
+    # Arrange
+    owner = users[0]
+    location = await create_ready_location(owner, slug="primary", name="Primary")
+
+    # Act
+    result = await db.locations.delete(location.id, owner)
+    active = await db.locations.get(location.id)
+    deleted = await db.locations.get(location.id, include_deleted=True)
+    open_operations = [item for item in await db.operations.fetch() if item.stopped_at is None]
+
+    # Assert
+    assert result is not None
+    changed, operation = result
+    assert changed.status == LocationStatus.deleting
+    assert changed.version is None
+    assert changed.deleted_id == owner.id
+    assert active is None
+    assert deleted is not None
+    assert deleted.id == location.id
     assert await db.locations.fetch() == []
+    assert [item.id for item in open_operations] == [operation.id]
+    assert operation.location_id == location.id
+    assert operation.platform_version == env.VERSION
+    assert operation.status == OperationStatus.scheduled
 
 
-@pytest.mark.parametrize(("create_dependency", "args", "expected_detail"), LOCATION_DEPENDENCY_CASES)
-async def test_delete_rejects_location_used_by_active_dependency(
-    users: tuple[User, User, User],
-    create_dependency: Callable[..., Awaitable[object]],
-    args: tuple[object, ...],
-    expected_detail: str,
-) -> None:
-    """Reject deleting a location while an active resource depends on it."""
+async def test_delete_rejects_location_used_by_active_organization(users: tuple[User, User, User]) -> None:
+    """Reject location teardown while active organization state depends on it."""
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, "CH")
-    await create_dependency(*args, location.id, owner)
+    location = await create_ready_location(owner, slug="primary", name="Primary")
+    await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
     with pytest.raises(HTTPException) as exc:
@@ -125,5 +159,13 @@ async def test_delete_rejects_location_used_by_active_dependency(
 
     # Assert
     assert exc.value.status_code == 409
-    assert exc.value.detail == expected_detail
-    assert await db.locations.get(location.id) is not None
+    assert exc.value.detail == "Location is used by active organizations"
+    reloaded = await db.locations.get(location.id)
+    assert reloaded is not None
+    assert reloaded.status == LocationStatus.ready
+    assert reloaded.version == env.VERSION
+    open_operations = [item for item in await db.operations.fetch() if item.stopped_at is None]
+    assert len(open_operations) == 1
+    assert open_operations[0].location_id == location.id
+    assert open_operations[0].platform_version == env.VERSION
+    assert open_operations[0].status == OperationStatus.scheduled

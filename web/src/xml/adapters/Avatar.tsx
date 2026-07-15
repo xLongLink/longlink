@@ -1,16 +1,16 @@
+import type { ComponentProps } from 'react';
+import { hasProtocol } from 'ufo';
+import type { Props } from '@/xml/types';
+import { renderNode } from '@/xml/core/node';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
+import { isAppRelativeUrl, resolveUrl, useUrl } from '@/xml/core/url';
 import {
     Avatar as UIAvatar,
     AvatarBadge as UIAvatarBadge,
     AvatarFallback as UIAvatarFallback,
     AvatarImage as UIAvatarImage,
 } from '@/components/ui/avatar';
-import { useXmlContext } from '@/xml/core/context';
-import { resolveTranslation } from '@/xml/core/i18n';
-import { renderNode } from '@/xml/core/node';
-import { isAppRelativeUrl, resolveUrl, useUrl } from '@/xml/core/url';
-import type { Props } from '@/xml/types';
-import { hasProtocol } from 'ufo';
-import type { ComponentProps } from 'react';
 import { resolveXmlString } from './props';
 
 type AvatarSize = NonNullable<ComponentProps<typeof UIAvatar>['size']>;

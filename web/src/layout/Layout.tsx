@@ -1,12 +1,12 @@
-import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Breadcrumb } from '@/components/Breadcrumb';
-import { UserProfile } from '@/components/Profile';
+import type { LucideIcon } from 'lucide-react';
+import { Link, useLocation } from 'react-router';
+import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
-import { useTranslation } from '@/lib/i18n';
-import { cn } from '@/lib/utils';
-import { Link, useLocation } from 'react-router';
+import { UserProfile } from '@/components/Profile';
+import { Breadcrumb } from '@/components/Breadcrumb';
 import TopLayout from './TopLayout';
 
 type LayoutTab = {

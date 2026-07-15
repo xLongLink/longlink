@@ -1,8 +1,6 @@
-import { createElement } from 'react';
 import { describe, expect, it } from 'bun:test';
-import { renderToStaticMarkup } from 'react-dom/server';
 import type { ASTNode, ExecutionContext } from '@/xml/types';
-import { RenderXML } from '@/xml/renderers.tsx';
+import { renderXmlToMarkup } from './helpers';
 
 describe('renderNode', () => {
     it('resolves localized text through XML adapters', () => {
@@ -13,35 +11,20 @@ describe('renderNode', () => {
             values: {},
             count: 7,
         };
-        expect(
-            renderToStaticMarkup(
-                createElement(
-                    'div',
-                    null,
-                    createElement(RenderXML, {
-                        ast: [{ name: 'P', params: { count: '${count}', i18n: 'copy.count' } }],
-                        ctx,
-                    })
-                )
-            )
-        ).toContain('Count 7');
+        expect(renderXmlToMarkup([{ name: 'P', params: { count: '${count}', i18n: 'copy.count' } }], ctx)).toContain(
+            'Count 7'
+        );
     });
 
     it('skips nodes when if condition is false', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
         const node: ASTNode = { name: 'Button', params: { if: '${false}' } };
-        expect(renderToStaticMarkup(createElement('div', null, createElement(RenderXML, { ast: [node], ctx })))).toBe(
-            '<div></div>'
-        );
+        expect(renderXmlToMarkup([node], ctx)).toBe('<div></div>');
     });
 
     it('throws on unknown component', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
-        expect(() =>
-            renderToStaticMarkup(
-                createElement('div', null, createElement(RenderXML, { ast: [{ name: 'Unknown' }], ctx }))
-            )
-        ).toThrow('Unknown component "Unknown"');
+        expect(() => renderXmlToMarkup([{ name: 'Unknown' }], ctx)).toThrow('Unknown component "Unknown"');
     });
 
     it('resolves input props from expressions', () => {
@@ -52,7 +35,7 @@ describe('renderNode', () => {
             form: { value: 'Ada', placeholder: 'Enter name' },
         };
         const node: ASTNode = { name: 'Input', params: { value: 'form.value', placeholder: 'form.placeholder' } };
-        const output = renderToStaticMarkup(createElement('div', null, createElement(RenderXML, { ast: [node], ctx })));
+        const output = renderXmlToMarkup([node], ctx);
         expect(output).toContain('value="Ada"');
         expect(output).toContain('placeholder="Enter name"');
     });

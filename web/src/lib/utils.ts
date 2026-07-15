@@ -1,6 +1,6 @@
+import { twMerge } from 'tailwind-merge';
 import { clsx, type ClassValue } from 'clsx';
 import { useState, type ReactNode } from 'react';
-import { twMerge } from 'tailwind-merge';
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
     day: 'numeric',

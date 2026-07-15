@@ -1,6 +1,6 @@
+import { BrainCircuit, ChevronRight, Sparkles, Users } from 'lucide-react';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
-import { BrainCircuit, ChevronRight, Sparkles, Users } from 'lucide-react';
 
 const pricingOptions = [
     {

@@ -35,6 +35,9 @@ class Exoscale(MinIO):
 
         name = self._credential_name(bucket)
 
+        # Remove an incomplete prior attempt so deterministic names make retries converge without leaked keys.
+        await self.revoke(bucket)
+
         # Create the restricted role first because API keys are immutable role attachments.
         operation = await self._api_request(
             "POST",
@@ -61,7 +64,6 @@ class Exoscale(MinIO):
         return {
             "access_key_id": self._string(key, "key"),
             "secret_access_key": self._string(key, "secret"),
-            "role_id": role_id,
         }
 
     async def revoke(self, bucket: str) -> None:
@@ -138,7 +140,9 @@ class Exoscale(MinIO):
 
         # Execute the request through the configured zone-local control-plane endpoint.
         async with httpx2.AsyncClient(timeout=30.0) as client:
-            response = await client.request(method, f"{self._api_url}{path}", content=body if payload is not None else None, headers=headers)
+            response = await client.request(
+                method, f"{self._api_url}{path}", content=body if payload is not None else None, headers=headers
+            )
 
         # Cleanup paths tolerate resources that have already been removed.
         if response.status_code == 404 and ignore_not_found:

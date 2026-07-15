@@ -1,12 +1,12 @@
-import { CodeBlock } from '@/components/CodeBlock';
-import { CodeTabs } from '@/components/CodeTabs';
-import { A } from '@/components/ui/a';
-import { Code } from '@/components/ui/code';
-import { Heading } from '@/components/ui/heading';
-import { P } from '@/components/ui/p';
-import { Stack } from '@/components/ui/stack';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Cloud, FlaskConical, Laptop } from 'lucide-react';
+import { A } from '@/components/ui/a';
+import { P } from '@/components/ui/p';
+import { Code } from '@/components/ui/code';
+import { Stack } from '@/components/ui/stack';
+import { CodeTabs } from '@/components/CodeTabs';
+import { Heading } from '@/components/ui/heading';
+import { CodeBlock } from '@/components/CodeBlock';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const environmentIcons = {
     Development: Laptop,

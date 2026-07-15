@@ -1,8 +1,8 @@
 import { parse, parseExpressionAt } from 'acorn';
-import type { ExecutionContext } from '../types';
-import { createScopeProxy, hasSafeProperty, isSafePropertyName, readSafeProperty, resolvePath } from './resolve';
 import type { ExpressionNode } from './types';
+import type { ExecutionContext } from '../types';
 import { isReference } from './utils';
+import { createScopeProxy, hasSafeProperty, isSafePropertyName, readSafeProperty, resolvePath } from './resolve';
 
 const expressionNodeCache = new Map<string, ExpressionNode>();
 

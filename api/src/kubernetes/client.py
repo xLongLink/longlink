@@ -1,44 +1,36 @@
-from src.utils import names, templates
-from importlib.resources import files
+from src.utils import names
+from collections.abc import Callable, Awaitable
 from kr8s.asyncio.objects import Pod, Namespace
-from src.kubernetes.gateway import Gateway
+from src.kubernetes.gateway import GatewayTLSMaterial
+from src.kubernetes.reconcile import Reconciler, DesiredLocation, ReconcileResult
 from src.kubernetes.resources import KubernetesResources
 from src.kubernetes.applications import Applications
 
-TEMPLATES = files("src.kubernetes.templates")
-
 
 class Kubernetes:
-    """Expose namespace, gateway, and application operations for one Kubernetes cluster."""
+    """Expose desired-state reconciliation and read-only cluster diagnostics."""
 
-    def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
+    def __init__(self, kubeconfig: str) -> None:
         """Initialize components that share one lazy cluster connection."""
 
         self._resources = KubernetesResources(kubeconfig)
-        self.gateway = Gateway(self._resources, proxy_secret)
-        self.applications = Applications(self._resources, self.gateway)
+        self._reconciler = Reconciler(self._resources)
+        self.applications = Applications(self._resources)
 
-    async def namespace(self, organization: str) -> None:
-        """Create one managed organization namespace and its network policy."""
+    async def reconcile(
+        self,
+        desired: DesiredLocation,
+        proxy_secret: str,
+        existing_tls: GatewayTLSMaterial | None = None,
+        fence: Callable[[], Awaitable[None]] | None = None,
+        stage_tls: Callable[[GatewayTLSMaterial], Awaitable[None]] | None = None,
+    ) -> ReconcileResult:
+        """Converge the connected cluster to one location's complete desired state."""
 
-        namespace = names.knames(organization)
-        manifests = templates.readyml_list(
-            TEMPLATES.joinpath("application_network_policy.yml"),
-            namespace=namespace,
-        )
-
-        # The Namespace is applied first so the following NetworkPolicy has an owner namespace.
-        for manifest in manifests:
-            await self._resources.upsert(manifest)
-
-    async def delete_namespace(self, organization: str) -> None:
-        """Delete one managed organization namespace and tolerate missing namespaces."""
-
-        await self._resources.delete(Namespace, names.knames(organization))
-        await self.gateway.sync()
+        return await self._reconciler.reconcile(desired, proxy_secret, existing_tls, fence, stage_tls)
 
     async def namespaces(self) -> list[str]:
-        """List all organization namespaces in the connected cluster."""
+        """List non-core namespaces for cluster diagnostics without mutating them."""
 
         return [
             namespace.name
@@ -47,6 +39,9 @@ class Kubernetes:
         ]
 
     async def pods(self, namespace: str) -> list[Pod]:
-        """List all pods in one namespace."""
+        """List all pods in one namespace for diagnostics."""
 
         return await self._resources.list(Pod, namespace)
+
+
+from collections.abc import Callable, Awaitable

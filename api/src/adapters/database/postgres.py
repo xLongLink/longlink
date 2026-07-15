@@ -1,4 +1,3 @@
-import secrets
 import contextlib
 from uuid import UUID
 from .base import Database, DatabaseRuntimeConnection
@@ -93,7 +92,6 @@ class Postgres(Database):
 
         # Ensure the operation-scoped engine is disposed after use.
         try:
-
             # Use explicit connections for autocommit operations and transactions for normal operations.
             connection_context = engine.connect() if autocommit else engine.begin()
 
@@ -114,7 +112,6 @@ class Postgres(Database):
 
             # Create the database only when PostgreSQL does not already list it.
             if result.scalar_one_or_none() is None:
-
                 # CREATE DATABASE needs a quoted identifier, so compile it with SQLAlchemy's dialect preparer.
                 quoted_database_name = self.quote(conn, organization.hex)
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
@@ -128,16 +125,13 @@ class Postgres(Database):
             await conn.execute(text("REVOKE CREATE ON SCHEMA public FROM PUBLIC"))
             await conn.exec_driver_sql(f"REVOKE CREATE ON SCHEMA {shared_schema} FROM PUBLIC")
             await conn.execute(text("REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA public FROM PUBLIC"))
-            await conn.exec_driver_sql(
-                f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA {shared_schema} FROM PUBLIC"
-            )
+            await conn.exec_driver_sql(f"REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON ALL TABLES IN SCHEMA {shared_schema} FROM PUBLIC")
 
-    async def schema(self, organization: UUID, application: UUID) -> DatabaseRuntimeConnection:
-        """Create or replace the schema for one application and return runtime connection settings."""
+    async def schema(self, organization: UUID, application: UUID, password: str) -> DatabaseRuntimeConnection:
+        """Create or update one application schema using its stable runtime password."""
 
-        # Generate an app-scoped role and password for the deployed runtime.
+        # Derive the app-scoped role while keeping the persisted password stable across retries.
         runtime_username = f"longlink_{organization.hex[:16]}_{application.hex[:16]}"
-        role_password = secrets.token_urlsafe(24)
 
         # Create the app schema and bind the runtime role inside the organization database.
         async with self._connection(organization.hex) as conn:
@@ -152,7 +146,7 @@ class Postgres(Database):
             if password_processor is None:
                 raise ValueError("PostgreSQL string literal processing is unavailable")
 
-            password_literal = password_processor(role_password)
+            password_literal = password_processor(password)
 
             # Create new roles and rotate existing roles with fresh credentials.
             if result.scalar_one_or_none() is None:
@@ -187,7 +181,7 @@ class Postgres(Database):
         return {
             "host": self._host,
             "port": self._port,
-            "password": role_password,
+            "password": password,
             "username": runtime_username,
             "database_name": organization.hex,
         }

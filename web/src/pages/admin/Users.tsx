@@ -1,21 +1,21 @@
+import type { TFunction } from 'i18next';
+import { toast } from 'sonner';
+import { MoreVertical } from 'lucide-react';
+import { type ColumnDef } from '@tanstack/react-table';
+import type { ApiUserListItem } from '@/lib/types';
+import { useUsers } from '@/data/admin';
+import { getInitials } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
+import { DataTable } from '@/components/DataTable';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { useTranslation } from '@/lib/i18n';
-import { type ColumnDef } from '@tanstack/react-table';
-import type { TFunction } from 'i18next';
-import { MoreVertical } from 'lucide-react';
-import { toast } from 'sonner';
-import { DataTable } from '@/components/DataTable';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useUsers } from '@/data/admin';
-import type { ApiUserListItem } from '@/lib/types';
-import { getInitials } from '@/lib/utils';
 
 /** Builds localized admin user table columns. */
 function createUserColumns(t: TFunction): Array<ColumnDef<ApiUserListItem>> {

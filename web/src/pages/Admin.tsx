@@ -1,8 +1,8 @@
-import { Auth } from '@/components/Auth';
-import Layout from '@/layout/Layout';
-import { useTranslation } from '@/lib/i18n';
-import { Activity, Boxes, Building2, Cpu, Database, HardDrive, MapPin, Users } from 'lucide-react';
 import { Outlet } from 'react-router';
+import { Activity, Boxes, Building2, Cpu, Database, HardDrive, MapPin, Users } from 'lucide-react';
+import Layout from '@/layout/Layout';
+import { Auth } from '@/components/Auth';
+import { useTranslation } from '@/lib/i18n';
 
 /** Renders the admin shell with tabbed navigation. */
 export default function Admin() {

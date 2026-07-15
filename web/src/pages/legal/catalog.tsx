@@ -1,8 +1,8 @@
-import type { ArticleNavigationGroup, ArticlePage } from '@/pages/catalog';
-import { content as impressumContent, metadata as impressumMetadata } from '@/pages/legal/impressum';
-import { content as privacyContent, metadata as privacyMetadata } from '@/pages/legal/privacy';
-import { content as termsContent, metadata as termsMetadata } from '@/pages/legal/terms';
 import { FileText, Landmark, ShieldCheck } from 'lucide-react';
+import type { ArticleNavigationGroup, ArticlePage } from '@/pages/catalog';
+import { content as termsContent, metadata as termsMetadata } from '@/pages/legal/terms';
+import { content as privacyContent, metadata as privacyMetadata } from '@/pages/legal/privacy';
+import { content as impressumContent, metadata as impressumMetadata } from '@/pages/legal/impressum';
 
 const homeBreadcrumb = { title: 'Home', path: '/' };
 

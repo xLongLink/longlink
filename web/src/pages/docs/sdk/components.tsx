@@ -1,10 +1,10 @@
-import { CodeBlock } from '@/components/CodeBlock';
-import { Code } from '@/components/ui/code';
-import { Heading } from '@/components/ui/heading';
-import { Li } from '@/components/ui/li';
 import { P } from '@/components/ui/p';
-import { Stack } from '@/components/ui/stack';
+import { Li } from '@/components/ui/li';
 import { Ul } from '@/components/ui/ul';
+import { Code } from '@/components/ui/code';
+import { Stack } from '@/components/ui/stack';
+import { Heading } from '@/components/ui/heading';
+import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
     lastUpdated: '2026-07-11',

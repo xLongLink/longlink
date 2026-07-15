@@ -1,11 +1,11 @@
-import { fetchApiJson } from '@/lib/api';
-import { useEffect, useState, type ReactNode } from 'react';
 import { getVersion, subscribe } from 'valtio';
-import { ContextProvider, createContext, setupContext, validateSetupNodes } from './core/context';
-import { XmlErrorBoundary } from './core/errors';
-import { renderNode } from './core/node';
-import { BaseUrlContext, resolveUrl } from './core/url';
+import { useEffect, useState, type ReactNode } from 'react';
+import { fetchApiJson } from '@/lib/api';
 import type { ASTNode, ExecutionContext } from './types';
+import { renderNode } from './core/node';
+import { XmlErrorBoundary } from './core/errors';
+import { BaseUrlContext, resolveUrl } from './core/url';
+import { ContextProvider, createContext, setupContext, validateSetupNodes } from './core/context';
 
 type RenderXMLProps = {
     ast: ASTNode[];

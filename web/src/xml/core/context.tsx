@@ -1,8 +1,8 @@
 import { createContext as createReactContext, useContext as useReactContext, type ReactNode } from 'react';
-import { evaluate, isSafePropertyName, isText } from '../expressions';
 import type { ASTNode, ExecutionContext } from '../types';
 import { query } from './query';
 import { state } from './state';
+import { evaluate, isSafePropertyName, isText } from '../expressions';
 
 export const Context = createReactContext<ExecutionContext | null>(null);
 

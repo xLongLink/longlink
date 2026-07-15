@@ -1,12 +1,12 @@
+import type { Props } from '@/xml/types';
+import { renderNode } from '@/xml/core/node';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
 import {
     Hero as HeroShell,
     HeroDescription as HeroShellDescription,
     HeroTitle as HeroShellTitle,
 } from '@/components/ui/hero';
-import { useXmlContext } from '@/xml/core/context';
-import { resolveTranslation } from '@/xml/core/i18n';
-import { renderNode } from '@/xml/core/node';
-import type { Props } from '@/xml/types';
 import { resolveXmlString } from './props';
 
 /** Renders the hero shell. */

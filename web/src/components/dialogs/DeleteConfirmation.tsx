@@ -1,5 +1,5 @@
-import { useTranslation } from '@/lib/i18n';
 import type { DeleteConfirmationProps } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 

@@ -1,4 +1,26 @@
+import { toast } from 'sonner';
+import { useState } from 'react';
+import { type ColumnDef } from '@tanstack/react-table';
+import { BookOpen, Crown, GitPullRequest, MoreVertical, PenLine, Settings2, type LucideIcon } from 'lucide-react';
+import type { Role } from '@/lib/roles';
+import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
+import { ROLE_NAMES } from '@/lib/roles';
+import { useTranslation } from '@/lib/i18n';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/DataTable';
+import { formatDate, getInitials } from '@/lib/utils';
+import { useOrganizationActions } from '@/hooks/use-organization';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -9,28 +31,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
-import { useOrganizationActions } from '@/hooks/use-organization';
-import { useTranslation } from '@/lib/i18n';
-import type { Role } from '@/lib/roles';
-import { ROLE_NAMES } from '@/lib/roles';
-import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
-import { formatDate, getInitials } from '@/lib/utils';
-import { type ColumnDef } from '@tanstack/react-table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { BookOpen, Crown, GitPullRequest, MoreVertical, PenLine, Settings2, type LucideIcon } from 'lucide-react';
-import { useState } from 'react';
-import { toast } from 'sonner';
 
 type PeopleProps = {
     organization: string;

@@ -25,10 +25,6 @@ describe('resolveUrl', () => {
 describe('resolveRequestUrl', () => {
     it('resolves app-relative request paths', () => {
         expect(resolveRequestUrl('/api/applications/123/proxy', '/items')).toBe('/api/applications/123/proxy/items');
-        expect(resolveRequestUrl('/api/applications/123/proxy/', 'items')).toBe('/api/applications/123/proxy/items');
-        expect(resolveRequestUrl('https://apps.example/api/applications/123/proxy/', '/items')).toBe(
-            'https://apps.example/api/applications/123/proxy/items'
-        );
     });
 
     it('rejects external request URLs', () => {

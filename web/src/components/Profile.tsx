@@ -1,15 +1,5 @@
-import { useUser } from '@/hooks/use-user';
-import { useTranslation } from '@/lib/i18n';
-import { getInitials } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
+import { Link } from 'react-router';
 import {
     Activity,
     ArrowRightLeft,
@@ -25,8 +15,18 @@ import {
     Settings2,
     Users,
 } from 'lucide-react';
-import { Link } from 'react-router';
-import { toast } from 'sonner';
+import { getInitials } from '@/lib/utils';
+import { useUser } from '@/hooks/use-user';
+import { useTranslation } from '@/lib/i18n';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 /** Renders a user profile dropdown with authentication actions. */
 export function UserProfile() {

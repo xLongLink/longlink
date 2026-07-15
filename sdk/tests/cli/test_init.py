@@ -40,11 +40,7 @@ def test_init_adds_github_ci_files_when_requested() -> None:
         ci_source = ROOT / ".static" / "ci" / "github"
 
         assert result.exit_code == 0
-        _assert_directory_was_copied(
-            ROOT / ".static" / "new",
-            target,
-            overwritten_paths=frozenset(_directory_entries(ci_source)),
-        )
+        assert (target / "pyproject.toml").read_bytes() == (ROOT / ".static" / "new" / "pyproject.toml").read_bytes()
         _assert_directory_was_copied(ci_source, target)
 
 
@@ -68,20 +64,10 @@ def test_init_refuses_existing_non_empty_folder() -> None:
         assert (target / "README.md").read_text(encoding="utf-8") == "Existing project\n"
 
 
-def _assert_directory_was_copied(
-    source: Path,
-    target: Path,
-    *,
-    exact: bool = False,
-    overwritten_paths: frozenset[Path] = frozenset(),
-) -> None:
+def _assert_directory_was_copied(source: Path, target: Path, *, exact: bool = False) -> None:
     """Assert that all source entries were copied to the target directory."""
 
-    source_entries = {
-        relative_path: is_directory
-        for relative_path, is_directory in _directory_entries(source).items()
-        if relative_path not in overwritten_paths
-    }
+    source_entries = _directory_entries(source)
     target_entries = _directory_entries(target)
 
     if exact:

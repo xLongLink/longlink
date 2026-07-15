@@ -1,11 +1,7 @@
-import { ContextProvider, setupContext } from '@/xml/core/context';
-import { renderNode } from '@/xml/core/node';
-import { parseXML } from '@/xml/core/parser';
-import { RenderXML } from '@/xml/renderers.tsx';
-import type { ASTNode, ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
-import { createElement, Fragment } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
+import type { ASTNode, ExecutionContext } from '@/xml/types';
+import { parseXML } from '@/xml/core/parser';
+import { renderXmlToMarkup } from '../helpers';
 
 describe('For', () => {
     /* Non-array results should render nothing instead of crashing. */
@@ -17,64 +13,40 @@ describe('For', () => {
             children: [{ name: 'P', params: { i18n: 'for.ignored' } }],
         };
 
-        const output = renderToStaticMarkup(
-            createElement(Fragment, null, createElement(RenderXML, { ast: [node], ctx }))
-        );
+        const output = renderXmlToMarkup([node], ctx);
 
-        expect(output).toBe('');
+        expect(output).toBe('<div></div>');
     });
 
     /* Loop children should keep access to the scoped item value. */
-    it('renders children with the scoped item value', async () => {
+    it('renders children with the scoped item value', () => {
         const ctx: ExecutionContext = {
             setups: {},
             invalidate: async () => {},
             translations: { items: { name: '{{name}}' } },
-            values: {},
+            values: { items: [{ name: 'Alpha' }] },
         };
-        const ast = parseXML(
-            '<longlink><State id="items" value="[{&quot;name&quot;:&quot;Alpha&quot;}]" /><For each="${items.value}" as="item"><P i18n="items.name" name="$item.name" /></For></longlink>'
-        );
+        const ast = parseXML('<For each="$items" as="item"><P i18n="items.name" name="$item.name" /></For>');
 
-        await setupContext(ast, ctx, '');
-
-        expect(
-            renderToStaticMarkup(
-                createElement(
-                    Fragment,
-                    null,
-                    createElement(ContextProvider, { value: ctx, children: renderNode(ast, ctx) })
-                )
-            )
-        ).toContain('Alpha');
+        expect(renderXmlToMarkup(ast, ctx)).toContain('Alpha');
     });
 
     /* Missing loop parameters should be rejected immediately. */
     it('throws when each or as is missing', () => {
-        expect(() =>
-            renderToStaticMarkup(
-                createElement(
-                    'div',
-                    null,
-                    createElement(RenderXML, {
-                        ast: [{ name: 'For', params: { as: 'item' } }],
-                        ctx: { setups: {}, invalidate: async () => {}, values: {} },
-                    })
-                )
-            )
-        ).toThrow('For requires an "each" parameter');
+        const cases: Array<{ node: ASTNode; expectedError: string }> = [
+            {
+                node: { name: 'For', params: { as: 'item' } },
+                expectedError: 'For requires an "each" parameter',
+            },
+            {
+                node: { name: 'For', params: { each: '[]' } },
+                expectedError: 'For requires an "as" parameter',
+            },
+        ];
+        const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
 
-        expect(() =>
-            renderToStaticMarkup(
-                createElement(
-                    'div',
-                    null,
-                    createElement(RenderXML, {
-                        ast: [{ name: 'For', params: { each: '[]' } }],
-                        ctx: { setups: {}, invalidate: async () => {}, values: {} },
-                    })
-                )
-            )
-        ).toThrow('For requires an "as" parameter');
+        for (const testCase of cases) {
+            expect(() => renderXmlToMarkup([testCase.node], ctx)).toThrow(testCase.expectedError);
+        }
     });
 });

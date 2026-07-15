@@ -1,28 +1,23 @@
 import httpx2
 from uuid import UUID
 from types import SimpleNamespace
+from factories import create_ready_location, mark_organization_running
+from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from fastapi.testclient import TestClient
 from longlink.utils.time import utcnow
-from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
-from src.models.storages import StorageKind
+from src.models.statuses import ApplicationStatus
 from src.database.session import get_session
-from src.models.databases import DatabaseKind
-from src.database.services import users, compute, storage, database, locations, operations, applications, organizations
-from src.models.operations import OperationKind
-from src.models.applications import ApplicationStatus
+from src.database.services import compute, operations, applications, organizations
+from src.models.operations import OperationStatus
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 
 db = SimpleNamespace(
     applications=applications,
     compute=compute,
-    database=database,
-    locations=locations,
     operations=operations,
     organizations=organizations,
-    storage=storage,
-    users=users,
 )
 
 
@@ -35,8 +30,9 @@ async def test_list_organization_apps_returns_app_membership_role(
     # Arrange
     owner = users[0]
     user = users[1]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
+    location = await create_ready_location(owner)
     organization = await db.organizations.create("acme", "acme", location.id, owner)
+    await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -84,9 +80,11 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user, "CH")
+    location = await create_ready_location(user)
     acme = await db.organizations.create("acme", "acme", location.id, user)
     globex = await db.organizations.create("globex", "globex", location.id, user)
+    await mark_organization_running(acme)
+    await mark_organization_running(globex)
     dashboard = await db.applications.create(
         acme.id,
         "dashboard",
@@ -138,9 +136,9 @@ async def test_list_organization_apps_returns_403_for_non_member(
 
     # Arrange
     owner = users[0]
-    user = users[1]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
+    location = await create_ready_location(owner)
     organization = await db.organizations.create("acme", "acme", location.id, owner)
+    await mark_organization_running(organization)
     await db.applications.create(
         organization.id,
         "dashboard",
@@ -158,195 +156,17 @@ async def test_list_organization_apps_returns_403_for_non_member(
     assert response.json() == {"detail": "Access required"}
 
 
-async def test_create_app_returns_app_response(
+async def test_create_app_persists_desired_state_and_queues_reconciliation(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
-    monkeypatch,
 ) -> None:
-    """Create an app and return the app response payload."""
+    """Persist application desired state and return its location operation."""
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user, "CH")
-    remote_location = await db.locations.create("remote", "Remote testing", user, "CH")
-    organization_id = UUID("11111111-1111-1111-1111-111111111111")
-    organization_database = organization_id.hex
-    organization = await db.organizations.create(
-        "acme",
-        "acme",
-        remote_location.id,
-        user,
-        organization_id=organization_id,
-        shared_schema_url=f"postgresql://shared/{organization_database}",
-    )
-    await db.compute.create(
-        name="local",
-        slug="local",
-        kubeconfig="apiVersion: v1\nclusters: []\n",
-        gateway_url="https://apps.local.longlink.internal",
-        location_id=local_location.id,
-        user=user,
-    )
-    await db.compute.create(
-        name="remote",
-        slug="remote",
-        kubeconfig="apiVersion: v1\nclusters: []\n",
-        gateway_url="https://apps.remote.longlink.internal",
-        location_id=remote_location.id,
-        user=user,
-    )
-    await db.database.create(
-        kind=DatabaseKind.postgresql,
-        name="local",
-        slug="local",
-        host="db.local.longlink.internal",
-        port=5432,
-        username="longlink",
-        password="secret",
-        location_id=local_location.id,
-        user=user,
-    )
-    await db.database.create(
-        kind=DatabaseKind.postgresql,
-        name="remote",
-        slug="remote",
-        host="db.remote.longlink.internal",
-        port=5432,
-        username="longlink",
-        password="secret",
-        location_id=remote_location.id,
-        user=user,
-    )
-    await db.storage.create(
-        kind=StorageKind.minio,
-        name="remote",
-        slug="remote",
-        endpoint_url="http://storage.control.longlink.internal",
-        runtime_endpoint_url="http://storage.runtime.longlink.internal:19000",
-        access_key_id="storage-access",
-        secret_access_key="storage-secret",
-        location_id=remote_location.id,
-        user=user,
-    )
-
-    async def fake_metadata(image: str) -> LongLinkMetadata:
-        """Return image metadata with a resolved immutable image reference."""
-
-        image_metadata = LongLinkMetadata(
-            version="20250623_120000",
-            sdk="0.1.0",
-            digest="sha256:manifest",
-        )
-        image_metadata.image = "ghcr.io/longlink/dashboard@sha256:manifest"
-        return image_metadata
-
-    monkeypatch.setattr("src.kubernetes.environments.images.metadata", fake_metadata)
-
-    captured: dict[str, object] = {}
-    captured_buckets: list[tuple[str, ...]] = []
-
-    class FakeCompute:
-        """Fake compute adapter for app creation tests."""
-
-        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
-            """Capture compute registry configuration."""
-
-            self.applications = self
-            captured["kubeconfig"] = kubeconfig
-            captured["proxy_secret"] = proxy_secret
-
-        async def create(
-            self,
-            organization: str,
-            application_id: str,
-            image: str,
-            secrets: dict[str, str],
-        ) -> None:
-            """Record the application deployment request."""
-
-            captured["application"] = {
-                "organization": organization,
-                "application_id": application_id,
-                "image": image,
-                "secrets": secrets,
-            }
-
-    class FakeDatabase:
-        """Fake database adapter for app creation tests."""
-
-        def __init__(self, host: str, port: int, username: str, password: str) -> None:
-            """Capture database registry configuration."""
-
-            captured["database"] = {
-                "host": host,
-                "port": port,
-                "username": username,
-                "password": password,
-            }
-
-        async def schema(self, organization: UUID, application: UUID) -> dict[str, str | int]:
-            """Record the requested application schema and return fake credentials."""
-
-            captured["schema"] = {
-                "organization": organization,
-                "application": application,
-            }
-            return {
-                "host": "db.remote.longlink.internal",
-                "port": 5432,
-                "password": "runtime-secret",
-                "username": f"longlink_{organization.hex[:16]}_{application.hex[:16]}",
-                "database_name": organization.hex,
-            }
-
-    class FakeStorage:
-        """Fake storage adapter for app creation tests."""
-
-        def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
-            """Capture storage registry configuration."""
-
-            captured["storage"] = {
-                "endpoint_url": endpoint_url,
-                "access_key_id": access_key_id,
-                "secret_access_key": secret_access_key,
-            }
-
-        async def create(self, bucket: str) -> str:
-            """Record bucket creation and return the bucket name."""
-
-            captured_buckets.append(("bucket", bucket))
-            return bucket
-
-        async def credentials(self, bucket: str, access: str) -> dict[str, str]:
-            """Return fake scoped runtime credentials."""
-
-            captured["storage_credentials"] = {
-                "bucket": bucket,
-                "access": access,
-            }
-            return {
-                "access_key_id": "runtime-storage-access",
-                "secret_access_key": "runtime-storage-secret",
-            }
-
-    monkeypatch.setattr("src.routes.applications.Kubernetes", FakeCompute)
-    monkeypatch.setattr(
-        "src.routes.applications.adapters.database",
-        lambda registry: FakeDatabase(
-            registry.host,
-            registry.port,
-            registry.username,
-            registry.password,
-        ),
-    )
-    monkeypatch.setattr(
-        "src.routes.applications.adapters.storage",
-        lambda registry: FakeStorage(
-            registry.endpoint_url,
-            registry.access_key_id,
-            registry.secret_access_key,
-        ),
-    )
+    location = await create_ready_location(user)
+    organization = await db.organizations.create("acme", "acme", location.id, user)
+    await mark_organization_running(organization)
     client = clients[0]
 
     # Act
@@ -362,184 +182,44 @@ async def test_create_app_returns_app_response(
             },
         },
     )
-    queued = await db.operations.fetch()
 
     # Assert
-    assert response.status_code == 200
+    assert response.status_code == 202
     payload = response.json()
-    assert payload["status"] == "creating"
-    assert payload["description"] == "Dashboard app"
-    assert payload["version"] == "20250623_120000"
-    assert payload["sdk"] == "0.1.0"
-    assert payload["digest"] == "sha256:manifest"
-    assert "gateway_url" not in payload
-    assert queued[0].kind == OperationKind.application_verify
-    assert captured["proxy_secret"]
-    schema_payload = captured["schema"]
-    assert isinstance(schema_payload, dict)
-    assert schema_payload["organization"] == organization.id
-    assert str(schema_payload["application"]) == payload["id"]
-    application_id = UUID(payload["id"])
-    application_database = organization.id.hex
-    database_schema = application_id.hex
-    application_username = f"longlink_{organization.id.hex[:16]}_{application_id.hex[:16]}"
-    assert captured_buckets == [("bucket", application_id.hex)]
-    assert captured["storage_credentials"] == {
-        "bucket": application_id.hex,
-        "access": "write",
-    }
-    application_payload = captured["application"]
-    assert isinstance(application_payload, dict)
-    assert application_payload["organization"] == "acme"
-    assert application_payload["application_id"] == payload["id"]
-    assert application_payload["image"] == "ghcr.io/longlink/dashboard@sha256:manifest"
-    application_secrets = application_payload["secrets"]
-    assert isinstance(application_secrets, dict)
-    assert application_secrets["API_KEY"] == "secret-value"
-    assert application_secrets["LONGLINK_ENV"] == "production"
-    assert application_secrets["LONGLINK_DATABASE_HOST"] == "db.remote.longlink.internal"
-    assert application_secrets["LONGLINK_DATABASE_NAME"] == application_database
-    assert application_secrets["LONGLINK_DATABASE_PASSWORD"] == "runtime-secret"
-    assert application_secrets["LONGLINK_DATABASE_PORT"] == "5432"
-    assert application_secrets["LONGLINK_DATABASE_SCHEMA"] == database_schema
-    assert application_secrets["LONGLINK_DATABASE_USERNAME"] == application_username
-    assert application_secrets["LONGLINK_STORAGE_BUCKET"] == application_id.hex
-    assert application_secrets["LONGLINK_STORAGE_ENDPOINT_URL"] == "http://storage.runtime.longlink.internal:19000"
-    assert application_secrets["LONGLINK_STORAGE_PASSWORD"] == "runtime-storage-secret"
-    assert application_secrets["LONGLINK_STORAGE_SHARED_BUCKET"] == organization.id.hex
-    assert application_secrets["LONGLINK_STORAGE_USERNAME"] == "runtime-storage-access"
-
-
-async def test_create_app_returns_409_when_image_metadata_is_missing(
-    clients: tuple[TestClient, TestClient, TestClient],
-    users: tuple[User, User, User],
-    monkeypatch,
-) -> None:
-    """Reject app creation when the image cannot be inspected."""
-
-    # Arrange
-    owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
-
-    async def fake_metadata(image: str) -> None:
-        """Pretend the registry inspection failed or returned invalid metadata."""
-
-        return None
-
-    monkeypatch.setattr("src.kubernetes.environments.images.metadata", fake_metadata)
-    client = clients[0]
-
-    # Act
-    response = client.post(
-        f"/api/organizations/{organization.id}/applications",
-        json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
+    application = payload["application"]
+    operation = payload["operation"]
+    assert application["status"] == "creating"
+    assert application["description"] == "Dashboard app"
+    assert application["image"] == "ghcr.io/longlink/dashboard:latest"
+    assert "compute_registry_id" not in application
+    assert "database_registry_id" not in application
+    assert "storage_registry_id" not in application
+    assert operation["location_id"] == str(location.id)
+    assert operation["platform_version"] == env.VERSION
+    assert operation["status"] == OperationStatus.scheduled
+    assert set(operation).isdisjoint(
+        {"kind", "revision", "retry_count", "deadline_at", "lease_token", "created_id", "updated_id", "updated_at"}
     )
 
-    # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Image metadata could not be inspected"}
-    assert await db.organizations.applications(organization.id) == []
-
-
-async def test_create_app_rejects_reserved_platform_environment_requirements(
-    clients: tuple[TestClient, TestClient, TestClient],
-    users: tuple[User, User, User],
-    monkeypatch,
-) -> None:
-    """Reject apps that declare LongLink-managed runtime environment variables."""
-
-    # Arrange
-    owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
-    await db.compute.create(
-        name="local",
-        slug="local",
-        kubeconfig="apiVersion: v1\nclusters: []\n",
-        gateway_url="https://apps.local.longlink.internal",
-        location_id=location.id,
-        user=owner,
-    )
-    await db.database.create(
-        kind=DatabaseKind.postgresql,
-        name="primary",
-        slug="primary",
-        host="db.local.longlink.internal",
-        port=5432,
-        username="longlink",
-        password="secret",
-        location_id=location.id,
-        user=owner,
-    )
-
-    async def fake_metadata(image: str) -> LongLinkMetadata:
-        """Return metadata for an app that needs platform-managed storage."""
-
-        image_metadata = LongLinkMetadata(
-            version="20250623_120000",
-            sdk="0.1.0",
-            digest="sha256:manifest",
-            environments=[
-                EnvironmentMetadata(name="LONGLINK_STORAGE_ENDPOINT_URL", type="str", required=True),
-            ],
-        )
-        image_metadata.image = "ghcr.io/longlink/dashboard@sha256:manifest"
-        return image_metadata
-
-    monkeypatch.setattr("src.kubernetes.environments.images.metadata", fake_metadata)
-    client = clients[0]
-
-    # Act
-    response = client.post(
-        f"/api/organizations/{organization.id}/applications",
-        json={
-            "name": "dashboard",
-            "image": "ghcr.io/longlink/dashboard:latest",
-        },
-    )
-
-    # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Reserved platform environment variables: LONGLINK_STORAGE_ENDPOINT_URL"}
-    assert await db.organizations.applications(organization.id) == []
-
-
-async def test_create_app_returns_409_for_overlong_slug(
-    clients: tuple[TestClient, TestClient, TestClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Reject app creation when the URL slug exceeds one DNS label."""
-
-    # Arrange
-    owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
-    client = clients[0]
-
-    # Act
-    response = client.post(
-        f"/api/organizations/{organization.id}/applications",
-        json={"name": "a" * 64, "image": "ghcr.io/longlink/dashboard:latest"},
-    )
-
-    # Assert
-    assert response.status_code == 409
-    assert response.json() == {"detail": "Invalid name"}
-    assert await db.organizations.applications(organization.id) == []
+    persisted = await db.applications.get(UUID(application["id"]))
+    assert persisted is not None
+    assert persisted.organization_id == organization.id
+    assert persisted.envs == {"API_KEY": "secret-value", "PORT": "8080"}
+    queued = await db.operations.fetch()
+    assert len(queued) == 1
+    assert str(queued[0].id) == operation["id"]
 
 
 async def test_create_app_returns_403_for_regular_member(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
-    monkeypatch,
 ) -> None:
     """Reject application creation when the organization member lacks deployment permissions."""
 
     # Arrange
     owner = users[0]
     regular_member = users[1]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
+    location = await create_ready_location(owner)
     organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     Session = await get_session()
@@ -553,15 +233,6 @@ async def test_create_app_returns_403_for_regular_member(
         )
         await session.commit()
 
-    async def fail_application_metadata(*args, **kwargs):
-        """Fail if the authorization check lets provisioning start."""
-
-        raise AssertionError("Regular organization members must not start provisioning")
-
-    monkeypatch.setattr(
-        "src.routes.applications.environments.application_image_metadata",
-        fail_application_metadata,
-    )
     client = clients[1]
 
     # Act
@@ -580,12 +251,13 @@ async def test_get_app_logs_returns_pod_logs(
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
-    """Return the recent pod logs for one app."""
+    """Return recent pod logs through the organization location's compute cluster."""
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user, "CH")
+    location = await create_ready_location(user)
     organization = await db.organizations.create("acme", "acme", location.id, user)
+    await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -593,44 +265,18 @@ async def test_get_app_logs_returns_pod_logs(
         image="ghcr.io/longlink/dashboard:latest",
         user=user,
     )
-    await db.compute.create(
-        name="local",
-        slug="local",
-        kubeconfig=(
-            "apiVersion: v1\n"
-            "clusters:\n"
-            "- name: k3d-compute\n"
-            "  cluster:\n"
-            "    server: https://0.0.0.0:8001\n"
-            "contexts:\n"
-            "- name: k3d-compute\n"
-            "  context:\n"
-            "    cluster: k3d-compute\n"
-            "    user: admin@k3d-compute\n"
-            "current-context: k3d-compute\n"
-            "kind: Config\n"
-            "preferences: {}\n"
-            "users:\n"
-            "- name: admin@k3d-compute\n"
-            "  user:\n"
-            "    client-certificate-data: Y2VydA==\n"
-            "    client-key-data: a2V5\n"
-        ),
-        gateway_url="https://localhost:8443",
-        location_id=location.id,
-        user=user,
-    )
+    registry = await db.compute.location(location.id)
+    assert registry is not None
     captured: dict[str, object] = {}
 
     class FakeCompute:
-        """Fake compute adapter for app log tests."""
+        """Fake compute adapter for application log tests."""
 
-        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
+        def __init__(self, kubeconfig: str) -> None:
             """Capture compute registry configuration."""
 
             self.applications = self
             captured["kubeconfig"] = kubeconfig
-            captured["proxy_secret"] = proxy_secret
 
         async def logs(self, application_id: str, lines: int = 200) -> list[str]:
             """Record the log request and return fake pod logs."""
@@ -650,23 +296,24 @@ async def test_get_app_logs_returns_pod_logs(
     # Assert
     assert response.status_code == 200
     assert response.json() == ["line 1", "line 2"]
-    assert response.headers["content-type"].startswith("application/json")
+    assert captured["kubeconfig"] == registry.kubeconfig
     assert captured["logs"] == {
         "application_id": str(app.id),
         "lines": 200,
     }
 
 
-async def test_delete_application_soft_deletes_and_queues_removal(
+async def test_delete_application_soft_deletes_and_returns_reconciliation_operation(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Soft-delete an application and queue immediate runtime removal."""
+    """Soft-delete an application and return its location operation."""
 
     # Arrange
     user = users[0]
-    location = await db.locations.create("local", "Local testing", user, "CH")
+    location = await create_ready_location(user)
     organization = await db.organizations.create("acme", "acme", location.id, user)
+    await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -680,16 +327,23 @@ async def test_delete_application_soft_deletes_and_queues_removal(
     response = client.delete(f"/api/applications/{app.id}")
 
     # Assert
-    assert response.status_code == 204
+    assert response.status_code == 202
+    payload = response.json()
+    assert payload["application"]["id"] == str(app.id)
+    assert payload["application"]["status"] == "deleting"
+    assert payload["operation"]["location_id"] == str(location.id)
+    assert payload["operation"]["platform_version"] == env.VERSION
+    assert payload["operation"]["status"] == OperationStatus.scheduled
+    assert set(payload["operation"]).isdisjoint(
+        {"kind", "revision", "retry_count", "deadline_at", "lease_token", "created_id", "updated_id", "updated_at"}
+    )
     assert await db.applications.get(app.id) is None
     deleted = await db.applications.get(app.id, include_deleted=True)
     assert deleted is not None
     assert deleted.deleted_id == user.id
     recorded_operations = await db.operations.fetch()
     assert len(recorded_operations) == 1
-    assert recorded_operations[0].kind == OperationKind.application_remove
-    assert recorded_operations[0].application_id == app.id
-    assert recorded_operations[0].scheduled_at is None
+    assert str(recorded_operations[0].id) == payload["operation"]["id"]
 
 
 async def test_application_proxy_forwards_safe_content_and_rejects_active_content(
@@ -697,13 +351,14 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
-    """Forward an authenticated application request through the cluster gateway."""
+    """Forward an authenticated request through the organization location's gateway."""
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user, "CH")
-    remote_location = await db.locations.create("remote", "Remote testing", user, "CH")
+    await create_ready_location(user, slug="local", name="Local testing")
+    remote_location = await create_ready_location(user, slug="remote", name="Remote testing")
     organization = await db.organizations.create("acme", "acme", remote_location.id, user)
+    await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -712,68 +367,34 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
         user=user,
     )
     await db.applications.set_status(app.id, ApplicationStatus.running)
-    await db.compute.create(
-        name="local",
-        slug="local",
-        kubeconfig=(
-            "apiVersion: v1\n"
-            "clusters:\n"
-            "- name: k3d-compute\n"
-            "  cluster:\n"
-            "    server: https://0.0.0.0:8001\n"
-            "contexts:\n"
-            "- name: k3d-compute\n"
-            "  context:\n"
-            "    cluster: k3d-compute\n"
-            "    user: admin@k3d-compute\n"
-            "current-context: k3d-compute\n"
-            "kind: Config\n"
-            "preferences: {}\n"
-            "users:\n"
-            "- name: admin@k3d-compute\n"
-            "  user:\n"
-            "    client-certificate-data: Y2VydA==\n"
-            "    client-key-data: a2V5\n"
-        ),
-        gateway_url="https://localhost:8443",
-        location_id=local_location.id,
-        user=user,
-    )
-    registry = await db.compute.create(
-        name="remote",
-        slug="remote",
-        kubeconfig=(
-            "apiVersion: v1\n"
-            "clusters:\n"
-            "- name: k3d-compute\n"
-            "  cluster:\n"
-            "    server: https://0.0.0.0:8001\n"
-            "contexts:\n"
-            "- name: k3d-compute\n"
-            "  context:\n"
-            "    cluster: k3d-compute\n"
-            "    user: admin@k3d-compute\n"
-            "current-context: k3d-compute\n"
-            "kind: Config\n"
-            "preferences: {}\n"
-            "users:\n"
-            "- name: admin@k3d-compute\n"
-            "  user:\n"
-            "    client-certificate-data: Y2VydA==\n"
-            "    client-key-data: a2V5\n"
-        ),
-        gateway_url="https://localhost:8443",
-        location_id=remote_location.id,
-        user=user,
-    )
-    await db.applications.update_runtime(
-        app.id,
-        image=app.image,
-        compute_registry_id=registry.id,
-        status=ApplicationStatus.running,
-        user=user,
-    )
+    registry = await db.compute.location(remote_location.id)
+    assert registry is not None
     captured: dict[str, object] = {}
+    tls = object()
+
+    def fake_ssl_context(*, cadata: str) -> object:
+        """Capture the location CA used for gateway verification."""
+
+        captured["cadata"] = cadata
+        return tls
+
+    class FakeProxyResponse:
+        """Stream one fake upstream application response."""
+
+        status_code = 201
+        headers = {
+            "content-type": "text/plain",
+            "set-cookie": "ignored=1",
+            "content-length": "999",
+        }
+
+        async def aiter_bytes(self):
+            """Yield the fake response body."""
+
+            yield b"proxied"
+
+        async def aclose(self) -> None:
+            """Close the fake response."""
 
     class FakeProxyClient:
         """Fake upstream HTTP client for application proxy requests."""
@@ -783,35 +404,30 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
 
             captured["client_kwargs"] = kwargs
 
-        async def __aenter__(self) -> FakeProxyClient:
-            """Return the fake client context."""
+        def build_request(self, method: str, url: str, content, headers: dict[str, str]) -> SimpleNamespace:
+            """Build one fake streaming request."""
 
-            return self
+            return SimpleNamespace(method=method, url=url, content=content, headers=headers)
 
-        async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
-            """Close the fake client context."""
+        async def send(self, request: SimpleNamespace, stream: bool) -> FakeProxyResponse:
+            """Capture the forwarded application request and return a stream."""
 
-            return None
-
-        async def request(self, method: str, url: str, content: bytes, headers: dict[str, str]) -> SimpleNamespace:
-            """Capture the forwarded application request."""
-
+            content = b"".join([chunk async for chunk in request.content])
             captured["request"] = {
-                "method": method,
-                "url": url,
+                "method": request.method,
+                "url": request.url,
                 "content": content,
-                "headers": headers,
+                "headers": request.headers,
             }
-            return SimpleNamespace(
-                status_code=201,
-                content=b"proxied",
-                headers={
-                    "content-type": captured.get("response_content_type", "text/plain"),
-                    "set-cookie": "ignored=1",
-                    "content-length": "999",
-                },
-            )
+            response = FakeProxyResponse()
+            response.headers = {**response.headers, "content-type": captured.get("response_content_type", "text/plain")}
+            assert stream
+            return response
 
+        async def aclose(self) -> None:
+            """Close the fake client."""
+
+    monkeypatch.setattr("src.routes.applications.ssl.create_default_context", fake_ssl_context)
     monkeypatch.setattr("src.routes.applications.httpx2.AsyncClient", FakeProxyClient)
     client = clients[0]
 
@@ -840,12 +456,12 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
         "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
     )
     assert "set-cookie" not in response.headers
-    assert "content-length" in response.headers
-    assert captured["client_kwargs"] == {"follow_redirects": False, "timeout": 300.0}
+    assert captured["cadata"] == registry.gateway_ca_certificate
+    assert captured["client_kwargs"] == {"follow_redirects": False, "timeout": 300.0, "verify": tls}
     forwarded = captured["request"]
     assert isinstance(forwarded, dict)
     assert forwarded["method"] == "POST"
-    assert forwarded["url"] == "https://localhost:8443/anything?answer=42"
+    assert forwarded["url"] == "https://gateway.example/anything?answer=42"
     assert forwarded["content"] == b"payload"
     headers = forwarded["headers"]
     assert isinstance(headers, dict)
@@ -859,32 +475,26 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     assert "cookie" not in headers
     assert "x-custom-feature" not in headers
     assert "x-forwarded-for" not in headers
-    assert "x-user-role" not in headers
-    assert "x-longlink-application-slug" not in headers
-    assert "x-longlink-organization-id" not in headers
-    assert "x-longlink-organization-slug" not in headers
 
+    # Active documents must not cross the authenticated proxy boundary.
     captured["response_content_type"] = "text/html; charset=utf-8"
     root_response = client.get(f"/api/applications/{app.id}/proxy")
     assert root_response.status_code == 502
     assert root_response.json() == {"detail": "Application proxy returned an unsupported content type"}
-    root_forwarded = captured["request"]
-    assert isinstance(root_forwarded, dict)
-    assert root_forwarded["method"] == "GET"
-    assert root_forwarded["url"] == "https://localhost:8443/"
 
 
 async def test_application_proxy_requires_application_role_for_regular_member(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Reject app proxy access for regular org members without an app role."""
+    """Reject app proxy access for regular organization members without an app role."""
 
     # Arrange
     owner = users[0]
     user = users[1]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
+    location = await create_ready_location(owner)
     organization = await db.organizations.create("acme", "acme", location.id, owner)
+    await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -903,22 +513,6 @@ async def test_application_proxy_requires_application_role_for_regular_member(
             )
         )
         await session.commit()
-
-    registry = await db.compute.create(
-        name="local",
-        slug="local",
-        kubeconfig="apiVersion: v1\nclusters: []\n",
-        gateway_url="https://localhost:9443",
-        location_id=location.id,
-        user=owner,
-    )
-    await db.applications.update_runtime(
-        app.id,
-        image=app.image,
-        compute_registry_id=registry.id,
-        status=ApplicationStatus.running,
-        user=owner,
-    )
     client = clients[1]
 
     # Act
@@ -938,9 +532,9 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user, "CH")
-    remote_location = await db.locations.create("remote", "Remote testing", user, "CH")
-    organization = await db.organizations.create("acme", "acme", remote_location.id, user)
+    location = await create_ready_location(user)
+    organization = await db.organizations.create("acme", "acme", location.id, user)
+    await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -949,41 +543,16 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
         user=user,
     )
     await db.applications.set_status(app.id, ApplicationStatus.running)
-    registry = await db.compute.create(
-        name="local",
-        slug="local",
-        kubeconfig=(
-            "apiVersion: v1\n"
-            "clusters:\n"
-            "- name: k3d-compute\n"
-            "  cluster:\n"
-            "    server: https://0.0.0.0:8001\n"
-            "contexts:\n"
-            "- name: k3d-compute\n"
-            "  context:\n"
-            "    cluster: k3d-compute\n"
-            "    user: admin@k3d-compute\n"
-            "current-context: k3d-compute\n"
-            "kind: Config\n"
-            "preferences: {}\n"
-            "users:\n"
-            "- name: admin@k3d-compute\n"
-            "  user:\n"
-            "    client-certificate-data: Y2VydA==\n"
-            "    client-key-data: a2V5\n"
-        ),
-        gateway_url="https://localhost:9443",
-        location_id=remote_location.id,
-        user=user,
-    )
-    await db.applications.update_runtime(
-        app.id,
-        image=app.image,
-        compute_registry_id=registry.id,
-        status=ApplicationStatus.running,
-        user=user,
-    )
+    registry = await db.compute.location(location.id)
+    assert registry is not None
     captured: dict[str, object] = {}
+    tls = object()
+
+    def fake_ssl_context(*, cadata: str) -> object:
+        """Return a test TLS context for the generated location CA."""
+
+        assert cadata == registry.gateway_ca_certificate
+        return tls
 
     class FailingProxyClient:
         """Fake upstream HTTP client that fails application proxy requests."""
@@ -993,22 +562,21 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
 
             captured["client_kwargs"] = kwargs
 
-        async def __aenter__(self) -> FailingProxyClient:
-            """Return the fake client context."""
-
-            return self
-
-        async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
-            """Close the fake client context."""
-
-            return None
-
-        async def request(self, method: str, url: str, content: bytes, headers: dict[str, str]) -> SimpleNamespace:
-            """Raise a proxy transport error."""
+        def build_request(self, method: str, url: str, content, headers: dict[str, str]) -> SimpleNamespace:
+            """Build one fake streaming request."""
 
             captured["request"] = {"method": method, "url": url, "content": content, "headers": headers}
+            return SimpleNamespace(method=method, url=url, content=content, headers=headers)
+
+        async def send(self, request: SimpleNamespace, stream: bool) -> SimpleNamespace:
+            """Raise a proxy transport error."""
+
             raise httpx2.HTTPError("gateway unavailable")
 
+        async def aclose(self) -> None:
+            """Close the fake client."""
+
+    monkeypatch.setattr("src.routes.applications.ssl.create_default_context", fake_ssl_context)
     monkeypatch.setattr("src.routes.applications.httpx2.AsyncClient", FailingProxyClient)
     client = clients[0]
 
@@ -1018,10 +586,10 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     # Assert
     assert response.status_code == 503
     assert response.json() == {"detail": "Application proxy request failed"}
-    assert captured["client_kwargs"] == {"follow_redirects": False, "timeout": 300.0}
+    assert captured["client_kwargs"] == {"follow_redirects": False, "timeout": 300.0, "verify": tls}
     forwarded = captured["request"]
     assert isinstance(forwarded, dict)
-    assert forwarded["url"] == "https://localhost:9443/i18n/en.json"
+    assert forwarded["url"] == "https://gateway.example/i18n/en.json"
 
 
 async def test_application_proxy_enforces_method_role(
@@ -1032,9 +600,9 @@ async def test_application_proxy_enforces_method_role(
 
     # Arrange
     user = users[0]
-    local_location = await db.locations.create("local", "Local testing", user, "CH")
-    remote_location = await db.locations.create("remote", "Remote testing", user, "CH")
-    organization = await db.organizations.create("acme", "acme", remote_location.id, user)
+    location = await create_ready_location(user)
+    organization = await db.organizations.create("acme", "acme", location.id, user)
+    await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
         "dashboard",
@@ -1043,40 +611,7 @@ async def test_application_proxy_enforces_method_role(
         user=user,
     )
     await db.applications.set_status(app.id, ApplicationStatus.running)
-    registry = await db.compute.create(
-        name="local",
-        slug="local",
-        kubeconfig=(
-            "apiVersion: v1\n"
-            "clusters:\n"
-            "- name: k3d-compute\n"
-            "  cluster:\n"
-            "    server: https://0.0.0.0:8001\n"
-            "contexts:\n"
-            "- name: k3d-compute\n"
-            "  context:\n"
-            "    cluster: k3d-compute\n"
-            "    user: admin@k3d-compute\n"
-            "current-context: k3d-compute\n"
-            "kind: Config\n"
-            "preferences: {}\n"
-            "users:\n"
-            "- name: admin@k3d-compute\n"
-            "  user:\n"
-            "    client-certificate-data: Y2VydA==\n"
-            "    client-key-data: a2V5\n"
-        ),
-        gateway_url="https://localhost:9443",
-        location_id=remote_location.id,
-        user=user,
-    )
-    await db.applications.update_runtime(
-        app.id,
-        image=app.image,
-        compute_registry_id=registry.id,
-        status=ApplicationStatus.running,
-        user=user,
-    )
+
     Session = await get_session()
     async with Session() as session:
         organization_membership = await session.get(UserOrganization, (user.id, organization.id))
@@ -1104,34 +639,6 @@ async def test_application_proxy_enforces_method_role(
     assert response.json() == {"detail": "Application write access required"}
 
 
-async def test_application_proxy_returns_unavailable_without_compute_registry(
-    clients: tuple[TestClient, TestClient, TestClient],
-    users: tuple[User, User, User],
-) -> None:
-    """Return unavailable when no compute registry can receive application traffic."""
-
-    # Arrange
-    user = users[0]
-    location = await db.locations.create("local", "Local testing", user, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, user)
-    app = await db.applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/xlonglink/sample:latest",
-        user=user,
-    )
-    await db.applications.set_status(app.id, ApplicationStatus.running)
-    client = clients[0]
-
-    # Act
-    response = client.get(f"/api/applications/{app.id}/proxy/i18n/en.json")
-
-    # Assert
-    assert response.status_code == 503
-    assert response.json() == {"detail": "No compute cluster configured"}
-
-
 async def test_organization_access_rejects_soft_deleted_membership(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
@@ -1141,8 +648,9 @@ async def test_organization_access_rejects_soft_deleted_membership(
     # Arrange
     owner = users[0]
     user = users[1]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
+    location = await create_ready_location(owner)
     organization = await db.organizations.create("acme", "acme", location.id, owner)
+    await mark_organization_running(organization)
     await db.applications.create(
         organization.id,
         "dashboard",
@@ -1177,31 +685,18 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Return a loading page while the application is still provisioning."""
+    """Return a loading response while application reconciliation is pending."""
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("local", "Local testing", owner, "CH")
+    location = await create_ready_location(owner)
     organization = await db.organizations.create("acme", "acme", location.id, owner)
+    await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
-    registry = await db.compute.create(
-        name="local",
-        slug="local",
-        kubeconfig="apiVersion: v1\nclusters: []\n",
-        gateway_url="https://localhost:9443",
-        location_id=location.id,
-        user=owner,
-    )
-    await db.applications.update_runtime(
-        app.id,
-        image=app.image,
-        compute_registry_id=registry.id,
         user=owner,
     )
     client = clients[0]

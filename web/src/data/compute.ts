@@ -1,7 +1,7 @@
 import { z } from 'zod';
+import type { ApiComputePod, ApiComputeRegistry } from '@/lib/types';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { apiComputePodSchema, apiComputeRegistrySchema, parseApiCollection } from '@/lib/api-schemas';
-import type { ApiComputePod, ApiComputeRegistry } from '@/lib/types';
 
 /** Fetches the compute registry list for admin views. */
 export function useComputes() {

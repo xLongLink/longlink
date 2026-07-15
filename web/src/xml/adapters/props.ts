@@ -1,6 +1,6 @@
 import { getVersion, proxy, useSnapshot } from 'valtio';
-import { compile, evaluate } from '../expressions';
 import type { ASTProps, ExecutionContext, XmlBindableValue } from '../types';
+import { compile, evaluate } from '../expressions';
 
 const emptyXmlValueState = proxy({ value: undefined as unknown });
 

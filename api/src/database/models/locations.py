@@ -5,8 +5,8 @@ from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Column, String
 from longlink.utils.time import utcnow
+from src.models.statuses import LocationStatus
 from src.models.countries import DEFAULT_COUNTRY
-from src.models.locations import LocationProvider
 from longlink.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.
@@ -26,13 +26,16 @@ class Location(SQLModel, table=True):
     name: str = Field(max_length=255)
     slug: str = Field(unique=True, max_length=128)
     country: str = Field(default=DEFAULT_COUNTRY, sa_column=Column(String(2), nullable=False))
-    provider: LocationProvider = Field(
-        default=LocationProvider.local,
+
+    # Reconciliation
+    status: LocationStatus = Field(
+        default=LocationStatus.provisioning,
         sa_column=Column(
-            SAEnum(LocationProvider, name="location_provider_enum", native_enum=False, create_constraint=True),
+            SAEnum(LocationStatus, name="location_status_enum", native_enum=False, create_constraint=True),
             nullable=False,
         ),
     )
+    version: str | None = Field(default=None, max_length=128)
 
     # Audit
     created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))

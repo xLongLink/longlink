@@ -1,21 +1,10 @@
 import pytest
 import asyncio
 from uuid import UUID
-from types import SimpleNamespace
-from datetime import datetime
-from src.utils import jobs as operation_worker
-from src.operations import applications as application_operations
-from src.operations import organizations as organization_operations
-from src.utils.jobs import OperationOutcomeState
-from src.models.users import UserSummary
+from datetime import datetime, timedelta
 from longlink.utils.time import utcnow
-from src.models.statuses import ApplicationStatus
-from src.models.locations import LocationProvider, LocationResponse
-from src.models.operations import OperationKind
-from src.models.organizations import OrganizationDetails
-from src.database.models.users import User
+from src.utils import jobs as operation_worker
 from src.database.models.operations import Operation
-from src.database.models.applications import Application
 
 pytestmark = pytest.mark.no_db
 
@@ -24,108 +13,54 @@ class StopScheduler(RuntimeError):
     """Raised by test sleep calls to exit the infinite scheduler loop."""
 
 
-def user() -> User:
-    """Build one user for operation tests."""
-
-    return User(
-        id=UUID("11111111-1111-1111-1111-111111111111"),
-        oidc="ops-user",
-        email="ops@example.com",
-        name="Ops User",
-        avatar="",
-    )
-
-
-def location_response() -> LocationResponse:
-    """Build one location response."""
-
-    return LocationResponse(
-        id=UUID("22222222-2222-2222-2222-222222222222"),
-        name="Local",
-        slug="local",
-        country="CH",
-        provider=LocationProvider.local,
-    )
-
-
-def organization_details(actor: User | None = None) -> OrganizationDetails:
-    """Build one organization details payload."""
-
-    owner = actor or user()
-    location = location_response()
-    return OrganizationDetails(
-        id=UUID("33333333-3333-3333-3333-333333333333"),
-        name="Acme",
-        slug="acme",
-        avatar="",
-        country="CH",
-        location=location,
-        location_id=location.id,
-        created_at=datetime.fromisoformat("2026-07-01T08:00:00+00:00"),
-        updated_at=datetime.fromisoformat("2026-07-01T08:00:00+00:00"),
-        created_by=UserSummary.model_validate(owner),
-        updated_by=UserSummary.model_validate(owner),
-        deleted_at=None,
-        deleted_by=None,
-        users=[],
-        invitations=[],
-        applications=[],
-    )
-
-
-def application_model() -> Application:
-    """Build one application model."""
-
-    return Application(
-        id=UUID("44444444-4444-4444-4444-444444444444"),
-        organization_id=organization_details().id,
-        name="Dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        status=ApplicationStatus.creating,
-    )
-
-
-def leased_operation(kind: OperationKind = OperationKind.application_verify) -> Operation:
-    """Build one claimed operation."""
+def leased_operation(attempt_count: int = 1) -> Operation:
+    """Build one claimed location reconciliation operation."""
 
     return Operation(
         id=UUID("55555555-5555-5555-5555-555555555555"),
-        kind=kind,
-        application_id=application_model().id if kind != OperationKind.organization_remove else None,
-        organization_id=organization_details().id if kind == OperationKind.organization_remove else None,
+        location_id=UUID("22222222-2222-2222-2222-222222222222"),
+        platform_version="v1.2.3",
+        attempt_count=attempt_count,
         started_at=datetime.fromisoformat("2026-07-01T09:00:00+00:00"),
-        lease_token="lease-token",
+        lease_expires_at=utcnow() + timedelta(minutes=1),
     )
 
 
 async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Claim scheduled work, renew its lease during execution, and keep polling."""
+    """Claim location work, renew its lease during execution, and keep polling."""
 
+    # Arrange
     operation = leased_operation()
     completed = leased_operation()
-    completed.stopped_at = utcnow()
+    completed.stopped_at = datetime.fromisoformat("2026-07-01T09:01:00+00:00")
     claims = [operation, None]
     executed: list[Operation] = []
-    renewals: list[tuple[UUID, str]] = []
+    renewals: list[tuple[UUID, int]] = []
     real_sleep = asyncio.sleep
+
+    async def handler(claimed: Operation) -> operation_worker.OperationOutcome:
+        """Return the scheduler handler outcome if the real executor invokes it."""
+
+        assert claimed is operation
+        return operation_worker.complete()
 
     async def fake_claim_next() -> Operation | None:
         """Return one operation and then no work."""
 
         return claims.pop(0)
 
-    async def fake_execute(operation: Operation) -> Operation:
+    async def fake_execute(claimed: Operation, supplied_handler: operation_worker.JobHandler) -> Operation:
         """Record executed operations."""
 
-        executed.append(operation)
+        assert supplied_handler is handler
+        executed.append(claimed)
         await real_sleep(0)
         return completed
 
-    async def fake_renew_operation_lease(operation_id: UUID, lease_token: str) -> None:
+    async def fake_renew_operation_lease(operation_id: UUID, attempt_count: int) -> None:
         """Record heartbeat setup and wait until cancelled."""
 
-        renewals.append((operation_id, lease_token))
+        renewals.append((operation_id, attempt_count))
         await real_sleep(3600)
 
     async def fake_sleep(seconds: float) -> None:
@@ -138,111 +73,107 @@ async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytes
     monkeypatch.setattr(operation_worker, "renew_operation_lease", fake_renew_operation_lease)
     monkeypatch.setattr(operation_worker.asyncio, "sleep", fake_sleep)
 
+    # Act
     with pytest.raises(StopScheduler):
-        await operation_worker.run_operation_scheduler()
+        await operation_worker.run_operation_scheduler(handler)
 
+    # Assert
     assert executed == [operation]
-    assert renewals == [(operation.id, "lease-token")]
+    assert renewals == [(operation.id, operation.attempt_count)]
 
 
-async def test_application_and_organization_remove_handlers_remove_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Execute remove cleanup handlers for applications and organizations."""
+async def test_execute_retries_location_work_with_exponential_backoff(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Persist a handler-requested retry with bounded exponential backoff."""
 
-    application = application_model()
-    organization = organization_details()
-    compute_registry = SimpleNamespace(
-        id=UUID("66666666-6666-6666-6666-666666666666"),
-        kubeconfig="apiVersion: v1\nclusters: []\n",
-        proxy_secret="proxy-secret",
-    )
-    removals: list[tuple[str, UUID | str]] = []
+    # Arrange
+    operation = leased_operation(attempt_count=3)
+    transitions: list[tuple[UUID, int, float, str | None]] = []
 
-    async def fake_get_application(application_id: UUID, include_deleted: bool = False) -> Application:
-        """Return a soft-deleted application for cleanup."""
+    async def retry_handler(claimed: Operation) -> operation_worker.OperationOutcome:
+        """Request another attempt for the claimed location."""
 
-        assert include_deleted
-        return application
+        assert claimed is operation
+        return operation_worker.retry("workloads are starting")
 
-    async def fake_get_organization(organization_id: UUID, include_deleted: bool = False) -> OrganizationDetails:
-        """Return an organization for cleanup."""
+    async def fake_defer(operation_id: UUID, attempt_count: int, delay: float, error: str | None) -> Operation:
+        """Record the retry transition and return scheduled work."""
 
-        assert include_deleted
-        return organization
+        transitions.append((operation_id, attempt_count, delay, error))
+        return Operation(
+            id=operation_id,
+            location_id=operation.location_id,
+            platform_version=operation.platform_version,
+            attempt_count=operation.attempt_count,
+        )
 
-    async def fake_organization_applications(organization_id: UUID, include_deleted: bool = False) -> list[Application]:
-        """Return soft-deleted applications for organization cleanup."""
+    monkeypatch.setattr(operation_worker.operations, "defer", fake_defer)
 
-        assert organization_id == organization.id
-        assert include_deleted
-        return [application]
+    # Act
+    result = await operation_worker.execute(operation, retry_handler)
 
-    async def fake_compute(location_id: UUID, include_deleted: bool = False) -> SimpleNamespace:
-        """Return the organization location compute registry."""
+    # Assert
+    assert result.status == "scheduled"
+    assert transitions == [(operation.id, operation.attempt_count, 20, "workloads are starting")]
 
-        assert location_id == organization.location_id
-        return compute_registry
 
-    async def fake_database(
-        location_id: UUID,
-        include_deleted: bool = False,
-    ) -> None:
-        """Return no database registry for organization cleanup."""
+async def test_execute_raises_when_location_lease_is_lost(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reject a stale worker result when its final lease transition no longer owns the row."""
 
-        assert location_id == organization.location_id
-        assert include_deleted
+    # Arrange
+    operation = leased_operation()
+
+    async def complete_handler(claimed: Operation) -> operation_worker.OperationOutcome:
+        """Complete one claimed location attempt."""
+
+        assert claimed is operation
+        return operation_worker.complete()
+
+    async def fake_complete(operation_id: UUID, attempt_count: int) -> None:
+        """Report that the worker no longer owns the operation lease."""
+
+        assert operation_id == operation.id
+        assert attempt_count == operation.attempt_count
         return None
 
-    async def fake_storage(
-        location_id: UUID,
-        include_deleted: bool = False,
-    ) -> None:
-        """Return no storage registry for organization cleanup."""
+    monkeypatch.setattr(operation_worker.operations, "complete", fake_complete)
 
-        assert location_id == organization.location_id
-        assert include_deleted
-        return None
+    # Act and assert
+    with pytest.raises(operation_worker.OperationLeaseLost, match=str(operation.id)):
+        await operation_worker.execute(operation, complete_handler)
 
-    class FakeKubernetes:
-        """Record namespace deletion for organization cleanup."""
 
-        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
-            """Accept the compute registry connection fields."""
+async def test_execute_fails_retry_at_attempt_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fail rather than defer when the sixth operation attempt requests another retry."""
 
-            assert kubeconfig == compute_registry.kubeconfig
-            assert proxy_secret == compute_registry.proxy_secret
-            self.applications = self
+    # Arrange
+    operation = leased_operation(attempt_count=operation_worker.OPERATION_ATTEMPT_LIMIT)
+    transitions: list[tuple[UUID, str, int]] = []
 
-        async def delete_namespace(self, namespace: str) -> None:
-            """Record namespace deletion."""
+    async def retry_handler(claimed: Operation) -> operation_worker.OperationOutcome:
+        """Request a retry after consuming the complete attempt budget."""
 
-            removals.append(("namespace", namespace))
+        assert claimed is operation
+        return operation_worker.retry("workloads are still starting")
 
-        async def delete(self, application_id: str) -> None:
-            """Record application deletion."""
+    async def fake_fail(operation_id: UUID, error: str, attempt_count: int) -> Operation:
+        """Record terminal failure after the attempt budget is exhausted."""
 
-            removals.append(("application", UUID(application_id)))
+        transitions.append((operation_id, error, attempt_count))
+        return Operation(
+            id=operation_id,
+            location_id=operation.location_id,
+            error=error,
+            platform_version=operation.platform_version,
+            attempt_count=attempt_count,
+            stopped_at=utcnow(),
+        )
 
-    monkeypatch.setattr(application_operations.applications, "get", fake_get_application)
-    monkeypatch.setattr(application_operations.organizations, "get", fake_get_organization)
-    monkeypatch.setattr(organization_operations.organizations, "get", fake_get_organization)
-    monkeypatch.setattr(organization_operations.organizations, "applications", fake_organization_applications)
-    monkeypatch.setattr(application_operations.compute, "location", fake_compute)
-    monkeypatch.setattr(organization_operations.compute, "location", fake_compute)
-    monkeypatch.setattr(organization_operations.database, "location", fake_database)
-    monkeypatch.setattr(organization_operations.storage, "location", fake_storage)
-    monkeypatch.setattr(application_operations, "Kubernetes", FakeKubernetes)
-    monkeypatch.setattr(organization_operations, "Kubernetes", FakeKubernetes)
+    monkeypatch.setattr(operation_worker.operations, "fail", fake_fail)
 
-    app_operation = leased_operation(OperationKind.application_remove)
-    org_operation = leased_operation(OperationKind.organization_remove)
+    # Act
+    result = await operation_worker.execute(operation, retry_handler)
 
-    app_result = await application_operations.remove(app_operation)
-    org_result = await organization_operations.remove(org_operation)
-
-    assert app_result.state == OperationOutcomeState.complete
-    assert org_result.state == OperationOutcomeState.complete
-    assert removals == [
-        ("application", application.id),
-        ("application", application.id),
-        ("namespace", organization.slug),
-    ]
+    # Assert
+    assert result.status == "failed"
+    assert operation_worker.OPERATION_ATTEMPT_LIMIT == 6
+    assert transitions == [(operation.id, "workloads are still starting", 6)]

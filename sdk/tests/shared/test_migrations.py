@@ -146,7 +146,7 @@ def test_alembic_script_location_returns_sdk_owned_migrations() -> None:
 
     assert script_location.name == "alembic"
     assert (script_location / "env.py").exists()
-    assert (script_location / "versions" / "20260713_0001_initial.py").exists()
+    assert any(path.suffix == ".py" and path.name != "__init__.py" for path in (script_location / "versions").iterdir())
 
 
 @pytest.mark.integration

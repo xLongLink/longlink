@@ -1,24 +1,16 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
-import { toast } from 'sonner';
-import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
-import { DataTable } from '@/components/DataTable';
-import ConnectStorage from '@/components/dialogs/ConnectStorage';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useLocations } from '@/data/admin';
-import { useStorages } from '@/data/storage';
-import { useUserProfile } from '@/hooks/use-user';
-import { fetchApiVoid } from '@/lib/api';
-import { useTranslation } from '@/lib/i18n';
-import { storagesQueryKey } from '@/lib/query-keys';
+import { type ColumnDef } from '@tanstack/react-table';
 import type { ApiLocation, ApiStorageRegistry } from '@/lib/types';
-import { useDeleteDialog } from '@/lib/utils';
 import { S3 } from '@/svg/S3';
+import { useLocations } from '@/data/admin';
+import { useTranslation } from '@/lib/i18n';
+import { useStorages } from '@/data/storage';
+import { DataTable } from '@/components/DataTable';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import { AdminLocationBadge } from '@/components/admin/AdminTableElements';
 
 /** Returns localized admin storage table columns. */
-function createStorageColumnsBase(t: TFunction): Array<ColumnDef<ApiStorageRegistry & { location?: ApiLocation }>> {
+function createStorageColumns(t: TFunction): Array<ColumnDef<ApiStorageRegistry & { location?: ApiLocation }>> {
     return [
         {
             id: 'storage',
@@ -75,22 +67,6 @@ function createStorageColumnsBase(t: TFunction): Array<ColumnDef<ApiStorageRegis
 /** Renders the admin storage page. */
 export default function AdminStorage() {
     const { t } = useTranslation();
-    const { role } = useUserProfile();
-    const queryClient = useQueryClient();
-    const canManage = role === 'administrator';
-
-    const deleteStorage = useMutation({
-        mutationFn: async (registryId: string) => {
-            await fetchApiVoid(`/api/storages/${registryId}`, {
-                method: 'DELETE',
-            });
-        },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: storagesQueryKey() });
-            toast.success(t('admin.storageDeleted'));
-        },
-    });
-
     const { items: storages, error: storageError, isLoading: storageIsLoading } = useStorages();
     const { items: locations, error: locationsError, isLoading: locationsIsLoading } = useLocations();
     const locationById = new Map(locations.map((location) => [location.id, location]));
@@ -98,50 +74,16 @@ export default function AdminStorage() {
         ...storage,
         location: locationById.get(storage.location_id),
     }));
-    const deleteDialog = useDeleteDialog({
-        title: t('admin.deleteStorageTitle'),
-        mutation: deleteStorage,
-        items: storageRows,
-        getId: (storage) => storage.id,
-        description: (storage) => t('admin.deleteStorageDescription', { slug: storage.slug }),
-        errorMessage: t('admin.failedDeleteStorage'),
-        fallbackDescription: t('admin.deleteStorageFallback'),
-    });
-    const storageColumnsBase = createStorageColumnsBase(t);
-    const storageColumns = canManage
-        ? ([
-              ...storageColumnsBase,
-              {
-                  id: 'actions',
-                  header: t('columns.action'),
-                  meta: { className: 'w-24 text-right' },
-                  cell: ({ row }) => {
-                      const storage = row.original;
-
-                      return (
-                          <AdminActionMenu
-                              label={storage.name}
-                              copyLabel={t('admin.copyStorageSlug')}
-                              copyValue={storage.slug}
-                              onDelete={() => deleteDialog.openFor(storage)}
-                          />
-                      );
-                  },
-              },
-          ] satisfies Array<ColumnDef<ApiStorageRegistry & { location?: ApiLocation }>>)
-        : storageColumnsBase;
+    const storageColumns = createStorageColumns(t);
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <Hero icon="hard-drive">
-                    <div>
-                        <HeroTitle>{t('admin.storageTitle')}</HeroTitle>
-                        <HeroDescription>{t('admin.storageDescription')}</HeroDescription>
-                    </div>
-                </Hero>
-                {canManage ? <ConnectStorage /> : null}
-            </div>
+            <Hero icon="hard-drive">
+                <div>
+                    <HeroTitle>{t('admin.storageTitle')}</HeroTitle>
+                    <HeroDescription>{t('admin.storageDescription')}</HeroDescription>
+                </div>
+            </Hero>
             <DataTable
                 columns={storageColumns}
                 data={storageRows}
@@ -149,7 +91,6 @@ export default function AdminStorage() {
                 isLoading={storageIsLoading || locationsIsLoading}
                 pageSize={25}
             />
-            <DeleteConfirmation {...deleteDialog.dialogProps} />
         </div>
     );
 }

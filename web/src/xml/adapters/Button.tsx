@@ -1,10 +1,10 @@
-import { Button as UIButton, buttonVariants } from '@/components/ui/button';
-import { useXmlContext } from '@/xml/core/context';
-import { resolveTranslation } from '@/xml/core/i18n';
+import type { VariantProps } from 'class-variance-authority';
+import type { Props } from '@/xml/types';
 import { renderNode } from '@/xml/core/node';
 import { resolvePath } from '@/xml/expressions';
-import type { Props } from '@/xml/types';
-import type { VariantProps } from 'class-variance-authority';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
+import { Button as UIButton, buttonVariants } from '@/components/ui/button';
 import { useActionHandler } from './Action';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
 

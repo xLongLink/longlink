@@ -1,8 +1,3 @@
-import { Heading } from '@/components/ui/heading';
-import { P } from '@/components/ui/p';
-import { Stack } from '@/components/ui/stack';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Wordmark } from '@/components/Wordmark';
 import {
     Activity,
     AppWindow,
@@ -22,6 +17,11 @@ import {
     ShieldCheck,
     UserRound,
 } from 'lucide-react';
+import { P } from '@/components/ui/p';
+import { Stack } from '@/components/ui/stack';
+import { Wordmark } from '@/components/Wordmark';
+import { Heading } from '@/components/ui/heading';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const sharedFoundationItems = [
     {
@@ -164,7 +164,7 @@ function PlatformFlowDiagram() {
 }
 
 export const metadata = {
-    lastUpdated: '2026-07-10',
+    lastUpdated: '2026-07-14',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/index.tsx',
 };
 
@@ -175,8 +175,8 @@ export const content = (
         </Heading>
         <P>
             The LongLink Platform owns the shared operating model. It stores users, organizations, memberships,
-            applications, locations, infrastructure registries, operations, and deployment state, then exposes the API
-            and web shell used to manage them.
+            applications, complete location infrastructure, reconciliation operations, and deployment state, then
+            exposes the API and web shell used to manage them.
         </P>
         <P>
             It does not replace application code. Applications still run as separate SDK services; the LongLink Platform
@@ -184,8 +184,8 @@ export const content = (
             verification, logs, and status.
         </P>
         <P>
-            Production runtime traffic is mediated by the API proxy and the per-cluster gateway. The API authorizes the
-            user and forwards approved requests with trusted runtime headers; the gateway accepts only authenticated
+            Production runtime traffic is mediated by the API proxy and the per-location TLS gateway. The API authorizes
+            the user and forwards approved requests with trusted runtime headers; the gateway accepts only authenticated
             proxy traffic and routes it to the internal application service.
         </P>
         <PlatformFlowDiagram />

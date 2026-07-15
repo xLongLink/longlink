@@ -27,17 +27,14 @@ class Application(SQLModel, table=True):
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 
-    # References
+    # Organization
     organization_id: UUID = Field(foreign_key="organizations.id")
-    compute_registry_id: UUID | None = Field(default=None, foreign_key="compute_registries.id")
-    storage_registry_id: UUID | None = Field(default=None, foreign_key="storage_registries.id")
-    database_registry_id: UUID | None = Field(default=None, foreign_key="database_registries.id")
 
     # Metadata
     name: str = Field(max_length=100)
     slug: str = Field(max_length=100)
     icon: str | None = Field(default=None, max_length=50)
-    image: str = Field(max_length=255)
+    image: str = Field(max_length=512)
     sdk: str | None = Field(default=None, max_length=128)
     digest: str | None = Field(default=None, max_length=255)
     version: str | None = Field(default=None, max_length=128)
@@ -46,10 +43,12 @@ class Application(SQLModel, table=True):
     # Configuration
     envs: dict[str, str] = Field(default_factory=dict, sa_column=Column(JSON, nullable=False))
 
+    # Database
+    database_password: str = Field(max_length=255)
+
     # Storage
-    storage_runtime_key_id: str | None = Field(default=None, max_length=255)
-    storage_runtime_role_id: str | None = Field(default=None, max_length=255)
-    storage_runtime_secret_access_key: str | None = Field(default=None, max_length=255)
+    storage_access_key_id: str | None = Field(default=None, max_length=255)
+    storage_secret_access_key: str | None = Field(default=None, max_length=255)
 
     # State
     status: ApplicationStatus = Field(

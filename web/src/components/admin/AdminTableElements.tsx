@@ -1,3 +1,6 @@
+import { toast } from 'sonner';
+import { MoreVertical } from 'lucide-react';
+import type { ApiLocation } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -5,9 +8,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { ApiLocation } from '@/lib/types';
-import { MoreVertical } from 'lucide-react';
-import { toast } from 'sonner';
 
 /** Renders a compact location badge for admin tables. */
 export function AdminLocationBadge({ fallbackId, location }: { fallbackId?: string; location?: ApiLocation }) {

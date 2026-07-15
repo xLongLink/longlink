@@ -1,14 +1,14 @@
-import { useTranslation } from '@/lib/i18n';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
-import { Wordmark } from '@/components/Wordmark';
-import { useUser } from '@/hooks/use-user';
+import { Link, useNavigate } from 'react-router';
 import { apiUrl } from '@/lib/api';
-import { sanitizeRedirectPath } from '@/lib/redirects';
 import { getInitials } from '@/lib/utils';
+import { useUser } from '@/hooks/use-user';
+import { useTranslation } from '@/lib/i18n';
+import { Button } from '@/components/ui/button';
+import { Wordmark } from '@/components/Wordmark';
+import { Separator } from '@/components/ui/separator';
+import { sanitizeRedirectPath } from '@/lib/redirects';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 /** Renders the shared OIDC redirect sign-in card. */
 export function SignInCard({ redirectTo }: { redirectTo: string }) {

@@ -1,6 +1,6 @@
-import { Switch as UISwitch } from '@/components/ui/switch';
-import { useXmlContext } from '@/xml/core/context';
 import type { Props } from '@/xml/types';
+import { useXmlContext } from '@/xml/core/context';
+import { Switch as UISwitch } from '@/components/ui/switch';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
 
 /** Renders a shadcn-backed switch. */

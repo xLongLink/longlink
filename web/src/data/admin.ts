@@ -1,3 +1,11 @@
+import type {
+    ApiApplicationResponse,
+    ApiCountryOption,
+    ApiLocation,
+    ApiOperation,
+    ApiOrganizationSummary,
+    ApiUserListItem,
+} from '@/lib/types';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import {
     apiApplicationResponseSchema,
@@ -8,14 +16,6 @@ import {
     apiUserListItemSchema,
     parseApiCollection,
 } from '@/lib/api-schemas';
-import type {
-    ApiApplicationResponse,
-    ApiCountryOption,
-    ApiLocation,
-    ApiOperation,
-    ApiOrganizationSummary,
-    ApiUserListItem,
-} from '@/lib/types';
 
 /** Fetches the application list for admin views. */
 export function useApplications() {
@@ -28,6 +28,7 @@ export function useApplications() {
 export function useLocations(enabled = true) {
     return useCollectionQuery<ApiLocation>(enabled ? '/api/locations' : null, {
         enabled,
+        refetchInterval: 5000,
         parse: (value) => parseApiCollection(apiLocationSchema, value),
     });
 }
@@ -43,6 +44,7 @@ export function useCountries(enabled = true) {
 /** Fetches the operation list for admin views. */
 export function useOperations() {
     return useCollectionQuery<ApiOperation>('/api/operations', {
+        refetchInterval: 5000,
         parse: (value) => parseApiCollection(apiOperationSchema, value),
     });
 }

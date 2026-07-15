@@ -4,7 +4,7 @@ import { LANGUAGE_VALUES } from '@/lib/languages';
 import { ACCENT_VALUES, RADIUS_VALUES, THEME_VALUES } from '@/lib/theme';
 import { APPLICATION_ROLE_NAMES, PLATFORM_ROLE_NAMES, ROLE_NAMES } from '@/lib/roles';
 
-const applicationStatusSchema = z.enum(['creating', 'running', 'failed']);
+const applicationStatusSchema = z.enum(['creating', 'running', 'failed', 'deleting']);
 const applicationRoleSchema = z.enum(APPLICATION_ROLE_NAMES);
 const platformRoleSchema = z.enum(PLATFORM_ROLE_NAMES);
 const roleSchema = z.enum(ROLE_NAMES);
@@ -19,6 +19,8 @@ export const apiLocationSchema = z.object({
     name: z.string(),
     slug: z.string(),
     country: z.string(),
+    status: z.enum(['provisioning', 'ready', 'failed', 'deleting']),
+    version: z.string().nullable(),
 });
 
 export const apiUserSummarySchema = z.object({
@@ -74,6 +76,7 @@ export const apiOrganizationSummarySchema = z.object({
     avatar: z.string(),
     country: z.string(),
     location_id: z.string().nullable(),
+    status: z.enum(['creating', 'running', 'failed', 'deleting']),
     created_at: z.string(),
     updated_at: z.string(),
     created_by: nullableUserSummarySchema,
@@ -200,7 +203,7 @@ export const apiStorageRegistrySchema = z.object({
 export const apiComputeRegistrySchema = z.object({
     id: z.string(),
     slug: z.string(),
-    gateway_url: z.string(),
+    gateway_url: z.string().nullable(),
     location_id: z.string(),
     created_at: z.string(),
     created_by: nullableUserSummarySchema,
@@ -212,14 +215,30 @@ export const apiComputeRegistrySchema = z.object({
 
 export const apiOperationSchema = z.object({
     id: z.string(),
-    kind: z.string(),
-    application_id: z.string().nullable(),
-    organization_id: z.string().nullable(),
+    location_id: z.string(),
     status: z.enum(['scheduled', 'active', 'completed', 'failed']),
     error: z.string().nullable(),
+    platform_version: z.string(),
+    attempt_count: z.number().int().nonnegative(),
     created_at: z.string(),
     started_at: z.string().nullable(),
     stopped_at: z.string().nullable(),
+    scheduled_at: z.string(),
+});
+
+export const apiLocationMutationResponseSchema = z.object({
+    location: apiLocationSchema,
+    operation: apiOperationSchema,
+});
+
+export const apiOrganizationMutationResponseSchema = z.object({
+    organization: apiOrganizationSummarySchema,
+    operation: apiOperationSchema,
+});
+
+export const apiApplicationMutationResponseSchema = z.object({
+    application: apiApplicationResponseSchema,
+    operation: apiOperationSchema,
 });
 
 export const apiComputePodSchema = z.object({

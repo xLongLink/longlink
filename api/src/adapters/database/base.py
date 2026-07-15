@@ -42,8 +42,8 @@ class Database(ABC):
         """Ensure one organization's database and shared schema are ready."""
 
     @abstractmethod
-    async def schema(self, organization: UUID, application: UUID) -> DatabaseRuntimeConnection:
-        """Create or replace the schema for one application and return runtime connection settings."""
+    async def schema(self, organization: UUID, application: UUID, password: str) -> DatabaseRuntimeConnection:
+        """Create or update one application schema using its stable runtime password."""
 
     @abstractmethod
     async def delete_schema(self, organization: UUID, application: UUID) -> None:

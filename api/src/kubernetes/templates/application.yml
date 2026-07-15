@@ -1,16 +1,21 @@
-# Template for application resources in one namespace.
-# Each app gets its own deployment, ClusterIP service, and secret-backed env vars.
-
+# Template for one desired LongLink Application workload.
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: $application_id
   namespace: $namespace
+  annotations:
+    longlink.io/platform-version: "$platform_version"
+    longlink.io/runtime-revision: "$runtime_revision"
+    longlink.io/template-revision: "$template_revision"
   labels:
-    compute-role: application
     app: $application_id
+    app.kubernetes.io/managed-by: longlink-platform
+    compute-role: application
     longlink.io/application-id: $application_id
+    longlink.io/location-id: "$location_id"
+    longlink.io/organization-id: "$organization_id"
 spec:
   replicas: 1
   strategy:
@@ -21,11 +26,16 @@ spec:
   template:
     metadata:
       annotations:
-        longlink.io/rollout-token: ""
+        longlink.io/platform-version: "$platform_version"
+        longlink.io/runtime-revision: "$runtime_revision"
+        longlink.io/template-revision: "$template_revision"
       labels:
-        compute-role: application
         app: $application_id
+        app.kubernetes.io/managed-by: longlink-platform
+        compute-role: application
         longlink.io/application-id: $application_id
+        longlink.io/location-id: "$location_id"
+        longlink.io/organization-id: "$organization_id"
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -36,21 +46,22 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: $application_id
+        - name: application
           image: $image
           imagePullPolicy: Always
           ports:
-            - containerPort: 8000
+            - name: http
+              containerPort: 8000
           startupProbe:
             httpGet:
               path: /health
-              port: 8000
+              port: http
             periodSeconds: 2
             failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /health
-              port: 8000
+              port: http
             periodSeconds: 5
             failureThreshold: 3
           envFrom:
@@ -81,14 +92,22 @@ kind: Service
 metadata:
   name: app-$application_id
   namespace: $namespace
+  annotations:
+    longlink.io/platform-version: "$platform_version"
+    longlink.io/runtime-revision: "$runtime_revision"
+    longlink.io/template-revision: "$template_revision"
   labels:
-    compute-role: application
     app: $application_id
+    app.kubernetes.io/managed-by: longlink-platform
+    compute-role: application
     longlink.io/application-id: $application_id
+    longlink.io/location-id: "$location_id"
+    longlink.io/organization-id: "$organization_id"
 spec:
   type: ClusterIP
   selector:
     app: $application_id
   ports:
-    - port: 8000
-      targetPort: 8000
+    - name: http
+      port: 8000
+      targetPort: http

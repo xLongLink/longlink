@@ -1,14 +1,11 @@
-import secrets
 from uuid import UUID
-from fastapi import HTTPException
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
-from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
-from src.database.models.applications import Application
+from src.database.models.locations import Location
+from src.database.models.operations import Operation
 
 
 async def fetch() -> list[ComputeRegistry]:
@@ -77,83 +74,47 @@ async def location(location_id: UUID, include_deleted: bool = False) -> ComputeR
         return result.scalar_one_or_none()
 
 
-async def create(name: str, slug: str, kubeconfig: str, gateway_url: str, location_id: UUID, user: User) -> ComputeRegistry:
-    """Create one compute backend registration."""
+async def stage_gateway_tls(
+    location_id: UUID,
+    ca_certificate: str,
+    certificate: str,
+    private_key: str,
+    operation_id: UUID,
+    attempt_count: int,
+    platform_version: str,
+) -> bool:
+    """Persist new gateway trust while retaining the previously served CA during rollout."""
 
-    # Create the registry within one scoped session.
+    # Proxy clients trust both CA versions until reconciliation verifies the new gateway rollout.
     async with session_scope() as session:
-        result = await session.execute(select(ComputeRegistry.id).where(ComputeRegistry.name == name))
-
-        # Fail early when the name already exists.
-        if result.scalar_one_or_none() is not None:
-            raise HTTPException(status_code=409, detail="Compute registry already exists")
-
-        location_result = await session.execute(select(ComputeRegistry.id).where(ComputeRegistry.location_id == location_id))
-
-        # Each location owns a single compute backend.
-        if location_result.scalar_one_or_none() is not None:
-            raise HTTPException(status_code=409, detail="Compute registry already exists for location")
-
-        # Registries are append-only once created.
-        proxy_secret_value = secrets.token_urlsafe(32)
-        compute = ComputeRegistry(
-            name=name,
-            slug=slug,
-            kubeconfig=kubeconfig,
-            gateway_url=gateway_url,
-            proxy_secret=proxy_secret_value,
-            location_id=location_id,
-        )
-        compute.created_id = user.id
-        compute.updated_id = user.id
-        session.add(compute)
-
-        # Commit while translating uniqueness races.
-        try:
-            await session.commit()
-        except IntegrityError as exc:
-            await session.rollback()
-            raise HTTPException(status_code=409, detail="Compute registry already exists") from exc
-
-        statement = (
-            select(ComputeRegistry)
-            .options(
-                selectinload(ComputeRegistry.created_by),
-                selectinload(ComputeRegistry.updated_by),
-                selectinload(ComputeRegistry.deleted_by),
-            )
-            .where(ComputeRegistry.id == compute.id)
-        )
-        result = await session.execute(statement)
-        return result.scalar_one()
-
-
-async def delete(registry_id: UUID, user: User) -> bool:
-    """Soft-delete one compute registry when no active app uses it."""
-
-    # Load the registry within one scoped session.
-    async with session_scope() as session:
-        registry = await session.get(ComputeRegistry, registry_id)
-
-        # Missing or deleted registries are already inactive.
-        if registry is None or registry.deleted_at is not None:
-            return False
-
-        active_application = await session.execute(
-            select(Application.id).where(
-                Application.compute_registry_id == registry_id,
-                Application.deleted_at.is_(None),
-            ).limit(1)
-        )
-
-        # Active applications keep their compute backend registered.
-        if active_application.scalars().first() is not None:
-            raise HTTPException(status_code=409, detail="Compute registry is used by active applications")
-
+        location = (await session.execute(select(Location.id).where(Location.id == location_id).with_for_update())).scalar_one_or_none()
         now = utcnow()
-        registry.deleted_at = now
-        registry.deleted_id = user.id
-        registry.updated_at = now
-        registry.updated_id = user.id
+        lease = (
+            await session.execute(
+                select(Operation.id)
+                .where(
+                    Operation.id == operation_id,
+                    Operation.location_id == location_id,
+                    Operation.attempt_count == attempt_count,
+                    Operation.platform_version == platform_version,
+                    Operation.lease_expires_at > now,
+                    Operation.started_at.is_not(None),
+                    Operation.stopped_at.is_(None),
+                )
+                .with_for_update()
+            )
+        ).scalar_one_or_none()
+        if location is None or lease is None:
+            return False
+        registry = (
+            await session.execute(select(ComputeRegistry).where(ComputeRegistry.location_id == location_id).with_for_update())
+        ).scalar_one_or_none()
+        if registry is None:
+            raise RuntimeError("Location compute registry not found")
+        if registry.gateway_ca_certificate != ca_certificate:
+            registry.gateway_previous_ca_certificate = registry.gateway_ca_certificate
+        registry.gateway_ca_certificate = ca_certificate
+        registry.gateway_tls_certificate = certificate
+        registry.gateway_tls_private_key = private_key
         await session.commit()
         return True

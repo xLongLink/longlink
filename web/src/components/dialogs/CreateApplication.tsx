@@ -1,38 +1,23 @@
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { Icon } from '@/components/ui/icon';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useApiQuery } from '@/hooks/use-api';
-import { useOrganizationActions } from '@/hooks/use-organization';
-import { useUserProfile } from '@/hooks/use-user';
-import { fetchApiJson } from '@/lib/api';
-import { apiIconsSchema, apiImageMetadataSchema, parseApiResponse } from '@/lib/api-schemas';
-import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
-import { useTranslation } from '@/lib/i18n';
-import { canCreateApplication } from '@/lib/roles';
-import type { ApiImageMetadata } from '@/lib/types';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-
-const platformEnvironmentNames = new Set([
-    'LONGLINK_DATABASE_HOST',
-    'LONGLINK_DATABASE_NAME',
-    'LONGLINK_DATABASE_PASSWORD',
-    'LONGLINK_DATABASE_PORT',
-    'LONGLINK_DATABASE_SCHEMA',
-    'LONGLINK_DATABASE_USERNAME',
-    'LONGLINK_ENV',
-    'LONGLINK_STORAGE_BUCKET',
-    'LONGLINK_STORAGE_ENDPOINT_URL',
-    'LONGLINK_STORAGE_PASSWORD',
-    'LONGLINK_STORAGE_SHARED_BUCKET',
-    'LONGLINK_STORAGE_USERNAME',
-]);
+import { zodResolver } from '@hookform/resolvers/zod';
+import type { ApiImageMetadata } from '@/lib/types';
+import { fetchApiJson } from '@/lib/api';
+import { Icon } from '@/components/ui/icon';
+import { useTranslation } from '@/lib/i18n';
+import { hasMinimumRole } from '@/lib/roles';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useApiQuery } from '@/hooks/use-api';
+import { Button } from '@/components/ui/button';
+import { useUserProfile } from '@/hooks/use-user';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useOrganizationActions } from '@/hooks/use-organization';
+import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
+import { apiIconsSchema, apiImageMetadataSchema, parseApiResponse } from '@/lib/api-schemas';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const createApplicationFormSchema = z.object({
     image: z.string().trim().min(1),
@@ -78,12 +63,11 @@ export default function CreateApplication({ organization }: { organization: stri
         staleTime: Infinity,
     });
     const iconOptions = iconCatalog ?? [];
-    const configurableEnvironments =
-        imageMetadata?.environments.filter((env) => !platformEnvironmentNames.has(env.name)) ?? [];
+    const declaredEnvironments = imageMetadata?.environments ?? [];
     const organizationMembership = organizations.find((item) => item.slug === organization);
 
     // Hide creation for roles without application access.
-    if (!canCreateApplication(organizationMembership?.role)) {
+    if (!hasMinimumRole(organizationMembership?.role, 'maintain')) {
         return null;
     }
 
@@ -325,10 +309,10 @@ export default function CreateApplication({ organization }: { organization: stri
                             </form>
                         ) : (
                             <form className="space-y-4" onSubmit={form.handleSubmit(handleCreateApp)}>
-                                {configurableEnvironments.length ? (
+                                {declaredEnvironments.length ? (
                                     <ScrollArea className="max-h-80 pr-3">
                                         <div className="space-y-4">
-                                            {configurableEnvironments.map((env) => (
+                                            {declaredEnvironments.map((env) => (
                                                 <div key={env.name} className="space-y-2">
                                                     <Label htmlFor={`env-${env.name}`}>
                                                         {env.name}{' '}

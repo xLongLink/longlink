@@ -1,39 +1,4 @@
 import {
-    content as docsApiApplicationsContent,
-    metadata as docsApiApplicationsMetadata,
-} from '@/pages/docs/api/applications';
-import { content as docsApiIndexContent, metadata as docsApiIndexMetadata } from '@/pages/docs/api/index';
-import {
-    content as docsApiOrganizationsContent,
-    metadata as docsApiOrganizationsMetadata,
-} from '@/pages/docs/api/organizations';
-import {
-    content as docsApiSelfHostedContent,
-    metadata as docsApiSelfHostedMetadata,
-} from '@/pages/docs/api/self-hosted';
-import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/pages/docs/index';
-import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/pages/docs/sdk/building';
-import {
-    content as docsSdkComponentsContent,
-    metadata as docsSdkComponentsMetadata,
-} from '@/pages/docs/sdk/components';
-import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/pages/docs/sdk/database';
-import {
-    content as docsSdkEnvironmentsContent,
-    metadata as docsSdkEnvironmentsMetadata,
-} from '@/pages/docs/sdk/environments';
-import {
-    content as docsSdkExpressionsContent,
-    metadata as docsSdkExpressionsMetadata,
-} from '@/pages/docs/sdk/expressions';
-import { content as docsSdkIndexContent, metadata as docsSdkIndexMetadata } from '@/pages/docs/sdk/index';
-import { content as docsSdkLayoutContent, metadata as docsSdkLayoutMetadata } from '@/pages/docs/sdk/layout';
-import { content as docsSdkPagesContent, metadata as docsSdkPagesMetadata } from '@/pages/docs/sdk/pages';
-import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } from '@/pages/docs/sdk/routes';
-import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/pages/docs/sdk/storage';
-import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } from '@/pages/docs/sdk/testing';
-import type { ArticleBreadcrumb, ArticleNavigationGroup, ArticleNavigationItem, ArticlePage } from '@/pages/catalog';
-import {
     AppWindow,
     BookOpen,
     Braces,
@@ -51,6 +16,41 @@ import {
     ShieldCheck,
     Waypoints,
 } from 'lucide-react';
+import type { ArticleBreadcrumb, ArticleNavigationGroup, ArticleNavigationItem, ArticlePage } from '@/pages/catalog';
+import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/pages/docs/index';
+import { content as docsApiIndexContent, metadata as docsApiIndexMetadata } from '@/pages/docs/api/index';
+import { content as docsSdkIndexContent, metadata as docsSdkIndexMetadata } from '@/pages/docs/sdk/index';
+import { content as docsSdkPagesContent, metadata as docsSdkPagesMetadata } from '@/pages/docs/sdk/pages';
+import { content as docsSdkLayoutContent, metadata as docsSdkLayoutMetadata } from '@/pages/docs/sdk/layout';
+import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } from '@/pages/docs/sdk/routes';
+import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/pages/docs/sdk/storage';
+import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } from '@/pages/docs/sdk/testing';
+import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/pages/docs/sdk/building';
+import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/pages/docs/sdk/database';
+import {
+    content as docsSdkComponentsContent,
+    metadata as docsSdkComponentsMetadata,
+} from '@/pages/docs/sdk/components';
+import {
+    content as docsApiSelfHostedContent,
+    metadata as docsApiSelfHostedMetadata,
+} from '@/pages/docs/api/self-hosted';
+import {
+    content as docsSdkExpressionsContent,
+    metadata as docsSdkExpressionsMetadata,
+} from '@/pages/docs/sdk/expressions';
+import {
+    content as docsApiApplicationsContent,
+    metadata as docsApiApplicationsMetadata,
+} from '@/pages/docs/api/applications';
+import {
+    content as docsSdkEnvironmentsContent,
+    metadata as docsSdkEnvironmentsMetadata,
+} from '@/pages/docs/sdk/environments';
+import {
+    content as docsApiOrganizationsContent,
+    metadata as docsApiOrganizationsMetadata,
+} from '@/pages/docs/api/organizations';
 
 type DocGroupTitle = 'Overview' | 'Platform' | 'Applications / SDK';
 

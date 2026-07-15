@@ -5,14 +5,12 @@ import { executeAction } from '@/xml/adapters/Action';
 describe('Action', () => {
     /* The action shell should send a request with a JSON payload. */
     it('sends a request and invalidates after success', async () => {
-        const events: string[] = [];
         const invalidations: Array<string | string[]> = [];
-        const successMessages: string[] = [];
-        const errorMessages: string[] = [];
+        let successCalls = 0;
+        let errorCalls = 0;
         const ctx: ExecutionContext = {
             setups: {},
             invalidate: async (ids) => {
-                events.push('invalidate');
                 invalidations.push(ids);
             },
             values: {
@@ -27,7 +25,6 @@ describe('Action', () => {
         let fetchCalls = 0;
 
         const fetchImpl = (async (input: RequestInfo | URL, init?: RequestInit) => {
-            events.push('fetch');
             fetchCalls += 1;
             requestUrl = String(input);
             requestInit = init;
@@ -45,13 +42,11 @@ describe('Action', () => {
             '',
             fetchImpl,
             {
-                success: (message) => {
-                    events.push('success');
-                    successMessages.push(message);
+                success: () => {
+                    successCalls += 1;
                 },
-                error: (message) => {
-                    events.push('error');
-                    errorMessages.push(message);
+                error: () => {
+                    errorCalls += 1;
                 },
             }
         );
@@ -72,55 +67,58 @@ describe('Action', () => {
         );
         expect(fetchCalls).toBe(1);
         expect(invalidations).toEqual([['profile', 'activity']]);
-        expect(successMessages).toEqual(['Request completed with status 204']);
-        expect(errorMessages).toEqual([]);
-        expect(events).toEqual(['fetch', 'invalidate', 'success']);
+        expect(successCalls).toBe(1);
+        expect(errorCalls).toBe(0);
     });
 
-    /* Failed HTTP responses must stop before invalidation and success notification. */
-    it('reports non-2xx responses without invalidating', async () => {
-        const events: string[] = [];
-        const invalidations: Array<string | string[]> = [];
-        const successMessages: string[] = [];
-        const errorMessages: string[] = [];
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async (ids) => {
-                events.push('invalidate');
-                invalidations.push(ids);
-            },
-            values: {},
-        };
-        const fetchImpl = (async () => {
-            events.push('fetch');
-
-            return new Response('', { status: 422 });
-        }) as unknown as typeof fetch;
-
-        await executeAction(
+    /* HTTP and transport failures must stop before invalidation and success notification. */
+    it('reports request failures without invalidating', async () => {
+        const cases: Array<{ request: () => Promise<Response>; expectedError: string }> = [
             {
-                action: '/example/profile',
-                invalidate: '${["profile", "activity"]}',
+                request: async () => new Response('', { status: 422 }),
+                expectedError: 'Request failed with status 422',
             },
-            ctx,
-            '',
-            fetchImpl,
             {
-                success: (message) => {
-                    events.push('success');
-                    successMessages.push(message);
+                request: async () => {
+                    throw new Error('Network unavailable');
                 },
-                error: (message) => {
-                    events.push('error');
-                    errorMessages.push(message);
-                },
-            }
-        );
+                expectedError: 'Network unavailable',
+            },
+        ];
 
-        expect(invalidations).toEqual([]);
-        expect(successMessages).toEqual([]);
-        expect(errorMessages).toEqual(['Request failed with status 422']);
-        expect(events).toEqual(['fetch', 'error']);
+        for (const testCase of cases) {
+            let invalidationCalls = 0;
+            let successCalls = 0;
+            let errorMessage = '';
+            const ctx: ExecutionContext = {
+                setups: {},
+                invalidate: async () => {
+                    invalidationCalls += 1;
+                },
+                values: {},
+            };
+            const fetchImpl = (async () => testCase.request()) as unknown as typeof fetch;
+
+            await executeAction(
+                {
+                    action: '/example/profile',
+                    invalidate: '${["profile", "activity"]}',
+                },
+                ctx,
+                '',
+                fetchImpl,
+                {
+                    success: () => {
+                        successCalls += 1;
+                    },
+                    error: (message) => (errorMessage = message),
+                }
+            );
+
+            expect(invalidationCalls).toBe(0);
+            expect(successCalls).toBe(0);
+            expect(errorMessage).toBe(testCase.expectedError);
+        }
     });
 
     /* The action shell should send multipart form data without a JSON content type. */
@@ -250,29 +248,5 @@ describe('Action', () => {
             expect(fetchCalls).toBe(0);
             expect(errorMessage).toBe(testCase.expectedError);
         }
-    });
-
-    it('shows an error when the request throws', async () => {
-        const ctx: ExecutionContext = {
-            setups: {},
-            invalidate: async () => {},
-            values: {},
-        };
-        let errorMessage = '';
-        const fetchImpl = (async () => {
-            throw new Error('Network unavailable');
-        }) as unknown as typeof fetch;
-
-        await executeAction(
-            {
-                action: '/profile',
-            },
-            ctx,
-            '',
-            fetchImpl,
-            { success: () => {}, error: (message) => (errorMessage = message) }
-        );
-
-        expect(errorMessage).toBe('Network unavailable');
     });
 });

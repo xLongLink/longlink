@@ -1,19 +1,21 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { useTranslation } from '@/lib/i18n';
-import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
 import { toast } from 'sonner';
-import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
-import { DataTable } from '@/components/DataTable';
-import CreateLocation from '@/components/dialogs/CreateLocation';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { useLocations } from '@/data/admin';
-import { useUserProfile } from '@/hooks/use-user';
-import { fetchApiVoid } from '@/lib/api';
-import { locationsQueryKey } from '@/lib/query-keys';
+import { type ColumnDef } from '@tanstack/react-table';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ApiLocation } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
+import { useLocations } from '@/data/admin';
+import { Badge } from '@/components/ui/badge';
 import { useDeleteDialog } from '@/lib/utils';
+import { useUserProfile } from '@/hooks/use-user';
+import { DataTable } from '@/components/DataTable';
+import { apiQueryKey, fetchApiJson } from '@/lib/api';
+import CreateLocation from '@/components/dialogs/CreateLocation';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { apiLocationMutationResponseSchema, parseApiResponse } from '@/lib/api-schemas';
+import { AdminActionMenu, AdminLocationBadge } from '@/components/admin/AdminTableElements';
+import { computesQueryKey, databasesQueryKey, locationsQueryKey, storagesQueryKey } from '@/lib/query-keys';
 
 /** Returns localized admin location table columns. */
 function createLocationColumnsBase(t: TFunction): Array<ColumnDef<ApiLocation>> {
@@ -23,6 +25,28 @@ function createLocationColumnsBase(t: TFunction): Array<ColumnDef<ApiLocation>> 
             header: t('columns.location'),
             cell: ({ row }) => {
                 return <AdminLocationBadge location={row.original} />;
+            },
+            meta: { className: 'min-w-56' },
+        },
+        {
+            accessorKey: 'status',
+            header: t('columns.status'),
+            cell: ({ row }) => {
+                const location = row.original;
+
+                return (
+                    <Badge variant={location.status === 'failed' ? 'destructive' : 'outline'}>{location.status}</Badge>
+                );
+            },
+            meta: { className: 'w-36' },
+        },
+        {
+            id: 'metadata',
+            header: t('columns.metadata'),
+            cell: ({ row }) => {
+                const location = row.original;
+
+                return <div className="text-xs text-muted-foreground">Platform {location.version ?? 'Pending'}</div>;
             },
             meta: { className: 'min-w-56' },
         },
@@ -38,12 +62,23 @@ export default function AdminLocation() {
 
     const deleteLocation = useMutation({
         mutationFn: async (locationId: string) => {
-            await fetchApiVoid(`/api/locations/${locationId}`, {
-                method: 'DELETE',
-            });
+            return fetchApiJson(
+                `/api/locations/${locationId}`,
+                {
+                    method: 'DELETE',
+                },
+                (value) => parseApiResponse(apiLocationMutationResponseSchema, value)
+            );
         },
         onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: locationsQueryKey() });
+            // Refresh every diagnostic owned by the location aggregate.
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: locationsQueryKey() }),
+                queryClient.invalidateQueries({ queryKey: computesQueryKey() }),
+                queryClient.invalidateQueries({ queryKey: databasesQueryKey() }),
+                queryClient.invalidateQueries({ queryKey: storagesQueryKey() }),
+                queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/operations') }),
+            ]);
             toast.success(t('admin.locationDeleted'));
         },
     });

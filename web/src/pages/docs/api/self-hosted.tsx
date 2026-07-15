@@ -1,12 +1,12 @@
 import { A } from '@/components/ui/a';
-import { Code } from '@/components/ui/code';
-import { Heading } from '@/components/ui/heading';
 import { P } from '@/components/ui/p';
+import { Code } from '@/components/ui/code';
 import { Stack } from '@/components/ui/stack';
+import { Heading } from '@/components/ui/heading';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export const metadata = {
-    lastUpdated: '2026-07-10',
+    lastUpdated: '2026-07-15',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/self-hosted.tsx',
 };
 
@@ -17,12 +17,20 @@ export const content = (
         </Heading>
         <P>
             Self-hosted mode runs the LongLink Platform and managed application workloads on infrastructure you operate.
-            You provide Kubernetes, PostgreSQL, S3-compatible object storage, OIDC, and public origins; LongLink
-            registers those backends and provisions organization and application resources through them.
+            You create each location with a Kubernetes kubeconfig, PostgreSQL connection, and S3-compatible object
+            storage connection. The Kubernetes service must implement <Code>type: LoadBalancer</Code>; LongLink derives
+            the public TLS gateway address and reconciles organization and application resources asynchronously. The
+            cluster CNI must enforce Kubernetes NetworkPolicy because application-to-application isolation depends on
+            it.
         </P>
         <P>
             The LongLink Platform container is published at{' '}
             <A href="https://github.com/xLongLink/longlink/pkgs/container/longlink">ghcr.io/xlonglink/longlink</A>.
+        </P>
+        <P>
+            Release images carry an immutable <Code>vX.Y.Z</Code> Platform version. On startup, the reconciler migrates
+            active locations to that release and records the version only after Kubernetes, database, and storage work
+            succeeds. Operation history reports failures and retry progress.
         </P>
         <Heading id="api-environment-variables" level="h2">
             API Environment Variables
@@ -33,6 +41,20 @@ export const content = (
                     <TableRow>
                         <TableHead className="bg-muted/50">Variable</TableHead>
                         <TableHead className="bg-muted/50">Purpose</TableHead>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="space-y-2">
+                            <div>
+                                <Code>RECONCILE_INTERVAL_SECONDS</Code>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                                Default: <Code>300</Code>
+                            </div>
+                        </TableCell>
+                        <TableCell className="whitespace-normal text-muted-foreground">
+                            Interval used to enqueue location drift repair. Multiple Platform containers may scan
+                            safely; the operation queue coalesces concurrent requests per location.
+                        </TableCell>
                     </TableRow>
                 </TableHeader>
                 <TableBody>

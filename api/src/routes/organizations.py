@@ -1,4 +1,4 @@
-from src import adapters, projections
+from src import adapters
 from uuid import UUID, uuid4
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authsupport
@@ -9,10 +9,15 @@ from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import OrganizationDatabaseResourceResponse
 from src.database.services import compute, storage, database, locations, operations, invitations, organizations
-from src.kubernetes.client import Kubernetes
 from src.models.applications import ApplicationResponse
-from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary, OrganizationMemberUpdate,
-                                      OrganizationInvitationCreate)
+from src.models.organizations import (
+    OrganizationCreate,
+    OrganizationDetails,
+    OrganizationSummary,
+    OrganizationMemberUpdate,
+    OrganizationInvitationCreate,
+    OrganizationMutationResponse,
+)
 from longlink.shared.constants import SHARED_SCHEMA
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -22,58 +27,6 @@ from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 router = APIRouter()
-
-
-async def _provision_organization_runtime(
-    organization: Organization,
-    compute_registry: ComputeRegistry,
-    database_registry: DatabaseRegistry,
-    storage_registry: StorageRegistry,
-) -> None:
-    """Provision the lightweight runtime resources required by one organization."""
-
-    # Create the organization namespace before workloads can target it.
-    await Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret).namespace(organization.slug)
-
-    # Create and migrate the organization database through its stored shared-schema URL.
-    shared_schema_url = organization.shared_schema_url
-    if shared_schema_url is None:
-        raise RuntimeError("Organization has no shared schema URL")
-    await adapters.database(database_registry).prepare_organization_database(organization.id, shared_schema_url)
-
-    # Project API-owned users into the existing organization schema.
-    await projections.sync_organization_users(organization)
-
-    # Create the shared organization storage bucket from the deterministic UUID-derived name.
-    storage = adapters.storage(storage_registry)
-    await storage.create(names.organization_shared_bucket(organization.id))
-
-
-async def _cleanup_organization_runtime(
-    organization: Organization,
-    compute_registry: ComputeRegistry,
-    database_registry: DatabaseRegistry,
-    storage_registry: StorageRegistry,
-) -> None:
-    """Best-effort cleanup for a failed synchronous organization bootstrap."""
-
-    # Remove the shared bucket first because it is independent of compute and database resources.
-    try:
-        await adapters.storage(storage_registry).delete(names.organization_shared_bucket(organization.id))
-    except Exception as exc:
-        logger.exception("Failed to clean up storage for organization '%s': %r", organization.slug, exc)
-
-    # Remove the organization database even if user synchronization failed midway.
-    try:
-        await adapters.database(database_registry).delete_database(organization.id)
-    except Exception as exc:
-        logger.exception("Failed to clean up database for organization '%s': %r", organization.slug, exc)
-
-    # Remove the namespace last so any namespace-scoped resources are deleted together.
-    try:
-        await Kubernetes(compute_registry.kubeconfig, compute_registry.proxy_secret).delete_namespace(organization.slug)
-    except Exception as exc:
-        logger.exception("Failed to clean up namespace for organization '%s': %r", organization.slug, exc)
 
 
 @router.get("/api/organizations", response_model=list[OrganizationSummary])
@@ -117,6 +70,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
         "country": organization.country,
         "location": organization.location,
         "location_id": organization.location_id,
+        "status": organization.status,
         "created_at": organization.created_at,
         "updated_at": organization.updated_at,
         "created_by": organization.created_by,
@@ -288,18 +242,10 @@ async def update_organization_member(
     if not updated:
         raise HTTPException(status_code=404, detail="Organization member not found")
 
-    # Project the changed API membership into the organization database.
-    try:
-        await projections.sync_organization_users(membership.organization)
 
-    # Surface synchronization failures as unavailable.
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail="Failed to synchronize organization members") from exc
-
-
-@router.delete("/api/organizations/{organization_id}", status_code=204)
+@router.delete("/api/organizations/{organization_id}", status_code=202, response_model=OrganizationMutationResponse)
 async def delete_organization(organization_id: UUID, user: User = Depends(authuser)):
-    """Soft-delete one organization and queue runtime resource removal."""
+    """Mark one organization absent and queue location reconciliation."""
 
     # Require organization ownership unless the caller is a platform administrator.
     if user.role != PlatformRoles.administrator:
@@ -315,10 +261,10 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
     if deleted is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    await operations.queue_organization_removal(
-        organization_id,
-        user=user,
-    )
+    operation = await operations.latest(deleted.location_id)
+    if operation is None:
+        raise RuntimeError("Organization reconciliation operation not found")
+    return {"organization": deleted, "operation": operation}
 
 
 async def _database_usage_rows(
@@ -485,12 +431,13 @@ async def _storage_usage_rows(
     return rows
 
 
-@router.post("/api/organizations", response_model=OrganizationSummary)
+@router.post("/api/organizations", response_model=OrganizationMutationResponse, status_code=202)
 async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)):
-    """Create a new organization."""
+    """Create organization desired state and queue location reconciliation."""
 
-    # Require a valid deployment location.
-    if await locations.get(payload.location_id) is None:
+    # Require a ready aggregate before accepting tenant desired state.
+    location = await locations.get(payload.location_id)
+    if location is None:
         raise HTTPException(status_code=404, detail="Location not found")
 
     # Generate the row ID before insert so derived resource names use the final UUID.
@@ -506,20 +453,10 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
 
-    # Organizations require a compute namespace in their location.
-    compute_registry = await compute.location(payload.location_id)
-    if compute_registry is None:
-        raise HTTPException(status_code=409, detail="Location has no compute registry")
-
-    # Organizations require a database in their location.
+    # The complete location aggregate owns the immutable database used to derive the shared URL.
     database_registry = await database.location(payload.location_id)
     if database_registry is None:
-        raise HTTPException(status_code=409, detail="Location has no database registry")
-
-    # Organizations require shared object storage in their location.
-    storage_registry = await storage.location(payload.location_id)
-    if storage_registry is None:
-        raise HTTPException(status_code=409, detail="Location has no storage registry")
+        raise HTTPException(status_code=409, detail="Location infrastructure is incomplete")
 
     # Store the shared-schema URL with the final database name.
     shared_schema_url = adapters.database(database_registry).shared_schema_url(organization_id)
@@ -535,21 +472,7 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
         shared_schema_url=shared_schema_url,
     )
 
-    # Runtime bootstrap is part of organization creation and must complete before the row is returned.
-    try:
-        await _provision_organization_runtime(organization, compute_registry, database_registry, storage_registry)
-
-    # Failed bootstrap must not leave a visible organization that cannot run applications.
-    except Exception as exc:
-        logger.exception("Failed to initialize runtime for organization '%s': %r", organization.slug, exc)
-        await _cleanup_organization_runtime(organization, compute_registry, database_registry, storage_registry)
-
-        # Remove the just-created platform rows so a user can retry the same organization name.
-        try:
-            await organizations.discard_created(organization.id)
-        except Exception as cleanup_exc:
-            logger.exception("Failed to discard organization '%s' after bootstrap failure: %r", organization.slug, cleanup_exc)
-
-        raise HTTPException(status_code=503, detail="Organization runtime provisioning failed") from exc
-
-    return organization
+    operation = await operations.latest(organization.location_id)
+    if operation is None:
+        raise RuntimeError("Organization reconciliation operation not found")
+    return {"organization": organization, "operation": operation}

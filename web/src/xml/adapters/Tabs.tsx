@@ -1,15 +1,15 @@
+import { Fragment, type ComponentProps } from 'react';
+import type { ASTNode, Props } from '@/xml/types';
+import { renderNode } from '@/xml/core/node';
+import { evaluate } from '@/xml/expressions';
+import { useXmlContext } from '@/xml/core/context';
+import { resolveTranslation } from '@/xml/core/i18n';
 import {
     Tabs as UITabs,
     TabsContent as UITabsContent,
     TabsList as UITabsList,
     TabsTrigger as UITabsTrigger,
 } from '@/components/ui/tabs';
-import { useXmlContext } from '@/xml/core/context';
-import { resolveTranslation } from '@/xml/core/i18n';
-import { renderNode } from '@/xml/core/node';
-import { evaluate } from '@/xml/expressions';
-import type { ASTNode, Props } from '@/xml/types';
-import { Fragment, type ComponentProps } from 'react';
 import { Icon } from './Icon';
 import { requireXmlString, resolveXmlString } from './props';
 

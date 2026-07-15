@@ -1,254 +1,364 @@
-from types import SimpleNamespace
+import pytest
+from datetime import timedelta
+from src.utils import names
+from src.operations import locations as location_operations
 from src.utils.jobs import execute
-from src.database.services import users, compute, database, locations, operations, applications, organizations
-from src.models.operations import OperationKind
-from src.models.applications import ApplicationStatus
-
-db = SimpleNamespace(
-    applications=applications,
-    compute=compute,
-    database=database,
-    locations=locations,
-    operations=operations,
-    organizations=organizations,
-    users=users,
-)
-
-
-def container_status(ready: bool = False, waiting_reason: str | None = None, terminated_exit_code: int | None = None) -> dict[str, object]:
-    """Build a minimal Kubernetes container status double."""
-
-    state: dict[str, object] = {}
-    if waiting_reason is not None:
-        state["waiting"] = {"reason": waiting_reason}
-
-    if terminated_exit_code is not None:
-        state["terminated"] = {"exitCode": terminated_exit_code}
-
-    return {"ready": ready, "state": state}
+from src.environments import env
+from longlink.utils.time import utcnow
+from src.models.metadata import LongLinkMetadata
+from src.models.statuses import LocationStatus, ApplicationStatus, OrganizationStatus
+from src.models.storages import StorageKind
+from src.database.session import session_scope
+from src.models.databases import DatabaseKind
+from src.database.services import compute, locations, operations, applications, organizations
+from src.kubernetes.gateway import GatewayTLSMaterial
+from src.kubernetes.reconcile import DesiredLocation, ReconcileResult
+from src.database.models.computes import ComputeRegistry
+from src.database.models.storages import StorageRegistry
+from src.database.models.databases import DatabaseRegistry
+from src.database.models.locations import Location
+from src.database.models.applications import Application
+from src.database.models.organizations import Organization
 
 
-def pod_status(phase: str, containers: list[dict[str, object]]) -> SimpleNamespace:
-    """Build a minimal Kubernetes pod double."""
+async def create_location_infrastructure(slug: str = "local") -> tuple[Location, ComputeRegistry]:
+    """Persist one complete location aggregate without queueing work."""
 
-    return SimpleNamespace(raw={"status": {"phase": phase, "containerStatuses": containers}})
+    # Handler tests need real registry rows while provider calls remain explicit boundaries.
+    async with session_scope() as session:
+        location = Location(name=slug.title(), slug=slug, country="CH", version=None)
+        compute_registry = ComputeRegistry(
+            name=f"{slug.title()} compute",
+            slug=f"{slug}-compute",
+            kubeconfig="apiVersion: v1\nclusters: []\n",
+            proxy_secret="proxy-secret",
+            location_id=location.id,
+        )
+        database_registry = DatabaseRegistry(
+            kind=DatabaseKind.postgresql,
+            name=f"{slug.title()} database",
+            slug=f"{slug}-database",
+            host="postgres.example",
+            port=5432,
+            password="control-password",
+            username="longlink",
+            location_id=location.id,
+        )
+        storage_registry = StorageRegistry(
+            kind=StorageKind.minio,
+            name=f"{slug.title()} storage",
+            slug=f"{slug}-storage",
+            endpoint_url="http://minio.example:9000",
+            runtime_endpoint_url="http://minio:9000",
+            access_key_id="control-access",
+            secret_access_key="control-secret",
+            location_id=location.id,
+        )
+        session.add_all([location, compute_registry, database_registry, storage_registry])
+        await session.commit()
+        await session.refresh(location)
+        await session.refresh(compute_registry)
+        return location, compute_registry
 
 
-async def test_execute_application_verify_operation_completes_running_application(monkeypatch) -> None:
-    """Complete an application.verify operation once the application is alive."""
+async def test_execute_location_reconcile_operation_converges_complete_desired_state(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reconcile active tenant state, persist gateway trust, and clean tombstoned provider state."""
 
     # Arrange
-    user = await db.users.upsert(
-        oidc="dev-oidc-subject",
-        email="dev@longlink.dev",
-        name="Dev User",
-        avatar=None,
+    location, compute_registry = await create_location_infrastructure()
+    deleted_at = utcnow() - timedelta(minutes=1)
+    active_organization = Organization(name="Acme", slug="acme", location_id=location.id)
+    deleted_organization = Organization(
+        name="Retired",
+        slug="retired",
+        location_id=location.id,
+        status=OrganizationStatus.deleting,
+        deleted_at=deleted_at,
     )
-    location = await db.locations.create("local", "Local testing", user, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, user)
-    application = await db.applications.create(
-        organization.id,
-        "dashboard",
+    active_application = Application(
+        organization_id=active_organization.id,
+        name="Dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
-        user=user,
+        database_password="database-password",
+        envs={"CUSTOM_VALUE": "configured"},
     )
-    operation = await db.operations.create(
-        OperationKind.application_verify,
-        application_id=application.id,
-        user=user,
+    deleted_application = Application(
+        organization_id=deleted_organization.id,
+        name="Legacy",
+        slug="legacy",
+        image="ghcr.io/longlink/legacy@sha256:resolved",
+        database_password="legacy-password",
+        status=ApplicationStatus.deleting,
+        deleted_at=deleted_at,
     )
-    calls: list[str] = []
+    async with session_scope() as session:
+        session.add_all([active_organization, deleted_organization, active_application, deleted_application])
+        await session.commit()
 
-    async def fake_compute(location_id, include_deleted: bool = False):
-        """Return a fake compute registry for startup verification."""
+    events: list[tuple[object, ...]] = []
+    reconciliations: list[tuple[DesiredLocation, str, GatewayTLSMaterial | None]] = []
 
-        assert not include_deleted
-        return SimpleNamespace(kubeconfig="apiVersion: v1\nclusters: []\n", proxy_secret="proxy-secret")
+    class FakeDatabase:
+        """Record database preparation and tombstone cleanup."""
+
+        def shared_schema_url(self, organization_id) -> str:
+            """Return one deterministic shared-schema URL."""
+
+            events.append(("shared-schema-url", organization_id))
+            return f"postgresql://shared/{organization_id.hex}"
+
+        async def prepare_organization_database(self, organization_id, shared_schema_url: str) -> None:
+            """Record organization database preparation."""
+
+            events.append(("prepare-database", organization_id, shared_schema_url))
+
+        async def schema(self, organization_id, application_id, password: str) -> dict[str, str | int]:
+            """Return stable runtime database connection fields."""
+
+            events.append(("prepare-schema", organization_id, application_id, password))
+            return {
+                "host": "runtime-postgres",
+                "port": 5432,
+                "password": "runtime-database-password",
+                "username": "runtime-user",
+                "database_name": organization_id.hex,
+            }
+
+        async def delete_schema(self, organization_id, application_id) -> None:
+            """Record application schema cleanup."""
+
+            events.append(("delete-schema", organization_id, application_id))
+
+        async def delete_database(self, organization_id) -> None:
+            """Record organization database cleanup."""
+
+            events.append(("delete-database", organization_id))
+
+    class FakeStorage:
+        """Record bucket preparation, credentials, and tombstone cleanup."""
+
+        async def create(self, bucket: str) -> str:
+            """Record and return one desired bucket."""
+
+            events.append(("create-bucket", bucket))
+            return bucket
+
+        async def credentials(self, bucket: str, access: str) -> dict[str, str]:
+            """Return stable application storage credentials."""
+
+            events.append(("create-credentials", bucket, access))
+            return {"access_key_id": "runtime-access", "secret_access_key": "runtime-secret"}
+
+        async def revoke(self, bucket: str) -> None:
+            """Record runtime credential revocation."""
+
+            events.append(("revoke-credentials", bucket))
+
+        async def delete(self, bucket: str) -> None:
+            """Record bucket cleanup."""
+
+            events.append(("delete-bucket", bucket))
 
     class FakeKubernetes:
-        """Fake Kubernetes client for startup verification."""
+        """Capture the complete desired location submitted by reconciliation."""
 
-        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
-            """Accept the compute registry connection fields."""
+        def __init__(self, kubeconfig: str) -> None:
+            """Accept only the location compute registry kubeconfig."""
 
+            assert kubeconfig == compute_registry.kubeconfig
             self.applications = self
 
-        async def ready(self, application: str) -> bool:
-            """Pretend the application is already ready."""
+        async def reconcile(
+            self,
+            desired: DesiredLocation,
+            proxy_secret: str,
+            existing_tls: GatewayTLSMaterial | None = None,
+            fence=None,
+            stage_tls=None,
+        ) -> ReconcileResult:
+            """Return stable gateway connection material."""
 
-            calls.append("startup-check")
+            reconciliations.append((desired, proxy_secret, existing_tls))
+            return ReconcileResult(
+                gateway_url="https://gateway.example",
+                gateway_ca_certificate="gateway-ca",
+                gateway_tls_certificate="gateway-certificate",
+                gateway_tls_private_key="gateway-private-key",
+            )
+
+        async def ready(self, application_id: str) -> bool:
+            """Report the active application Deployment ready."""
+
+            events.append(("application-ready", application_id))
             return True
 
-    monkeypatch.setattr(
-        "src.operations.applications.compute.location",
-        fake_compute,
-    )
-    monkeypatch.setattr(
-        "src.operations.applications.Kubernetes",
-        FakeKubernetes,
-    )
+    fake_database = FakeDatabase()
+    fake_storage = FakeStorage()
+
+    def database_adapter(registry: DatabaseRegistry) -> FakeDatabase:
+        """Return the test database adapter for the persisted registry."""
+
+        assert registry.location_id == location.id
+        return fake_database
+
+    def storage_adapter(registry: StorageRegistry) -> FakeStorage:
+        """Return the test storage adapter for the persisted registry."""
+
+        assert registry.location_id == location.id
+        return fake_storage
+
+    async def sync_organization_users(organization: Organization) -> None:
+        """Record projection synchronization at its external boundary."""
+
+        events.append(("sync-users", organization.id))
+
+    async def image_metadata(payload) -> LongLinkMetadata:
+        """Resolve the submitted tag to one immutable image reference."""
+
+        assert payload.image == "ghcr.io/longlink/dashboard:latest"
+        metadata = LongLinkMetadata(digest="sha256:resolved")
+        metadata.image = "ghcr.io/longlink/dashboard@sha256:resolved"
+        return metadata
+
+    monkeypatch.setattr(location_operations.adapters, "database", database_adapter)
+    monkeypatch.setattr(location_operations.adapters, "storage", storage_adapter)
+    monkeypatch.setattr(location_operations.projections, "sync_organization_users", sync_organization_users)
+    monkeypatch.setattr(location_operations.environments, "application_image_metadata", image_metadata)
+    monkeypatch.setattr(location_operations, "Kubernetes", FakeKubernetes)
+    operation = await operations.enqueue(location.id)
+    claimed = await operations.claim_next()
+    assert claimed is not None
+    assert claimed.id == operation.id
 
     # Act
-    claimed = await db.operations.claim(operation.id)
-    assert claimed is not None
-    await execute(claimed)
+    completed = await execute(claimed, location_operations.reconcile)
 
     # Assert
-    assert calls == ["startup-check"]
-    refreshed_application = await db.applications.get(application.id)
+    assert completed.status == "completed"
+    assert completed.stopped_at is not None
+    assert len(reconciliations) == 1
+    desired, proxy_secret, existing_tls = reconciliations[0]
+    assert desired.id == location.id
+    assert desired.deleting is False
+    assert [(item.id, item.slug) for item in desired.organizations] == [(active_organization.id, "acme")]
+    assert len(desired.applications) == 1
+    desired_application = desired.applications[0]
+    assert desired_application.id == active_application.id
+    assert desired_application.organization_id == active_organization.id
+    assert desired_application.namespace == "acme"
+    assert desired_application.image == "ghcr.io/longlink/dashboard@sha256:resolved"
+    assert desired_application.envs == {
+        "CUSTOM_VALUE": "configured",
+        "LONGLINK_ENV": "production",
+        "LONGLINK_DATABASE_HOST": "runtime-postgres",
+        "LONGLINK_DATABASE_NAME": active_organization.id.hex,
+        "LONGLINK_DATABASE_PASSWORD": "runtime-database-password",
+        "LONGLINK_DATABASE_PORT": "5432",
+        "LONGLINK_DATABASE_SCHEMA": active_application.id.hex,
+        "LONGLINK_DATABASE_USERNAME": "runtime-user",
+        "LONGLINK_STORAGE_BUCKET": names.application_bucket(active_application.id),
+        "LONGLINK_STORAGE_ENDPOINT_URL": "http://minio:9000",
+        "LONGLINK_STORAGE_PASSWORD": "runtime-secret",
+        "LONGLINK_STORAGE_SHARED_BUCKET": names.organization_shared_bucket(active_organization.id),
+        "LONGLINK_STORAGE_USERNAME": "runtime-access",
+    }
+    assert proxy_secret == "proxy-secret"
+    assert existing_tls is None
+    assert ("delete-schema", deleted_organization.id, deleted_application.id) in events
+    assert ("revoke-credentials", names.application_bucket(deleted_application.id)) in events
+    assert ("delete-bucket", names.application_bucket(deleted_application.id)) in events
+    assert ("delete-database", deleted_organization.id) in events
+    assert ("delete-bucket", names.organization_shared_bucket(deleted_organization.id)) in events
+
+    refreshed_location = await locations.get(location.id)
+    refreshed_compute = await compute.location(location.id)
+    refreshed_organization = await organizations.get(active_organization.id)
+    refreshed_application = await applications.get(active_application.id)
+    removed_organization = await organizations.get(deleted_organization.id, include_deleted=True)
+    removed_application = await applications.get(deleted_application.id, include_deleted=True)
+    assert refreshed_location is not None
+    assert refreshed_location.status == LocationStatus.ready
+    assert refreshed_location.version == env.VERSION
+    assert refreshed_compute is not None
+    assert refreshed_compute.gateway_url == "https://gateway.example"
+    assert refreshed_compute.gateway_ca_certificate == "gateway-ca"
+    assert refreshed_compute.gateway_tls_certificate == "gateway-certificate"
+    assert refreshed_compute.gateway_tls_private_key == "gateway-private-key"
+    assert refreshed_organization is not None
+    assert refreshed_organization.status == OrganizationStatus.running
+    assert refreshed_organization.shared_schema_url == f"postgresql://shared/{active_organization.id.hex}"
     assert refreshed_application is not None
     assert refreshed_application.status == ApplicationStatus.running
-    refreshed = await db.operations.get(operation.id)
-    assert refreshed is not None
-    assert refreshed.status == "completed"
-    assert refreshed.started_at is not None
-    assert refreshed.stopped_at is not None
+    assert refreshed_application.image == "ghcr.io/longlink/dashboard@sha256:resolved"
+    assert refreshed_application.digest == "sha256:resolved"
+    assert refreshed_application.storage_access_key_id == "runtime-access"
+    assert refreshed_application.storage_secret_access_key == "runtime-secret"
+    assert removed_organization is None
+    assert removed_application is None
 
 
-async def test_execute_application_verify_operation_marks_failed_when_dead(monkeypatch) -> None:
-    """Fail an application.verify operation when the application crashes during startup."""
-
-    # Arrange
-    user = await db.users.upsert(
-        oidc="dev-oidc-subject-existing",
-        email="dev-existing@longlink.dev",
-        name="Dev User Existing",
-        avatar=None,
-    )
-    location = await db.locations.create("local", "Local testing", user, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, user)
-    application = await db.applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=user,
-    )
-    operation = await db.operations.create(
-        OperationKind.application_verify,
-        application_id=application.id,
-        user=user,
-    )
-    calls: list[str] = []
-
-    async def fake_compute(location_id, include_deleted: bool = False):
-        """Return a fake compute registry for startup verification."""
-
-        assert not include_deleted
-        return SimpleNamespace(kubeconfig="apiVersion: v1\nclusters: []\n", proxy_secret="proxy-secret")
-
-    class FakeKubernetes:
-        """Fake Kubernetes client for startup verification."""
-
-        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
-            """Accept the compute registry connection fields."""
-
-            self.applications = self
-
-        async def ready(self, application: str) -> bool:
-            """Pretend the deployment is not ready yet."""
-
-            return False
-
-        async def pod(self, application: str) -> SimpleNamespace:
-            """Return the current pod in a terminal startup state."""
-
-            calls.append("startup-check")
-            return pod_status("Pending", [container_status(waiting_reason="ImagePullBackOff")])
-
-    monkeypatch.setattr(
-        "src.operations.applications.compute.location",
-        fake_compute,
-    )
-    monkeypatch.setattr(
-        "src.operations.applications.Kubernetes",
-        FakeKubernetes,
-    )
-
-    # Act
-    claimed = await db.operations.claim(operation.id)
-    assert claimed is not None
-    await execute(claimed)
-
-    # Assert
-    assert calls == ["startup-check"]
-    refreshed_application = await db.applications.get(application.id)
-    assert refreshed_application is not None
-    assert refreshed_application.status == ApplicationStatus.failed
-    refreshed = await db.operations.get(operation.id)
-    assert refreshed is not None
-    assert refreshed.status == "failed"
-    assert refreshed.started_at is not None
-    assert refreshed.stopped_at is not None
-
-
-async def test_execute_application_verify_operation_releases_when_only_pod_is_ready(monkeypatch) -> None:
-    """Release application.verify until the current Deployment reports readiness."""
+async def test_execute_location_reconcile_operation_retries_transient_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Record a location failure and schedule retryable reconciliation work."""
 
     # Arrange
-    user = await db.users.upsert(
-        oidc="dev-oidc-subject-waiting",
-        email="dev-waiting@longlink.dev",
-        name="Dev User Waiting",
-        avatar=None,
-    )
-    location = await db.locations.create("local", "Local testing", user, "CH")
-    organization = await db.organizations.create("acme", "acme", location.id, user)
-    application = await db.applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=user,
-    )
-    operation = await db.operations.create(
-        OperationKind.application_verify,
-        application_id=application.id,
-        user=user,
-    )
+    location, compute_registry = await create_location_infrastructure()
 
-    async def fake_compute(location_id, include_deleted: bool = False):
-        """Return a fake compute registry for startup verification."""
+    class FailingKubernetes:
+        """Raise a transient provider error after desired state is built."""
 
-        assert not include_deleted
-        return SimpleNamespace(kubeconfig="apiVersion: v1\nclusters: []\n", proxy_secret="proxy-secret")
+        def __init__(self, kubeconfig: str) -> None:
+            """Accept only the location compute registry kubeconfig."""
 
-    class FakeKubernetes:
-        """Fake Kubernetes client for startup verification."""
-
-        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
-            """Accept the compute registry connection fields."""
-
+            assert kubeconfig == compute_registry.kubeconfig
             self.applications = self
 
-        async def ready(self, application: str) -> bool:
-            """Pretend the deployment is not ready yet."""
+        async def reconcile(
+            self,
+            desired: DesiredLocation,
+            proxy_secret: str,
+            existing_tls: GatewayTLSMaterial | None = None,
+            fence=None,
+            stage_tls=None,
+        ) -> ReconcileResult:
+            """Fail one provider reconciliation attempt."""
 
-            return False
+            assert desired.organizations == ()
+            assert desired.applications == ()
+            assert proxy_secret == "proxy-secret"
+            assert existing_tls is None
+            raise RuntimeError("https://admin:password@db.example?token=secret")
 
-        async def pod(self, application: str) -> SimpleNamespace:
-            """Return a ready pod before the Deployment status catches up."""
+    def database_adapter(registry: DatabaseRegistry) -> object:
+        """Return an unused database adapter for the empty tenant snapshot."""
 
-            return pod_status("Running", [container_status(ready=True)])
+        assert registry.location_id == location.id
+        return object()
 
-    monkeypatch.setattr(
-        "src.operations.applications.compute.location",
-        fake_compute,
-    )
-    monkeypatch.setattr(
-        "src.operations.applications.Kubernetes",
-        FakeKubernetes,
-    )
+    def storage_adapter(registry: StorageRegistry) -> object:
+        """Return an unused storage adapter for the empty tenant snapshot."""
+
+        assert registry.location_id == location.id
+        return object()
+
+    monkeypatch.setattr(location_operations.adapters, "database", database_adapter)
+    monkeypatch.setattr(location_operations.adapters, "storage", storage_adapter)
+    monkeypatch.setattr(location_operations, "Kubernetes", FailingKubernetes)
+    operation = await operations.enqueue(location.id)
+    claimed = await operations.claim_next()
+    assert claimed is not None
+    assert claimed.id == operation.id
 
     # Act
-    claimed = await db.operations.claim(operation.id)
-    assert claimed is not None
-    await execute(claimed)
+    deferred = await execute(claimed, location_operations.reconcile)
 
     # Assert
-    refreshed = await db.operations.get(operation.id)
-    assert refreshed is not None
-    assert refreshed.status == "scheduled"
-    assert refreshed.started_at is None
-    assert refreshed.stopped_at is None
+    expected_error = "https://<redacted>:<redacted>@db.example?token=<redacted>"
+    assert deferred.status == "scheduled"
+    assert deferred.started_at is None
+    assert deferred.stopped_at is None
+    assert deferred.attempt_count == 1
+    assert deferred.error == expected_error
+    refreshed_location = await locations.get(location.id)
+    assert refreshed_location is not None
+    assert refreshed_location.status == LocationStatus.failed

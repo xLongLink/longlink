@@ -2,16 +2,21 @@ import pytest
 from uuid import uuid4
 from types import SimpleNamespace
 from fastapi import HTTPException
+from factories import create_ready_location
+from src.environments import env
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
+from src.models.statuses import LocationStatus
 from src.database.session import get_session
-from src.database.services import locations, invitations, organizations
+from src.database.services import locations, operations, invitations, organizations
+from src.models.operations import OperationStatus
 from src.database.models.users import User
 from src.database.models.invitations import OrganizationInvitation
 
 db = SimpleNamespace(
     invitations=invitations,
     locations=locations,
+    operations=operations,
     organizations=organizations,
 )
 
@@ -23,7 +28,7 @@ async def test_create_normalizes_invitation_email_and_lists_active_invitations(
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, "CH")
+    location = await create_ready_location(owner, slug="primary", name="Primary")
     organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
@@ -34,6 +39,8 @@ async def test_create_normalizes_invitation_email_and_lists_active_invitations(
         owner,
     )
     invitations = await db.organizations.invitations(organization.id)
+    reloaded_location = await db.locations.get(location.id)
+    open_operations = [item for item in await db.operations.fetch() if item.stopped_at is None]
 
     # Assert
     assert invitation.email == "invited@example.com"
@@ -41,6 +48,13 @@ async def test_create_normalizes_invitation_email_and_lists_active_invitations(
     assert invitation.created_id == owner.id
     assert invitation.updated_id == owner.id
     assert [item.id for item in invitations] == [invitation.id]
+    assert reloaded_location is not None
+    assert reloaded_location.status == LocationStatus.ready
+    assert reloaded_location.version == env.VERSION
+    assert len(open_operations) == 1
+    assert open_operations[0].location_id == location.id
+    assert open_operations[0].platform_version == env.VERSION
+    assert open_operations[0].status == OperationStatus.scheduled
 
 
 async def test_create_rejects_invitation_for_missing_organization(users: tuple[User, User, User]) -> None:
@@ -64,7 +78,7 @@ async def test_create_rejects_invitation_for_existing_member_email(users: tuple[
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, "CH")
+    location = await create_ready_location(owner, slug="primary", name="Primary")
     organization = await db.organizations.create("acme", "acme", location.id, owner)
 
     # Act
@@ -81,7 +95,7 @@ async def test_create_rejects_duplicate_invitation_email_case_insensitively(user
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, "CH")
+    location = await create_ready_location(owner, slug="primary", name="Primary")
     organization = await db.organizations.create("acme", "acme", location.id, owner)
     await db.invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 
@@ -99,7 +113,7 @@ async def test_organization_invitations_ignore_deleted_invitations(users: tuple[
 
     # Arrange
     owner = users[0]
-    location = await db.locations.create("primary", "Primary", owner, "CH")
+    location = await create_ready_location(owner, slug="primary", name="Primary")
     organization = await db.organizations.create("acme", "acme", location.id, owner)
     invitation = await db.invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 

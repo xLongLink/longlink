@@ -1,8 +1,8 @@
+import type { Props } from '@/xml/types';
+import { renderNode } from '@/xml/core/node';
 import { Heading } from '@/components/ui/heading';
 import { useXmlContext } from '@/xml/core/context';
 import { resolveTranslation } from '@/xml/core/i18n';
-import { renderNode } from '@/xml/core/node';
-import type { Props } from '@/xml/types';
 import { headingId } from './heading';
 
 /** Renders a quaternary heading with typographic defaults. */

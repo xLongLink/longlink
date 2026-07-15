@@ -12,6 +12,7 @@ RUN bun run build:api
 FROM python:3.14-slim
 
 ARG VERSION=v0.0.0
+ENV VERSION=${VERSION}
 
 LABEL org.opencontainers.image.title="longlink-api"
 LABEL org.opencontainers.image.description="LongLink backend API"

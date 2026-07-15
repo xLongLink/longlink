@@ -34,68 +34,9 @@ const ROLE_SCOPES = {
     administrator: 'platform',
 } as const satisfies Record<RankedRole, 'platform' | 'tenant'>;
 
-/** Returns the numeric rank for one role within its role scope. */
-export function roleRank(role: RankedRole | null | undefined) {
-    return role ? ROLE_RANKS[role] : 0;
-}
-
 /** Returns whether one role is at least as privileged as the required role. */
 export function hasMinimumRole(role: RankedRole | null | undefined, requiredRole: RankedRole) {
     return role !== null && role !== undefined && ROLE_SCOPES[role] === ROLE_SCOPES[requiredRole]
-        ? roleRank(role) >= roleRank(requiredRole)
+        ? ROLE_RANKS[role] >= ROLE_RANKS[requiredRole]
         : false;
-}
-
-/** Returns whether an organization role grants elevated application-level access. */
-export function canUseOrganizationApplicationAccess(organizationRole: Role | null | undefined) {
-    return hasMinimumRole(organizationRole, 'maintain');
-}
-
-/** Returns whether a user can create applications in an organization. */
-export function canCreateApplication(organizationRole: Role | null | undefined) {
-    return canUseOrganizationApplicationAccess(organizationRole);
-}
-
-/** Returns whether a user can invite organization members. */
-export function canCreateOrganizationInvitation(organizationRole: Role | null | undefined) {
-    return hasMinimumRole(organizationRole, 'maintain');
-}
-
-/** Returns whether a user can inspect organization infrastructure resources. */
-export function canInspectOrganizationResources(organizationRole: Role | null | undefined) {
-    return hasMinimumRole(organizationRole, 'maintain');
-}
-
-/** Returns whether a user can manage organization members. */
-export function canManageOrganizationMembers(organizationRole: Role | null | undefined) {
-    return hasMinimumRole(organizationRole, 'admin');
-}
-
-/** Returns whether a user can manage organization owner assignments. */
-export function canManageOrganizationOwnerRole(organizationRole: Role | null | undefined) {
-    return hasMinimumRole(organizationRole, 'owner');
-}
-
-/** Returns whether a user can open an application runtime. */
-export function canAccessApplication(
-    organizationRole: Role | null | undefined,
-    applicationRole: ApplicationRole | null
-) {
-    return applicationRole !== null || canUseOrganizationApplicationAccess(organizationRole);
-}
-
-/** Returns whether a user can view application logs. */
-export function canViewApplicationLogs(
-    organizationRole: Role | null | undefined,
-    applicationRole: ApplicationRole | null
-) {
-    return hasMinimumRole(applicationRole, 'maintain') || canUseOrganizationApplicationAccess(organizationRole);
-}
-
-/** Returns whether a user can manage application lifecycle actions. */
-export function canManageApplication(
-    organizationRole: Role | null | undefined,
-    applicationRole: ApplicationRole | null
-) {
-    return hasMinimumRole(applicationRole, 'maintain') || canUseOrganizationApplicationAccess(organizationRole);
 }

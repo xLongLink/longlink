@@ -75,20 +75,19 @@ def upgrade() -> None:
         sa.Column("slug", sa.String(length=128), nullable=False),
         sa.Column("country", sa.String(length=2), nullable=False),
         sa.Column(
-            "provider",
+            "status",
             sa.Enum(
-                "local",
-                "infomaniak",
-                "ovh",
-                "scaleway",
-                "hetzner",
-                "exoscale",
-                name="location_provider_enum",
+                "provisioning",
+                "ready",
+                "failed",
+                "deleting",
+                name="location_status_enum",
                 native_enum=False,
                 create_constraint=True,
             ),
             nullable=False,
         ),
+        sa.Column("version", sa.String(length=128), nullable=True),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("created_id", sa.Uuid(), nullable=True),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
@@ -118,8 +117,12 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=128), nullable=False),
         sa.Column("slug", sa.String(length=255), nullable=False),
         sa.Column("kubeconfig", sa.Text(), nullable=False),
-        sa.Column("gateway_url", sa.String(length=512), nullable=False),
+        sa.Column("gateway_url", sa.String(length=512), nullable=True),
         sa.Column("proxy_secret", sa.String(length=255), nullable=False),
+        sa.Column("gateway_ca_certificate", sa.Text(), nullable=True),
+        sa.Column("gateway_previous_ca_certificate", sa.Text(), nullable=True),
+        sa.Column("gateway_tls_certificate", sa.Text(), nullable=True),
+        sa.Column("gateway_tls_private_key", sa.Text(), nullable=True),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("created_id", sa.Uuid(), nullable=True),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
@@ -148,8 +151,6 @@ def upgrade() -> None:
         sa.UniqueConstraint("name"),
         sa.UniqueConstraint("slug"),
     )
-    op.create_index(op.f("ix_compute_registries_proxy_secret"), "compute_registries", ["proxy_secret"], unique=False)
-
     # Create database registries after their user and location dependencies.
     op.create_table(
         "database_registries",
@@ -200,6 +201,7 @@ def upgrade() -> None:
         sa.Column("country", sa.String(length=2), nullable=False),
         sa.Column("location_id", sa.Uuid(), nullable=False),
         sa.Column("shared_schema_url", sa.String(length=2048), nullable=True),
+        sa.Column("status", sa.String(length=20), nullable=False),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("created_id", sa.Uuid(), nullable=True),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
@@ -267,27 +269,28 @@ def upgrade() -> None:
         sa.UniqueConstraint("slug"),
     )
 
-    # Create applications after organizations and all runtime registries.
+    # Create applications after organizations.
     op.create_table(
         "applications",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("organization_id", sa.Uuid(), nullable=False),
-        sa.Column("compute_registry_id", sa.Uuid(), nullable=True),
-        sa.Column("storage_registry_id", sa.Uuid(), nullable=True),
-        sa.Column("database_registry_id", sa.Uuid(), nullable=True),
         sa.Column("name", sa.String(length=100), nullable=False),
         sa.Column("slug", sa.String(length=100), nullable=False),
         sa.Column("icon", sa.String(length=50), nullable=True),
-        sa.Column("image", sa.String(length=255), nullable=False),
+        sa.Column("image", sa.String(length=512), nullable=False),
         sa.Column("sdk", sa.String(length=128), nullable=True),
         sa.Column("digest", sa.String(length=255), nullable=True),
         sa.Column("version", sa.String(length=128), nullable=True),
         sa.Column("description", sa.String(length=255), nullable=True),
         sa.Column("envs", sa.JSON(), nullable=False),
-        sa.Column("storage_runtime_key_id", sa.String(length=255), nullable=True),
-        sa.Column("storage_runtime_role_id", sa.String(length=255), nullable=True),
-        sa.Column("storage_runtime_secret_access_key", sa.String(length=255), nullable=True),
-        sa.Column("status", sa.Enum("creating", "running", "failed", name="application_status_enum", native_enum=False), nullable=False),
+        sa.Column("database_password", sa.String(length=255), nullable=False),
+        sa.Column("storage_access_key_id", sa.String(length=255), nullable=True),
+        sa.Column("storage_secret_access_key", sa.String(length=255), nullable=True),
+        sa.Column(
+            "status",
+            sa.Enum("creating", "running", "failed", "deleting", name="application_status_enum", native_enum=False),
+            nullable=False,
+        ),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("created_id", sa.Uuid(), nullable=True),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
@@ -295,16 +298,8 @@ def upgrade() -> None:
         sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("deleted_id", sa.Uuid(), nullable=True),
         sa.ForeignKeyConstraint(
-            ["compute_registry_id"],
-            ["compute_registries.id"],
-        ),
-        sa.ForeignKeyConstraint(
             ["created_id"],
             ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["database_registry_id"],
-            ["database_registries.id"],
         ),
         sa.ForeignKeyConstraint(
             ["deleted_id"],
@@ -313,10 +308,6 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ["organization_id"],
             ["organizations.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["storage_registry_id"],
-            ["storage_registries.id"],
         ),
         sa.ForeignKeyConstraint(
             ["updated_id"],
@@ -398,51 +389,29 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("user_id", "organization_id"),
     )
 
-    # Create operations after their application, organization, and user dependencies.
+    # Create one coalesced reconciliation operation per location.
     op.create_table(
         "operations",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column(
-            "kind",
-            sa.Enum(
-                "application.verify",
-                "application.remove",
-                "organization.remove",
-                name="operation_kind_enum",
-                native_enum=False,
-                create_constraint=True,
-            ),
-            nullable=False,
-        ),
-        sa.Column("application_id", sa.Uuid(), nullable=True),
-        sa.Column("organization_id", sa.Uuid(), nullable=True),
+        sa.Column("location_id", sa.Uuid(), nullable=False),
         sa.Column("error", sa.String(length=2000), nullable=True),
-        sa.Column("lease_token", sa.String(length=100), nullable=True),
+        sa.Column("attempt_count", sa.Integer(), nullable=False),
+        sa.Column("platform_version", sa.String(length=128), nullable=False),
         sa.Column("lease_expires_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("created_id", sa.Uuid(), nullable=True),
-        sa.Column("scheduled_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("updated_id", sa.Uuid(), nullable=True),
+        sa.Column("scheduled_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("started_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("stopped_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["application_id"],
-            ["applications.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["created_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["organization_id"],
-            ["organizations.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["updated_id"],
-            ["users.id"],
-        ),
+        sa.ForeignKeyConstraint(["location_id"], ["locations.id"]),
         sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_index(
+        "uq_operations_open_location_id",
+        "operations",
+        ["location_id"],
+        unique=True,
+        postgresql_where=sa.text("stopped_at IS NULL"),
+        sqlite_where=sa.text("stopped_at IS NULL"),
     )
 
     # Create application memberships after applications, organizations, and users.
@@ -497,7 +466,6 @@ def downgrade() -> None:
     op.drop_table("storage_registries")
     op.drop_table("organizations")
     op.drop_table("database_registries")
-    op.drop_index(op.f("ix_compute_registries_proxy_secret"), table_name="compute_registries")
     op.drop_table("compute_registries")
     op.drop_table("locations")
     op.drop_table("users")

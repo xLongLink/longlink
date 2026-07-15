@@ -65,6 +65,7 @@
         "locationDeleted": "Location deleted",
         "locationId": "Location ID",
         "locationLabel": "location {{name}}",
+        "locationReconciliation": "Location reconciliation",
         "locationsDescription": "Manage datacenter and cloud region locations for infrastructure deployments.",
         "locationsTitle": "Locations",
         "operationsTitle": "Operations",

@@ -1,6 +1,6 @@
-import { parseXML } from '@/xml/core/parser';
-import type { ExecutionContext } from '@/xml/types';
 import { describe, expect, it } from 'bun:test';
+import type { ExecutionContext } from '@/xml/types';
+import { parseXML } from '@/xml/core/parser';
 import { renderXmlToMarkup } from '../helpers';
 
 describe('DataTable', () => {

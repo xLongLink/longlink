@@ -1,6 +1,6 @@
 import i18next, { type Resource, type i18n } from 'i18next';
-import { evaluate } from '../expressions';
 import type { ASTProps, ExecutionContext, XmlTranslations } from '../types';
+import { evaluate } from '../expressions';
 
 const defaultLocale = 'en';
 const pluralCategoryOrder = ['other', 'one', 'few', 'many', 'two', 'zero'] as const;

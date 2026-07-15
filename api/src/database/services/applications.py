@@ -1,14 +1,17 @@
+import secrets
 from uuid import UUID, uuid4
 from fastapi import HTTPException
 from src.utils import names
-from sqlalchemy import and_, select
+from sqlalchemy import and_, delete, select
 from sqlalchemy.orm import selectinload
 from src.models.roles import ApplicationRoles
 from longlink.utils.time import utcnow
-from src.models.statuses import ApplicationStatus
+from src.models.statuses import LocationStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
+from src.database.services import operations
 from src.adapters.storage.base import StorageRuntimeCredentials
 from src.database.models.users import User
+from src.database.models.locations import Location
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
@@ -35,6 +38,42 @@ async def fetch() -> list[Application]:
         )
         result = await session.execute(statement)
         return result.scalars().all()
+
+
+async def location(location_id: UUID, include_deleted: bool = False) -> list[Application]:
+    """Return applications belonging to organizations in one location."""
+
+    # Reconciliation loads active and pending-removal rows through the same query shape.
+    async with session_scope() as session:
+        conditions = [Organization.location_id == location_id]
+        if not include_deleted:
+            conditions.extend([Organization.deleted_at.is_(None), Application.deleted_at.is_(None)])
+        statement = (
+            select(Application)
+            .join(Organization, Organization.id == Application.organization_id)
+            .options(selectinload(Application.organization))
+            .where(*conditions)
+        )
+        result = await session.execute(statement)
+        return result.scalars().all()
+
+
+async def purge(application_id: UUID) -> bool:
+    """Hard-delete one application after all external runtime resources are gone."""
+
+    # The tombstone remains the retry marker until cleanup can finish with this transaction.
+    async with session_scope() as session:
+        application = (
+            await session.execute(select(Application).where(Application.id == application_id).with_for_update())
+        ).scalar_one_or_none()
+        if application is None:
+            return False
+        if application.deleted_at is None:
+            raise RuntimeError("Active applications cannot be purged")
+        await session.execute(delete(UserApplication).where(UserApplication.application_id == application_id))
+        await session.execute(delete(Application).where(Application.id == application_id))
+        await session.commit()
+        return True
 
 
 async def get(application_id: UUID, include_deleted: bool = False) -> Application | None:
@@ -180,9 +219,7 @@ async def create(
     image: str,
     user: User,
     status: ApplicationStatus = ApplicationStatus.creating,
-    compute_registry_id: UUID | None = None,
-    database_registry_id: UUID | None = None,
-    storage_registry_id: UUID | None = None,
+    database_password: str | None = None,
     version: str | None = None,
     sdk: str | None = None,
     description: str | None = None,
@@ -194,10 +231,22 @@ async def create(
 
     # Create the application and owner membership transactionally.
     async with session_scope() as session:
-        # Require the owning organization to exist.
-        organization = await session.get(Organization, organization_id)
-        if organization is None:
+        # Resolve the parent before taking locks in aggregate order.
+        current = await session.get(Organization, organization_id)
+        if current is None:
             raise HTTPException(status_code=404, detail="Organization not found")
+        location = (
+            await session.execute(select(Location).where(Location.id == current.location_id).with_for_update())
+        ).scalar_one_or_none()
+        organization = (
+            await session.execute(select(Organization).where(Organization.id == organization_id).with_for_update())
+        ).scalar_one_or_none()
+        if location is None or organization is None:
+            raise HTTPException(status_code=404, detail="Organization not found")
+        if location.deleted_at is not None or location.status != LocationStatus.ready:
+            raise HTTPException(status_code=409, detail="Location is not ready")
+        if organization.deleted_at is not None or organization.status != OrganizationStatus.running:
+            raise HTTPException(status_code=409, detail="Organization is not ready")
 
         # Check slug uniqueness so K8s resource names stay collision-free.
         slug_statement = select(Application.id).where(
@@ -217,9 +266,6 @@ async def create(
         application = Application(
             id=application_id,
             organization_id=organization_id,
-            compute_registry_id=compute_registry_id,
-            database_registry_id=database_registry_id,
-            storage_registry_id=storage_registry_id,
             name=name,
             slug=slug,
             status=status,
@@ -230,6 +276,7 @@ async def create(
             image=image,
             icon=icon,
             envs=dict(envs or {}),
+            database_password=database_password or secrets.token_urlsafe(24),
         )
         application.created_id = user.id
         application.updated_id = user.id
@@ -244,6 +291,8 @@ async def create(
                 updated_id=user.id,
             )
         )
+        location.updated_id = user.id
+        await operations.enqueue_in_session(session, location.id)
         await session.commit()
 
         statement = (
@@ -262,29 +311,23 @@ async def create(
         return result.scalar_one()
 
 
-def storage_runtime_credentials(application: Application) -> StorageRuntimeCredentials | None:
-    """Return persisted runtime storage credentials for one application."""
+def storage_credentials(application: Application) -> StorageRuntimeCredentials | None:
+    """Return persisted storage credentials for one application."""
 
-    # Runtime credentials are usable only when both storage credential fields were stored.
-    if application.storage_runtime_key_id is None or application.storage_runtime_secret_access_key is None:
+    # Credentials are usable only when both storage credential fields were stored.
+    if application.storage_access_key_id is None or application.storage_secret_access_key is None:
         return None
 
-    credentials: StorageRuntimeCredentials = {
-        "access_key_id": application.storage_runtime_key_id,
-        "secret_access_key": application.storage_runtime_secret_access_key,
+    return {
+        "access_key_id": application.storage_access_key_id,
+        "secret_access_key": application.storage_secret_access_key,
     }
 
-    # Provider-specific role metadata is required for Exoscale cleanup.
-    if application.storage_runtime_role_id is not None:
-        credentials["role_id"] = application.storage_runtime_role_id
 
-    return credentials
+async def set_storage_credentials(application_id: UUID, credentials: StorageRuntimeCredentials) -> Application | None:
+    """Persist storage credentials for one application."""
 
-
-async def set_storage_runtime_credentials(application_id: UUID, credentials: StorageRuntimeCredentials) -> Application | None:
-    """Persist runtime storage credentials for one application."""
-
-    # Update only runtime storage credential fields.
+    # Update only storage credential fields.
     async with session_scope() as session:
         application = await session.get(Application, application_id)
 
@@ -292,9 +335,8 @@ async def set_storage_runtime_credentials(application_id: UUID, credentials: Sto
         if application is None:
             return None
 
-        application.storage_runtime_key_id = credentials["access_key_id"]
-        application.storage_runtime_role_id = credentials.get("role_id")
-        application.storage_runtime_secret_access_key = credentials["secret_access_key"]
+        application.storage_access_key_id = credentials["access_key_id"]
+        application.storage_secret_access_key = credentials["secret_access_key"]
         await session.commit()
         await session.refresh(application)
         return application
@@ -319,11 +361,8 @@ async def set_status(application_id: UUID, status: ApplicationStatus) -> Applica
 async def update_runtime(
     application_id: UUID,
     image: str,
-    user: User,
+    user: User | None,
     status: ApplicationStatus = ApplicationStatus.creating,
-    compute_registry_id: UUID | None = None,
-    database_registry_id: UUID | None = None,
-    storage_registry_id: UUID | None = None,
     version: str | None = None,
     sdk: str | None = None,
     description: str | None = None,
@@ -342,13 +381,11 @@ async def update_runtime(
             return None
 
         # Keep the database metadata aligned with the workload that will be applied.
-        application.compute_registry_id = compute_registry_id
-        application.database_registry_id = database_registry_id
-        application.storage_registry_id = storage_registry_id
         application.sdk = sdk
         application.digest = digest
         application.description = description
-        application.updated_id = user.id
+        if user is not None:
+            application.updated_id = user.id
         application.version = version
         application.status = status
         application.image = image
@@ -367,13 +404,30 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
 
     # Soft-delete the application and memberships together.
     async with session_scope() as session:
-        application = await session.get(Application, application_id)
+        current = await session.get(Application, application_id)
+
+        # Resolve parents before taking locks in aggregate order.
+        if current is None:
+            return None
+        current_organization = await session.get(Organization, current.organization_id)
+        if current_organization is None:
+            return None
+        location = (
+            await session.execute(select(Location).where(Location.id == current_organization.location_id).with_for_update())
+        ).scalar_one_or_none()
+        organization = (
+            await session.execute(select(Organization).where(Organization.id == current.organization_id).with_for_update())
+        ).scalar_one_or_none()
+        application = (
+            await session.execute(select(Application).where(Application.id == application_id).with_for_update())
+        ).scalar_one_or_none()
 
         # Ignore missing or already-deleted applications.
-        if application is None or application.deleted_at is not None:
+        if location is None or organization is None or application is None or application.deleted_at is not None:
             return None
 
         now = utcnow()
+        application.status = ApplicationStatus.deleting
         application.deleted_at = now
         application.deleted_id = user.id
         application.updated_at = now
@@ -392,6 +446,10 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
             membership.deleted_id = user.id
             membership.updated_at = now
             membership.updated_id = user.id
+
+        # Application tombstone and reconciliation request are one Platform transaction.
+        location.updated_id = user.id
+        await operations.enqueue_in_session(session, location.id)
 
         await session.commit()
         statement = (

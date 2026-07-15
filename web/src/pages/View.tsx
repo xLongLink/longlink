@@ -1,10 +1,13 @@
-import { buttonVariants } from '@/components/ui/button';
-import { createLucideIconComponent } from '@/components/ui/icon';
-import { usePages, type RuntimePage } from '@/hooks/use-pages';
-import XML from '@/layout/XmlLayout';
-import { ApiError, fetchApiText } from '@/lib/api';
-import { useTranslation } from '@/lib/i18n';
+import startCase from 'lodash/startCase';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { generatePath, Link, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import type { ApiOrganizationApplication } from '@/lib/types';
+import XML from '@/layout/XmlLayout';
+import { useTranslation } from '@/lib/i18n';
+import { ApiError, fetchApiText } from '@/lib/api';
+import { buttonVariants } from '@/components/ui/button';
+import { usePages, type RuntimePage } from '@/hooks/use-pages';
+import { createLucideIconComponent } from '@/components/ui/icon';
 import {
     createContext as createXmlContext,
     fromXml,
@@ -13,9 +16,6 @@ import {
     type ASTNode,
     type ExecutionContext,
 } from '@/xml';
-import startCase from 'lodash/startCase';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { generatePath, Link, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import NotFound from './NotFound';
 
 type ViewProps = {

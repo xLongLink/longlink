@@ -1,11 +1,14 @@
-import { useTranslation } from '@/lib/i18n';
-import { Fragment, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
-import { Sidebar } from '@/components/Sidebar';
-import { useUserProfile } from '@/hooks/use-user';
-import { cn, formatDate } from '@/lib/utils';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import type { ArticleNavigationGroup, ArticlePage } from '@/pages/catalog';
 import { A } from '@/components/ui/a';
+import { useTranslation } from '@/lib/i18n';
+import { cn, formatDate } from '@/lib/utils';
+import { Sidebar } from '@/components/Sidebar';
+import { useUserProfile } from '@/hooks/use-user';
+import { buttonVariants } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import {
     BreadcrumbItem,
     BreadcrumbLink,
@@ -13,9 +16,6 @@ import {
     BreadcrumbSeparator,
     Breadcrumb as UIBreadcrumb,
 } from '@/components/ui/breadcrumb';
-import { buttonVariants } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
 type ArticleLayoutProps = {
     page: ArticlePage;

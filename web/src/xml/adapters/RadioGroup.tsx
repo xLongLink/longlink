@@ -1,8 +1,8 @@
-import { RadioGroup as UIRadioGroup, RadioGroupItem as UIRadioGroupItem } from '@/components/ui/radio-group';
+import type { Props } from '@/xml/types';
+import { renderNode } from '@/xml/core/node';
 import { useXmlContext } from '@/xml/core/context';
 import { resolveTranslation } from '@/xml/core/i18n';
-import { renderNode } from '@/xml/core/node';
-import type { Props } from '@/xml/types';
+import { RadioGroup as UIRadioGroup, RadioGroupItem as UIRadioGroupItem } from '@/components/ui/radio-group';
 import { useBindableValue } from './binding';
 import { requireXmlString, resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
 

@@ -1,6 +1,6 @@
-import { useXmlContext } from '@/xml/core/context';
-import { renderNode } from '@/xml/core/node';
 import type { Props } from '@/xml/types';
+import { renderNode } from '@/xml/core/node';
+import { useXmlContext } from '@/xml/core/context';
 
 /** Renders children in a vertical stack. */
 export function Stack({ nodes }: Props) {

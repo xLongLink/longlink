@@ -1,25 +1,25 @@
 import re
-import secrets
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import timedelta
 from sqlalchemy import or_, select, update
+from src.version import platform_version_key, latest_platform_version
+from src.environments import env
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
-from src.models.operations import OperationKind
-from src.database.models.users import User
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.database.models.locations import Location
 from src.database.models.operations import Operation
 
 OPERATION_LEASE_SECONDS = 120
-OPERATION_RETRY_DELAY_SECONDS = 5
+OPERATION_ATTEMPT_LIMIT = 6
 OPERATION_ERROR_MAX_LENGTH = 2000
 OPERATION_ERROR_TRUNCATION_MARKER = "... [truncated]"
 URL_CREDENTIAL_PATTERN = re.compile(r"://([^\s/:@]+):([^\s/@]+)@")
-AUTHORIZATION_SECRET_PATTERN = re.compile(
-    r"(?i)([\"']?authorization[\"']?\s*[:=]\s*[\"']?(?:bearer\s+)?)[^\s'\",}]+([\"']?)"
-)
+AUTHORIZATION_SECRET_PATTERN = re.compile(r"(?i)([\"']?authorization[\"']?\s*[:=]\s*[\"']?(?:bearer\s+)?)[^\s'\",}]+([\"']?)")
 ASSIGNED_SECRET_PATTERN = re.compile(
     r"(?i)((?<![a-z0-9_-])[\"']?"
-    r"(?:secret_access_key|secret-access-key|access_key_id|access-key-id|client_key_data|client-key-data|"
+    r"(?:storage_secret_access_key|storage-secret-access-key|storage_access_key_id|storage-access-key-id|"
+    r"secret_access_key|secret-access-key|access_key_id|access-key-id|client_key_data|client-key-data|"
     r"client_certificate_data|client-certificate-data|database_password|database-password|database_url|database-url|"
     r"longlink_database_password|longlink-database-password|longlink_storage_password|longlink-storage-password|"
     r"storage_password|storage-password|storage_url|storage-url|"
@@ -40,10 +40,7 @@ def sanitize_operation_error(error: str) -> str:
     if len(redacted_error) <= OPERATION_ERROR_MAX_LENGTH:
         return redacted_error
 
-    return (
-        redacted_error[: OPERATION_ERROR_MAX_LENGTH - len(OPERATION_ERROR_TRUNCATION_MARKER)]
-        + OPERATION_ERROR_TRUNCATION_MARKER
-    )
+    return redacted_error[: OPERATION_ERROR_MAX_LENGTH - len(OPERATION_ERROR_TRUNCATION_MARKER)] + OPERATION_ERROR_TRUNCATION_MARKER
 
 
 async def fetch() -> list[Operation]:
@@ -56,238 +53,243 @@ async def fetch() -> list[Operation]:
         return result.scalars().all()
 
 
-async def get(operation_id: UUID) -> Operation | None:
-    """Return one operation by id."""
+async def latest(location_id: UUID) -> Operation | None:
+    """Return the newest reconciliation operation for one location."""
 
-    # Read the operation through a managed database session.
+    # Mutation services commit their operation atomically before routes load it for the response.
     async with session_scope() as session:
-        statement = select(Operation).where(Operation.id == operation_id)
-        result = await session.execute(statement)
-        return result.scalar_one_or_none()
+        statement = select(Operation).where(Operation.location_id == location_id).order_by(Operation.created_at.desc()).limit(1)
+        return (await session.execute(statement)).scalar_one_or_none()
 
 
-async def reset_active() -> None:
-    """Return expired active operations to the scheduled queue.
-
-    Startup and recovery paths use this to clear stale leases left by stopped workers. Healthy workers keep ownership
-    because only rows with expired leases are reset.
-    """
-
-    # Reset expired leases inside one transaction.
-    async with session_scope() as session:
-        now = utcnow()
-
-        # Only expired leases are reset so healthy workers keep ownership while the API scales out.
-        statement = (
-            update(Operation)
-            .where(
-                Operation.started_at.is_not(None),
-                Operation.stopped_at.is_(None),
-                or_(
-                    Operation.lease_expires_at.is_(None),
-                    Operation.lease_expires_at < now,
-                ),
-            )
-            .values(
-                started_at=None,
-                error=None,
-                lease_token=None,
-                lease_expires_at=None,
-                updated_at=now,
-            )
-        )
-        await session.execute(statement)
-        await session.commit()
-
-
-async def create(
-    kind: OperationKind,
-    application_id: UUID | None = None,
-    organization_id: UUID | None = None,
-    scheduled_at: datetime | None = None,
-    user: User | None = None,
+async def enqueue_in_session(
+    session: AsyncSession,
+    location_id: UUID,
+    desired_change: bool = True,
 ) -> Operation:
-    """Create a scheduled operation record without claiming it.
+    """Queue one location reconciliation inside a caller-owned transaction."""
 
-    Endpoint handlers call this after writing domain state. The worker later claims the row, receives a lease token, and
-    runs the handler registered for the operation kind.
-    """
-
-    # Persist the operation in a managed database session.
-    async with session_scope() as session:
-        operation = Operation(
-            kind=kind,
-            application_id=application_id,
-            organization_id=organization_id,
-            scheduled_at=scheduled_at,
-        )
-
-        # Attribute the operation to the caller when available.
-        if user is not None:
-            operation.created_id = user.id
-            operation.updated_id = user.id
-        session.add(operation)
-        await session.commit()
-        await session.refresh(operation)
-        return operation
-
-
-async def queue_organization_removal(organization_id: UUID, scheduled_at: datetime | None = None, user: User | None = None) -> Operation:
-    """Queue a metadata-only operation that removes one deleted organization's runtime resources."""
-
-    # Organization cleanup only needs the organization reference and optional schedule.
-    return await create(OperationKind.organization_remove, organization_id=organization_id, scheduled_at=scheduled_at, user=user)
-
-
-async def claim(operation_id: UUID) -> Operation | None:
-    """Claim one requested operation for exclusive execution.
-
-    Only scheduled rows with no active lease or an expired lease can be claimed. Claiming stores a fresh lease token and
-    expiry; later state transitions must present the same token to prove this worker still owns the attempt.
-    """
-
-    # Claim the requested operation inside one transaction.
-    async with session_scope() as session:
-        now = utcnow()
-        statement = (
+    # Serialize queue changes through the aggregate so release targets remain monotonic across Platform replicas.
+    location = (await session.execute(select(Location).where(Location.id == location_id).with_for_update())).scalar_one_or_none()
+    if location is None:
+        raise ValueError("Operation location not found")
+    versions = (
+        (await session.execute(select(Operation.platform_version).where(Operation.location_id == location_id).distinct())).scalars().all()
+    )
+    platform_version = latest_platform_version(env.VERSION, *versions, *([location.version] if location.version is not None else []))
+    existing = (
+        await session.execute(
             select(Operation)
             .where(
-                Operation.id == operation_id,
+                Operation.location_id == location_id,
                 Operation.stopped_at.is_(None),
-                or_(Operation.scheduled_at.is_(None), Operation.scheduled_at <= now),
-                or_(
-                    Operation.started_at.is_(None),
-                    Operation.lease_expires_at.is_(None),
-                    Operation.lease_expires_at < now,
-                ),
             )
-            .with_for_update(skip_locked=True)
+            .with_for_update()
         )
-        # Stop when another worker already owns the operation.
-        operation = (await session.execute(statement)).scalars().first()
-        if operation is None:
-            return None
+    ).scalar_one_or_none()
 
-        operation.started_at = operation.started_at or now
-        operation.lease_token = secrets.token_urlsafe(24)
-        operation.lease_expires_at = now + timedelta(seconds=OPERATION_LEASE_SECONDS)
-        operation.updated_at = now
+    # Desired changes and release upgrades supersede active attempts and remove inherited retry delays.
+    if existing is not None:
+        version_changed = platform_version_key(platform_version) > platform_version_key(existing.platform_version)
+        if not desired_change and not version_changed:
+            return existing
+        now = utcnow()
+
+        # A fresh desired target receives a complete attempt budget after the previous row exhausted its own.
+        if existing.attempt_count >= OPERATION_ATTEMPT_LIMIT:
+            existing.error = "Operation superseded after exhausting its attempt budget"
+            existing.stopped_at = now
+            existing.lease_expires_at = None
+        else:
+            if version_changed:
+                existing.platform_version = platform_version
+            existing.error = None
+            existing.scheduled_at = now
+            if existing.lease_expires_at is not None:
+                existing.lease_expires_at = now
+            return existing
+
+    # New work starts ready for the Platform release that owns the location target.
+    operation = Operation(
+        platform_version=platform_version,
+        location_id=location_id,
+        scheduled_at=utcnow(),
+    )
+    session.add(operation)
+    await session.flush()
+    return operation
+
+
+async def enqueue(location_id: UUID, desired_change: bool = True) -> Operation:
+    """Queue one location reconciliation in a dedicated transaction."""
+
+    # Convenience callers use the same transactional enqueue implementation as domain services.
+    async with session_scope() as session:
+        operation = await enqueue_in_session(session, location_id, desired_change)
         await session.commit()
         await session.refresh(operation)
         return operation
-
-
-async def defer(operation_id: UUID, lease_token: str, delay_seconds: int | None = None) -> Operation | None:
-    """Release an active lease and schedule the operation for another attempt.
-
-    The update matches both operation id and lease token. Returning `None` means the caller no longer owns the active
-    lease, so another worker may already be responsible for the operation.
-    """
-
-    # Release the operation lease inside one transaction.
-    async with session_scope() as session:
-
-        # Waiting work should be retried later without blocking the worker.
-        now = utcnow()
-        retry_delay_seconds = OPERATION_RETRY_DELAY_SECONDS if delay_seconds is None else delay_seconds
-        scheduled_at = now + timedelta(seconds=max(0, retry_delay_seconds))
-        statement = (
-            update(Operation)
-            .where(
-                Operation.id == operation_id,
-                Operation.lease_token == lease_token,
-                Operation.started_at.is_not(None),
-                Operation.stopped_at.is_(None),
-            )
-            .values(
-                started_at=None,
-                error=None,
-                lease_token=None,
-                scheduled_at=scheduled_at,
-                lease_expires_at=None,
-                updated_at=now,
-            )
-        )
-        result = await session.execute(statement)
-
-        # Treat stale leases as already handled by another worker.
-        if result.rowcount == 0:
-            return None
-
-        await session.commit()
-        refreshed = await session.execute(select(Operation).where(Operation.id == operation_id))
-        return refreshed.scalar_one_or_none()
 
 
 async def claim_next() -> Operation | None:
-    """Claim the oldest ready operation for exclusive execution.
+    """Claim the oldest ready operation, including work with a stale lease."""
 
-    Worker loops use this as the queue pop operation. It locks one ready row, assigns a fresh lease token, and returns
-    `None` when no scheduled or expired work is currently claimable.
-    """
+    # Skip exhausted crash recovery rows while selecting one attempt this worker may execute.
+    while True:
+        async with session_scope() as session:
+            now = utcnow()
+            statement = (
+                select(Operation)
+                .where(
+                    Operation.stopped_at.is_(None),
+                    Operation.platform_version == env.VERSION,
+                    Operation.scheduled_at <= now,
+                    or_(Operation.lease_expires_at.is_(None), Operation.lease_expires_at <= now),
+                )
+                .order_by(Operation.created_at.asc())
+                .limit(1)
+                .with_for_update(skip_locked=True)
+            )
+            operation = (await session.execute(statement)).scalars().first()
 
-    # Claim the next available operation inside one transaction.
+            # Return nothing when no operation is ready to run.
+            if operation is None:
+                return None
+
+            # A worker that crashed on its final attempt leaves terminal failure for the next claimant to record.
+            if operation.attempt_count >= OPERATION_ATTEMPT_LIMIT:
+                operation.error = "Operation attempt limit exceeded"
+                operation.stopped_at = now
+                operation.lease_expires_at = None
+                await session.commit()
+                continue
+
+            # Claim the next generation and begin its renewable lease.
+            operation.error = None
+            operation.started_at = now
+            operation.attempt_count += 1
+            operation.lease_expires_at = now + timedelta(seconds=OPERATION_LEASE_SECONDS)
+            await session.commit()
+            await session.refresh(operation)
+            return operation
+
+
+async def renew_lease(operation_id: UUID, attempt_count: int) -> Operation | None:
+    """Extend a matching operation lease only while it remains unexpired."""
+
+    # Include the current attempt in the ownership check so expired workers cannot revive their lease.
     async with session_scope() as session:
         now = utcnow()
-
-        # Select the oldest claimable row so work is processed in submission order.
         statement = (
-            select(Operation)
+            update(Operation)
             .where(
+                Operation.id == operation_id,
+                Operation.attempt_count == attempt_count,
+                Operation.lease_expires_at > now,
+                Operation.started_at.is_not(None),
                 Operation.stopped_at.is_(None),
-                or_(Operation.scheduled_at.is_(None), Operation.scheduled_at <= now),
-                or_(
-                    Operation.started_at.is_(None),
-                    Operation.lease_expires_at.is_(None),
-                    Operation.lease_expires_at < now,
-                ),
             )
-            .order_by(Operation.created_at.asc())
-            .limit(1)
-            .with_for_update(skip_locked=True)
+            .values(lease_expires_at=now + timedelta(seconds=OPERATION_LEASE_SECONDS))
         )
         result = await session.execute(statement)
 
-        # Return nothing when no operation is ready to run.
-        operation = result.scalars().first()
+        # A non-matching update means the caller has lost exclusive ownership.
+        if result.rowcount == 0:
+            return None
+
+        await session.commit()
+        refreshed = await session.execute(select(Operation).where(Operation.id == operation_id))
+        return refreshed.scalar_one_or_none()
+
+
+async def complete(operation_id: UUID, attempt_count: int) -> Operation | None:
+    """Complete one operation while the caller owns its current attempt."""
+
+    # Resolve the location before locking in the same aggregate-first order used by desired-state mutations.
+    async with session_scope() as session:
+        snapshot = (await session.execute(select(Operation).where(Operation.id == operation_id))).scalar_one_or_none()
+        if snapshot is None:
+            return None
+        location = (
+            await session.execute(select(Location).where(Location.id == snapshot.location_id).with_for_update())
+        ).scalar_one_or_none()
+        if location is None:
+            return None
+
+        # Lock and revalidate the leased operation after the location prevents concurrent desired-state changes.
+        now = utcnow()
+        operation = (
+            await session.execute(
+                select(Operation)
+                .where(
+                    Operation.id == operation_id,
+                    Operation.attempt_count == attempt_count,
+                    Operation.lease_expires_at > now,
+                    Operation.started_at.is_not(None),
+                    Operation.stopped_at.is_(None),
+                )
+                .with_for_update()
+            )
+        ).scalar_one_or_none()
         if operation is None:
             return None
 
-        operation.started_at = operation.started_at or now
-        operation.lease_token = secrets.token_urlsafe(24)
-        operation.lease_expires_at = now + timedelta(seconds=OPERATION_LEASE_SECONDS)
-        operation.updated_at = now
+        # Terminal completion releases the lease while preserving the final attempt timestamps.
+        operation.error = None
+        operation.stopped_at = now
+        operation.lease_expires_at = None
+
         await session.commit()
         await session.refresh(operation)
         return operation
 
 
-async def renew_lease(operation_id: UUID, lease_token: str) -> Operation | None:
-    """Extend the current worker's active operation lease.
+async def lease_is_current(operation_id: UUID, attempt_count: int) -> bool:
+    """Return whether one worker still owns an unexpired operation lease."""
 
-    The lease token check prevents stale workers from renewing after another worker has reclaimed an expired operation.
-    Returning `None` tells the heartbeat that ownership was lost and renewal should stop.
-    """
+    # External mutation phases call this fence after awaits and before issuing provider writes.
+    async with session_scope() as session:
+        now = utcnow()
+        statement = select(Operation.id).where(
+            Operation.id == operation_id,
+            Operation.attempt_count == attempt_count,
+            Operation.lease_expires_at > now,
+            Operation.started_at.is_not(None),
+            Operation.stopped_at.is_(None),
+        )
+        return (await session.execute(statement)).scalar_one_or_none() is not None
 
-    # Extend the lease inside one transaction.
+
+async def defer(
+    operation_id: UUID,
+    attempt_count: int,
+    delay_seconds: float,
+    error: str | None = None,
+) -> Operation | None:
+    """Release an unexpired lease and schedule one transient retry."""
+
+    # Schedule the next attempt only while this worker still owns the current one.
     async with session_scope() as session:
         now = utcnow()
         statement = (
             update(Operation)
             .where(
                 Operation.id == operation_id,
-                Operation.lease_token == lease_token,
+                Operation.attempt_count == attempt_count,
+                Operation.lease_expires_at > now,
                 Operation.started_at.is_not(None),
                 Operation.stopped_at.is_(None),
             )
             .values(
-                lease_expires_at=now + timedelta(seconds=OPERATION_LEASE_SECONDS),
-                updated_at=now,
+                error=sanitize_operation_error(error) if error is not None else None,
+                started_at=None,
+                scheduled_at=now + timedelta(seconds=max(0, delay_seconds)),
+                lease_expires_at=None,
             )
         )
         result = await session.execute(statement)
 
-        # Treat missing rows as stale worker ownership.
+        # A non-matching update means the attempt was superseded or its lease expired.
         if result.rowcount == 0:
             return None
 
@@ -296,77 +298,30 @@ async def renew_lease(operation_id: UUID, lease_token: str) -> Operation | None:
         return refreshed.scalar_one_or_none()
 
 
-async def complete(operation_id: UUID, lease_token: str) -> Operation | None:
-    """Finish an operation only if the caller still owns its lease.
+async def fail(operation_id: UUID, error: str, attempt_count: int) -> Operation | None:
+    """Fail an operation while the caller owns its unexpired lease."""
 
-    Successful completion records `stopped_at` and clears lease fields. A `None` result means the token no longer matches,
-    so the caller should treat its result as stale.
-    """
-
-    # Complete the operation inside one transaction.
+    # Persist a sanitized terminal error only for the current leased attempt.
     async with session_scope() as session:
-
-        # Finalize the row once after successful execution.
         now = utcnow()
         statement = (
             update(Operation)
             .where(
                 Operation.id == operation_id,
-                Operation.lease_token == lease_token,
+                Operation.attempt_count == attempt_count,
+                Operation.lease_expires_at > now,
                 Operation.started_at.is_not(None),
                 Operation.stopped_at.is_(None),
             )
             .values(
+                error=sanitize_operation_error(error),
                 stopped_at=now,
-                error=None,
-                lease_token=None,
                 lease_expires_at=None,
-                updated_at=now,
             )
         )
         result = await session.execute(statement)
 
-        # Treat missing rows as stale worker ownership.
-        if result.rowcount == 0:
-            return None
-
-        await session.commit()
-        refreshed = await session.execute(select(Operation).where(Operation.id == operation_id))
-        return refreshed.scalar_one_or_none()
-
-
-async def fail(operation_id: UUID, error: str, lease_token: str) -> Operation | None:
-    """Fail an operation only if the caller still owns its lease.
-
-    The public error text is sanitized before it is stored. A `None` result means another worker or terminal transition
-    changed the row first, so the caller should not overwrite it.
-    """
-
-    # Record the failure inside one transaction.
-    async with session_scope() as session:
-
-        # Persist the failure exactly once so the row remains a reliable audit trail.
-        now = utcnow()
-        sanitized_error = sanitize_operation_error(error)
-        statement = (
-            update(Operation)
-            .where(
-                Operation.id == operation_id,
-                Operation.lease_token == lease_token,
-                Operation.started_at.is_not(None),
-                Operation.stopped_at.is_(None),
-            )
-            .values(
-                stopped_at=now,
-                error=sanitized_error,
-                lease_token=None,
-                lease_expires_at=None,
-                updated_at=now,
-            )
-        )
-        result = await session.execute(statement)
-
-        # Treat missing rows as stale worker ownership.
+        # A non-matching update means the attempt was superseded or its lease expired.
         if result.rowcount == 0:
             return None
 

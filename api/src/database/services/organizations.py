@@ -6,9 +6,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
+from src.models.statuses import LocationStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.models.countries import DEFAULT_COUNTRY
+from src.database.services import operations
 from src.database.models.users import User
+from src.database.models.locations import Location
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
@@ -31,6 +34,58 @@ async def fetch() -> list[Organization]:
         )
         result = await session.execute(statement)
         return result.scalars().all()
+
+
+async def location(location_id: UUID, include_deleted: bool = False) -> list[Organization]:
+    """Return organizations assigned to one immutable location."""
+
+    # Reconciliation includes tombstones only when it needs to finish external cleanup.
+    async with session_scope() as session:
+        conditions = [Organization.location_id == location_id]
+        if not include_deleted:
+            conditions.append(Organization.deleted_at.is_(None))
+        statement = select(Organization).where(*conditions)
+        result = await session.execute(statement)
+        return result.scalars().all()
+
+
+async def set_runtime(organization_id: UUID, status: OrganizationStatus, shared_schema_url: str | None = None) -> None:
+    """Persist organization runtime state observed by reconciliation."""
+
+    # Runtime status and a newly derived shared URL change together.
+    async with session_scope() as session:
+        organization = await session.get(Organization, organization_id)
+        if organization is None:
+            return
+        organization.status = status
+        if shared_schema_url is not None:
+            organization.shared_schema_url = shared_schema_url
+        await session.commit()
+
+
+async def purge(organization_id: UUID) -> bool:
+    """Hard-delete one organization after all applications and external resources are gone."""
+
+    # The organization tombstone remains until every child application has been purged.
+    async with session_scope() as session:
+        organization = (
+            await session.execute(select(Organization).where(Organization.id == organization_id).with_for_update())
+        ).scalar_one_or_none()
+        if organization is None:
+            return False
+        if organization.deleted_at is None:
+            raise RuntimeError("Active organizations cannot be purged")
+        application = (
+            await session.execute(select(Application.id).where(Application.organization_id == organization_id).limit(1))
+        ).scalar_one_or_none()
+        if application is not None:
+            raise RuntimeError("Organization applications must be purged first")
+        await session.execute(delete(UserApplication).where(UserApplication.organization_id == organization_id))
+        await session.execute(delete(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization_id))
+        await session.execute(delete(UserOrganization).where(UserOrganization.organization_id == organization_id))
+        await session.execute(delete(Organization).where(Organization.id == organization_id))
+        await session.commit()
+        return True
 
 
 async def applications(organization_id: UUID, include_deleted: bool = False) -> list[Application]:
@@ -175,6 +230,16 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
         membership.updated_at = utcnow()
         membership.updated_id = user.id
         membership.role = role
+        organization = await session.get(Organization, organization_id)
+        if organization is None:
+            return False
+        location = (
+            await session.execute(select(Location).where(Location.id == organization.location_id).with_for_update())
+        ).scalar_one_or_none()
+        if location is None:
+            raise RuntimeError("Organization location not found")
+        location.updated_id = user.id
+        await operations.enqueue_in_session(session, location.id)
         await session.commit()
         return True
 
@@ -198,6 +263,13 @@ async def create(
 
     # Create the organization and owner membership together.
     async with session_scope() as session:
+        # Organizations can be created only in a fully provisioned immutable location.
+        location = (await session.execute(select(Location).where(Location.id == location_id).with_for_update())).scalar_one_or_none()
+        if location is None or location.deleted_at is not None:
+            raise HTTPException(status_code=404, detail="Location not found")
+        if location.status != LocationStatus.ready:
+            raise HTTPException(status_code=409, detail="Location is not ready")
+
         organization = Organization(
             id=organization_id,
             name=name,
@@ -221,6 +293,8 @@ async def create(
             )
         )
         session.add(organization)
+        location.updated_id = user.id
+        await operations.enqueue_in_session(session, location.id)
 
         # Commit creation and translate unique conflicts.
         try:
@@ -245,31 +319,29 @@ async def create(
         return result.scalar_one()
 
 
-async def discard_created(organization_id: UUID) -> None:
-    """Hard-delete an organization created by a failed synchronous bootstrap."""
-
-    # Remove dependent rows before deleting the organization row so creation can be retried with the same name.
-    async with session_scope() as session:
-        await session.execute(delete(UserApplication).where(UserApplication.organization_id == organization_id))
-        await session.execute(delete(Application).where(Application.organization_id == organization_id))
-        await session.execute(delete(OrganizationInvitation).where(OrganizationInvitation.organization_id == organization_id))
-        await session.execute(delete(UserOrganization).where(UserOrganization.organization_id == organization_id))
-        await session.execute(delete(Organization).where(Organization.id == organization_id))
-        await session.commit()
-
-
 async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
     """Soft-delete an organization and all nested access rows."""
 
     # Soft-delete organization data in one transaction.
     async with session_scope() as session:
-        organization = await session.get(Organization, organization_id)
+        current = await session.get(Organization, organization_id)
+
+        # Resolve the parent before taking locks in aggregate order.
+        if current is None:
+            return None
+        location = (
+            await session.execute(select(Location).where(Location.id == current.location_id).with_for_update())
+        ).scalar_one_or_none()
+        organization = (
+            await session.execute(select(Organization).where(Organization.id == organization_id).with_for_update())
+        ).scalar_one_or_none()
 
         # Ignore missing or already-deleted organizations.
-        if organization is None or organization.deleted_at is not None:
+        if location is None or organization is None or organization.deleted_at is not None:
             return None
 
         now = utcnow()
+        organization.status = OrganizationStatus.deleting
         organization.deleted_at = now
         organization.deleted_id = user.id
         organization.updated_at = now
@@ -284,6 +356,7 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
 
         # Mark active applications as deleted.
         for application in applications_result.scalars().all():
+            application.status = ApplicationStatus.deleting
             application.deleted_at = now
             application.deleted_id = user.id
             application.updated_at = now
@@ -330,6 +403,10 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
             invitation.deleted_id = user.id
             invitation.updated_at = now
             invitation.updated_id = user.id
+
+        # Tombstones and their reconciliation request commit atomically.
+        location.updated_id = user.id
+        await operations.enqueue_in_session(session, location.id)
 
         await session.commit()
         await session.refresh(organization)

@@ -1,9 +1,9 @@
 import { Bot, Boxes, Code2, Cog, Puzzle, Table2 } from 'lucide-react';
-import { Wordmark } from '@/components/Wordmark';
 import { A } from '@/components/ui/a';
-import { Heading } from '@/components/ui/heading';
 import { P } from '@/components/ui/p';
 import { Stack } from '@/components/ui/stack';
+import { Wordmark } from '@/components/Wordmark';
+import { Heading } from '@/components/ui/heading';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export const metadata = {

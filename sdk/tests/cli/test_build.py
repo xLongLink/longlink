@@ -5,38 +5,25 @@ from click.testing import CliRunner
 from longlink.cli.build import build_app, build_command, read_env_spec, render_dockerfile, resolve_image_tag
 
 
-def test_render_dockerfile_copies_full_workspace_for_editable_sources() -> None:
-    """Keep editable path dependencies available in the runtime image."""
+def test_render_dockerfile_preserves_build_and_runtime_contract() -> None:
+    """Keep editable sources, migrations, and production-safe defaults in built images."""
 
     # Act
     dockerfile = render_dockerfile("/workspace/dev", "LABEL longlink.name=\"test\"", "0.1.0")
 
-    # Assert
-    assert "COPY --from=builder /workspace /workspace" in dockerfile
+    # Assert required build and runtime behavior.
+    for expected in (
+        "COPY --from=builder /workspace /workspace",
+        "python -m longlink.database.migrations && exec uvicorn main:app",
+        "uv sync --no-dev",
+        ".git",
+        "rm -rf",
+        "--log-level info",
+    ):
+        assert expected in dockerfile
 
-
-def test_render_dockerfile_runs_migrations_before_serving() -> None:
-    """Apply app migrations before the runtime starts accepting requests."""
-
-    # Act
-    dockerfile = render_dockerfile("/workspace/dev", "LABEL longlink.name=\"test\"", "0.1.0")
-
-    # Assert
-    assert "python -m longlink.database.migrations && exec uvicorn main:app" in dockerfile
+    # Reject development-only runtime behavior.
     assert "printf" not in dockerfile
-
-
-def test_render_dockerfile_uses_production_safe_runtime_defaults() -> None:
-    """Install runtime dependencies only and avoid debug logging in built images."""
-
-    # Act
-    dockerfile = render_dockerfile("/workspace/dev", "LABEL longlink.name=\"test\"", "0.1.0")
-
-    # Assert
-    assert "uv sync --no-dev" in dockerfile
-    assert ".git" in dockerfile
-    assert "rm -rf" in dockerfile
-    assert "--log-level info" in dockerfile
     assert "--log-level debug" not in dockerfile
 
 
@@ -75,82 +62,68 @@ def test_build_reports_missing_project_file_before_docker() -> None:
         assert "Docker is required" not in result.output
 
 
-def test_read_env_spec_emits_only_supported_environment_metadata(tmp_path: Path) -> None:
-    """Exclude internal Field details from generated environment metadata labels."""
+@pytest.mark.parametrize(
+    ("module_path", "project_config", "module_source", "expected_spec"),
+    [
+        pytest.param(
+            "settings/envs.py",
+            '[tool.longlink]\nenvironment = "settings.envs:Env"\n',
+            "from pydantic import BaseModel, Field\n\n"
+            "class Env(BaseModel):\n"
+            "    API_KEY: str = Field(default='dev', validation_alias='LONG_API_KEY', description='API key', secret=True)\n"
+            "    TOKEN: str = Field(default_factory=str, validation_alias='LONG_TOKEN')\n"
+            "    PORT: int = 8080\n",
+            {
+                "environments": [
+                    {"name": "LONG_API_KEY", "type": "str", "required": False, "description": "API key"},
+                    {"name": "LONG_TOKEN", "type": "str", "required": False},
+                    {"name": "PORT", "type": "int", "required": False},
+                ]
+            },
+            id="supported-metadata",
+        ),
+        pytest.param(
+            "src/envs.py",
+            None,
+            "from pydantic import BaseModel, Field\n\n"
+            "class Env(BaseModel):\n"
+            "    OPTIONAL_TOKEN: str = Field('dev', validation_alias='OPTIONAL_TOKEN')\n"
+            "    REQUIRED_TOKEN: str = Field(..., validation_alias='REQUIRED_TOKEN')\n",
+            {
+                "environments": [
+                    {"name": "OPTIONAL_TOKEN", "type": "str", "required": False},
+                    {"name": "REQUIRED_TOKEN", "type": "str", "required": True},
+                ]
+            },
+            id="positional-defaults",
+        ),
+    ],
+)
+def test_read_env_spec_emits_supported_environment_metadata(
+    tmp_path: Path,
+    module_path: str,
+    project_config: str | None,
+    module_source: str,
+    expected_spec: dict[str, object],
+) -> None:
+    """Emit supported metadata while respecting aliases and field defaults."""
 
     # Arrange
-    settings_path = tmp_path / "settings"
-    settings_path.mkdir()
-    (tmp_path / "pyproject.toml").write_text('[tool.longlink]\nenvironment = "settings.envs:Env"\n')
-    (settings_path / "envs.py").write_text(
-        "from pydantic import BaseModel, Field\n\n"
-        "class Env(BaseModel):\n"
-        "    API_KEY: str = Field(default='dev', validation_alias='LONG_API_KEY', description='API key', secret=True)\n"
-        "    TOKEN: str = Field(default_factory=str, validation_alias='LONG_TOKEN')\n"
-        "    PORT: int = 8080\n"
-    )
+    settings_path = tmp_path / module_path
+    settings_path.parent.mkdir(parents=True)
+    settings_path.write_text(module_source)
+    if project_config is not None:
+        (tmp_path / "pyproject.toml").write_text(project_config)
 
     # Act
     env_spec = read_env_spec(tmp_path)
 
     # Assert
-    assert env_spec == {
-        "environments": [
-            {
-                "name": "LONG_API_KEY",
-                "type": "str",
-                "required": False,
-                "description": "API key",
-            },
-            {
-                "name": "LONG_TOKEN",
-                "type": "str",
-                "required": False,
-            },
-            {
-                "name": "PORT",
-                "type": "int",
-                "required": False,
-            },
-        ]
-    }
-
-
-def test_read_env_spec_respects_positional_field_defaults(tmp_path: Path) -> None:
-    """Mark positional Field defaults as optional while keeping ellipsis fields required."""
-
-    # Arrange
-    src_path = tmp_path / "src"
-    src_path.mkdir()
-    (src_path / "envs.py").write_text(
-        "from pydantic import BaseModel, Field\n\n"
-        "class Env(BaseModel):\n"
-        "    OPTIONAL_TOKEN: str = Field('dev', validation_alias='OPTIONAL_TOKEN')\n"
-        "    REQUIRED_TOKEN: str = Field(..., validation_alias='REQUIRED_TOKEN')\n"
-    )
-
-    # Act
-    env_spec = read_env_spec(tmp_path)
-
-    # Assert
-    assert env_spec == {
-        "environments": [
-            {
-                "name": "OPTIONAL_TOKEN",
-                "type": "str",
-                "required": False,
-            },
-            {
-                "name": "REQUIRED_TOKEN",
-                "type": "str",
-                "required": True,
-            },
-        ]
-    }
+    assert env_spec == expected_spec
 
 
 def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path: Path) -> None:
-    """Keep local-only files out of the temporary Docker build context."""
+    """Keep required project files while excluding local-only build context entries."""
 
     # Arrange
     root = tmp_path / "app"
@@ -162,6 +135,9 @@ def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path
     (root / ".env.sample").write_text("SECRET=sample\n")
     (root / "dev.db").write_text("sqlite\n")
     (root / "data.sqlite3-wal").write_text("wal\n")
+    git_directory = root / ".git"
+    git_directory.mkdir()
+    (git_directory / "HEAD").write_text("ref: refs/heads/main\n")
 
     for directory_name in (".pytest_cache", "__pycache__", "dist", "build", "demo.egg-info", "node_modules"):
         directory = root / directory_name
@@ -176,6 +152,7 @@ def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path
     # Assert
     assert (build_context / "main.py").is_file()
     assert (build_context / "pyproject.toml").is_file()
+    assert (build_context / ".git" / "HEAD").is_file()
     assert not (build_context / ".env").exists()
     assert not (build_context / ".env.local").exists()
     assert not (build_context / ".env.sample").exists()
@@ -186,33 +163,14 @@ def test_build_app_excludes_local_secrets_databases_and_generated_files(tmp_path
         assert not (build_context / directory_name).exists()
 
 
-def test_build_app_preserves_git_metadata_for_app_root_repository(tmp_path: Path) -> None:
-    """Preserve VCS metadata when the application root is itself a Git repository."""
-
-    # Arrange
-    root = tmp_path / "app"
-    root.mkdir()
-    (root / "pyproject.toml").write_text('[project]\nname = "demo"\nversion = "0.1.0"\n')
-    (root / "main.py").write_text("app = object()\n")
-    git_directory = root / ".git"
-    git_directory.mkdir()
-    (git_directory / "HEAD").write_text("ref: refs/heads/main\n")
-    build_context = tmp_path / "context"
-
-    # Act
-    build_app(build_context, base_path=root, tag="dev")
-
-    # Assert
-    assert (build_context / ".git" / "HEAD").is_file()
-
-
-def test_build_command_builds_pushes_and_reports_image(monkeypatch) -> None:
+def test_build_command_builds_pushes_and_reports_image(monkeypatch: pytest.MonkeyPatch) -> None:
     """Build a Docker image in a temporary context, push it, and report image details."""
 
+    # Arrange
     commands: list[list[str]] = []
     runner = CliRunner()
 
-    def fake_build_app(build_context: Path, base_path: Path | None = None, tag: str | None = None):
+    def fake_build_app(build_context: Path, base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str]:
         """Create fake Docker artifacts for the build command."""
 
         assert base_path is None
@@ -226,16 +184,26 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch) -> None:
 
         assert check is True
         commands.append(command)
+
+        # Simulate Docker writing the requested image ID file.
         if command[1] == "build":
             image_id_path = Path(command[command.index("--iidfile") + 1])
             image_id_path.write_text("sha256:demo\n", encoding="utf-8")
 
+    def fake_which(command: str) -> str | None:
+        """Resolve only the Docker executable."""
+
+        return "/usr/bin/docker" if command == "docker" else None
+
+    # Replace Docker boundaries with deterministic local fakes.
     monkeypatch.setattr(build, "build_app", fake_build_app)
-    monkeypatch.setattr(build.shutil, "which", lambda command: "/usr/bin/docker" if command == "docker" else None)
+    monkeypatch.setattr(build.shutil, "which", fake_which)
     monkeypatch.setattr(build.subprocess, "run", fake_run)
 
+    # Act
     result = runner.invoke(build.build_command, ["--tag", "dev", "--registry", "localhost:15000", "--push"])
 
+    # Assert
     assert result.exit_code == 0
     assert len(commands) == 2
     assert commands[0][0:2] == ["/usr/bin/docker", "build"]
@@ -250,6 +218,7 @@ def test_build_command_builds_pushes_and_reports_image(monkeypatch) -> None:
 def test_render_longlink_labels_writes_metadata_and_environment_labels() -> None:
     """Render LongLink metadata and environment definitions as Docker labels."""
 
+    # Arrange
     metadata = {
         "name": "demo",
         "sdk": "1.2.3",
@@ -269,8 +238,10 @@ def test_render_longlink_labels_writes_metadata_and_environment_labels() -> None
         ]
     }
 
+    # Act
     labels = build.render_longlink_labels(metadata, env_spec)
 
+    # Assert
     assert 'LABEL longlink.name="demo"' in labels
     assert 'LABEL longlink.sdk="1.2.3"' in labels
     assert 'LABEL longlink.version="0.1.0"' in labels

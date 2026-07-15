@@ -1,8 +1,8 @@
-import { useUserProfile } from '@/hooks/use-user';
-import Layout from '@/layout/Layout';
-import NotFound from '@/pages/NotFound';
 import type { ReactElement } from 'react';
 import { useLocation } from 'react-router';
+import Layout from '@/layout/Layout';
+import NotFound from '@/pages/NotFound';
+import { useUserProfile } from '@/hooks/use-user';
 import { SignInCard } from '@/components/SignInCard';
 import { hasMinimumRole, type PlatformRole } from '@/lib/roles';
 

@@ -1,4 +1,4 @@
-# Template for the Envoy gateway configuration.
+# Template for the TLS-enabled Envoy gateway configuration.
 admin:
   access_log_path: /tmp/envoy-admin.log
   address:
@@ -14,7 +14,17 @@ static_resources:
           address: 0.0.0.0
           port_value: 8443
       filter_chains:
-        - filters:
+        - transport_socket:
+            name: envoy.transport_sockets.tls
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+              common_tls_context:
+                tls_certificates:
+                  - certificate_chain:
+                      filename: /etc/envoy-tls/tls.crt
+                    private_key:
+                      filename: /etc/envoy-tls/tls.key
+          filters:
             - name: envoy.filters.network.http_connection_manager
               typed_config:
                 "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
@@ -32,7 +42,7 @@ static_resources:
                       log_format:
                         text_format_source:
                           inline_string: |
-                            [%START_TIME%] "%REQ(:METHOD)% %REQ_WITHOUT_QUERY(:PATH)%" %RESPONSE_CODE% %DURATION%ms %UPSTREAM_HOST%
+                            [%START_TIME%] "%REQUEST_HEADER(:METHOD)%" %RESPONSE_CODE% %DURATION%ms %UPSTREAM_HOST%
                 route_config:
                   name: local_route
                   virtual_hosts:

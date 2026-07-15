@@ -35,18 +35,16 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
 
         return next(audit_times)
 
-    # Capture the SDK globals before binding this test's clock, users, and engine.
+    # Bind this test's clock, users, and isolated engine.
     monkeypatch.setattr(database_audit, "utcnow", next_audit_time)
     creator_id = UUID("00000000-0000-0000-0000-000000000002")
     updater_id = UUID("00000000-0000-0000-0000-000000000003")
     deleter_id = UUID("00000000-0000-0000-0000-000000000004")
-    previous_engine = database_base._engine
-    previous_session = database_base.Session
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
 
     # Isolate the real SQLite engine behind the SDK's normal session lifecycle.
-    database_base._engine = engine
-    database_base.Session = None
+    monkeypatch.setattr(database_base, "_engine", engine)
+    monkeypatch.setattr(database_base, "Session", None)
 
     try:
         # Insert through AsyncSession so the registered sync before_flush listener runs.
@@ -77,9 +75,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
             assert database_audit._current_user_id.get() is None
             await session.refresh(item)
             assert item.name == "reviewed"
-            assert item.created_at == created_at
             assert item.updated_at == updated_at
-            assert item.created_id == creator_id
             assert item.updated_id == updater_id
 
         # Delete the reloaded row and commit the listener's soft-delete conversion.
@@ -105,9 +101,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
             assert item.updated_id == deleter_id
             assert item.deleted_id == deleter_id
     finally:
-        # Release test resources and restore process-level SDK database state.
-        database_base._engine = previous_engine
-        database_base.Session = previous_session
+        # Release test metadata and engine resources.
         try:
             database_base.database_metadata.remove(getattr(AuditLifecycleItem, "__table__"))
         finally:

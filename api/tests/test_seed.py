@@ -3,23 +3,9 @@ import pytest
 from uuid import UUID
 from types import SimpleNamespace
 from typing import cast
+from src.environments import env
 
 pytestmark = pytest.mark.no_db
-
-
-class FakeKubernetes:
-    """Record Kubernetes setup calls made by the seed script."""
-
-    def __init__(self) -> None:
-        """Initialize call tracking."""
-
-        self.gateway = self
-        self.sync_gateway_calls = 0
-
-    async def sync(self) -> None:
-        """Record one gateway synchronization call."""
-
-        self.sync_gateway_calls += 1
 
 
 def fake_resource(**fields: object) -> SimpleNamespace:
@@ -28,212 +14,157 @@ def fake_resource(**fields: object) -> SimpleNamespace:
     return SimpleNamespace(**fields)
 
 
-async def test_seed_local_development_creates_local_resources(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
-    """Seed local resources through the domain services."""
+async def test_seed_local_development_creates_complete_aggregate_and_drains_reconciliation(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    """Create local desired state and drain each queued location reconciliation."""
 
+    # Arrange
     user = fake_resource(id=UUID("11111111-1111-1111-1111-111111111111"))
     location = fake_resource(id=UUID("22222222-2222-2222-2222-222222222222"), slug="local")
-    organization = fake_resource(
-        id=UUID("33333333-3333-3333-3333-333333333333"),
-        name=seed.LOCAL_ORG,
-        slug="test",
-        location_id=location.id,
-        shared_schema_url="postgresql://shared/test",
-    )
-    compute_registry = fake_resource(
-        id=UUID("44444444-4444-4444-4444-444444444444"),
-        name="local",
-        kubeconfig="apiVersion: v1\nclusters: []\n",
-        proxy_secret="proxy-secret",
-        gateway_url=seed.LOCAL_COMPUTE_GATEWAY_URL,
-    )
+    organization = fake_resource(id=UUID("33333333-3333-3333-3333-333333333333"), slug=seed.LOCAL_ORG)
+    application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
+    operation = fake_resource(location_id=location.id, platform_version=env.VERSION)
+    completed = fake_resource(location_id=location.id, platform_version=env.VERSION, stopped_at=object(), error=None)
     kubeconfig = tmp_path / "kubeconfig.yaml"
     kubeconfig.write_text("apiVersion: v1\nclusters: []\n", encoding="utf-8")
-    fake_kubernetes = FakeKubernetes()
     calls: dict[str, object] = {}
+    claimed = [operation, operation, operation]
+    executed: list[object] = []
 
     async def seed_administrator() -> SimpleNamespace:
-        """Return the seeded fixed administrator."""
+        """Return the fixed local administrator."""
 
-        calls["user"] = seed.LOCAL_ADMIN_OIDC
+        calls["administrator"] = seed.LOCAL_ADMIN_OIDC
         return user
 
     def local_database_host() -> str:
-        """Return the fake local database host."""
+        """Return a deterministic host without inspecting Docker."""
 
         return "172.19.0.1"
 
-    async def fetch_no_locations() -> list[object]:
-        """Return no existing locations."""
+    async def fetch_no_resources() -> list[object]:
+        """Return no existing locations or organizations."""
 
         return []
 
-    async def create_location(*args: object) -> SimpleNamespace:
-        """Record the local location creation request."""
+    async def create_location(slug: str, payload: seed.LocationCreate, user_argument: object) -> tuple[SimpleNamespace, SimpleNamespace]:
+        """Record creation of the complete local infrastructure aggregate."""
 
-        calls["location"] = args
-        return location
+        calls["location"] = (slug, payload, user_argument)
+        return location, operation
 
-    async def fetch_no_database_registries() -> list[object]:
-        """Return no existing database registries."""
+    async def create_organization(
+        name: str,
+        slug: str,
+        location_id: UUID,
+        user_argument: object,
+        **fields: object,
+    ) -> SimpleNamespace:
+        """Record local organization desired-state creation."""
 
-        return []
-
-    async def create_database_registry(**kwargs: object) -> SimpleNamespace:
-        """Record the local database registry creation request."""
-
-        calls["database"] = kwargs
-        return fake_resource(id=UUID("55555555-5555-5555-5555-555555555555"), **kwargs)
-
-    async def fetch_no_storage_registries() -> list[object]:
-        """Return no existing storage registries."""
-
-        return []
-
-    async def create_storage_registry(**kwargs: object) -> SimpleNamespace:
-        """Record the local storage registry creation request."""
-
-        calls["storage"] = kwargs
-        return fake_resource(id=UUID("66666666-6666-6666-6666-666666666666"), **kwargs)
-
-    async def fetch_no_compute_registries() -> list[object]:
-        """Return no existing compute registries."""
-
-        return []
-
-    async def create_compute_registry(**kwargs: object) -> SimpleNamespace:
-        """Record the local compute registry creation request."""
-
-        calls["compute"] = kwargs
-        return compute_registry
-
-    async def fetch_no_organizations() -> list[object]:
-        """Return no existing organizations."""
-
-        return []
-
-    async def create_organization(payload: seed.OrganizationCreate, user_argument: object) -> SimpleNamespace:
-        """Record the local organization endpoint creation request."""
-
-        calls["organization"] = (payload, user_argument)
-        return organization
-
-    async def load_organization(organization_id: UUID) -> SimpleNamespace:
-        """Return the seeded organization details."""
-
-        calls["loaded_organization"] = organization_id
+        calls["organization"] = (name, slug, location_id, user_argument, fields)
         return organization
 
     async def list_no_applications(organization_id: UUID) -> list[object]:
-        """Return no existing seeded applications."""
+        """Return no existing sample application."""
 
         calls["application_lookup"] = organization_id
         return []
 
-    async def load_user(oidc: str, include_access: bool = False) -> SimpleNamespace:
-        """Return the seeded administrator with loaded access relationships."""
+    async def create_application(
+        organization_id: UUID,
+        name: str,
+        slug: str,
+        image: str,
+        user_argument: object,
+        **fields: object,
+    ) -> SimpleNamespace:
+        """Record sample application desired-state creation."""
 
-        calls["loaded_user"] = (oidc, include_access)
-        return user
+        calls["application"] = (organization_id, name, slug, image, user_argument, fields)
+        return application
 
-    async def create_application(*args: object) -> object:
-        """Record the application endpoint creation request."""
+    async def claim_operation() -> SimpleNamespace:
+        """Return one terminally executable operation for each seed mutation."""
 
-        calls["application_create"] = args
-        return fake_resource(id=UUID("77777777-7777-7777-7777-777777777777"))
+        if not claimed:
+            raise AssertionError("Seed attempted to claim unexpected reconciliation work")
+        return claimed.pop(0)
+
+    async def execute_operation(claimed_operation: object, handler: object) -> SimpleNamespace:
+        """Complete reconciliation without invoking infrastructure providers."""
+
+        assert handler is seed.operation_locations.reconcile
+        executed.append(claimed_operation)
+        return completed
 
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
     monkeypatch.setattr(seed, "local_database_host", local_database_host)
     monkeypatch.setattr(seed, "seed_local_administrator", seed_administrator)
-    monkeypatch.setattr(seed.location_service, "fetch", fetch_no_locations)
+    monkeypatch.setattr(seed.location_service, "fetch", fetch_no_resources)
     monkeypatch.setattr(seed.location_service, "create", create_location)
-    monkeypatch.setattr(seed.database_service, "fetch", fetch_no_database_registries)
-    monkeypatch.setattr(seed.database_service, "create", create_database_registry)
-    monkeypatch.setattr(seed.storage_service, "fetch", fetch_no_storage_registries)
-    monkeypatch.setattr(seed.storage_service, "create", create_storage_registry)
-    monkeypatch.setattr(seed.compute_service, "fetch", fetch_no_compute_registries)
-    monkeypatch.setattr(seed.compute_service, "create", create_compute_registry)
-    monkeypatch.setattr(seed, "Kubernetes", lambda kubeconfig, proxy_secret: fake_kubernetes)
-    monkeypatch.setattr(seed.organization_service, "fetch", fetch_no_organizations)
-    monkeypatch.setattr(seed.organization_routes, "create_organization", create_organization)
-    monkeypatch.setattr(seed.organization_service, "get", load_organization)
+    monkeypatch.setattr(seed.organization_service, "fetch", fetch_no_resources)
+    monkeypatch.setattr(seed.organization_service, "create", create_organization)
     monkeypatch.setattr(seed.organization_service, "applications", list_no_applications)
-    monkeypatch.setattr(seed.users, "get", load_user)
-    monkeypatch.setattr(seed.application_routes, "create_application", create_application)
+    monkeypatch.setattr(seed.application_service, "create", create_application)
+    monkeypatch.setattr(seed.operations, "claim_next", claim_operation)
+    monkeypatch.setattr(seed.jobs, "run_claimed_operation", execute_operation)
 
+    # Act
     await seed.seed_local_development()
 
-    assert calls["user"] == seed.LOCAL_ADMIN_OIDC
-    assert calls["database"] == {
-        "kind": seed.DatabaseKind.postgresql,
-        "name": "local",
-        "slug": "local",
-        "host": "172.19.0.1",
-        "port": seed.LOCAL_DATABASE_PORT,
-        "username": "admin",
-        "password": "admin",
-        "location_id": location.id,
-        "user": user,
-    }
-    assert calls["storage"] == {
-        "kind": seed.StorageKind.minio,
-        "name": "local",
-        "slug": "local",
-        "endpoint_url": "http://localhost:19000",
-        "runtime_endpoint_url": "http://host.k3d.internal:19000",
-        "access_key_id": "admin",
-        "secret_access_key": "adminadmin",
-        "location_id": location.id,
-        "user": user,
-    }
-    assert calls["compute"] == {
-        "name": "local",
-        "slug": "local",
-        "kubeconfig": "apiVersion: v1\nclusters: []\n",
-        "gateway_url": seed.LOCAL_COMPUTE_GATEWAY_URL,
-        "location_id": location.id,
-        "user": user,
-    }
-    assert fake_kubernetes.sync_gateway_calls == 1
-    organization_payload, organization_user = cast(tuple[seed.OrganizationCreate, object], calls["organization"])
-    assert organization_payload.name == seed.LOCAL_ORG
-    assert organization_payload.avatar == seed.LOCAL_ORG_AVATAR
-    assert organization_payload.country == "CH"
-    assert organization_payload.location_id == location.id
-    assert organization_user == user
+    # Assert
+    assert calls["administrator"] == seed.LOCAL_ADMIN_OIDC
+    slug, payload, location_user = cast(tuple[str, seed.LocationCreate, object], calls["location"])
+    assert slug == "local"
+    assert location_user == user
+    assert payload.name == "local"
+    assert payload.country == "CH"
+    assert payload.compute.kubeconfig == "apiVersion: v1\nclusters: []\n"
+    assert payload.database.kind == seed.DatabaseKind.postgresql
+    assert payload.database.host == "172.19.0.1"
+    assert payload.database.port == seed.LOCAL_DATABASE_PORT
+    assert payload.database.username == "admin"
+    assert payload.database.password == "admin"
+    assert payload.storage.kind == seed.StorageKind.minio
+    assert payload.storage.endpoint_url == "http://localhost:19000"
+    assert payload.storage.runtime_endpoint_url == "http://host.k3d.internal:19000"
+    assert payload.storage.access_key_id == "admin"
+    assert payload.storage.secret_access_key == "adminadmin"
+    assert calls["organization"] == (
+        seed.LOCAL_ORG,
+        seed.LOCAL_ORG,
+        location.id,
+        user,
+        {"avatar": seed.LOCAL_ORG_AVATAR, "country": "CH"},
+    )
     assert calls["application_lookup"] == organization.id
-    assert calls["loaded_user"] == (seed.LOCAL_ADMIN_OIDC, True)
-    application_create_call = cast(tuple[object, ...], calls["application_create"])
-    assert application_create_call[0] == organization.id
-    assert application_create_call[2] == user
+    assert calls["application"] == (
+        organization.id,
+        seed.LOCAL_APP_NAME,
+        seed.LOCAL_APP_NAME,
+        seed.LOCAL_APPLICATION_IMAGE,
+        user,
+        {
+            "description": "Local SDK development application",
+            "icon": None,
+            "envs": {"REQUIRED": "local-development"},
+        },
+    )
+    assert executed == [operation, operation, operation]
+    assert claimed == []
 
 
-async def test_seed_local_development_refreshes_existing_application_runtime(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path,
-) -> None:
-    """Refresh the local application runtime when the seeded app already exists."""
+async def test_seed_local_development_reuses_complete_aggregate(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reuse the local location, organization, and application without provider work."""
 
+    # Arrange
     user = fake_resource(id=UUID("11111111-1111-1111-1111-111111111111"))
-    location = fake_resource(id=UUID("22222222-2222-2222-2222-222222222222"), slug="local")
-    organization = fake_resource(
-        id=UUID("33333333-3333-3333-3333-333333333333"),
-        name=seed.LOCAL_ORG,
-        slug="test",
-        location_id=location.id,
-        shared_schema_url="postgresql://shared/test",
-    )
-    application = fake_resource(
-        id=UUID("44444444-4444-4444-4444-444444444444"),
-        slug=seed.LOCAL_APP_NAME,
-        compute_registry_id=UUID("55555555-5555-5555-5555-555555555555"),
-        storage_registry_id=UUID("77777777-7777-7777-7777-777777777777"),
-    )
-    application_compute = fake_resource(id=UUID("55555555-5555-5555-5555-555555555555"))
-    application_database = fake_resource(id=UUID("66666666-6666-6666-6666-666666666666"))
-    application_storage = fake_resource(id=UUID("77777777-7777-7777-7777-777777777777"))
-    kubeconfig = tmp_path / "kubeconfig.yaml"
-    kubeconfig.write_text("apiVersion: v1\nclusters: []\n", encoding="utf-8")
+    location = fake_resource(id=UUID("22222222-2222-2222-2222-222222222222"), slug="local", version=env.VERSION)
+    organization = fake_resource(id=UUID("33333333-3333-3333-3333-333333333333"), slug=seed.LOCAL_ORG)
+    application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
     calls: dict[str, object] = {}
 
     async def seed_administrator() -> SimpleNamespace:
@@ -241,32 +172,12 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
 
         return user
 
-    def local_database_host() -> str:
-        """Return the fake local database host."""
-
-        return "172.19.0.1"
-
-    async def fetch_locations() -> list[object]:
-        """Return the existing local location."""
+    async def fetch_locations() -> list[SimpleNamespace]:
+        """Return the existing complete local aggregate."""
 
         return [location]
 
-    async def fetch_database_registries() -> list[object]:
-        """Return the existing local database registry."""
-
-        return [fake_resource(name="local", host="172.19.0.1", port=seed.LOCAL_DATABASE_PORT)]
-
-    async def fetch_storage_registries() -> list[object]:
-        """Return the existing local storage registry."""
-
-        return [fake_resource(name="local")]
-
-    async def fetch_compute_registries() -> list[object]:
-        """Return the existing local compute registry."""
-
-        return [fake_resource(name="local", gateway_url=seed.LOCAL_COMPUTE_GATEWAY_URL)]
-
-    async def fetch_organizations() -> list[object]:
+    async def fetch_organizations() -> list[SimpleNamespace]:
         """Return the existing local organization."""
 
         return [organization]
@@ -276,107 +187,35 @@ async def test_seed_local_development_refreshes_existing_application_runtime(
 
         calls["owner"] = (organization_id, user_id)
 
-    async def sync_organization_users(organization_record: object) -> None:
-        """Record organization user synchronization."""
-
-        calls["organization_users"] = organization_record
-
-    async def load_organization(organization_id: UUID) -> SimpleNamespace:
-        """Return the existing organization details."""
-
-        calls["loaded_organization"] = organization_id
-        return organization
-
     async def list_applications(organization_id: UUID) -> list[SimpleNamespace]:
-        """Return the existing seeded application."""
+        """Return the existing sample application."""
 
         calls["application_lookup"] = organization_id
         return [application]
 
-    async def create_application(*args: object) -> object:
-        """Fail if an existing application is recreated."""
+    async def fail_create(*args: object, **kwargs: object) -> None:
+        """Reject any mutation while reusing complete desired state."""
 
-        raise AssertionError(f"Unexpected application create: {args}")
+        raise AssertionError(f"Unexpected seed creation: {args}, {kwargs}")
 
-    async def application_metadata(payload: object) -> SimpleNamespace:
-        """Return refreshed metadata for the existing sample image."""
+    async def fail_claim() -> None:
+        """Reject reconciliation when seed makes no desired-state changes."""
 
-        calls["application_metadata"] = payload
-        return fake_resource(
-            sdk="0.1.0",
-            digest="sha256:manifest",
-            image="localhost:15000/longlink-app@sha256:manifest",
-            version="20260713_120000",
-        )
+        raise AssertionError("Unexpected reconciliation claim")
 
-    async def select_application_compute(registry_id: UUID, include_deleted: bool = False) -> SimpleNamespace:
-        """Return the application's compute registry."""
-
-        assert registry_id == application.compute_registry_id
-        assert include_deleted
-        return application_compute
-
-    async def select_application_database(location_id: UUID, include_deleted: bool = False) -> SimpleNamespace:
-        """Return the application's database registry."""
-
-        assert location_id == organization.location_id
-        assert not include_deleted
-        return application_database
-
-    async def select_application_storage(registry_id: UUID, include_deleted: bool = False) -> SimpleNamespace:
-        """Return the application's storage registry."""
-
-        assert registry_id == application.storage_registry_id
-        assert include_deleted
-        return application_storage
-
-    async def update_application_runtime(application_id: UUID, **kwargs: object) -> SimpleNamespace:
-        """Record the desired runtime update."""
-
-        calls["application_update"] = (application_id, kwargs)
-        return application
-
-    async def provision_application_runtime(*args: object) -> SimpleNamespace:
-        """Record synchronous runtime provisioning and verification queueing."""
-
-        calls["provision"] = args
-        return fake_resource(id=UUID("88888888-8888-8888-8888-888888888888"))
-
-    monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
-    monkeypatch.setattr(seed, "local_database_host", local_database_host)
     monkeypatch.setattr(seed, "seed_local_administrator", seed_administrator)
     monkeypatch.setattr(seed.location_service, "fetch", fetch_locations)
-    monkeypatch.setattr(seed.database_service, "fetch", fetch_database_registries)
-    monkeypatch.setattr(seed.storage_service, "fetch", fetch_storage_registries)
-    monkeypatch.setattr(seed.compute_service, "fetch", fetch_compute_registries)
+    monkeypatch.setattr(seed.location_service, "create", fail_create)
     monkeypatch.setattr(seed.organization_service, "fetch", fetch_organizations)
-    monkeypatch.setattr(seed.organization_service, "get", load_organization)
+    monkeypatch.setattr(seed.organization_service, "create", fail_create)
     monkeypatch.setattr(seed, "ensure_local_organization_owner", ensure_owner)
-    monkeypatch.setattr(seed.projections, "sync_organization_users", sync_organization_users)
     monkeypatch.setattr(seed.organization_service, "applications", list_applications)
-    monkeypatch.setattr(seed.application_routes, "create_application", create_application)
-    monkeypatch.setattr(seed.environments, "application_image_metadata", application_metadata)
-    monkeypatch.setattr(seed.compute_service, "get", select_application_compute)
-    monkeypatch.setattr(seed.database_service, "location", select_application_database)
-    monkeypatch.setattr(seed.storage_service, "get", select_application_storage)
-    monkeypatch.setattr(seed.application_service, "update_runtime", update_application_runtime)
-    monkeypatch.setattr(seed.application_routes, "provision_application_runtime", provision_application_runtime)
+    monkeypatch.setattr(seed.application_service, "create", fail_create)
+    monkeypatch.setattr(seed.operations, "claim_next", fail_claim)
 
+    # Act
     await seed.seed_local_development()
 
+    # Assert
     assert calls["owner"] == (organization.id, user.id)
-    assert calls["organization_users"] == organization
     assert calls["application_lookup"] == organization.id
-    application_update = cast(tuple[object, dict[str, object]], calls["application_update"])
-    assert application_update[0] == application.id
-    assert application_update[1]["digest"] == "sha256:manifest"
-    provision_call = cast(tuple[object, ...], calls["provision"])
-    assert provision_call == (
-        organization,
-        application,
-        "localhost:15000/longlink-app@sha256:manifest",
-        application_compute,
-        application_database,
-        application_storage,
-        user,
-    )

@@ -1,6 +1,6 @@
-import { CircleCheckIcon, InfoIcon, Loader2Icon, OctagonXIcon, TriangleAlertIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
+import { CircleCheckIcon, InfoIcon, Loader2Icon, OctagonXIcon, TriangleAlertIcon } from 'lucide-react';
 
 /**
  * Renders toast notifications using the current document theme.

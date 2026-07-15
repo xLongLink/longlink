@@ -1,10 +1,10 @@
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { type ColumnDef } from '@tanstack/react-table';
 import { useParams } from 'react-router';
+import { type ColumnDef } from '@tanstack/react-table';
+import type { ApiComputePod } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
 import { DataTable } from '@/components/DataTable';
 import { useComputePods, useComputes } from '@/data/compute';
-import { useTranslation } from '@/lib/i18n';
-import type { ApiComputePod } from '@/lib/types';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 
 /** Renders pods in a namespace on a compute backend. */
 export default function ComputePods() {

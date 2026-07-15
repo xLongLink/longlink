@@ -1,9 +1,9 @@
+import { Link } from 'react-router';
+import type { Props } from '@/xml/types';
+import { renderNode } from '@/xml/core/node';
 import { useXmlContext } from '@/xml/core/context';
 import { resolveTranslation } from '@/xml/core/i18n';
-import { renderNode } from '@/xml/core/node';
 import { isAppRelativeUrl, resolveUrl, useAnchorUrl } from '@/xml/core/url';
-import type { Props } from '@/xml/types';
-import { Link } from 'react-router';
 import { resolveXmlString } from './props';
 
 /** Renders a linked anchor with standard styling. */

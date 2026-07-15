@@ -36,6 +36,8 @@ class OAuthStub:
 
         assert name == "oidc"
         return self.oidc_client
+
+
 async def test_auth_oidc_upserts_activates_and_redirects(monkeypatch: pytest.MonkeyPatch) -> None:
     """Complete OIDC callback by validating userinfo and activating the account."""
 
@@ -81,6 +83,7 @@ async def test_auth_oidc_upserts_activates_and_redirects(monkeypatch: pytest.Mon
 async def test_upsert_oidc_user_normalizes_provider_claims(monkeypatch: pytest.MonkeyPatch) -> None:
     """Upsert normalized provider claims into the local user record."""
 
+    # Arrange
     created_user = User(
         oidc="oidc-upsert",
         email="oidc-upsert@example.com",
@@ -89,14 +92,15 @@ async def test_upsert_oidc_user_normalizes_provider_claims(monkeypatch: pytest.M
     )
     upsert_calls: list[dict[str, object]] = []
 
-    async def fake_upsert(**kwargs) -> User:
+    async def fake_upsert(*, oidc: str, email: str | None = None, name: str | None = None, avatar: str | None = None) -> User:
         """Record the user upsert payload."""
 
-        upsert_calls.append(kwargs)
+        upsert_calls.append({"oidc": oidc, "email": email, "name": name, "avatar": avatar})
         return created_user
 
     monkeypatch.setattr(auth_routes.users, "upsert", fake_upsert)
 
+    # Act
     subject = await auth_routes.upsert_oidc_user(
         OidcUserInfo(
             sub="oidc-upsert",
@@ -108,6 +112,7 @@ async def test_upsert_oidc_user_normalizes_provider_claims(monkeypatch: pytest.M
         )
     )
 
+    # Assert
     assert subject == "oidc-upsert"
     assert upsert_calls == [
         {
@@ -119,25 +124,40 @@ async def test_upsert_oidc_user_normalizes_provider_claims(monkeypatch: pytest.M
     ]
 
 
-async def test_upsert_oidc_user_rejects_missing_identity_claims() -> None:
+@pytest.mark.parametrize(
+    ("userinfo", "expected_status", "expected_detail"),
+    [
+        pytest.param(
+            OidcUserInfo(sub="missing-email", name="No Email"),
+            503,
+            "Authentication provider returned no email",
+            id="missing-email",
+        ),
+        pytest.param(
+            OidcUserInfo(sub="missing-name", email="missing@example.com", email_verified=True),
+            503,
+            "Authentication provider returned no display name",
+            id="missing-name",
+        ),
+        pytest.param(
+            OidcUserInfo(sub="unverified-email", email="unverified@example.com", email_verified=False, name="User"),
+            401,
+            "Authentication provider returned an unverified email",
+            id="unverified-email",
+        ),
+    ],
+)
+async def test_upsert_oidc_user_rejects_missing_identity_claims(
+    userinfo: OidcUserInfo,
+    expected_status: int,
+    expected_detail: str,
+) -> None:
     """Reject provider profiles that cannot create a complete local user."""
 
-    with pytest.raises(HTTPException) as missing_email_error:
-        await auth_routes.upsert_oidc_user(OidcUserInfo(sub="missing-email", name="No Email"))
+    # Act
+    with pytest.raises(HTTPException) as exc:
+        await auth_routes.upsert_oidc_user(userinfo)
 
-    assert missing_email_error.value.status_code == 503
-    assert missing_email_error.value.detail == "Authentication provider returned no email"
-
-    with pytest.raises(HTTPException) as missing_name_error:
-        await auth_routes.upsert_oidc_user(OidcUserInfo(sub="missing-name", email="missing@example.com", email_verified=True))
-
-    assert missing_name_error.value.status_code == 503
-    assert missing_name_error.value.detail == "Authentication provider returned no display name"
-
-    with pytest.raises(HTTPException) as unverified_email_error:
-        await auth_routes.upsert_oidc_user(
-            OidcUserInfo(sub="unverified-email", email="unverified@example.com", email_verified=False, name="User")
-        )
-
-    assert unverified_email_error.value.status_code == 401
-    assert unverified_email_error.value.detail == "Authentication provider returned an unverified email"
+    # Assert
+    assert exc.value.status_code == expected_status
+    assert exc.value.detail == expected_detail

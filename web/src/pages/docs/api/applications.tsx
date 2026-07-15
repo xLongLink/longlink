@@ -1,9 +1,9 @@
-import { Code } from '@/components/ui/code';
-import { Heading } from '@/components/ui/heading';
-import { P } from '@/components/ui/p';
-import { Stack } from '@/components/ui/stack';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BookOpen, Database, GitPullRequest, HardDrive, PenLine, ServerCog, Settings2 } from 'lucide-react';
+import { P } from '@/components/ui/p';
+import { Code } from '@/components/ui/code';
+import { Stack } from '@/components/ui/stack';
+import { Heading } from '@/components/ui/heading';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const applicationRoles = [
     {

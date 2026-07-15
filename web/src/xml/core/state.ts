@@ -1,6 +1,6 @@
 import { proxy } from 'valtio';
-import { isSafePropertyName } from '../expressions';
 import type { ExecutionContext } from '../types';
+import { isSafePropertyName } from '../expressions';
 
 /** Initializes a local reactive state slot for descendant XML nodes. */
 export function state(ctx: ExecutionContext, id: string, value: unknown): void {

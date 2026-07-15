@@ -3,10 +3,11 @@ from datetime import datetime
 from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
-from src.models.statuses import ApplicationStatus
+from src.models.statuses import ApplicationStatus, OrganizationStatus
 from src.models.countries import DEFAULT_COUNTRY, Country
 from src.models.locations import LocationResponse
 from longlink.models.icons import Icon
+from src.models.operations import OperationResponse
 
 
 class OrganizationCreate(BaseModel):
@@ -73,6 +74,9 @@ class OrganizationSummary(BaseModel):
     # Relationships
     location_id: UUID
 
+    # State
+    status: OrganizationStatus
+
     # Audit
     created_at: datetime
     updated_at: datetime
@@ -80,6 +84,14 @@ class OrganizationSummary(BaseModel):
     updated_by: UserSummary
     deleted_at: datetime | None = None
     deleted_by: UserSummary | None = None
+
+
+class OrganizationMutationResponse(BaseModel):
+    """Return a changed organization and its location reconciliation operation."""
+
+    # Result
+    organization: OrganizationSummary
+    operation: OperationResponse
 
 
 class OrganizationApplicationResponse(BaseModel):
@@ -150,6 +162,9 @@ class OrganizationDetails(BaseModel):
     # Location
     location: LocationResponse
     location_id: UUID
+
+    # State
+    status: OrganizationStatus
 
     # Audit
     created_at: datetime

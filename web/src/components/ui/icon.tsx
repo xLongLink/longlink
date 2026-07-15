@@ -1,5 +1,3 @@
-import { cn } from '@/lib/utils';
-import { isIconName, type IconName } from '@/lib/icons';
 import {
     Activity,
     ArrowRight,
@@ -34,6 +32,8 @@ import {
     type LucideIcon,
     type LucideProps,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { isIconName, type IconName } from '@/lib/icons';
 
 const staticIconRegistry = {
     activity: Activity,

@@ -1,10 +1,9 @@
 from src import adapters
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authadmin, authsupport
-from src.utils import names
+from src.auth import authsupport
 from src.logger import logger
-from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
+from src.models.databases import DatabaseRegistryResponse
 from src.database.services import database
 from src.database.models.users import User
 
@@ -27,25 +26,6 @@ async def get_database_registry(registry_id: UUID, _user: User = Depends(authsup
         raise HTTPException(status_code=404, detail="Database registry not found")
 
     return registry
-
-
-@router.delete("/api/databases/{registry_id}", status_code=204)
-async def delete_database_registry(registry_id: UUID, user: User = Depends(authadmin)):
-    """Soft-delete one database backend registration."""
-
-    deleted = await database.delete(registry_id, user)
-    if not deleted:
-        raise HTTPException(status_code=404, detail="Database registry not found")
-
-
-@router.post("/api/databases", response_model=DatabaseRegistryResponse)
-async def create_database_registry(payload: DatabaseRegistryCreate, user: User = Depends(authadmin)):
-    """Create one database backend registration."""
-
-    # Build a stable slug from the submitted name.
-    slug = names.slugify(payload.name)
-
-    return await database.create(**payload.model_dump(), slug=slug, user=user)
 
 
 @router.get("/api/databases/{registry_id}/usage", response_model=int)

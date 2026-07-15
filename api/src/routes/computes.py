@@ -1,14 +1,14 @@
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authadmin, authsupport
-from src.utils import names
+from src.auth import authsupport
 from src.logger import logger
-from src.models.computes import PodResponse, ComputeRegistryCreate, ComputeRegistryResponse
+from src.models.computes import PodResponse, ComputeRegistryResponse
 from src.database.services import compute
 from src.kubernetes.client import Kubernetes
 from src.database.models.users import User
 
 router = APIRouter()
+
 
 @router.get("/api/computes", response_model=list[ComputeRegistryResponse])
 async def list_compute_registries(_user: User = Depends(authsupport)):
@@ -28,34 +28,6 @@ async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)
     return registry
 
 
-@router.delete("/api/computes/{registry_id}", status_code=204)
-async def delete_compute_registry(registry_id: UUID, user: User = Depends(authadmin)):
-    """Soft-delete one compute backend registration."""
-
-    deleted = await compute.delete(registry_id, user)
-    if not deleted:
-        raise HTTPException(status_code=404, detail="Compute registry not found")
-
-
-@router.post("/api/computes", response_model=ComputeRegistryResponse)
-async def create_compute_registry(payload: ComputeRegistryCreate, user: User = Depends(authadmin)):
-    """Create one compute backend registration."""
-
-    # Derive the registry slug from the display name.
-    slug = names.slugify(payload.name)
-
-    registry = await compute.create(**payload.model_dump(), slug=slug, user=user)
-
-    # Initialize the cluster immediately so unavailable backends fail fast.
-    try:
-        adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
-        await adapter.gateway.sync()
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail="Failed to initialize the compute cluster") from exc
-
-    return registry
-
-
 @router.get("/api/computes/{registry_id}/namespaces", response_model=list[str])
 async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsupport)):
     """List all namespaces on a compute backend."""
@@ -64,7 +36,7 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
     if registry is None:
         raise HTTPException(status_code=404, detail="Compute registry not found")
 
-    adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
+    adapter = Kubernetes(registry.kubeconfig)
 
     # Ask the backend for known namespaces.
     try:
@@ -84,7 +56,7 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
     if registry is None:
         raise HTTPException(status_code=404, detail="Compute registry not found")
 
-    adapter = Kubernetes(registry.kubeconfig, registry.proxy_secret)
+    adapter = Kubernetes(registry.kubeconfig)
 
     # Load namespaces before validating the request.
     try:

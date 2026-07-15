@@ -1,7 +1,7 @@
-import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
-import fs from 'node:fs/promises';
 import path from 'path';
+import fs from 'node:fs/promises';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 
 /** Resolves the bundle output directory for one Vite mode. */

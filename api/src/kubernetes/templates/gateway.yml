@@ -1,28 +1,54 @@
-# Template for the per-cluster Envoy gateway resources.
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: longlink-system
+# Template for per-location Envoy gateway resources other than its early LoadBalancer Service.
 ---
 apiVersion: v1
 kind: Secret
 metadata:
   name: longlink-gateway-auth
   namespace: longlink-system
+  annotations:
+    longlink.io/platform-version: "$platform_version"
+    longlink.io/runtime-revision: "$runtime_revision"
+    longlink.io/template-revision: "$template_revision"
   labels:
     app: longlink-gateway
+    app.kubernetes.io/managed-by: longlink-platform
+    longlink.io/location-id: "$location_id"
 type: Opaque
-data:
-  gateway-secret: "$gateway_secret"
+stringData:
+  gateway-secret: $gateway_secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: longlink-gateway-tls
+  namespace: longlink-system
+  annotations:
+    longlink.io/platform-version: "$platform_version"
+    longlink.io/runtime-revision: "$runtime_revision"
+    longlink.io/template-revision: "$template_revision"
+  labels:
+    app: longlink-gateway
+    app.kubernetes.io/managed-by: longlink-platform
+    longlink.io/location-id: "$location_id"
+type: kubernetes.io/tls
+stringData:
+  ca.crt: $ca_certificate
+  tls.crt: $tls_certificate
+  tls.key: $tls_private_key
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: longlink-gateway
   namespace: longlink-system
+  annotations:
+    longlink.io/platform-version: "$platform_version"
+    longlink.io/runtime-revision: "$runtime_revision"
+    longlink.io/template-revision: "$template_revision"
   labels:
     app: longlink-gateway
+    app.kubernetes.io/managed-by: longlink-platform
+    longlink.io/location-id: "$location_id"
 data:
   envoy.yaml: $envoy_config
 ---
@@ -31,8 +57,14 @@ kind: Deployment
 metadata:
   name: longlink-gateway
   namespace: longlink-system
+  annotations:
+    longlink.io/platform-version: "$platform_version"
+    longlink.io/runtime-revision: "$runtime_revision"
+    longlink.io/template-revision: "$template_revision"
   labels:
     app: longlink-gateway
+    app.kubernetes.io/managed-by: longlink-platform
+    longlink.io/location-id: "$location_id"
 spec:
   replicas: 2
   selector:
@@ -41,9 +73,13 @@ spec:
   template:
     metadata:
       annotations:
-        longlink.io/config-hash: $config_hash
+        longlink.io/platform-version: "$platform_version"
+        longlink.io/runtime-revision: "$runtime_revision"
+        longlink.io/template-revision: "$template_revision"
       labels:
         app: longlink-gateway
+        app.kubernetes.io/managed-by: longlink-platform
+        longlink.io/location-id: "$location_id"
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -55,14 +91,13 @@ spec:
           type: RuntimeDefault
       initContainers:
         - name: render-config
-          image: busybox:1.36.1
+          image: busybox:1.36.1@sha256:73aaf090f3d85aa34ee199857f03fa3a95c8ede2ffd4cc2cdb5b94e566b11662
           command:
             - sh
             - -c
             - >-
               sed 's|__LONG_LINK_GATEWAY_SECRET__|'"$$LONG_LINK_GATEWAY_SECRET"'|g'
-              /etc/envoy-template/envoy.yaml >
-              /etc/envoy/envoy.yaml
+              /etc/envoy-template/envoy.yaml > /etc/envoy/envoy.yaml
           env:
             - name: LONG_LINK_GATEWAY_SECRET
               valueFrom:
@@ -96,19 +131,23 @@ spec:
             httpGet:
               path: /ready
               port: gateway
-              scheme: HTTP
+              scheme: HTTPS
             periodSeconds: 5
             failureThreshold: 3
           livenessProbe:
             httpGet:
               path: /ready
               port: gateway
-              scheme: HTTP
+              scheme: HTTPS
             periodSeconds: 10
             failureThreshold: 3
           volumeMounts:
             - name: config
               mountPath: /etc/envoy
+              readOnly: true
+            - name: tls
+              mountPath: /etc/envoy-tls
+              readOnly: true
             - name: tmp
               mountPath: /tmp
           resources:
@@ -130,33 +169,25 @@ spec:
             name: longlink-gateway
         - name: config
           emptyDir: {}
+        - name: tls
+          secret:
+            secretName: longlink-gateway-tls
         - name: tmp
           emptyDir: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: longlink-gateway
-  namespace: longlink-system
-  labels:
-    app: longlink-gateway
-spec:
-  type: ClusterIP
-  selector:
-    app: longlink-gateway
-  ports:
-    - name: gateway
-      protocol: TCP
-      port: 80
-      targetPort: gateway
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: longlink-gateway-ingress
   namespace: longlink-system
+  annotations:
+    longlink.io/platform-version: "$platform_version"
+    longlink.io/runtime-revision: "$runtime_revision"
+    longlink.io/template-revision: "$template_revision"
   labels:
     app: longlink-gateway
+    app.kubernetes.io/managed-by: longlink-platform
+    longlink.io/location-id: "$location_id"
 spec:
   podSelector:
     matchLabels:

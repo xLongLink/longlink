@@ -1,8 +1,8 @@
 import i18next, { type Resource } from 'i18next';
 import { useEffect, type ReactNode } from 'react';
 import { I18nextProvider, initReactI18next, useTranslation as useReactTranslation } from 'react-i18next';
-import { DEFAULT_LANGUAGE, resolveSupportedLanguage, type Language } from '@/lib/languages';
 import defaultTranslationCatalog from '@/translations/en.json';
+import { DEFAULT_LANGUAGE, resolveSupportedLanguage, type Language } from '@/lib/languages';
 
 type TranslationCatalog = Record<string, unknown>;
 type LazyLanguage = Exclude<Language, typeof DEFAULT_LANGUAGE>;

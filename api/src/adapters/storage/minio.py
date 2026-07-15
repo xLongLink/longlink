@@ -51,19 +51,24 @@ class MinIO(Storage):
 
         # Keep bucket cleanup in one client session.
         async with self._client() as client:
-            paginator = client.get_paginator("list_objects_v2")
+            try:
+                paginator = client.get_paginator("list_objects_v2")
 
-            # Delete objects page by page before removing the bucket.
-            async for page in paginator.paginate(Bucket=bucket):
-                objects: list[ObjectIdentifierTypeDef] = [
-                    {"Key": str(item["Key"])} for item in page.get("Contents", []) if "Key" in item
-                ]
+                # Delete objects page by page before removing the bucket.
+                async for page in paginator.paginate(Bucket=bucket):
+                    objects: list[ObjectIdentifierTypeDef] = [
+                        {"Key": str(item["Key"])} for item in page.get("Contents", []) if "Key" in item
+                    ]
 
-                # Skip empty pages from compatible storage backends.
-                if objects:
-                    await client.delete_objects(Bucket=bucket, Delete={"Objects": objects})
+                    # Skip empty pages from compatible storage backends.
+                    if objects:
+                        await client.delete_objects(Bucket=bucket, Delete={"Objects": objects})
 
-            await client.delete_bucket(Bucket=bucket)
+                await client.delete_bucket(Bucket=bucket)
+            except ClientError as exc:
+                error = exc.response.get("Error", {})
+                if error.get("Code") not in {"NoSuchBucket", "NoSuchKey", "404"}:
+                    raise
 
     async def create(self, bucket: str) -> str:
         """Create one assigned bucket and return its name."""

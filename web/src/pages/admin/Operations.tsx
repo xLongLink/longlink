@@ -1,11 +1,11 @@
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
-import { DataTable } from '@/components/DataTable';
-import { useOperations } from '@/data/admin';
-import { useTranslation } from '@/lib/i18n';
+import { type ColumnDef } from '@tanstack/react-table';
 import type { ApiOperation } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
+import { useOperations } from '@/data/admin';
 import { formatDateTime } from '@/lib/utils';
+import { DataTable } from '@/components/DataTable';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 
 /** Returns localized admin operation table columns. */
 function createOperationColumns(t: TFunction): Array<ColumnDef<ApiOperation>> {
@@ -18,14 +18,14 @@ function createOperationColumns(t: TFunction): Array<ColumnDef<ApiOperation>> {
 
     return [
         {
-            accessorKey: 'kind',
+            id: 'operation',
             header: t('columns.operation'),
             cell: ({ row }) => {
                 const operation = row.original;
 
                 return (
                     <div className="min-w-0">
-                        <div className="truncate font-medium text-foreground">{operation.kind}</div>
+                        <div className="truncate font-medium text-foreground">{t('admin.locationReconciliation')}</div>
                         <div className="text-xs text-muted-foreground">{operationStatusLabels[operation.status]}</div>
                     </div>
                 );
@@ -43,6 +43,12 @@ function createOperationColumns(t: TFunction): Array<ColumnDef<ApiOperation>> {
                         <div>
                             <span className="text-xs text-muted-foreground">{t('columns.created')}</span>{' '}
                             {formatDateTime(operation.created_at)}
+                        </div>
+                        <div>
+                            <span className="text-xs text-muted-foreground">
+                                {t('admin.operationStatus.scheduled')}
+                            </span>{' '}
+                            {formatDateTime(operation.scheduled_at)}
                         </div>
                         <div>
                             <span className="text-xs text-muted-foreground">{t('columns.started')}</span>{' '}
@@ -76,20 +82,12 @@ function createOperationColumns(t: TFunction): Array<ColumnDef<ApiOperation>> {
                             <span className="font-mono text-xs">{operation.id}</span>
                         </div>
                         <div className="truncate">
-                            <span className="text-xs text-muted-foreground">{t('columns.application')}</span>{' '}
-                            {operation.application_id ? (
-                                <span className="font-mono text-xs">{operation.application_id}</span>
-                            ) : (
-                                '—'
-                            )}
+                            <span className="text-xs text-muted-foreground">{t('columns.location')}</span>{' '}
+                            <span className="font-mono text-xs">{operation.location_id}</span>
                         </div>
-                        <div className="truncate">
-                            <span className="text-xs text-muted-foreground">{t('columns.organization')}</span>{' '}
-                            {operation.organization_id ? (
-                                <span className="font-mono text-xs">{operation.organization_id}</span>
-                            ) : (
-                                '—'
-                            )}
+                        <div className="flex gap-3 text-xs text-muted-foreground">
+                            <span>Platform {operation.platform_version}</span>
+                            <span>Attempts {operation.attempt_count}</span>
                         </div>
                         {operation.error ? (
                             <div className="truncate text-destructive">

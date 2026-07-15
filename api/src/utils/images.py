@@ -51,7 +51,6 @@ async def metadata(image: str) -> LongLinkMetadata | None:
 
     # Fetch registry data with TLS matching the registry URL.
     async with httpx2.AsyncClient(verify=registry_url.startswith("https://"), follow_redirects=False, timeout=5.0) as client:
-
         # LongLink labels are stored in the image config blob, reached through the image manifest.
         try:
             # Stop when the manifest cannot be resolved.
@@ -121,7 +120,6 @@ async def metadata(image: str) -> LongLinkMetadata | None:
 
             # Decode environment requirements when present.
             if environments is not None:
-
                 # Parse the encoded environment label.
                 try:
                     parsed_environments = json.loads(environments)
@@ -131,7 +129,7 @@ async def metadata(image: str) -> LongLinkMetadata | None:
                         return None
 
                     result.environments = [EnvironmentMetadata.model_validate(item) for item in parsed_environments]
-                except (json.JSONDecodeError, TypeError, ValueError):
+                except json.JSONDecodeError, TypeError, ValueError:
                     return None
 
             return result
@@ -252,7 +250,6 @@ async def _fetch_manifest(
 
     # Validate registry-provided digests when present.
     if digest is not None:
-
         # Reject malformed manifest digests.
         if not IMAGE_DIGEST_PATTERN.fullmatch(digest):
             return None
@@ -309,10 +306,10 @@ async def _fetch_manifest(
         if not isinstance(data, dict):
             return None
 
-        digest = manifest_response.headers.get("Docker-Content-Digest") or manifest_digest
+        selected_digest = manifest_response.headers.get("Docker-Content-Digest") or manifest_digest
 
-        # Require a valid platform manifest digest.
-        if not IMAGE_DIGEST_PATTERN.fullmatch(digest):
+        # Validate the inspected platform while retaining the multi-platform index digest for deployment.
+        if not IMAGE_DIGEST_PATTERN.fullmatch(selected_digest):
             return None
 
     # Require a resolved valid manifest digest.

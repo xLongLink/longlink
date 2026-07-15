@@ -1,5 +1,8 @@
-import { type ColumnDef, type RowData, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { useEffect, useState } from 'react';
+import { type ColumnDef, type RowData, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
+import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
     Pagination,
     PaginationContent,
@@ -9,9 +12,6 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from '@/components/ui/pagination';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useTranslation } from '@/lib/i18n';
-import { cn } from '@/lib/utils';
 
 const LEADING_PAGINATION_PAGE_COUNT = 5;
 

@@ -1,73 +1,33 @@
-from types import SimpleNamespace
+from factories import create_ready_location
 from fastapi.testclient import TestClient
-from src.database.services import users, compute, locations
-
-db = SimpleNamespace(
-    compute=compute,
-    locations=locations,
-    users=users,
-)
+from src.database.services import compute
 
 
-async def test_compute_registry_endpoint_supports_create_and_list(
+async def test_compute_registry_endpoints_return_location_backend(
     clients: tuple[TestClient, TestClient, TestClient],
-    monkeypatch,
     users,
 ) -> None:
-    """Create, list, and delete one compute registry."""
+    """Return the compute backend created with a complete location aggregate."""
 
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    location = await db.locations.create("local", "Local testing", user1, "CH")
-    captured: dict[str, object] = {}
-
-    class FakeCompute:
-        """Fake Kubernetes compute client for registry route tests."""
-
-        def __init__(self, kubeconfig: str, proxy_secret: str) -> None:
-            """Capture constructor arguments passed by the route."""
-
-            self.gateway = self
-            captured["kubeconfig"] = kubeconfig
-            captured["proxy_secret"] = proxy_secret
-
-        async def sync(self) -> None:
-            """Capture gateway sync calls."""
-
-            sync_calls = captured.get("sync_calls")
-            captured["sync_calls"] = sync_calls + 1 if isinstance(sync_calls, int) else 1
-
-    monkeypatch.setattr("src.routes.computes.Kubernetes", FakeCompute)
+    location = await create_ready_location(user1)
+    registry = await compute.location(location.id)
+    assert registry is not None
 
     # Act
-    create_response = client.post(
-        "/api/computes",
-        json={
-            "name": "primary",
-            "kubeconfig": "apiVersion: v1\nclusters: []\n",
-            "gateway_url": "https://apps.longlink.internal",
-            "location_id": str(location.id),
-        },
-    )
     list_response = client.get("/api/computes")
-    registry_id = create_response.json()["id"]
-    delete_response = client.delete(f"/api/computes/{registry_id}")
-    get_response = client.get(f"/api/computes/{registry_id}")
+    get_response = client.get(f"/api/computes/{registry.id}")
 
     # Assert
-    assert create_response.status_code == 200
-    create_payload = create_response.json()
-    assert create_payload["id"] == registry_id
-    assert create_payload["name"] == "primary"
-    assert create_payload["gateway_url"] == "https://apps.longlink.internal"
-    assert "gateway_load_balancer_ip" not in create_payload
-    assert "kind" not in create_payload
-    assert "kubeconfig" not in create_payload
     assert list_response.status_code == 200
-    assert [item["id"] for item in list_response.json()] == [registry_id]
-    assert delete_response.status_code == 204
-    assert get_response.status_code == 404
-    assert captured["kubeconfig"] == "apiVersion: v1\nclusters: []\n"
-    assert captured["proxy_secret"]
-    assert captured["sync_calls"] == 1
+    assert [item["id"] for item in list_response.json()] == [str(registry.id)]
+    assert get_response.status_code == 200
+    payload = get_response.json()
+    assert payload["id"] == str(registry.id)
+    assert payload["name"] == registry.name
+    assert payload["gateway_url"] == "https://gateway.example"
+    assert payload["location_id"] == str(location.id)
+    assert "kubeconfig" not in payload
+    assert "proxy_secret" not in payload

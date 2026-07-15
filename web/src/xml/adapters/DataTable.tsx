@@ -1,12 +1,12 @@
-import { DataTable as UIDataTable } from '@/components/DataTable';
+import type { ReactNode } from 'react';
 import type { CellContext, ColumnDef } from '@tanstack/react-table';
-import { ContextProvider, useXmlContext } from '@/xml/core/context';
-import { resolveTranslation } from '@/xml/core/i18n';
+import type { ASTNode, ASTProps, ExecutionContext, Props } from '@/xml/types';
 import { renderNode } from '@/xml/core/node';
+import { resolveTranslation } from '@/xml/core/i18n';
 import { BaseUrlContext, useUrl } from '@/xml/core/url';
 import { evaluate, readSafeProperty } from '@/xml/expressions';
-import type { ASTNode, ASTProps, ExecutionContext, Props } from '@/xml/types';
-import type { ReactNode } from 'react';
+import { DataTable as UIDataTable } from '@/components/DataTable';
+import { ContextProvider, useXmlContext } from '@/xml/core/context';
 import { readXmlProp, resolveXmlString, resolveXmlValue } from './props';
 
 type DataTableRow = Record<string, unknown>;

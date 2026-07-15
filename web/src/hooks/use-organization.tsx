@@ -1,15 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useApiQuery } from '@/hooks/use-api';
-import { useUserProfile } from '@/hooks/use-user';
-import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
-import {
-    apiApplicationResponseSchema,
-    apiOrganizationDetailsSchema,
-    apiOrganizationSummarySchema,
-    parseApiResponse,
-} from '@/lib/api-schemas';
-import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
-import { canCreateOrganizationInvitation, canManageOrganizationMembers, type Role } from '@/lib/roles';
 import type {
     ApiApplicationResponse,
     ApiInvitation,
@@ -18,6 +7,17 @@ import type {
     ApiOrganizationMemberSummary,
     ApiUserOrganizationMembership,
 } from '@/lib/types';
+import { useApiQuery } from '@/hooks/use-api';
+import { useUserProfile } from '@/hooks/use-user';
+import { hasMinimumRole, type Role } from '@/lib/roles';
+import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
+import {
+    apiApplicationMutationResponseSchema,
+    apiOrganizationDetailsSchema,
+    apiOrganizationMutationResponseSchema,
+    parseApiResponse,
+} from '@/lib/api-schemas';
 
 type UseOrganizationResult = {
     organization: ApiOrganizationDetails | undefined;
@@ -66,6 +66,7 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
 
     const organizationQuery = useApiQuery<ApiOrganizationDetails>(organizationPath, {
         parse: (value) => parseApiResponse(apiOrganizationDetailsSchema, value),
+        refetchInterval: 5000,
         retry: false,
     });
 
@@ -92,8 +93,8 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
     const organizationId = resolveOrganizationId(organizationSlug, organizations);
     const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
     const organizationMembership = organizations.find((item) => item.slug === organizationSlug);
-    const canInviteMembers = canCreateOrganizationInvitation(organizationMembership?.role);
-    const canManageMembers = canManageOrganizationMembers(organizationMembership?.role);
+    const canInviteMembers = hasMinimumRole(organizationMembership?.role, 'maintain');
+    const canManageMembers = hasMinimumRole(organizationMembership?.role, 'admin');
 
     const inviteMemberMutation = useMutation({
         mutationFn: async ({ email, role }: { email: string; role: Role }) => {
@@ -150,7 +151,7 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, image, description, icon, envs }),
                 },
-                (value) => parseApiResponse(apiApplicationResponseSchema, value)
+                (value) => parseApiResponse(apiApplicationMutationResponseSchema, value).application
             );
         },
         onSuccess: async () => {
@@ -201,9 +202,13 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
                 throw new Error('Organization not found');
             }
 
-            await fetchApiVoid(`/api/applications/${applicationId}`, {
-                method: 'DELETE',
-            });
+            await fetchApiJson(
+                `/api/applications/${applicationId}`,
+                {
+                    method: 'DELETE',
+                },
+                (value) => parseApiResponse(apiApplicationMutationResponseSchema, value).application
+            );
 
             await queryClient.refetchQueries({ queryKey: apiQueryKey(organizationPath), type: 'active' });
             await queryClient.invalidateQueries({ queryKey: applicationsQueryKey() });
@@ -247,7 +252,7 @@ export function useCreateOrganization() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, location_id, avatar: avatar?.trim() ? avatar.trim() : null, country }),
                 },
-                (value) => parseApiResponse(apiOrganizationSummarySchema, value)
+                (value) => parseApiResponse(apiOrganizationMutationResponseSchema, value).organization
             );
         },
         onSuccess: () => {
@@ -267,9 +272,13 @@ export function useDeleteOrganization() {
                 throw new Error('Organization not found');
             }
 
-            await fetchApiVoid(`/api/organizations/${organizationId}`, {
-                method: 'DELETE',
-            });
+            await fetchApiJson(
+                `/api/organizations/${organizationId}`,
+                {
+                    method: 'DELETE',
+                },
+                (value) => parseApiResponse(apiOrganizationMutationResponseSchema, value).organization
+            );
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() });

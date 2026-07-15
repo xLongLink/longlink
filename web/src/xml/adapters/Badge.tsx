@@ -1,9 +1,9 @@
-import { Badge as UIBadge, badgeVariants } from '@/components/ui/badge';
+import type { VariantProps } from 'class-variance-authority';
+import type { Props } from '@/xml/types';
+import { renderNode } from '@/xml/core/node';
 import { useXmlContext } from '@/xml/core/context';
 import { resolveTranslation } from '@/xml/core/i18n';
-import { renderNode } from '@/xml/core/node';
-import type { Props } from '@/xml/types';
-import type { VariantProps } from 'class-variance-authority';
+import { Badge as UIBadge, badgeVariants } from '@/components/ui/badge';
 import { resolveXmlString, resolveXmlValue } from './props';
 
 type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>['variant']>;

@@ -1,9 +1,9 @@
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { type ColumnDef } from '@tanstack/react-table';
 import { Link, useParams } from 'react-router';
+import { type ColumnDef } from '@tanstack/react-table';
+import { useTranslation } from '@/lib/i18n';
 import { DataTable } from '@/components/DataTable';
 import { useComputeNamespaces, useComputes } from '@/data/compute';
-import { useTranslation } from '@/lib/i18n';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 
 type ComputeNamespaceRow = {
     name: string;

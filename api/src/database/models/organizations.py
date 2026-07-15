@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Column, String
 from longlink.utils.time import utcnow
+from src.models.statuses import OrganizationStatus
 from src.models.countries import DEFAULT_COUNTRY
 from longlink.database.types import UTCDateTime
 
@@ -34,6 +35,15 @@ class Organization(SQLModel, table=True):
 
     # Database
     shared_schema_url: str | None = Field(default=None, max_length=2048)
+
+    # State
+    status: OrganizationStatus = Field(
+        default=OrganizationStatus.creating,
+        sa_column=Column(
+            String(20),
+            nullable=False,
+        ),
+    )
 
     # User
     created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))

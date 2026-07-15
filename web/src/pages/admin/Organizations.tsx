@@ -1,20 +1,20 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { useTranslation } from '@/lib/i18n';
-import { type ColumnDef } from '@tanstack/react-table';
 import type { TFunction } from 'i18next';
-import { Link } from 'react-router';
 import { toast } from 'sonner';
-import { AdminActionMenu } from '@/components/admin/AdminTableElements';
-import { DataTable } from '@/components/DataTable';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { Link } from 'react-router';
+import { type ColumnDef } from '@tanstack/react-table';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { ApiOrganizationSummary } from '@/lib/types';
+import { fetchApiVoid } from '@/lib/api';
+import { useTranslation } from '@/lib/i18n';
 import { useOrganizations } from '@/data/admin';
 import { useUserProfile } from '@/hooks/use-user';
-import { fetchApiVoid } from '@/lib/api';
+import { DataTable } from '@/components/DataTable';
 import { organizationsQueryKey } from '@/lib/query-keys';
-import type { ApiOrganizationSummary } from '@/lib/types';
+import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import { AdminActionMenu } from '@/components/admin/AdminTableElements';
 import { formatDateTime, getInitials, useDeleteDialog } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 
 /** Returns localized admin organization table columns. */
 function createOrganizationColumnsBase(t: TFunction): Array<ColumnDef<ApiOrganizationSummary>> {

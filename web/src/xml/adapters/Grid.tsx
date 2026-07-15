@@ -1,7 +1,7 @@
-import { Grid as GridShell } from '@/components/ui/grid';
-import { useXmlContext } from '@/xml/core/context';
-import { renderNode } from '@/xml/core/node';
 import type { Props } from '@/xml/types';
+import { renderNode } from '@/xml/core/node';
+import { useXmlContext } from '@/xml/core/context';
+import { Grid as GridShell } from '@/components/ui/grid';
 import { resolveXmlString } from './props';
 
 /** Renders a full-width grid row. */

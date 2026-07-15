@@ -1,7 +1,7 @@
-import { Toggle as UIToggle } from '@/components/ui/toggle';
-import { useXmlContext } from '@/xml/core/context';
-import { renderNode } from '@/xml/core/node';
 import type { Props } from '@/xml/types';
+import { renderNode } from '@/xml/core/node';
+import { useXmlContext } from '@/xml/core/context';
+import { Toggle as UIToggle } from '@/components/ui/toggle';
 import { resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
 
 /** Renders a shadcn-backed toggle. */
