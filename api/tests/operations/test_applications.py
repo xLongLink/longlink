@@ -1,4 +1,5 @@
 import pytest
+from uuid import uuid4
 from datetime import timedelta
 from src.utils import names
 from src.operations import locations as location_operations
@@ -67,11 +68,21 @@ async def test_execute_location_reconcile_operation_converges_complete_desired_s
     # Arrange
     location, compute_registry = await create_location_infrastructure()
     deleted_at = utcnow() - timedelta(minutes=1)
-    active_organization = Organization(name="Acme", slug="acme", location_id=location.id)
+    active_organization_id = uuid4()
+    active_organization = Organization(
+        id=active_organization_id,
+        name="Acme",
+        slug="acme",
+        location_id=location.id,
+        shared_schema_url=f"postgresql://shared/{active_organization_id.hex}",
+    )
+    deleted_organization_id = uuid4()
     deleted_organization = Organization(
+        id=deleted_organization_id,
         name="Retired",
         slug="retired",
         location_id=location.id,
+        shared_schema_url=f"postgresql://shared/{deleted_organization_id.hex}",
         status=OrganizationStatus.deleting,
         deleted_at=deleted_at,
     )
@@ -102,12 +113,6 @@ async def test_execute_location_reconcile_operation_converges_complete_desired_s
     class FakeDatabase:
         """Record database preparation and tombstone cleanup."""
 
-        def shared_schema_url(self, organization_id) -> str:
-            """Return one deterministic shared-schema URL."""
-
-            events.append(("shared-schema-url", organization_id))
-            return f"postgresql://shared/{organization_id.hex}"
-
         async def prepare_organization_database(self, organization_id, shared_schema_url: str) -> None:
             """Record organization database preparation."""
 
@@ -121,6 +126,7 @@ async def test_execute_location_reconcile_operation_converges_complete_desired_s
                 "host": "runtime-postgres",
                 "port": 5432,
                 "password": "runtime-database-password",
+                "sslmode": "disable",
                 "username": "runtime-user",
                 "database_name": organization_id.hex,
             }
@@ -257,6 +263,7 @@ async def test_execute_location_reconcile_operation_converges_complete_desired_s
         "LONGLINK_DATABASE_PASSWORD": "runtime-database-password",
         "LONGLINK_DATABASE_PORT": "5432",
         "LONGLINK_DATABASE_SCHEMA": active_application.id.hex,
+        "LONGLINK_DATABASE_SSLMODE": "disable",
         "LONGLINK_DATABASE_USERNAME": "runtime-user",
         "LONGLINK_STORAGE_BUCKET": names.application_bucket(active_application.id),
         "LONGLINK_STORAGE_ENDPOINT_URL": "http://minio:9000",

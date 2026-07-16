@@ -306,6 +306,7 @@ async def test_operations_service_platform_upgrade_supersedes_leased_work(monkey
     upgraded = await db.operations.enqueue(location.id, desired_change=False)
     stale_completion = await db.operations.complete(operation.id, claimed.attempt_count)
     replacement = await db.operations.claim_next()
+    monkeypatch.setattr(env, "VERSION", "v1.0.0")
 
     # Assert
     assert upgraded.id != operation.id
@@ -318,3 +319,5 @@ async def test_operations_service_platform_upgrade_supersedes_leased_work(monkey
     assert replacement.platform_version == "v1.1.0"
     assert replacement.attempt_count == 1
     assert replacement.lease_expires_at is not None
+    with pytest.raises(RuntimeError, match="downgrade from v1.1.0 to v1.0.0 is not supported"):
+        await db.operations.reject_platform_downgrade()

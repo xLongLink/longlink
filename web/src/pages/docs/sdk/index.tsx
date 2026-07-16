@@ -135,6 +135,10 @@ export const content = (
             ]}
         />
         <P>
+            The development server listens on <Code>127.0.0.1</Code> by default. Use <Code>--host</Code> only when
+            you intentionally need access from another host.
+        </P>
+        <P>
             For a small working application, see the{' '}
             <A href="https://github.com/xLongLink/sample">LongLink sample repository</A>.
         </P>

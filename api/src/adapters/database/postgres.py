@@ -11,6 +11,7 @@ from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
 from sqlalchemy.sql.elements import quoted_name
 from longlink.shared.constants import SHARED_SCHEMA
+from src.models.infrastructure import DatabaseSSLMode
 
 
 class Postgres(Database):
@@ -34,7 +35,7 @@ class Postgres(Database):
         self._port = port
         self._username = username
         self._password = password
-        self._sslmode = env.DATABASE_SSLMODE
+        self._sslmode: DatabaseSSLMode = env.DATABASE_SSLMODE
         self._maintenance_database = "postgres"
 
     def url(self, database: str, search_path: str | None = None) -> URL:
@@ -191,6 +192,7 @@ class Postgres(Database):
             "host": self._host,
             "port": self._port,
             "password": password,
+            "sslmode": self._sslmode,
             "username": runtime_username,
             "database_name": organization.hex,
         }

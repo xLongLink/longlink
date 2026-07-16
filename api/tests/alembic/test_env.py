@@ -92,7 +92,7 @@ class _FakeEngine:
         pytest.param(
             "postgresql+psycopg://longlink:sec%40ret@db.longlink.internal:5432/longlink?sslmode=require&application_name=longlink",
             "postgresql+psycopg://longlink:sec%%40ret@db.longlink.internal:5432/longlink?sslmode=require&application_name=longlink",
-            "postgresql+asyncpg://longlink:sec%40ret@db.longlink.internal:5432/longlink?application_name=longlink",
+            "postgresql+asyncpg://longlink:sec%40ret@db.longlink.internal:5432/longlink?application_name=longlink&ssl=require",
             id="postgresql",
         ),
     ],

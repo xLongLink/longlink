@@ -32,7 +32,7 @@ def test_dev_command_runs_uvicorn_when_stdin_is_not_interactive(monkeypatch: pyt
     assert calls == [
         {
             "app": "main:app",
-            "host": "0.0.0.0",
+            "host": "127.0.0.1",
             "port": cli_dev.DEV_PORT,
             "reload": True,
             "log_config": cli_dev.log_config,

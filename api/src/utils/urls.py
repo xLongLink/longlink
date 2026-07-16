@@ -1,6 +1,6 @@
 import urllib.parse
 import sqlalchemy.engine
-from starlette.datastructures import URL
+from src.models.infrastructure import DATABASE_SSL_MODES, DatabaseSSLMode
 
 POSTGRESQL_DRIVER_NAMES = {
     "postgres",
@@ -11,33 +11,50 @@ POSTGRESQL_DRIVER_NAMES = {
 }
 
 
-def database(database_url: str) -> str:
-    """Normalize the control database URL for SQLAlchemy async engines."""
+def database(database_url: str, default_sslmode: DatabaseSSLMode = "require") -> str:
+    """Normalize the control database URL and translate PostgreSQL SSL mode for asyncpg."""
 
     parsed_url = sqlalchemy.engine.make_url(database_url)
 
     # Control-plane database access is async, so PostgreSQL connections use asyncpg.
     if parsed_url.drivername in POSTGRESQL_DRIVER_NAMES:
-
         # Normalize PostgreSQL aliases to the async driver.
         if parsed_url.drivername != "postgresql+asyncpg":
             parsed_url = parsed_url.set(drivername="postgresql+asyncpg")
 
-        # sslmode is a libpq/psycopg option; asyncpg receives it as an invalid kwarg.
+        # asyncpg accepts libpq modes through its ssl argument rather than sslmode.
         sslmode_query_keys = [key for key in parsed_url.query if key.lower() == "sslmode"]
+        ssl_query_keys = [key for key in parsed_url.query if key.lower() == "ssl"]
 
-        # Remove unsupported sslmode query parameters.
+        # Reject ambiguous or repeated SSL settings before opening a connection.
+        if len(sslmode_query_keys) > 1 or len(ssl_query_keys) > 1 or (sslmode_query_keys and ssl_query_keys):
+            raise ValueError("PostgreSQL database URL has conflicting SSL modes")
+
+        # Translate the libpq spelling to asyncpg's query argument.
         if sslmode_query_keys:
+            sslmode = parsed_url.query[sslmode_query_keys[0]]
+            if not isinstance(sslmode, str) or sslmode not in DATABASE_SSL_MODES:
+                raise ValueError("PostgreSQL database URL has an invalid SSL mode")
             parsed_url = parsed_url.difference_update_query(sslmode_query_keys)
+            parsed_url = parsed_url.update_query_dict({"ssl": sslmode})
+
+        # Validate callers that already use the asyncpg spelling.
+        elif ssl_query_keys:
+            sslmode = parsed_url.query[ssl_query_keys[0]]
+            if not isinstance(sslmode, str) or sslmode not in DATABASE_SSL_MODES:
+                raise ValueError("PostgreSQL database URL has an invalid SSL mode")
+            if ssl_query_keys[0] != "ssl":
+                parsed_url = parsed_url.difference_update_query(ssl_query_keys)
+                parsed_url = parsed_url.update_query_dict({"ssl": sslmode})
+
+        # Apply the deployment default when the URL does not select a mode explicitly.
+        else:
+            parsed_url = parsed_url.update_query_dict({"ssl": default_sslmode})
 
         return parsed_url.render_as_string(hide_password=False)
 
     # MySQL needs an async DBAPI for SQLAlchemy's async engine.
-    if (
-        parsed_url.drivername == "mysql"
-        or parsed_url.drivername.startswith("mysql+")
-        and not parsed_url.drivername.endswith("aiomysql")
-    ):
+    if parsed_url.drivername == "mysql" or parsed_url.drivername.startswith("mysql+") and not parsed_url.drivername.endswith("aiomysql"):
         return parsed_url.set(drivername="mysql+aiomysql").render_as_string(hide_password=False)
 
     return database_url
@@ -66,10 +83,3 @@ def safe_local_path(value: object, fallback: str) -> str:
         return fallback
 
     return value
-
-
-def is_https_url(value: str) -> bool:
-    """Return whether a value is an absolute HTTPS URL."""
-
-    url = URL(value.strip())
-    return url.scheme == "https" and bool(url.netloc)

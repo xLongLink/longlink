@@ -1,3 +1,4 @@
+from src import adapters
 from uuid import UUID, uuid4
 from fastapi import HTTPException
 from src.utils import names
@@ -12,6 +13,7 @@ from src.models.countries import DEFAULT_COUNTRY
 from src.database.services import operations
 from src.database.models.users import User
 from src.database.models.locations import Location
+from src.database.models.databases import DatabaseRegistry
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
@@ -49,17 +51,15 @@ async def location(location_id: UUID, include_deleted: bool = False) -> list[Org
         return result.scalars().all()
 
 
-async def set_runtime(organization_id: UUID, status: OrganizationStatus, shared_schema_url: str | None = None) -> None:
+async def set_runtime(organization_id: UUID, status: OrganizationStatus) -> None:
     """Persist organization runtime state observed by reconciliation."""
 
-    # Runtime status and a newly derived shared URL change together.
+    # Runtime status is observed independently from immutable Organization configuration.
     async with session_scope() as session:
         organization = await session.get(Organization, organization_id)
         if organization is None:
             return
         organization.status = status
-        if shared_schema_url is not None:
-            organization.shared_schema_url = shared_schema_url
         await session.commit()
 
 
@@ -251,7 +251,6 @@ async def create(
     user: User,
     avatar: str | None = None,
     country: str = DEFAULT_COUNTRY,
-    shared_schema_url: str | None = None,
     organization_id: UUID | None = None,
 ) -> Organization:
     """Create an Organization aggregate with its creator as owner in a ready Location. The desired state and initial reconciliation request commit atomically."""
@@ -269,6 +268,14 @@ async def create(
             raise HTTPException(status_code=404, detail="Location not found")
         if location.status != LocationStatus.ready:
             raise HTTPException(status_code=409, detail="Location is not ready")
+
+        # Derive immutable Organization database configuration from the complete Location aggregate.
+        database_registry = (
+            await session.execute(select(DatabaseRegistry).where(DatabaseRegistry.location_id == location_id))
+        ).scalar_one_or_none()
+        if database_registry is None:
+            raise HTTPException(status_code=409, detail="Location infrastructure is incomplete")
+        shared_schema_url = adapters.database(database_registry).shared_schema_url(organization_id)
 
         organization = Organization(
             id=organization_id,

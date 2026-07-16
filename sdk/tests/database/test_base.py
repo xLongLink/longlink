@@ -62,7 +62,12 @@ def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> Non
                 DATABASE_USERNAME="app",
             ),
             "postgresql+asyncpg://app:secret@db:5432/longlink",
-            {"pool_pre_ping": True, "pool_recycle": 20, "pool_use_lifo": True},
+            {
+                "pool_pre_ping": True,
+                "pool_recycle": 20,
+                "pool_use_lifo": True,
+                "connect_args": {"ssl": "require"},
+            },
             id="production",
         ),
         pytest.param(
@@ -80,7 +85,7 @@ def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> Non
                 "pool_pre_ping": True,
                 "pool_recycle": 20,
                 "pool_use_lifo": True,
-                "connect_args": {"server_settings": {"search_path": '"dashboard",shared'}},
+                "connect_args": {"ssl": "require", "server_settings": {"search_path": '"dashboard",shared'}},
             },
             id="production-schema",
         ),

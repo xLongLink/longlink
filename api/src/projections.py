@@ -6,11 +6,6 @@ from src.database.models.organizations import Organization
 async def sync_organization_users(organization: Organization) -> None:
     """Project API-owned organization users into the organization's shared schema."""
 
-    # Require the API-owned control-plane connection for the organization database.
-    shared_schema_url = organization.shared_schema_url
-    if shared_schema_url is None:
-        raise RuntimeError("Organization has no shared schema URL")
-
     # Read every membership from the API database so deactivations propagate one way.
     memberships = await organizations.members(organization.id, include_deleted=True)
     users: list[shared_users.UserRow] = []
@@ -43,4 +38,4 @@ async def sync_organization_users(organization: Organization) -> None:
         )
 
     # The API is the source of truth; applications only receive read access to this projection.
-    await shared_users.sync_url(shared_schema_url, users)
+    await shared_users.sync_url(organization.shared_schema_url, users)

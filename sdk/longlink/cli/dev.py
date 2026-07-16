@@ -83,7 +83,8 @@ def _print_shortcuts(server_url: str) -> None:
 
 
 @click.command(name="dev")
-def dev_command() -> None:
+@click.option("--host", default="127.0.0.1", show_default=True, help="Host interface for the development server.")
+def dev_command(host: str) -> None:
     """Run LongLink application locally with auto-reload enabled."""
 
     app_directory = str(Path.cwd())
@@ -92,10 +93,18 @@ def dev_command() -> None:
     if app_directory not in sys.path:
         sys.path.insert(0, app_directory)
 
-    server_url = f"http://127.0.0.1:{DEV_PORT}"
+    # Keep browser shortcuts usable when Uvicorn listens on a wildcard interface.
+    display_host = "127.0.0.1" if host == "0.0.0.0" else "[::1]" if host == "::" else host
+    if ":" in display_host and not display_host.startswith("["):
+        display_host = f"[{display_host}]"
+    server_url = f"http://{display_host}:{DEV_PORT}"
     stop_event = threading.Event()
     restart_event = threading.Event()
     current_server: uvicorn.Server | None = None
+
+    # Make network exposure visible when the caller opts out of the loopback default.
+    if host not in {"127.0.0.1", "::1", "localhost"}:
+        logger.warning("Development server is exposed on host %s", host)
 
     def read_shortcuts() -> None:
         """Read shortcut commands from stdin until the server stops."""
@@ -166,7 +175,7 @@ def dev_command() -> None:
     if not sys.stdin.isatty():
         uvicorn.run(
             "main:app",
-            host="0.0.0.0",
+            host=host,
             port=DEV_PORT,
             reload=True,
             log_config=log_config,
@@ -184,7 +193,7 @@ def dev_command() -> None:
         while not stop_event.is_set():
             config = uvicorn.Config(
                 "main:app",
-                host="0.0.0.0",
+                host=host,
                 port=DEV_PORT,
                 reload=True,
                 log_config=log_config,

@@ -27,9 +27,14 @@ class User(SQLModel, table=True):
     avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
 
     # Audit
-    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
-    updated_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow))
-    deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
+    created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
+    updated_at: datetime = Field(
+        default_factory=utcnow,
+        nullable=False,
+        sa_type=UTCDateTime,
+        sa_column_kwargs={"onupdate": utcnow},
+    )
+    deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
 
     # State
     role: PlatformRoles = Field(

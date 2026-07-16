@@ -11,15 +11,15 @@ pytestmark = pytest.mark.no_db
         ("sqlite+aiosqlite:///./dev.db", "sqlite+aiosqlite:///./dev.db"),
         (
             "postgresql://control:secret@db:5432/longlink",
-            "postgresql+asyncpg://control:secret@db:5432/longlink",
+            "postgresql+asyncpg://control:secret@db:5432/longlink?ssl=require",
         ),
         (
             "postgres://control:secret@db:5432/longlink",
-            "postgresql+asyncpg://control:secret@db:5432/longlink",
+            "postgresql+asyncpg://control:secret@db:5432/longlink?ssl=require",
         ),
         (
             "postgresql+psycopg://control:secret@db:5432/longlink?sslmode=require&application_name=longlink",
-            "postgresql+asyncpg://control:secret@db:5432/longlink?application_name=longlink",
+            "postgresql+asyncpg://control:secret@db:5432/longlink?application_name=longlink&ssl=require",
         ),
     ],
 )
@@ -42,15 +42,15 @@ def test_database_url_normalization(source: str, expected: str) -> None:
         ),
     ],
 )
-def test_database_url_strips_sslmode_and_preserves_other_query_params(
+def test_database_url_translates_sslmode_and_preserves_other_query_params(
     source: str,
     expected_query: list[tuple[str, str]],
 ) -> None:
-    """Remove SSL mode parameters while preserving unrelated PostgreSQL query options."""
+    """Translate SSL mode parameters while preserving unrelated PostgreSQL query options."""
 
     normalized = urls.database(source)
     parsed_query = urllib.parse.parse_qsl(urllib.parse.urlsplit(normalized).query)
 
     assert normalized.startswith("postgresql+asyncpg://")
     assert {key.lower() for key, _value in parsed_query}.isdisjoint({"sslmode"})
-    assert dict(parsed_query) == dict(expected_query)
+    assert dict(parsed_query) == {**dict(expected_query), "ssl": "disable"}

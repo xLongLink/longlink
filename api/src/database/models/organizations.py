@@ -37,7 +37,7 @@ class Organization(SQLModel, table=True):
     location_id: UUID = Field(foreign_key="locations.id")
 
     # Database
-    shared_schema_url: str | None = Field(default=None, max_length=2048)
+    shared_schema_url: str = Field(max_length=2048)
 
     # State
     status: OrganizationStatus = Field(
@@ -49,13 +49,18 @@ class Organization(SQLModel, table=True):
     )
 
     # User
-    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
+    created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
     created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Organization.created_id"})
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    updated_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow))
+    updated_at: datetime = Field(
+        default_factory=utcnow,
+        nullable=False,
+        sa_type=UTCDateTime,
+        sa_column_kwargs={"onupdate": utcnow},
+    )
     updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Organization.updated_id"})
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
-    deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
+    deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
     deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Organization.deleted_id"})
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
 

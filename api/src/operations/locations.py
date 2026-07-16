@@ -88,16 +88,11 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
         active_organizations = {item.id: item for item in organization_rows if item.deleted_at is None}
 
         for organization in sorted(active_organizations.values(), key=lambda item: item.slug):
-            shared_schema_url = organization.shared_schema_url or db.shared_schema_url(organization.id)
             await fence()
-            await db.prepare_organization_database(organization.id, shared_schema_url)
+            await db.prepare_organization_database(organization.id, organization.shared_schema_url)
             if organization.status != OrganizationStatus.running:
                 await fence()
-                await organizations.set_runtime(organization.id, OrganizationStatus.creating, shared_schema_url)
-            elif organization.shared_schema_url is None:
-                await fence()
-                await organizations.set_runtime(organization.id, OrganizationStatus.running, shared_schema_url)
-            organization.shared_schema_url = shared_schema_url
+                await organizations.set_runtime(organization.id, OrganizationStatus.creating)
             await fence()
             await projections.sync_organization_users(organization)
             await fence()
@@ -162,6 +157,7 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
                 "LONGLINK_DATABASE_PASSWORD": connection["password"],
                 "LONGLINK_DATABASE_PORT": str(connection["port"]),
                 "LONGLINK_DATABASE_SCHEMA": application.id.hex,
+                "LONGLINK_DATABASE_SSLMODE": connection["sslmode"],
                 "LONGLINK_DATABASE_USERNAME": connection["username"],
                 "LONGLINK_STORAGE_BUCKET": bucket,
                 "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.runtime_endpoint_url,

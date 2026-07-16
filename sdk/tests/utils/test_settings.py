@@ -11,6 +11,7 @@ def test_sdk_envs_read_longlink_prefixed_runtime_settings(monkeypatch) -> None:
     monkeypatch.setenv("LONGLINK_DATABASE_PORT", "5432")
     monkeypatch.setenv("LONGLINK_DATABASE_SCHEMA", "dashboard")
     monkeypatch.setenv("LONGLINK_DATABASE_PASSWORD", "secret")
+    monkeypatch.setenv("LONGLINK_DATABASE_SSLMODE", "verify-full")
     monkeypatch.setenv("LONGLINK_DATABASE_USERNAME", "app")
     monkeypatch.setenv("LONGLINK_STORAGE_BUCKET", "acme-dashboard")
     monkeypatch.setenv("LONGLINK_STORAGE_ENDPOINT_URL", "http://storage.runtime.longlink.internal:19000")
@@ -26,6 +27,7 @@ def test_sdk_envs_read_longlink_prefixed_runtime_settings(monkeypatch) -> None:
     assert settings.DATABASE_PORT == 5432
     assert settings.DATABASE_SCHEMA == "dashboard"
     assert settings.DATABASE_PASSWORD == "secret"
+    assert settings.DATABASE_SSLMODE == "verify-full"
     assert settings.DATABASE_USERNAME == "app"
     assert settings.STORAGE_BUCKET == "acme-dashboard"
     assert settings.STORAGE_ENDPOINT_URL == "http://storage.runtime.longlink.internal:19000"

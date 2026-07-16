@@ -5,6 +5,7 @@ from pathlib import Path
 from src.routes import auth, icons, image, users, health, accounts, branding, computes, storages, countries, databases, locations
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
+from src.database.services import operations
 from src.operations import locations as operation_locations
 from src.utils.jobs import run_operation_scheduler
 from collections.abc import AsyncIterator
@@ -16,8 +17,9 @@ from starlette.middleware.sessions import SessionMiddleware
 
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Run one serial operation scheduler and one drift scan for this API replica. Durable queue coalescing and leased claims coordinate the tasks across replicas until shutdown."""
+    """Validate release compatibility, then run this API replica's scheduler and periodic reconciliation scan."""
 
+    await operations.reject_platform_downgrade()
     worker = asyncio.create_task(run_operation_scheduler(operation_locations.reconcile))
     reconciler = asyncio.create_task(operation_locations.run_periodic_reconciliation())
     yield

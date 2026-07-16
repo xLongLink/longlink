@@ -1,9 +1,8 @@
 import tomllib
-from typing import TypeAlias
 from pathlib import Path
 from pydantic import BaseModel
 
-MetadataPayload: TypeAlias = dict[str, object]
+type MetadataPayload = dict[str, object]
 
 
 def metadata_section(data: MetadataPayload, name: str) -> MetadataPayload:
@@ -42,9 +41,7 @@ class Metadata(BaseModel):
             "name": tool_data.get("name") or project_data.get("name") or defaults["name"],
             "title": tool_data.get("title") or defaults["title"],
             "summary": tool_data.get("summary") or defaults["summary"],
-            "description": tool_data.get("description")
-            or project_data.get("description")
-            or defaults["description"],
+            "description": tool_data.get("description") or project_data.get("description") or defaults["description"],
             "version": tool_data.get("version") or project_data.get("version") or defaults["version"],
             "terms_of_service": tool_data.get("terms_of_service") or defaults["terms_of_service"],
             "contact": tool_data.get("contact") or defaults["contact"],
@@ -60,7 +57,6 @@ def load_metadata(pyproject_path: Path | None = None, **overrides: object) -> Me
 
     # Resolve a file path once and parse TOML from that location without changing cwd.
     if resolved_pyproject.exists():
-
         # Keep file IO local to this resolved path.
         with resolved_pyproject.open("rb") as file_handle:
             parsed_pyproject: MetadataPayload = tomllib.load(file_handle)

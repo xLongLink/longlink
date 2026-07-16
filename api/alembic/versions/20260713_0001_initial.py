@@ -200,7 +200,7 @@ def upgrade() -> None:
         sa.Column("avatar", sa.String(length=2048), nullable=False),
         sa.Column("country", sa.String(length=2), nullable=False),
         sa.Column("location_id", sa.Uuid(), nullable=False),
-        sa.Column("shared_schema_url", sa.String(length=2048), nullable=True),
+        sa.Column("shared_schema_url", sa.String(length=2048), nullable=False),
         sa.Column("status", sa.String(length=20), nullable=False),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("created_id", sa.Uuid(), nullable=True),

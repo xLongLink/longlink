@@ -2,6 +2,7 @@ import pytest
 from uuid import UUID
 from datetime import UTC, datetime
 from src.utils import names
+from src.environments import env
 from containers import DockerRuntimeContainer, wait_for_postgres, require_docker_daemon
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -78,11 +79,15 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             await conn.execute(text("CREATE TABLE runtime_items (id integer PRIMARY KEY, name text)"))
             await conn.execute(text("INSERT INTO runtime_items (id, name) VALUES (1, 'Widget')"))
             shared_user = (
-                await conn.execute(
-                    text("SELECT email, role FROM shared.users WHERE id = :user_id"),
-                    {"user_id": active_user["id"]},
+                (
+                    await conn.execute(
+                        text("SELECT email, role FROM shared.users WHERE id = :user_id"),
+                        {"user_id": active_user["id"]},
+                    )
                 )
-            ).mappings().one()
+                .mappings()
+                .one()
+            )
 
         inactive_at = datetime(2026, 7, 2, tzinfo=UTC)
         inactive_user: shared_users.UserRow = {**active_user, "updated_at": inactive_at, "deleted_at": inactive_at}
@@ -110,7 +115,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
                         """
                     ),
                     {"id": UUID("22222222-2222-2222-2222-222222222222")},
-        )
+                )
 
         schema_usage = await adapter.schema_usage(database_name)
         server_usage = await adapter.usage()
@@ -125,6 +130,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         assert database_url.database == organization_id.hex
         assert retried_runtime_connection == runtime_connection
         assert runtime_connection["password"] == runtime_password
+        assert runtime_connection["sslmode"] == env.DATABASE_SSLMODE
         assert runtime_connection["username"].startswith("longlink_")
         assert len(runtime_connection["username"]) <= 63
         assert shared_user == {"email": "owner@example.com", "role": "owner"}

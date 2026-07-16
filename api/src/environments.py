@@ -1,6 +1,7 @@
 import os
 from pydantic import Field
 from src.version import PLATFORM_VERSION_PATTERN
+from src.models.infrastructure import DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEVELOPMENT = os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
@@ -23,7 +24,7 @@ class Env(BaseSettings):
     DATABASE_URL: str
 
     # PostgreSQL adapter defaults.
-    DATABASE_SSLMODE: str = "require"
+    DATABASE_SSLMODE: DatabaseSSLMode = "require"
 
     # Reconciliation
     RECONCILE_INTERVAL_SECONDS: int = Field(default=300, ge=30, le=86400)

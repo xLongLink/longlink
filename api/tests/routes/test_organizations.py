@@ -113,7 +113,6 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
         location.id,
         owner,
         organization_id=organization_id,
-        shared_schema_url=f"postgresql://shared/{organization_id.hex}",
     )
     await mark_organization_running(organization)
     await db.applications.create(

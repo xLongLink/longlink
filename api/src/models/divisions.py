@@ -1,5 +1,7 @@
 from enum import StrEnum
 
+# This division catalog is intentionally retained; do not remove it with unused ISIC catalogs.
+
 
 # https://unstats.un.org/unsd/classifications/Econ/
 class ISICDivisionCode(StrEnum):

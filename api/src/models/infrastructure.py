@@ -1,6 +1,10 @@
 import urllib.parse
 from enum import StrEnum
+from typing import Literal
 from pydantic import Field, BaseModel, field_validator
+
+DatabaseSSLMode = Literal["disable", "allow", "prefer", "require", "verify-ca", "verify-full"]
+DATABASE_SSL_MODES = frozenset[DatabaseSSLMode]({"disable", "allow", "prefer", "require", "verify-ca", "verify-full"})
 
 
 class ComputeConfiguration(BaseModel):

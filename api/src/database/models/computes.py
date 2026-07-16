@@ -37,13 +37,18 @@ class ComputeRegistry(SQLModel, table=True):
     gateway_tls_private_key: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
 
     # Audit
-    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
+    created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
     created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "ComputeRegistry.created_id"})
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    updated_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False, onupdate=utcnow))
+    updated_at: datetime = Field(
+        default_factory=utcnow,
+        nullable=False,
+        sa_type=UTCDateTime,
+        sa_column_kwargs={"onupdate": utcnow},
+    )
     updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "ComputeRegistry.updated_id"})
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
-    deleted_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
+    deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
 
     # Location
     location_id: UUID = Field(foreign_key="locations.id")

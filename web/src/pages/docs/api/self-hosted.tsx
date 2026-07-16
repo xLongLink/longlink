@@ -28,9 +28,12 @@ export const content = (
             <A href="https://github.com/xLongLink/longlink/pkgs/container/longlink">ghcr.io/xlonglink/longlink</A>.
         </P>
         <P>
-            Release images carry an immutable <Code>vX.Y.Z</Code> Platform version. On startup, the reconciler migrates
-            active locations to that release and records the version only after Kubernetes, database, and storage work
-            succeeds. Operation history reports failures and retry progress.
+            Release images carry an immutable <Code>vX.Y.Z</Code> LongLink Platform version. On startup, the reconciler
+            migrates active locations to that release and records the version only after Kubernetes, database, and
+            storage work succeeds. Operation history reports failures and retry progress. Platform releases are
+            forward-only for now: a binary older than any recorded location or operation release refuses to start.
+            Recover by deploying the recorded release or a newer release, or by restoring a database backup that matches
+            the older binary.
         </P>
         <Heading id="api-environment-variables" level="h2">
             API Environment Variables
@@ -78,7 +81,8 @@ export const content = (
                             <div className="text-xs text-muted-foreground">Required</div>
                         </TableCell>
                         <TableCell className="whitespace-normal text-muted-foreground">
-                            Control-plane database URL used by the API and Alembic migrations.
+                            Control-plane database URL used by the API and Alembic migrations. PostgreSQL URLs preserve
+                            <Code>sslmode</Code> when they are normalized for asyncpg.
                         </TableCell>
                     </TableRow>
                     <TableRow>
@@ -91,8 +95,9 @@ export const content = (
                             </div>
                         </TableCell>
                         <TableCell className="whitespace-normal text-muted-foreground">
-                            PostgreSQL SSL mode used by registered database backends when the API provisions
-                            organization databases and application schemas.
+                            PostgreSQL SSL mode used when <Code>DATABASE_URL</Code> omits one and when the API
+                            provisions organization databases and application schemas. The same mode is injected into
+                            managed LongLink Application database connections.
                         </TableCell>
                     </TableRow>
                     <TableRow>

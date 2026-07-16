@@ -8,7 +8,7 @@ from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import OrganizationDatabaseResourceResponse
-from src.database.services import storage, database, locations, operations, invitations, organizations
+from src.database.services import storage, database, operations, invitations, organizations
 from src.models.applications import ApplicationResponse
 from src.models.organizations import (
     OrganizationCreate,
@@ -446,11 +446,6 @@ async def _storage_usage_rows(
 async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)):
     """Create organization desired state and queue location reconciliation."""
 
-    # Require a ready aggregate before accepting tenant desired state.
-    location = await locations.get(payload.location_id)
-    if location is None:
-        raise HTTPException(status_code=404, detail="Location not found")
-
     # Generate the row ID before insert so derived resource names use the final UUID.
     organization_id = uuid4()
 
@@ -464,14 +459,6 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
 
-    # The complete location aggregate owns the immutable database used to derive the shared URL.
-    database_registry = await database.location(payload.location_id)
-    if database_registry is None:
-        raise HTTPException(status_code=409, detail="Location infrastructure is incomplete")
-
-    # Store the shared-schema URL with the final database name.
-    shared_schema_url = adapters.database(database_registry).shared_schema_url(organization_id)
-
     organization = await organizations.create(
         payload.name,
         slug,
@@ -480,7 +467,6 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
         payload.avatar,
         organization_id=organization_id,
         country=payload.country,
-        shared_schema_url=shared_schema_url,
     )
 
     operation = await operations.latest(organization.location_id)

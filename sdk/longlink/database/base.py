@@ -80,16 +80,16 @@ def create_engine(env: Envs) -> AsyncEngine:
     if not dburl.startswith("sqlite+"):
         engine_kwargs["pool_use_lifo"] = True
 
-    # Scope PostgreSQL connections to the configured app schema.
-    if env.DATABASE_SCHEMA and dburl.startswith("postgresql+asyncpg"):
+    # Preserve the Platform-selected TLS mode for production PostgreSQL connections.
+    if dburl.startswith("postgresql+asyncpg"):
+        connect_args: dict[str, object] = {"ssl": env.DATABASE_SSLMODE}
 
-        # PostgreSQL production apps write unqualified tables to their app schema
-        # while still resolving the shared organization users table from shared.
-        engine_kwargs["connect_args"] = {
-            "server_settings": {
+        # Production apps write unqualified tables to their app schema while resolving shared users.
+        if env.DATABASE_SCHEMA:
+            connect_args["server_settings"] = {
                 "search_path": f'"{env.DATABASE_SCHEMA}",{SHARED_SCHEMA}',
-            },
-        }
+            }
+        engine_kwargs["connect_args"] = connect_args
 
     _engine = create_async_engine(dburl, **engine_kwargs)
     return _engine

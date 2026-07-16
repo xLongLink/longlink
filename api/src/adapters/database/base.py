@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 from typing import TypedDict
 from .types import DatabaseSchemaUsage
+from src.models.infrastructure import DatabaseSSLMode
 
 
 class DatabaseRuntimeConnection(TypedDict):
@@ -13,6 +14,7 @@ class DatabaseRuntimeConnection(TypedDict):
     host: str
     port: int
     password: str
+    sslmode: DatabaseSSLMode
     username: str
     database_name: str
 

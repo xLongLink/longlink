@@ -37,13 +37,13 @@ class Operation(SQLModel, table=True):
     platform_version: str = Field(max_length=128)
 
     # Lease
-    lease_expires_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
+    lease_expires_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
 
     # Timestamps
-    created_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
-    started_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
-    stopped_at: datetime | None = Field(default=None, sa_column=Column(UTCDateTime(), nullable=True))
-    scheduled_at: datetime = Field(default_factory=utcnow, sa_column=Column(UTCDateTime(), nullable=False))
+    created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
+    started_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
+    stopped_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
+    scheduled_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
 
     @property
     def status(self) -> OperationStatus:

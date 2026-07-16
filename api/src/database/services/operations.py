@@ -62,6 +62,27 @@ async def latest(location_id: UUID) -> Operation | None:
         return (await session.execute(statement)).scalar_one_or_none()
 
 
+async def reject_platform_downgrade() -> None:
+    """Reject an API binary older than any persisted LongLink Platform release target or observation."""
+
+    # Operation history and observed Locations form the forward-only release watermark.
+    async with session_scope() as session:
+        location_versions = (
+            (await session.execute(select(Location.version).where(Location.version.is_not(None)).distinct())).scalars().all()
+        )
+        operation_versions = (await session.execute(select(Operation.platform_version).distinct())).scalars().all()
+    versions = [version for version in (*location_versions, *operation_versions) if version is not None]
+    if not versions:
+        return
+    latest_version = latest_platform_version(*versions)
+
+    # Older binaries cannot claim newer-target Operations, so fail before accepting traffic.
+    if platform_version_key(env.VERSION) < platform_version_key(latest_version):
+        raise RuntimeError(
+            f"LongLink Platform downgrade from {latest_version} to {env.VERSION} is not supported; deploy {latest_version} or newer"
+        )
+
+
 async def enqueue_in_session(
     session: AsyncSession,
     location_id: UUID,
