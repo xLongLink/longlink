@@ -10,18 +10,19 @@
 <br />
 
 > [!WARNING]
-> LongLink is currently in development. APIs, features, and documentation may change as the project evolves.
+> LongLink is currently in development. \
+> APIs, features, license and documentation may change as the project evolves.
 
 <br />
 
 ## Introduction
 
-AI has changed the economics and cost structure of software creation. As applications become faster and cheaper to build, more workflows, processes, and operational needs can be expressed directly in code, providing greater flexibility, control, and long-term maintainability than rigid generic SaaS products, spreadsheets, manual coordination, or fragile no-code automations. But speed and lower cost alone are not enough: without a shared foundation, this new wave of application creation risks producing duplicated infrastructure, inconsistent systems, and long-term technical debt.
+AI has changed the economics and cost structure of software creation. As applications become faster and cheaper to build, more workflows, processes, and operational needs can be expressed directly in code. However, without the right engineering foundations, complexity, fragility, and technical debt can gradually erode those initial benefits over time.
 
-The LongLink Platform provides that foundation. It turns real-world processes into production-grade Python codebases while handling the common layer around every application: authentication, permissions, deployment, storage, routing, logs, governance, and operational structure. Users define how the work should happen; developers focus on the application logic.
+LongLink provides that foundation. It turns real-world processes into well-structured, maintainable Python applications while handling the common layer around every application: authentication, permissions, deployment, storage, routing, logging, governance, and operational structure. Users define how the work should happen; developers focus on the application logic.
 
-Specific workflows can be customized like software, built quickly like modern AI-assisted applications, and maintained with the discipline of proper engineering. LongLink brings software-development principles to the broader world of work, making valuable processes structured, deployable, reviewable, and cheap to maintain over time.
- 
+Specific workflows can be customized through code, built quickly with modern AI-assisted tooling, and maintained with the discipline of proper engineering. LongLink brings software-development principles to the broader world of work, making valuable processes structured, deployable, reviewable, and economical to maintain over time.
+
 <br />
 
 ## Get Started
