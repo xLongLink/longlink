@@ -4,7 +4,7 @@ import { Ul } from '@/components/ui/ul';
 import { Heading } from '@/components/ui/heading';
 
 export const metadata = {
-    lastUpdated: '2026-06-20',
+    lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/legal/privacy.tsx',
 };
 
@@ -64,15 +64,15 @@ export const content = (
             <p>Depending on how you use the Service, we may process the following categories of personal data:</p>
             <Ul>
                 <Li>
-                    Account and identity data: internal account ID, OIDC subject or provider ID, name, email address,
+                    Account and identity data: internal account ID, OAuth or OIDC provider ID, name, email address,
                     optional avatar URL, platform role, account status, selected theme, accent, radius, language,
                     account creation, update, deletion, and sign-in session information.
                 </Li>
                 <Li>
-                    Authentication data: profile claims returned by the identity provider you choose, session account
-                    identifiers, safe post-login redirect paths, and OIDC tokens used during sign-in. Passwords are
-                    handled by the configured identity provider; the LongLink Platform database does not intentionally
-                    store account passwords or OAuth access tokens.
+                    Authentication data: password hashes, email verification and password reset data, revocable session
+                    tokens, saved account identifiers, safe post-login redirect paths, and profile claims returned by an
+                    optional identity provider. The LongLink Platform does not store plaintext passwords and discards
+                    OAuth access and refresh tokens after resolving the provider identity.
                 </Li>
                 <Li>
                     Organization and access data: organization name, slug, avatar, infrastructure assignments,
@@ -159,9 +159,9 @@ export const content = (
             <p>We disclose only the data reasonably needed for the recipient's role:</p>
             <Ul>
                 <Li>
-                    Identity and OIDC providers: authentication when you sign in. They receive the information required
-                    for sign-in and return your provider ID, name, email, and, where available, avatar and profile
-                    claims. Provider hints may be used for GitHub or Google sign-in where configured.
+                    OAuth and OIDC providers: optional authentication when you sign in. They receive the information
+                    required for sign-in and return your provider ID, name, email, and, where available, avatar and
+                    profile claims. GitHub or an installation-specific single sign-on provider may be configured.
                 </Li>
                 <Li>
                     Infrastructure providers and connected registries: Kubernetes, database, object-storage, container
@@ -224,11 +224,12 @@ export const content = (
                 7. Cookies and similar storage
             </Heading>
             <p>
-                We currently use storage needed for the Service. A signed session cookie named{' '}
-                <span className="font-mono text-xs text-foreground">longlink_session</span> keeps you authenticated and
-                may contain active and saved account identifiers, sign-in state, and a safe post-login redirect path.
-                OAuth providers, identity providers, and payment providers may set their own cookies when you visit
-                them.
+                We currently use storage needed for the Service. An HTTP-only cookie named{' '}
+                <span className="font-mono text-xs text-foreground">longlink_auth</span> contains an opaque revocable
+                session token. A signed cookie named{' '}
+                <span className="font-mono text-xs text-foreground">longlink_session</span> may contain saved account
+                identifiers used by the account switcher. OAuth, identity, and payment providers may set their own
+                cookies when you visit them.
             </p>
             <p>
                 In SDK mode and local development, the embedded web runtime may use local storage to remember the
@@ -314,11 +315,11 @@ export const content = (
             </Heading>
             <p>
                 We use technical and organizational measures appropriate to the nature and risk of the processing,
-                including access controls, OIDC authentication, signed session cookies, transport encryption, namespace,
-                database-schema, and storage-bucket isolation, credential hashing or encryption where appropriate,
-                secret management, logging, and restricted administrative access. No system is completely secure, and
-                you are responsible for securing your accounts, applications, credentials, infrastructure, and Customer
-                Content.
+                including access controls, password hashing, optional OAuth or OIDC authentication, revocable session
+                tokens, signed session cookies, transport encryption, namespace, database-schema, and storage-bucket
+                isolation, credential hashing or encryption where appropriate, secret management, logging, and
+                restricted administrative access. No system is completely secure, and you are responsible for securing
+                your accounts, applications, credentials, infrastructure, and Customer Content.
             </p>
             <p>
                 We assess personal-data breaches and notify the Federal Data Protection and Information Commissioner

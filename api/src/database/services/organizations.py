@@ -9,7 +9,6 @@ from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
-from src.models.countries import DEFAULT_COUNTRY
 from src.database.services import operations
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -251,8 +250,8 @@ async def create(
     database_id: UUID,
     storage_id: UUID,
     user: User,
+    country: str,
     avatar: str | None = None,
-    country: str = DEFAULT_COUNTRY,
     organization_id: UUID | None = None,
 ) -> Organization:
     """Create an Organization with immutable infrastructure assignments and queue reconciliation."""

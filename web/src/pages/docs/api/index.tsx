@@ -26,7 +26,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 const sharedFoundationItems = [
     {
         name: 'Authentication',
-        description: 'OIDC identity, sessions, and current-user context.',
+        description: 'Email, password, OAuth, OIDC, sessions, and current-user context.',
         icon: KeyRound,
     },
     {

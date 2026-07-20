@@ -128,9 +128,6 @@ class UserSummary(BaseModel):
 class UserListItem(UserSummary):
     """Represent one user in admin list responses."""
 
-    # Identity
-    oidc: str
-
 
 class UserProfile(UserSummary):
     """Represent the authenticated user payload returned by the API."""
@@ -140,6 +137,3 @@ class UserProfile(UserSummary):
     accent: Accent
     radius: Radius
     language: Language
-
-    # Identity
-    oidc: str

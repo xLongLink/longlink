@@ -81,7 +81,6 @@ longlink/
 │   └── tests/                    # Web and XML tests
 └── dev/                          # Local services and reference material
     ├── compose.yml                 # Local service dependencies
-    ├── keycloak-realm-dev.json     # Local Keycloak realm
     └── rfc/                        # Reference RFC material
 ```
 

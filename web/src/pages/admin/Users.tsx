@@ -44,13 +44,8 @@ function createUserColumns(t: TFunction): Array<ColumnDef<ApiUserListItem>> {
         {
             accessorKey: 'id',
             header: t('columns.id'),
-            cell: ({ row, getValue }) => (
-                <div className="flex flex-col leading-tight text-left">
-                    <span className="font-medium text-foreground">#{getValue<number>()}</span>
-                    <span className="text-xs text-muted-foreground">OIDC: {row.original.oidc ?? '—'}</span>
-                </div>
-            ),
-            meta: { className: 'w-28 pl-1 text-left' },
+            cell: ({ getValue }) => <span className="font-mono text-xs text-foreground">{getValue<string>()}</span>,
+            meta: { className: 'w-72 pl-1 text-left' },
         },
         {
             accessorKey: 'role',
@@ -94,21 +89,6 @@ function createUserColumns(t: TFunction): Array<ColumnDef<ApiUserListItem>> {
                                     }}
                                 >
                                     {t('admin.copyEmail')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    disabled={!user.oidc}
-                                    onClick={() => {
-                                        // Skip copying OIDC when the value is absent.
-                                        if (!user.oidc) {
-                                            return;
-                                        }
-
-                                        void navigator.clipboard.writeText(user.oidc);
-                                        toast.success(t('admin.oidcCopied'));
-                                    }}
-                                >
-                                    {t('admin.copyOidc')}
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>

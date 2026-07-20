@@ -1,3 +1,4 @@
+from src.models.images import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 
@@ -5,7 +6,7 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
     """Return name, description, and environment metadata for an image."""
 
     # Arrange
-    async def fake_metadata(image: str) -> LongLinkMetadata:
+    async def fake_metadata(image: Image) -> LongLinkMetadata:
         """Return inspected LongLink metadata for the requested image."""
 
         return LongLinkMetadata(
@@ -50,7 +51,7 @@ def test_inspect_image_returns_404_when_metadata_missing(clients, monkeypatch) -
     """Return a not-found error when the image has no LongLink metadata."""
 
     # Arrange
-    async def fake_metadata(image: str) -> None:
+    async def fake_metadata(image: Image) -> None:
         """Pretend image inspection found no LongLink metadata."""
 
         return None

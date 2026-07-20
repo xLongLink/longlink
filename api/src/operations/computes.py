@@ -6,6 +6,7 @@ from src.utils import jobs, names, images
 from src.logger import logger
 from src.version import platform_version_key
 from src.environments import env
+from src.models.images import Image
 from src.models.statuses import ApplicationStatus, OrganizationStatus
 from src.database.services import compute, storage, database, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
@@ -129,7 +130,7 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
 
             # Resolve and persist the immutable image before creating provider credentials.
             if application.digest is None:
-                metadata = await images.metadata(application.image, application.envs)
+                metadata = await images.metadata(Image(application.image), application.envs)
                 if metadata is None:
                     await applications.set_status(application.id, ApplicationStatus.failed)
                     continue

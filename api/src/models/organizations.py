@@ -4,7 +4,7 @@ from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus, OrganizationStatus
-from src.models.countries import DEFAULT_COUNTRY, Country
+from src.models.countries import Country
 from longlink.models.icons import Icon
 from src.models.operations import OperationResponse
 
@@ -15,7 +15,7 @@ class OrganizationCreate(BaseModel):
     # Metadata
     name: str = Field(min_length=1, max_length=128)
     avatar: str = Field(default="", max_length=2048)
-    country: Country = DEFAULT_COUNTRY
+    country: Country
 
     # Infrastructure
     compute_id: UUID

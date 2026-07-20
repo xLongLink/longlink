@@ -90,6 +90,11 @@ export function getApiRoutes(): RouteObject[] {
             lazy: loadPage(() => import('@/pages/docs/routes')),
         },
         ...['terms', 'privacy', 'impressum'].map((path) => ({ path, lazy: loadLegalPage })),
+        { path: 'auth/register', lazy: loadPage(() => import('@/pages/auth/Register')) },
+        { path: 'auth/verify-email', lazy: loadPage(() => import('@/pages/auth/VerifyEmail')) },
+        { path: 'auth/forgot-password', lazy: loadPage(() => import('@/pages/auth/ForgotPassword')) },
+        { path: 'auth/reset-password', lazy: loadPage(() => import('@/pages/auth/ResetPassword')) },
+        { path: 'auth/complete', lazy: loadPage(() => import('@/pages/auth/Complete')) },
         {
             path: 'pricing',
             lazy: loadPage(() => import('@/pages/Pricing')),

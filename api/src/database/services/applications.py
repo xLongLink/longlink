@@ -7,6 +7,7 @@ from sqlalchemy import and_, delete, select
 from sqlalchemy.orm import selectinload
 from collections.abc import Callable, Awaitable
 from src.models.roles import ApplicationRoles
+from src.models.images import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
@@ -219,7 +220,7 @@ async def create(
     organization_id: UUID,
     name: str,
     slug: str,
-    image: str,
+    image: Image | str,
     user: User,
     status: ApplicationStatus = ApplicationStatus.creating,
     database_password: str | None = None,
@@ -231,6 +232,9 @@ async def create(
     envs: dict[str, str] | None = None,
 ) -> Application:
     """Create an Organization-owned LongLink Application and queue compute reconciliation."""
+
+    # Validate direct service callers while preserving already-validated API values.
+    image = Image(image)
 
     # Create the application and owner membership transactionally.
     async with session_scope() as session:
@@ -276,7 +280,7 @@ async def create(
             digest=digest,
             version=version,
             description=description,
-            image=image,
+            image=image.value,
             icon=icon,
             envs=dict(envs or {}),
             database_password=database_password or secrets.token_urlsafe(24),

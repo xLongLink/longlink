@@ -38,7 +38,7 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
     async def seed_administrator() -> SimpleNamespace:
         """Return the fixed local administrator."""
 
-        calls["administrator"] = seed.LOCAL_ADMIN_OIDC
+        calls["administrator"] = seed.LOCAL_ADMIN_EMAIL
         return user
 
     def local_database_host() -> str:
@@ -121,7 +121,7 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
     await seed.seed_local_development()
 
     # Assert
-    assert calls["administrator"] == seed.LOCAL_ADMIN_OIDC
+    assert calls["administrator"] == seed.LOCAL_ADMIN_EMAIL
     assert calls["compute"] == ("local compute", "local-compute", "apiVersion: v1\nclusters: []\n", user)
     assert calls["database"] == (
         "local database",

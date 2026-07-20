@@ -27,7 +27,7 @@ type CreateOrganizationValues = z.output<typeof createOrganizationSchema>;
 const defaultCreateOrganizationValues = {
     name: '',
     avatar: '',
-    country: 'CH',
+    country: '',
     computeId: '',
     databaseId: '',
     storageId: '',

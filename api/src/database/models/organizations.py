@@ -5,7 +5,6 @@ from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Column, String
 from longlink.utils.time import utcnow
 from src.models.statuses import OrganizationStatus
-from src.models.countries import DEFAULT_COUNTRY
 from longlink.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.
@@ -32,7 +31,7 @@ class Organization(SQLModel, table=True):
     name: str = Field(unique=True, max_length=128)
     slug: str = Field(unique=True, max_length=128)
     avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
-    country: str = Field(default=DEFAULT_COUNTRY, sa_column=Column(String(2), nullable=False))
+    country: str = Field(sa_column=Column(String(2), nullable=False))
 
     # Infrastructure
     compute: "ComputeRegistry" = Relationship()

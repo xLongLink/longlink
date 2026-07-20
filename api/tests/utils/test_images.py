@@ -1,5 +1,6 @@
 import pytest
 from src.utils import images
+from src.models.images import Image
 from src.models.metadata import LongLinkMetadata
 
 
@@ -7,7 +8,7 @@ async def test_metadata_rejects_unsupported_registry_hosts() -> None:
     """Avoid inspecting image metadata through unsupported registry references."""
 
     # Act
-    image_metadata = await images.metadata("registry.example.com/longlink/dashboard:latest")
+    image_metadata = await images.metadata(Image("registry.example.com/longlink/dashboard:latest"))
 
     # Assert
     assert image_metadata is None
@@ -109,7 +110,7 @@ async def test_metadata_fetches_tagged_and_digest_image_references(
     monkeypatch.setattr(images.httpx2, "AsyncClient", FakeAsyncClient)
 
     # Act
-    image_metadata = await images.metadata(image)
+    image_metadata = await images.metadata(Image(image))
 
     # Assert
     assert image_metadata is not None

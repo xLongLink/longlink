@@ -1,19 +1,22 @@
 import asyncio
 import subprocess
 from pathlib import Path
+from sqlmodel import col
 from src.utils import jobs, names
+from sqlalchemy import select
 from src.operations import computes as operation_computes
 from src.models.roles import PlatformRoles, OrganizationRoles
+from src.models.images import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus
 from src.database.session import session_scope
-from src.database.services import users
 from src.database.services import compute as compute_service
 from src.database.services import storage as storage_service
 from src.database.services import database as database_service
 from src.database.services import operations
 from src.database.services import applications as application_service
 from src.database.services import organizations as organization_service
+from fastapi_users.password import PasswordHelper
 from src.models.applications import ApplicationCreate
 from src.database.models.users import User
 from src.models.infrastructure import StorageKind, DatabaseKind
@@ -21,9 +24,9 @@ from src.database.models.association import UserOrganization
 
 LOCAL_ORG = "test"
 LOCAL_ORG_AVATAR = "https://example.com/organizations/test.png"
-LOCAL_ADMIN_OIDC = "00000000-0000-0000-0000-000000000001"
 LOCAL_ADMIN_NAME = "Example LongLink"
 LOCAL_ADMIN_EMAIL = "example@longlink.dev"
+LOCAL_ADMIN_PASSWORD = "longlink-admin"
 LOCAL_DATABASE_PORT = 15432
 LOCAL_DOCKER_NETWORK = "k3d-compute"
 LOCAL_APPLICATION_IMAGE = "localhost:15000/longlink-app:dev"
@@ -50,12 +53,35 @@ def local_database_host() -> str:
 async def seed_local_administrator() -> User:
     """Create or update the fixed local administrator account."""
 
-    return await users.upsert(
-        oidc=LOCAL_ADMIN_OIDC,
-        email=LOCAL_ADMIN_EMAIL,
-        name=LOCAL_ADMIN_NAME,
-        role=PlatformRoles.administrator,
-    )
+    async with session_scope() as session:
+        result = await session.execute(select(User).where(col(User.email) == LOCAL_ADMIN_EMAIL))
+        user = result.scalar_one_or_none()
+        password = PasswordHelper().hash(LOCAL_ADMIN_PASSWORD)
+
+        # Create the local account or repair its development credentials and role.
+        if user is None:
+            user = User(
+                name=LOCAL_ADMIN_NAME,
+                email=LOCAL_ADMIN_EMAIL,
+                hashed_password=password,
+                is_active=True,
+                is_superuser=True,
+                is_verified=True,
+                role=PlatformRoles.administrator,
+            )
+            session.add(user)
+        else:
+            user.name = LOCAL_ADMIN_NAME
+            user.hashed_password = password
+            user.is_verified = True
+            user.is_active = True
+            user.is_superuser = True
+            user.role = PlatformRoles.administrator
+            user.deleted_at = None
+
+        await session.commit()
+        await session.refresh(user)
+        return user
 
 
 async def ensure_local_organization_owner(organization_id, user_id) -> None:
@@ -169,7 +195,7 @@ async def seed_local_development() -> None:
     if application is None:
         payload = ApplicationCreate(
             name=LOCAL_APP_NAME,
-            image=LOCAL_APPLICATION_IMAGE,
+            image=Image(LOCAL_APPLICATION_IMAGE),
             description="Local SDK development application",
             envs={"REQUIRED": "local-development"},
         )
@@ -190,6 +216,7 @@ def main() -> None:
     """Seed local development resources from a synchronous entrypoint."""
 
     asyncio.run(seed_local_development())
+    print(f"Local administrator: {LOCAL_ADMIN_EMAIL} / {LOCAL_ADMIN_PASSWORD}")
 
 
 if __name__ == "__main__":

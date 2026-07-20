@@ -26,12 +26,7 @@ db = SimpleNamespace(
 async def create_application_context(prefix: str) -> tuple[User, Organization, Application]:
     """Create a user, organization, and application for service tests."""
 
-    user = await db.users.upsert(
-        oidc=f"{prefix}-oidc",
-        email=f"{prefix}@longlink.dev",
-        name=f"{prefix} User",
-        avatar="",
-    )
+    user = await create_user(prefix)
     infrastructure = await create_ready_infrastructure(user, slug=f"{prefix}-compute", name=f"{prefix} compute")
     organization = await create_organization(
         infrastructure,
@@ -50,11 +45,30 @@ async def create_application_context(prefix: str) -> tuple[User, Organization, A
     return user, organization, application
 
 
+async def create_user(prefix: str) -> User:
+    """Persist one verified local user for application service tests."""
+
+    Session = await get_session()
+
+    # These tests do not authenticate, so a fixed non-empty hash is sufficient.
+    async with Session() as session:
+        user = User(
+            name=f"{prefix} User",
+            email=f"{prefix}@longlink.dev",
+            hashed_password="test-password-hash",
+            is_verified=True,
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+        return user
+
+
 async def test_create_requires_running_organization_and_coalesces_compute_reconciliation() -> None:
     """Create Applications only for running Organizations and coalesce compute work."""
 
     # Arrange
-    user = await db.users.upsert(oidc="app-oidc", email="app@longlink.dev", name="App User", avatar="")
+    user = await create_user("app")
     infrastructure = await create_ready_infrastructure(user)
     organization = await create_organization(infrastructure, user)
     open_before = [item for item in await db.operations.fetch() if item.stopped_at is None]

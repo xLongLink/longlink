@@ -12,12 +12,12 @@ dependencies = [
     'aioboto3>=15.5.0',
     'aiosqlite>=0.22.1',
     'alembic>=1.18.5',
-    'authlib>=1.7.2',
     'botocore>=1.40.61',
     'cryptography>=48.0.1',
     'email-validator>=2.3.0',
     'exoscale>=0.16.3',
     'fastapi>=0.139.0',
+    'fastapi-users[oauth,sqlalchemy]>=15.0.5,<16',
     'httpx2>=2.7.0',
     'itsdangerous>=2.2.0',
     'aiomysql>=0.3.2',
@@ -98,7 +98,7 @@ extraPaths = ["src", "../sdk", "tests"]
 [tool.pytest.ini_options]
 pythonpath = [".", "../sdk"]
 markers = [
-    "integration: marks integration tests requiring docker/keycloak",
+    "integration: marks tests requiring container-backed infrastructure",
     "no_db: skips the API test database fixture for pure unit tests",
     "unit: marks unit tests",
 ]

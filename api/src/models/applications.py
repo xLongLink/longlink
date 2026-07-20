@@ -2,9 +2,9 @@ import re
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
-from src.utils import images
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
+from src.models.images import Image
 from src.models.statuses import ApplicationStatus
 from longlink.models.icons import Icon
 from src.models.operations import OperationResponse
@@ -23,18 +23,11 @@ class ApplicationCreate(BaseModel):
     # Metadata
     name: str = Field(min_length=1, max_length=100)
     icon: Icon | None = None
-    image: str
+    image: Image
     description: str | None = Field(default=None, max_length=255)
 
     # Relationships
     envs: dict[str, str] = Field(default_factory=dict)
-
-    @field_validator("image")
-    @classmethod
-    def validate_image(cls, image: str) -> str:
-        """Validate the application container image reference."""
-
-        return images.parse_reference(image).value
 
     @field_validator("envs")
     @classmethod

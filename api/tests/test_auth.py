@@ -1,163 +1,60 @@
 import pytest
-from fastapi import Request, HTTPException
-from src.routes import auth as auth_routes
-from src.models.auth import OidcUserInfo
-from src.database.models.users import User
+from uuid import uuid4
+from fastapi import Request
+from src.auth import UserManager, SessionAccountsService
+from src.models.auth import AuthUserCreate
+from fastapi_users.exceptions import InvalidPasswordException
 
 pytestmark = pytest.mark.no_db
 
 
-class OidcCallbackClientStub:
-    """Return a fixed token payload for callback tests."""
+def test_session_accounts_filters_invalid_and_duplicate_ids() -> None:
+    """Return only unique UUIDs from signed saved-account state."""
 
-    def __init__(self, userinfo: dict[str, object]) -> None:
-        """Store the userinfo payload returned in the token."""
-
-        self.userinfo = userinfo
-        self.authorize_calls = 0
-
-    async def authorize_access_token(self, request: Request) -> dict[str, object]:
-        """Record authorization-code exchange and return token claims."""
-
-        self.authorize_calls += 1
-        return {"userinfo": self.userinfo}
-
-
-class OAuthStub:
-    """Return the configured OIDC test client."""
-
-    def __init__(self, oidc_client: object) -> None:
-        """Store the client returned for the oidc provider."""
-
-        self.oidc_client = oidc_client
-
-    def create_client(self, name: str) -> object:
-        """Return the stub client for the requested provider name."""
-
-        assert name == "oidc"
-        return self.oidc_client
-
-
-async def test_auth_oidc_upserts_activates_and_redirects(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Complete OIDC callback by validating userinfo and activating the account."""
-
-    oidc_client = OidcCallbackClientStub(
-        {
-            "sub": "callback-subject",
-            "email": "callback@example.com",
-            "email_verified": True,
-            "name": "Callback User",
-        }
-    )
-    upserts: list[OidcUserInfo] = []
-
-    async def fake_upsert_oidc_user(userinfo: OidcUserInfo) -> str:
-        """Record validated userinfo and return the session subject."""
-
-        upserts.append(userinfo)
-        return userinfo.sub
-
-    monkeypatch.setattr(auth_routes, "oauth", OAuthStub(oidc_client))
-    monkeypatch.setattr(auth_routes, "upsert_oidc_user", fake_upsert_oidc_user)
+    first_id = uuid4()
+    second_id = uuid4()
     request = Request(
         {
             "type": "http",
-            "method": "GET",
-            "path": "/auth/oidc",
-            "headers": [],
-            "query_string": b"",
-            "session": {"oidc_next": "/organizations/acme"},
+            "session": {"account_ids": [str(first_id), "invalid", str(first_id), None, str(second_id)]},
         }
     )
 
-    response = await auth_routes.auth_oidc(request)
+    # Parse untrusted session values without leaking malformed identifiers.
+    accounts = SessionAccountsService(request).list()
 
-    assert response.headers["location"] == "/organizations/acme"
-    assert request.session["oidc"] == "callback-subject"
-    assert request.session["oidc_accounts"] == ["callback-subject"]
-    assert "oidc_next" not in request.session
-    assert oidc_client.authorize_calls == 1
-    assert [userinfo.sub for userinfo in upserts] == ["callback-subject"]
+    assert accounts == [first_id, second_id]
 
 
-async def test_upsert_oidc_user_normalizes_provider_claims(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Upsert normalized provider claims into the local user record."""
+def test_session_accounts_remember_and_remove_local_users() -> None:
+    """Keep recent local accounts ordered and remove only the selected user."""
 
-    # Arrange
-    created_user = User(
-        oidc="oidc-upsert",
-        email="oidc-upsert@example.com",
-        name="oidc-upsert name",
-        avatar="",
-    )
-    upsert_calls: list[dict[str, object]] = []
-
-    async def fake_upsert(*, oidc: str, email: str | None = None, name: str | None = None, avatar: str | None = None) -> User:
-        """Record the user upsert payload."""
-
-        upsert_calls.append({"oidc": oidc, "email": email, "name": name, "avatar": avatar})
-        return created_user
-
-    monkeypatch.setattr(auth_routes.users, "upsert", fake_upsert)
-
-    # Act
-    subject = await auth_routes.upsert_oidc_user(
-        OidcUserInfo(
-            sub="oidc-upsert",
-            email="upsert@example.com",
-            email_verified=True,
-            given_name="Upsert",
-            family_name="User",
-            picture="https://example.com/avatar.png",
-        )
-    )
-
-    # Assert
-    assert subject == "oidc-upsert"
-    assert upsert_calls == [
+    account_ids = [uuid4() for _ in range(10)]
+    request = Request(
         {
-            "oidc": "oidc-upsert",
-            "email": "upsert@example.com",
-            "name": "Upsert User",
-            "avatar": "https://example.com/avatar.png",
+            "type": "http",
+            "session": {"account_ids": [str(account_id) for account_id in account_ids]},
         }
-    ]
+    )
+    accounts = SessionAccountsService(request)
+
+    # Move an existing account to the most-recent position, then remove it.
+    accounts.remember(account_ids[0])
+    assert request.session["account_ids"] == [str(account_id) for account_id in [*account_ids[1:], account_ids[0]]]
+
+    accounts.remove(account_ids[0])
+    assert accounts.list() == account_ids[1:]
 
 
-@pytest.mark.parametrize(
-    ("userinfo", "expected_status", "expected_detail"),
-    [
-        pytest.param(
-            OidcUserInfo(sub="missing-email", name="No Email"),
-            503,
-            "Authentication provider returned no email",
-            id="missing-email",
-        ),
-        pytest.param(
-            OidcUserInfo(sub="missing-name", email="missing@example.com", email_verified=True),
-            503,
-            "Authentication provider returned no display name",
-            id="missing-name",
-        ),
-        pytest.param(
-            OidcUserInfo(sub="unverified-email", email="unverified@example.com", email_verified=False, name="User"),
-            401,
-            "Authentication provider returned an unverified email",
-            id="unverified-email",
-        ),
-    ],
-)
-async def test_upsert_oidc_user_rejects_missing_identity_claims(
-    userinfo: OidcUserInfo,
-    expected_status: int,
-    expected_detail: str,
-) -> None:
-    """Reject provider profiles that cannot create a complete local user."""
+async def test_user_manager_requires_twelve_character_passwords() -> None:
+    """Reject short local passwords while accepting the configured minimum."""
 
-    # Act
-    with pytest.raises(HTTPException) as exc:
-        await auth_routes.upsert_oidc_user(userinfo)
+    manager = UserManager(None)  # type: ignore[arg-type]
+    user = AuthUserCreate(name="Test User", email="user@example.com", password="unused-password")
 
-    # Assert
-    assert exc.value.status_code == expected_status
-    assert exc.value.detail == expected_detail
+    # Enforce the LongLink password policy before FastAPI Users persists credentials.
+    with pytest.raises(InvalidPasswordException) as exc:
+        await manager.validate_password("too-short", user)
+
+    assert exc.value.reason == "Password must contain at least 12 characters"
+    await manager.validate_password("twelve-chars", user)

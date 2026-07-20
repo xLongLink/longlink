@@ -6,7 +6,7 @@ import { Heading } from '@/components/ui/heading';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export const metadata = {
-    lastUpdated: '2026-07-15',
+    lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/self-hosted.tsx',
 };
 
@@ -103,47 +103,63 @@ export const content = (
                     <TableRow>
                         <TableCell className="space-y-2">
                             <div>
-                                <Code>OIDC_CLIENT_ID</Code>
+                                <Code>PUBLIC_URL</Code>
                             </div>
                             <div className="text-xs text-muted-foreground">Required</div>
                         </TableCell>
                         <TableCell className="whitespace-normal text-muted-foreground">
-                            Client ID for the LongLink API client in the OIDC provider.
+                            Public web origin used for account verification, password reset, and OAuth completion links.
                         </TableCell>
                     </TableRow>
                     <TableRow>
                         <TableCell className="space-y-2">
                             <div>
+                                <Code>AUTH_REGISTRATION_ENABLED</Code>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                                Default: <Code>true</Code>
+                            </div>
+                        </TableCell>
+                        <TableCell className="whitespace-normal text-muted-foreground">
+                            Enables local email and password registration. Production registration also requires{' '}
+                            <Code>SMTP_HOST</Code>; verification and reset messages are logged when running locally
+                            without SMTP.
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="space-y-2">
+                            <div>
+                                <Code>GITHUB_CLIENT_ID</Code> and <Code>GITHUB_CLIENT_SECRET</Code>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Optional</div>
+                        </TableCell>
+                        <TableCell className="whitespace-normal text-muted-foreground">
+                            Enables GitHub OAuth login as an additional authentication method.
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="space-y-2">
+                            <div>
+                                <Code>INITIAL_ADMIN_EMAIL</Code>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Recommended for new installations</div>
+                        </TableCell>
+                        <TableCell className="whitespace-normal text-muted-foreground">
+                            Grants the platform administrator role when this exact email address completes registration.
+                            The account must still verify ownership of the address before it can sign in.
+                        </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell className="space-y-2">
+                            <div>
+                                <Code>OIDC_ISSUER</Code>, <Code>OIDC_CLIENT_ID</Code>, and{' '}
                                 <Code>OIDC_CLIENT_SECRET</Code>
                             </div>
-                            <div className="text-xs text-muted-foreground">Required</div>
+                            <div className="text-xs text-muted-foreground">Optional</div>
                         </TableCell>
                         <TableCell className="whitespace-normal text-muted-foreground">
-                            Secret for the LongLink API client in the OIDC provider. Store it as a deployment secret,
-                            not in the image.
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell className="space-y-2">
-                            <div>
-                                <Code>OIDC_ISSUER</Code>
-                            </div>
-                            <div className="text-xs text-muted-foreground">Required</div>
-                        </TableCell>
-                        <TableCell className="whitespace-normal text-muted-foreground">
-                            Issuer URL for the OIDC realm or tenant used for login. Must be HTTPS outside development.
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell className="space-y-2">
-                            <div>
-                                <Code>OIDC_REDIRECT_URI</Code>
-                            </div>
-                            <div className="text-xs text-muted-foreground">Required</div>
-                        </TableCell>
-                        <TableCell className="whitespace-normal text-muted-foreground">
-                            Callback URL registered with the OIDC provider for LongLink login. Must be HTTPS outside
-                            development.
+                            Enables a generic OIDC provider for internal SSO or a hosted B2B identity broker. Configure
+                            the provider callback as <Code>/auth/oidc/callback</Code> on the LongLink API origin.
                         </TableCell>
                     </TableRow>
                 </TableBody>

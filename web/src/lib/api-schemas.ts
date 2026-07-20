@@ -14,6 +14,16 @@ const radiusSchema = z.enum(RADIUS_VALUES);
 const iconNameSchema = z.enum(ICON_NAMES).nullable();
 const languageSchema = z.enum(LANGUAGE_VALUES);
 
+export const apiAuthConfigSchema = z.object({
+    oidc_enabled: z.boolean(),
+    github_enabled: z.boolean(),
+    registration_enabled: z.boolean(),
+});
+
+export const apiAuthorizationSchema = z.object({
+    authorization_url: z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
+});
+
 export const apiUserSummarySchema = z.object({
     id: z.string(),
     name: z.string(),
@@ -22,9 +32,7 @@ export const apiUserSummarySchema = z.object({
     role: platformRoleSchema,
 });
 
-export const apiUserListItemSchema = apiUserSummarySchema.extend({
-    oidc: z.string(),
-});
+export const apiUserListItemSchema = apiUserSummarySchema;
 
 const nullableUserSummarySchema = apiUserSummarySchema.nullable();
 

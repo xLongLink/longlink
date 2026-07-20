@@ -1,6 +1,7 @@
 import os
 from uuid import UUID
-from pydantic import Field
+from typing import Self
+from pydantic import Field, model_validator
 from src.version import PLATFORM_VERSION_PATTERN
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.models.infrastructure import DatabaseSSLMode
@@ -18,8 +19,29 @@ class Env(BaseSettings):
     VERSION: str = Field(default="v0.0.0", pattern=PLATFORM_VERSION_PATTERN)
     DEVELOPMENT: bool = DEVELOPMENT
 
-    # Session cookies
-    SESSION_KEY: str
+    # Authentication
+    SESSION_KEY: str = Field(min_length=32)
+    PUBLIC_URL: str = Field(default="http://localhost:5173", pattern=r"^https?://")
+    AUTH_REGISTRATION_ENABLED: bool = True
+    AUTH_SESSION_LIFETIME_SECONDS: int = Field(default=2592000, ge=300, le=31536000)
+    INITIAL_ADMIN_EMAIL: str | None = None
+
+    # Authentication email delivery
+    SMTP_HOST: str | None = None
+    SMTP_PORT: int = Field(default=587, ge=1, le=65535)
+    SMTP_USERNAME: str | None = None
+    SMTP_PASSWORD: str | None = None
+    SMTP_START_TLS: bool = True
+    SMTP_USE_TLS: bool = False
+    SMTP_FROM: str = "LongLink <no-reply@longlink.dev>"
+
+    # Optional authentication providers
+    GITHUB_CLIENT_ID: str | None = None
+    GITHUB_CLIENT_SECRET: str | None = None
+    OIDC_ISSUER: str | None = None
+    OIDC_CLIENT_ID: str | None = None
+    OIDC_CLIENT_SECRET: str | None = None
+    OIDC_EMAIL_VERIFIED: bool = False
 
     # Control plane database URL
     DATABASE_URL: str
@@ -35,16 +57,35 @@ class Env(BaseSettings):
     EXOSCALE_API_SECRET: str | None = None
     EXOSCALE_ORGANIZATION_ID: UUID | None = None
 
-    # OIDC bridge credentials
-    OIDC_ISSUER: str
-    OIDC_CLIENT_ID: str
-    OIDC_REDIRECT_URI: str
-    OIDC_CLIENT_SECRET: str
-
     model_config = SettingsConfigDict(
         env_file=(".env.sample", ".env") if DEVELOPMENT else (".env",),
         env_file_encoding="utf-8",
     )
+
+    @model_validator(mode="after")
+    def validate_authentication(self) -> Self:
+        """Require complete provider and email-delivery configuration."""
+
+        # Reject partial GitHub configuration instead of hiding a broken provider.
+        github_values = (self.GITHUB_CLIENT_ID, self.GITHUB_CLIENT_SECRET)
+        if any(github_values) and not all(github_values):
+            raise ValueError("GitHub authentication requires GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET")
+
+        # Reject partial OIDC configuration instead of failing during login.
+        oidc_values = (self.OIDC_ISSUER, self.OIDC_CLIENT_ID, self.OIDC_CLIENT_SECRET)
+        if any(oidc_values) and not all(oidc_values):
+            raise ValueError("OIDC authentication requires OIDC_ISSUER, OIDC_CLIENT_ID, and OIDC_CLIENT_SECRET")
+
+        # Implicit TLS and STARTTLS are mutually exclusive SMTP transports.
+        if self.SMTP_USE_TLS and self.SMTP_START_TLS:
+            raise ValueError("SMTP_USE_TLS and SMTP_START_TLS cannot both be enabled")
+
+        return self
+
+    def registration(self) -> bool:
+        """Return whether this installation can accept local registrations."""
+
+        return self.AUTH_REGISTRATION_ENABLED and (self.DEVELOPMENT or self.SMTP_HOST is not None)
 
     def exoscale(self) -> tuple[str, str, UUID]:
         """Return complete Platform-only Exoscale provisioning credentials."""

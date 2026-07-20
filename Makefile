@@ -143,7 +143,7 @@ web\:clean:
 	rm -rf web/dist web/dist-ssr web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite
 
 
-# Start local services, registry, Keycloak, and cluster, then wait for local endpoints.
+# Start local services and the cluster, then wait for the local registry.
 up:
 	docker compose -f dev/compose.yml up -d
 	@if k3d cluster list compute >/dev/null 2>&1; then \
@@ -163,17 +163,6 @@ up:
 		sleep 1; \
 	done
 	@printf "Local registry is ready.\n"
-	@printf "Waiting for Keycloak...\n"
-	@attempt=1; \
-	while ! curl --fail --silent --output /dev/null http://localhost:18080/realms/dev/.well-known/openid-configuration; do \
-		if [ "$$attempt" -ge 60 ]; then \
-			printf "Keycloak did not become ready after %s attempts.\n" "$$attempt"; \
-			exit 1; \
-		fi; \
-		attempt=$$((attempt + 1)); \
-		sleep 2; \
-	done
-	@printf "Keycloak is ready.\n"
 
 
 # Stop local services, remove the cluster, and clean Python caches.

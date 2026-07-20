@@ -1,151 +1,91 @@
 import pytest
-from src.models.roles import PlatformRoles
+from uuid import uuid4
 from src.models.users import Theme, Accent, Radius, Language
 from src.database.services import users as user_service
 from src.database.models.users import User
 
 
 async def test_fetch_and_get_return_persisted_users(users: tuple[User, User, User]) -> None:
-    """Return persisted users through all user read services."""
+    """Return persisted users by their stable local identifiers."""
 
-    # Arrange
     first_user, second_user, third_user = users
 
-    # Act
+    # Read the collection and individual users through the service boundary.
     fetched = await user_service.fetch()
-    by_second_oidc = await user_service.get(second_user.oidc)
-    by_oidc = await user_service.get(third_user.oidc)
+    second_result = await user_service.get(second_user.id)
+    third_result = await user_service.get(third_user.id)
 
-    # Assert
     assert {user.id for user in fetched} == {first_user.id, second_user.id, third_user.id}
-    assert by_second_oidc is not None
-    assert by_second_oidc.id == second_user.id
-    assert by_oidc is not None
-    assert by_oidc.id == third_user.id
+    assert second_result is not None
+    assert second_result.id == second_user.id
+    assert third_result is not None
+    assert third_result.id == third_user.id
 
 
-async def test_missing_user_reads_return_none() -> None:
-    """Return None when user read services cannot find a user."""
+async def test_missing_user_get_returns_none() -> None:
+    """Return None when a local user UUID is not persisted."""
 
-    # Act
-    by_oidc = await user_service.get("missing-oidc")
+    # Query with a valid UUID that has no corresponding account.
+    result = await user_service.get(uuid4())
 
-    # Assert
-    assert by_oidc is None
-
-
-async def test_upsert_creates_user_when_no_existing_match() -> None:
-    """Create a new user when no OIDC subject matches exist."""
-
-    # Act
-    user = await user_service.upsert(
-        oidc="oidc-subject-create",
-        email="create@example.com",
-        name="Create User",
-        avatar="https://example.com/create.png",
-    )
-
-    # Assert
-    assert user.id is not None
-    assert user.oidc == "oidc-subject-create"
-    assert user.email == "create@example.com"
-    assert user.name == "Create User"
-    assert user.avatar == "https://example.com/create.png"
-    assert user.role == PlatformRoles.administrator
+    assert result is None
 
 
-async def test_upsert_requires_identity_fields_for_new_user() -> None:
-    """Require name and email when creating a new user."""
+async def test_update_applies_profile_settings_and_preserves_authentication(users: tuple[User, User, User]) -> None:
+    """Update mutable profile fields without changing authentication state."""
 
-    # Act
-    with pytest.raises(ValueError) as exc:
-        await user_service.upsert(oidc="oidc-subject-missing-fields")
+    user = users[1]
 
-    # Assert
-    assert str(exc.value) == "Missing user fields"
-    assert await user_service.fetch() == []
-
-
-async def test_upsert_does_not_mark_second_user_as_admin() -> None:
-    """Keep later users non-admin by default."""
-
-    # Arrange
-    await user_service.upsert(
-        oidc="oidc-subject-first",
-        email="first@example.com",
-        name="First User",
-        avatar=None,
-    )
-
-    # Act
-    user = await user_service.upsert(
-        oidc="oidc-subject-second",
-        email="second@example.com",
-        name="Second User",
-        avatar=None,
-    )
-
-    # Assert
-    assert user.id is not None
-    assert user.role == PlatformRoles.user
-
-
-async def test_upsert_applies_explicit_user_settings_and_preserves_omitted_values() -> None:
-    """Apply explicit profile settings without overwriting omitted values later."""
-
-    # Arrange
-    original_user = await user_service.upsert(
-        oidc="oidc-subject-settings",
-        email="settings@example.com",
-        name="Settings User",
-        avatar="https://example.com/settings.png",
-        role=PlatformRoles.support,
+    # Patch all supported profile fields by local user identifier.
+    updated = await user_service.update(
+        user_id=user.id,
+        name="Updated User",
+        avatar="https://example.com/updated.png",
         theme=Theme.light,
         accent=Accent.blue,
         radius=Radius.large,
         language=Language.it,
     )
 
-    # Act
-    updated_user = await user_service.upsert(
-        oidc="oidc-subject-settings",
-        name="Settings User Updated",
+    assert updated.id == user.id
+    assert updated.name == "Updated User"
+    assert updated.avatar == "https://example.com/updated.png"
+    assert updated.theme == Theme.light
+    assert updated.accent == Accent.blue
+    assert updated.radius == Radius.large
+    assert updated.language == Language.it
+    assert updated.hashed_password == user.hashed_password
+    assert updated.is_active is True
+    assert updated.is_verified is True
+
+
+async def test_update_preserves_omitted_profile_fields(users: tuple[User, User, User]) -> None:
+    """Leave profile settings unchanged when a later patch omits them."""
+
+    user = users[1]
+    await user_service.update(
+        user_id=user.id,
+        avatar="https://example.com/settings.png",
+        theme=Theme.light,
+        accent=Accent.blue,
+        radius=Radius.large,
+        language=Language.it,
     )
 
-    # Assert
-    assert updated_user.id == original_user.id
-    assert updated_user.name == "Settings User Updated"
-    assert updated_user.email == "settings@example.com"
-    assert updated_user.avatar == "https://example.com/settings.png"
-    assert updated_user.role == PlatformRoles.support
-    assert updated_user.theme == Theme.light
-    assert updated_user.accent == Accent.blue
-    assert updated_user.radius == Radius.large
-    assert updated_user.language == Language.it
+    # Change one field without resetting prior profile values.
+    updated = await user_service.update(user_id=user.id, name="Settings User")
+
+    assert updated.name == "Settings User"
+    assert updated.avatar == "https://example.com/settings.png"
+    assert updated.theme == Theme.light
+    assert updated.accent == Accent.blue
+    assert updated.radius == Radius.large
+    assert updated.language == Language.it
 
 
-async def test_upsert_updates_existing_user_by_oidc() -> None:
-    """Update the existing user when the OIDC subject already exists."""
+async def test_update_rejects_missing_local_user() -> None:
+    """Reject profile updates for a local UUID that does not exist."""
 
-    # Arrange
-    original_user = await user_service.upsert(
-        oidc="oidc-subject-update",
-        email="original@example.com",
-        name="Original User",
-        avatar=None,
-    )
-
-    # Act
-    updated_user = await user_service.upsert(
-        oidc="oidc-subject-update",
-        email="updated@example.com",
-        name="Updated User",
-        avatar="https://example.com/updated.png",
-    )
-
-    # Assert
-    assert updated_user.id == original_user.id
-    assert updated_user.oidc == "oidc-subject-update"
-    assert updated_user.email == "updated@example.com"
-    assert updated_user.name == "Updated User"
-    assert updated_user.avatar == "https://example.com/updated.png"
+    # Preserve explicit failure semantics for stale authenticated identifiers.
+    with pytest.raises(ValueError, match="User not found"):
+        await user_service.update(user_id=uuid4(), name="Missing User")

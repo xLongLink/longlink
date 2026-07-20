@@ -450,9 +450,9 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
         payload.database_id,
         payload.storage_id,
         user,
-        payload.avatar,
-        organization_id=organization_id,
         country=payload.country,
+        avatar=payload.avatar,
+        organization_id=organization_id,
     )
 
     operation = await operations.latest(organization.compute_id)

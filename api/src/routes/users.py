@@ -45,5 +45,5 @@ async def patch_me(payload: UserUpdate, user: User = Depends(authuser)):
     """Update the authenticated user's details."""
 
     params = payload.model_dump(exclude_unset=True)
-    updated_user = await users.upsert(oidc=user.oidc, **params)
+    updated_user = await users.update(user_id=user.id, **params)
     return updated_user

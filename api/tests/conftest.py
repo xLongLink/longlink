@@ -3,10 +3,12 @@ import json
 import base64
 import pytest
 import pytest_asyncio
+from uuid import UUID
 from pathlib import Path
 from itsdangerous import TimestampSigner
 from collections.abc import AsyncIterator
 from fastapi.testclient import TestClient
+from fastapi_users.password import PasswordHelper
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 # Seed the required settings before importing the FastAPI app.
@@ -17,19 +19,27 @@ os.environ.setdefault("DATABASE_SSLMODE", "disable")
 # Keep TestClient session cookies non-secure while letting adapters detect tests.
 os.environ["DEVELOPMENT"] = "true"
 os.environ["ENVIRONMENT"] = "testing"
-os.environ.setdefault("OIDC_CLIENT_ID", "longlink-api")
-os.environ.setdefault("OIDC_CLIENT_SECRET", "longlink-secret")
-os.environ.setdefault("OIDC_ISSUER", "https://identity.example/realms/dev")
-os.environ.setdefault("OIDC_REDIRECT_URI", "https://app.example/auth/oidc")
+
+# Keep optional providers disabled so tests never perform external discovery.
+for provider_setting in (
+    "GITHUB_CLIENT_ID",
+    "GITHUB_CLIENT_SECRET",
+    "OIDC_CLIENT_ID",
+    "OIDC_CLIENT_SECRET",
+    "OIDC_ISSUER",
+):
+    os.environ.pop(provider_setting, None)
 
 from main import app
 from sqlmodel import SQLModel
 from src.database import session
 from src.environments import env
 from src.models.roles import PlatformRoles
-from src.database.models.users import User
+from src.database.models.users import User, AccessToken
 
+AUTH_COOKIE = "longlink_auth"
 SESSION_COOKIE = "longlink_session"
+TEST_PASSWORD = "longlink-test-password"
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -72,34 +82,53 @@ async def reset_db(
         await engine.dispose()
 
 
-def session_cookie(oidc: str, accounts: list[str] | None = None) -> dict[str, str]:
-    """Build a signed session cookie for the given OIDC subject."""
+def session_cookie(accounts: list[UUID]) -> dict[str, str]:
+    """Build a signed session cookie for saved local accounts."""
 
-    saved_accounts = accounts[:] if accounts is not None else [oidc]
-    if oidc not in saved_accounts:
-        saved_accounts.append(oidc)
-
-    payload = base64.b64encode(json.dumps({"oidc": oidc, "oidc_accounts": saved_accounts}).encode("utf-8"))
+    # Encode the same account_ids payload consumed by Starlette's session middleware.
+    payload = base64.b64encode(json.dumps({"account_ids": [str(account) for account in accounts]}).encode("utf-8"))
     signed = TimestampSigner(str(env.SESSION_KEY)).sign(payload).decode("utf-8")
     return {SESSION_COOKIE: signed}
+
+
+def authenticated_cookies(user_id: UUID, accounts: list[UUID] | None = None) -> dict[str, str]:
+    """Build matching authentication and saved-account cookies for one user."""
+
+    # Mirror the login hook by retaining the active account in the saved list.
+    saved_accounts = accounts[:] if accounts is not None else [user_id]
+    if user_id not in saved_accounts:
+        saved_accounts.append(user_id)
+    return {AUTH_COOKIE: str(user_id), **session_cookie(saved_accounts)}
 
 
 @pytest_asyncio.fixture
 async def users() -> tuple[User, User, User]:
     """Create three persisted users for tests."""
 
+    # Hash the shared fixture credential using FastAPI Users' production helper.
+    password = PasswordHelper().hash(TEST_PASSWORD)
     Session = await session.get_session()
     async with Session() as db_session:
         user1 = User(
             name="user1",
             email="user1@example.com",
-            oidc="oidc-user-1",
+            hashed_password=password,
+            is_superuser=True,
+            is_verified=True,
             role=PlatformRoles.administrator,
         )
-        user2 = User(name="user2", email="user2@example.com", oidc="oidc-user-2")
-        user3 = User(name="user3", email="user3@example.com", oidc="oidc-user-3")
+        user2 = User(name="user2", email="user2@example.com", hashed_password=password, is_verified=True)
+        user3 = User(name="user3", email="user3@example.com", hashed_password=password, is_verified=True)
 
+        # Persist one matching database token for every authenticated fixture client.
         db_session.add_all([user1, user2, user3])
+        db_session.add_all(
+            [
+                AccessToken(token=str(user1.id), user_id=user1.id),
+                AccessToken(token=str(user2.id), user_id=user2.id),
+                AccessToken(token=str(user3.id), user_id=user3.id),
+            ]
+        )
         await db_session.commit()
 
         await db_session.refresh(user1)
@@ -113,8 +142,9 @@ async def users() -> tuple[User, User, User]:
 def clients(users: tuple[User, User, User]) -> tuple[TestClient, TestClient, TestClient]:
     """Build authenticated test clients for all seeded users."""
 
+    # Pair each database token with its auth cookie and signed account list.
     user1, user2, user3 = users
-    client1 = TestClient(app, cookies=session_cookie(str(user1.oidc)))
-    client2 = TestClient(app, cookies=session_cookie(str(user2.oidc)))
-    client3 = TestClient(app, cookies=session_cookie(str(user3.oidc)))
+    client1 = TestClient(app, cookies=authenticated_cookies(user1.id))
+    client2 = TestClient(app, cookies=authenticated_cookies(user2.id))
+    client3 = TestClient(app, cookies=authenticated_cookies(user3.id))
     return client1, client2, client3

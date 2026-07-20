@@ -1,19 +1,26 @@
-from pydantic import Field, EmailStr, BaseModel, ConfigDict
+from uuid import UUID
+from pydantic import Field, EmailStr, BaseModel
+from fastapi_users import schemas
 
 
-class OidcUserInfo(BaseModel):
-    """Represent the OIDC userinfo payload returned by Keycloak."""
+class AuthConfig(BaseModel):
+    """Describe authentication methods enabled for this installation."""
 
-    model_config = ConfigDict(extra="ignore")
+    oidc_enabled: bool
+    github_enabled: bool
+    registration_enabled: bool
 
-    # Identity
-    sub: str = Field(min_length=1, max_length=255)
-    email: EmailStr | None = None
-    email_verified: bool | None = None
 
-    # Profile
-    name: str | None = Field(default=None, max_length=255)
-    picture: str | None = Field(default=None, max_length=2048)
-    given_name: str | None = Field(default=None, max_length=255)
-    family_name: str | None = Field(default=None, max_length=255)
-    preferred_username: str | None = Field(default=None, max_length=255)
+class AuthUser(schemas.BaseUser[UUID]):
+    """Represent the account fields returned by generated authentication routes."""
+
+    name: str = Field(min_length=1, max_length=255)
+    avatar: str = ""
+
+
+class AuthUserCreate(schemas.BaseUserCreate):
+    """Validate local email and password registration input."""
+
+    name: str = Field(min_length=1, max_length=255)
+    email: EmailStr = Field(max_length=254)
+    password: str = Field(min_length=12, max_length=1024)

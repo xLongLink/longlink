@@ -43,6 +43,7 @@ async def test_create_organization_persists_desired_state_and_queues_reconciliat
             "compute_id": str(infrastructure.compute.id),
             "database_id": str(infrastructure.database.id),
             "storage_id": str(infrastructure.storage.id),
+            "country": "CH",
         },
     )
 
@@ -51,6 +52,7 @@ async def test_create_organization_persists_desired_state_and_queues_reconciliat
     payload = response.json()
     organization_id = UUID(payload["organization"]["id"])
     assert payload["organization"]["name"] == "acme"
+    assert payload["organization"]["country"] == "CH"
     assert payload["organization"]["status"] == "creating"
     assert payload["operation"]["compute_id"] == str(infrastructure.compute.id)
     assert payload["operation"]["platform_version"] == env.VERSION

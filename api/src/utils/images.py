@@ -1,18 +1,13 @@
 import os
-import re
 import json
 import httpx2
-import urllib.parse
 from typing import Any
 from src.logger import logger
-from dataclasses import dataclass
 from collections.abc import Mapping
 from src.environments import env
+from src.models.images import IMAGE_DIGEST_PATTERN, Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
-IMAGE_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+)*$")
-IMAGE_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
-IMAGE_DIGEST_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9]*(?:[+._-][A-Za-z][A-Za-z0-9]*)*:[A-Za-z0-9=_+.-]+$")
 IMAGE_MANIFEST_ACCEPT = ", ".join(
     (
         "application/vnd.docker.distribution.manifest.v2+json",
@@ -29,27 +24,16 @@ SUPPORTED_REGISTRIES = {
 }
 
 
-@dataclass(frozen=True)
-class ImageReference:
-    """Parsed OCI image reference parts."""
-
-    value: str
-    registry: str
-    repository: str
-    tag_or_digest: str
-
-
-async def metadata(image: str, envs: Mapping[str, str] | None = None) -> LongLinkMetadata | None:
+async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongLinkMetadata | None:
     """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
 
     # Reject application values reserved for Platform injection before accessing the registry.
     if envs is not None and any(name.startswith("LONGLINK_") for name in envs):
         return None
 
-    # Parse the image reference before opening a registry client.
+    # Resolve the supported registry before opening a network client.
     try:
-        image_reference = parse_reference(image)
-        registry_url = _registry_url(image_reference.registry)
+        registry_url = _registry_url(image.registry)
     except ValueError as exc:
         logger.warning("Failed to inspect image metadata: %s", exc)
         return None
@@ -62,8 +46,8 @@ async def metadata(image: str, envs: Mapping[str, str] | None = None) -> LongLin
             manifest_result = await _fetch_manifest(
                 client,
                 registry_url,
-                image_reference.repository,
-                image_reference.tag_or_digest,
+                image.repository,
+                image.tag_or_digest,
             )
             if manifest_result is None:
                 return None
@@ -86,7 +70,7 @@ async def metadata(image: str, envs: Mapping[str, str] | None = None) -> LongLin
             if not IMAGE_DIGEST_PATTERN.fullmatch(config_digest):
                 return None
 
-            blob_response = await client.get(f"{registry_url}/v2/{image_reference.repository}/blobs/{config_digest}")
+            blob_response = await client.get(f"{registry_url}/v2/{image.repository}/blobs/{config_digest}")
 
             # Stop when the config blob cannot be fetched.
             if not blob_response.is_success:
@@ -119,7 +103,7 @@ async def metadata(image: str, envs: Mapping[str, str] | None = None) -> LongLin
                 version=labels.get("longlink.version"),
                 description=labels.get("longlink.description"),
             )
-            result.image = f"{image_reference.registry}/{image_reference.repository}@{digest}"
+            result.image = f"{image.registry}/{image.repository}@{digest}"
 
             environments = labels.get("longlink.environments")
 
@@ -148,72 +132,6 @@ async def metadata(image: str, envs: Mapping[str, str] | None = None) -> LongLin
         except (httpx2.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
             logger.warning("Failed to inspect image metadata: %s", exc)
             return None
-
-
-def parse_reference(image: str) -> ImageReference:
-    """Parse and validate one fully-qualified OCI image reference."""
-
-    value = image.strip()
-
-    # Require a non-empty reference.
-    if not value:
-        raise ValueError("Image reference is required")
-
-    # Keep references within a safe bound.
-    if len(value) > 255:
-        raise ValueError("Image reference is too long")
-
-    # Reject URL-style references.
-    if value.startswith("//") or "://" in value:
-        raise ValueError("Image reference must not be a URL")
-
-    # Reject whitespace and control characters.
-    if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in value):
-        raise ValueError("Image reference contains invalid characters")
-
-    registry, separator, remainder = value.partition("/")
-
-    # Require an explicit registry host.
-    if not separator:
-        raise ValueError("Image registry host is required")
-
-    # Parse digest references separately from tags.
-    if "@" in remainder:
-        repository, _separator, tag_or_digest = remainder.partition("@")
-
-        # Validate digest references.
-        if not IMAGE_DIGEST_PATTERN.fullmatch(tag_or_digest):
-            raise ValueError("Image digest is invalid")
-    else:
-        repository, separator, tag_or_digest = remainder.rpartition(":")
-
-        # Require an explicit tag when no digest is present.
-        if not separator:
-            raise ValueError("Image reference tag or digest is required")
-
-        # Validate tag references.
-        if not IMAGE_TAG_PATTERN.fullmatch(tag_or_digest):
-            raise ValueError("Image tag is invalid")
-
-    parsed_registry = urllib.parse.urlsplit(f"//{registry}")
-
-    # Reject malformed registry hosts or credentials.
-    if parsed_registry.hostname is None or parsed_registry.username or parsed_registry.password:
-        raise ValueError("Image registry is invalid")
-
-    # Validate the optional registry port.
-    try:
-        parsed_registry.port
-    except ValueError as exc:
-        raise ValueError("Image registry port is invalid") from exc
-
-    # Reject missing or invalid repository components.
-    if not repository or any(not IMAGE_NAME_COMPONENT_PATTERN.fullmatch(component) for component in repository.split("/")):
-        raise ValueError("Image repository is invalid")
-
-    return ImageReference(value, registry, repository, tag_or_digest)
-
-
 def _registry_url(registry: str) -> str:
     """Return the supported OCI Distribution API base URL for one registry."""
 

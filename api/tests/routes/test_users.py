@@ -1,7 +1,8 @@
 from main import app
 from types import SimpleNamespace
-from conftest import session_cookie
+from conftest import authenticated_cookies
 from factories import create_organization, create_ready_infrastructure
+from src.database import session
 from src.models.roles import PlatformRoles
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
@@ -53,21 +54,23 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
 
 
 async def test_logout_clears_the_active_account(users: tuple[User, User, User]) -> None:
-    """Clear the active account from the session."""
+    """Remove only the active account from the saved browser session."""
 
-    # Arrange
-    user_one, _, _ = users
-    client = TestClient(app, cookies=session_cookie(str(user_one.oidc)))
+    user_one, user_two, _ = users
+    client = TestClient(
+        app,
+        cookies=authenticated_cookies(user_one.id, [user_one.id, user_two.id]),
+    )
 
-    # Act
+    # Revoke the database token and remove its local UUID from the account list.
     response = client.post("/auth/logout")
 
-    # Assert
     assert response.status_code == 204
 
+    # Preserve other remembered accounts while protected routes become anonymous.
     accounts_response = client.get("/auth/accounts")
     assert accounts_response.status_code == 200
-    assert accounts_response.json() == []
+    assert accounts_response.json() == [UserListItem.model_validate(user_two).model_dump(mode="json")]
 
     me_response = client.get("/api/me")
     assert me_response.status_code == 401
@@ -98,17 +101,20 @@ async def test_list_users_returns_admin_user_summaries(
 
 async def test_platform_roles_separate_support_reads_from_admin_mutations(
     clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
 ) -> None:
     """Allow support reads while denying support mutations and ordinary-user support access."""
 
-    # Create a dedicated support account without changing the shared user fixture roles.
-    support = await db.users.upsert(
-        oidc="oidc-support",
-        email="support@example.com",
-        name="Support User",
-        role=PlatformRoles.support,
-    )
-    support_client = TestClient(app, cookies=session_cookie(str(support.oidc)))
+    # Promote the third local fixture account for this isolated database.
+    support = users[2]
+    Session = await session.get_session()
+    async with Session() as db_session:
+        persisted_support = await db_session.get(User, support.id)
+        assert persisted_support is not None
+        persisted_support.role = PlatformRoles.support
+        await db_session.commit()
+
+    support_client = clients[2]
     ordinary_client = clients[1]
 
     # Exercise representative support and administrator route dependencies.
@@ -144,7 +150,7 @@ async def test_patch_me_updates_authenticated_user_profile(
     # Assert
     assert response.status_code == 200
 
-    updated_user = await db.users.get(user.oidc)
+    updated_user = await db.users.get(user.id)
     assert updated_user is not None
 
     expected_payload = UserProfile.model_validate(updated_user).model_dump(mode="json")
