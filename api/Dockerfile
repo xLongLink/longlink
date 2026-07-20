@@ -25,7 +25,11 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 
 COPY sdk/ /sdk/
 COPY api/ /app/
-RUN SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK=${VERSION} uv sync --frozen --no-dev --no-editable --no-cache
+RUN apt-get update \
+    && apt-get install --no-install-recommends --yes git \
+    && SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK=${VERSION} uv sync --frozen --no-dev --no-editable --no-cache \
+    && apt-get purge --auto-remove --yes git \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=web-builder /repo/api/src/.static/web /app/src/.static/web
 
 EXPOSE 8000
