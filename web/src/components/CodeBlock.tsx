@@ -9,6 +9,7 @@ export function CodeBlock({ children, language = 'text' }: { children: string; l
 
     return (
         <AstryxCodeBlock
+            className="longlink-code-block"
             code={children.trim()}
             highlightMode="spans"
             language={language === 'text' ? 'plaintext' : language}

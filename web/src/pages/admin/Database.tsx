@@ -1,13 +1,23 @@
 import type { TFunction } from 'i18next';
+import { useState } from 'react';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { pixel, proportional } from '@astryxdesign/core/Table';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+    Table,
+    type TableColumn,
+    pixel,
+    paginateData,
+    proportional,
+    useTablePagination,
+} from '@astryxdesign/core/Table';
 import type { ApiDatabaseRegistry } from '@/lib/types';
 import { fetchApiJson } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
@@ -16,13 +26,12 @@ import { useDeleteDialog } from '@/lib/utils';
 import { useDatabases } from '@/data/database';
 import { useUserProfile } from '@/hooks/use-user';
 import CreateDatabase from '@/components/dialogs/CreateDatabase';
-import { DataTable, type DataTableColumn } from '@/components/DataTable';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { apiDatabaseRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
 import { databasesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
 
 /** Returns localized admin database table columns. */
-function createDatabaseColumns(t: TFunction): DataTableColumn<ApiDatabaseRegistry>[] {
+function createDatabaseColumns(t: TFunction): TableColumn<ApiDatabaseRegistry>[] {
     return [
         {
             key: 'database',
@@ -68,6 +77,18 @@ export default function AdminDatabase() {
         },
     });
     const { items: databases, error, isLoading } = useDatabases();
+    const [page, setPage] = useState(1);
+    const pageSize = 25;
+    const pageCount = Math.max(1, Math.ceil(databases.length / pageSize));
+    const currentPage = Math.min(page, pageCount);
+    const pagination = useTablePagination<ApiDatabaseRegistry>({
+        page: currentPage,
+        onPageChange: setPage,
+        totalItems: databases.length,
+        pageSize,
+        label: `${t('actions.previous')} / ${t('actions.next')}`,
+        size: 'sm',
+    });
     const deleteDialog = useDeleteDialog({
         title: t('admin.deleteDatabaseTitle'),
         mutation: deleteDatabase,
@@ -78,7 +99,7 @@ export default function AdminDatabase() {
         fallbackDescription: t('admin.deleteDatabaseFallback'),
     });
     const columns = createDatabaseColumns(t);
-    const databaseColumns: DataTableColumn<ApiDatabaseRegistry>[] = canManage
+    const databaseColumns: TableColumn<ApiDatabaseRegistry>[] = canManage
         ? [
               ...columns,
               {
@@ -116,7 +137,19 @@ export default function AdminDatabase() {
                 </VStack>
                 <CreateDatabase />
             </HStack>
-            <DataTable columns={databaseColumns} data={databases} error={error} isLoading={isLoading} pageSize={25} />
+            {isLoading && databases.length === 0 ? null : error && databases.length === 0 ? (
+                <Banner status="error" title={error.message} />
+            ) : (
+                <Table
+                    columns={databaseColumns}
+                    data={paginateData(databases, currentPage, pageSize)}
+                    density="compact"
+                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    hasHover
+                    idKey="id"
+                    plugins={{ pagination }}
+                />
+            )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </VStack>
     );

@@ -30,6 +30,7 @@
   <xsd:include schemaLocation="adapters/Selector.xsd" />
   <xsd:include schemaLocation="adapters/RadioList.xsd" />
   <xsd:include schemaLocation="adapters/Dialog.xsd" />
+  <xsd:include schemaLocation="adapters/SideNav.xsd" />
   <xsd:include schemaLocation="adapters/TabList.xsd" />
   <xsd:include schemaLocation="adapters/Table.xsd" />
 </xsd:schema>

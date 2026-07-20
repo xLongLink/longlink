@@ -115,11 +115,11 @@ export function getAstryxTheme(accentValue: Accent, radius: Radius): DefinedThem
         return existing;
     }
 
+    // Keep surfaces neutral while applying the selected color to accent roles.
     const accent = ACCENT_TOKENS[accentValue];
     const theme = defineTheme({
         name: `longlink-${key}`,
         extends: neutralTheme,
-        color: { accent: accent.accent, neutralStyle: 'neutral' },
         typography: {
             body: { family: 'Inter Variable', fallbacks: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
             heading: {
@@ -128,9 +128,33 @@ export function getAstryxTheme(accentValue: Accent, radius: Radius): DefinedThem
             },
         },
         radius: { base: 4, multiplier: RADIUS_MULTIPLIERS[radius] },
+        components: {
+            table: {
+                base: {
+                    borderColor: 'var(--color-border-emphasized)',
+                    borderStyle: 'solid',
+                    borderWidth: 'var(--border-width)',
+                },
+            },
+            'table-header': {
+                base: { backgroundColor: 'var(--color-background-muted)' },
+            },
+        },
         tokens: {
-            '--color-accent': accent.accent,
-            '--color-on-accent': accent.accentForeground,
+            '--color-background-surface': ['oklch(1 0 0)', 'oklch(0.205 0 0)'],
+            '--color-background-body': ['oklch(1 0 0)', 'oklch(0.145 0 0)'],
+            '--color-background-card': ['oklch(1 0 0)', 'oklch(0.205 0 0)'],
+            '--color-background-popover': ['oklch(1 0 0)', 'oklch(0.205 0 0)'],
+            '--color-background-muted': ['oklch(0.97 0 0)', 'oklch(0.235 0 0)'],
+            '--color-accent': accentValue === 'neutral' ? ['oklch(0.205 0 0)', 'oklch(0.922 0 0)'] : accent.accent,
+            '--color-accent-muted': [
+                'color-mix(in srgb, var(--color-accent) 20%, transparent)',
+                'color-mix(in srgb, var(--color-accent) 25%, transparent)',
+            ],
+            '--color-text-accent': 'var(--color-accent)',
+            '--color-icon-accent': 'var(--color-accent)',
+            '--color-on-accent':
+                accentValue === 'neutral' ? ['oklch(0.985 0 0)', 'oklch(0.205 0 0)'] : accent.accentForeground,
         },
     });
 

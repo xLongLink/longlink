@@ -12,18 +12,18 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
-import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout as DialogLayout, LayoutContent } from '@astryxdesign/core/Layout';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { Role } from '@/lib/roles';
 import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
 import { ROLE_NAMES } from '@/lib/roles';
 import { formatDate } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
 import { useOrganizationActions } from '@/hooks/use-organization';
-import { DataTable, type DataTableColumn } from '@/components/DataTable';
 
 type PeopleProps = {
     organization: string;
@@ -66,7 +66,7 @@ export default function People({
         useOrganizationActions(organization);
     const roleChangeTargetLabel = roleChangeTarget ? ORGANIZATION_ROLE_LABELS[roleChangeTarget.role] : '';
 
-    const peopleColumns: DataTableColumn<ApiOrganizationMemberSummary>[] = [
+    const peopleColumns: TableColumn<ApiOrganizationMemberSummary>[] = [
         {
             key: 'member',
             header: t('columns.user'),
@@ -108,7 +108,7 @@ export default function People({
             ),
         },
     ];
-    const invitationColumns: DataTableColumn<ApiInvitation>[] = [
+    const invitationColumns: TableColumn<ApiInvitation>[] = [
         {
             key: 'email',
             header: t('columns.email'),
@@ -140,13 +140,18 @@ export default function People({
                         <Text type="supporting">{t('people.membersDescription')}</Text>
                     </VStack>
                     <Divider />
-                    <DataTable
-                        columns={peopleColumns}
-                        data={people}
-                        emptyMessage={t('people.noPeople')}
-                        error={peopleError}
-                        isLoading={isLoading}
-                    />
+                    {isLoading && people.length === 0 ? null : peopleError && people.length === 0 ? (
+                        <Banner status="error" title={peopleError.message} />
+                    ) : (
+                        <Table
+                            columns={peopleColumns}
+                            data={people}
+                            density="compact"
+                            emptyState={<EmptyState title={t('people.noPeople')} isCompact />}
+                            hasHover
+                            idKey="id"
+                        />
+                    )}
                 </VStack>
             ) : null}
 
@@ -168,13 +173,18 @@ export default function People({
                         />
                     </HStack>
                     <Divider />
-                    <DataTable
-                        columns={invitationColumns}
-                        data={invitations}
-                        emptyMessage={t('people.noInvitations')}
-                        error={invitationsError}
-                        isLoading={isLoading}
-                    />
+                    {isLoading && invitations.length === 0 ? null : invitationsError && invitations.length === 0 ? (
+                        <Banner status="error" title={invitationsError.message} />
+                    ) : (
+                        <Table
+                            columns={invitationColumns}
+                            data={invitations}
+                            density="compact"
+                            emptyState={<EmptyState title={t('people.noInvitations')} isCompact />}
+                            hasHover
+                            idKey="id"
+                        />
+                    )}
                 </VStack>
             ) : null}
 

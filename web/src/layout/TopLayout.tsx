@@ -3,7 +3,15 @@ import { AppShell } from '@astryxdesign/core/AppShell';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
 /** Renders the shared top layout shell. */
-function TopLayout({ header, children }: { header: ReactNode; children: ReactNode }) {
+function TopLayout({
+    header,
+    children,
+    fullHeight = false,
+}: {
+    header: ReactNode;
+    children: ReactNode;
+    fullHeight?: boolean;
+}) {
     return (
         <AppShell
             banner={import.meta.env.MODE === 'sdk' ? undefined : <DevelopmentNotice />}
@@ -13,7 +21,17 @@ function TopLayout({ header, children }: { header: ReactNode; children: ReactNod
             topNav={header}
             variant="elevated"
         >
-            {children}
+            {fullHeight ? (
+                <div
+                    style={{
+                        minHeight: 'calc(100dvh - var(--appshell-header-height, 0px) - var(--spacing-12))',
+                    }}
+                >
+                    {children}
+                </div>
+            ) : (
+                children
+            )}
         </AppShell>
     );
 }

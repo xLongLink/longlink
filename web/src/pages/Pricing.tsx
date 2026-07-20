@@ -60,7 +60,7 @@ export default function Pricing() {
             <Navbar />
             <main>
                 <Section variant="transparent" padding={6}>
-                    <Stack width="100%" maxWidth={1120} gap={10} align="center">
+                    <Stack width="100%" maxWidth={1120} gap={10} align="center" style={{ marginInline: 'auto' }}>
                         <Stack gap={3} align="center" maxWidth={640}>
                             <Badge label="Pricing" variant="teal" />
                             <Heading level={1} type="display-2" justify="center" textWrap="balance">

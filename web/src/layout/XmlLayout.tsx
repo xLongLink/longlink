@@ -51,6 +51,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
         <Stack gap={0}>
             <TopNav
                 label={t('common.mainNavigation')}
+                style={{ paddingInline: 'var(--spacing-7)' }}
                 heading={
                     isSdkMode ? (
                         <Link
@@ -106,10 +107,16 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
         </Stack>
     );
 
+    // Keep XML page content aligned within the centered application container.
     return (
-        <TopLayout header={header}>
+        <TopLayout header={header} fullHeight={!brandOnly && resolvedTabs.length > 0}>
             <Center axis="horizontal" width="100%">
-                <Stack minHeight={isSdkMode ? '100%' : undefined} width="100%" maxWidth={1000}>
+                <Stack
+                    className="[--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
+                    minHeight={isSdkMode ? '100%' : undefined}
+                    width="100%"
+                    maxWidth={1000}
+                >
                     {children}
                 </Stack>
             </Center>

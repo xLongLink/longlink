@@ -1,10 +1,8 @@
 import { useParams } from 'react-router';
-import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Section } from '@astryxdesign/core/Section';
 import Layout from '@/layout/Layout';
 import { useTranslation } from '@/lib/i18n';
 import { useOrganization } from '@/hooks/use-organization';
@@ -45,33 +43,20 @@ export default function Organization({ settingsSection }: OrganizationProps) {
         return <NotFound />;
     }
 
-    const content =
-        section === 'applications' ? (
-            <Section variant="muted" width="100%">
-                <Stack direction="horizontal" gap={3} vAlign="center">
-                    <Icon icon="viewColumns" size="lg" color="secondary" />
-                    <Stack gap={1}>
-                        <Heading level={1}>{t('organization.applicationsTitle')}</Heading>
-                        <Text as="p" color="secondary">
-                            {t('organization.applicationsDescription')}
-                        </Text>
-                    </Stack>
-                </Stack>
-            </Section>
-        ) : section === 'settings' ? (
-            <Section variant="muted" width="100%">
-                <Stack direction="horizontal" gap={3} vAlign="center">
-                    <Icon icon="wrench" size="lg" color="secondary" />
-                    <Stack gap={1}>
-                        <Heading level={1}>{t('organization.settingsTitle')}</Heading>
-                        <Text as="p" color="secondary">
-                            {t('organization.settingsDescription')}
-                        </Text>
-                    </Stack>
-                </Stack>
-            </Section>
-        ) : null;
+    const content = (
+        <Stack gap={1} width="100%">
+            <Heading level={1}>
+                {section === 'applications' ? t('organization.applicationsTitle') : t('organization.settingsTitle')}
+            </Heading>
+            <Text as="p" color="secondary">
+                {section === 'applications'
+                    ? t('organization.applicationsDescription')
+                    : t('organization.settingsDescription')}
+            </Text>
+        </Stack>
+    );
 
+    // Keep edge-aware content aligned within the centered page container.
     return (
         <Layout
             tabs={{
@@ -80,7 +65,12 @@ export default function Organization({ settingsSection }: OrganizationProps) {
             }}
         >
             <Center axis="horizontal" width="100%">
-                <Stack gap={8} maxWidth={1000} width="100%">
+                <Stack
+                    className="[--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
+                    gap={8}
+                    maxWidth={1000}
+                    width="100%"
+                >
                     {content}
                     {section === 'applications' ? (
                         <Applications

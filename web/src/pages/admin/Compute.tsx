@@ -1,14 +1,24 @@
 import type { TFunction } from 'i18next';
+import { useState } from 'react';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { pixel, proportional } from '@astryxdesign/core/Table';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+    Table,
+    type TableColumn,
+    pixel,
+    paginateData,
+    proportional,
+    useTablePagination,
+} from '@astryxdesign/core/Table';
 import type { ApiComputeRegistry } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n';
 import { useComputes } from '@/data/compute';
@@ -16,13 +26,12 @@ import { useDeleteDialog } from '@/lib/utils';
 import { useUserProfile } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiJson } from '@/lib/api';
 import CreateCompute from '@/components/dialogs/CreateCompute';
-import { DataTable, type DataTableColumn } from '@/components/DataTable';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { computesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
 import { apiComputeMutationResponseSchema, parseApiResponse } from '@/lib/api-schemas';
 
 /** Returns localized admin compute table columns. */
-function createComputeColumns(t: TFunction): DataTableColumn<ApiComputeRegistry>[] {
+function createComputeColumns(t: TFunction): TableColumn<ApiComputeRegistry>[] {
     return [
         {
             key: 'compute',
@@ -71,6 +80,18 @@ export default function AdminCompute() {
         },
     });
     const { items: computes, error, isLoading } = useComputes();
+    const [page, setPage] = useState(1);
+    const pageSize = 25;
+    const pageCount = Math.max(1, Math.ceil(computes.length / pageSize));
+    const currentPage = Math.min(page, pageCount);
+    const pagination = useTablePagination<ApiComputeRegistry>({
+        page: currentPage,
+        onPageChange: setPage,
+        totalItems: computes.length,
+        pageSize,
+        label: `${t('actions.previous')} / ${t('actions.next')}`,
+        size: 'sm',
+    });
     const deleteDialog = useDeleteDialog({
         title: t('admin.deleteComputeTitle'),
         mutation: deleteCompute,
@@ -81,7 +102,7 @@ export default function AdminCompute() {
         fallbackDescription: t('admin.deleteComputeFallback'),
     });
     const columns = createComputeColumns(t);
-    const computeColumns: DataTableColumn<ApiComputeRegistry>[] = canManage
+    const computeColumns: TableColumn<ApiComputeRegistry>[] = canManage
         ? [
               ...columns,
               {
@@ -119,7 +140,19 @@ export default function AdminCompute() {
                 </VStack>
                 <CreateCompute />
             </HStack>
-            <DataTable columns={computeColumns} data={computes} error={error} isLoading={isLoading} pageSize={25} />
+            {isLoading && computes.length === 0 ? null : error && computes.length === 0 ? (
+                <Banner status="error" title={error.message} />
+            ) : (
+                <Table
+                    columns={computeColumns}
+                    data={paginateData(computes, currentPage, pageSize)}
+                    density="compact"
+                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    hasHover
+                    idKey="id"
+                    plugins={{ pagination }}
+                />
+            )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </VStack>
     );

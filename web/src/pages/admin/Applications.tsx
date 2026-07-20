@@ -1,21 +1,30 @@
 import type { TFunction } from 'i18next';
+import { useState } from 'react';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
+import { Banner } from '@astryxdesign/core/Banner';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { pixel, proportional } from '@astryxdesign/core/Table';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import {
+    Table,
+    type TableColumn,
+    pixel,
+    paginateData,
+    proportional,
+    useTablePagination,
+} from '@astryxdesign/core/Table';
 import type { ApiApplicationResponse } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n';
 import { formatDateTime } from '@/lib/utils';
 import { useApplications } from '@/data/admin';
-import { DataTable, type DataTableColumn } from '@/components/DataTable';
 
 /** Builds localized admin application table columns. */
-function createAppColumns(t: TFunction): DataTableColumn<ApiApplicationResponse>[] {
+function createAppColumns(t: TFunction): TableColumn<ApiApplicationResponse>[] {
     return [
         {
             key: 'name',
@@ -74,6 +83,18 @@ function createAppColumns(t: TFunction): DataTableColumn<ApiApplicationResponse>
 export default function AdminApplications() {
     const { t } = useTranslation();
     const { items: applications, error, isLoading } = useApplications();
+    const [page, setPage] = useState(1);
+    const pageSize = 25;
+    const pageCount = Math.max(1, Math.ceil(applications.length / pageSize));
+    const currentPage = Math.min(page, pageCount);
+    const pagination = useTablePagination<ApiApplicationResponse>({
+        page: currentPage,
+        onPageChange: setPage,
+        totalItems: applications.length,
+        pageSize,
+        label: `${t('actions.previous')} / ${t('actions.next')}`,
+        size: 'sm',
+    });
 
     return (
         <VStack gap={6} width="100%">
@@ -81,13 +102,19 @@ export default function AdminApplications() {
                 <Heading level={1}>{t('admin.applicationsTitle')}</Heading>
                 <Text type="supporting">{t('admin.applicationsDescription')}</Text>
             </VStack>
-            <DataTable
-                columns={createAppColumns(t)}
-                data={applications}
-                error={error}
-                isLoading={isLoading}
-                pageSize={25}
-            />
+            {isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
+                <Banner status="error" title={error.message} />
+            ) : (
+                <Table
+                    columns={createAppColumns(t)}
+                    data={paginateData(applications, currentPage, pageSize)}
+                    density="compact"
+                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    hasHover
+                    idKey="id"
+                    plugins={{ pagination }}
+                />
+            )}
         </VStack>
     );
 }

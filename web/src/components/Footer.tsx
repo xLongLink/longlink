@@ -10,6 +10,9 @@ import { GitHub } from '@/svg/GitHub';
 import { LinkedIn } from '@/svg/LinkedIn';
 import { Wordmark } from '@/components/Wordmark';
 
+const footerLinkClassName = 'group hover:!no-underline';
+const footerLinkContentClassName = 'group-hover:text-[var(--color-text-accent)]';
+
 /** Scrolls public pages back to the top after internal navigation. */
 function scrollToTop() {
     window.scrollTo({ left: 0, top: 0 });
@@ -31,48 +34,78 @@ export function Footer() {
                                     <li>
                                         <Link
                                             as="a"
+                                            className={footerLinkClassName}
+                                            color="secondary"
                                             href="https://www.linkedin.com/company/swissgpu"
                                             label="LinkedIn"
-                                            isExternalLink
-                                            tooltip="LinkedIn"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
                                         >
-                                            <Icon icon={LinkedIn} size="sm" />
+                                            <span className={footerLinkContentClassName}>
+                                                <Icon icon={LinkedIn} size="sm" />
+                                            </span>
                                         </Link>
                                     </li>
                                     <li>
                                         <Link
                                             as="a"
+                                            className={footerLinkClassName}
+                                            color="secondary"
                                             href="https://github.com/xLongLink/longlink"
                                             label="GitHub"
-                                            isExternalLink
-                                            tooltip="GitHub"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
                                         >
-                                            <Icon icon={GitHub} size="sm" />
+                                            <span className={footerLinkContentClassName}>
+                                                <Icon icon={GitHub} size="sm" />
+                                            </span>
                                         </Link>
                                     </li>
                                     <li>
                                         <Link
                                             as="a"
+                                            className={footerLinkClassName}
+                                            color="secondary"
                                             href="https://pypi.org/project/longlink/"
                                             label="PyPI"
-                                            isExternalLink
-                                            tooltip="PyPI"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
                                         >
-                                            <Icon icon={Package} size="sm" />
+                                            <span className={footerLinkContentClassName}>
+                                                <Icon icon={Package} size="sm" />
+                                            </span>
                                         </Link>
                                     </li>
                                 </Stack>
                             </Stack>
 
                             <Stack as="nav" direction="horizontal" gap={4} wrap="wrap" aria-label="Footer navigation">
-                                <Link href="/" onClick={scrollToTop} type="supporting">
-                                    Home
+                                <Link
+                                    href="/"
+                                    className={footerLinkClassName}
+                                    color="secondary"
+                                    onClick={scrollToTop}
+                                    type="supporting"
+                                >
+                                    <span className={footerLinkContentClassName}>Home</span>
                                 </Link>
-                                <Link href="/docs" onClick={scrollToTop} type="supporting">
-                                    Documentation
+                                <Link
+                                    href="/docs"
+                                    className={footerLinkClassName}
+                                    color="secondary"
+                                    onClick={scrollToTop}
+                                    type="supporting"
+                                >
+                                    <span className={footerLinkContentClassName}>Documentation</span>
                                 </Link>
-                                <Link href="/pricing" onClick={scrollToTop} type="supporting">
-                                    Pricing
+                                <Link
+                                    href="/pricing"
+                                    className={footerLinkClassName}
+                                    color="secondary"
+                                    onClick={scrollToTop}
+                                    type="supporting"
+                                >
+                                    <span className={footerLinkContentClassName}>Pricing</span>
                                 </Link>
                             </Stack>
                         </Stack>
@@ -84,14 +117,32 @@ export function Footer() {
                                 LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}
                             </Text>
                             <Stack as="nav" direction="horizontal" gap={4} aria-label="Legal navigation">
-                                <Link href="/impressum" onClick={scrollToTop} type="supporting">
-                                    Impressum
+                                <Link
+                                    href="/impressum"
+                                    className={footerLinkClassName}
+                                    color="secondary"
+                                    onClick={scrollToTop}
+                                    type="supporting"
+                                >
+                                    <span className={footerLinkContentClassName}>Impressum</span>
                                 </Link>
-                                <Link href="/terms" onClick={scrollToTop} type="supporting">
-                                    Terms
+                                <Link
+                                    href="/terms"
+                                    className={footerLinkClassName}
+                                    color="secondary"
+                                    onClick={scrollToTop}
+                                    type="supporting"
+                                >
+                                    <span className={footerLinkContentClassName}>Terms</span>
                                 </Link>
-                                <Link href="/privacy" onClick={scrollToTop} type="supporting">
-                                    Privacy
+                                <Link
+                                    href="/privacy"
+                                    className={footerLinkClassName}
+                                    color="secondary"
+                                    onClick={scrollToTop}
+                                    type="supporting"
+                                >
+                                    <span className={footerLinkContentClassName}>Privacy</span>
                                 </Link>
                             </Stack>
                         </Stack>

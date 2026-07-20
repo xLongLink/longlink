@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:complexType name="SideNavType">
+    <xsd:sequence><xsd:element ref="SideNavItem" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
+    <xsd:attribute name="label" type="NonBlankStringType" use="optional" default="Navigation" />
+    <xsd:attribute name="value" type="xsd:string" use="optional" />
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+  <xsd:complexType name="SideNavItemType">
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:attribute name="value" type="NonBlankStringType" use="required" />
+    <xsd:attribute name="label" type="NonBlankStringType" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
+    <xsd:attribute name="values" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="icon" type="NonBlankStringType" use="optional" />
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+  <xsd:element name="SideNav" type="SideNavType">
+    <xsd:annotation><xsd:documentation>Renders Astryx side navigation and one selected panel.</xsd:documentation></xsd:annotation>
+  </xsd:element>
+  <xsd:element name="SideNavItem" type="SideNavItemType">
+    <xsd:annotation><xsd:documentation>Defines one side navigation destination and its panel children.</xsd:documentation></xsd:annotation>
+    <xsd:key name="SideNavItemAccessibleLabel">
+      <xsd:selector xpath="." />
+      <xsd:field xpath="@label | @i18n" />
+    </xsd:key>
+  </xsd:element>
+</xsd:schema>

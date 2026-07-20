@@ -31,6 +31,7 @@ function renderArticleNavigationItem(item: ArticleNavigationItem, currentPath: s
             icon={item.icon}
             isSelected={isSelected}
             label={item.title}
+            size="sm"
         >
             {item.children?.map((child) => renderArticleNavigationItem(child, currentPath))}
         </SideNavItem>
@@ -41,14 +42,22 @@ function renderArticleNavigationItem(item: ArticleNavigationItem, currentPath: s
 export function Sidebar({ currentPath, groups }: SidebarProps) {
     return (
         <AstryxSideNav
+            className="docs-sidebar"
+            style={{ width: '100%' }}
             header={
-                <Link href="/" label="LongLink home" color="inherit">
-                    <Wordmark />
-                </Link>
+                <div className="flex h-16 w-full shrink-0 items-center justify-center border-b border-[var(--color-border)]">
+                    <Link href="/" label="LongLink home" color="inherit">
+                        <Wordmark className="tracking-normal" style={{ fontSize: '1.375rem' }} />
+                    </Link>
+                </div>
             }
         >
             {groups.map((group) => (
-                <SideNavSection key={group.title} title={group.title}>
+                <SideNavSection
+                    key={group.title}
+                    className="py-2 [&>div:first-child]:py-0.5 [&>div:last-child]:gap-0 [&>div:first-child>span:first-child>span:first-child]:text-[0.75rem] [&>div:first-child>span:first-child>span:first-child]:font-semibold [&>div:first-child>span:first-child>span:first-child]:tracking-normal [&>div:first-child>span:first-child>span:first-child]:text-[#9eb3c7] [&>div:first-child>span:first-child>span:first-child]:uppercase"
+                    title={group.title}
+                >
                     {group.items.map((item) => renderArticleNavigationItem(item, currentPath))}
                 </SideNavSection>
             ))}

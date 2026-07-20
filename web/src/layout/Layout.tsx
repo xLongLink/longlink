@@ -86,6 +86,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
         <Stack gap={0}>
             <TopNav
                 label={t('common.mainNavigation')}
+                style={{ paddingInline: 'var(--spacing-7)' }}
                 heading={
                     brandOnly ? (
                         <Link href={brandHref} label={t('common.longlinkHome')} color="inherit">
@@ -130,5 +131,9 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
         </Stack>
     );
 
-    return <TopLayout header={header}>{children}</TopLayout>;
+    return (
+        <TopLayout header={header} fullHeight={tabEntries.length > 0}>
+            {children}
+        </TopLayout>
+    );
 }

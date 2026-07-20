@@ -10,10 +10,13 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
-import { pixel, proportional } from '@astryxdesign/core/Table';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Boxes, Building2, Database, HardDrive, Users } from 'lucide-react';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type {
     ApiApplicationMember,
     ApiInvitation,
@@ -33,7 +36,6 @@ import { apiQueryKey, fetchApiVoid } from '@/lib/api';
 import { formatBytes, formatNumber } from '@/lib/utils';
 import { useOrganizationActions } from '@/hooks/use-organization';
 import CreateApplication from '@/components/dialogs/CreateApplication';
-import { DataTable, type DataTableColumn } from '@/components/DataTable';
 import { apiApplicationMemberSchema, parseApiCollection } from '@/lib/api-schemas';
 import { APPLICATION_ROLE_NAMES, hasMinimumRole, type ApplicationRole } from '@/lib/roles';
 import { useOrganizationDatabaseResources, useOrganizationStorageResources } from '@/data/organization';
@@ -103,6 +105,7 @@ export default function Settings({
         parse: (value) => parseApiCollection(apiApplicationMemberSchema, value),
         retry: false,
     });
+    const applicationMembers = applicationMembersQuery.data ?? [];
     const canManageSelectedApplication = selectedApplication
         ? hasMinimumRole(selectedApplication.role, 'maintain') || hasOrganizationApplicationAccess
         : false;
@@ -135,29 +138,7 @@ export default function Settings({
         },
     });
 
-    /** Navigates settings menu selections through real organization settings routes. */
-    function handleSectionChange(nextSection: string): void {
-        setApplicationRoleError(null);
-
-        // Route the settings overview to its base path.
-        if (nextSection === 'organization') {
-            navigate(`/orgs/${organization}/settings`);
-            return;
-        }
-
-        // Route top-level resource sections directly.
-        if (nextSection === 'applications' || nextSection === 'database' || nextSection === 'storage') {
-            navigate(`/orgs/${organization}/settings/${nextSection}`);
-            return;
-        }
-
-        // Route people subsections through their hash anchors.
-        if (nextSection === 'members' || nextSection === 'invitations') {
-            navigate(`/orgs/${organization}/settings/people#${nextSection}`);
-        }
-    }
-
-    const appColumns: DataTableColumn<ApiOrganizationApplication>[] = [
+    const appColumns: TableColumn<ApiOrganizationApplication>[] = [
         {
             key: 'name',
             header: t('columns.application'),
@@ -218,7 +199,7 @@ export default function Settings({
             },
         },
     ];
-    const applicationMemberColumns: DataTableColumn<ApiApplicationMember>[] = [
+    const applicationMemberColumns: TableColumn<ApiApplicationMember>[] = [
         {
             key: 'member',
             header: t('columns.user'),
@@ -292,7 +273,7 @@ export default function Settings({
             },
         },
     ];
-    const databaseColumns: DataTableColumn<ApiOrganizationDatabaseResource>[] = [
+    const databaseColumns: TableColumn<ApiOrganizationDatabaseResource>[] = [
         {
             key: 'resource',
             header: t('columns.resource'),
@@ -351,7 +332,7 @@ export default function Settings({
             },
         },
     ];
-    const storageColumns: DataTableColumn<ApiOrganizationStorageResource>[] = [
+    const storageColumns: TableColumn<ApiOrganizationStorageResource>[] = [
         {
             key: 'resource',
             header: t('columns.resource'),
@@ -414,128 +395,195 @@ export default function Settings({
     ];
 
     return (
-        <VStack gap={6} width="100%">
-            <Selector
-                label={t('navigation.settings')}
-                value={section}
-                width={320}
-                options={[
-                    { value: 'organization', label: t('columns.organization') },
-                    { value: 'members', label: t('people.membersTitle') },
-                    { value: 'invitations', label: t('people.invitationsTitle') },
-                    { value: 'applications', label: t('navigation.applications') },
-                    { value: 'database', label: t('navigation.database') },
-                    { value: 'storage', label: t('navigation.storage') },
-                ]}
-                onChange={handleSectionChange}
-            />
-
-            {section === 'organization' ? (
-                <VStack gap={4}>
-                    <VStack gap={1}>
-                        <Heading level={2}>{t('columns.organization')}</Heading>
-                        <Text type="supporting">{t('organizationSettings.organizationDescription')}</Text>
-                    </VStack>
-                    <HStack gap={3} align="center">
-                        <Avatar src={organizationAvatar} name={organizationName} size="small" />
-                        <VStack gap={1}>
-                            <Text weight="semibold">{organizationName}</Text>
-                            <Text type="supporting">{organizationDetails?.country}</Text>
-                        </VStack>
-                    </HStack>
-                </VStack>
-            ) : null}
-
-            {section === 'members' || section === 'invitations' ? (
-                <People
-                    organization={organization}
-                    people={people}
-                    invitations={invitations}
-                    activeSection={section}
-                    isLoading={isLoading}
-                    error={error}
-                />
-            ) : null}
-
-            {section === 'applications' ? (
-                <VStack gap={4}>
-                    <HStack gap={4} justify="between" align="end" wrap="wrap">
-                        <VStack gap={1}>
-                            {selectedApplication ? (
-                                <Link
-                                    href={`/orgs/${organization}/settings/applications`}
-                                    onClick={() => setApplicationRoleError(null)}
-                                >
-                                    {t('organizationSettings.back')}
-                                </Link>
-                            ) : null}
-                            <Heading level={2}>
-                                {selectedApplication
-                                    ? t('organizationSettings.applicationPermissionsTitle', {
-                                          name: selectedApplication.name,
-                                      })
-                                    : t('navigation.applications')}
-                            </Heading>
-                            {!selectedApplication ? (
-                                <Text type="supporting">{t('organizationSettings.reviewApplications')}</Text>
-                            ) : !canManageSelectedApplication ? (
-                                <Text type="supporting">{t('organizationSettings.cannotChangePermissions')}</Text>
-                            ) : null}
-                        </VStack>
-                        {!selectedApplication ? <CreateApplication organization={organization} /> : null}
-                    </HStack>
-
-                    {applicationRoleError ? <Banner status="error" title={applicationRoleError} /> : null}
-                    {selectedApplication ? (
-                        <DataTable
-                            columns={applicationMemberColumns}
-                            data={applicationMembersQuery.data ?? []}
-                            emptyMessage={t('resources.noOrganizationMembers')}
-                            error={applicationMembersQuery.error}
-                            isLoading={applicationMembersQuery.isLoading}
+        <>
+            <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
+                <SideNav style={{ height: 'auto', width: '100%' }}>
+                    <SideNavSection title={t('navigation.settings')} isHeaderHidden>
+                        <SideNavItem
+                            href={`/orgs/${organization}/settings`}
+                            icon={Building2}
+                            isSelected={section === 'organization'}
+                            label={t('columns.organization')}
                         />
-                    ) : (
-                        <DataTable
-                            columns={appColumns}
-                            data={applications}
-                            emptyMessage={t('organizationSettings.noApplications')}
-                            error={error ? new Error(t('organizationSettings.loadApplicationsFailed')) : null}
+                        <SideNavItem
+                            collapsible
+                            icon={Users}
+                            isSelected={section === 'members' || section === 'invitations'}
+                            label={t('navigation.people')}
+                        >
+                            <SideNavItem
+                                href={`/orgs/${organization}/settings/people#members`}
+                                isSelected={section === 'members'}
+                                label={t('people.membersTitle')}
+                            />
+                            <SideNavItem
+                                href={`/orgs/${organization}/settings/people#invitations`}
+                                isSelected={section === 'invitations'}
+                                label={t('people.invitationsTitle')}
+                            />
+                        </SideNavItem>
+                        <SideNavItem
+                            href={`/orgs/${organization}/settings/applications`}
+                            icon={Boxes}
+                            isSelected={section === 'applications'}
+                            label={t('navigation.applications')}
+                            onClick={() => setApplicationRoleError(null)}
+                        />
+                        <SideNavItem
+                            href={`/orgs/${organization}/settings/database`}
+                            icon={Database}
+                            isSelected={section === 'database'}
+                            label={t('navigation.database')}
+                        />
+                        <SideNavItem
+                            href={`/orgs/${organization}/settings/storage`}
+                            icon={HardDrive}
+                            isSelected={section === 'storage'}
+                            label={t('navigation.storage')}
+                        />
+                    </SideNavSection>
+                </SideNav>
+
+                <div className="min-w-0">
+                    {section === 'organization' ? (
+                        <VStack gap={4}>
+                            <VStack gap={1}>
+                                <Heading level={2}>{t('columns.organization')}</Heading>
+                                <Text type="supporting">{t('organizationSettings.organizationDescription')}</Text>
+                            </VStack>
+                            <HStack gap={3} align="center">
+                                <Avatar src={organizationAvatar} name={organizationName} size="small" />
+                                <VStack gap={1}>
+                                    <Text weight="semibold">{organizationName}</Text>
+                                    <Text type="supporting">{organizationDetails?.country}</Text>
+                                </VStack>
+                            </HStack>
+                        </VStack>
+                    ) : null}
+
+                    {section === 'members' || section === 'invitations' ? (
+                        <People
+                            organization={organization}
+                            people={people}
+                            invitations={invitations}
+                            activeSection={section}
                             isLoading={isLoading}
+                            error={error}
                         />
-                    )}
-                </VStack>
-            ) : null}
+                    ) : null}
 
-            {section === 'database' ? (
-                <VStack gap={4}>
-                    <VStack gap={1}>
-                        <Heading level={2}>{t('navigation.database')}</Heading>
-                        <Text type="supporting">{t('organizationSettings.reviewDatabase')}</Text>
-                    </VStack>
-                    <DataTable
-                        columns={databaseColumns}
-                        data={databaseResources}
-                        error={databaseResourcesError}
-                        isLoading={isLoading || databaseResourcesIsLoading}
-                    />
-                </VStack>
-            ) : null}
+                    {section === 'applications' ? (
+                        <VStack gap={4}>
+                            <HStack gap={4} justify="between" align="end" wrap="wrap">
+                                <VStack gap={1}>
+                                    {selectedApplication ? (
+                                        <Link
+                                            href={`/orgs/${organization}/settings/applications`}
+                                            onClick={() => setApplicationRoleError(null)}
+                                        >
+                                            {t('organizationSettings.back')}
+                                        </Link>
+                                    ) : null}
+                                    <Heading level={2}>
+                                        {selectedApplication
+                                            ? t('organizationSettings.applicationPermissionsTitle', {
+                                                  name: selectedApplication.name,
+                                              })
+                                            : t('navigation.applications')}
+                                    </Heading>
+                                    {!selectedApplication ? (
+                                        <Text type="supporting">{t('organizationSettings.reviewApplications')}</Text>
+                                    ) : !canManageSelectedApplication ? (
+                                        <Text type="supporting">
+                                            {t('organizationSettings.cannotChangePermissions')}
+                                        </Text>
+                                    ) : null}
+                                </VStack>
+                                {!selectedApplication ? <CreateApplication organization={organization} /> : null}
+                            </HStack>
 
-            {section === 'storage' ? (
-                <VStack gap={4}>
-                    <VStack gap={1}>
-                        <Heading level={2}>{t('navigation.storage')}</Heading>
-                        <Text type="supporting">{t('organizationSettings.reviewStorage')}</Text>
-                    </VStack>
-                    <DataTable
-                        columns={storageColumns}
-                        data={storageResources}
-                        emptyMessage={t('resources.noStorageResources')}
-                        error={storageResourcesError}
-                        isLoading={isLoading || storageResourcesIsLoading}
-                    />
-                </VStack>
-            ) : null}
+                            {applicationRoleError ? <Banner status="error" title={applicationRoleError} /> : null}
+                            {selectedApplication ? (
+                                applicationMembersQuery.isLoading &&
+                                applicationMembers.length === 0 ? null : applicationMembersQuery.error &&
+                                  applicationMembers.length === 0 ? (
+                                    <Banner status="error" title={applicationMembersQuery.error.message} />
+                                ) : (
+                                    <Table
+                                        columns={applicationMemberColumns}
+                                        data={applicationMembers}
+                                        density="compact"
+                                        emptyState={
+                                            <EmptyState title={t('resources.noOrganizationMembers')} isCompact />
+                                        }
+                                        hasHover
+                                        idKey="id"
+                                    />
+                                )
+                            ) : isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
+                                <Banner status="error" title={t('organizationSettings.loadApplicationsFailed')} />
+                            ) : (
+                                <Table
+                                    columns={appColumns}
+                                    data={applications}
+                                    density="compact"
+                                    emptyState={
+                                        <EmptyState title={t('organizationSettings.noApplications')} isCompact />
+                                    }
+                                    hasHover
+                                    idKey="id"
+                                />
+                            )}
+                        </VStack>
+                    ) : null}
+
+                    {section === 'database' ? (
+                        <VStack gap={4}>
+                            <VStack gap={1}>
+                                <Heading level={2}>{t('navigation.database')}</Heading>
+                                <Text type="supporting">{t('organizationSettings.reviewDatabase')}</Text>
+                            </VStack>
+                            {(isLoading || databaseResourcesIsLoading) &&
+                            databaseResources.length === 0 ? null : databaseResourcesError &&
+                              databaseResources.length === 0 ? (
+                                <Banner status="error" title={databaseResourcesError.message} />
+                            ) : (
+                                <Table
+                                    columns={databaseColumns}
+                                    data={databaseResources}
+                                    density="compact"
+                                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                                    hasHover
+                                    idKey="name"
+                                />
+                            )}
+                        </VStack>
+                    ) : null}
+
+                    {section === 'storage' ? (
+                        <VStack gap={4}>
+                            <VStack gap={1}>
+                                <Heading level={2}>{t('navigation.storage')}</Heading>
+                                <Text type="supporting">{t('organizationSettings.reviewStorage')}</Text>
+                            </VStack>
+                            {(isLoading || storageResourcesIsLoading) &&
+                            storageResources.length === 0 ? null : storageResourcesError &&
+                              storageResources.length === 0 ? (
+                                <Banner status="error" title={storageResourcesError.message} />
+                            ) : (
+                                <Table
+                                    columns={storageColumns}
+                                    data={storageResources}
+                                    density="compact"
+                                    emptyState={<EmptyState title={t('resources.noStorageResources')} isCompact />}
+                                    hasHover
+                                    idKey="prefix"
+                                />
+                            )}
+                        </VStack>
+                    ) : null}
+                </div>
+            </div>
 
             {logsTarget ? (
                 <Logs
@@ -597,6 +645,6 @@ export default function Settings({
                     }
                 }}
             />
-        </VStack>
+        </>
     );
 }

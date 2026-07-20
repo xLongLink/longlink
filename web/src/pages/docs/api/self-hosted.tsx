@@ -47,6 +47,8 @@ export const content = (
                     <TableHeaderCell>Variable</TableHeaderCell>
                     <TableHeaderCell>Purpose</TableHeaderCell>
                 </TableRow>
+            </TableHeader>
+            <TableBody>
                 <TableRow>
                     <TableCell>
                         <div>
@@ -61,8 +63,6 @@ export const content = (
                         Operation queue coalesces concurrent requests per compute target.
                     </TableCell>
                 </TableRow>
-            </TableHeader>
-            <TableBody>
                 <TableRow>
                     <TableCell>
                         <div>

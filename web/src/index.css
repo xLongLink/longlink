@@ -18,3 +18,31 @@
         scrollbar-gutter: stable;
     }
 }
+
+@layer components {
+    .docs-sidebar .astryx-side-nav-item[data-selected='selected'] {
+        background-color: var(--color-accent-muted);
+        box-shadow: inset 3px 0 0 var(--color-accent);
+        color: var(--color-text-primary);
+    }
+
+    .docs-sidebar .astryx-side-nav-item[data-selected='selected']:hover {
+        background-color: var(--color-accent-muted);
+    }
+
+    .docs-sidebar .astryx-side-nav-item[data-selected='selected'] svg {
+        color: var(--color-icon-accent);
+    }
+
+    .docs-article .astryx-table-scroll-wrapper {
+        margin-inline: 0 !important;
+        max-width: 100%;
+        width: 100% !important;
+    }
+}
+
+@layer components {
+    .longlink-code-block > button {
+        margin-inline-end: 0;
+    }
+}

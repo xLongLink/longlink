@@ -7,6 +7,7 @@ export function DevelopmentNotice() {
     return (
         <Banner
             container="section"
+            isDismissable
             status="warning"
             title={
                 <Text type="supporting">

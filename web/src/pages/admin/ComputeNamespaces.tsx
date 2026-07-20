@@ -1,14 +1,16 @@
+import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { proportional } from '@astryxdesign/core/Table';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Table, type TableColumn, paginateData, proportional, useTablePagination } from '@astryxdesign/core/Table';
 import { useTranslation } from '@/lib/i18n';
 import { useComputeNamespaces, useComputes } from '@/data/compute';
-import { DataTable, type DataTableColumn } from '@/components/DataTable';
 
-type ComputeNamespaceRow = {
+type ComputeNamespaceRow = Record<string, unknown> & {
     name: string;
 };
 
@@ -16,9 +18,10 @@ type ComputeNamespaceRow = {
 export default function ComputeNamespaces() {
     const { t } = useTranslation();
     const { compute = '' } = useParams();
+    const [page, setPage] = useState(1);
     const { items: computes, error: computeError, isLoading: computesIsLoading } = useComputes();
     const computeRegistry = computes.find((registry) => registry.slug === compute);
-    const columns: DataTableColumn<ComputeNamespaceRow>[] = [
+    const columns: TableColumn<ComputeNamespaceRow>[] = [
         {
             key: 'name',
             header: t('columns.namespace'),
@@ -39,6 +42,17 @@ export default function ComputeNamespaces() {
         isLoading: namespacesIsLoading,
     } = useComputeNamespaces(computeRegistry?.id ?? '');
     const rows = namespaceNames.map((name) => ({ name }));
+    const pageSize = 25;
+    const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
+    const currentPage = Math.min(page, pageCount);
+    const pagination = useTablePagination<ComputeNamespaceRow>({
+        page: currentPage,
+        onPageChange: setPage,
+        totalItems: rows.length,
+        pageSize,
+        label: `${t('actions.previous')} / ${t('actions.next')}`,
+        size: 'sm',
+    });
     const error =
         computeError ??
         (!computesIsLoading && !computeRegistry
@@ -53,13 +67,19 @@ export default function ComputeNamespaces() {
                     {t('resources.namespacesDescription', { name: computeRegistry?.slug || compute })}
                 </Text>
             </VStack>
-            <DataTable
-                columns={columns}
-                data={rows}
-                error={error}
-                isLoading={computesIsLoading || namespacesIsLoading}
-                pageSize={25}
-            />
+            {(computesIsLoading || namespacesIsLoading) && rows.length === 0 ? null : error && rows.length === 0 ? (
+                <Banner status="error" title={error.message} />
+            ) : (
+                <Table
+                    columns={columns}
+                    data={paginateData(rows, currentPage, pageSize)}
+                    density="compact"
+                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    hasHover
+                    idKey="name"
+                    plugins={{ pagination }}
+                />
+            )}
         </VStack>
     );
 }

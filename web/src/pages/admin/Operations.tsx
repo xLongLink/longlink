@@ -1,18 +1,26 @@
 import type { TFunction } from 'i18next';
+import { useState } from 'react';
 import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { pixel, proportional } from '@astryxdesign/core/Table';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import {
+    Table,
+    type TableColumn,
+    pixel,
+    paginateData,
+    proportional,
+    useTablePagination,
+} from '@astryxdesign/core/Table';
 import type { ApiOperation } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n';
 import { useOperations } from '@/data/admin';
 import { formatDateTime } from '@/lib/utils';
-import { DataTable, type DataTableColumn } from '@/components/DataTable';
 
 /** Returns localized admin operation table columns. */
-function createOperationColumns(t: TFunction): DataTableColumn<ApiOperation>[] {
+function createOperationColumns(t: TFunction): TableColumn<ApiOperation>[] {
     const statusLabels: Record<ApiOperation['status'], string> = {
         scheduled: t('admin.operationStatus.scheduled'),
         active: t('admin.operationStatus.active'),
@@ -86,6 +94,18 @@ function createOperationColumns(t: TFunction): DataTableColumn<ApiOperation>[] {
 export default function AdminOperations() {
     const { t } = useTranslation();
     const { items: operations, error, isLoading } = useOperations();
+    const [page, setPage] = useState(1);
+    const pageSize = 25;
+    const pageCount = Math.max(1, Math.ceil(operations.length / pageSize));
+    const currentPage = Math.min(page, pageCount);
+    const pagination = useTablePagination<ApiOperation>({
+        page: currentPage,
+        onPageChange: setPage,
+        totalItems: operations.length,
+        pageSize,
+        label: `${t('actions.previous')} / ${t('actions.next')}`,
+        size: 'sm',
+    });
 
     return (
         <VStack gap={6} width="100%">
@@ -93,13 +113,19 @@ export default function AdminOperations() {
                 <Heading level={1}>{t('admin.operationsTitle')}</Heading>
                 <Text type="supporting">{t('admin.operationsDescription')}</Text>
             </VStack>
-            <DataTable
-                columns={createOperationColumns(t)}
-                data={operations}
-                error={error}
-                isLoading={isLoading}
-                pageSize={25}
-            />
+            {isLoading && operations.length === 0 ? null : error && operations.length === 0 ? (
+                <Banner status="error" title={error.message} />
+            ) : (
+                <Table
+                    columns={createOperationColumns(t)}
+                    data={paginateData(operations, currentPage, pageSize)}
+                    density="compact"
+                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    hasHover
+                    idKey="id"
+                    plugins={{ pagination }}
+                />
+            )}
         </VStack>
     );
 }

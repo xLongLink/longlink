@@ -22,6 +22,7 @@ export { NumberInput } from './NumberInput';
 export * from './props';
 export { RadioList, RadioListItem } from './RadioList';
 export { Selector, SelectorOption } from './Selector';
+export { SideNav, SideNavItem } from './SideNav';
 export { Slider } from './Slider';
 export { Stack } from './Stack';
 export { Switch } from './Switch';

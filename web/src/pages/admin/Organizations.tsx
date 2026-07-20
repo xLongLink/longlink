@@ -1,15 +1,25 @@
 import type { TFunction } from 'i18next';
+import { useState } from 'react';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { pixel, proportional } from '@astryxdesign/core/Table';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+    Table,
+    type TableColumn,
+    pixel,
+    paginateData,
+    proportional,
+    useTablePagination,
+} from '@astryxdesign/core/Table';
 import type { ApiOrganizationSummary } from '@/lib/types';
 import { fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
@@ -17,11 +27,10 @@ import { useOrganizations } from '@/data/admin';
 import { useUserProfile } from '@/hooks/use-user';
 import { organizationsQueryKey } from '@/lib/query-keys';
 import { formatDateTime, useDeleteDialog } from '@/lib/utils';
-import { DataTable, type DataTableColumn } from '@/components/DataTable';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 
 /** Returns localized admin organization table columns. */
-function createOrganizationColumns(t: TFunction): DataTableColumn<ApiOrganizationSummary>[] {
+function createOrganizationColumns(t: TFunction): TableColumn<ApiOrganizationSummary>[] {
     return [
         {
             key: 'name',
@@ -109,6 +118,18 @@ export default function AdminOrganizations() {
         },
     });
     const { items: organizations, error, isLoading } = useOrganizations();
+    const [page, setPage] = useState(1);
+    const pageSize = 25;
+    const pageCount = Math.max(1, Math.ceil(organizations.length / pageSize));
+    const currentPage = Math.min(page, pageCount);
+    const pagination = useTablePagination<ApiOrganizationSummary>({
+        page: currentPage,
+        onPageChange: setPage,
+        totalItems: organizations.length,
+        pageSize,
+        label: `${t('actions.previous')} / ${t('actions.next')}`,
+        size: 'sm',
+    });
     const deleteDialog = useDeleteDialog({
         title: t('deleteDialog.deleteOrganizationTitle'),
         mutation: deleteOrganization,
@@ -119,7 +140,7 @@ export default function AdminOrganizations() {
         fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
     });
     const columns = createOrganizationColumns(t);
-    const organizationColumns: DataTableColumn<ApiOrganizationSummary>[] = canManage
+    const organizationColumns: TableColumn<ApiOrganizationSummary>[] = canManage
         ? [
               ...columns,
               {
@@ -154,13 +175,19 @@ export default function AdminOrganizations() {
                 <Heading level={1}>{t('admin.organizationsTitle')}</Heading>
                 <Text type="supporting">{t('admin.organizationsDescription')}</Text>
             </VStack>
-            <DataTable
-                columns={organizationColumns}
-                data={organizations}
-                error={error}
-                isLoading={isLoading}
-                pageSize={25}
-            />
+            {isLoading && organizations.length === 0 ? null : error && organizations.length === 0 ? (
+                <Banner status="error" title={error.message} />
+            ) : (
+                <Table
+                    columns={organizationColumns}
+                    data={paginateData(organizations, currentPage, pageSize)}
+                    density="compact"
+                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    hasHover
+                    idKey="id"
+                    plugins={{ pagination }}
+                />
+            )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
         </VStack>
     );

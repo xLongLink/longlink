@@ -1,12 +1,13 @@
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
-import { proportional } from '@astryxdesign/core/Table';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { ApiOrganizationApplication } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n';
-import { DataTable, type DataTableColumn } from '@/components/DataTable';
 
 /** Renders the organization applications table. */
 export default function Applications({
@@ -22,7 +23,7 @@ export default function Applications({
 }) {
     const { t } = useTranslation();
     const applicationsError = error ? new Error(t('errors.loadApplications')) : null;
-    const columns: DataTableColumn<ApiOrganizationApplication>[] = [
+    const columns: TableColumn<ApiOrganizationApplication>[] = [
         {
             key: 'name',
             header: t('columns.application'),
@@ -41,5 +42,23 @@ export default function Applications({
         },
     ];
 
-    return <DataTable columns={columns} data={applications} error={applicationsError} isLoading={isLoading} />;
+    if (isLoading && applications.length === 0) {
+        return null;
+    }
+
+    // Surface application lookup failures when no stale data is available.
+    if (applicationsError && applications.length === 0) {
+        return <Banner status="error" title={applicationsError.message} />;
+    }
+
+    return (
+        <Table
+            columns={columns}
+            data={applications}
+            density="compact"
+            emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+            hasHover
+            idKey="id"
+        />
+    );
 }

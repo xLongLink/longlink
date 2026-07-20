@@ -4,11 +4,13 @@ import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
-import { TopNav, TopNavItem } from '@astryxdesign/core/TopNav';
+import { TopNav } from '@astryxdesign/core/TopNav';
 import { useTranslation } from '@/lib/i18n';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
+
+const navigationLinkContentClassName = 'group-hover:text-[var(--color-text-accent)]';
 
 /** Renders the public landing page navigation. */
 export function Navbar() {
@@ -37,19 +39,40 @@ export function Navbar() {
                                 </Link>
                             }
                             label="Main navigation"
-                            startContent={
+                            centerContent={
                                 <div className="hidden sm:flex">
-                                    <Stack direction="horizontal" gap={1} vAlign="center">
-                                        <TopNavItem href="/docs" label="Documentation" />
-                                        <TopNavItem href="/pricing" label="Pricing" />
+                                    <Stack direction="horizontal" gap={4} vAlign="center">
+                                        <Link
+                                            href="/docs"
+                                            className="group hover:!no-underline"
+                                            color="secondary"
+                                            isStandalone
+                                            weight="normal"
+                                        >
+                                            <span className={navigationLinkContentClassName}>Documentation</span>
+                                        </Link>
+                                        <Link
+                                            href="/pricing"
+                                            className="group hover:!no-underline"
+                                            color="secondary"
+                                            isStandalone
+                                            weight="normal"
+                                        >
+                                            <span className={navigationLinkContentClassName}>Pricing</span>
+                                        </Link>
                                         <Link
                                             as="a"
+                                            className="group hover:!no-underline"
+                                            color="secondary"
                                             href="https://github.com/xLongLink/longlink"
                                             isStandalone
                                             rel="noopener noreferrer"
                                             target="_blank"
+                                            weight="normal"
                                         >
-                                            <span className="inline-flex items-center gap-1">
+                                            <span
+                                                className={`inline-flex items-center gap-1 ${navigationLinkContentClassName}`}
+                                            >
                                                 GitHub
                                                 <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
                                             </span>

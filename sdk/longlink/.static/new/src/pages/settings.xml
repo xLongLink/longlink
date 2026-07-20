@@ -14,8 +14,8 @@
         <Text as="p" color="secondary" i18n="settings.description" />
     </Stack>
 
-    <TabList label="Settings sections">
-        <Tab value="application" i18n="settings.sections.application">
+    <SideNav label="Settings sections">
+        <SideNavItem value="application" icon="viewColumns" i18n="settings.sections.application">
             <Stack gap="4">
                 <Heading level="2" i18n="settings.sections.application" />
                 <Text as="p" i18n="settings.application.description" />
@@ -48,9 +48,9 @@
                 <Text as="p" i18n="settings.application.bold" weight="semibold" />
                 <Code i18n="settings.application.code" />
             </Stack>
-        </Tab>
+        </SideNavItem>
 
-        <Tab value="preferences" i18n="settings.sections.preferences">
+        <SideNavItem value="preferences" icon="wrench" i18n="settings.sections.preferences">
             <Stack gap="4">
                 <Heading level="2" i18n="settings.sections.preferences" />
                 <Text as="p" i18n="settings.preferences.description" />
@@ -69,9 +69,9 @@
                 </FormLayout>
                 <Text i18n="settings.preferences.limitValue" values="${{ limit: budgetLimit.value }}" />
             </Stack>
-        </Tab>
+        </SideNavItem>
 
-        <Tab value="workflow" i18n="settings.sections.workflow">
+        <SideNavItem value="workflow" icon="arrowsUpDown" i18n="settings.sections.workflow">
             <Stack gap="4">
                 <Heading level="2" i18n="settings.sections.workflow" />
                 <Text as="p" i18n="settings.workflow.description" />
@@ -88,9 +88,9 @@
                     </Selector>
                 </FormLayout>
             </Stack>
-        </Tab>
+        </SideNavItem>
 
-        <Tab value="links" i18n="settings.sections.links">
+        <SideNavItem value="links" icon="externalLink" i18n="settings.sections.links">
             <Stack gap="4">
                 <Heading level="2" i18n="settings.sections.links" />
                 <Text as="p" i18n="settings.links.description" />
@@ -114,6 +114,6 @@
                     </For>
                 </Stack>
             </Stack>
-        </Tab>
-    </TabList>
+        </SideNavItem>
+    </SideNav>
 </longlink>
