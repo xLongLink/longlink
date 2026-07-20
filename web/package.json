@@ -27,7 +27,7 @@
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
         "embla-carousel-react": "^8.6.0",
-        "fast-xml-parser": "^5.9.3",
+        "fast-xml-parser": "^5.10.0",
         "i18next": "^26.3.4",
         "input-otp": "^1.4.2",
         "lodash": "^4.18.1",
