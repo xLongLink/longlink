@@ -6,9 +6,7 @@ from pathlib import PurePosixPath
 from longlink import Router
 from src.resources import fs
 from fastapi.responses import Response
-from src.schemas.requests import (PurchaseRequestRead, PurchaseRequestCreate,
-                                  RequestAttachmentRead,
-                                  PurchaseRequestStatusUpdate)
+from src.schemas.requests import PurchaseRequestRead, PurchaseRequestCreate, RequestAttachmentRead, PurchaseRequestStatusUpdate
 from src.database.services import requests
 from src.database.models.requests import PurchaseRequest
 

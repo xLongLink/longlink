@@ -2,11 +2,11 @@ import pytest
 from uuid import UUID
 from datetime import UTC, datetime
 from src.utils import names
-from src.environments import env
 from containers import DockerRuntimeContainer, wait_for_postgres, require_docker_daemon
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from longlink.shared import users as shared_users
+from src.environments import env
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine
 from src.adapters.database.postgres import Postgres
