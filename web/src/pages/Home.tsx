@@ -536,7 +536,7 @@ export default function Home() {
                             <span className="mx-auto block tracking-[0.018em]">
                                 Build the process, not the workaround
                             </span>
-                            <span className="mx-auto block tracking-[0.026em]">Start from solid ground</span>
+                            <span className="mx-auto block tracking-[0.026em]">Start from solid foundations</span>
                             <span className="mx-auto block">This is LongLink</span>
                         </p>
                     </div>

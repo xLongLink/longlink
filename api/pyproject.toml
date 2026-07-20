@@ -16,6 +16,7 @@ dependencies = [
     'botocore>=1.40.61',
     'cryptography>=48.0.1',
     'email-validator>=2.3.0',
+    'exoscale>=0.16.3',
     'fastapi>=0.139.0',
     'httpx2>=2.3.0',
     'itsdangerous>=2.2.0',
@@ -35,6 +36,7 @@ dependencies = [
 
 [tool.uv.sources]
 longlink = { path = "../sdk", editable = true }
+exoscale = { git = "https://github.com/xLongLink/python-exoscale", rev = "7a1ed139e8d535b150505506450dba72efa1314e" }
 
 [project.optional-dependencies]
 dev = [

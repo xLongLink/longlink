@@ -1,19 +1,13 @@
-import hmac
-import json
-import time
-import base64
-import httpx2
-import asyncio
-import hashlib
 import urllib.parse
 from .base import StorageAccess, StorageRuntimeCredentials
-from typing import Literal
 from .minio import MinIO
 from contextlib import suppress
+from collections.abc import Mapping
+from exoscale.api.v2 import AsyncClient
+from exoscale.api.exceptions import ExoscaleAPIClientException
+from exoscale.api.v2_response_types import Operation
 
-EXOSCALE_SIGNATURE_TTL_SECONDS = 300
-EXOSCALE_OPERATION_POLL_ATTEMPTS = 20
-EXOSCALE_OPERATION_POLL_DELAY_SECONDS = 0.5
+EXOSCALE_OPERATION_MAX_WAIT_SECONDS = 10
 
 JsonObject = dict[str, object]
 
@@ -26,9 +20,9 @@ class Exoscale(MinIO):
 
         super().__init__(endpoint_url, access_key_id, secret_access_key)
 
-        # Exoscale control-plane API hosts are zone-local and derived from the SOS endpoint.
-        self._zone = self._zone_from_endpoint(endpoint_url)
-        self._api_url = f"https://api-{self._zone}.exoscale.com/v2"
+        # Configure the async control-plane client for the SOS endpoint's zone.
+        zone = self._zone_from_endpoint(endpoint_url)
+        self._api_url = f"https://api-{zone}.exoscale.com/v2"
 
     async def credentials(self, bucket: str, access: StorageAccess) -> StorageRuntimeCredentials:
         """Replace deterministic prior IAM material and issue a new key constrained to the requested bucket and access level.
@@ -41,158 +35,97 @@ class Exoscale(MinIO):
         # Remove an incomplete prior attempt so deterministic names make retries converge without leaked keys.
         await self.revoke(bucket)
 
-        # Create the restricted role first because API keys are immutable role attachments.
-        operation = await self._api_request(
-            "POST",
-            "/iam-role",
-            {
-                "name": name,
-                "description": f"LongLink {access} storage access for {bucket}",
-                "editable": False,
-                "policy": self._bucket_policy(bucket, access),
-            },
-        )
-        role_id = await self._wait_operation(operation, require_reference=True)
-        if role_id is None:
-            raise RuntimeError("Exoscale IAM role creation did not return a role id")
+        # Keep role and key provisioning in one managed async client session.
+        api = AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url)
+        async with api:
+            operation = await api.create_iam_role(
+                name=name,
+                description=f"LongLink {access} storage access for {bucket}",
+                editable=False,
+                policy=self._bucket_policy(bucket, access),
+            )
+            role_id = await self._wait_operation(api, operation, require_reference=True)
+            if role_id is None:
+                raise RuntimeError("Exoscale IAM role creation did not return a role id")
 
-        # Create the API key for the new role, cleaning up the role if key creation fails.
-        try:
-            key = await self._api_request("POST", "/api-key", {"name": name, "role-id": role_id})
-        except Exception:
-            with suppress(Exception):
-                await self._delete_operation(f"/iam-role/{urllib.parse.quote(role_id, safe='')}")
-            raise
+            # Create the API key for the new role, cleaning up the role if key creation fails.
+            try:
+                key = await api.create_api_key(name=name, role_id=role_id)
+            except Exception:
+                with suppress(Exception):
+                    operation = await api.delete_iam_role(id=role_id)
+                    await self._wait_operation(api, operation, require_reference=False)
+                raise
 
-        return {
-            "access_key_id": self._string(key, "key"),
-            "secret_access_key": self._string(key, "secret"),
-        }
+            return {
+                "access_key_id": self._string(key, "key"),
+                "secret_access_key": self._string(key, "secret"),
+            }
 
     async def revoke(self, bucket: str) -> None:
         """Delete Exoscale API keys and IAM roles created for one bucket."""
 
         name = self._credential_name(bucket)
 
-        # Delete every matching API key before deleting roles they may reference.
-        keys = await self._api_request("GET", "/api-key")
-        api_keys = keys.get("api-keys", [])
-        if not isinstance(api_keys, list):
-            api_keys = []
+        # Keep credential cleanup in one managed async client session.
+        api = AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url)
+        async with api:
+            # Delete every matching API key before deleting roles they may reference.
+            keys = await api.list_api_keys()
+            api_keys = keys.get("api-keys", [])
+            if not isinstance(api_keys, list):
+                api_keys = []
 
-        for item in api_keys:
-            if not isinstance(item, dict) or item.get("name") != name:
-                continue
+            for item in api_keys:
+                if not isinstance(item, dict) or item.get("name") != name:
+                    continue
 
-            key = item.get("key")
-            if isinstance(key, str) and key:
-                await self._delete_operation(f"/api-key/{urllib.parse.quote(key, safe='')}")
+                key = item.get("key")
+                if isinstance(key, str) and key:
+                    try:
+                        operation = await api.delete_api_key(id=key)
+                    except ExoscaleAPIClientException as exc:
+                        if exc.response is None or exc.response.status_code != 404:
+                            raise
+                    else:
+                        await self._wait_operation(api, operation, require_reference=False)
 
-        # Delete every matching role after keys have been removed.
-        roles = await self._api_request("GET", "/iam-role")
-        iam_roles = roles.get("iam-roles", [])
-        if not isinstance(iam_roles, list):
-            iam_roles = []
+            # Delete every matching role after keys have been removed.
+            roles = await api.list_iam_roles()
+            iam_roles = roles.get("iam-roles", [])
+            if not isinstance(iam_roles, list):
+                iam_roles = []
 
-        for item in iam_roles:
-            if not isinstance(item, dict) or item.get("name") != name:
-                continue
+            for item in iam_roles:
+                if not isinstance(item, dict) or item.get("name") != name:
+                    continue
 
-            role_id = item.get("id")
-            if isinstance(role_id, str) and role_id:
-                await self._delete_operation(f"/iam-role/{urllib.parse.quote(role_id, safe='')}")
+                role_id = item.get("id")
+                if isinstance(role_id, str) and role_id:
+                    try:
+                        operation = await api.delete_iam_role(id=role_id)
+                    except ExoscaleAPIClientException as exc:
+                        if exc.response is None or exc.response.status_code != 404:
+                            raise
+                    else:
+                        await self._wait_operation(api, operation, require_reference=False)
 
-    def _authorization(self, method: str, path: str, body: str, expires: int) -> str:
-        """Return the Exoscale V2 API authorization header value."""
-
-        # Build the exact message documented by the Exoscale V2 API signature scheme.
-        message = "\n".join(
-            [
-                f"{method} /v2{path}",
-                body,
-                "",
-                "",
-                str(expires),
-            ]
-        )
-        signature = base64.b64encode(
-            hmac.new(self._secret_access_key.encode("utf-8"), message.encode("utf-8"), hashlib.sha256).digest()
-        ).decode("ascii")
-
-        return f"EXO2-HMAC-SHA256 credential={self._access_key_id},expires={expires},signature={signature}"
-
-    async def _api_request(
-        self,
-        method: Literal["GET", "POST", "DELETE"],
-        path: str,
-        payload: JsonObject | None = None,
-        *,
-        ignore_not_found: bool = False,
-    ) -> JsonObject:
-        """Send one signed Exoscale V2 API request and return its JSON object."""
-
-        # Serialize the payload once so the signature and HTTP request body match exactly.
-        body = "" if payload is None else json.dumps(payload, separators=(",", ":"), sort_keys=True)
-        expires = int(time.time()) + EXOSCALE_SIGNATURE_TTL_SECONDS
-        headers = {
-            "Accept": "application/json",
-            "Authorization": self._authorization(method, path, body, expires),
-        }
-        if payload is not None:
-            headers["Content-Type"] = "application/json"
-
-        # Execute the request through the configured zone-local control-plane endpoint.
-        async with httpx2.AsyncClient(timeout=30.0) as client:
-            response = await client.request(
-                method, f"{self._api_url}{path}", content=body if payload is not None else None, headers=headers
-            )
-
-        # Cleanup paths tolerate resources that have already been removed.
-        if response.status_code == 404 and ignore_not_found:
-            return {}
-
-        response.raise_for_status()
-        data = response.json()
-        if isinstance(data, dict):
-            return {str(key): value for key, value in data.items()}
-
-        raise RuntimeError("Exoscale API returned a non-object response")
-
-    async def _delete_operation(self, path: str) -> None:
-        """Run an Exoscale delete request and wait for the returned operation."""
-
-        # Delete endpoints return operations unless the resource is already gone.
-        operation = await self._api_request("DELETE", path, ignore_not_found=True)
-        if operation:
-            await self._wait_operation(operation, require_reference=False)
-
-    async def _wait_operation(self, operation: JsonObject, *, require_reference: bool) -> str | None:
+    async def _wait_operation(self, api: AsyncClient, operation: Operation, *, require_reference: bool) -> str | None:
         """Wait for an Exoscale operation and return its reference id when required."""
 
-        # Poll by operation id until Exoscale reports a terminal state.
+        # Delegate operation polling and error handling to the async client.
         operation_id = self._string(operation, "id")
-        current = operation
-        for _ in range(EXOSCALE_OPERATION_POLL_ATTEMPTS):
-            state = current.get("state")
-            if state == "success":
-                reference = current.get("reference")
-                if isinstance(reference, dict):
-                    reference_id = reference.get("id")
-                    if isinstance(reference_id, str) and reference_id:
-                        return reference_id
+        current = await api.wait(operation_id, max_wait_time=EXOSCALE_OPERATION_MAX_WAIT_SECONDS)
+        reference = current.get("reference")
+        if isinstance(reference, dict):
+            reference_id = reference.get("id")
+            if isinstance(reference_id, str) and reference_id:
+                return reference_id
 
-                if require_reference:
-                    raise RuntimeError("Exoscale operation completed without a resource reference")
+        if require_reference:
+            raise RuntimeError("Exoscale operation completed without a resource reference")
 
-                return None
-
-            if state in {"failure", "timeout"}:
-                raise RuntimeError(f"Exoscale operation failed: {current.get('message') or state}")
-
-            await asyncio.sleep(EXOSCALE_OPERATION_POLL_DELAY_SECONDS)
-            current = await self._api_request("GET", f"/operation/{urllib.parse.quote(operation_id, safe='')}")
-
-        raise TimeoutError(f"Exoscale operation '{operation_id}' did not complete")
+        return None
 
     def _bucket_policy(self, bucket: str, access: StorageAccess) -> JsonObject:
         """Build the IAM policy for one bucket access level."""
@@ -222,7 +155,7 @@ class Exoscale(MinIO):
 
         return f"longlink-{bucket}"
 
-    def _string(self, data: JsonObject, field: str) -> str:
+    def _string(self, data: Mapping[str, object], field: str) -> str:
         """Return one required string field from an Exoscale response."""
 
         # Validate external response data before using it in follow-up requests or persistence.
