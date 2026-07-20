@@ -18,7 +18,7 @@ dependencies = [
     "s3fs>=2026.4.0",
     "sqlalchemy>=2.0.51",
     "sqlmodel>=0.0.39",
-    "uvicorn>=0.46.0",
+    "uvicorn>=0.51.0",
 ]
 requires-python = ">=3.14"
 authors = [
