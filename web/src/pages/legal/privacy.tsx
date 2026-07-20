@@ -75,9 +75,9 @@ export const content = (
                     store account passwords or OAuth access tokens.
                 </Li>
                 <Li>
-                    Organization and access data: organization name, slug, avatar, selected location, memberships,
-                    application roles, invitation email addresses, invited roles, and audit records for created,
-                    updated, or deleted resources.
+                    Organization and access data: organization name, slug, avatar, infrastructure assignments,
+                    memberships, application roles, invitation email addresses, invited roles, and audit records for
+                    created, updated, or deleted resources.
                 </Li>
                 <Li>
                     Application and deployment data: application name, slug, icon, image reference, image digest,
@@ -87,10 +87,10 @@ export const content = (
                     applications.
                 </Li>
                 <Li>
-                    Infrastructure registry data: location, compute, database, storage, Kubernetes, PostgreSQL, and
-                    S3-compatible storage configuration, including endpoints, runtime endpoints, credentials,
-                    kubeconfigs, proxy secrets, access keys, bucket names, database names, schema names, table metadata,
-                    object metadata, usage information, and related audit records.
+                    Infrastructure registry data: compute, database, storage, Kubernetes, PostgreSQL, and S3-compatible
+                    storage configuration, including endpoints, runtime endpoints, credentials, kubeconfigs, proxy
+                    secrets, access keys, bucket names, database names, schema names, table metadata, object metadata,
+                    usage information, and related audit records.
                 </Li>
                 <Li>
                     Connection and log data: IP address, request method and path, timestamps, response status, duration,
@@ -207,9 +207,9 @@ export const content = (
                 6. International transfers
             </Heading>
             <p>
-                LongLink can be operated across customer-selected locations and connected infrastructure. Personal data
-                may therefore be processed in Switzerland, the European Economic Area, the United States, or other
-                countries where we, our providers, a customer's providers, or their subprocessors operate.
+                LongLink can be operated on customer-connected infrastructure. Personal data may therefore be processed
+                in Switzerland, the European Economic Area, the United States, or other countries where we, our
+                providers, a customer's providers, or their subprocessors operate.
             </p>
             <p>
                 Where required, transfers are based on a destination recognized as providing adequate protection, the

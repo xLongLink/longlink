@@ -1,20 +1,19 @@
-from factories import create_ready_location
+from factories import create_ready_infrastructure
 from fastapi.testclient import TestClient
 from src.database.services import compute
 
 
-async def test_compute_registry_endpoints_return_location_backend(
+async def test_compute_registry_endpoints_return_backend(
     clients: tuple[TestClient, TestClient, TestClient],
     users,
 ) -> None:
-    """Return the compute backend created with a complete location aggregate."""
+    """Return an independently registered compute backend."""
 
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    location = await create_ready_location(user1)
-    registry = await compute.location(location.id)
-    assert registry is not None
+    infrastructure = await create_ready_infrastructure(user1)
+    registry = infrastructure.compute
 
     # Act
     list_response = client.get("/api/computes")
@@ -28,6 +27,7 @@ async def test_compute_registry_endpoints_return_location_backend(
     assert payload["id"] == str(registry.id)
     assert payload["name"] == registry.name
     assert payload["gateway_url"] == "https://gateway.example"
-    assert payload["location_id"] == str(location.id)
+    assert payload["status"] == "ready"
+    assert payload["version"] is not None
     assert "kubeconfig" not in payload
     assert "proxy_secret" not in payload

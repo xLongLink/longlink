@@ -1,10 +1,5 @@
 import { apiQueryKey } from '@/lib/api';
 
-/** Builds the locations list query key. */
-export function locationsQueryKey() {
-    return apiQueryKey('/api/locations');
-}
-
 /** Builds the saved accounts query key. */
 export function accountsQueryKey() {
     return apiQueryKey('/auth/accounts');
@@ -38,6 +33,11 @@ export function databasesQueryKey() {
 /** Builds the computes list query key. */
 export function computesQueryKey() {
     return apiQueryKey('/api/computes');
+}
+
+/** Builds the assignable infrastructure options query key. */
+export function infrastructureOptionsQueryKey() {
+    return apiQueryKey('/api/infrastructure/options');
 }
 
 /** Builds the storages list query key. */

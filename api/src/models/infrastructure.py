@@ -1,14 +1,44 @@
+import re
 import urllib.parse
 from enum import StrEnum
-from typing import Literal
-from pydantic import Field, BaseModel, field_validator
+from uuid import UUID
+from typing import Self, Literal
+from pydantic import Field, BaseModel, field_validator, model_validator
 
 DatabaseSSLMode = Literal["disable", "allow", "prefer", "require", "verify-ca", "verify-full"]
 DATABASE_SSL_MODES = frozenset[DatabaseSSLMode]({"disable", "allow", "prefer", "require", "verify-ca", "verify-full"})
 
 
+def exoscale_zone(endpoint_url: str) -> str:
+    """Validate one Exoscale SOS endpoint and return its zone."""
+
+    # Exoscale SOS endpoints use HTTPS and the documented zone-specific hostname.
+    parsed = urllib.parse.urlsplit(endpoint_url)
+    host = parsed.hostname or ""
+    zone = host.removeprefix("sos-").removesuffix(".exo.io")
+    try:
+        port = parsed.port
+    except ValueError as exc:
+        raise ValueError("Exoscale storage endpoint URL port is invalid") from exc
+    if (
+        parsed.scheme != "https"
+        or port is not None
+        or parsed.path not in {"", "/"}
+        or parsed.username
+        or parsed.password
+        or parsed.query
+        or parsed.fragment
+        or not host.startswith("sos-")
+        or not host.endswith(".exo.io")
+        or re.fullmatch(r"[a-z]{2}-[a-z0-9]+-[0-9]+", zone) is None
+    ):
+        raise ValueError("Exoscale storage endpoint URL must use https://sos-{zone}.exo.io")
+
+    return zone
+
+
 class ComputeConfiguration(BaseModel):
-    """Kubernetes connection configuration for one location."""
+    """Kubernetes connection configuration for one compute registry."""
 
     # Connection
     kubeconfig: str = Field(min_length=1, max_length=1024 * 1024)
@@ -21,7 +51,7 @@ class DatabaseKind(StrEnum):
 
 
 class DatabaseConfiguration(BaseModel):
-    """Database connection configuration for one location."""
+    """Database connection configuration for one registry."""
 
     # Kind
     kind: DatabaseKind
@@ -70,16 +100,35 @@ class StorageKind(StrEnum):
 
 
 class StorageConfiguration(BaseModel):
-    """Object-storage connection configuration for one location."""
+    """Object-storage connection configuration for one registry."""
 
     # Kind
     kind: StorageKind
 
     # Connection
     endpoint_url: str = Field(min_length=1, max_length=255)
-    access_key_id: str = Field(min_length=1, max_length=255)
-    secret_access_key: str = Field(min_length=1, max_length=255)
+    access_key_id: str | None = Field(default=None, min_length=1, max_length=255)
+    secret_access_key: str | None = Field(default=None, min_length=1, max_length=255)
     runtime_endpoint_url: str | None = Field(default=None, max_length=255)
+
+    @model_validator(mode="after")
+    def validate_provider(self) -> Self:
+        """Validate provider-specific credentials and endpoints."""
+
+        # MinIO uses registry credentials, while Exoscale credentials come from Platform environment settings.
+        if self.kind == StorageKind.minio and (self.access_key_id is None or self.secret_access_key is None):
+            raise ValueError("MinIO storage requires access_key_id and secret_access_key")
+        if self.kind == StorageKind.exoscale and (self.access_key_id is not None or self.secret_access_key is not None):
+            raise ValueError("Exoscale provisioning credentials must be configured through Platform environment variables")
+
+        # Keep Exoscale control and runtime traffic on the same zone-specific HTTPS endpoint.
+        if self.kind == StorageKind.exoscale:
+            zone = exoscale_zone(self.endpoint_url)
+            runtime_zone = exoscale_zone(self.runtime_endpoint_url or self.endpoint_url)
+            if runtime_zone != zone:
+                raise ValueError("Exoscale control and runtime storage endpoints must use the same zone")
+
+        return self
 
     @field_validator("endpoint_url", "runtime_endpoint_url")
     @classmethod
@@ -109,3 +158,23 @@ class StorageConfiguration(BaseModel):
         except ValueError as exc:
             raise ValueError("Storage endpoint URL port is invalid") from exc
         return value
+
+
+class RegistryOption(BaseModel):
+    """Expose one assignable infrastructure registry without connection metadata."""
+
+    # Identifier
+    id: UUID
+
+    # Metadata
+    name: str
+    slug: str
+
+
+class InfrastructureOptionsResponse(BaseModel):
+    """Expose infrastructure choices available during Organization creation."""
+
+    # Registries
+    computes: list[RegistryOption]
+    databases: list[RegistryOption]
+    storages: list[RegistryOption]

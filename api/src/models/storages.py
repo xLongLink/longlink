@@ -1,17 +1,24 @@
 from enum import StrEnum
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import Field, BaseModel, ConfigDict
 from src.models.users import UserSummary
 from src.models.resources import OrganizationResourceApplicationResponse
-from src.models.infrastructure import StorageKind
+from src.models.infrastructure import StorageKind, StorageConfiguration
+
+
+class StorageRegistryCreate(StorageConfiguration):
+    """Validate one storage registry creation payload."""
+
+    # Metadata
+    name: str = Field(min_length=1, max_length=128)
 
 
 class OrganizationStorageResourceKind(StrEnum):
     """Supported organization storage resource kinds."""
 
-    shared_bucket = "shared_bucket"
-    application_bucket = "application_bucket"
+    shared_prefix = "shared_prefix"
+    application_prefix = "application_prefix"
 
 
 class OrganizationStorageResourceResponse(BaseModel):
@@ -20,6 +27,7 @@ class OrganizationStorageResourceResponse(BaseModel):
     # Metadata
     kind: OrganizationStorageResourceKind
     name: str
+    prefix: str
     bucket_name: str
 
     # Relationships
@@ -31,9 +39,9 @@ class OrganizationStorageResourceResponse(BaseModel):
 
 
 class StorageRegistryResponse(BaseModel):
-    """Describe the object-storage backend owned by one location while filtering its secret access key.
+    """Describe one object-storage backend while filtering its secret access key.
 
-    Endpoints and the access-key identifier remain available as operational metadata.
+    Local MinIO key identifiers remain visible, while Exoscale provisioning credentials stay in Platform settings.
     """
 
     model_config = ConfigDict(from_attributes=True)
@@ -48,11 +56,8 @@ class StorageRegistryResponse(BaseModel):
 
     # Connection
     endpoint_url: str
-    access_key_id: str
+    access_key_id: str | None
     runtime_endpoint_url: str
-
-    # Relationships
-    location_id: UUID
 
     # Audit
     created_at: datetime

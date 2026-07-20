@@ -8,8 +8,8 @@ import type {
     apiDatabaseRegistrySchema,
     apiEnvironmentMetadataSchema,
     apiImageMetadataSchema,
+    apiInfrastructureOptionsSchema,
     apiInvitationSchema,
-    apiLocationSchema,
     apiOperationSchema,
     apiOrganizationApplicationSchema,
     apiOrganizationDatabaseResourceSchema,
@@ -37,7 +37,7 @@ export type ApiImageMetadata = z.infer<typeof apiImageMetadataSchema>;
 export type ApiCountryOption = z.infer<typeof apiCountryOptionSchema>;
 export type ApiOrganizationSummary = z.infer<typeof apiOrganizationSummarySchema>;
 export type ApiOrganizationDetails = z.infer<typeof apiOrganizationDetailsSchema>;
-export type ApiLocation = z.infer<typeof apiLocationSchema>;
+export type ApiInfrastructureOptions = z.infer<typeof apiInfrastructureOptionsSchema>;
 export type ApiOrganizationDatabaseResource = z.infer<typeof apiOrganizationDatabaseResourceSchema>;
 export type ApiOrganizationStorageResource = z.infer<typeof apiOrganizationStorageResourceSchema>;
 export type ApiDatabaseRegistry = z.infer<typeof apiDatabaseRegistrySchema>;

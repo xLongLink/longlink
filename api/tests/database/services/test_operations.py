@@ -5,32 +5,38 @@ from src.environments import env
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.services import operations
-from src.database.models.locations import Location
+from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
 db = SimpleNamespace(operations=operations)
 
 
-async def create_location(slug: str) -> Location:
-    """Create one isolated location row without queueing reconciliation."""
+async def create_compute(slug: str) -> ComputeRegistry:
+    """Create one isolated compute row without queueing reconciliation."""
 
-    # Operation service tests need only a minimal location aggregate at the current Platform version.
+    # Operation service tests need only a minimal compute target at the current Platform version.
     async with session_scope() as session:
-        location = Location(name=slug.title(), slug=slug, country="CH", version=env.VERSION)
-        session.add(location)
+        compute = ComputeRegistry(
+            name=slug.title(),
+            slug=slug,
+            kubeconfig="apiVersion: v1\nclusters: []\n",
+            proxy_secret="proxy-secret",
+            version=env.VERSION,
+        )
+        session.add(compute)
         await session.commit()
-        await session.refresh(location)
-        return location
+        await session.refresh(compute)
+        return compute
 
 
 async def test_operations_service_fetch_returns_newest_operations_first() -> None:
-    """Return location reconciliation operations ordered by creation time descending."""
+    """Return compute reconciliation operations ordered by creation time descending."""
 
     # Arrange
-    older_location = await create_location("older")
-    newer_location = await create_location("newer")
-    older_operation = await db.operations.enqueue(older_location.id)
-    newer_operation = await db.operations.enqueue(newer_location.id)
+    older_compute = await create_compute("older")
+    newer_compute = await create_compute("newer")
+    older_operation = await db.operations.enqueue(older_compute.id)
+    newer_operation = await db.operations.enqueue(newer_compute.id)
 
     async with session_scope() as session:
         older_row = await session.get(Operation, older_operation.id)
@@ -50,18 +56,18 @@ async def test_operations_service_fetch_returns_newest_operations_first() -> Non
 
 
 async def test_operations_service_enqueue_coalesces_and_expires_active_lease() -> None:
-    """Coalesce location work and immediately supersede an active attempt after a desired change."""
+    """Coalesce compute work and immediately supersede an active attempt after a desired change."""
 
     # Arrange
-    location = await create_location("local")
-    first = await db.operations.enqueue(location.id)
+    compute = await create_compute("local")
+    first = await db.operations.enqueue(compute.id)
     claimed = await db.operations.claim_next()
     assert claimed is not None
     assert claimed.lease_expires_at is not None
 
     # Act
-    periodic = await db.operations.enqueue(location.id, desired_change=False)
-    changed = await db.operations.enqueue(location.id)
+    periodic = await db.operations.enqueue(compute.id, desired_change=False)
+    changed = await db.operations.enqueue(compute.id)
     stale_completion = await db.operations.complete(claimed.id, claimed.attempt_count)
     replacement = await db.operations.claim_next()
     fetched = await db.operations.fetch()
@@ -77,23 +83,23 @@ async def test_operations_service_enqueue_coalesces_and_expires_active_lease() -
     assert replacement.id == first.id
     assert replacement.attempt_count == 2
     assert len(fetched) == 1
-    assert fetched[0].location_id == location.id
+    assert fetched[0].compute_id == compute.id
 
 
-async def test_operations_service_enqueue_separates_locations_and_reopens_completed_work() -> None:
-    """Keep location queues independent and permit new work after completion."""
+async def test_operations_service_enqueue_separates_computes_and_reopens_completed_work() -> None:
+    """Keep compute queues independent and permit new work after completion."""
 
     # Arrange
-    first_location = await create_location("first")
-    second_location = await create_location("second")
-    first = await db.operations.enqueue(first_location.id)
-    second = await db.operations.enqueue(second_location.id)
+    first_compute = await create_compute("first")
+    second_compute = await create_compute("second")
+    first = await db.operations.enqueue(first_compute.id)
+    second = await db.operations.enqueue(second_compute.id)
 
     # Act
     claimed = await db.operations.claim_next()
     assert claimed is not None
     completed = await db.operations.complete(claimed.id, claimed.attempt_count)
-    replacement = await db.operations.enqueue(claimed.location_id)
+    replacement = await db.operations.enqueue(claimed.compute_id)
 
     # Assert
     assert first.id != second.id
@@ -104,13 +110,13 @@ async def test_operations_service_enqueue_separates_locations_and_reopens_comple
 
 
 async def test_operations_service_claim_next_claims_oldest_available_operation() -> None:
-    """Claim the oldest available location reconciliation first."""
+    """Claim the oldest available compute reconciliation first."""
 
     # Arrange
-    older_location = await create_location("older")
-    newer_location = await create_location("newer")
-    older_operation = await db.operations.enqueue(older_location.id)
-    newer_operation = await db.operations.enqueue(newer_location.id)
+    older_compute = await create_compute("older")
+    newer_compute = await create_compute("newer")
+    older_operation = await db.operations.enqueue(older_compute.id)
+    newer_operation = await db.operations.enqueue(newer_compute.id)
 
     async with session_scope() as session:
         older_row = await session.get(Operation, older_operation.id)
@@ -133,11 +139,11 @@ async def test_operations_service_claim_next_claims_oldest_available_operation()
 
 
 async def test_operations_service_claim_ignores_active_and_stopped_operations() -> None:
-    """Do not claim location work with a current lease, terminal state, or exhausted budget."""
+    """Do not claim compute work with a current lease, terminal state, or exhausted budget."""
 
     # Arrange
-    location = await create_location("local")
-    await db.operations.enqueue(location.id)
+    compute = await create_compute("local")
+    await db.operations.enqueue(compute.id)
 
     # Act
     active_claim = await db.operations.claim_next()
@@ -146,8 +152,8 @@ async def test_operations_service_claim_ignores_active_and_stopped_operations() 
     await db.operations.complete(active_claim.id, active_claim.attempt_count)
     stopped_claim = await db.operations.claim_next()
 
-    exhausted_location = await create_location("exhausted")
-    exhausted = await db.operations.enqueue(exhausted_location.id)
+    exhausted_compute = await create_compute("exhausted")
+    exhausted = await db.operations.enqueue(exhausted_compute.id)
     async with session_scope() as session:
         row = await session.get(Operation, exhausted.id)
         assert row is not None
@@ -170,8 +176,8 @@ async def test_operations_service_lease_updates_reject_stale_attempts() -> None:
     """Require the current unexpired attempt generation for every worker state mutation."""
 
     # Arrange
-    location = await create_location("local")
-    operation = await db.operations.enqueue(location.id)
+    compute = await create_compute("local")
+    operation = await db.operations.enqueue(compute.id)
     claimed = await db.operations.claim_next()
     assert claimed is not None
 
@@ -226,13 +232,13 @@ async def test_operations_service_lease_updates_reject_stale_attempts() -> None:
 
 
 async def test_operations_service_tracks_successful_and_failed_lifecycles() -> None:
-    """Track claimed location work through both terminal lifecycle states."""
+    """Track claimed compute work through both terminal lifecycle states."""
 
     # Arrange
-    successful_location = await create_location("successful")
-    failed_location = await create_location("failed")
-    successful = await db.operations.enqueue(successful_location.id)
-    failed = await db.operations.enqueue(failed_location.id)
+    successful_compute = await create_compute("successful")
+    failed_compute = await create_compute("failed")
+    successful = await db.operations.enqueue(successful_compute.id)
+    failed = await db.operations.enqueue(failed_compute.id)
 
     # Act
     successful_claim = await db.operations.claim_next()
@@ -255,12 +261,12 @@ async def test_operations_service_tracks_successful_and_failed_lifecycles() -> N
     assert stopped.error == "boom"
 
 
-async def test_operations_service_defers_and_retries_location_work() -> None:
+async def test_operations_service_defers_and_retries_compute_work() -> None:
     """Release transiently failed work and lease its next attempt."""
 
     # Arrange
-    location = await create_location("local")
-    operation = await db.operations.enqueue(location.id)
+    compute = await create_compute("local")
+    operation = await db.operations.enqueue(compute.id)
     claimed = await db.operations.claim_next()
     assert claimed is not None
 
@@ -288,8 +294,8 @@ async def test_operations_service_platform_upgrade_supersedes_leased_work(monkey
 
     # Arrange
     monkeypatch.setattr(env, "VERSION", "v1.0.0")
-    location = await create_location("local")
-    operation = await db.operations.enqueue(location.id)
+    compute = await create_compute("local")
+    operation = await db.operations.enqueue(compute.id)
     claimed = await db.operations.claim_next()
     assert claimed is not None
 
@@ -303,7 +309,7 @@ async def test_operations_service_platform_upgrade_supersedes_leased_work(monkey
 
     # Act
     monkeypatch.setattr(env, "VERSION", "v1.1.0")
-    upgraded = await db.operations.enqueue(location.id, desired_change=False)
+    upgraded = await db.operations.enqueue(compute.id, desired_change=False)
     stale_completion = await db.operations.complete(operation.id, claimed.attempt_count)
     replacement = await db.operations.claim_next()
     monkeypatch.setattr(env, "VERSION", "v1.0.0")

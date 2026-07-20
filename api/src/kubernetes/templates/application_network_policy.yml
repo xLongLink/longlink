@@ -10,7 +10,7 @@ metadata:
     longlink.io/template-revision: "$template_revision"
   labels:
     app.kubernetes.io/managed-by: longlink-platform
-    longlink.io/location-id: "$location_id"
+    longlink.io/compute-id: "$compute_id"
     longlink.io/organization-id: "$organization_id"
 ---
 apiVersion: networking.k8s.io/v1
@@ -24,7 +24,7 @@ metadata:
     longlink.io/template-revision: "$template_revision"
   labels:
     app.kubernetes.io/managed-by: longlink-platform
-    longlink.io/location-id: "$location_id"
+    longlink.io/compute-id: "$compute_id"
     longlink.io/organization-id: "$organization_id"
 spec:
   podSelector:

@@ -1,22 +1,18 @@
 import type { TFunction } from 'i18next';
 import { Link } from 'react-router';
 import { type ColumnDef } from '@tanstack/react-table';
-import type { ApiApplicationResponse, ApiLocation } from '@/lib/types';
+import type { ApiApplicationResponse } from '@/lib/types';
 import { Icon } from '@/components/ui/icon';
 import { useTranslation } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
+import { useApplications } from '@/data/admin';
 import { DataTable } from '@/components/DataTable';
 import { formatDateTime, getInitials } from '@/lib/utils';
-import { useApplications, useLocations } from '@/data/admin';
 import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-type AdminApplicationResponse = ApiApplicationResponse & {
-    organization: ApiApplicationResponse['organization'] & { location?: ApiLocation };
-};
-
 /** Builds localized admin application table columns. */
-function createAppColumns(t: TFunction): Array<ColumnDef<AdminApplicationResponse>> {
+function createAppColumns(t: TFunction): Array<ColumnDef<ApiApplicationResponse>> {
     return [
         {
             accessorKey: 'name',
@@ -47,7 +43,7 @@ function createAppColumns(t: TFunction): Array<ColumnDef<AdminApplicationRespons
         {
             accessorKey: 'organization',
             header: t('columns.organization'),
-            cell: ({ row, getValue }) => {
+            cell: ({ getValue }) => {
                 const organization = getValue<ApiApplicationResponse['organization']>();
 
                 return (
@@ -63,12 +59,7 @@ function createAppColumns(t: TFunction): Array<ColumnDef<AdminApplicationRespons
                             >
                                 {organization.name}
                             </Link>
-                            <div className="truncate text-sm text-muted-foreground">
-                                {row.original.organization.location?.country ?? t('common.unknownLocation')}
-                                {row.original.organization.location?.name
-                                    ? ` · ${row.original.organization.location.name}`
-                                    : ''}
-                            </div>
+                            <div className="truncate text-sm text-muted-foreground">{organization.country}</div>
                         </div>
                     </div>
                 );
@@ -99,19 +90,8 @@ function createAppColumns(t: TFunction): Array<ColumnDef<AdminApplicationRespons
 /** Renders the admin applications page. */
 export default function AdminApplications() {
     const { t } = useTranslation();
-    const { items: applications, error: applicationsError, isLoading: applicationsIsLoading } = useApplications();
-    const { items: locations, error: locationsError, isLoading: locationsIsLoading } = useLocations();
+    const { items: applications, error, isLoading } = useApplications();
     const appColumns = createAppColumns(t);
-
-    // Resolve each application's organization location so the table can show the full organization context.
-    const locationById = new Map(locations.map((location) => [location.id, location]));
-    const appRows = applications.map((row) => ({
-        ...row,
-        organization: {
-            ...row.organization,
-            location: row.organization.location_id ? locationById.get(row.organization.location_id) : undefined,
-        },
-    }));
 
     return (
         <div className="space-y-6">
@@ -121,13 +101,7 @@ export default function AdminApplications() {
                     <HeroDescription>{t('admin.applicationsDescription')}</HeroDescription>
                 </div>
             </Hero>
-            <DataTable
-                columns={appColumns}
-                data={appRows}
-                error={applicationsError ?? locationsError}
-                isLoading={applicationsIsLoading || locationsIsLoading}
-                pageSize={25}
-            />
+            <DataTable columns={appColumns} data={applications} error={error} isLoading={isLoading} pageSize={25} />
         </div>
     );
 }

@@ -1,20 +1,19 @@
-from factories import create_ready_location
+from factories import create_ready_infrastructure
 from fastapi.testclient import TestClient
 from src.database.services import storage
 
 
-async def test_storage_registry_endpoints_return_location_backend(
+async def test_storage_registry_endpoints_return_backend(
     clients: tuple[TestClient, TestClient, TestClient],
     users,
 ) -> None:
-    """Return the storage backend created with a complete location aggregate."""
+    """Return an independently registered storage backend."""
 
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    location = await create_ready_location(user1)
-    registry = await storage.location(location.id)
-    assert registry is not None
+    infrastructure = await create_ready_infrastructure(user1)
+    registry = infrastructure.storage
 
     # Act
     list_response = client.get("/api/storages")
@@ -29,5 +28,4 @@ async def test_storage_registry_endpoints_return_location_backend(
     assert payload["name"] == registry.name
     assert payload["endpoint_url"] == "http://storage.example"
     assert payload["runtime_endpoint_url"] == "http://storage.internal"
-    assert payload["location_id"] == str(location.id)
     assert "secret_access_key" not in payload

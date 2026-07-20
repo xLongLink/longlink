@@ -12,15 +12,18 @@ def logo(env: Envs, shared_fs: AbstractFileSystem) -> organization_assets.Organi
 
     asset_path = organization_assets.logo_path()
 
-    # Local runtimes use the SDK-managed fallback while production reads the organization bucket.
+    # Local runtimes use the SDK-managed fallback while production reads Organization shared storage.
     if env.ENV in {"development", "testing"}:
         content = LOCAL_LOGO_PATH.read_bytes()
 
     # Production reads the organization asset from shared storage.
     else:
-        # Fail early when production has no shared asset bucket configured.
-        if env.STORAGE_SHARED_BUCKET is None:
-            raise ValueError("Organization assets require LONGLINK_STORAGE_SHARED_BUCKET in production")
+        # Fail early when production has no complete Organization shared-storage scope.
+        if not env.STORAGE_BUCKET or not env.STORAGE_SHARED_PREFIX:
+            raise ValueError(
+                "Organization assets require LONGLINK_STORAGE_BUCKET and "
+                "LONGLINK_STORAGE_SHARED_PREFIX in production"
+            )
 
         # Read the organization asset from shared storage.
         with shared_fs.open(asset_path, "rb") as asset_file:

@@ -143,15 +143,26 @@ web\:clean:
 	rm -rf web/dist web/dist-ssr web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite
 
 
-# Start local services, registry, Keycloak, and cluster, then wait for Keycloak readiness.
+# Start local services, registry, Keycloak, and cluster, then wait for local endpoints.
 up:
 	docker compose -f dev/compose.yml up -d
 	@if k3d cluster list compute >/dev/null 2>&1; then \
 		printf "k3d cluster compute already exists.\n"; \
 	else \
-		k3d cluster create compute --api-port 0.0.0.0:8001 -p "8080:80@loadbalancer" -p "8443:443@loadbalancer" --registry-config dev/registries.yml; \
+		k3d cluster create compute --api-port 0.0.0.0:8001 -p "8080:80@loadbalancer" -p "8443:443@loadbalancer" --registry-config dev/registries.yml --k3s-arg "--disable=traefik@server:0"; \
 	fi
 	k3d kubeconfig get compute > api/kubeconfig.yaml
+	@printf "Waiting for local registry...\n"
+	@attempt=1; \
+	while ! curl --fail --silent --output /dev/null http://localhost:15000/v2/; do \
+		if [ "$$attempt" -ge 60 ]; then \
+			printf "Local registry did not become ready after %s attempts.\n" "$$attempt"; \
+			exit 1; \
+		fi; \
+		attempt=$$((attempt + 1)); \
+		sleep 1; \
+	done
+	@printf "Local registry is ready.\n"
 	@printf "Waiting for Keycloak...\n"
 	@attempt=1; \
 	while ! curl --fail --silent --output /dev/null http://localhost:18080/realms/dev/.well-known/openid-configuration; do \
@@ -182,8 +193,8 @@ api:
 	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 
-# Build and push the SDK app image, then run migrations and seed data after `make up`.
-seed:
+# Start local services, build and push the SDK app image, then run migrations and seed data.
+seed: up
 	cd api && uv sync --locked --extra dev
 	if [ ! -d sdk/dev ]; then cd sdk && uv run --locked longlink init --folder dev; fi
 	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'

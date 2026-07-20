@@ -7,7 +7,7 @@ from src.environments import env
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.database.models.locations import Location
+from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
 OPERATION_LEASE_SECONDS = 120
@@ -53,25 +53,27 @@ async def fetch() -> list[Operation]:
         return result.scalars().all()
 
 
-async def latest(location_id: UUID) -> Operation | None:
-    """Return the newest reconciliation operation for one location."""
+async def latest(compute_id: UUID) -> Operation | None:
+    """Return the newest reconciliation operation for one compute target."""
 
     # Mutation services commit their operation atomically before routes load it for the response.
     async with session_scope() as session:
-        statement = select(Operation).where(Operation.location_id == location_id).order_by(Operation.created_at.desc()).limit(1)
+        statement = select(Operation).where(Operation.compute_id == compute_id).order_by(Operation.created_at.desc()).limit(1)
         return (await session.execute(statement)).scalar_one_or_none()
 
 
 async def reject_platform_downgrade() -> None:
     """Reject an API binary older than any persisted LongLink Platform release target or observation."""
 
-    # Operation history and observed Locations form the forward-only release watermark.
+    # Operation history and observed compute targets form the forward-only release watermark.
     async with session_scope() as session:
-        location_versions = (
-            (await session.execute(select(Location.version).where(Location.version.is_not(None)).distinct())).scalars().all()
+        compute_versions = (
+            (await session.execute(select(ComputeRegistry.version).where(ComputeRegistry.version.is_not(None)).distinct()))
+            .scalars()
+            .all()
         )
         operation_versions = (await session.execute(select(Operation.platform_version).distinct())).scalars().all()
-    versions = [version for version in (*location_versions, *operation_versions) if version is not None]
+    versions = [version for version in (*compute_versions, *operation_versions) if version is not None]
     if not versions:
         return
     latest_version = latest_platform_version(*versions)
@@ -85,27 +87,31 @@ async def reject_platform_downgrade() -> None:
 
 async def enqueue_in_session(
     session: AsyncSession,
-    location_id: UUID,
+    compute_id: UUID,
     desired_change: bool = True,
 ) -> Operation:
-    """Coalesce Location reconciliation inside the caller's desired-state transaction.
+    """Coalesce compute reconciliation inside the caller's desired-state transaction.
 
-    Location locking keeps the release target monotonic and queueing atomic across LongLink Platform replicas.
+    Compute locking keeps the release target monotonic and queueing atomic across LongLink Platform replicas.
     """
 
     # Serialize queue changes through the aggregate so release targets remain monotonic across Platform replicas.
-    location = (await session.execute(select(Location).where(Location.id == location_id).with_for_update())).scalar_one_or_none()
-    if location is None:
-        raise ValueError("Operation location not found")
+    compute = (
+        await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
+    ).scalar_one_or_none()
+    if compute is None:
+        raise ValueError("Operation compute registry not found")
     versions = (
-        (await session.execute(select(Operation.platform_version).where(Operation.location_id == location_id).distinct())).scalars().all()
+        (await session.execute(select(Operation.platform_version).where(Operation.compute_id == compute_id).distinct()))
+        .scalars()
+        .all()
     )
-    platform_version = latest_platform_version(env.VERSION, *versions, *([location.version] if location.version is not None else []))
+    platform_version = latest_platform_version(env.VERSION, *versions, *([compute.version] if compute.version is not None else []))
     existing = (
         await session.execute(
             select(Operation)
             .where(
-                Operation.location_id == location_id,
+                Operation.compute_id == compute_id,
                 Operation.stopped_at.is_(None),
             )
             .with_for_update()
@@ -133,10 +139,10 @@ async def enqueue_in_session(
                 existing.lease_expires_at = now
             return existing
 
-    # New work starts ready for the Platform release that owns the location target.
+    # New work starts ready for the Platform release that owns the compute target.
     operation = Operation(
         platform_version=platform_version,
-        location_id=location_id,
+        compute_id=compute_id,
         scheduled_at=utcnow(),
     )
     session.add(operation)
@@ -144,12 +150,12 @@ async def enqueue_in_session(
     return operation
 
 
-async def enqueue(location_id: UUID, desired_change: bool = True) -> Operation:
-    """Queue one location reconciliation in a dedicated transaction."""
+async def enqueue(compute_id: UUID, desired_change: bool = True) -> Operation:
+    """Queue one compute reconciliation in a dedicated transaction."""
 
     # Convenience callers use the same transactional enqueue implementation as domain services.
     async with session_scope() as session:
-        operation = await enqueue_in_session(session, location_id, desired_change)
+        operation = await enqueue_in_session(session, compute_id, desired_change)
         await session.commit()
         await session.refresh(operation)
         return operation
@@ -232,18 +238,18 @@ async def renew_lease(operation_id: UUID, attempt_count: int) -> Operation | Non
 async def complete(operation_id: UUID, attempt_count: int) -> Operation | None:
     """Complete one operation while the caller owns its current attempt."""
 
-    # Resolve the location before locking in the same aggregate-first order used by desired-state mutations.
+    # Resolve the compute target before locking in the same aggregate-first order used by desired-state mutations.
     async with session_scope() as session:
         snapshot = (await session.execute(select(Operation).where(Operation.id == operation_id))).scalar_one_or_none()
         if snapshot is None:
             return None
-        location = (
-            await session.execute(select(Location).where(Location.id == snapshot.location_id).with_for_update())
+        compute = (
+            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == snapshot.compute_id).with_for_update())
         ).scalar_one_or_none()
-        if location is None:
+        if compute is None:
             return None
 
-        # Lock and revalidate the leased operation after the location prevents concurrent desired-state changes.
+        # Lock and revalidate the leased operation after the compute prevents concurrent desired-state changes.
         now = utcnow()
         operation = (
             await session.execute(

@@ -6,26 +6,36 @@ from src.utils import names, roles
 from src.utils import storage as storage_utils
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
+from src.models.statuses import ComputeStatus
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import OrganizationDatabaseResourceResponse
-from src.database.services import storage, database, operations, invitations, organizations
+from src.database.services import compute, storage, database, operations, invitations, organizations
 from src.models.applications import ApplicationResponse
-from src.models.organizations import (
-    OrganizationCreate,
-    OrganizationDetails,
-    OrganizationSummary,
-    OrganizationMemberUpdate,
-    OrganizationInvitationCreate,
-    OrganizationMutationResponse,
-)
+from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary, OrganizationMemberUpdate,
+                                      OrganizationInvitationCreate, OrganizationMutationResponse)
 from longlink.shared.constants import SHARED_SCHEMA
 from src.database.models.users import User
+from src.models.infrastructure import InfrastructureOptionsResponse
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 router = APIRouter()
+
+
+@router.get("/api/infrastructure/options", response_model=InfrastructureOptionsResponse)
+async def list_infrastructure_options(_user: User = Depends(authuser)):
+    """Return assignable registry identities without exposing connection metadata."""
+
+    computes = [registry for registry in await compute.fetch() if registry.status == ComputeStatus.ready]
+    databases = await database.fetch()
+    storages = await storage.fetch()
+    return {
+        "computes": computes,
+        "databases": databases,
+        "storages": storages,
+    }
 
 
 @router.get("/api/organizations", response_model=list[OrganizationSummary])
@@ -67,8 +77,9 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
         "slug": organization.slug,
         "avatar": organization.avatar,
         "country": organization.country,
-        "location": organization.location,
-        "location_id": organization.location_id,
+        "compute_id": organization.compute_id,
+        "database_id": organization.database_id,
+        "storage_id": organization.storage_id,
         "status": organization.status,
         "created_at": organization.created_at,
         "updated_at": organization.updated_at,
@@ -138,7 +149,7 @@ async def list_organization_applications(organization_id: UUID, user: User = Dep
     response_model=list[OrganizationDatabaseResourceResponse],
 )
 async def list_organization_database_resources(organization_id: UUID, user: User = Depends(authuser)):
-    """Build a maintainer-only live inventory through the database registry owned by the Organization's location.
+    """Build a maintainer-only live inventory through the Organization's database registry.
 
     Rows include shared and orphaned schemas currently present, not only LongLink Application desired state.
     """
@@ -152,8 +163,8 @@ async def list_organization_database_resources(organization_id: UUID, user: User
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
-    # Skip resources when no database registry is assigned.
-    registry = await database.location(membership.organization.location_id)
+    # Resolve the Organization's immutable database assignment.
+    registry = await database.get(membership.organization.database_id)
     if registry is None:
         return []
 
@@ -166,9 +177,9 @@ async def list_organization_database_resources(organization_id: UUID, user: User
     response_model=list[OrganizationStorageResourceResponse],
 )
 async def list_organization_storage_resources(organization_id: UUID, user: User = Depends(authuser)):
-    """Build a maintainer-only live inventory through the storage registry owned by the Organization's location.
+    """Build a maintainer-only live inventory through the Organization's storage registry.
 
-    Rows reflect currently present managed buckets rather than persisted desired state alone.
+    Rows reflect logical prefixes in the currently present Organization bucket.
     """
 
     # Load organization access before exposing storage resources.
@@ -180,8 +191,8 @@ async def list_organization_storage_resources(organization_id: UUID, user: User 
     if not roles.atleast(membership.role, OrganizationRoles.maintain):
         raise HTTPException(status_code=403, detail="Permission required")
 
-    # Skip resources when no storage registry is assigned.
-    registry = await storage.location(membership.organization.location_id)
+    # Resolve the Organization's immutable storage assignment.
+    registry = await storage.get(membership.organization.storage_id)
     if registry is None:
         return []
 
@@ -250,7 +261,7 @@ async def update_organization_member(
 
 @router.delete("/api/organizations/{organization_id}", status_code=202, response_model=OrganizationMutationResponse)
 async def delete_organization(organization_id: UUID, user: User = Depends(authuser)):
-    """Mark one organization absent and queue location reconciliation."""
+    """Mark one Organization absent and queue compute reconciliation."""
 
     # Require organization ownership unless the caller is a platform administrator.
     if user.role != PlatformRoles.administrator:
@@ -266,7 +277,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
     if deleted is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    operation = await operations.latest(deleted.location_id)
+    operation = await operations.latest(deleted.compute_id)
     if operation is None:
         raise RuntimeError("Organization reconciliation operation not found")
     return {"organization": deleted, "operation": operation}
@@ -354,16 +365,16 @@ async def _storage_usage_rows(
     registry: StorageRegistry,
     apps: list[Application],
 ) -> list[dict[str, object]]:
-    """Join live bucket usage with expected shared and active-application buckets for one Organization.
+    """Join one Organization bucket's prefix usage with its active Applications.
 
-    Only buckets currently present are returned, so missing desired resources are not synthesized.
+    Logical prefix rows remain visible with zero usage even before their first object is written.
     """
 
-    # List backend buckets before building resource rows.
+    bucket = names.organization_bucket(organization.id)
+
+    # Return no logical resources until the Organization bucket exists.
     try:
         buckets = set(await storage_utils.buckets(registry))
-
-    # Convert storage listing failures to availability errors.
     except Exception as exc:
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",
@@ -372,36 +383,37 @@ async def _storage_usage_rows(
             exc,
         )
         raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
+    if bucket not in buckets:
+        return []
 
+    # Fetch shared and Application usage by exact non-overlapping prefixes.
+    resources = [
+        (OrganizationStorageResourceKind.shared_prefix, "shared", names.shared_storage_prefix(), None),
+        *[
+            (
+                OrganizationStorageResourceKind.application_prefix,
+                app.name,
+                names.application_storage_prefix(app.id),
+                app,
+            )
+            for app in sorted(apps, key=lambda item: item.name)
+        ],
+    ]
     rows: list[dict[str, object]] = []
-    needs_usage: list[str] = []
-    shared = names.organization_shared_bucket(organization.id)
-    visible: list[tuple[Application, str]] = []
-
-    # Inspect usage only for shared buckets that exist.
-    if shared in buckets:
-        needs_usage.append(shared)
-
-    # Compare expected app buckets against the backend listing so only existing resources are visible.
-    for app in sorted(apps, key=lambda item: item.name):
-        bucket = names.application_bucket(app.id)
-
-        # Only show application buckets present in the backend.
-        if bucket not in buckets:
-            continue
-
-        visible.append((app, bucket))
-        needs_usage.append(bucket)
-
-    usage_by_name: dict[str, storage_utils.StorageBucketUsage] = {}
-
-    # Fetch usage for every visible organization bucket.
     try:
-        # Collect usage by bucket name for row construction.
-        for bucket in needs_usage:
-            usage_by_name[bucket] = await storage_utils.usage(registry, bucket)
-
-    # Convert storage usage failures to availability errors.
+        for kind, name, prefix, app in resources:
+            usage = await storage_utils.usage(registry, bucket, prefix)
+            rows.append(
+                {
+                    "kind": kind,
+                    "name": name,
+                    "prefix": prefix,
+                    "bucket_name": bucket,
+                    "application": app,
+                    "space_used": usage["space_used"],
+                    "object_count": usage["object_count"],
+                }
+            )
     except Exception as exc:
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",
@@ -410,41 +422,13 @@ async def _storage_usage_rows(
             exc,
         )
         raise HTTPException(status_code=503, detail="Storage resources unavailable") from exc
-
-    # Include the shared bucket when it is visible.
-    if shared in buckets:
-        usage = usage_by_name[shared]
-        rows.append(
-            {
-                "kind": OrganizationStorageResourceKind.shared_bucket,
-                "name": "shared",
-                "bucket_name": shared,
-                "application": None,
-                "space_used": usage["space_used"],
-                "object_count": usage["object_count"],
-            }
-        )
-
-    # Add visible application buckets with usage details.
-    for app, bucket in visible:
-        usage = usage_by_name[bucket]
-        rows.append(
-            {
-                "kind": OrganizationStorageResourceKind.application_bucket,
-                "name": bucket,
-                "bucket_name": bucket,
-                "application": app,
-                "space_used": usage["space_used"],
-                "object_count": usage["object_count"],
-            }
-        )
 
     return rows
 
 
 @router.post("/api/organizations", response_model=OrganizationMutationResponse, status_code=202)
 async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)):
-    """Create organization desired state and queue location reconciliation."""
+    """Create Organization desired state and queue compute reconciliation."""
 
     # Generate the row ID before insert so derived resource names use the final UUID.
     organization_id = uuid4()
@@ -453,7 +437,7 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     try:
         slug = names.slugify(payload.name)
         names.knames(slug)
-        names.organization_shared_bucket(organization_id)
+        names.organization_bucket(organization_id)
 
     # Return invalid names as request conflicts.
     except ValueError as exc:
@@ -462,14 +446,16 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     organization = await organizations.create(
         payload.name,
         slug,
-        payload.location_id,
+        payload.compute_id,
+        payload.database_id,
+        payload.storage_id,
         user,
         payload.avatar,
         organization_id=organization_id,
         country=payload.country,
     )
 
-    operation = await operations.latest(organization.location_id)
+    operation = await operations.latest(organization.compute_id)
     if operation is None:
         raise RuntimeError("Organization reconciliation operation not found")
     return {"organization": organization, "operation": operation}

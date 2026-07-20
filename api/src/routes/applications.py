@@ -11,13 +11,8 @@ from src.models.statuses import ApplicationStatus
 from starlette.responses import StreamingResponse
 from src.database.services import compute, operations, applications
 from src.kubernetes.client import Kubernetes
-from src.models.applications import (
-    ApplicationCreate,
-    ApplicationResponse,
-    ApplicationMemberUpdate,
-    ApplicationMemberResponse,
-    ApplicationMutationResponse,
-)
+from src.models.applications import (ApplicationCreate, ApplicationResponse, ApplicationMemberUpdate, ApplicationMemberResponse,
+                                     ApplicationMutationResponse)
 from src.database.models.users import User
 from src.database.models.association import UserApplication
 
@@ -40,7 +35,7 @@ async def list_applications(_user: User = Depends(authadmin)):
 
 @router.post("/api/organizations/{organization_id}/applications", response_model=ApplicationMutationResponse, status_code=202)
 async def create_application(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)):
-    """Create application desired state and queue location reconciliation."""
+    """Create Application desired state and queue compute reconciliation."""
 
     # Resolve access inside the handler so body validation can reject malformed payloads first.
     membership = roles.access(user, organization_id, "organization")
@@ -68,7 +63,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         user=user,
     )
 
-    operation = await operations.latest(organization.location_id)
+    operation = await operations.latest(organization.compute_id)
     if operation is None:
         raise RuntimeError("Application reconciliation operation not found")
     return {"application": application, "operation": operation}
@@ -86,7 +81,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     # Direct application memberships provide application role access.
     if isinstance(membership, UserApplication):
         application = membership.application
-        location_id = membership.organization.location_id
+        compute_id = membership.organization.compute_id
         organization_membership = roles.access(user, membership.organization_id, "organization")
         organization_role = organization_membership.role if organization_membership is not None else None
 
@@ -95,14 +90,14 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
                 raise HTTPException(status_code=403, detail="Permission required")
     else:
         application = next(item for item in membership.organization.applications if item.id == application_id)
-        location_id = membership.organization.location_id
+        compute_id = membership.organization.compute_id
 
         # Organization memberships must satisfy the organization role requirement.
         if not roles.atleast(membership.role, OrganizationRoles.maintain):
             raise HTTPException(status_code=403, detail="Permission required")
 
-    # The organization location is the application's only infrastructure assignment.
-    registry = await compute.location(location_id)
+    # The Organization's compute registry is the Application's only cluster assignment.
+    registry = await compute.get(compute_id)
     if registry is None:
         raise HTTPException(status_code=503, detail="No compute cluster configured")
 
@@ -201,7 +196,7 @@ async def update_application_member(
 
 @router.delete("/api/applications/{application_id}", status_code=202, response_model=ApplicationMutationResponse)
 async def delete_application(application_id: UUID, user: User = Depends(authuser)):
-    """Mark one application absent and queue location reconciliation."""
+    """Mark one Application absent and queue compute reconciliation."""
 
     # Load application access before deleting the application.
     membership = roles.access(user, application_id, "application")
@@ -225,7 +220,7 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
     if deleted is None:
         raise HTTPException(status_code=404, detail="Application not found")
 
-    operation = await operations.latest(deleted.organization.location_id)
+    operation = await operations.latest(deleted.organization.compute_id)
     if operation is None:
         raise RuntimeError("Application reconciliation operation not found")
     return {"application": deleted, "operation": operation}
@@ -234,9 +229,9 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
 @router.api_route("/api/applications/{application_id}/proxy", methods=APPLICATION_PROXY_METHODS)
 @router.api_route("/api/applications/{application_id}/proxy/{path:path}", methods=APPLICATION_PROXY_METHODS)
 async def proxy_application_request(request: Request, application_id: UUID, path: str = "", user: User = Depends(authuser)) -> Response:
-    """Enforce HTTP-method-specific LongLink Application roles before traffic enters the location's cluster gateway.
+    """Enforce HTTP-method-specific LongLink Application roles before traffic enters its compute gateway.
 
-    The API is the trust boundary: it injects authenticated identity and trusts only the persisted location CA.
+    The API is the trust boundary: it injects authenticated identity and trusts only the persisted compute CA.
     """
 
     # Load application access before proxying runtime traffic.
@@ -250,14 +245,14 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     # Direct application memberships provide application role access.
     if isinstance(membership, UserApplication):
         application = membership.application
-        location_id = membership.organization.location_id
+        compute_id = membership.organization.compute_id
         organization_membership = roles.access(user, membership.organization_id, "organization")
         organization_role = organization_membership.role if organization_membership is not None else None
         has_application_access = roles.atleast(membership.role, required_application_role)
         has_organization_access = roles.atleast(organization_role, OrganizationRoles.maintain)
     else:
         application = next(item for item in membership.organization.applications if item.id == application_id)
-        location_id = membership.organization.location_id
+        compute_id = membership.organization.compute_id
         has_application_access = False
         has_organization_access = roles.atleast(membership.role, OrganizationRoles.maintain)
 
@@ -272,8 +267,8 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     if application.status != ApplicationStatus.running:
         return Response(status_code=503, headers={"cache-control": "no-store"})
 
-    # The immutable location owns the only gateway this application can use.
-    registry = await compute.location(location_id)
+    # The immutable compute assignment owns the only gateway this Application can use.
+    registry = await compute.get(compute_id)
     if registry is None or registry.gateway_url is None or registry.gateway_ca_certificate is None:
         raise HTTPException(status_code=503, detail="Application gateway is not ready")
 
@@ -305,7 +300,7 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     # The private cluster gateway accepts only API-authenticated requests with the registry secret.
     client = None
     try:
-        # Trust only the per-location CA generated and persisted by reconciliation.
+        # Trust only the per-compute CA generated and persisted by reconciliation.
         trusted_cas = registry.gateway_ca_certificate
         if registry.gateway_previous_ca_certificate is not None:
             trusted_cas = f"{trusted_cas}\n{registry.gateway_previous_ca_certificate}"

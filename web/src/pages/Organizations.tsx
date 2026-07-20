@@ -46,9 +46,7 @@ export default function Organizations() {
                         <Link to={`/orgs/${row.original.slug}`} className="font-medium text-foreground hover:underline">
                             {getValue<string>()}
                         </Link>
-                        <div className="truncate text-sm text-muted-foreground">
-                            {row.original.country} · {row.original.location.name}
-                        </div>
+                        <div className="truncate text-sm text-muted-foreground">{row.original.country}</div>
                     </div>
                 </div>
             ),

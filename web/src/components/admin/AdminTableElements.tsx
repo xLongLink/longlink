@@ -1,6 +1,5 @@
 import { toast } from 'sonner';
 import { MoreVertical } from 'lucide-react';
-import type { ApiLocation } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -8,27 +7,6 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-/** Renders a compact location badge for admin tables. */
-export function AdminLocationBadge({ fallbackId, location }: { fallbackId?: string; location?: ApiLocation }) {
-    const country = location?.country;
-
-    return (
-        <div className="flex items-center gap-3">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-xs font-semibold text-accent">
-                {country?.slice(0, 2).toUpperCase() || '--'}
-            </div>
-            <div className="min-w-0">
-                <div className="truncate font-medium text-foreground">
-                    {location?.name || (fallbackId ? `#${fallbackId}` : '--')}
-                </div>
-                <div className="truncate text-xs text-muted-foreground">
-                    {location?.slug || location?.country || ''}
-                </div>
-            </div>
-        </div>
-    );
-}
 
 /** Renders the shared copy/delete action menu for admin tables. */
 export function AdminActionMenu({

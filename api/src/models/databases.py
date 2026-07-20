@@ -1,9 +1,16 @@
 from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import Field, BaseModel, ConfigDict
 from src.models.users import UserSummary
 from src.models.resources import OrganizationResourceApplicationResponse
-from src.models.infrastructure import DatabaseKind
+from src.models.infrastructure import DatabaseKind, DatabaseConfiguration
+
+
+class DatabaseRegistryCreate(DatabaseConfiguration):
+    """Validate one database registry creation payload."""
+
+    # Metadata
+    name: str = Field(min_length=1, max_length=128)
 
 
 class OrganizationDatabaseResourceResponse(BaseModel):
@@ -27,7 +34,7 @@ class OrganizationDatabaseResourceResponse(BaseModel):
 
 
 class DatabaseRegistryResponse(BaseModel):
-    """Describe the database backend owned by one location while filtering its administrator password.
+    """Describe one database backend while filtering its administrator password.
 
     Non-secret connection metadata remains available for support and diagnostics.
     """
@@ -46,9 +53,6 @@ class DatabaseRegistryResponse(BaseModel):
     host: str
     port: int
     username: str
-
-    # Relationships
-    location_id: UUID
 
     # Audit
     created_at: datetime

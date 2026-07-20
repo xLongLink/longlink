@@ -29,17 +29,25 @@ def test_local_storage_uses_environment_filesystem(
 
     monkeypatch.setattr(storage_base.fsspec, "filesystem", fake_filesystem)
 
-    storage_base.create_fs(Envs(ENV=environment), "")
+    storage_base.create_fs(Envs(ENV=environment), "", "")
 
     assert captured == {"protocol": expected_protocol, "kwargs": {}}
 
 
-def test_production_storage_requires_bucket() -> None:
-    """Reject production storage that is not scoped to a bucket."""
+@pytest.mark.parametrize(
+    ("bucket", "prefix", "message"),
+    [
+        ("", "applications/dashboard/", "Production storage settings require a bucket"),
+        ("acme", "", "Production storage settings require a prefix"),
+        ("acme", "../shared/", "Storage prefixes must be relative paths inside a bucket"),
+        ("acme", "/shared/", "Storage prefixes must be relative paths inside a bucket"),
+        ("acme", ".", "Storage prefixes must be relative paths inside a bucket"),
+    ],
+)
+def test_production_storage_requires_safe_bucket_scope(bucket: str, prefix: str, message: str) -> None:
+    """Reject production storage that is not safely scoped within a bucket."""
 
-    with pytest.raises(
-        ValueError, match="Production storage settings require a bucket"
-    ):
+    with pytest.raises(ValueError, match=message):
         storage_base.create_fs(
             Envs(
                 ENV="production",
@@ -47,12 +55,13 @@ def test_production_storage_requires_bucket() -> None:
                 STORAGE_PASSWORD="secret@key",
                 STORAGE_USERNAME="access/key",
             ),
-            "",
+            bucket,
+            prefix,
         )
 
 
-def test_production_storage_scopes_paths_to_configured_bucket(monkeypatch) -> None:
-    """Scope production storage paths to the configured bucket."""
+def test_production_storage_scopes_paths_to_configured_bucket_prefix(monkeypatch) -> None:
+    """Scope production storage paths to the configured prefix beneath its bucket."""
 
     captured: dict[str, object] = {}
 
@@ -63,7 +72,7 @@ def test_production_storage_scopes_paths_to_configured_bucket(monkeypatch) -> No
         asynchronous = False
 
         def _strip_protocol(self, path: str) -> str:
-            """Return the path unchanged for bucket scoping assertions."""
+            """Return the path unchanged for storage scoping assertions."""
 
             return path
 
@@ -83,13 +92,15 @@ def test_production_storage_scopes_paths_to_configured_bucket(monkeypatch) -> No
             ENV="production",
             STORAGE_ENDPOINT_URL="http://storage.runtime.longlink.internal:19000",
             STORAGE_PASSWORD="secret@key",
+            STORAGE_REGION="ch-gva-2",
             STORAGE_USERNAME="access/key",
         ),
-        "acme-dashboard",
+        "acme",
+        "applications/dashboard/",
     )
 
     assert isinstance(filesystem, storage_base.DirFileSystem)
-    assert filesystem.path == "acme-dashboard"
+    assert filesystem.path == "acme/applications/dashboard"
     assert filesystem.fs is fake_filesystem
     assert captured == {
         "protocol": "s3",
@@ -97,5 +108,6 @@ def test_production_storage_scopes_paths_to_configured_bucket(monkeypatch) -> No
             "endpoint_url": "http://storage.runtime.longlink.internal:19000",
             "key": "access/key",
             "secret": "secret@key",
+            "client_kwargs": {"region_name": "ch-gva-2"},
         },
     }

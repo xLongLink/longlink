@@ -6,6 +6,7 @@ import { apiComputePodSchema, apiComputeRegistrySchema, parseApiCollection } fro
 /** Fetches the compute registry list for admin views. */
 export function useComputes() {
     return useCollectionQuery<ApiComputeRegistry>('/api/computes', {
+        refetchInterval: 5000,
         parse: (value) => parseApiCollection(apiComputeRegistrySchema, value),
     });
 }

@@ -1,7 +1,8 @@
 import pytest
 from uuid import UUID
 from types import SimpleNamespace
-from factories import create_ready_location, mark_organization_running
+from factories import create_organization, mark_organization_running, create_ready_infrastructure
+from src.utils import names
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from fastapi.testclient import TestClient
@@ -32,12 +33,17 @@ async def test_create_organization_persists_desired_state_and_queues_reconciliat
     # Arrange
     owner = users[0]
     client = clients[0]
-    location = await create_ready_location(owner)
+    infrastructure = await create_ready_infrastructure(owner)
 
     # Act
     response = client.post(
         "/api/organizations",
-        json={"name": "acme", "location_id": str(location.id)},
+        json={
+            "name": "acme",
+            "compute_id": str(infrastructure.compute.id),
+            "database_id": str(infrastructure.database.id),
+            "storage_id": str(infrastructure.storage.id),
+        },
     )
 
     # Assert
@@ -46,7 +52,7 @@ async def test_create_organization_persists_desired_state_and_queues_reconciliat
     organization_id = UUID(payload["organization"]["id"])
     assert payload["organization"]["name"] == "acme"
     assert payload["organization"]["status"] == "creating"
-    assert payload["operation"]["location_id"] == str(location.id)
+    assert payload["operation"]["compute_id"] == str(infrastructure.compute.id)
     assert payload["operation"]["platform_version"] == env.VERSION
     assert payload["operation"]["status"] == OperationStatus.scheduled
     assert set(payload["operation"]).isdisjoint(
@@ -67,8 +73,12 @@ async def test_get_organization_returns_member_payload(
 
     # Arrange
     owner = users[0]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner, avatar="https://example.com/organizations/acme.png")
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(
+        infrastructure,
+        owner,
+        avatar="https://example.com/organizations/acme.png",
+    )
     await mark_organization_running(organization)
     application = await db.applications.create(
         organization.id,
@@ -100,17 +110,15 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
-    """Soft-delete an organization and return location reconciliation state."""
+    """Soft-delete an Organization and return compute reconciliation state."""
 
     # Arrange
     owner = users[0]
     client = clients[0]
-    location = await create_ready_location(owner)
+    infrastructure = await create_ready_infrastructure(owner)
     organization_id = UUID("11111111-1111-1111-1111-111111111111")
-    organization = await db.organizations.create(
-        "acme",
-        "acme",
-        location.id,
+    organization = await create_organization(
+        infrastructure,
         owner,
         organization_id=organization_id,
     )
@@ -145,7 +153,7 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     payload = response.json()
     assert payload["organization"]["id"] == str(organization.id)
     assert payload["organization"]["status"] == "deleting"
-    assert payload["operation"]["location_id"] == str(location.id)
+    assert payload["operation"]["compute_id"] == str(infrastructure.compute.id)
     assert payload["operation"]["platform_version"] == env.VERSION
     assert payload["operation"]["status"] == OperationStatus.scheduled
     assert set(payload["operation"]).isdisjoint(
@@ -159,7 +167,7 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     recorded_operations = await db.operations.fetch()
     assert len(recorded_operations) == 1
     assert recorded_operations[0].id == UUID(payload["operation"]["id"])
-    assert recorded_operations[0].location_id == location.id
+    assert recorded_operations[0].compute_id == infrastructure.compute.id
 
 
 async def test_other_organization_user_cannot_manage_application_members_or_delete_application(
@@ -170,9 +178,9 @@ async def test_other_organization_user_cannot_manage_application_members_or_dele
 
     # Create isolated organizations owned by different users.
     target_owner, other_owner, _ = users
-    location = await create_ready_location(target_owner)
-    target_organization = await db.organizations.create("acme", "acme", location.id, target_owner)
-    await db.organizations.create("globex", "globex", location.id, other_owner)
+    infrastructure = await create_ready_infrastructure(target_owner)
+    target_organization = await create_organization(infrastructure, target_owner)
+    await create_organization(infrastructure, other_owner, name="globex", slug="globex")
     await mark_organization_running(target_organization)
     target_application = await db.applications.create(
         target_organization.id,
@@ -213,11 +221,10 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     # Arrange
     owner = users[0]
     client = clients[0]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    registry = await db.database.location(location.id)
-    assert registry is not None
+    registry = infrastructure.database
     dashboard = await db.applications.create(
         organization.id,
         "dashboard",
@@ -297,8 +304,8 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     # Arrange
     owner = users[0]
     client = clients[0]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
     await db.applications.create(
         organization.id,
@@ -335,21 +342,20 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     assert response.json() == {"detail": "Database resources unavailable"}
 
 
-async def test_organization_storage_endpoint_returns_organization_buckets(
+async def test_organization_storage_endpoint_returns_organization_prefixes(
     clients: tuple[TestClient, TestClient, TestClient],
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
-    """Return existing shared and application storage buckets for one organization."""
+    """Return shared and Application prefix usage for one Organization bucket."""
 
     # Arrange
     owner = users[0]
     client = clients[0]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    registry = await db.storage.location(location.id)
-    assert registry is not None
+    registry = infrastructure.storage
     dashboard = await db.applications.create(
         organization.id,
         "dashboard",
@@ -371,14 +377,19 @@ async def test_organization_storage_endpoint_returns_organization_buckets(
         """Return fake bucket names from the storage backend."""
 
         assert registry_argument.id == registry.id
-        return [organization.id.hex, dashboard.id.hex, "acme-stale", "acme-west-shared", "other-shared"]
+        return [organization.id.hex, "other-organization"]
 
-    async def fake_usage(registry_argument, bucket_name: str) -> dict[str, int]:
-        """Return fake usage counters for one bucket."""
+    async def fake_usage(registry_argument, bucket_name: str, prefix: str) -> dict[str, int]:
+        """Return fake usage counters for one Organization bucket prefix."""
 
         assert registry_argument.id == registry.id
-        assert bucket_name in {organization.id.hex, dashboard.id.hex}
-        return {"space_used": len(bucket_name), "object_count": 2}
+        assert bucket_name == organization.id.hex
+        assert prefix in {
+            names.shared_storage_prefix(),
+            names.application_storage_prefix(dashboard.id),
+            names.application_storage_prefix(reports.id),
+        }
+        return {"space_used": len(prefix), "object_count": 2}
 
     monkeypatch.setattr("src.routes.organizations.storage_utils.buckets", fake_buckets)
     monkeypatch.setattr("src.routes.organizations.storage_utils.usage", fake_usage)
@@ -390,14 +401,17 @@ async def test_organization_storage_endpoint_returns_organization_buckets(
     assert response.status_code == 200
     payload = response.json()
     assert [(item["kind"], item["name"]) for item in payload] == [
-        ("shared_bucket", "shared"),
-        ("application_bucket", dashboard.id.hex),
+        ("shared_prefix", "shared"),
+        ("application_prefix", "dashboard"),
+        ("application_prefix", "reports"),
     ]
     assert payload[1]["application"]["id"] == str(dashboard.id)
     assert payload[1]["application"]["icon"] == "layout-dashboard"
     assert payload[1]["application"]["description"] == "Dashboard app"
-    assert reports.id.hex not in [item["name"] for item in payload]
-    assert payload[0]["space_used"] == len(organization.id.hex)
+    assert payload[0]["bucket_name"] == organization.id.hex
+    assert payload[0]["prefix"] == names.shared_storage_prefix()
+    assert payload[1]["prefix"] == names.application_storage_prefix(dashboard.id)
+    assert payload[0]["space_used"] == len(names.shared_storage_prefix())
     assert payload[0]["object_count"] == 2
 
 
@@ -411,11 +425,10 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     # Arrange
     owner = users[0]
     client = clients[0]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    registry = await db.storage.location(location.id)
-    assert registry is not None
+    registry = infrastructure.storage
     await db.applications.create(
         organization.id,
         "dashboard",
@@ -448,8 +461,8 @@ async def test_organization_resource_endpoints_require_elevated_role(
 
     # Arrange
     owner, regular_member, _ = users
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -483,8 +496,8 @@ async def test_get_organization_returns_invitations(
 
     # Arrange
     owner, invitee, regular_member = users
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     invitation = await db.invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
 
     Session = await get_session()
@@ -523,8 +536,8 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
 
     # Arrange
     owner = users[0]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     client = clients[0]
 
     # Act
@@ -536,7 +549,9 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
     assert payload["id"] == str(organization.id)
     assert payload["name"] == organization.name
     assert payload["avatar"] == ""
-    assert payload["location_id"] == str(location.id)
+    assert payload["compute_id"] == str(infrastructure.compute.id)
+    assert payload["database_id"] == str(infrastructure.database.id)
+    assert payload["storage_id"] == str(infrastructure.storage.id)
     assert payload["deleted_by"] is None
 
 
@@ -548,8 +563,8 @@ async def test_get_organization_returns_404_for_non_member(
 
     # Arrange
     owner = users[0]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     client = clients[1]
 
     # Act
@@ -579,8 +594,8 @@ async def test_create_organization_invitation_returns_204(
     # Arrange
     owner = users[0]
     invitee = users[invitee_index]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     if caller_role is not None:
         Session = await get_session()
         async with Session() as session:
@@ -615,8 +630,8 @@ async def test_update_organization_member_changes_role(
 
     # Arrange
     owner, member = users[0], users[1]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -646,7 +661,7 @@ async def test_update_organization_member_changes_role(
     assert updated_member.role == OrganizationRoles.admin
     recorded_operations = await db.operations.fetch()
     assert len(recorded_operations) == 1
-    assert recorded_operations[0].location_id == location.id
+    assert recorded_operations[0].compute_id == infrastructure.compute.id
 
 
 async def test_update_organization_member_returns_403_for_regular_member(
@@ -657,8 +672,8 @@ async def test_update_organization_member_returns_403_for_regular_member(
 
     # Arrange
     owner, regular_member, target_member = users[0], users[1], users[2]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -699,8 +714,8 @@ async def test_create_organization_invitation_returns_409_for_duplicate_email(
 
     # Arrange
     owner, invitee = users[0], users[1]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     await db.invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
     client = clients[0]
 
@@ -723,8 +738,8 @@ async def test_create_organization_invitation_returns_404_for_non_member(
 
     # Arrange
     owner, invitee = users[0], users[1]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     client = clients[1]
 
     # Act
@@ -746,8 +761,8 @@ async def test_create_organization_invitation_returns_403_for_regular_member(
 
     # Arrange
     owner, regular_member, invitee = users[0], users[1], users[2]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
 
     Session = await get_session()
     async with Session() as session:

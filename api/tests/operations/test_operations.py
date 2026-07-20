@@ -2,8 +2,8 @@ import pytest
 import asyncio
 from uuid import UUID
 from datetime import datetime, timedelta
-from longlink.utils.time import utcnow
 from src.utils import jobs as operation_worker
+from longlink.utils.time import utcnow
 from src.database.models.operations import Operation
 
 pytestmark = pytest.mark.no_db
@@ -14,11 +14,11 @@ class StopScheduler(RuntimeError):
 
 
 def leased_operation(attempt_count: int = 1) -> Operation:
-    """Build one claimed location reconciliation operation."""
+    """Build one claimed compute reconciliation Operation."""
 
     return Operation(
         id=UUID("55555555-5555-5555-5555-555555555555"),
-        location_id=UUID("22222222-2222-2222-2222-222222222222"),
+        compute_id=UUID("22222222-2222-2222-2222-222222222222"),
         platform_version="v1.2.3",
         attempt_count=attempt_count,
         started_at=datetime.fromisoformat("2026-07-01T09:00:00+00:00"),
@@ -27,7 +27,7 @@ def leased_operation(attempt_count: int = 1) -> Operation:
 
 
 async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Claim location work, renew its lease during execution, and keep polling."""
+    """Claim compute work, renew its lease during execution, and keep polling."""
 
     # Arrange
     operation = leased_operation()
@@ -90,7 +90,7 @@ async def test_execute_retries_location_work_with_exponential_backoff(monkeypatc
     transitions: list[tuple[UUID, int, float, str | None]] = []
 
     async def retry_handler(claimed: Operation) -> operation_worker.OperationOutcome:
-        """Request another attempt for the claimed location."""
+        """Request another attempt for the claimed compute target."""
 
         assert claimed is operation
         return operation_worker.retry("workloads are starting")
@@ -101,7 +101,7 @@ async def test_execute_retries_location_work_with_exponential_backoff(monkeypatc
         transitions.append((operation_id, attempt_count, delay, error))
         return Operation(
             id=operation_id,
-            location_id=operation.location_id,
+            compute_id=operation.compute_id,
             platform_version=operation.platform_version,
             attempt_count=operation.attempt_count,
         )
@@ -123,7 +123,7 @@ async def test_execute_raises_when_location_lease_is_lost(monkeypatch: pytest.Mo
     operation = leased_operation()
 
     async def complete_handler(claimed: Operation) -> operation_worker.OperationOutcome:
-        """Complete one claimed location attempt."""
+        """Complete one claimed compute attempt."""
 
         assert claimed is operation
         return operation_worker.complete()
@@ -161,7 +161,7 @@ async def test_execute_fails_retry_at_attempt_limit(monkeypatch: pytest.MonkeyPa
         transitions.append((operation_id, error, attempt_count))
         return Operation(
             id=operation_id,
-            location_id=operation.location_id,
+            compute_id=operation.compute_id,
             error=error,
             platform_version=operation.platform_version,
             attempt_count=attempt_count,

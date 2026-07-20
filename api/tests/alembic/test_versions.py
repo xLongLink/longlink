@@ -8,8 +8,7 @@ from alembic.config import Config
 from alembic.script import ScriptDirectory
 from src.environments import env
 from sqlalchemy.engine import Engine
-from src.database.models import (users, computes, storages, databases, locations, operations, association, invitations, applications,
-                                 organizations)
+from src.database.models import users, computes, storages, databases, operations, association, invitations, applications, organizations
 
 pytestmark = pytest.mark.no_db
 POSTGRES_PORT = 5432

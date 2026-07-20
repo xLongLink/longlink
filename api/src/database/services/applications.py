@@ -2,16 +2,19 @@ import secrets
 from uuid import UUID, uuid4
 from fastapi import HTTPException
 from src.utils import names
+from contextlib import suppress
 from sqlalchemy import and_, delete, select
 from sqlalchemy.orm import selectinload
+from collections.abc import Callable, Awaitable
 from src.models.roles import ApplicationRoles
 from longlink.utils.time import utcnow
-from src.models.statuses import LocationStatus, ApplicationStatus, OrganizationStatus
+from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.database.services import operations
 from src.adapters.storage.base import StorageRuntimeCredentials
 from src.database.models.users import User
-from src.database.models.locations import Location
+from src.database.models.computes import ComputeRegistry
+from src.database.models.operations import Operation
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
@@ -40,12 +43,12 @@ async def fetch() -> list[Application]:
         return result.scalars().all()
 
 
-async def location(location_id: UUID, include_deleted: bool = False) -> list[Application]:
-    """Return applications belonging to organizations in one location."""
+async def for_compute(compute_id: UUID, include_deleted: bool = False) -> list[Application]:
+    """Return Applications belonging to Organizations on one compute target."""
 
     # Reconciliation loads active and pending-removal rows through the same query shape.
     async with session_scope() as session:
-        conditions = [Organization.location_id == location_id]
+        conditions = [Organization.compute_id == compute_id]
         if not include_deleted:
             conditions.extend([Organization.deleted_at.is_(None), Application.deleted_at.is_(None)])
         statement = (
@@ -227,7 +230,7 @@ async def create(
     icon: str | None = None,
     envs: dict[str, str] | None = None,
 ) -> Application:
-    """Create an Organization-owned LongLink Application and administrator membership. The desired-state change and its Location reconciliation request commit atomically."""
+    """Create an Organization-owned LongLink Application and queue compute reconciliation."""
 
     # Create the application and owner membership transactionally.
     async with session_scope() as session:
@@ -235,16 +238,16 @@ async def create(
         current = await session.get(Organization, organization_id)
         if current is None:
             raise HTTPException(status_code=404, detail="Organization not found")
-        location = (
-            await session.execute(select(Location).where(Location.id == current.location_id).with_for_update())
+        compute = (
+            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == current.compute_id).with_for_update())
         ).scalar_one_or_none()
         organization = (
             await session.execute(select(Organization).where(Organization.id == organization_id).with_for_update())
         ).scalar_one_or_none()
-        if location is None or organization is None:
+        if compute is None or organization is None:
             raise HTTPException(status_code=404, detail="Organization not found")
-        if location.deleted_at is not None or location.status != LocationStatus.ready:
-            raise HTTPException(status_code=409, detail="Location is not ready")
+        if compute.deleted_at is not None or compute.status != ComputeStatus.ready:
+            raise HTTPException(status_code=409, detail="Compute registry is not ready")
         if organization.deleted_at is not None or organization.status != OrganizationStatus.running:
             raise HTTPException(status_code=409, detail="Organization is not ready")
 
@@ -259,9 +262,9 @@ async def create(
         if slug_result.scalar_one_or_none() is not None:
             raise HTTPException(status_code=409, detail="Application slug already exists")
 
-        # Generate the application ID before validating UUID-derived storage names.
+        # Generate the application ID before validating its deterministic storage prefix.
         application_id = uuid4()
-        names.application_bucket(application_id)
+        names.application_storage_prefix(application_id)
 
         application = Application(
             id=application_id,
@@ -291,8 +294,8 @@ async def create(
                 updated_id=user.id,
             )
         )
-        location.updated_id = user.id
-        await operations.enqueue_in_session(session, location.id)
+        compute.updated_id = user.id
+        await operations.enqueue_in_session(session, compute.id)
         await session.commit()
 
         statement = (
@@ -324,22 +327,65 @@ def storage_credentials(application: Application) -> StorageRuntimeCredentials |
     }
 
 
-async def set_storage_credentials(application_id: UUID, credentials: StorageRuntimeCredentials) -> Application | None:
-    """Persist generated credentials for a LongLink Application's stable storage identity. A missing row lets reconciliation revoke the unclaimed credentials."""
+async def provision_storage_credentials(
+    application_id: UUID,
+    operation_id: UUID,
+    attempt_count: int,
+    platform_version: str,
+    provision: Callable[[], Awaitable[StorageRuntimeCredentials]],
+    discard: Callable[[StorageRuntimeCredentials], Awaitable[None]],
+) -> tuple[Application, StorageRuntimeCredentials] | None:
+    """Provision and persist credentials while holding the Application and reconciliation lease locks."""
 
-    # Update only storage credential fields.
-    async with session_scope() as session:
-        application = await session.get(Application, application_id)
+    generated: StorageRuntimeCredentials | None = None
+    try:
+        # Lock the Application first to match desired-state mutation lock ordering.
+        async with session_scope() as session:
+            application = (
+                await session.execute(select(Application).where(Application.id == application_id).with_for_update())
+            ).scalar_one_or_none()
+            if application is None:
+                return None
 
-        # Ignore missing applications so callers can clean up generated credentials.
-        if application is None:
-            return None
+            # Lock and validate the current lease before starting the external IAM operation.
+            now = utcnow()
+            lease = (
+                await session.execute(
+                    select(Operation.id)
+                    .where(
+                        Operation.id == operation_id,
+                        Operation.attempt_count == attempt_count,
+                        Operation.platform_version == platform_version,
+                        Operation.lease_expires_at > now,
+                        Operation.started_at.is_not(None),
+                        Operation.stopped_at.is_(None),
+                    )
+                    .with_for_update()
+                )
+            ).scalar_one_or_none()
+            if lease is None:
+                return None
 
-        application.storage_access_key_id = credentials["access_key_id"]
-        application.storage_secret_access_key = credentials["secret_access_key"]
-        await session.commit()
-        await session.refresh(application)
-        return application
+            # Reuse credentials committed by a prior attempt that completed before these locks were acquired.
+            credentials = storage_credentials(application)
+            if credentials is not None:
+                return application, credentials
+
+            # Keep deterministic provider replacement and persistence inside the same lease ownership window.
+            generated = await provision()
+            application.storage_access_key_id = generated["access_key_id"]
+            application.storage_secret_access_key = generated["secret_access_key"]
+            await session.commit()
+            await session.refresh(application)
+            return application, generated
+    except Exception:
+        # Delete only a definitely unpersisted key; preserve it when a lost commit response actually stored it.
+        if generated is not None:
+            with suppress(Exception):
+                current = await get(application_id, include_deleted=True)
+                if current is None or storage_credentials(current) != generated:
+                    await discard(generated)
+        raise
 
 
 async def set_status(application_id: UUID, status: ApplicationStatus) -> Application | None:
@@ -400,7 +446,7 @@ async def update_runtime(
 
 
 async def soft_delete(application_id: UUID, user: User) -> Application | None:
-    """Tombstone a LongLink Application and its memberships, then atomically queue Location cleanup. Reconciliation retains the tombstone until external resources are removed."""
+    """Tombstone a LongLink Application and atomically queue compute cleanup."""
 
     # Soft-delete the application and memberships together.
     async with session_scope() as session:
@@ -412,8 +458,8 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
         current_organization = await session.get(Organization, current.organization_id)
         if current_organization is None:
             return None
-        location = (
-            await session.execute(select(Location).where(Location.id == current_organization.location_id).with_for_update())
+        compute = (
+            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == current_organization.compute_id).with_for_update())
         ).scalar_one_or_none()
         organization = (
             await session.execute(select(Organization).where(Organization.id == current.organization_id).with_for_update())
@@ -423,7 +469,7 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
         ).scalar_one_or_none()
 
         # Ignore missing or already-deleted applications.
-        if location is None or organization is None or application is None or application.deleted_at is not None:
+        if compute is None or organization is None or application is None or application.deleted_at is not None:
             return None
 
         now = utcnow()
@@ -448,8 +494,8 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
             membership.updated_id = user.id
 
         # Application tombstone and reconciliation request are one Platform transaction.
-        location.updated_id = user.id
-        await operations.enqueue_in_session(session, location.id)
+        compute.updated_id = user.id
+        await operations.enqueue_in_session(session, compute.id)
 
         await session.commit()
         statement = (

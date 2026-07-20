@@ -2,15 +2,15 @@ import asyncio
 import contextlib
 from fastapi import FastAPI
 from pathlib import Path
-from src.routes import auth, icons, image, users, health, accounts, branding, computes, storages, countries, databases, locations
+from src.routes import auth, icons, image, users, health, accounts, branding, computes, storages, countries, databases
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
-from src.database.services import operations
-from src.operations import locations as operation_locations
+from src.operations import computes as operation_computes
 from src.utils.jobs import run_operation_scheduler
 from collections.abc import AsyncIterator
 from src.environments import env
 from longlink.middleware import install_frontend_middleware
+from src.database.services import operations
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -20,8 +20,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Validate release compatibility, then run this API replica's scheduler and periodic reconciliation scan."""
 
     await operations.reject_platform_downgrade()
-    worker = asyncio.create_task(run_operation_scheduler(operation_locations.reconcile))
-    reconciler = asyncio.create_task(operation_locations.run_periodic_reconciliation())
+    worker = asyncio.create_task(run_operation_scheduler(operation_computes.reconcile))
+    reconciler = asyncio.create_task(operation_computes.run_periodic_reconciliation())
     yield
 
     reconciler.cancel()
@@ -58,7 +58,6 @@ app.include_router(databases.router)
 app.include_router(health.router)
 app.include_router(icons.router)
 app.include_router(image.router)
-app.include_router(locations.router)
 app.include_router(operations_route.router)
 app.include_router(organizations.router)
 app.include_router(storages.router)

@@ -26,7 +26,6 @@ async def get_my_organizations(user: User = Depends(authuser)):
             "slug": organization.slug,
             "avatar": organization.avatar,
             "country": organization.country,
-            "location": organization.location,
             "role": membership.role,
         }
         for membership in user.organization_memberships

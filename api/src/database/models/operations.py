@@ -9,16 +9,16 @@ from longlink.database.types import UTCDateTime
 
 
 class Operation(SQLModel, table=True):
-    """Persist one durable Location reconciliation request and its renewable worker lease.
+    """Persist one durable compute reconciliation request and its renewable worker lease.
 
-    Each Location admits one open request; its target release and attempt generation coordinate and fence API replicas.
+    Each compute target admits one open request; its target release and attempt generation coordinate and fence API replicas.
     """
 
     __tablename__: ClassVar[str] = "operations"
     __table_args__ = (
         Index(
-            "uq_operations_open_location_id",
-            "location_id",
+            "uq_operations_open_compute_id",
+            "compute_id",
             unique=True,
             postgresql_where=text("stopped_at IS NULL"),
             sqlite_where=text("stopped_at IS NULL"),
@@ -29,7 +29,7 @@ class Operation(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 
     # Reference
-    location_id: UUID = Field(foreign_key="locations.id")
+    compute_id: UUID = Field(foreign_key="compute_registries.id")
 
     # State
     error: str | None = Field(default=None, sa_column=Column(String(length=2000), nullable=True))

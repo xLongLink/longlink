@@ -5,10 +5,10 @@ from containers import DockerRuntimeContainer, wait_for_postgres, require_docker
 from sqlalchemy import select
 from src.database import session as database_session
 from src.environments import env
-from src.database.models import users, computes, storages, databases, locations, association, invitations, applications, organizations
+from src.database.models import users, computes, storages, databases, association, invitations, applications, organizations
 from src.database.services import operations
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
-from src.database.models.locations import Location
+from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.no_db]
@@ -44,15 +44,20 @@ async def test_claim_next_leases_one_operation_to_one_concurrent_worker(monkeypa
         monkeypatch.setattr(database_session, "_engine", engine)
         monkeypatch.setattr(database_session, "Session", session_factory)
 
-        # Create one location without invoking the aggregate service's queue side effect.
+        # Create one compute target without invoking the registry service's queue side effect.
         async with session_factory() as session:
-            location = Location(name="Local", slug="local", country="CH")
-            session.add(location)
+            compute = ComputeRegistry(
+                name="Local",
+                slug="local",
+                kubeconfig="apiVersion: v1\nclusters: []\n",
+                proxy_secret="proxy-secret",
+            )
+            session.add(compute)
             await session.commit()
-            await session.refresh(location)
+            await session.refresh(compute)
 
         # Race independent enqueue transactions against the partial unique index.
-        enqueue_tasks = [asyncio.create_task(operations.enqueue(location.id)) for _ in range(2)]
+        enqueue_tasks = [asyncio.create_task(operations.enqueue(compute.id)) for _ in range(2)]
         enqueued = await asyncio.gather(*enqueue_tasks)
 
         # Run two workers concurrently so each claim uses an independent session and PostgreSQL row lock.

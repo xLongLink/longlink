@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from src.kubernetes.reconcile import DesiredApplication
 
 TEMPLATES = files("src.kubernetes.templates")
-TEMPLATE_REVISION = "2026-07-14.2"
+TEMPLATE_REVISION = "2026-07-20.1"
 GATEWAY_NAME = "longlink-gateway"
 GATEWAY_NAMESPACE = "longlink-system"
 GATEWAY_AUTH_SECRET_NAME = "longlink-gateway-auth"
@@ -31,7 +31,7 @@ EnvoyDocument = dict[str, Any]
 
 @dataclass(frozen=True, slots=True)
 class GatewayTLSMaterial:
-    """Carry the per-location CA certificate, server certificate, and sensitive private key used by the public gateway.
+    """Carry the per-compute CA certificate, server certificate, and sensitive private key used by the public gateway.
 
     Reconciliation persists and stages this identity before deployment when rotation changes its trust chain.
     """
@@ -55,12 +55,12 @@ class GatewayManifests:
 
 
 class Gateway:
-    """Render the location gateway boundary for public TLS termination and authenticated application routing.
+    """Render the compute gateway boundary for public TLS termination and authenticated application routing.
 
     Routing inputs come from desired state rather than cluster discovery.
     """
 
-    def system_namespace(self, location_id: str, platform_version: str) -> KubernetesDocument:
+    def system_namespace(self, compute_id: str, platform_version: str) -> KubernetesDocument:
         """Render the exclusively claimed LongLink system Namespace."""
 
         # Hash the source so edits to namespace metadata are visible in desired state.
@@ -68,21 +68,21 @@ class Gateway:
         runtime_revision = hashlib.sha256(source.read_bytes()).hexdigest()
         return templates.readyml_list(
             source,
-            location_id=location_id,
+            compute_id=compute_id,
             platform_version=platform_version,
             runtime_revision=runtime_revision,
             template_revision=TEMPLATE_REVISION,
         )[0]
 
-    def service(self, location_id: str, runtime_revision: str, platform_version: str) -> KubernetesDocument:
-        """Render the stable public LoadBalancer Service that establishes the location endpoint.
+    def service(self, compute_id: str, runtime_revision: str, platform_version: str) -> KubernetesDocument:
+        """Render the stable public LoadBalancer Service that establishes the compute endpoint.
 
         Reconciliation applies it before TLS generation because the endpoint determines the certificate SAN.
         """
 
         return templates.readyml_list(
             TEMPLATES.joinpath("gateway_service.yml"),
-            location_id=location_id,
+            compute_id=compute_id,
             platform_version=platform_version,
             runtime_revision=runtime_revision,
             template_revision=TEMPLATE_REVISION,
@@ -175,22 +175,22 @@ class Gateway:
         yaml.safe_dump(config, stream=stream, sort_keys=False)
         return stream.getvalue()
 
-    def tls(self, location_id: str, endpoint: str, existing: GatewayTLSMaterial | None = None) -> GatewayTLSMaterial:
-        """Reuse persisted TLS only after validating its location identity, key, chain, lifetime, and endpoint SAN.
+    def tls(self, compute_id: str, endpoint: str, existing: GatewayTLSMaterial | None = None) -> GatewayTLSMaterial:
+        """Reuse persisted TLS only after validating its compute identity, key, chain, lifetime, and endpoint SAN.
 
-        Otherwise generate a per-location CA and server certificate for the caller to stage before deployment.
+        Otherwise generate a per-compute CA and server certificate for the caller to stage before deployment.
         """
 
-        # Existing material is reusable only when its chain, key, location, lifetime, and SAN all remain valid.
-        if existing is not None and self._valid_tls(location_id, endpoint, existing):
+        # Existing material is reusable only when its chain, key, compute identity, lifetime, and SAN all remain valid.
+        if existing is not None and self._valid_tls(compute_id, endpoint, existing):
             return existing
 
         # A new endpoint identity uses a private self-signed CA and a CA-issued server certificate.
         now = datetime.now(UTC)
         ca_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         server_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-        ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Location {location_id} CA")])
-        server_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Gateway {location_id}")])
+        ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Compute {compute_id} CA")])
+        server_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Gateway {compute_id}")])
         ca_certificate = (
             x509.CertificateBuilder()
             .subject_name(ca_name)
@@ -265,7 +265,7 @@ class Gateway:
 
     def manifests(
         self,
-        location_id: str,
+        compute_id: str,
         proxy_secret: str,
         tls: GatewayTLSMaterial,
         envoy_config: str,
@@ -301,7 +301,7 @@ class Gateway:
             ca_certificate=json.dumps(tls.ca_certificate),
             envoy_config=json.dumps(envoy_config),
             gateway_secret=json.dumps(proxy_secret),
-            location_id=location_id,
+            compute_id=compute_id,
             platform_version=platform_version,
             runtime_revision=runtime_revision,
             template_revision=TEMPLATE_REVISION,
@@ -318,13 +318,13 @@ class Gateway:
             tls_secret=manifests[1],
             config_map=manifests[2],
             deployment=manifests[3],
-            service=self.service(location_id, runtime_revision, platform_version),
+            service=self.service(compute_id, runtime_revision, platform_version),
             network_policy=manifests[4],
             runtime_revision=runtime_revision,
         )
 
-    def _valid_tls(self, location_id: str, endpoint: str, material: GatewayTLSMaterial) -> bool:
-        """Return whether persisted PEM material is valid for this location and endpoint."""
+    def _valid_tls(self, compute_id: str, endpoint: str, material: GatewayTLSMaterial) -> bool:
+        """Return whether persisted PEM material is valid for this compute target and endpoint."""
 
         # PEM parsing is an untrusted persistence boundary, so malformed material requests rotation.
         try:
@@ -354,9 +354,9 @@ class Gateway:
         ):
             return False
 
-        # Persisted material must be the expected per-location chain and a server-auth certificate.
-        expected_ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Location {location_id} CA")])
-        expected_server_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Gateway {location_id}")])
+        # Persisted material must be the expected per-compute chain and a server-auth certificate.
+        expected_ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Compute {compute_id} CA")])
+        expected_server_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, f"LongLink Gateway {compute_id}")])
         if (
             ca_certificate.subject != expected_ca_name
             or ca_certificate.issuer != expected_ca_name

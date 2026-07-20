@@ -76,7 +76,7 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
     if attempt_count < 1 or operation.lease_expires_at is None:
         raise ValueError("Operation must be claimed before execution")
 
-    logger.info("Running location reconciliation %s", operation.id)
+    logger.info("Running compute reconciliation %s", operation.id)
 
     # Convert expected handler failures into explicit outcomes without wrapping database transitions.
     try:
@@ -84,9 +84,10 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
             outcome = await handler(operation)
     except OperationLeaseLost:
         raise
-    except TimeoutError:
-        logger.warning("Operation %s attempt timed out", operation.id)
-        outcome = retry("Operation attempt timed out")
+    except TimeoutError as exc:
+        detail = str(exc) or "Operation attempt timed out"
+        logger.warning("Operation %s timed out: %s", operation.id, detail)
+        outcome = retry(detail)
     except HTTPException as exc:
         detail = str(exc.detail)
         logger.warning("Operation %s failed: %s", operation.id, detail)
@@ -177,7 +178,7 @@ async def run_operation_scheduler(handler: JobHandler) -> None:
             await asyncio.sleep(OPERATION_POLL_SECONDS)
             continue
 
-        logger.info("Executing location reconciliation %s", operation.id)
+        logger.info("Executing compute reconciliation %s", operation.id)
 
         # Run one complete leased attempt before claiming more work.
         try:

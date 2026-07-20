@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 type HeadingLevel = 'h1' | 'h2' | 'h3' | 'h4';
 
 const headingClassNames: Record<HeadingLevel, string> = {
-    h1: 'scroll-m-20 text-4xl font-semibold tracking-tight',
+    h1: 'scroll-m-20 text-3xl font-semibold tracking-tight',
     h2: 'scroll-m-20 text-3xl font-semibold tracking-tight',
     h3: 'scroll-m-20 text-2xl font-semibold tracking-tight',
     h4: 'scroll-m-20 text-xl font-semibold tracking-tight',

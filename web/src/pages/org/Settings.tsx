@@ -439,7 +439,7 @@ export default function Settings({
                         />
                         <div className="min-w-0 space-y-1">
                             <div className="truncate font-medium text-foreground">
-                                {row.original.kind === 'shared_bucket' ? t('resources.shared') : row.original.name}
+                                {row.original.kind === 'shared_prefix' ? t('resources.shared') : row.original.name}
                             </div>
                             <div className="truncate text-xs text-muted-foreground">{usageSummary}</div>
                         </div>
@@ -454,8 +454,8 @@ export default function Settings({
             cell: ({ row }) => {
                 const application = row.original.application;
 
-                // Show organization ownership for the shared bucket.
-                if (row.original.kind === 'shared_bucket') {
+                // Show organization ownership for the shared prefix.
+                if (row.original.kind === 'shared_prefix') {
                     return (
                         <div className="flex items-start gap-3">
                             <Avatar shape="squircle" className="size-9 shrink-0">
@@ -517,7 +517,7 @@ export default function Settings({
                             <div className="min-w-0">
                                 <div className="truncate font-medium text-foreground">{organizationName}</div>
                                 <div className="truncate text-sm text-muted-foreground">
-                                    {organizationDetails?.country} · {organizationDetails?.location.name}
+                                    {organizationDetails?.country}
                                 </div>
                             </div>
                         </div>

@@ -44,15 +44,20 @@ def knames(value: str) -> str:
     return value
 
 
-def organization_shared_bucket(organization_id: UUID) -> str:
-    """Return the shared storage bucket name derived from an organization ID."""
+def organization_bucket(organization_id: UUID) -> str:
+    """Return the storage bucket name derived from an Organization ID."""
 
-    # Shared buckets use the same UUID-hex nomenclature as organization databases.
+    # Organization buckets use the same UUID-hex nomenclature as Organization databases.
     return knames(organization_id.hex)
 
 
-def application_bucket(application_id: UUID) -> str:
-    """Return the storage bucket name derived from an application ID."""
+def shared_storage_prefix() -> str:
+    """Return the Organization-owned shared storage prefix."""
 
-    # Application buckets use the same UUID-hex nomenclature as application schemas.
-    return knames(application_id.hex)
+    return "shared/"
+
+
+def application_storage_prefix(application_id: UUID) -> str:
+    """Return one Application's private storage prefix."""
+
+    return f"applications/{application_id.hex}/"

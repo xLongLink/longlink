@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from src.kubernetes.reconcile import DesiredApplication, DesiredOrganization
 
 TEMPLATES = files("src.kubernetes.templates")
-TEMPLATE_REVISION = "2026-07-14.2"
+TEMPLATE_REVISION = "2026-07-20.1"
 APPLICATION_ID_LABEL = "longlink.io/application-id"
 ORGANIZATION_ID_LABEL = "longlink.io/organization-id"
 ENVIRONMENT_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -48,7 +48,7 @@ class Applications:
     def organization_manifests(
         self,
         organization: DesiredOrganization,
-        location_id: str,
+        compute_id: str,
         platform_version: str,
     ) -> OrganizationManifests:
         """Render the organization tenant boundary as an owned Namespace plus a gateway-only ingress policy.
@@ -66,7 +66,7 @@ class Applications:
         runtime_revision = hashlib.sha256(f"{source.read_text(encoding='utf-8')}\n{revision_input}".encode()).hexdigest()
         manifests = templates.readyml_list(
             source,
-            location_id=location_id,
+            compute_id=compute_id,
             namespace=organization.slug,
             organization_id=str(organization.id),
             platform_version=platform_version,
@@ -82,7 +82,7 @@ class Applications:
     def manifests(
         self,
         application: DesiredApplication,
-        location_id: str,
+        compute_id: str,
         revision_key: str,
         platform_version: str,
     ) -> ApplicationManifests:
@@ -115,7 +115,7 @@ class Applications:
             "app.kubernetes.io/managed-by": "longlink-platform",
             "compute-role": "application",
             APPLICATION_ID_LABEL: application_id,
-            "longlink.io/location-id": location_id,
+            "longlink.io/compute-id": compute_id,
             ORGANIZATION_ID_LABEL: str(application.organization_id),
         }
         annotations = {
@@ -139,7 +139,7 @@ class Applications:
             source,
             application_id=application_id,
             image=json.dumps(application.image),
-            location_id=location_id,
+            compute_id=compute_id,
             namespace=application.namespace,
             organization_id=str(application.organization_id),
             platform_version=platform_version,

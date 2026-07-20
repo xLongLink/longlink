@@ -1,8 +1,8 @@
 from enum import StrEnum
 
 
-class LocationStatus(StrEnum):
-    """Lifecycle states for one immutable location aggregate."""
+class ComputeStatus(StrEnum):
+    """Lifecycle states for one compute reconciliation target."""
 
     provisioning = "provisioning"
     ready = "ready"

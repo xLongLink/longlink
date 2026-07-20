@@ -1,13 +1,30 @@
 from src import adapters
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authsupport
+from src.auth import authadmin, authsupport
+from src.utils import names
 from src.logger import logger
-from src.models.databases import DatabaseRegistryResponse
+from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse
 from src.database.services import database
 from src.database.models.users import User
 
 router = APIRouter()
+
+
+@router.post("/api/databases", response_model=DatabaseRegistryResponse, status_code=201)
+async def create_database_registry(payload: DatabaseRegistryCreate, user: User = Depends(authadmin)):
+    """Register one database backend."""
+
+    return await database.create(
+        payload.name,
+        names.slugify(payload.name),
+        payload.kind,
+        payload.host,
+        payload.port,
+        payload.username,
+        payload.password,
+        user,
+    )
 
 
 @router.get("/api/databases", response_model=list[DatabaseRegistryResponse])
@@ -22,6 +39,17 @@ async def get_database_registry(registry_id: UUID, _user: User = Depends(authsup
     """Return one database backend registration."""
 
     registry = await database.get(registry_id)
+    if registry is None:
+        raise HTTPException(status_code=404, detail="Database registry not found")
+
+    return registry
+
+
+@router.delete("/api/databases/{registry_id}", response_model=DatabaseRegistryResponse)
+async def delete_database_registry(registry_id: UUID, user: User = Depends(authadmin)):
+    """Delete one unused database backend registration."""
+
+    registry = await database.delete(registry_id, user)
     if registry is None:
         raise HTTPException(status_code=404, detail="Database registry not found")
 

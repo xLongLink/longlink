@@ -81,7 +81,7 @@ function OrganizationResourcesDiagram() {
                     </div>
                     <div>
                         <div className="font-medium text-foreground">File Storage</div>
-                        <div className="mt-1 text-sm text-muted-foreground">Storage buckets</div>
+                        <div className="mt-1 text-sm text-muted-foreground">One bucket with scoped prefixes</div>
                     </div>
                 </div>
                 <div className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-md border bg-muted/40 px-3 py-4 text-center">
@@ -99,18 +99,18 @@ function OrganizationResourcesDiagram() {
 }
 
 export const metadata = {
-    lastUpdated: '2026-07-10',
+    lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/organizations.tsx',
 };
 
 export const content = (
     <Stack>
-        <Heading id="organizations" level="h2">
+        <Heading id="organizations" level="h1">
             Organizations
         </Heading>
         <P>
-            Organizations are the tenant boundary in LongLink. They group members, invitations, applications, database
-            resources, storage resources, and the location where runtime infrastructure is provisioned.
+            Organizations are the tenant boundary in LongLink. They group members, invitations, Applications, and their
+            immutable compute, database, and storage registry assignments.
         </P>
         <P>
             Every application belongs to one organization. Organization membership controls who can see the workspace,

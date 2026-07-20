@@ -44,6 +44,21 @@ uv run pytest tests
 The `longlink` package owns the shared-schema model and migration definitions as well as application migration tooling. The Platform API executes shared migrations and writes with control-plane credentials; application runtimes use the same shared model with read-only database access.
 
 <br/>
+
+## Storage
+
+The LongLink Platform provides one physical bucket per Organization and scopes each runtime with these variables:
+
+| Variable                         | Purpose                                              |
+| -------------------------------- | ---------------------------------------------------- |
+| `LONGLINK_STORAGE_BUCKET`        | Physical Organization bucket.                        |
+| `LONGLINK_STORAGE_PREFIX`        | Application storage prefix under that bucket.        |
+| `LONGLINK_STORAGE_REGION`        | Provider signing region when required.               |
+| `LONGLINK_STORAGE_SHARED_PREFIX` | Organization shared-storage prefix under the bucket. |
+
+Pass the bucket and the relevant prefix to `create_fs`. The returned filesystem treats that prefix as its root, so Application code uses only paths relative to its scoped view. Development and testing can leave all four values unset to use the local and in-memory filesystem roots.
+
+<br/>
 <br/>
 
 ---

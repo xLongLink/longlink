@@ -66,7 +66,7 @@ const sharedFoundationItems = [
     },
     {
         name: 'Storage',
-        description: 'S3-compatible buckets scoped to organizations and applications.',
+        description: 'One S3-compatible bucket per Organization, with shared and application prefixes.',
         icon: HardDrive,
     },
     {
@@ -164,19 +164,19 @@ function PlatformFlowDiagram() {
 }
 
 export const metadata = {
-    lastUpdated: '2026-07-14',
+    lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/index.tsx',
 };
 
 export const content = (
     <Stack>
-        <Heading id="platform" level="h2">
+        <Heading id="platform" level="h1">
             Platform
         </Heading>
         <P>
             The LongLink Platform owns the shared operating model. It stores users, organizations, memberships,
-            applications, complete location infrastructure, reconciliation operations, and deployment state, then
-            exposes the API and web shell used to manage them.
+            applications, infrastructure registries, reconciliation Operations, and deployment state, then exposes the
+            API and web shell used to manage them.
         </P>
         <P>
             It does not replace application code. Applications still run as separate SDK services; the LongLink Platform
@@ -184,7 +184,7 @@ export const content = (
             verification, logs, and status.
         </P>
         <P>
-            Production runtime traffic is mediated by the API proxy and the per-location TLS gateway. The API authorizes
+            Production runtime traffic is mediated by the API proxy and the per-compute TLS gateway. The API authorizes
             the user and forwards approved requests with trusted runtime headers; the gateway accepts only authenticated
             proxy traffic and routes it to the internal application service.
         </P>

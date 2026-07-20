@@ -129,9 +129,6 @@ async def get(oidc: str, include_deleted: bool = False, include_access: bool = F
                 selectinload(User.organization_memberships)
                 .selectinload(UserOrganization.organization)
                 .selectinload(Organization.applications),
-                selectinload(User.organization_memberships)
-                .selectinload(UserOrganization.organization)
-                .selectinload(Organization.location),
                 selectinload(User.application_memberships).selectinload(UserApplication.application),
                 selectinload(User.application_memberships).selectinload(UserApplication.organization),
             )

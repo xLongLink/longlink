@@ -1,8 +1,7 @@
 from main import app
 from types import SimpleNamespace
 from conftest import session_cookie
-from factories import create_ready_location
-from src.environments import env
+from factories import create_organization, create_ready_infrastructure
 from src.models.roles import PlatformRoles
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
@@ -23,8 +22,12 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
 
     # Arrange
     user = users[0]
-    location = await create_ready_location(user)
-    organization = await db.organizations.create("acme", "acme", location.id, user, avatar="https://example.com/organizations/acme.png")
+    infrastructure = await create_ready_infrastructure(user)
+    organization = await create_organization(
+        infrastructure,
+        user,
+        avatar="https://example.com/organizations/acme.png",
+    )
     client = clients[0]
 
     # Act
@@ -44,14 +47,6 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
             "slug": "acme",
             "avatar": "https://example.com/organizations/acme.png",
             "country": "CH",
-            "location": {
-                "id": str(location.id),
-                    "name": "Local testing",
-                    "slug": "local",
-                    "country": "CH",
-                    "status": "ready",
-                "version": env.VERSION,
-            },
             "role": "owner",
         }
     ]
@@ -86,8 +81,8 @@ async def test_list_users_returns_admin_user_summaries(
 
     # Arrange
     user = users[0]
-    location = await create_ready_location(user)
-    await db.organizations.create("acme", "acme", location.id, user)
+    infrastructure = await create_ready_infrastructure(user)
+    await create_organization(infrastructure, user)
 
     client = clients[0]
 
@@ -120,8 +115,8 @@ async def test_platform_roles_separate_support_reads_from_admin_mutations(
     support_read_response = support_client.get("/api/users")
     ordinary_read_response = ordinary_client.get("/api/users")
     support_mutation_response = support_client.post(
-        "/api/locations",
-        json={"name": "Support location", "country": "CH"},
+        "/api/computes",
+        json={"name": "Support compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
 
     # Verify support can read but neither support nor ordinary users receive excess privileges.

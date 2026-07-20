@@ -34,7 +34,6 @@ The combined repository architecture is maintained in `../AGENTS.md`.
 │   ├── users
 │   ├── applications
 │   ├── organizations
-│   ├── locations
 │   ├── database
 │   ├── storage
 │   ├── compute

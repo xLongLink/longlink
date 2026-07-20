@@ -1,6 +1,5 @@
 import pytest
 from src import adapters
-from uuid import UUID
 from collections.abc import Callable
 from src.models.storages import StorageKind
 from src.models.databases import DatabaseKind
@@ -19,7 +18,6 @@ FACTORY_CASES = [
             port=5432,
             username="admin",
             password="secret",
-            location_id=UUID("11111111-1111-4111-8111-111111111111"),
         ),
         adapters.database,
         adapters.Postgres,
@@ -34,7 +32,6 @@ FACTORY_CASES = [
             access_key_id="access-key",
             secret_access_key="secret-key",
             runtime_endpoint_url="https://storage.example.test",
-            location_id=UUID("11111111-1111-4111-8111-111111111111"),
         ),
         adapters.storage,
         adapters.MinIO,

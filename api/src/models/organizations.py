@@ -5,7 +5,6 @@ from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus, OrganizationStatus
 from src.models.countries import DEFAULT_COUNTRY, Country
-from src.models.locations import LocationResponse
 from longlink.models.icons import Icon
 from src.models.operations import OperationResponse
 
@@ -18,8 +17,10 @@ class OrganizationCreate(BaseModel):
     avatar: str = Field(default="", max_length=2048)
     country: Country = DEFAULT_COUNTRY
 
-    # Location
-    location_id: UUID
+    # Infrastructure
+    compute_id: UUID
+    database_id: UUID
+    storage_id: UUID
 
 
 class OrganizationInvitationCreate(BaseModel):
@@ -71,8 +72,10 @@ class OrganizationSummary(BaseModel):
     avatar: str = ""
     country: Country
 
-    # Relationships
-    location_id: UUID
+    # Infrastructure
+    compute_id: UUID
+    database_id: UUID
+    storage_id: UUID
 
     # State
     status: OrganizationStatus
@@ -87,7 +90,7 @@ class OrganizationSummary(BaseModel):
 
 
 class OrganizationMutationResponse(BaseModel):
-    """Pair an accepted Organization desired-state change with its location reconciliation operation.
+    """Pair an accepted Organization desired-state change with its compute reconciliation operation.
 
     The operation must complete before the desired state is confirmed in managed infrastructure.
     """
@@ -162,9 +165,10 @@ class OrganizationDetails(BaseModel):
     avatar: str = ""
     country: Country
 
-    # Location
-    location: LocationResponse
-    location_id: UUID
+    # Infrastructure
+    compute_id: UUID
+    database_id: UUID
+    storage_id: UUID
 
     # State
     status: OrganizationStatus

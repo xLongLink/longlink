@@ -17,7 +17,6 @@ function adminRoutes() {
             { path: 'admin/users', lazy: loadPage(() => import('@/pages/admin/Users')) },
             { path: 'admin/applications', lazy: loadPage(() => import('@/pages/admin/Applications')) },
             { path: 'admin/organizations', lazy: loadPage(() => import('@/pages/admin/Organizations')) },
-            { path: 'admin/locations', lazy: loadPage(() => import('@/pages/admin/Location')) },
             { path: 'admin/database', lazy: loadPage(() => import('@/pages/admin/Database')) },
             { path: 'admin/storage', lazy: loadPage(() => import('@/pages/admin/Storage')) },
             { path: 'admin/compute', lazy: loadPage(() => import('@/pages/admin/Compute')) },

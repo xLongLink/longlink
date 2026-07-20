@@ -1,4 +1,4 @@
-# Template for the immutable per-location system Namespace claim.
+# Template for the immutable per-compute system Namespace claim.
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -9,4 +9,4 @@ metadata:
     longlink.io/template-revision: "$template_revision"
   labels:
     app.kubernetes.io/managed-by: longlink-platform
-    longlink.io/location-id: "$location_id"
+    longlink.io/compute-id: "$compute_id"

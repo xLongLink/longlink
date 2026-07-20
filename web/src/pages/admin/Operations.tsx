@@ -25,7 +25,7 @@ function createOperationColumns(t: TFunction): Array<ColumnDef<ApiOperation>> {
 
                 return (
                     <div className="min-w-0">
-                        <div className="truncate font-medium text-foreground">{t('admin.locationReconciliation')}</div>
+                        <div className="truncate font-medium text-foreground">{t('admin.computeReconciliation')}</div>
                         <div className="text-xs text-muted-foreground">{operationStatusLabels[operation.status]}</div>
                     </div>
                 );
@@ -82,8 +82,8 @@ function createOperationColumns(t: TFunction): Array<ColumnDef<ApiOperation>> {
                             <span className="font-mono text-xs">{operation.id}</span>
                         </div>
                         <div className="truncate">
-                            <span className="text-xs text-muted-foreground">{t('columns.location')}</span>{' '}
-                            <span className="font-mono text-xs">{operation.location_id}</span>
+                            <span className="text-xs text-muted-foreground">{t('admin.computeTitle')}</span>{' '}
+                            <span className="font-mono text-xs">{operation.compute_id}</span>
                         </div>
                         <div className="flex gap-3 text-xs text-muted-foreground">
                             <span>Platform {operation.platform_version}</span>

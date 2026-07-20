@@ -8,7 +8,7 @@ LOGO_PATH = "brand/logo.svg"
 
 @dataclass(frozen=True)
 class OrganizationAsset:
-    """Represent one read-only tenant organization asset."""
+    """Represent one read-only Organization asset."""
 
     path: str
     content: bytes
@@ -16,7 +16,7 @@ class OrganizationAsset:
 
 
 def logo_path() -> str:
-    """Return the shared-storage path for the organization logo asset."""
+    """Return the path for the Organization logo within shared storage."""
 
     return LOGO_PATH
 
@@ -44,13 +44,13 @@ def asset_content_type(path: str, *, default_content_type: str = "application/oc
 
 
 def normalize_asset_path(path: str) -> str:
-    """Return a safe relative shared-storage asset path."""
+    """Return a safe asset path relative to the shared storage prefix."""
 
     asset_path = path.strip()
     parsed_path = PurePosixPath(asset_path)
 
-    # Asset paths are shared bucket keys, not filesystem or parent-relative paths.
-    if not asset_path or parsed_path.is_absolute() or ".." in parsed_path.parts:
-        raise ValueError("Organization asset paths must be relative paths inside shared storage")
+    # Asset paths stay relative to the shared prefix, never a filesystem root or parent.
+    if not asset_path or parsed_path.is_absolute() or not parsed_path.parts or ".." in parsed_path.parts:
+        raise ValueError("Organization asset paths must be relative paths inside the shared storage prefix")
 
     return parsed_path.as_posix()

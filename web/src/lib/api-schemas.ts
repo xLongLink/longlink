@@ -14,15 +14,6 @@ const radiusSchema = z.enum(RADIUS_VALUES);
 const iconNameSchema = z.enum(ICON_NAMES).nullable();
 const languageSchema = z.enum(LANGUAGE_VALUES);
 
-export const apiLocationSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    slug: z.string(),
-    country: z.string(),
-    status: z.enum(['provisioning', 'ready', 'failed', 'deleting']),
-    version: z.string().nullable(),
-});
-
 export const apiUserSummarySchema = z.object({
     id: z.string(),
     name: z.string(),
@@ -43,7 +34,6 @@ export const apiUserOrganizationMembershipSchema = z.object({
     slug: z.string(),
     avatar: z.string(),
     country: z.string(),
-    location: apiLocationSchema,
     role: roleSchema,
 });
 
@@ -75,7 +65,9 @@ export const apiOrganizationSummarySchema = z.object({
     slug: z.string(),
     avatar: z.string(),
     country: z.string(),
-    location_id: z.string().nullable(),
+    compute_id: z.string(),
+    database_id: z.string(),
+    storage_id: z.string(),
     status: z.enum(['creating', 'running', 'failed', 'deleting']),
     created_at: z.string(),
     updated_at: z.string(),
@@ -106,7 +98,6 @@ export const apiOrganizationApplicationSchema = z.object({
 });
 
 export const apiOrganizationDetailsSchema = apiOrganizationSummarySchema.extend({
-    location: apiLocationSchema,
     users: z.array(apiOrganizationMemberSummarySchema),
     invitations: z.array(apiInvitationSchema),
     applications: z.array(apiOrganizationApplicationSchema),
@@ -174,7 +165,6 @@ export const apiDatabaseRegistrySchema = z.object({
     host: z.string(),
     port: z.number(),
     username: z.string(),
-    location_id: z.string(),
     created_at: z.string(),
     created_by: nullableUserSummarySchema,
     updated_at: z.string(),
@@ -189,9 +179,8 @@ export const apiStorageRegistrySchema = z.object({
     name: z.string(),
     slug: z.string(),
     endpoint_url: z.string(),
-    access_key_id: z.string(),
+    access_key_id: z.string().nullable(),
     runtime_endpoint_url: z.string(),
-    location_id: z.string(),
     created_at: z.string(),
     created_by: nullableUserSummarySchema,
     updated_at: z.string(),
@@ -202,9 +191,11 @@ export const apiStorageRegistrySchema = z.object({
 
 export const apiComputeRegistrySchema = z.object({
     id: z.string(),
+    name: z.string(),
     slug: z.string(),
     gateway_url: z.string().nullable(),
-    location_id: z.string(),
+    status: z.enum(['provisioning', 'ready', 'failed', 'deleting']),
+    version: z.string().nullable(),
     created_at: z.string(),
     created_by: nullableUserSummarySchema,
     updated_at: z.string(),
@@ -215,7 +206,7 @@ export const apiComputeRegistrySchema = z.object({
 
 export const apiOperationSchema = z.object({
     id: z.string(),
-    location_id: z.string(),
+    compute_id: z.string(),
     status: z.enum(['scheduled', 'active', 'completed', 'failed']),
     error: z.string().nullable(),
     platform_version: z.string(),
@@ -226,8 +217,8 @@ export const apiOperationSchema = z.object({
     scheduled_at: z.string(),
 });
 
-export const apiLocationMutationResponseSchema = z.object({
-    location: apiLocationSchema,
+export const apiComputeMutationResponseSchema = z.object({
+    compute: apiComputeRegistrySchema,
     operation: apiOperationSchema,
 });
 
@@ -245,6 +236,18 @@ export const apiComputePodSchema = z.object({
     name: z.string(),
     status: z.string(),
     node: z.string().nullable(),
+});
+
+export const apiRegistryOptionSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    slug: z.string(),
+});
+
+export const apiInfrastructureOptionsSchema = z.object({
+    computes: z.array(apiRegistryOptionSchema),
+    databases: z.array(apiRegistryOptionSchema),
+    storages: z.array(apiRegistryOptionSchema),
 });
 
 const apiOrganizationResourceApplicationSchema = z.object({
@@ -265,9 +268,10 @@ export const apiOrganizationDatabaseResourceSchema = z.object({
 });
 
 export const apiOrganizationStorageResourceSchema = z.object({
-    kind: z.enum(['shared_bucket', 'application_bucket']),
+    kind: z.enum(['shared_prefix', 'application_prefix']),
     name: z.string(),
     bucket_name: z.string(),
+    prefix: z.string(),
     application: apiOrganizationResourceApplicationSchema.nullable(),
     space_used: z.number().nullable(),
     object_count: z.number().nullable(),

@@ -11,7 +11,6 @@ import {
     ExternalLink,
     HardDrive,
     LogOut,
-    MapPin,
     Settings2,
     Users,
 } from 'lucide-react';
@@ -135,18 +134,6 @@ export function UserProfile() {
                             >
                                 <Building2 className="h-4 w-4" />
                                 {t('profile.organizations')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                render={
-                                    <Link
-                                        to="/admin/locations"
-                                        className="flex w-full items-center gap-2 text-inherit"
-                                    />
-                                }
-                                className="cursor-pointer p-2 text-muted-foreground transition-colors data-highlighted:bg-accent data-highlighted:text-accent-foreground"
-                            >
-                                <MapPin className="h-4 w-4" />
-                                {t('profile.locations')}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 render={

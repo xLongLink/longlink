@@ -2,7 +2,7 @@ from src.utils import names
 from collections.abc import Callable, Awaitable
 from kr8s.asyncio.objects import Pod, Namespace
 from src.kubernetes.gateway import GatewayTLSMaterial
-from src.kubernetes.reconcile import Reconciler, DesiredLocation, ReconcileResult
+from src.kubernetes.reconcile import Reconciler, DesiredCompute, ReconcileResult
 from src.kubernetes.resources import KubernetesResources
 from src.kubernetes.applications import Applications
 
@@ -19,13 +19,13 @@ class Kubernetes:
 
     async def reconcile(
         self,
-        desired: DesiredLocation,
+        desired: DesiredCompute,
         proxy_secret: str,
         existing_tls: GatewayTLSMaterial | None = None,
         fence: Callable[[], Awaitable[None]] | None = None,
         stage_tls: Callable[[GatewayTLSMaterial], Awaitable[None]] | None = None,
     ) -> ReconcileResult:
-        """Forward an authoritative location snapshot to the cluster reconciler and return gateway connection material.
+        """Forward an authoritative compute snapshot to the cluster reconciler and return gateway connection material.
 
         Optional fencing and TLS staging preserve operation ownership and trust ordering.
         """

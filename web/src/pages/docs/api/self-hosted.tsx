@@ -12,16 +12,16 @@ export const metadata = {
 
 export const content = (
     <Stack>
-        <Heading id="self-hosted" level="h2">
+        <Heading id="self-hosted" level="h1">
             Self-hosted
         </Heading>
         <P>
             Self-hosted mode runs the LongLink Platform and managed application workloads on infrastructure you operate.
-            You create each location with a Kubernetes kubeconfig, PostgreSQL connection, and S3-compatible object
-            storage connection. The Kubernetes service must implement <Code>type: LoadBalancer</Code>; LongLink derives
-            the public TLS gateway address and reconciles organization and application resources asynchronously. The
-            cluster CNI must enforce Kubernetes NetworkPolicy because application-to-application isolation depends on
-            it.
+            You register Kubernetes compute, PostgreSQL, and S3-compatible object storage independently, then assign one
+            registry of each kind to every Organization. The Kubernetes service must implement{' '}
+            <Code>type: LoadBalancer</Code>; LongLink derives the public TLS gateway address and reconciles Organization
+            and Application resources asynchronously. The cluster CNI must enforce Kubernetes NetworkPolicy because
+            Application-to-Application isolation depends on it.
         </P>
         <P>
             The LongLink Platform container is published at{' '}
@@ -29,9 +29,9 @@ export const content = (
         </P>
         <P>
             Release images carry an immutable <Code>vX.Y.Z</Code> LongLink Platform version. On startup, the reconciler
-            migrates active locations to that release and records the version only after Kubernetes, database, and
+            migrates active compute targets to that release and records the version only after Kubernetes, database, and
             storage work succeeds. Operation history reports failures and retry progress. Platform releases are
-            forward-only for now: a binary older than any recorded location or operation release refuses to start.
+            forward-only for now: a binary older than any recorded compute or Operation release refuses to start.
             Recover by deploying the recorded release or a newer release, or by restoring a database backup that matches
             the older binary.
         </P>
@@ -55,8 +55,8 @@ export const content = (
                             </div>
                         </TableCell>
                         <TableCell className="whitespace-normal text-muted-foreground">
-                            Interval used to enqueue location drift repair. Multiple Platform containers may scan
-                            safely; the operation queue coalesces concurrent requests per location.
+                            Interval used to enqueue compute drift repair. Multiple Platform containers may scan safely;
+                            the Operation queue coalesces concurrent requests per compute target.
                         </TableCell>
                     </TableRow>
                 </TableHeader>

@@ -11,7 +11,7 @@ from src.environments import env
 from kr8s.asyncio.objects import Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayTLSMaterial
-from src.kubernetes.reconcile import DesiredLocation, DesiredApplication, DesiredOrganization
+from src.kubernetes.reconcile import DesiredCompute, DesiredApplication, DesiredOrganization
 
 pytestmark = pytest.mark.no_db
 K3S_IMAGE = "rancher/k3s:v1.31.5-k3s1"
@@ -89,19 +89,19 @@ def kubernetes_compute() -> Iterator[tuple[Kubernetes, int]]:
 async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup(
     kubernetes_compute: tuple[Kubernetes, int],
 ) -> None:
-    """Reconcile, repair, prune, serve HTTPS, enforce ownership, and clean a real k3s location."""
+    """Reconcile, repair, prune, serve HTTPS, enforce ownership, and clean a real k3s compute target."""
 
     # Arrange
     compute, gateway_port = kubernetes_compute
-    location_id = UUID("00000000-0000-4000-8000-000000000001")
-    other_location_id = UUID("00000000-0000-4000-8000-000000000002")
+    compute_id = UUID("00000000-0000-4000-8000-000000000001")
+    other_compute_id = UUID("00000000-0000-4000-8000-000000000002")
     organization_id = UUID("10000000-0000-4000-8000-000000000001")
     retired_organization_id = UUID("10000000-0000-4000-8000-000000000002")
     application_id = UUID("20000000-0000-4000-8000-000000000001")
     stale_application_id = UUID("20000000-0000-4000-8000-000000000002")
     proxy_secret = "shared-secret"
-    desired = DesiredLocation(
-        id=location_id,
+    desired = DesiredCompute(
+        id=compute_id,
         organizations=(
             DesiredOrganization(id=organization_id, slug="acme"),
             DesiredOrganization(id=retired_organization_id, slug="retired"),
@@ -123,7 +123,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
             ),
         ),
     )
-    cleanup = DesiredLocation(id=location_id, organizations=(), applications=(), deleting=True)
+    cleanup = DesiredCompute(id=compute_id, organizations=(), applications=(), deleting=True)
     cleanup_requested = False
 
     try:
@@ -170,8 +170,8 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         )
 
         # Act: reconcile a reduced graph with persisted TLS to repair drift and prune obsolete state.
-        current = DesiredLocation(
-            id=location_id,
+        current = DesiredCompute(
+            id=compute_id,
             organizations=(DesiredOrganization(id=organization_id, slug="acme"),),
             applications=(
                 DesiredApplication(
@@ -222,7 +222,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
             )
 
         assert system_namespace is not None
-        assert system_namespace.labels["longlink.io/location-id"] == str(location_id)
+        assert system_namespace.labels["longlink.io/compute-id"] == str(compute_id)
         assert organization_namespace is not None
         assert organization_namespace.labels["longlink.io/organization-id"] == str(organization_id)
         assert retired_deleting
@@ -299,10 +299,10 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         logs = await compute.applications.logs(str(application_id), lines=50)
         assert any("Listening on port 8000." in line for line in logs)
 
-        # A cluster claimed by one immutable location must reject another location before adoption.
-        with pytest.raises(ValueError, match=f"not owned by location {other_location_id}"):
+        # A cluster claimed by one compute target must reject another target before adoption.
+        with pytest.raises(ValueError, match=f"not owned by compute {other_compute_id}"):
             await compute.reconcile(
-                DesiredLocation(id=other_location_id, organizations=(), applications=()),
+                DesiredCompute(id=other_compute_id, organizations=(), applications=()),
                 "other-secret",
             )
 

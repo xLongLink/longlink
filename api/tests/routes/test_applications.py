@@ -1,7 +1,7 @@
 import httpx2
 from uuid import UUID
 from types import SimpleNamespace
-from factories import create_ready_location, mark_organization_running
+from factories import create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from fastapi.testclient import TestClient
@@ -30,8 +30,8 @@ async def test_list_organization_apps_returns_app_membership_role(
     # Arrange
     owner = users[0]
     user = users[1]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
@@ -80,9 +80,9 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
     # Arrange
     user = users[0]
-    location = await create_ready_location(user)
-    acme = await db.organizations.create("acme", "acme", location.id, user)
-    globex = await db.organizations.create("globex", "globex", location.id, user)
+    infrastructure = await create_ready_infrastructure(user)
+    acme = await create_organization(infrastructure, user)
+    globex = await create_organization(infrastructure, user, name="globex", slug="globex")
     await mark_organization_running(acme)
     await mark_organization_running(globex)
     dashboard = await db.applications.create(
@@ -136,8 +136,8 @@ async def test_list_organization_apps_returns_403_for_non_member(
 
     # Arrange
     owner = users[0]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
     await db.applications.create(
         organization.id,
@@ -160,12 +160,12 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Persist application desired state and return its location operation."""
+    """Persist Application desired state and return its compute Operation."""
 
     # Arrange
     user = users[0]
-    location = await create_ready_location(user)
-    organization = await db.organizations.create("acme", "acme", location.id, user)
+    infrastructure = await create_ready_infrastructure(user)
+    organization = await create_organization(infrastructure, user)
     await mark_organization_running(organization)
     client = clients[0]
 
@@ -194,7 +194,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     assert "compute_registry_id" not in application
     assert "database_registry_id" not in application
     assert "storage_registry_id" not in application
-    assert operation["location_id"] == str(location.id)
+    assert operation["compute_id"] == str(infrastructure.compute.id)
     assert operation["platform_version"] == env.VERSION
     assert operation["status"] == OperationStatus.scheduled
     assert set(operation).isdisjoint(
@@ -219,8 +219,8 @@ async def test_create_app_returns_403_for_regular_member(
     # Arrange
     owner = users[0]
     regular_member = users[1]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -251,12 +251,12 @@ async def test_get_app_logs_returns_pod_logs(
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
-    """Return recent pod logs through the organization location's compute cluster."""
+    """Return recent pod logs through the Organization's compute cluster."""
 
     # Arrange
     user = users[0]
-    location = await create_ready_location(user)
-    organization = await db.organizations.create("acme", "acme", location.id, user)
+    infrastructure = await create_ready_infrastructure(user)
+    organization = await create_organization(infrastructure, user)
     await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
@@ -265,8 +265,7 @@ async def test_get_app_logs_returns_pod_logs(
         image="ghcr.io/longlink/dashboard:latest",
         user=user,
     )
-    registry = await db.compute.location(location.id)
-    assert registry is not None
+    registry = infrastructure.compute
     captured: dict[str, object] = {}
 
     class FakeCompute:
@@ -307,12 +306,12 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Soft-delete an application and return its location operation."""
+    """Soft-delete an Application and return its compute Operation."""
 
     # Arrange
     user = users[0]
-    location = await create_ready_location(user)
-    organization = await db.organizations.create("acme", "acme", location.id, user)
+    infrastructure = await create_ready_infrastructure(user)
+    organization = await create_organization(infrastructure, user)
     await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
@@ -331,7 +330,7 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
     payload = response.json()
     assert payload["application"]["id"] == str(app.id)
     assert payload["application"]["status"] == "deleting"
-    assert payload["operation"]["location_id"] == str(location.id)
+    assert payload["operation"]["compute_id"] == str(infrastructure.compute.id)
     assert payload["operation"]["platform_version"] == env.VERSION
     assert payload["operation"]["status"] == OperationStatus.scheduled
     assert set(payload["operation"]).isdisjoint(
@@ -351,13 +350,13 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
-    """Forward an authenticated request through the organization location's gateway."""
+    """Forward an authenticated request through the Organization's compute gateway."""
 
     # Arrange
     user = users[0]
-    await create_ready_location(user, slug="local", name="Local testing")
-    remote_location = await create_ready_location(user, slug="remote", name="Remote testing")
-    organization = await db.organizations.create("acme", "acme", remote_location.id, user)
+    await create_ready_infrastructure(user, slug="local", name="Local testing")
+    remote_infrastructure = await create_ready_infrastructure(user, slug="remote", name="Remote testing")
+    organization = await create_organization(remote_infrastructure, user)
     await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
@@ -367,13 +366,12 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
         user=user,
     )
     await db.applications.set_status(app.id, ApplicationStatus.running)
-    registry = await db.compute.location(remote_location.id)
-    assert registry is not None
+    registry = remote_infrastructure.compute
     captured: dict[str, object] = {}
     tls = object()
 
     def fake_ssl_context(*, cadata: str) -> object:
-        """Capture the location CA used for gateway verification."""
+        """Capture the compute CA used for gateway verification."""
 
         captured["cadata"] = cadata
         return tls
@@ -492,8 +490,8 @@ async def test_application_proxy_requires_application_role_for_regular_member(
     # Arrange
     owner = users[0]
     user = users[1]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
@@ -532,8 +530,8 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
 
     # Arrange
     user = users[0]
-    location = await create_ready_location(user)
-    organization = await db.organizations.create("acme", "acme", location.id, user)
+    infrastructure = await create_ready_infrastructure(user)
+    organization = await create_organization(infrastructure, user)
     await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
@@ -543,13 +541,12 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
         user=user,
     )
     await db.applications.set_status(app.id, ApplicationStatus.running)
-    registry = await db.compute.location(location.id)
-    assert registry is not None
+    registry = infrastructure.compute
     captured: dict[str, object] = {}
     tls = object()
 
     def fake_ssl_context(*, cadata: str) -> object:
-        """Return a test TLS context for the generated location CA."""
+        """Return a test TLS context for the generated compute CA."""
 
         assert cadata == registry.gateway_ca_certificate
         return tls
@@ -600,8 +597,8 @@ async def test_application_proxy_enforces_method_role(
 
     # Arrange
     user = users[0]
-    location = await create_ready_location(user)
-    organization = await db.organizations.create("acme", "acme", location.id, user)
+    infrastructure = await create_ready_infrastructure(user)
+    organization = await create_organization(infrastructure, user)
     await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,
@@ -648,8 +645,8 @@ async def test_organization_access_rejects_soft_deleted_membership(
     # Arrange
     owner = users[0]
     user = users[1]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
     await db.applications.create(
         organization.id,
@@ -689,8 +686,8 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
 
     # Arrange
     owner = users[0]
-    location = await create_ready_location(owner)
-    organization = await db.organizations.create("acme", "acme", location.id, owner)
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
     app = await db.applications.create(
         organization.id,

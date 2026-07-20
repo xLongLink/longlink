@@ -1,11 +1,26 @@
 import fsspec
+from pathlib import PurePosixPath
 from fsspec.spec import AbstractFileSystem
 from longlink.utils.settings import Envs
 from fsspec.implementations.dirfs import DirFileSystem
 
 
-def create_fs(env: Envs, bucket: str) -> AbstractFileSystem:
-    """Create the active runtime filesystem, optionally scoped to one bucket path."""
+def create_fs(env: Envs, bucket: str, prefix: str) -> AbstractFileSystem:
+    """Create the active runtime filesystem scoped to one bucket prefix."""
+
+    # Production must always use a scoped view of the Organization bucket.
+    if env.ENV == "production":
+        if not bucket:
+            raise ValueError("Production storage settings require a bucket")
+        if not prefix:
+            raise ValueError("Production storage settings require a prefix")
+
+    # Normalize only safe relative prefixes so a scoped view cannot escape its bucket.
+    prefix_path = PurePosixPath(prefix)
+    if prefix and (prefix_path.is_absolute() or not prefix_path.parts or ".." in prefix_path.parts):
+        raise ValueError("Storage prefixes must be relative paths inside a bucket")
+    if prefix and not bucket:
+        raise ValueError("Storage prefixes require a bucket")
 
     # Tests use isolated in-memory storage so they never touch local files or remote services.
     if env.ENV == "testing":
@@ -17,10 +32,6 @@ def create_fs(env: Envs, bucket: str) -> AbstractFileSystem:
 
     # Production uses remote object storage supplied by the platform.
     else:
-        # Require a bucket so production storage is never exposed from its backend root.
-        if not bucket:
-            raise ValueError("Production storage settings require a bucket")
-
         # Require all production storage credentials before constructing the backend.
         if (
             env.STORAGE_ENDPOINT_URL is None
@@ -32,14 +43,21 @@ def create_fs(env: Envs, bucket: str) -> AbstractFileSystem:
             )
 
         # Production runtimes receive S3 connection options from the LongLink Platform.
+        options: dict[str, object] = {
+            "endpoint_url": env.STORAGE_ENDPOINT_URL,
+            "key": env.STORAGE_USERNAME,
+            "secret": env.STORAGE_PASSWORD,
+        }
+        if env.STORAGE_REGION is not None:
+            options["client_kwargs"] = {"region_name": env.STORAGE_REGION}
         filesystem = fsspec.filesystem(
             "s3",
-            endpoint_url=env.STORAGE_ENDPOINT_URL,
-            key=env.STORAGE_USERNAME,
-            secret=env.STORAGE_PASSWORD,
+            **options,
         )
 
-    # Scope configured buckets while keeping local storage roots available for development and tests.
+    # Scope configured prefixes beneath their bucket while local defaults keep the backend root.
+    if prefix:
+        return DirFileSystem(path=(PurePosixPath(bucket) / prefix_path).as_posix(), fs=filesystem)
     if bucket:
         return DirFileSystem(path=bucket, fs=filesystem)
 

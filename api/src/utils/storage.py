@@ -2,6 +2,8 @@ import aioboto3
 import urllib.parse
 from typing import TYPE_CHECKING, TypedDict, cast
 from contextlib import AbstractAsyncContextManager
+from src.environments import env
+from src.models.infrastructure import StorageKind, exoscale_zone
 from src.database.models.storages import StorageRegistry
 
 # Import typing-only S3 stubs without adding runtime dependencies.
@@ -9,8 +11,8 @@ if TYPE_CHECKING:
     from types_aiobotocore_s3.client import S3Client
 
 
-class StorageBucketUsage(TypedDict):
-    """Describe aggregate storage usage for one bucket."""
+class StorageUsage(TypedDict):
+    """Describe aggregate storage usage for one bucket prefix."""
 
     space_used: int
     object_count: int
@@ -24,14 +26,26 @@ def client(registry: StorageRegistry) -> AbstractAsyncContextManager[S3Client]:
     if parsed_url.scheme not in {"http", "https"}:
         raise ValueError("Storage endpoint URL must use http or https")
 
+    # Resolve provider credentials from their authoritative control-plane boundary.
+    region = None
+    if registry.kind == StorageKind.exoscale:
+        region = exoscale_zone(registry.endpoint_url)
+        access_key_id, secret_access_key, _organization_id = env.exoscale()
+    else:
+        if registry.access_key_id is None or registry.secret_access_key is None:
+            raise ValueError("Storage registry credentials are missing")
+        access_key_id = registry.access_key_id
+        secret_access_key = registry.secret_access_key
+
     return cast(
         "AbstractAsyncContextManager[S3Client]",
         aioboto3.Session().client(
             "s3",
             use_ssl=parsed_url.scheme == "https",
             endpoint_url=registry.endpoint_url,
-            aws_access_key_id=registry.access_key_id,
-            aws_secret_access_key=registry.secret_access_key,
+            region_name=region,
+            aws_access_key_id=access_key_id,
+            aws_secret_access_key=secret_access_key,
         ),
     )
 
@@ -46,8 +60,8 @@ async def buckets(registry: StorageRegistry) -> list[str]:
     return [name for bucket in response.get("Buckets", []) if (name := bucket.get("Name")) is not None]
 
 
-async def usage(registry: StorageRegistry, bucket_name: str) -> StorageBucketUsage:
-    """Return aggregate usage details for one bucket."""
+async def usage(registry: StorageRegistry, bucket_name: str, prefix: str) -> StorageUsage:
+    """Return aggregate usage details for one bucket prefix."""
 
     object_count = 0
     space_used = 0
@@ -55,7 +69,7 @@ async def usage(registry: StorageRegistry, bucket_name: str) -> StorageBucketUsa
     # Walk every listed page because S3-compatible APIs do not expose portable bucket totals.
     async with client(registry) as s3:
         paginator = s3.get_paginator("list_objects_v2")
-        async for page in paginator.paginate(Bucket=bucket_name):
+        async for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
             contents = page.get("Contents", [])
             object_count += len(contents)
             space_used += sum(int(item.get("Size", 0)) for item in contents)

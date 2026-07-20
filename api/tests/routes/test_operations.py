@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from factories import create_ready_location
+from factories import create_organization, create_ready_infrastructure
 from src.environments import env
 from fastapi.testclient import TestClient
 from src.database.services import operations, organizations
@@ -8,17 +8,17 @@ from src.database.models.users import User
 db = SimpleNamespace(operations=operations, organizations=organizations)
 
 
-async def test_operations_endpoint_returns_location_scoped_operations(
+async def test_operations_endpoint_returns_compute_scoped_operations(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Return location-scoped reconciliation operations for admin views."""
+    """Return compute-scoped reconciliation Operations for admin views."""
 
     # Arrange
     client = clients[0]
     user = users[0]
-    location = await create_ready_location(user)
-    await db.organizations.create("acme", "acme", location.id, user)
+    infrastructure = await create_ready_infrastructure(user)
+    await create_organization(infrastructure, user)
     operation = (await db.operations.fetch())[0]
 
     # Act
@@ -29,7 +29,7 @@ async def test_operations_endpoint_returns_location_scoped_operations(
     payload = response.json()
     assert len(payload) == 1
     assert payload[0]["id"] == str(operation.id)
-    assert payload[0]["location_id"] == str(location.id)
+    assert payload[0]["compute_id"] == str(infrastructure.compute.id)
     assert payload[0]["status"] == operation.status
     assert payload[0]["platform_version"] == env.VERSION
     assert set(payload[0]).isdisjoint(

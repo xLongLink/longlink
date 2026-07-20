@@ -14,7 +14,7 @@ metadata:
     app.kubernetes.io/managed-by: longlink-platform
     compute-role: application
     longlink.io/application-id: $application_id
-    longlink.io/location-id: "$location_id"
+    longlink.io/compute-id: "$compute_id"
     longlink.io/organization-id: "$organization_id"
 spec:
   replicas: 1
@@ -34,7 +34,7 @@ spec:
         app.kubernetes.io/managed-by: longlink-platform
         compute-role: application
         longlink.io/application-id: $application_id
-        longlink.io/location-id: "$location_id"
+        longlink.io/compute-id: "$compute_id"
         longlink.io/organization-id: "$organization_id"
     spec:
       automountServiceAccountToken: false
@@ -101,7 +101,7 @@ metadata:
     app.kubernetes.io/managed-by: longlink-platform
     compute-role: application
     longlink.io/application-id: $application_id
-    longlink.io/location-id: "$location_id"
+    longlink.io/compute-id: "$compute_id"
     longlink.io/organization-id: "$organization_id"
 spec:
   type: ClusterIP

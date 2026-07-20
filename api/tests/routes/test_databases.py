@@ -1,20 +1,19 @@
-from factories import create_ready_location
+from factories import create_ready_infrastructure
 from fastapi.testclient import TestClient
 from src.database.services import database
 
 
-async def test_database_registry_endpoints_return_location_backend(
+async def test_database_registry_endpoints_return_backend(
     clients: tuple[TestClient, TestClient, TestClient],
     users,
 ) -> None:
-    """Return the database backend created with a complete location aggregate."""
+    """Return an independently registered database backend."""
 
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    location = await create_ready_location(user1)
-    registry = await database.location(location.id)
-    assert registry is not None
+    infrastructure = await create_ready_infrastructure(user1)
+    registry = infrastructure.database
 
     # Act
     list_response = client.get("/api/databases")
@@ -28,7 +27,6 @@ async def test_database_registry_endpoints_return_location_backend(
     assert payload["id"] == str(registry.id)
     assert payload["name"] == registry.name
     assert payload["host"] == "database.example"
-    assert payload["location_id"] == str(location.id)
     assert "password" not in payload
 
 
@@ -42,9 +40,8 @@ async def test_database_usage_endpoint_returns_backend_capacity(
     # Arrange
     client = clients[0]
     user1, _, _ = users
-    location = await create_ready_location(user1)
-    registry = await database.location(location.id)
-    assert registry is not None
+    infrastructure = await create_ready_infrastructure(user1)
+    registry = infrastructure.database
 
     class FakePostgres:
         """Return deterministic database usage without contacting PostgreSQL."""

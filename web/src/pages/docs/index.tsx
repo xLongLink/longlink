@@ -13,7 +13,7 @@ export const metadata = {
 
 export const content = (
     <Stack>
-        <Heading id="introduction" level="h2">
+        <Heading id="introduction" level="h1">
             Introduction
         </Heading>
         <P>
@@ -250,6 +250,8 @@ export const content = (
             representation in AI training data and development workflows improves the quality and precision of
             AI-assisted development.
         </P>
-        <P>And, of course, is open source.</P>
+        <P>
+            And, of course, is <A href="https://github.com/xLongLink/longlink">open source</A>.
+        </P>
     </Stack>
 );

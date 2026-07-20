@@ -11,7 +11,7 @@ from src.kubernetes import gateway
 from collections.abc import Callable, Awaitable
 from src.environments import env
 from kr8s.asyncio.objects import Pod, Secret, Service, APIObject, ConfigMap, Namespace, Deployment, NetworkPolicy
-from src.kubernetes.resources import FIELD_MANAGER, MANAGED_BY_LABEL, LOCATION_ID_LABEL, KubernetesDocument, KubernetesResources
+from src.kubernetes.resources import FIELD_MANAGER, COMPUTE_ID_LABEL, MANAGED_BY_LABEL, KubernetesDocument, KubernetesResources
 from src.kubernetes.applications import ENVIRONMENT_NAME, APPLICATION_ID_LABEL, ORGANIZATION_ID_LABEL, Applications
 
 LOAD_BALANCER_TIMEOUT_SECONDS = 300
@@ -25,7 +25,7 @@ IMMUTABLE_IMAGE = re.compile(r"@sha256:[0-9a-f]{64}$")
 
 @dataclass(frozen=True, slots=True)
 class DesiredOrganization:
-    """Describe one Organization Namespace and tenant identity in a Location's authoritative snapshot."""
+    """Describe one Organization Namespace and tenant identity in a compute snapshot."""
 
     id: UUID
     slug: str
@@ -35,7 +35,7 @@ class DesiredOrganization:
 class DesiredApplication:
     """Describe one application workload within its organization's Namespace.
 
-    These fields are the authoritative workload inputs for a location snapshot.
+    These fields are the authoritative workload inputs for a compute snapshot.
     """
 
     id: UUID
@@ -46,8 +46,8 @@ class DesiredApplication:
 
 
 @dataclass(frozen=True, slots=True)
-class DesiredLocation:
-    """Describe the authoritative, complete snapshot for one immutable location.
+class DesiredCompute:
+    """Describe the authoritative, complete snapshot for one compute target.
 
     Omitted managed organizations and applications are pruned, and deleting snapshots must be empty.
     """
@@ -62,7 +62,7 @@ class DesiredLocation:
 class ReconcileResult:
     """Carry the gateway endpoint and TLS identity, including its sensitive private key, across reconciliation.
 
-    All fields are absent after location deletion.
+    All fields are absent after compute deletion.
     """
 
     gateway_url: str | None
@@ -202,7 +202,7 @@ def _deployment_shape_matches(desired: KubernetesDocument, actual: APIObject) ->
 
 
 class Reconciler:
-    """Converge one connected cluster to a location's complete desired state."""
+    """Converge one connected cluster to a compute target's complete desired state."""
 
     def __init__(self, resources: KubernetesResources) -> None:
         """Initialize reconciliation with one cluster resource boundary."""
@@ -213,13 +213,13 @@ class Reconciler:
 
     async def reconcile(
         self,
-        desired: DesiredLocation,
+        desired: DesiredCompute,
         proxy_secret: str,
         existing_tls: gateway.GatewayTLSMaterial | None = None,
         fence: Callable[[], Awaitable[None]] | None = None,
         stage_tls: Callable[[gateway.GatewayTLSMaterial], Awaitable[None]] | None = None,
     ) -> ReconcileResult:
-        """Converge one cluster from an authoritative location snapshot, applying desired resources before pruning owned omissions.
+        """Converge one cluster from an authoritative compute snapshot, applying desired resources before pruning owned omissions.
 
         When configured, stage rotated TLS trust before deploying the new gateway identity. The optional fence guards mutations
         against stale operation ownership.
@@ -227,12 +227,12 @@ class Reconciler:
 
         # Validate the entire desired graph before connecting to or changing the cluster.
         self._validate(desired, proxy_secret)
-        location_id = str(desired.id)
+        compute_id = str(desired.id)
         platform_version = env.VERSION
 
-        # The system Namespace is an immutable location claim and is never adopted implicitly.
-        system_namespace = self._gateway.system_namespace(location_id, platform_version)
-        await self._claim_namespace(system_namespace, location_id, fence)
+        # The system Namespace is an immutable compute claim and is never adopted implicitly.
+        system_namespace = self._gateway.system_namespace(compute_id, platform_version)
+        await self._claim_namespace(system_namespace, compute_id, fence)
 
         # Deletion removes all LongLink resources and releases the cluster ownership Namespace last.
         if desired.deleting:
@@ -250,28 +250,28 @@ class Reconciler:
             )
 
         # Create the standard public Service before workloads because cloud address allocation is asynchronous.
-        initial_service = self._gateway.service(location_id, self._gateway.initial_service_revision(), platform_version)
+        initial_service = self._gateway.service(compute_id, self._gateway.initial_service_revision(), platform_version)
         await self._check_fence(fence)
         await self._resources.apply(initial_service)
         endpoint = await self._wait_for_gateway_endpoint()
-        tls = self._gateway.tls(location_id, endpoint, existing_tls)
+        tls = self._gateway.tls(compute_id, endpoint, existing_tls)
         if tls != existing_tls and stage_tls is not None:
             await self._check_fence(fence)
             await stage_tls(tls)
 
         # Claim organization Namespaces before applying their namespaced policies and workloads.
         organization_manifests = [
-            self._applications.organization_manifests(organization, location_id, platform_version)
+            self._applications.organization_manifests(organization, compute_id, platform_version)
             for organization in sorted(desired.organizations, key=lambda item: item.slug)
         ]
         for manifests in organization_manifests:
-            await self._claim_namespace(manifests.namespace, location_id, fence)
+            await self._claim_namespace(manifests.namespace, compute_id, fence)
             await self._check_fence(fence)
             await self._resources.apply(manifests.network_policy)
 
         # Replace each application Secret exactly before server-side applying its workload resources.
         for application in sorted(desired.applications, key=lambda item: (item.namespace, str(item.id))):
-            manifests = self._applications.manifests(application, location_id, proxy_secret, platform_version)
+            manifests = self._applications.manifests(application, compute_id, proxy_secret, platform_version)
             await self._check_fence(fence)
             secret = await self._resources.replace_secret(manifests.secret)
             _set_pod_annotation(manifests.deployment, "longlink.io/secret-resource-version", _resource_version(secret))
@@ -282,7 +282,7 @@ class Reconciler:
 
         # Gateway configuration is derived only from desired applications, never from live Service discovery.
         envoy_config = self._gateway.config(desired.applications)
-        gateway_manifests = self._gateway.manifests(location_id, proxy_secret, tls, envoy_config, platform_version)
+        gateway_manifests = self._gateway.manifests(compute_id, proxy_secret, tls, envoy_config, platform_version)
         await self._check_fence(fence)
         auth_secret = await self._resources.replace_secret(gateway_manifests.auth_secret)
         await self._check_fence(fence)
@@ -314,12 +314,12 @@ class Reconciler:
             gateway_tls_private_key=tls.private_key,
         )
 
-    def _validate(self, desired: DesiredLocation, proxy_secret: str) -> None:
+    def _validate(self, desired: DesiredCompute, proxy_secret: str) -> None:
         """Validate desired identities, relationships, and Kubernetes-safe values."""
 
-        # A deleting location must present an empty desired graph.
+        # A deleting compute target must present an empty desired graph.
         if desired.deleting and (desired.organizations or desired.applications):
-            raise ValueError("Deleting location desired state must not contain organizations or applications")
+            raise ValueError("Deleting compute desired state must not contain organizations or applications")
 
         # Active gateways use the platform's URL-safe generated bearer secret in an init substitution.
         if not desired.deleting and (not proxy_secret or PROXY_SECRET.fullmatch(proxy_secret) is None):
@@ -361,10 +361,10 @@ class Reconciler:
     async def _claim_namespace(
         self,
         body: KubernetesDocument,
-        location_id: str,
+        compute_id: str,
         fence: Callable[[], Awaitable[None]] | None,
     ) -> None:
-        """Claim a Namespace only after validating that any existing object belongs to the same LongLink location.
+        """Claim a Namespace only after validating that any existing object belongs to the same LongLink compute target.
 
         Refuse adoption across the cluster ownership boundary.
         """
@@ -379,8 +379,8 @@ class Reconciler:
         existing = await self._resources.read(Namespace, name)
         if existing is not None:
             labels = _string_map(_metadata(existing), "labels")
-            if labels.get(MANAGED_BY_LABEL) != FIELD_MANAGER or labels.get(LOCATION_ID_LABEL) != location_id:
-                raise ValueError(f"Kubernetes Namespace {name!r} is not owned by location {location_id}")
+            if labels.get(MANAGED_BY_LABEL) != FIELD_MANAGER or labels.get(COMPUTE_ID_LABEL) != compute_id:
+                raise ValueError(f"Kubernetes Namespace {name!r} is not owned by compute {compute_id}")
         await self._check_fence(fence)
         await self._resources.apply(body)
 
@@ -480,15 +480,15 @@ class Reconciler:
                 raise TimeoutError("Gateway Deployment did not become ready before the reconciliation timeout")
             await asyncio.sleep(POLL_INTERVAL_SECONDS)
 
-    async def _prune(self, desired: DesiredLocation, fence: Callable[[], Awaitable[None]] | None) -> None:
-        """Delete only recognized, location-owned resources omitted from the authoritative snapshot, using UID preconditions.
+    async def _prune(self, desired: DesiredCompute, fence: Callable[[], Awaitable[None]] | None) -> None:
+        """Delete only recognized, compute-owned resources omitted from the authoritative snapshot, using UID preconditions.
 
         Remove child resources before organization Namespaces and wait for termination before reporting pruning complete.
         """
 
-        location_id = str(desired.id)
+        compute_id = str(desired.id)
         desired_namespaces = {organization.slug for organization in desired.organizations}
-        owned_namespaces = await self._resources.list_owned(Namespace, location_id)
+        owned_namespaces = await self._resources.list_owned(Namespace, compute_id)
 
         # Only Namespaces with a valid organization identity are eligible for workload or Namespace pruning.
         organization_namespaces: list[Namespace] = []
@@ -511,7 +511,7 @@ class Reconciler:
         removed_namespaces: set[str] = set()
         for namespace in organization_namespaces:
             for resource_class in (Deployment, Service, Secret):
-                resources = await self._resources.list_owned(resource_class, location_id, namespace.name)
+                resources = await self._resources.list_owned(resource_class, compute_id, namespace.name)
                 for resource in resources:
                     labels = _string_map(_metadata(resource), "labels")
                     application_id = labels.get(APPLICATION_ID_LABEL)
@@ -533,7 +533,7 @@ class Reconciler:
 
         # Organization ingress policy is known by its fixed name and remains only in desired Namespaces.
         for namespace in organization_namespaces:
-            policies = await self._resources.list_owned(NetworkPolicy, location_id, namespace.name)
+            policies = await self._resources.list_owned(NetworkPolicy, compute_id, namespace.name)
             for policy in policies:
                 if policy.name == "longlink-gateway-ingress" and namespace.name not in desired_namespaces:
                     await self._check_fence(fence)
@@ -548,7 +548,7 @@ class Reconciler:
             (NetworkPolicy, {"longlink-gateway-ingress"}),
         )
         for resource_class, active_names in gateway_resources:
-            resources = await self._resources.list_owned(resource_class, location_id, gateway.GATEWAY_NAMESPACE)
+            resources = await self._resources.list_owned(resource_class, compute_id, gateway.GATEWAY_NAMESPACE)
             for resource in resources:
                 labels = _string_map(_metadata(resource), "labels")
                 if labels.get(GATEWAY_LABEL) != gateway.GATEWAY_NAME:

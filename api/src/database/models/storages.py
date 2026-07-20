@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Enum, Column, UniqueConstraint
+from sqlalchemy import Enum, Column
 from longlink.utils.time import utcnow
 from src.models.storages import StorageKind
 from longlink.database.types import UTCDateTime
@@ -13,13 +13,12 @@ if TYPE_CHECKING:
 
 
 class StorageRegistry(SQLModel, table=True):
-    """Persist the object-storage member of a Location's immutable infrastructure aggregate.
+    """Persist one object-storage backend available to Organizations.
 
-    Reconciliation manages shared Organization buckets, Application buckets, and runtime credentials through this configuration.
+    Reconciliation manages Organization buckets, scoped Application credentials, and local development access through this configuration.
     """
 
     __tablename__: ClassVar[str] = "storage_registries"
-    __table_args__ = (UniqueConstraint("location_id", name="uq_storage_registries_location_id"),)
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)
@@ -33,8 +32,8 @@ class StorageRegistry(SQLModel, table=True):
 
     # Connection
     endpoint_url: str = Field(max_length=255)
-    access_key_id: str = Field(max_length=255)
-    secret_access_key: str = Field(max_length=255)
+    access_key_id: str | None = Field(default=None, max_length=255)
+    secret_access_key: str | None = Field(default=None, max_length=255)
     runtime_endpoint_url: str = Field(max_length=255)
 
     # Audit
@@ -52,6 +51,3 @@ class StorageRegistry(SQLModel, table=True):
     deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
     deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "StorageRegistry.deleted_id"})
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")
-
-    # Location
-    location_id: UUID = Field(foreign_key="locations.id")

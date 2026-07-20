@@ -236,12 +236,16 @@ export function useCreateOrganization() {
     return useMutation({
         mutationFn: async ({
             name,
-            location_id,
+            compute_id,
+            database_id,
+            storage_id,
             avatar,
             country,
         }: {
             name: string;
-            location_id: string;
+            compute_id: string;
+            database_id: string;
+            storage_id: string;
             avatar?: string | null;
             country: string;
         }) => {
@@ -250,7 +254,14 @@ export function useCreateOrganization() {
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, location_id, avatar: avatar?.trim() ? avatar.trim() : null, country }),
+                    body: JSON.stringify({
+                        name,
+                        compute_id,
+                        database_id,
+                        storage_id,
+                        avatar: avatar?.trim() ?? '',
+                        country,
+                    }),
                 },
                 (value) => parseApiResponse(apiOrganizationMutationResponseSchema, value).organization
             );

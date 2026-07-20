@@ -11,7 +11,7 @@ export const SITE_URL = 'https://longlink.dev';
 
 const descriptionsByPath: Record<string, string> = {
     '/docs': 'Learn how LongLink helps teams build and run structured business applications.',
-    '/docs/api': 'Understand the LongLink Platform for organizations, applications, locations, and operations.',
+    '/docs/api': 'Understand the LongLink Platform for organizations, applications, infrastructure, and operations.',
     '/docs/api/organizations': 'Learn how LongLink organizations, memberships, and access boundaries work.',
     '/docs/api/applications': 'Learn how LongLink registers, deploys, routes, and manages business applications.',
     '/docs/api/self-hosted':

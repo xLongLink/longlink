@@ -2,19 +2,21 @@ import asyncio
 import subprocess
 from pathlib import Path
 from src.utils import jobs, names
-from src.operations import locations as operation_locations
+from src.operations import computes as operation_computes
 from src.models.roles import PlatformRoles, OrganizationRoles
 from longlink.utils.time import utcnow
+from src.models.statuses import ComputeStatus
 from src.database.session import session_scope
-from src.models.locations import LocationCreate
 from src.database.services import users
-from src.database.services import locations as location_service
+from src.database.services import compute as compute_service
+from src.database.services import storage as storage_service
+from src.database.services import database as database_service
 from src.database.services import operations
 from src.database.services import applications as application_service
 from src.database.services import organizations as organization_service
 from src.models.applications import ApplicationCreate
 from src.database.models.users import User
-from src.models.infrastructure import StorageKind, DatabaseKind, ComputeConfiguration, StorageConfiguration, DatabaseConfiguration
+from src.models.infrastructure import StorageKind, DatabaseKind
 from src.database.models.association import UserOrganization
 
 LOCAL_ORG = "test"
@@ -82,8 +84,8 @@ async def ensure_local_organization_owner(organization_id, user_id) -> None:
         await session.commit()
 
 
-async def reconcile_until_complete(location_id) -> None:
-    """Drain the durable queue through normal leased execution until the target Location succeeds or fails. Other Location work may be processed while no lifespan scheduler is running."""
+async def reconcile_until_complete(compute_id) -> None:
+    """Drain the durable queue until the target compute reconciliation succeeds or fails."""
 
     # The seed process has no lifespan worker, so it drains the same durable queue explicitly.
     while True:
@@ -91,8 +93,8 @@ async def reconcile_until_complete(location_id) -> None:
         if operation is None:
             await asyncio.sleep(1)
             continue
-        result = await jobs.run_claimed_operation(operation, operation_locations.reconcile)
-        if result.location_id != location_id:
+        result = await jobs.run_claimed_operation(operation, operation_computes.reconcile)
+        if result.compute_id != compute_id:
             continue
         if result.stopped_at is not None:
             if result.error is not None:
@@ -102,46 +104,63 @@ async def reconcile_until_complete(location_id) -> None:
 
 
 async def seed_local_development() -> None:
-    """Create or repair local desired state through normal control-plane service boundaries. Reconcile each newly created Location, Organization, and sample LongLink Application before proceeding."""
+    """Create or repair local infrastructure, Organization, and sample Application desired state."""
 
     admin = await seed_local_administrator()
-    location = next((item for item in await location_service.fetch() if item.slug == "local"), None)
+    compute_registry = next((item for item in await compute_service.fetch() if item.slug == "local-compute"), None)
 
-    # A clean MVP database creates the complete immutable infrastructure aggregate at once.
-    if location is None:
-        payload = LocationCreate(
-            name="local",
-            country="CH",
-            compute=ComputeConfiguration(kubeconfig=KUBECONFIG.read_text(encoding="utf-8")),
-            database=DatabaseConfiguration(
-                kind=DatabaseKind.postgresql,
-                host=local_database_host(),
-                port=LOCAL_DATABASE_PORT,
-                username="admin",
-                password="admin",
-            ),
-            storage=StorageConfiguration(
-                kind=StorageKind.minio,
-                endpoint_url="http://localhost:19000",
-                runtime_endpoint_url="http://host.k3d.internal:19000",
-                access_key_id="admin",
-                secret_access_key="adminadmin",
-            ),
+    # Reconcile the local compute target before assigning Organizations to it.
+    if compute_registry is None:
+        compute_registry, _ = await compute_service.create(
+            "local compute",
+            "local-compute",
+            KUBECONFIG.read_text(encoding="utf-8"),
+            admin,
         )
-        location, _ = await location_service.create(names.slugify(payload.name), payload, admin)
-        await reconcile_until_complete(location.id)
+        await reconcile_until_complete(compute_registry.id)
+    elif compute_registry.status != ComputeStatus.ready:
+        await operations.enqueue(compute_registry.id)
+        await reconcile_until_complete(compute_registry.id)
+
+    # Register the local database and storage backends independently.
+    database_registry = next((item for item in await database_service.fetch() if item.slug == "local-database"), None)
+    if database_registry is None:
+        database_registry = await database_service.create(
+            "local database",
+            "local-database",
+            DatabaseKind.postgresql,
+            local_database_host(),
+            LOCAL_DATABASE_PORT,
+            "admin",
+            "admin",
+            admin,
+        )
+    storage_registry = next((item for item in await storage_service.fetch() if item.slug == "local-storage"), None)
+    if storage_registry is None:
+        storage_registry = await storage_service.create(
+            "local storage",
+            "local-storage",
+            StorageKind.minio,
+            "http://localhost:19000",
+            "http://host.k3d.internal:19000",
+            "admin",
+            "adminadmin",
+            admin,
+        )
 
     organization = next((item for item in await organization_service.fetch() if item.slug == LOCAL_ORG), None)
     if organization is None:
         organization = await organization_service.create(
             LOCAL_ORG,
             LOCAL_ORG,
-            location.id,
+            compute_registry.id,
+            database_registry.id,
+            storage_registry.id,
             admin,
             avatar=LOCAL_ORG_AVATAR,
             country="CH",
         )
-        await reconcile_until_complete(location.id)
+        await reconcile_until_complete(compute_registry.id)
     else:
         await ensure_local_organization_owner(organization.id, admin.id)
 
@@ -164,7 +183,7 @@ async def seed_local_development() -> None:
             icon=payload.icon.value if payload.icon is not None else None,
             envs=payload.envs,
         )
-        await reconcile_until_complete(location.id)
+        await reconcile_until_complete(compute_registry.id)
 
 
 def main() -> None:

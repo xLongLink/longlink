@@ -519,11 +519,11 @@ requires-dist = [
     { name = "aiosqlite", specifier = ">=0.22.1" },
     { name = "alembic", specifier = ">=1.18.5" },
     { name = "asyncpg", specifier = ">=0.31.0" },
-    { name = "click", specifier = ">=8.3.3" },
+    { name = "click", specifier = ">=8.4.2" },
     { name = "fastapi", specifier = ">=0.138.0" },
     { name = "fsspec", specifier = ">=2026.4.0" },
     { name = "httpx", marker = "extra == 'dev'", specifier = ">=0.28.1" },
-    { name = "httpx2", marker = "extra == 'dev'", specifier = ">=2.3.0" },
+    { name = "httpx2", marker = "extra == 'dev'", specifier = ">=2.7.0" },
     { name = "isort", marker = "extra == 'dev'", specifier = ">=8.0.1" },
     { name = "lxml", specifier = ">=6.1.0" },
     { name = "lxml-stubs", marker = "extra == 'dev'", specifier = ">=0.5.1" },
@@ -538,14 +538,14 @@ requires-dist = [
     { name = "s3fs", specifier = ">=2026.4.0" },
     { name = "sqlalchemy", specifier = ">=2.0.51" },
     { name = "sqlmodel", specifier = ">=0.0.39" },
-    { name = "uvicorn", specifier = ">=0.46.0" },
+    { name = "uvicorn", specifier = ">=0.51.0" },
 ]
 provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "httpx", specifier = ">=0.28.1" },
-    { name = "httpx2", specifier = ">=2.3.0" },
+    { name = "httpx2", specifier = ">=2.7.0" },
     { name = "isort", specifier = ">=8.0.1" },
     { name = "lxml-stubs", specifier = ">=0.5.1" },
     { name = "pyright", specifier = ">=1.1.411" },

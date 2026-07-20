@@ -6,25 +6,13 @@ from src.utils import urls
 from sqlalchemy import pool, engine_from_config
 from src.environments import env
 from sqlalchemy.engine import Connection, make_url
-from src.database.models import (
-    users,
-    computes,
-    storages,
-    databases,
-    locations,
-    operations,
-    association,
-    invitations,
-    applications,
-    organizations,
-)
+from src.database.models import users, computes, storages, databases, operations, association, invitations, applications, organizations
 from sqlalchemy.ext.asyncio import create_async_engine
 
 _model_modules = (
     users,
     computes,
     storages,
-    locations,
     databases,
     operations,
     invitations,

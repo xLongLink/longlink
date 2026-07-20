@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Enum, Column, UniqueConstraint
+from sqlalchemy import Enum, Column
 from longlink.utils.time import utcnow
 from src.models.databases import DatabaseKind
 from longlink.database.types import UTCDateTime
@@ -13,13 +13,12 @@ if TYPE_CHECKING:
 
 
 class DatabaseRegistry(SQLModel, table=True):
-    """Persist the database member of a Location's immutable infrastructure aggregate.
+    """Persist one database backend available to Organizations.
 
     Reconciliation creates one database per Organization and one isolated schema and runtime role per LongLink Application.
     """
 
     __tablename__: ClassVar[str] = "database_registries"
-    __table_args__ = (UniqueConstraint("location_id", name="uq_database_registries_location_id"),)
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)
@@ -52,9 +51,6 @@ class DatabaseRegistry(SQLModel, table=True):
     port: int
     password: str = Field(max_length=255)
     username: str = Field(max_length=255)
-
-    # Location
-    location_id: UUID = Field(foreign_key="locations.id")
 
     # User
     deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "DatabaseRegistry.deleted_id"})

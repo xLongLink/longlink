@@ -3,7 +3,6 @@ from uuid import UUID
 from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.countries import Country
-from src.models.locations import LocationResponse
 from longlink.models.languages import Language
 
 
@@ -104,7 +103,6 @@ class UserOrganizationMembership(BaseModel):
     slug: str
     avatar: str = ""
     country: Country
-    location: LocationResponse
 
     # State
     role: OrganizationRoles

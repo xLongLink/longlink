@@ -14,13 +14,13 @@ const environmentIcons = {
 } as const;
 
 export const metadata = {
-    lastUpdated: '2026-07-10',
+    lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/storage.tsx',
 };
 
 export const content = (
     <Stack>
-        <Heading id="storage" level="h2">
+        <Heading id="storage" level="h1">
             Storage
         </Heading>
         <P>
@@ -73,15 +73,16 @@ export const content = (
                             </div>
                         </TableCell>
                         <TableCell className="whitespace-normal text-muted-foreground">
-                            <Code>s3</Code> backend for application and shared buckets.
+                            <Code>s3</Code> backend using application and shared prefixes in one Organization bucket.
                         </TableCell>
                     </TableRow>
                 </TableBody>
             </Table>
         </div>
         <P>
-            Runtime storage credentials are scoped before deployment: applications can read and write their own bucket,
-            and can read the organization shared bucket without writing to it.
+            The LongLink Platform creates one bucket per Organization and gives each application direct IAM credentials.
+            The credentials allow reads and writes in that application's prefix and read-only access to the shared
+            prefix.
         </P>
         <Heading id="usage" level="h2">
             Usage
@@ -89,7 +90,7 @@ export const content = (
         <CodeBlock language="python">{`from longlink import Envs, create_fs
 
 env = Envs()
-fs = create_fs(env, env.STORAGE_BUCKET or "")
+fs = create_fs(env, env.STORAGE_BUCKET or "", env.STORAGE_PREFIX or "")
 
 with fs.open("reports/example.txt", "wb") as f:
     f.write(b"hello")`}</CodeBlock>
@@ -99,13 +100,13 @@ with fs.open("reports/example.txt", "wb") as f:
         <P>
             Organization-level assets live in shared storage. The SDK exposes <Code>longlink.assets.logo()</Code> for
             the organization logo, using a bundled fallback in development and testing and the organization shared
-            bucket in production. Pass the runtime environment and shared filesystem explicitly.
+            prefix in production. Pass the runtime environment and shared filesystem explicitly.
         </P>
         <CodeBlock language="python">{`import longlink.assets as assets
 from longlink import Envs, create_fs
 
 env = Envs()
-shared_fs = create_fs(env, env.STORAGE_SHARED_BUCKET or "")
+shared_fs = create_fs(env, env.STORAGE_BUCKET or "", env.STORAGE_SHARED_PREFIX or "")
 logo = assets.logo(env, shared_fs)`}</CodeBlock>
     </Stack>
 );

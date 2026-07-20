@@ -7,12 +7,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
-from src.models.statuses import LocationStatus, ApplicationStatus, OrganizationStatus
+from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.models.countries import DEFAULT_COUNTRY
 from src.database.services import operations
 from src.database.models.users import User
-from src.database.models.locations import Location
+from src.database.models.computes import ComputeRegistry
+from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -38,12 +39,12 @@ async def fetch() -> list[Organization]:
         return result.scalars().all()
 
 
-async def location(location_id: UUID, include_deleted: bool = False) -> list[Organization]:
-    """Return organizations assigned to one immutable location."""
+async def for_compute(compute_id: UUID, include_deleted: bool = False) -> list[Organization]:
+    """Return Organizations assigned to one compute target."""
 
     # Reconciliation includes tombstones only when it needs to finish external cleanup.
     async with session_scope() as session:
-        conditions = [Organization.location_id == location_id]
+        conditions = [Organization.compute_id == compute_id]
         if not include_deleted:
             conditions.append(Organization.deleted_at.is_(None))
         statement = select(Organization).where(*conditions)
@@ -150,7 +151,6 @@ async def get(organization_id: UUID, include_deleted: bool = False) -> Organizat
                 selectinload(Organization.created_by),
                 selectinload(Organization.updated_by),
                 selectinload(Organization.deleted_by),
-                selectinload(Organization.location),
             )
             .where(*conditions)
         )
@@ -189,7 +189,7 @@ async def membership_role(organization_id: UUID, user_id: UUID) -> OrganizationR
 
 
 async def update_member_role(organization_id: UUID, member_id: UUID, role: OrganizationRoles, user: User) -> bool:
-    """Change an active Organization membership while preserving at least one owner. The access change and Location reconciliation request commit atomically."""
+    """Change an Organization membership and atomically queue compute reconciliation."""
 
     # Update the member role inside one transaction.
     async with session_scope() as session:
@@ -233,13 +233,13 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
         organization = await session.get(Organization, organization_id)
         if organization is None:
             return False
-        location = (
-            await session.execute(select(Location).where(Location.id == organization.location_id).with_for_update())
+        compute = (
+            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == organization.compute_id).with_for_update())
         ).scalar_one_or_none()
-        if location is None:
-            raise RuntimeError("Organization location not found")
-        location.updated_id = user.id
-        await operations.enqueue_in_session(session, location.id)
+        if compute is None:
+            raise RuntimeError("Organization compute registry not found")
+        compute.updated_id = user.id
+        await operations.enqueue_in_session(session, compute.id)
         await session.commit()
         return True
 
@@ -247,34 +247,53 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
 async def create(
     name: str,
     slug: str,
-    location_id: UUID,
+    compute_id: UUID,
+    database_id: UUID,
+    storage_id: UUID,
     user: User,
     avatar: str | None = None,
     country: str = DEFAULT_COUNTRY,
     organization_id: UUID | None = None,
 ) -> Organization:
-    """Create an Organization aggregate with its creator as owner in a ready Location. The desired state and initial reconciliation request commit atomically."""
+    """Create an Organization with immutable infrastructure assignments and queue reconciliation."""
 
     # Validate deterministic runtime resource names before creating the row.
     organization_id = organization_id or uuid4()
     names.knames(slug)
-    names.organization_shared_bucket(organization_id)
+    names.organization_bucket(organization_id)
 
     # Create the organization and owner membership together.
     async with session_scope() as session:
-        # Organizations can be created only in a fully provisioned immutable location.
-        location = (await session.execute(select(Location).where(Location.id == location_id).with_for_update())).scalar_one_or_none()
-        if location is None or location.deleted_at is not None:
-            raise HTTPException(status_code=404, detail="Location not found")
-        if location.status != LocationStatus.ready:
-            raise HTTPException(status_code=409, detail="Location is not ready")
-
-        # Derive immutable Organization database configuration from the complete Location aggregate.
+        # Lock the compute reconciliation root and validate every selected registry in the same transaction.
+        compute = (
+            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
+        ).scalar_one_or_none()
+        if compute is None or compute.deleted_at is not None:
+            raise HTTPException(status_code=404, detail="Compute registry not found")
+        if compute.status != ComputeStatus.ready:
+            raise HTTPException(status_code=409, detail="Compute registry is not ready")
         database_registry = (
-            await session.execute(select(DatabaseRegistry).where(DatabaseRegistry.location_id == location_id))
+            await session.execute(
+                select(DatabaseRegistry).where(
+                    DatabaseRegistry.id == database_id,
+                    DatabaseRegistry.deleted_at.is_(None),
+                ).with_for_update()
+            )
+        ).scalar_one_or_none()
+        storage_registry = (
+            await session.execute(
+                select(StorageRegistry).where(
+                    StorageRegistry.id == storage_id,
+                    StorageRegistry.deleted_at.is_(None),
+                ).with_for_update()
+            )
         ).scalar_one_or_none()
         if database_registry is None:
-            raise HTTPException(status_code=409, detail="Location infrastructure is incomplete")
+            raise HTTPException(status_code=404, detail="Database registry not found")
+        if storage_registry is None:
+            raise HTTPException(status_code=404, detail="Storage registry not found")
+
+        # Derive the immutable Organization connection from its selected database registry.
         shared_schema_url = adapters.database(database_registry).shared_schema_url(organization_id)
 
         organization = Organization(
@@ -283,7 +302,9 @@ async def create(
             slug=slug,
             avatar=avatar or "",
             country=country,
-            location_id=location_id,
+            compute_id=compute_id,
+            database_id=database_id,
+            storage_id=storage_id,
             shared_schema_url=shared_schema_url,
         )
 
@@ -300,8 +321,8 @@ async def create(
             )
         )
         session.add(organization)
-        location.updated_id = user.id
-        await operations.enqueue_in_session(session, location.id)
+        compute.updated_id = user.id
+        await operations.enqueue_in_session(session, compute.id)
 
         # Commit creation and translate unique conflicts.
         try:
@@ -318,7 +339,6 @@ async def create(
                 selectinload(Organization.created_by),
                 selectinload(Organization.updated_by),
                 selectinload(Organization.deleted_by),
-                selectinload(Organization.location),
             )
             .where(Organization.id == organization.id)
         )
@@ -327,7 +347,7 @@ async def create(
 
 
 async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
-    """Tombstone an Organization, its LongLink Applications, and nested access state while atomically queueing Location cleanup. Reconciliation retains tombstones until external resources are removed."""
+    """Tombstone an Organization and nested state while atomically queueing compute cleanup."""
 
     # Soft-delete organization data in one transaction.
     async with session_scope() as session:
@@ -336,15 +356,15 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
         # Resolve the parent before taking locks in aggregate order.
         if current is None:
             return None
-        location = (
-            await session.execute(select(Location).where(Location.id == current.location_id).with_for_update())
+        compute = (
+            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == current.compute_id).with_for_update())
         ).scalar_one_or_none()
         organization = (
             await session.execute(select(Organization).where(Organization.id == organization_id).with_for_update())
         ).scalar_one_or_none()
 
         # Ignore missing or already-deleted organizations.
-        if location is None or organization is None or organization.deleted_at is not None:
+        if compute is None or organization is None or organization.deleted_at is not None:
             return None
 
         now = utcnow()
@@ -412,8 +432,8 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
             invitation.updated_id = user.id
 
         # Tombstones and their reconciliation request commit atomically.
-        location.updated_id = user.id
-        await operations.enqueue_in_session(session, location.id)
+        compute.updated_id = user.id
+        await operations.enqueue_in_session(session, compute.id)
 
         await session.commit()
         await session.refresh(organization)

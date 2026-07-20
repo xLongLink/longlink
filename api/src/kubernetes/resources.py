@@ -12,7 +12,7 @@ KubernetesResource = TypeVar("KubernetesResource", bound=APIObject)
 
 FIELD_MANAGER = "longlink-platform"
 MANAGED_BY_LABEL = "app.kubernetes.io/managed-by"
-LOCATION_ID_LABEL = "longlink.io/location-id"
+COMPUTE_ID_LABEL = "longlink.io/compute-id"
 LONG_LINK_METADATA_PREFIX = "longlink.io/"
 SECRET_REPLACE_ATTEMPTS = 3
 SERVER_METADATA_FIELDS = {
@@ -294,10 +294,10 @@ class KubernetesResources:
     async def list_owned(
         self,
         resource_class: type[KubernetesResource],
-        location_id: str,
+        compute_id: str,
         namespace: str | None = None,
     ) -> list[KubernetesResource]:
-        """List resources only when both LongLink manager and location labels match.
+        """List resources only when both LongLink manager and compute labels match.
 
         This selector is the first ownership boundary; callers still validate kind-specific identity before mutation.
         """
@@ -308,7 +308,7 @@ class KubernetesResources:
             namespace,
             {
                 MANAGED_BY_LABEL: FIELD_MANAGER,
-                LOCATION_ID_LABEL: location_id,
+                COMPUTE_ID_LABEL: compute_id,
             },
         )
 

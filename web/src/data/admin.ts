@@ -1,35 +1,37 @@
 import type {
     ApiApplicationResponse,
     ApiCountryOption,
-    ApiLocation,
+    ApiInfrastructureOptions,
     ApiOperation,
     ApiOrganizationSummary,
     ApiUserListItem,
 } from '@/lib/types';
+import { useApiQuery } from '@/hooks/use-api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import {
     apiApplicationResponseSchema,
     apiCountryOptionSchema,
-    apiLocationSchema,
+    apiInfrastructureOptionsSchema,
     apiOperationSchema,
     apiOrganizationSummarySchema,
     apiUserListItemSchema,
     parseApiCollection,
+    parseApiResponse,
 } from '@/lib/api-schemas';
+
+/** Fetches assignable infrastructure identities without connection secrets. */
+export function useInfrastructureOptions(enabled = true) {
+    return useApiQuery<ApiInfrastructureOptions>(enabled ? '/api/infrastructure/options' : null, {
+        enabled,
+        refetchInterval: enabled ? 5000 : false,
+        parse: (value) => parseApiResponse(apiInfrastructureOptionsSchema, value),
+    });
+}
 
 /** Fetches the application list for admin views. */
 export function useApplications() {
     return useCollectionQuery<ApiApplicationResponse>('/api/applications', {
         parse: (value) => parseApiCollection(apiApplicationResponseSchema, value),
-    });
-}
-
-/** Fetches the shared location list for selectors and admin views. */
-export function useLocations(enabled = true) {
-    return useCollectionQuery<ApiLocation>(enabled ? '/api/locations' : null, {
-        enabled,
-        refetchInterval: 5000,
-        parse: (value) => parseApiCollection(apiLocationSchema, value),
     });
 }
 

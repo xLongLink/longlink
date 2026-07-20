@@ -66,7 +66,7 @@ export const metadata = {
 
 export const content = (
     <Stack>
-        <Heading id="application-sdk" level="h2">
+        <Heading id="application-sdk" level="h1">
             LongLink Applications / SDK
         </Heading>
         <P>
@@ -105,7 +105,7 @@ export const content = (
             ]}
         />
         <P>
-            <Code>longlink init</Code> creates an application scaffold with separate locations for routes, schemas,
+            <Code>longlink init</Code> creates an application scaffold with separate directories for routes, schemas,
             database models and services, XML pages, translations, migrations, environment declarations, and tests:
         </P>
         <CodeBlock language="text">
@@ -135,8 +135,8 @@ export const content = (
             ]}
         />
         <P>
-            The development server listens on <Code>127.0.0.1</Code> by default. Use <Code>--host</Code> only when
-            you intentionally need access from another host.
+            The development server listens on <Code>127.0.0.1</Code> by default. Use <Code>--host</Code> only when you
+            intentionally need access from another host.
         </P>
         <P>
             For a small working application, see the{' '}

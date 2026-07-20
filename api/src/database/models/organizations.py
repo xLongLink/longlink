@@ -11,12 +11,14 @@ from longlink.database.types import UTCDateTime
 # Import relationship targets only during type checking.
 if TYPE_CHECKING:
     from src.database.models.users import User
-    from src.database.models.locations import Location
+    from src.database.models.computes import ComputeRegistry
+    from src.database.models.storages import StorageRegistry
+    from src.database.models.databases import DatabaseRegistry
     from src.database.models.applications import Application
 
 
 class Organization(SQLModel, table=True):
-    """Persist the tenant boundary for users, shared state, and LongLink Applications within one Location.
+    """Persist the tenant boundary and its immutable infrastructure assignments.
 
     A deletion tombstone remains until reconciliation removes the Organization's external resources.
     """
@@ -32,9 +34,13 @@ class Organization(SQLModel, table=True):
     avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
     country: str = Field(default=DEFAULT_COUNTRY, sa_column=Column(String(2), nullable=False))
 
-    # Location
-    location: "Location" = Relationship()
-    location_id: UUID = Field(foreign_key="locations.id")
+    # Infrastructure
+    compute: "ComputeRegistry" = Relationship()
+    compute_id: UUID = Field(foreign_key="compute_registries.id", index=True)
+    database: "DatabaseRegistry" = Relationship()
+    database_id: UUID = Field(foreign_key="database_registries.id", index=True)
+    storage: "StorageRegistry" = Relationship()
+    storage_id: UUID = Field(foreign_key="storage_registries.id", index=True)
 
     # Database
     shared_schema_url: str = Field(max_length=2048)

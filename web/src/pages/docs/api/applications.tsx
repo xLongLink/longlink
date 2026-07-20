@@ -50,8 +50,8 @@ function ApplicationRuntimeResourcesDiagram() {
                         </div>
                         <div className="font-medium text-foreground">File Storage</div>
                         <div className="grid gap-2 text-sm text-muted-foreground">
-                            <div>Dedicated bucket</div>
-                            <div>Read access from shared</div>
+                            <div>Application prefix</div>
+                            <div>Read access to shared prefix</div>
                         </div>
                     </div>
                     <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-md border bg-muted/40 px-4 py-5 text-center">
@@ -71,13 +71,13 @@ function ApplicationRuntimeResourcesDiagram() {
 }
 
 export const metadata = {
-    lastUpdated: '2026-07-10',
+    lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/applications.tsx',
 };
 
 export const content = (
     <Stack>
-        <Heading id="applications" level="h2">
+        <Heading id="applications" level="h1">
             Applications
         </Heading>
         <P>
@@ -87,9 +87,9 @@ export const content = (
         </P>
         <P>
             In production, each application receives database and storage access scoped to organization resources. The
-            runtime can read and write its own application schema and bucket, can read the shared schema and shared
-            bucket without writing to either, and runs from versioned image metadata with environment values injected as
-            runtime secrets.
+            runtime can read and write its own application schema and its application prefix in the Organization bucket.
+            It can read the shared schema and the bucket's shared prefix without writing to either. The LongLink
+            Platform injects direct application IAM credentials and other environment values as runtime secrets.
         </P>
         <ApplicationRuntimeResourcesDiagram />
         <Heading id="roles" level="h2">

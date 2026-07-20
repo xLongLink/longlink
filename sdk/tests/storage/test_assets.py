@@ -16,9 +16,9 @@ def test_asset_content_type_uses_default_for_unknown_extensions() -> None:
     assert assets.asset_content_type("asset.unknown-extension", default_content_type="text/plain") == "text/plain"
 
 
-@pytest.mark.parametrize("path", ["", "/brand/logo.svg", "../logo.svg", "brand/../logo.svg"])
+@pytest.mark.parametrize("path", ["", ".", "/brand/logo.svg", "../logo.svg", "brand/../logo.svg"])
 def test_normalize_asset_path_rejects_unsafe_paths(path: str) -> None:
-    """Reject asset paths outside shared storage."""
+    """Reject asset paths outside the shared storage prefix."""
 
     with pytest.raises(ValueError, match="relative paths"):
         assets.normalize_asset_path(path)

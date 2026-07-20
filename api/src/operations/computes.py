@@ -1,40 +1,45 @@
 import asyncio
 from src import adapters, projections
+from uuid import UUID
 from typing import cast
 from src.utils import jobs, names, images
 from src.logger import logger
 from src.version import platform_version_key
 from src.environments import env
 from src.models.statuses import ApplicationStatus, OrganizationStatus
-from src.database.services import compute, storage, database, locations, operations, applications, organizations
+from src.database.services import compute, storage, database, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayTLSMaterial
-from src.kubernetes.reconcile import DesiredLocation, DesiredApplication, DesiredOrganization
+from src.kubernetes.reconcile import DesiredCompute, DesiredApplication, DesiredOrganization
+from src.adapters.storage.base import Storage
+from src.models.infrastructure import StorageKind, exoscale_zone
+from src.adapters.database.base import Database
+from src.database.models.storages import StorageRegistry
 from src.database.models.operations import Operation
 
 
 async def run_periodic_reconciliation() -> None:
-    """Periodically request drift repair for every active or incompletely deleted Location. Each API replica may scan because Location queueing coalesces duplicate requests."""
+    """Periodically request drift repair for every active or incompletely deleted compute target."""
 
     # Every API replica may scan because the open-operation index coalesces duplicate requests.
     while True:
         try:
-            for location in await locations.fetch(include_deleted=True):
-                if location.deleted_at is not None and location.version is not None:
+            for registry in await compute.fetch(include_deleted=True):
+                if registry.deleted_at is not None and registry.version is not None:
                     continue
-                await operations.enqueue(location.id, desired_change=False)
+                await operations.enqueue(registry.id, desired_change=False)
         except Exception as exc:
-            logger.exception("Periodic location reconciliation scan failed: %r", exc)
+            logger.exception("Periodic compute reconciliation scan failed: %r", exc)
         await asyncio.sleep(env.RECONCILE_INTERVAL_SECONDS)
 
 
 async def reconcile(operation: Operation) -> jobs.OperationOutcome:
-    """Converge one Location's desired Organization and LongLink Application state across its database, storage, and Kubernetes backends. The claimed attempt fences provider writes, while tombstones drive cleanup before observed state advances. Release mismatches and incomplete readiness request retry."""
+    """Converge all Organization and Application state assigned to one compute target."""
 
     # Every external mutation is fenced by the unexpired lease claimed for this attempt.
     attempt_count = operation.attempt_count
     if attempt_count < 1 or operation.lease_expires_at is None:
-        raise ValueError("Location reconciliation requires a claimed operation")
+        raise ValueError("Compute reconciliation requires a claimed operation")
 
     async def fence() -> None:
         """Reject provider work after another worker can own this operation."""
@@ -47,7 +52,7 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
 
         await fence()
         staged = await compute.stage_gateway_tls(
-            operation.location_id,
+            operation.compute_id,
             material.ca_certificate,
             material.certificate,
             material.private_key,
@@ -58,36 +63,47 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
         if not staged:
             raise jobs.OperationLeaseLost(operation.id)
 
-    # Load the immutable infrastructure triple and complete tenant snapshot.
-    location = await locations.get(operation.location_id, include_deleted=True)
-    compute_registry = await compute.location(operation.location_id, include_deleted=True)
-    database_registry = await database.location(operation.location_id, include_deleted=True)
-    storage_registry = await storage.location(operation.location_id, include_deleted=True)
-    if location is None or compute_registry is None or database_registry is None or storage_registry is None:
-        if location is not None:
-            await locations.record_failure(
-                location.id,
-                operation.id,
-                attempt_count,
-                operation.platform_version,
-            )
-        return jobs.fail("Location infrastructure is incomplete")
+    # Load the compute reconciliation root and complete tenant snapshot.
+    compute_registry = await compute.get(operation.compute_id, include_deleted=True)
+    if compute_registry is None:
+        return jobs.fail("Compute registry not found")
     if operation.platform_version != env.VERSION:
         return jobs.retry("Operation targets a different Platform release")
-    if location.version is not None and platform_version_key(location.version) > platform_version_key(operation.platform_version):
-        return jobs.retry("Location was already reconciled by a newer Platform release")
-    organization_rows = await organizations.location(location.id, include_deleted=True)
-    application_rows = await applications.location(location.id, include_deleted=True)
+    if compute_registry.version is not None and platform_version_key(compute_registry.version) > platform_version_key(
+        operation.platform_version
+    ):
+        return jobs.retry("Compute target was already reconciled by a newer Platform release")
+    organization_rows = await organizations.for_compute(compute_registry.id, include_deleted=True)
+    application_rows = await applications.for_compute(compute_registry.id, include_deleted=True)
 
     try:
-        # Prepare active organization and application provider resources before rendering Kubernetes state.
-        db = adapters.database(database_registry)
-        object_storage = adapters.storage(storage_registry)
+        # Resolve each Organization's immutable database and storage assignments before provider writes.
+        databases: dict[UUID, Database] = {}
+        object_storages: dict[UUID, Storage] = {}
+        storage_registries: dict[UUID, StorageRegistry] = {}
+        for organization in organization_rows:
+            database_registry = await database.get(organization.database_id, include_deleted=True)
+            storage_registry = await storage.get(organization.storage_id, include_deleted=True)
+            if database_registry is None or storage_registry is None:
+                await compute.record_failure(
+                    compute_registry.id,
+                    operation.id,
+                    attempt_count,
+                    operation.platform_version,
+                )
+                return jobs.fail(f"Organization '{organization.slug}' infrastructure is incomplete")
+            databases[organization.id] = adapters.database(database_registry)
+            object_storages[organization.id] = adapters.storage(storage_registry)
+            storage_registries[organization.id] = storage_registry
+
+        # Prepare active Organization and Application provider resources before rendering Kubernetes state.
         desired_organizations: list[DesiredOrganization] = []
         desired_applications: list[DesiredApplication] = []
         active_organizations = {item.id: item for item in organization_rows if item.deleted_at is None}
 
         for organization in sorted(active_organizations.values(), key=lambda item: item.slug):
+            db = databases[organization.id]
+            object_storage = object_storages[organization.id]
             await fence()
             await db.prepare_organization_database(organization.id, organization.shared_schema_url)
             if organization.status != OrganizationStatus.running:
@@ -96,7 +112,7 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
             await fence()
             await projections.sync_organization_users(organization)
             await fence()
-            await object_storage.create(names.organization_shared_bucket(organization.id))
+            await object_storage.create(names.organization_bucket(organization.id))
             desired_organizations.append(DesiredOrganization(id=organization.id, slug=organization.slug))
 
         pending_applications = []
@@ -107,6 +123,9 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
             organization = active_organizations.get(application.organization_id)
             if organization is None:
                 continue
+            db = databases[organization.id]
+            object_storage = object_storages[organization.id]
+            storage_registry = storage_registries[organization.id]
 
             # Resolve and persist the immutable image before creating provider credentials.
             if application.digest is None:
@@ -132,22 +151,28 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
             # Ensure stable database and storage credentials before constructing the exact runtime Secret.
             await fence()
             connection = await db.schema(organization.id, application.id, application.database_password)
-            bucket = names.application_bucket(application.id)
-            await fence()
-            await object_storage.create(bucket)
+            bucket = names.organization_bucket(organization.id)
+            prefix = names.application_storage_prefix(application.id)
+            shared_prefix = names.shared_storage_prefix()
             credentials = applications.storage_credentials(application)
             if credentials is None:
                 await fence()
-                credentials = await object_storage.credentials(bucket, "write")
-                try:
-                    persisted = await applications.set_storage_credentials(application.id, credentials)
-                except Exception:
-                    await object_storage.revoke(bucket)
-                    raise
-                if persisted is None:
-                    await object_storage.revoke(bucket)
-                    raise RuntimeError("Application disappeared while persisting storage credentials")
-                application = persisted
+                provisioned = await applications.provision_storage_credentials(
+                    application.id,
+                    operation.id,
+                    attempt_count,
+                    operation.platform_version,
+                    lambda: object_storage.credentials(
+                        application.id.hex,
+                        bucket,
+                        (shared_prefix,),
+                        prefix,
+                    ),
+                    lambda generated: object_storage.discard(generated["access_key_id"]),
+                )
+                if provisioned is None:
+                    raise jobs.OperationLeaseLost(operation.id)
+                application, credentials = provisioned
 
             envs = {
                 **application.envs,
@@ -162,9 +187,12 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
                 "LONGLINK_STORAGE_BUCKET": bucket,
                 "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.runtime_endpoint_url,
                 "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
-                "LONGLINK_STORAGE_SHARED_BUCKET": names.organization_shared_bucket(organization.id),
+                "LONGLINK_STORAGE_PREFIX": prefix,
+                "LONGLINK_STORAGE_SHARED_PREFIX": shared_prefix,
                 "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
             }
+            if storage_registry.kind == StorageKind.exoscale:
+                envs["LONGLINK_STORAGE_REGION"] = exoscale_zone(storage_registry.runtime_endpoint_url)
             desired_applications.append(
                 DesiredApplication(
                     id=application.id,
@@ -187,16 +215,16 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
                 certificate=compute_registry.gateway_tls_certificate,
                 private_key=compute_registry.gateway_tls_private_key,
             )
-        desired = DesiredLocation(
-            id=location.id,
+        desired = DesiredCompute(
+            id=compute_registry.id,
             organizations=tuple(desired_organizations),
             applications=tuple(desired_applications),
-            deleting=location.deleted_at is not None,
+            deleting=compute_registry.deleted_at is not None,
         )
         cluster = Kubernetes(compute_registry.kubeconfig)
         result = await cluster.reconcile(desired, compute_registry.proxy_secret, existing_tls, fence, stage_tls)
 
-        # Workload readiness is observed after the gateway has accepted the exact desired route set.
+        # Workload readiness is observed only after the gateway accepts the exact desired route set.
         for application in desired_applications:
             await fence()
             if await cluster.applications.ready(str(application.id)):
@@ -213,22 +241,26 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
                 continue
             organization = next((item for item in organization_rows if item.id == application.organization_id), None)
             if organization is not None:
+                db = databases[organization.id]
+                object_storage = object_storages[organization.id]
                 await fence()
                 await db.delete_schema(organization.id, application.id)
-            bucket = names.application_bucket(application.id)
-            await fence()
-            await object_storage.revoke(bucket)
-            await fence()
-            await object_storage.delete(bucket)
+                bucket = names.organization_bucket(organization.id)
+                await fence()
+                await object_storage.revoke(application.id.hex)
+                await fence()
+                await object_storage.delete_prefix(bucket, names.application_storage_prefix(application.id))
             await fence()
             await applications.purge(application.id)
         for organization in organization_rows:
             if organization.deleted_at is None:
                 continue
+            db = databases[organization.id]
+            object_storage = object_storages[organization.id]
             await fence()
             await db.delete_database(organization.id)
             await fence()
-            await object_storage.delete(names.organization_shared_bucket(organization.id))
+            await object_storage.delete(names.organization_bucket(organization.id))
             await fence()
             await organizations.purge(organization.id)
 
@@ -236,8 +268,8 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
             if attempt_count >= jobs.OPERATION_ATTEMPT_LIMIT:
                 for application_id in pending_applications:
                     await applications.set_status(application_id, ApplicationStatus.failed)
-                await locations.record_failure(
-                    location.id,
+                await compute.record_failure(
+                    compute_registry.id,
                     operation.id,
                     attempt_count,
                     operation.platform_version,
@@ -247,8 +279,8 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
 
         # Persist the release only after workloads, pruning, and destructive cleanup all succeed.
         await fence()
-        applied = await locations.record_success(
-            location.id,
+        applied = await compute.record_success(
+            compute_registry.id,
             operation.platform_version,
             result.gateway_url,
             result.gateway_ca_certificate,
@@ -258,15 +290,15 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
             attempt_count,
         )
         if not applied:
-            return jobs.retry("Location reconciliation was superseded")
+            return jobs.retry("Compute reconciliation was superseded")
         return jobs.complete()
     except jobs.OperationLeaseLost:
         raise
     except Exception:
-        # The location status is a summary; detailed diagnostics remain on the operation.
+        # Compute status is a summary; detailed diagnostics remain on the Operation.
         await fence()
-        await locations.record_failure(
-            location.id,
+        await compute.record_failure(
+            compute_registry.id,
             operation.id,
             attempt_count,
             operation.platform_version,

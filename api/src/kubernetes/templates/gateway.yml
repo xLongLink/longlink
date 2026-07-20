@@ -1,4 +1,4 @@
-# Template for per-location Envoy gateway resources other than its early LoadBalancer Service.
+# Template for per-compute Envoy gateway resources other than its early LoadBalancer Service.
 ---
 apiVersion: v1
 kind: Secret
@@ -12,7 +12,7 @@ metadata:
   labels:
     app: longlink-gateway
     app.kubernetes.io/managed-by: longlink-platform
-    longlink.io/location-id: "$location_id"
+    longlink.io/compute-id: "$compute_id"
 type: Opaque
 stringData:
   gateway-secret: $gateway_secret
@@ -29,7 +29,7 @@ metadata:
   labels:
     app: longlink-gateway
     app.kubernetes.io/managed-by: longlink-platform
-    longlink.io/location-id: "$location_id"
+    longlink.io/compute-id: "$compute_id"
 type: kubernetes.io/tls
 stringData:
   ca.crt: $ca_certificate
@@ -48,7 +48,7 @@ metadata:
   labels:
     app: longlink-gateway
     app.kubernetes.io/managed-by: longlink-platform
-    longlink.io/location-id: "$location_id"
+    longlink.io/compute-id: "$compute_id"
 data:
   envoy.yaml: $envoy_config
 ---
@@ -64,7 +64,7 @@ metadata:
   labels:
     app: longlink-gateway
     app.kubernetes.io/managed-by: longlink-platform
-    longlink.io/location-id: "$location_id"
+    longlink.io/compute-id: "$compute_id"
 spec:
   replicas: 2
   selector:
@@ -79,7 +79,7 @@ spec:
       labels:
         app: longlink-gateway
         app.kubernetes.io/managed-by: longlink-platform
-        longlink.io/location-id: "$location_id"
+        longlink.io/compute-id: "$compute_id"
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -187,7 +187,7 @@ metadata:
   labels:
     app: longlink-gateway
     app.kubernetes.io/managed-by: longlink-platform
-    longlink.io/location-id: "$location_id"
+    longlink.io/compute-id: "$compute_id"
 spec:
   podSelector:
     matchLabels:

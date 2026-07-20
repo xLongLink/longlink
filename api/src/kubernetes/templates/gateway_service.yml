@@ -11,7 +11,7 @@ metadata:
   labels:
     app: longlink-gateway
     app.kubernetes.io/managed-by: longlink-platform
-    longlink.io/location-id: "$location_id"
+    longlink.io/compute-id: "$compute_id"
 spec:
   type: LoadBalancer
   selector:

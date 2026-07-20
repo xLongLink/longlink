@@ -14,7 +14,7 @@ class OperationStatus(StrEnum):
 
 
 class OperationResponse(BaseModel):
-    """Expose asynchronous reconciliation for one location's desired state.
+    """Expose asynchronous reconciliation for one compute target's desired state.
 
     Only completion confirms convergence; failures include sanitized diagnostics without backend credentials.
     """
@@ -25,7 +25,7 @@ class OperationResponse(BaseModel):
     id: UUID
 
     # Reference
-    location_id: UUID
+    compute_id: UUID
 
     # State
     error: str | None = None

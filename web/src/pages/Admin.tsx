@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router';
-import { Activity, Boxes, Building2, Cpu, Database, HardDrive, MapPin, Users } from 'lucide-react';
+import { Activity, Boxes, Building2, Cpu, Database, HardDrive, Users } from 'lucide-react';
 import Layout from '@/layout/Layout';
 import { Auth } from '@/components/Auth';
 import { useTranslation } from '@/lib/i18n';
@@ -15,7 +15,6 @@ export default function Admin() {
                     [t('admin.tabs.users')]: { href: '/admin/users', icon: Users },
                     [t('admin.tabs.applications')]: { href: '/admin/applications', icon: Boxes },
                     [t('admin.tabs.organizations')]: { href: '/admin/organizations', icon: Building2 },
-                    [t('admin.tabs.locations')]: { href: '/admin/locations', icon: MapPin },
                     [t('admin.tabs.database')]: { href: '/admin/database', icon: Database },
                     [t('admin.tabs.storage')]: { href: '/admin/storage', icon: HardDrive },
                     [t('admin.tabs.compute')]: { href: '/admin/compute', icon: Cpu },
