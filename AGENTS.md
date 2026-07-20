@@ -79,9 +79,6 @@ longlink/
 │   │   ├── pages/                # Platform pages and docs
 │   │   └── xml/                  # XML parser, adapters, renderer, translations
 │   └── tests/                    # Web and XML tests
-└── dev/                          # Local services and reference material
-    ├── compose.yml                 # Local service dependencies
-    └── rfc/                        # Reference RFC material
 ```
 
 
