@@ -1,7 +1,7 @@
-import { A } from '@/components/ui/a';
-import { P } from '@/components/ui/p';
-import { Stack } from '@/components/ui/stack';
-import { Heading } from '@/components/ui/heading';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
@@ -10,25 +10,28 @@ export const metadata = {
 };
 
 export const content = (
-    <Stack>
-        <Heading id="routes" level="h1">
+    <Stack gap={4}>
+        <Heading id="routes" level={1}>
             Routes
         </Heading>
-        <P>
+        <Text as="p">
             Routes are the entry points through which an application receives requests. A page can use a route to load
             information, save a change, or start a process.
-        </P>
-        <P>
+        </Text>
+        <Text as="p">
             LongLink Applications are designed so their core functionality is not tied to a single interface. The same
             application logic can be used by pages, external systems, automation tools, or AI agents. This makes
             applications easier to test, connect, and extend over time.
-        </P>
-        <P>
-            LongLink builds on <A href="https://fastapi.tiangolo.com/tutorial/">FastAPI</A> and keeps the routing setup
-            simple, allowing developers to focus on the functionality of the application rather than the surrounding
-            technical structure.
-        </P>
-        <Heading id="usage" level="h2">
+        </Text>
+        <Text as="p">
+            LongLink builds on{' '}
+            <Link href="https://fastapi.tiangolo.com/tutorial/" isExternalLink type="inherit">
+                FastAPI
+            </Link>{' '}
+            and keeps the routing setup simple, allowing developers to focus on the functionality of the application
+            rather than the surrounding technical structure.
+        </Text>
+        <Heading id="usage" level={2}>
             Usage
         </Heading>
         <CodeBlock language="python">{`from longlink import LongLink, Router

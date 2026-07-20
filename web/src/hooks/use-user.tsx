@@ -1,19 +1,11 @@
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext } from 'react';
 import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
+import type { Accent, Radius, Theme } from '@/lib/theme';
 import type { ApiUserListItem, ApiUserOrganizationMembership, ApiUserProfile } from '@/lib/types';
 import { useApiQuery } from '@/hooks/use-api';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import { accountsQueryKey, userOrganizationsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
-import {
-    applyTheme,
-    resolveTheme,
-    THEME_PRESETS,
-    type Accent,
-    type Radius,
-    type Theme,
-    type ThemeConfig,
-} from '@/lib/theme';
 import {
     apiUserListItemSchema,
     apiUserOrganizationMembershipSchema,
@@ -57,21 +49,6 @@ const DEFAULT_USER_PREFERENCES = {
     language: 'en',
 } as const satisfies UserPreferences;
 
-/** Applies user preferences to the document root. */
-function applyUserPreferences(preferences: UserPreferences) {
-    const root = window.document.documentElement;
-    const resolvedTheme = resolveTheme(preferences.theme);
-
-    const config: ThemeConfig = {
-        theme: preferences.theme,
-        ...THEME_PRESETS[resolvedTheme],
-        accent: preferences.accent,
-        radius: preferences.radius,
-    };
-
-    applyTheme(root, config);
-}
-
 /** Hook that fetches the current user. */
 function useUserQuery() {
     return useApiQuery<User | null>('/api/me', {
@@ -94,35 +71,6 @@ function useUserOrganizationsQuery(user: User | null | undefined) {
 /** Provides the authenticated user query to the app tree. */
 export function UserProvider({ children }: { children: React.ReactNode }) {
     const user = useUserQuery();
-
-    useEffect(() => {
-        // Defer preference application until the user query settles.
-        if (user.isLoading) {
-            return;
-        }
-
-        const preferences = user.data ?? DEFAULT_USER_PREFERENCES;
-
-        applyUserPreferences(preferences);
-
-        // System theme listeners are only needed for system preference.
-        if (preferences.theme !== 'system') {
-            return;
-        }
-
-        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
-
-        /** Re-applies user preferences when the operating system theme changes. */
-        const handleSystemThemeChange = () => {
-            applyUserPreferences(preferences);
-        };
-
-        systemTheme.addEventListener('change', handleSystemThemeChange);
-
-        return () => {
-            systemTheme.removeEventListener('change', handleSystemThemeChange);
-        };
-    }, [user.data, user.isLoading]);
 
     return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
 }

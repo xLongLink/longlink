@@ -46,17 +46,14 @@ class ApplicationRoles(StrEnum):
     admin = "admin"
 
 
-class ApplicationProxyMethodRanks(IntEnum):
-    """Minimum application role ranks required by proxied HTTP methods."""
-
-    DELETE = Ranks.maintain.value
-    GET = Ranks.read.value
-    PATCH = Ranks.write.value
-    POST = Ranks.write.value
-    PUT = Ranks.write.value
-
-
-APPLICATION_PROXY_METHODS = list(ApplicationProxyMethodRanks.__members__)
+APPLICATION_PROXY_METHOD_ROLES = {
+    "DELETE": ApplicationRoles.maintain,
+    "GET": ApplicationRoles.read,
+    "PATCH": ApplicationRoles.write,
+    "POST": ApplicationRoles.write,
+    "PUT": ApplicationRoles.write,
+}
+APPLICATION_PROXY_METHODS = list(APPLICATION_PROXY_METHOD_ROLES)
 
 
 RoleName = PlatformRoles | OrganizationRoles | ApplicationRoles

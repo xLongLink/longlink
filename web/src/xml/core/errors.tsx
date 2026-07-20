@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react';
+import { Banner } from '@astryxdesign/core/Banner';
 
 type XmlErrorBoundaryProps = {
     children: ReactNode;
@@ -30,11 +31,7 @@ export class XmlErrorBoundary extends Component<XmlErrorBoundaryProps, XmlErrorB
     render() {
         // Render the captured XML error instead of children.
         if (this.state.error) {
-            return (
-                <div>
-                    <div>{this.state.error.message || 'XML rendering failed'}</div>
-                </div>
-            );
+            return <Banner status="error" title={this.state.error.message || 'XML rendering failed'} />;
         }
 
         return this.props.children;

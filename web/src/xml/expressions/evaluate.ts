@@ -214,22 +214,22 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
             // Apply only allowed binary operators.
             switch (node.operator) {
                 case '+':
-                    return (left as any) + (right as any);
+                    return (left as number) + (right as number);
 
                 case '-':
-                    return Number(left as any) - Number(right as any);
+                    return Number(left) - Number(right);
 
                 case '*':
-                    return Number(left as any) * Number(right as any);
+                    return Number(left) * Number(right);
 
                 case '/':
-                    return Number(left as any) / Number(right as any);
+                    return Number(left) / Number(right);
 
                 case '%':
-                    return Number(left as any) % Number(right as any);
+                    return Number(left) % Number(right);
 
                 case '**':
-                    return Number(left as any) ** Number(right as any);
+                    return Number(left) ** Number(right);
 
                 case '===':
                     return left === right;
@@ -238,22 +238,22 @@ function evaluateNode(node: ExpressionNode, scope: Record<string, unknown> = {})
                     return left !== right;
 
                 case '==':
-                    return (left as any) == (right as any);
+                    return (left as number) == (right as number);
 
                 case '!=':
-                    return (left as any) != (right as any);
+                    return (left as number) != (right as number);
 
                 case '<':
-                    return (left as any) < (right as any);
+                    return (left as number) < (right as number);
 
                 case '<=':
-                    return (left as any) <= (right as any);
+                    return (left as number) <= (right as number);
 
                 case '>':
-                    return (left as any) > (right as any);
+                    return (left as number) > (right as number);
 
                 case '>=':
-                    return (left as any) >= (right as any);
+                    return (left as number) >= (right as number);
 
                 case 'in': {
                     // Support pythonic membership checks against strings, arrays, and objects.

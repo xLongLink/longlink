@@ -2,7 +2,6 @@ import type { ComponentType } from 'react';
 import type { RouteObject } from 'react-router';
 import { RouterProvider, createBrowserRouter } from 'react-router';
 import type { SettingsRouteSection } from '@/pages/org/Settings';
-import { Toaster } from '@/components/ui/sonner';
 
 type AppRouter = ReturnType<typeof createBrowserRouter>;
 type PageModule = { default: ComponentType };
@@ -187,12 +186,7 @@ export async function initializeApp(): Promise<void> {
 
 /** Renders one router with the global application UI. */
 export function RoutedApp({ router }: { router: AppRouter }) {
-    return (
-        <>
-            <RouterProvider router={router} />
-            <Toaster position="bottom-right" />
-        </>
-    );
+    return <RouterProvider router={router} />;
 }
 
 /** Renders the browser application router. */

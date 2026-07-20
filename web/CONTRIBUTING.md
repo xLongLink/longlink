@@ -63,7 +63,8 @@ Set `VITE_DEV_HOST=0.0.0.0` only when the local Vite server must be reachable fr
 
 ## Guidelines
 
-- Use the `Toaster` for the user notifications
+- Use Astryx components and providers for UI, overlays, links, and notifications.
+- XML adapters import components directly from `@astryxdesign/core/<Component>`.
 
 ## Theme
 
@@ -81,23 +82,26 @@ Theme values are defined in `src/lib/theme.ts` and applied programmatically to t
 ## Primitives
 
 ```xml
-<A>, <Avatar>, <AvatarBadge>, <AvatarFallback>, <AvatarImage>, <B>, <Badge>, <Br>, <Button>, <ButtonGroup>, <ButtonGroupSeparator>, <ButtonGroupText>, <Card>, <Checkbox>, <Code>, <Column>, <Columns>, <DataCell>, <DataColumn>, <DataHeader>, <DataTable>, <Dialog>, <DialogContent>, <DialogDescription>, <DialogTitle>, <DialogTrigger>, <Field>, <FieldContent>, <FieldDescription>, <FieldLabel>, <FieldLegend>, <FieldTitle>, <Flex>, <Grid>, <H1>, <H2>, <H3>, <H4>, <Hero>, <HeroAction>, <HeroDescription>, <HeroTitle>, <Hr>, <Icon>, <Input>, <InputGroup>, <InputGroupAddon>, <InputGroupButton>, <InputGroupInput>, <InputGroupText>, <InputGroupTextarea>, <Label>, <Li>, <Menu>, <MenuSection>, <MenuSubSection>, <Ol>, <P>, <RadioGroup>, <RadioGroupItem>, <S>, <Select>, <SelectContent>, <SelectGroup>, <SelectItem>, <SelectLabel>, <SelectSeparator>, <SelectTrigger>, <SelectValue>, <Slider>, <Stack>, <Sub>, <Sup>, <Switch>, <Tab>, <Tabs>, <Textarea>, <Toggle>, <ToggleGroup>, <ToggleGroupItem>, <U>, <Ul>
+<Avatar>, <Badge>, <Banner>, <Button>, <ButtonGroup>, <Card>, <CheckboxInput>, <Code>, <Dialog>, <Divider>, <FileInput>, <FormLayout>, <Grid>, <Heading>, <Icon>, <Link>, <NumberInput>, <RadioList>, <RadioListItem>, <Selector>, <SelectorOption>, <Slider>, <Stack>, <Switch>, <Tab>, <TabList>, <Table>, <TableColumn>, <Text>, <TextArea>, <TextInput>
 ```
+
+Runtime tags are `<longlink>`, `<State>`, `<Query>`, `<For>`, and `<Action>`.
 
 ## XML
 
 - XML pages are parsed by `src/xml/core/parser.ts` into an AST.
 - The renderer in `src/xml/renderers.tsx` seeds runtime state and renders the AST through `src/xml/core/node.tsx`.
-- Component names must exist in `src/xml/core/node.tsx`; unknown tags fail at render time.
+- Component names must exist in `src/xml/core/registry.tsx`; unknown tags fail at render time.
 - Child content is rendered recursively, so nested XML components stay under the same runtime context.
-- The localization boundary is the text-bearing component itself. Use dotted translation keys like `i18n="tasks.title"` on `P`, `H1`, `Button`, and similar tags, then keep translation strings in the app catalog at `src/i18n/en.json`.
+- The localization boundary is the text-bearing component itself. Use dotted translation keys like `i18n="tasks.title"` on `Text`, `Heading`, `Button`, and similar tags, then keep translation strings in the app catalog at `src/i18n/en.json`.
+- Pass interpolation data through one object expression such as `values="${{ name: item.name }}"`; arbitrary interpolation attributes are not part of XML v2.
 - Pluralized text uses `Intl.PluralRules` categories in the translation bundle, for example `{ "items": { "one": "1 item", "other": "{{count}} items" } }`.
+- XML rejects `className`, `style`, `xstyle`, and event-handler attributes. Adapters own all visual styling and callbacks.
 
 ## Keep changes aligned
 
 - Keep platform concerns in the API mode path.
-- Use shadcn/ui and the existing `src/components/ui/` primitives for reusable UI.
-- Keep the current shadcn/ui primitive set and related dependencies unless a component is proven obsolete by a product decision.
+- Use direct Astryx imports for reusable UI.
 - Keep XML runtime and compiler changes inside `src/xml/`.
 - Prefer `src/lib/api.ts` helpers over raw `fetch`.
 - Remove obsolete flows when replacing them end to end.

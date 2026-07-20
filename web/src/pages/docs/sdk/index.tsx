@@ -1,61 +1,35 @@
-import {
-    AppWindow,
-    ArrowLeftRight,
-    Code2,
-    Database,
-    HardDrive,
-    Languages,
-    Palette,
-    PanelTop,
-    UserRound,
-} from 'lucide-react';
-import { A } from '@/components/ui/a';
-import { P } from '@/components/ui/p';
-import { Code } from '@/components/ui/code';
-import { Stack } from '@/components/ui/stack';
+import { Card } from '@astryxdesign/core/Card';
+import { Code } from '@astryxdesign/core/Code';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
 import { CodeTabs } from '@/components/CodeTabs';
-import { Heading } from '@/components/ui/heading';
 import { CodeBlock } from '@/components/CodeBlock';
 
 /** Renders the local SDK runtime request flow diagram. */
 function LocalRuntimeDiagram() {
     return (
-        <div className="rounded-md border bg-muted/10 p-4">
-            <div className="grid gap-4 lg:grid-cols-[13.5rem_7rem_13.5rem] lg:items-center lg:justify-center">
-                <div className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-md border bg-muted/40 px-3 py-4 text-center">
-                    <div className="flex size-9 items-center justify-center text-muted-foreground">
-                        <UserRound aria-hidden={true} className="size-5" />
-                    </div>
-                    <div>
-                        <div className="font-medium text-foreground">User</div>
-                        <div className="mt-1 text-sm text-muted-foreground">Browser</div>
-                    </div>
-                    <div className="flex items-center justify-center gap-3 pt-1 text-muted-foreground">
-                        <Languages aria-label="Languages" className="size-4" />
-                        <Palette aria-label="Theming" className="size-4" />
-                        <PanelTop aria-label="Application shell" className="size-4" />
-                    </div>
-                </div>
-                <div className="flex flex-col items-center justify-center text-muted-foreground">
-                    <ArrowLeftRight aria-hidden={true} className="size-5" />
-                    <div className="mt-1 text-xs tabular-nums">localhost:1707</div>
-                </div>
-                <div className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-md border bg-muted/40 px-3 py-4 text-center">
-                    <div className="flex size-9 items-center justify-center text-muted-foreground">
-                        <AppWindow aria-hidden={true} className="size-5" />
-                    </div>
-                    <div>
-                        <div className="font-medium text-foreground">Application</div>
-                        <div className="mt-1 text-sm text-muted-foreground">Runtime</div>
-                    </div>
-                    <div className="flex items-center justify-center gap-3 pt-1 text-muted-foreground">
-                        <Code2 aria-label="Application logic" className="size-4" />
-                        <Database aria-label="Database logic" className="size-4" />
-                        <HardDrive aria-label="File storage" className="size-4" />
-                    </div>
-                </div>
-            </div>
-        </div>
+        <Grid columns={{ minWidth: 190, max: 2, repeat: 'fit' }} gap={4}>
+            <Card variant="muted">
+                <Stack gap={2} align="center">
+                    <Icon icon="info" color="accent" />
+                    <Text weight="semibold">User</Text>
+                    <Text type="supporting">Browser</Text>
+                    <Text type="supporting">Languages, theming, and application shell</Text>
+                </Stack>
+            </Card>
+            <Card variant="muted">
+                <Stack gap={2} align="center">
+                    <Icon icon="wrench" color="accent" />
+                    <Text weight="semibold">Application</Text>
+                    <Text type="supporting">Runtime at localhost:1707</Text>
+                    <Text type="supporting">Application logic, database logic, and file storage</Text>
+                </Stack>
+            </Card>
+        </Grid>
     );
 }
 
@@ -65,30 +39,30 @@ export const metadata = {
 };
 
 export const content = (
-    <Stack>
-        <Heading id="application-sdk" level="h1">
+    <Stack gap={4}>
+        <Heading id="application-sdk" level={1}>
             LongLink Applications / SDK
         </Heading>
-        <P>
+        <Text as="p">
             The LongLink SDK is the runtime and tooling layer for LongLink Applications. It provides the application
             factory, route registration, database helpers, storage access, XML page discovery, page manifest endpoint,
             testing defaults, and image labels expected by the LongLink Platform.
-        </P>
-        <P>
+        </Text>
+        <Text as="p">
             Application code owns the process-specific behavior: models, validation, workflows, actions, API routes,
             integrations, and XML pages. The SDK provides the runtime contract that lets the LongLink Platform run the
             application consistently across local development, tests, and production.
-        </P>
-        <P>
+        </Text>
+        <Text as="p">
             The packaged container image is the handoff from the SDK to the LongLink Platform. Local development uses
             the SDK runtime and local services, while production receives platform-managed database, storage, routing,
             identity, and deployment configuration.
-        </P>
+        </Text>
         <LocalRuntimeDiagram />
-        <Heading id="create-a-project" level="h2">
+        <Heading id="create-a-project" level={2}>
             Create a Project
         </Heading>
-        <P>Install LongLink:</P>
+        <Text as="p">Install LongLink:</Text>
         <CodeTabs
             defaultValue="pip"
             items={[
@@ -96,7 +70,7 @@ export const content = (
                 { code: 'uv add longlink', label: 'uv', value: 'uv' },
             ]}
         />
-        <P>Create the application scaffold:</P>
+        <Text as="p">Create the application scaffold:</Text>
         <CodeTabs
             defaultValue="pip"
             items={[
@@ -104,19 +78,19 @@ export const content = (
                 { code: 'uv run longlink init', label: 'uv', value: 'uv' },
             ]}
         />
-        <P>
+        <Text as="p">
             <Code>longlink init</Code> creates an application scaffold with separate directories for routes, schemas,
             database models and services, XML pages, translations, migrations, environment declarations, and tests:
-        </P>
+        </Text>
         <CodeBlock language="text">
             {
                 '├── src/\n│   ├── database/         # Database models and services\n│   ├── i18n/             # Translation catalogs\n│   ├── pages/            # XML page definitions\n│   ├── routes/           # FastAPI route modules\n│   ├── schemas/          # Pydantic request and response schemas\n│   └── envs.py           # Environment settings\n├── migrations/           # Alembic application migrations\n├── tests/                # Application tests\n├── main.py               # Application entry point\n├── pyproject.toml        # Project configuration\n├── .env.sample           # Environment template\n├── .gitignore\n├── AGENTS.md             # Application agent guide\n└── README.md'
             }
         </CodeBlock>
-        <Heading id="local-development" level="h2">
+        <Heading id="local-development" level={2}>
             Local Runtime
         </Heading>
-        <P>Install development dependencies:</P>
+        <Text as="p">Install development dependencies:</Text>
         <CodeTabs
             defaultValue="pip"
             items={[
@@ -124,9 +98,9 @@ export const content = (
                 { code: 'uv sync --extra dev', label: 'uv', value: 'uv' },
             ]}
         />
-        <P>
+        <Text as="p">
             Run the development server against <Code>main:app</Code> with the embedded SDK web bundle:
-        </P>
+        </Text>
         <CodeTabs
             defaultValue="pip"
             items={[
@@ -134,13 +108,16 @@ export const content = (
                 { code: 'uv run longlink dev', label: 'uv', value: 'uv' },
             ]}
         />
-        <P>
+        <Text as="p">
             The development server listens on <Code>127.0.0.1</Code> by default. Use <Code>--host</Code> only when you
             intentionally need access from another host.
-        </P>
-        <P>
+        </Text>
+        <Text as="p">
             For a small working application, see the{' '}
-            <A href="https://github.com/xLongLink/sample">LongLink sample repository</A>.
-        </P>
+            <Link href="https://github.com/xLongLink/sample" isExternalLink type="inherit">
+                LongLink sample repository
+            </Link>
+            .
+        </Text>
     </Stack>
 );

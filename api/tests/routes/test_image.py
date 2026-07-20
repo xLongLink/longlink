@@ -1,4 +1,4 @@
-from src.models.images import Image
+from src.models.types import Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 

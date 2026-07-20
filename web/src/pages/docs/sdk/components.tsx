@@ -1,686 +1,296 @@
-import { P } from '@/components/ui/p';
-import { Li } from '@/components/ui/li';
-import { Ul } from '@/components/ui/ul';
-import { Code } from '@/components/ui/code';
-import { Stack } from '@/components/ui/stack';
-import { Heading } from '@/components/ui/heading';
+import type { ReactNode } from 'react';
+import { Code } from '@astryxdesign/core/Code';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { List, ListItem } from '@astryxdesign/core/List';
 import { CodeBlock } from '@/components/CodeBlock';
 
+/** Renders paragraph text in the component reference. */
+function P({ children }: { children: ReactNode }) {
+    return <Text as="p">{children}</Text>;
+}
+
+/** Renders a bulleted parameter list. */
+function Ul({ children }: { children: ReactNode }) {
+    return <List listStyle="disc">{children}</List>;
+}
+
+/** Renders one item in a documentation parameter list. */
+function Li({ children }: { children: ReactNode }) {
+    return <ListItem label={<Text>{children}</Text>} />;
+}
+
 export const metadata = {
-    lastUpdated: '2026-07-11',
+    lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/components.tsx',
 };
 
 export const content = (
-    <Stack>
-        <Heading id="components" level="h1">
+    <Stack gap={4}>
+        <Heading id="components" level={1}>
             Components
         </Heading>
         <P>
-            Component elements cover form controls, text, lists, tables, and small visual building blocks used inside
-            SDK XML pages.
+            XML v2 exposes a small, data-oriented Astryx component set. The old HTML aliases and compound slot tags are
+            not supported. Use component attributes for labels, values, and state, then compose components with Stack,
+            Grid, Card, and FormLayout.
         </P>
-        <Stack className="gap-3">
-            <Heading id="icon" level="h2">
+        <P>
+            Every interactive control needs an accessible <Code>label</Code> or <Code>i18n</Code> value. Localized
+            interpolation data belongs in one <Code>values</Code> expression object; arbitrary placeholder attributes
+            are rejected by the schema.
+        </P>
+
+        <Stack gap={3}>
+            <Heading id="text" level={2}>
+                Text, Heading, and Code
+            </Heading>
+            <P>
+                Text replaces paragraph and inline HTML aliases. Heading requires an explicit semantic level from 1 to
+                6. Both accept literal <Code>value</Code>, localized <Code>i18n</Code>, or nested XML content. Code
+                renders inline code with the same content precedence.
+            </P>
+            <Ul>
+                <Li>
+                    <Code>values</Code>: expression resolving to an object used for translation placeholders.
+                </Li>
+                <Li>
+                    <Code>count</Code>: numeric expression used for plural translation entries.
+                </Li>
+                <Li>
+                    <Code>Text as</Code>: <Code>span</Code>, <Code>p</Code>, <Code>div</Code>, or <Code>label</Code>.
+                </Li>
+                <Li>
+                    <Code>Text type</Code>: <Code>body</Code>, <Code>large</Code>, <Code>label</Code>,{' '}
+                    <Code>supporting</Code>, <Code>code</Code>, a display style, or <Code>inherit</Code>.
+                </Li>
+            </Ul>
+            <CodeBlock language="xml">{`<Heading level="1" i18n="orders.title" />
+<Text as="p" i18n="orders.summary" values="\${{ number: order.number, status: order.status }}" />
+<Code value="$order.reference" />`}</CodeBlock>
+        </Stack>
+
+        <Stack gap={3}>
+            <Heading id="link" level={2}>
+                Link
+            </Heading>
+            <P>
+                Link replaces the old anchor alias. Use <Code>to</Code> for application navigation and <Code>href</Code>{' '}
+                for a URL. External destinations can set <Code>isExternalLink</Code>; translated link text uses{' '}
+                <Code>i18n</Code>.
+            </P>
+            <CodeBlock language="xml">{`<Link to="/orders/\${order.id}" i18n="orders.open" hasUnderline="true" />
+<Link href="$document.downloadUrl" i18n="documents.download" isExternalLink="true" />`}</CodeBlock>
+        </Stack>
+
+        <Stack gap={3}>
+            <Heading id="icon" level={2}>
                 Icon
             </Heading>
-            <P>Renders a Lucide icon by XML name. Blank or missing names fail fast.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>name</Code>: required Lucide icon name, usually kebab-case.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Icon name="settings" />`}</CodeBlock>
+            <P>
+                Icon renders a semantic Astryx icon name rather than a Lucide slug. Common names include{' '}
+                <Code>info</Code>, <Code>success</Code>, <Code>warning</Code>, <Code>error</Code>, <Code>search</Code>,
+                and <Code>wrench</Code>.
+            </P>
+            <CodeBlock language="xml">{`<Icon icon="info" size="sm" color="accent" />`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="badge" level="h2">
-                Badge
-            </Heading>
-            <P>Displays compact status, category, or count text.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>variant</Code>: optional <Code>default</Code>, <Code>outline</Code>, <Code>ghost</Code>,{' '}
-                        <Code>destructive</Code>, or <Code>link</Code>.
-                    </Li>
-                    <Li>
-                        <Code>value</Code>: optional expression value used as badge text.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Badge variant="outline" value="$order.status" />`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="avatar" level="h2">
+
+        <Stack gap={3}>
+            <Heading id="avatar" level={2}>
                 Avatar
             </Heading>
-            <P>Avatar shell for user or record imagery with image, fallback, and badge slots.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Avatar Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>size</Code>: optional <Code>default</Code>, <Code>sm</Code>, or <Code>lg</Code>. Defaults
-                        to <Code>default</Code>.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">AvatarImage Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>src</Code>: optional image URL.
-                    </Li>
-                    <Li>
-                        <Code>alt</Code>: optional accessible image label.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Avatar size="lg">
-  <AvatarImage src="/avatars/sam.png" alt="Sam" />
-  <AvatarFallback i18n="..." />
-  <AvatarBadge i18n="..." count="3" />
-</Avatar>`}</CodeBlock>
+            <P>
+                Avatar is a single data-oriented element. Set its image, fallback image, name, and alternative text as
+                attributes instead of using image and fallback children. Sizes are <Code>tiny</Code>,{' '}
+                <Code>xsmall</Code>, <Code>small</Code>, <Code>medium</Code>, and <Code>large</Code>.
+            </P>
+            <CodeBlock language="xml">{`<Avatar src="$user.avatarUrl" name="$user.name" alt="$user.name" size="medium" />`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="button" level="h2">
-                Button
+
+        <Stack gap={3}>
+            <Heading id="badge" level={2}>
+                Badge
             </Heading>
-            <P>Standard clickable button for local actions, form submission, or list append helpers.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>variant</Code>: optional <Code>default</Code>, <Code>outline</Code>, <Code>ghost</Code>,{' '}
-                        <Code>destructive</Code>, or <Code>link</Code>.
-                    </Li>
-                    <Li>
-                        <Code>size</Code>: optional button size.
-                    </Li>
-                    <Li>
-                        <Code>submit</Code>: optional boolean. When <Code>true</Code>, renders type submit.
-                    </Li>
-                    <Li>
-                        <Code>disabled</Code>: optional boolean expression.
-                    </Li>
-                    <Li>
-                        <Code>append</Code> and <Code>item</Code>: optional helper that appends an item into a target
-                        array state path.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Button variant="outline" disabled="form.saving" i18n="..." />`}</CodeBlock>
+            <P>
+                Badge requires a serializable <Code>label</Code> or an <Code>i18n</Code> key. Status variants include{' '}
+                <Code>neutral</Code>, <Code>info</Code>, <Code>success</Code>, <Code>warning</Code>, and{' '}
+                <Code>error</Code>.
+            </P>
+            <CodeBlock language="xml">{`<Badge label="$order.status" variant="info" />`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="buttongroup" level="h2">
-                ButtonGroup
+
+        <Stack gap={3}>
+            <Heading id="banner" level={2}>
+                Banner
             </Heading>
-            <P>Groups related buttons, inputs, text segments, and separators into one joined control.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">ButtonGroup Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>orientation</Code>: optional <Code>horizontal</Code> or <Code>vertical</Code>. Defaults to{' '}
-                        <Code>horizontal</Code>.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">ButtonGroupSeparator Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>orientation</Code>: optional <Code>vertical</Code> or <Code>horizontal</Code>. Defaults to{' '}
-                        <Code>vertical</Code>.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<ButtonGroup>
-  <Button variant="outline" i18n="..." />
-  <ButtonGroupSeparator />
-  <ButtonGroupText i18n="..." page="1" />
-  <Button i18n="..." />
+            <P>
+                Banner displays persistent status information. It requires a <Code>title</Code> or <Code>i18n</Code> key
+                and can expand to show child content.
+            </P>
+            <CodeBlock language="xml">{`<Banner status="warning" i18n="orders.reviewRequired">
+  <Text i18n="orders.reviewInstructions" />
+</Banner>`}</CodeBlock>
+        </Stack>
+
+        <Stack gap={3}>
+            <Heading id="divider" level={2}>
+                Divider
+            </Heading>
+            <P>
+                Divider replaces the horizontal-rule alias. It supports horizontal or vertical orientation, optional
+                translated labels, and <Code>subtle</Code> or <Code>strong</Code> variants.
+            </P>
+            <CodeBlock language="xml">{`<Divider i18n="common.or" variant="strong" />`}</CodeBlock>
+        </Stack>
+
+        <Stack gap={3}>
+            <Heading id="button" level={2}>
+                Button and ButtonGroup
+            </Heading>
+            <P>
+                Button requires a <Code>label</Code> or <Code>i18n</Code> key. Use <Code>isDisabled</Code>,{' '}
+                <Code>isLoading</Code>, and <Code>isIconOnly</Code> for state. ButtonGroup accepts Button or Action
+                children and also requires an accessible group label.
+            </P>
+            <Ul>
+                <Li>
+                    <Code>variant</Code>: <Code>primary</Code>, <Code>secondary</Code>, <Code>ghost</Code>, or{' '}
+                    <Code>destructive</Code>.
+                </Li>
+                <Li>
+                    <Code>type</Code>: <Code>button</Code>, <Code>submit</Code>, or <Code>reset</Code>.
+                </Li>
+                <Li>
+                    <Code>append</Code> and <Code>item</Code>: append a resolved item to array state before running the
+                    nearest Action.
+                </Li>
+            </Ul>
+            <CodeBlock language="xml">{`<ButtonGroup label="Order actions">
+  <Action action="/api/orders/\${order.id}/approve" method="PATCH">
+    <Button variant="primary" i18n="orders.approve" />
+  </Action>
+  <Button isDisabled="$order.locked" i18n="orders.edit" />
 </ButtonGroup>`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="field" level="h2">
-                Field
-            </Heading>
-            <P>
-                Form field container that groups labels, legends, descriptions, and control content. FieldContent holds
-                the interactive control, while FieldTitle and FieldDescription provide structured text inside labels or
-                legends.
-            </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Field Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>orientation</Code>: optional <Code>vertical</Code> or <Code>horizontal</Code>. Defaults to{' '}
-                        <Code>vertical</Code>.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">FieldLegend Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>variant</Code>: optional <Code>legend</Code> or <Code>label</Code>. Defaults to{' '}
-                        <Code>legend</Code>.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">FieldLabel Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>htmlFor</Code>: optional id of the associated control.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Field>
-  <FieldLabel htmlFor="email">
-    <FieldTitle i18n="..." />
-    <FieldDescription i18n="..." />
-  </FieldLabel>
-  <FieldContent>
-    <Input id="email" value="$form.email" />
-  </FieldContent>
-</Field>`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="label" level="h2">
-                Label
-            </Heading>
-            <P>Standalone form label when a full Field wrapper is unnecessary.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>htmlFor</Code>: optional id of the associated control.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Label htmlFor="search" i18n="..." />`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="input" level="h2">
-                Input
-            </Heading>
-            <P>Single-line text or number input. Writable value bindings update state as the user types.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>id</Code>: optional control id.
-                    </Li>
-                    <Li>
-                        <Code>label</Code>: optional accessible label.
-                    </Li>
-                    <Li>
-                        <Code>placeholder</Code>: optional placeholder text.
-                    </Li>
-                    <Li>
-                        <Code>value</Code>: optional value or writable binding.
-                    </Li>
-                    <Li>
-                        <Code>type</Code>: optional input type.
-                    </Li>
-                    <Li>
-                        <Code>disabled</Code>: optional boolean.
-                    </Li>
-                    <Li>
-                        <Code>autoComplete</Code>: optional browser autocomplete value.
-                    </Li>
-                    <Li>
-                        <Code>aria-invalid</Code>: optional invalid state.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Input id="quantity" type="number" value="$form.quantity" />`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="textarea" level="h2">
-                Textarea
-            </Heading>
-            <P>Multi-line text input. Writable value bindings update state as the user types.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>id</Code>: optional control id.
-                    </Li>
-                    <Li>
-                        <Code>label</Code>: optional accessible label.
-                    </Li>
-                    <Li>
-                        <Code>placeholder</Code>: optional placeholder text.
-                    </Li>
-                    <Li>
-                        <Code>value</Code>: optional value or writable binding.
-                    </Li>
-                    <Li>
-                        <Code>disabled</Code>: optional boolean.
-                    </Li>
-                    <Li>
-                        <Code>cols</Code> and <Code>rows</Code>: optional numeric dimensions.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Textarea id="notes" rows="4" value="$form.notes" />`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="inputgroup" level="h2">
-                InputGroup
-            </Heading>
-            <P>
-                Composes inputs or textareas with addons, inline text, and buttons. InputGroupInput matches Input
-                behavior, and InputGroupTextarea matches Textarea behavior.
-            </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">InputGroupAddon Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>align</Code>: optional <Code>inline-start</Code> or <Code>inline-end</Code>. Defaults to{' '}
-                        <Code>inline-start</Code>.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">InputGroupButton Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>type</Code>: optional button type. Defaults to <Code>button</Code>.
-                    </Li>
-                    <Li>
-                        <Code>size</Code>: optional size. Defaults to <Code>xs</Code>.
-                    </Li>
-                    <Li>
-                        <Code>variant</Code>: optional variant. Defaults to <Code>ghost</Code>.
-                    </Li>
-                    <Li>
-                        <Code>disabled</Code>: optional boolean.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">InputGroupInput Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>id</Code>, <Code>label</Code>, <Code>placeholder</Code>, <Code>value</Code>,{' '}
-                        <Code>type</Code>, <Code>disabled</Code>, <Code>autoComplete</Code>, and{' '}
-                        <Code>aria-invalid</Code>: match Input.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">InputGroupTextarea Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>id</Code>, <Code>label</Code>, <Code>placeholder</Code>, <Code>value</Code>,{' '}
-                        <Code>disabled</Code>, <Code>cols</Code>, and <Code>rows</Code>: match Textarea.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<InputGroup>
-  <InputGroupAddon><Icon name="banknote" /></InputGroupAddon>
-  <InputGroupInput value="$form.price" />
-  <InputGroupText i18n="..." />
-  <InputGroupButton i18n="..." />
-</InputGroup>`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="checkbox" level="h2">
-                Checkbox
-            </Heading>
-            <P>Boolean checkbox control. Use a state object with a value field for writable checked bindings.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>checked</Code>: optional controlled value or writable binding.
-                    </Li>
-                    <Li>
-                        <Code>defaultChecked</Code>: optional initial checked value.
-                    </Li>
-                    <Li>
-                        <Code>disabled</Code>: optional boolean.
-                    </Li>
-                    <Li>
-                        <Code>id</Code>: optional control id.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<State id="accepted" value="false" />
-<Checkbox id="accepted" checked="$accepted" />`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="switch" level="h2">
-                Switch
-            </Heading>
-            <P>On/off switch control for settings. Writable checked bindings use a state object with a value field.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>checked</Code>: optional controlled value or writable binding.
-                    </Li>
-                    <Li>
-                        <Code>defaultChecked</Code>: optional initial checked value.
-                    </Li>
-                    <Li>
-                        <Code>disabled</Code>: optional boolean.
-                    </Li>
-                    <Li>
-                        <Code>id</Code>: optional control id.
-                    </Li>
-                    <Li>
-                        <Code>size</Code>: optional switch size. Defaults to <Code>default</Code>.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<State id="notifications" value="true" />
-<Switch id="notifications" checked="$notifications" />`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="slider" level="h2">
-                Slider
-            </Heading>
-            <P>Numeric range input. Writable value bindings use a state object with a value field.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>value</Code>: optional controlled value or writable binding.
-                    </Li>
-                    <Li>
-                        <Code>defaultValue</Code>: optional initial value.
-                    </Li>
-                    <Li>
-                        <Code>min</Code>: optional minimum. Defaults to <Code>0</Code>.
-                    </Li>
-                    <Li>
-                        <Code>max</Code>: optional maximum. Defaults to <Code>100</Code>.
-                    </Li>
-                    <Li>
-                        <Code>step</Code>: optional step. Defaults to <Code>1</Code>.
-                    </Li>
-                    <Li>
-                        <Code>disabled</Code>, <Code>id</Code>, <Code>name</Code>, and <Code>orientation</Code>:
-                        optional.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<State id="budget" value="50" />
-<Slider min="0" max="100" step="5" value="$budget" />`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="toggle" level="h2">
-                Toggle
-            </Heading>
-            <P>Single pressed/unpressed button. Writable pressed bindings use a state object with a value field.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>pressed</Code>: optional controlled value or writable binding.
-                    </Li>
-                    <Li>
-                        <Code>defaultPressed</Code>: optional initial pressed value.
-                    </Li>
-                    <Li>
-                        <Code>disabled</Code>: optional boolean.
-                    </Li>
-                    <Li>
-                        <Code>id</Code>: optional control id.
-                    </Li>
-                    <Li>
-                        <Code>size</Code> and <Code>variant</Code>: optional.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<State id="enabled" value="false" />
-<Toggle pressed="$enabled" variant="outline" i18n="..." />`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="togglegroup" level="h2">
-                ToggleGroup
-            </Heading>
-            <P>Group of related ToggleGroupItem choices with single or multiple selection.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">ToggleGroup Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>value</Code>: optional controlled value.
-                    </Li>
-                    <Li>
-                        <Code>defaultValue</Code>: optional initial value.
-                    </Li>
-                    <Li>
-                        <Code>type</Code>: optional <Code>single</Code> or <Code>multiple</Code>. Defaults to{' '}
-                        <Code>single</Code>.
-                    </Li>
-                    <Li>
-                        <Code>disabled</Code>, <Code>loopFocus</Code>, <Code>orientation</Code>, <Code>size</Code>,{' '}
-                        <Code>spacing</Code>, and <Code>variant</Code>: optional.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">ToggleGroupItem Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>value</Code>: required item value.
-                    </Li>
-                    <Li>
-                        <Code>size</Code> and <Code>variant</Code>: optional overrides.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<ToggleGroup type="single" defaultValue="list">
-  <ToggleGroupItem value="grid"><Icon name="layout-grid" /></ToggleGroupItem>
-  <ToggleGroupItem value="list"><Icon name="list" /></ToggleGroupItem>
-</ToggleGroup>`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="radiogroup" level="h2">
-                RadioGroup
-            </Heading>
-            <P>Mutually exclusive option group made from labeled RadioGroupItem choices.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">RadioGroup Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>value</Code>: optional controlled value.
-                    </Li>
-                    <Li>
-                        <Code>defaultValue</Code>: optional initial value.
-                    </Li>
-                    <Li>
-                        <Code>disabled</Code>, <Code>form</Code>, <Code>name</Code>, <Code>readOnly</Code>, and{' '}
-                        <Code>required</Code>: optional.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">RadioGroupItem Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>value</Code>: required item value.
-                    </Li>
-                    <Li>
-                        <Code>disabled</Code>, <Code>readOnly</Code>, and <Code>required</Code>: optional.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<RadioGroup name="priority" defaultValue="medium">
-  <RadioGroupItem value="low" i18n="..." />
-  <RadioGroupItem value="medium" i18n="..." />
-</RadioGroup>`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="select" level="h2">
-                Select
-            </Heading>
-            <P>
-                Dropdown select root with trigger, value, popup content, grouped options, labels, items, and separators.
-                Writable value bindings use a state object with a value field.
-            </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Select Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>value</Code>: optional controlled value or writable binding.
-                    </Li>
-                    <Li>
-                        <Code>defaultValue</Code>: optional initial selected value.
-                    </Li>
-                    <Li>
-                        <Code>open</Code> and <Code>defaultOpen</Code>: optional.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">SelectValue Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>placeholder</Code>: optional fallback text.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">SelectItem Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>value</Code>: required option value.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<State id="department" value="sales" />
-<Select value="$department">
-  <SelectTrigger><SelectValue i18n="..." /></SelectTrigger>
-  <SelectContent>
-    <SelectGroup>
-      <SelectLabel i18n="..." />
-      <SelectItem value="sales" i18n="..." />
-      <SelectSeparator />
-      <SelectItem value="support" i18n="..." />
-    </SelectGroup>
-  </SelectContent>
-</Select>`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="text-elements" level="h2">
-                Text Elements
-            </Heading>
-            <P>
-                Use text nodes for structured copy, headings, inline markup, code formatting, links, and simple spacing.
-            </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">A Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>to</Code>, <Code>href</Code>, and <Code>active</Code>: optional.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<H1 i18n="..." />
-<H2 i18n="..." />
-<H3 i18n="..." />
-<H4 i18n="..." />
-<P i18n="..." />
-<A to="/issues/\${issue.id}" i18n="..." />
-<B i18n="..." />
-<U i18n="..." />
-<S i18n="..." />
-<Sup i18n="..." />
-<Sub i18n="..." />
-<Code i18n="..." />
-<Br />
-<Hr />`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="list" level="h2">
-                List
-            </Heading>
-            <P>Ul and Ol render unordered or ordered list containers. Li renders one item inside either list.</P>
-            <CodeBlock language="xml">{`<Ul>
-  <Li i18n="..." />
-  <Li i18n="..." />
-</Ul>
 
-<Ol>
-  <Li i18n="..." />
-  <Li i18n="..." />
-</Ol>`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="datatable" level="h2">
-                DataTable
+        <Stack gap={3}>
+            <Heading id="text-inputs" level={2}>
+                TextInput, NumberInput, FileInput, and TextArea
             </Heading>
             <P>
-                Query-backed data table that renders array rows through the shared LongLink table shell. DataColumn
-                defines aligned columns, while DataHeader and DataCell provide custom header and row content slots.
+                These controls replace Input, Textarea, Field, and InputGroup compounds. Each control owns its label,
+                description, validation status, and value. A <Code>$state.path</Code> value creates a writable binding.
             </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">DataTable Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>data</Code>: required expression resolving to an array, usually a Query id such as{' '}
-                        <Code>$orders</Code>.
-                    </Li>
-                    <Li>
-                        <Code>as</Code>: optional row variable name exposed to DataCell children. Defaults to{' '}
-                        <Code>row</Code>.
-                    </Li>
-                    <Li>
-                        <Code>empty</Code>: optional empty-state message. Defaults to <Code>No results.</Code>
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">DataColumn Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>field</Code>: optional dotted row field used for shorthand cells and column id.
-                    </Li>
-                    <Li>
-                        <Code>header</Code>: optional shorthand header text.
-                    </Li>
-                    <Li>
-                        <Code>id</Code>: optional stable column id.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">DataHeader Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>value</Code>: optional expression value.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">DataCell Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>value</Code>: optional expression value.
-                    </Li>
-                </Ul>
-            </Stack>
+            <Ul>
+                <Li>
+                    <Code>label</Code> or <Code>i18n</Code>: required accessible field label, even when{' '}
+                    <Code>isLabelHidden</Code> is true.
+                </Li>
+                <Li>
+                    <Code>isRequired</Code>, <Code>isOptional</Code>, <Code>isDisabled</Code>: explicit field states.
+                </Li>
+                <Li>
+                    <Code>status</Code>: <Code>warning</Code>, <Code>error</Code>, or <Code>success</Code>, with
+                    optional <Code>statusMessage</Code>.
+                </Li>
+                <Li>
+                    NumberInput writes numbers. FileInput keeps File values available to Action <Code>form</Code>{' '}
+                    payloads.
+                </Li>
+            </Ul>
+            <CodeBlock language="xml">{`<State id="draft" title="" amount="0" notes="" file="\${null}" />
+
+<FormLayout>
+  <TextInput i18n="orders.fields.title" value="$draft.title" isRequired="true" />
+  <NumberInput i18n="orders.fields.amount" value="$draft.amount" min="0" units="CHF" />
+  <TextArea i18n="orders.fields.notes" value="$draft.notes" rows="4" />
+  <FileInput i18n="orders.fields.attachment" value="$draft.file" accept=".pdf" />
+</FormLayout>`}</CodeBlock>
+        </Stack>
+
+        <Stack gap={3}>
+            <Heading id="boolean-and-range-inputs" level={2}>
+                CheckboxInput, Switch, and Slider
+            </Heading>
+            <P>
+                Boolean and range controls also bind through <Code>value</Code>. Use a State object with a{' '}
+                <Code>value</Code> field when the control owns the entire state slot.
+            </P>
+            <CodeBlock language="xml">{`<State id="accepted" value="false" />
+<State id="notifications" value="true" />
+<State id="budget" value="2500" />
+
+<CheckboxInput label="Accept terms" value="$accepted" isRequired="true" />
+<Switch label="Notifications" value="$notifications" />
+<Slider label="Budget" value="$budget" min="500" max="10000" step="500" />`}</CodeBlock>
+        </Stack>
+
+        <Stack gap={3}>
+            <Heading id="selector" level={2}>
+                Selector
+            </Heading>
+            <P>
+                Selector replaces the Select compound. It requires an accessible label and one or more flat
+                SelectorOption children. Each option requires a <Code>value</Code> and uses <Code>label</Code> or{' '}
+                <Code>i18n</Code> for visible text.
+            </P>
+            <CodeBlock language="xml">{`<State id="filters" status="open" />
+<Selector i18n="filters.status" value="$filters.status" hasClear="true">
+  <SelectorOption value="open" i18n="statuses.open" />
+  <SelectorOption value="closed" i18n="statuses.closed" />
+</Selector>`}</CodeBlock>
+        </Stack>
+
+        <Stack gap={3}>
+            <Heading id="radio-list" level={2}>
+                RadioList
+            </Heading>
+            <P>
+                RadioList replaces RadioGroup and contains flat RadioListItem children. The list and every item require
+                accessible labels.
+            </P>
+            <CodeBlock language="xml">{`<State id="workflow" owner="manager" />
+<RadioList i18n="workflow.owner" value="$workflow.owner">
+  <RadioListItem value="manager" i18n="workflow.roles.manager" />
+  <RadioListItem value="finance" i18n="workflow.roles.finance" />
+</RadioList>`}</CodeBlock>
+        </Stack>
+
+        <Stack gap={3}>
+            <Heading id="table" level={2}>
+                Table
+            </Heading>
+            <P>
+                Table replaces DataTable and its slot compounds. It consumes array data and flat TableColumn children.
+                Every column needs a <Code>key</Code> or dotted <Code>field</Code>; use an explicit key for custom
+                cells. Child content becomes the cell renderer and can read the configured row name, <Code>index</Code>,
+                and <Code>value</Code>.
+            </P>
+            <Ul>
+                <Li>
+                    <Code>data</Code>: required expression resolving to an array of objects.
+                </Li>
+                <Li>
+                    <Code>rowName</Code>: row variable exposed to custom cells. Defaults to <Code>row</Code>.
+                </Li>
+                <Li>
+                    <Code>idKey</Code>: optional stable row identifier field.
+                </Li>
+                <Li>
+                    <Code>emptyLabel</Code>: literal empty-state text.
+                </Li>
+            </Ul>
             <CodeBlock language="xml">{`<Query id="orders" path="/api/orders" />
-<DataTable data="$orders" as="order" empty="No orders found.">
-  <DataColumn field="number" i18n="..." />
-  <DataColumn>
-    <DataHeader>
-      <Flex><P i18n="..." /><Badge i18n="..." /></Flex>
-    </DataHeader>
-    <DataCell>
-      <Flex><P i18n="..." name="$order.customer.name" /><Badge value="$order.status" /></Flex>
-    </DataCell>
-  </DataColumn>
-</DataTable>`}</CodeBlock>
+<Table data="$orders" rowName="order" idKey="id" emptyLabel="No orders found.">
+  <TableColumn key="number" field="number" i18n="orders.table.number" />
+  <TableColumn key="customer" i18n="orders.table.customer">
+    <Link to="/orders/\${order.id}" i18n="orders.open" />
+  </TableColumn>
+  <TableColumn key="status" i18n="orders.table.status">
+    <Badge label="$order.status" variant="info" />
+  </TableColumn>
+</Table>`}</CodeBlock>
         </Stack>
     </Stack>
 );

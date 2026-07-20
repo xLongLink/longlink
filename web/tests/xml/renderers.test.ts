@@ -11,7 +11,7 @@ describe('renderNode', () => {
             values: {},
             count: 7,
         };
-        expect(renderXmlToMarkup([{ name: 'P', params: { count: '${count}', i18n: 'copy.count' } }], ctx)).toContain(
+        expect(renderXmlToMarkup([{ name: 'Text', params: { count: '${count}', i18n: 'copy.count' } }], ctx)).toContain(
             'Count 7'
         );
     });
@@ -34,7 +34,10 @@ describe('renderNode', () => {
             values: {},
             form: { value: 'Ada', placeholder: 'Enter name' },
         };
-        const node: ASTNode = { name: 'Input', params: { value: 'form.value', placeholder: 'form.placeholder' } };
+        const node: ASTNode = {
+            name: 'TextInput',
+            params: { label: 'Name', value: 'form.value', placeholder: 'form.placeholder' },
+        };
         const output = renderXmlToMarkup([node], ctx);
         expect(output).toContain('value="Ada"');
         expect(output).toContain('placeholder="Enter name"');

@@ -1,54 +1,59 @@
 import type { TFunction } from 'i18next';
-import { toast } from 'sonner';
-import { Link } from 'react-router';
-import { type ColumnDef } from '@tanstack/react-table';
+import { useState } from 'react';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
+import { useToast } from '@astryxdesign/core/Toast';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+    Table,
+    type TableColumn,
+    pixel,
+    paginateData,
+    proportional,
+    useTablePagination,
+} from '@astryxdesign/core/Table';
 import type { ApiComputeRegistry } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n';
 import { useComputes } from '@/data/compute';
 import { useDeleteDialog } from '@/lib/utils';
 import { useUserProfile } from '@/hooks/use-user';
-import { DataTable } from '@/components/DataTable';
 import { apiQueryKey, fetchApiJson } from '@/lib/api';
 import CreateCompute from '@/components/dialogs/CreateCompute';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { AdminActionMenu } from '@/components/admin/AdminTableElements';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { computesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
 import { apiComputeMutationResponseSchema, parseApiResponse } from '@/lib/api-schemas';
 
 /** Returns localized admin compute table columns. */
-function createComputeColumns(t: TFunction): Array<ColumnDef<ApiComputeRegistry>> {
+function createComputeColumns(t: TFunction): TableColumn<ApiComputeRegistry>[] {
     return [
         {
-            id: 'compute',
+            key: 'compute',
             header: t('admin.computeTitle'),
-            cell: ({ row }) => {
-                const gatewayUrl = row.original.gateway_url;
-                const computeSlug = row.original.slug;
-
-                return (
-                    <Link to={`/admin/compute/${encodeURIComponent(computeSlug)}`} className="flex items-center gap-3">
-                        <img
-                            src="/images/Kubernetes.png"
-                            alt="Kubernetes"
-                            className="size-10 rounded-md border border-border bg-background object-contain p-1"
-                        />
-                        <div className="min-w-0">
-                            <div className="truncate font-medium text-foreground underline-offset-4 hover:underline">
-                                {row.original.name}
-                            </div>
-                            <div className="truncate text-xs text-muted-foreground">{gatewayUrl ?? '—'}</div>
-                        </div>
-                    </Link>
-                );
-            },
-            meta: { className: 'min-w-56' },
+            width: proportional(1),
+            renderCell: (compute) => (
+                <HStack gap={3} align="center">
+                    <Icon icon="wrench" color="accent" />
+                    <VStack gap={1}>
+                        <Link href={`/admin/compute/${encodeURIComponent(compute.slug)}`} weight="semibold">
+                            {compute.name}
+                        </Link>
+                        <Text type="supporting">{compute.gateway_url ?? '—'}</Text>
+                    </VStack>
+                </HStack>
+            ),
         },
         {
-            accessorKey: 'status',
+            key: 'status',
             header: t('columns.status'),
-            meta: { className: 'w-32' },
+            width: pixel(128),
+            renderCell: (compute) => compute.status,
         },
     ];
 }
@@ -56,6 +61,7 @@ function createComputeColumns(t: TFunction): Array<ColumnDef<ApiComputeRegistry>
 /** Renders the admin compute page. */
 export default function AdminCompute() {
     const { t } = useTranslation();
+    const toast = useToast();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
@@ -70,10 +76,22 @@ export default function AdminCompute() {
                 queryClient.invalidateQueries({ queryKey: infrastructureOptionsQueryKey() }),
                 queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/operations') }),
             ]);
-            toast.success(t('admin.computeDeleted'));
+            toast({ body: t('admin.computeDeleted') });
         },
     });
     const { items: computes, error, isLoading } = useComputes();
+    const [page, setPage] = useState(1);
+    const pageSize = 25;
+    const pageCount = Math.max(1, Math.ceil(computes.length / pageSize));
+    const currentPage = Math.min(page, pageCount);
+    const pagination = useTablePagination<ApiComputeRegistry>({
+        page: currentPage,
+        onPageChange: setPage,
+        totalItems: computes.length,
+        pageSize,
+        label: `${t('actions.previous')} / ${t('actions.next')}`,
+        size: 'sm',
+    });
     const deleteDialog = useDeleteDialog({
         title: t('admin.deleteComputeTitle'),
         mutation: deleteCompute,
@@ -83,39 +101,59 @@ export default function AdminCompute() {
         errorMessage: t('admin.failedDeleteCompute'),
         fallbackDescription: t('admin.deleteComputeFallback'),
     });
-    const computeColumnsBase = createComputeColumns(t);
-    const computeColumns = canManage
-        ? ([
-              ...computeColumnsBase,
+    const columns = createComputeColumns(t);
+    const computeColumns: TableColumn<ApiComputeRegistry>[] = canManage
+        ? [
+              ...columns,
               {
-                  id: 'actions',
+                  key: 'actions',
                   header: t('columns.action'),
-                  meta: { className: 'w-24 text-right' },
-                  cell: ({ row }) => (
-                      <AdminActionMenu
-                          label={row.original.name}
-                          copyLabel={t('admin.copyComputeSlug')}
-                          copyValue={row.original.slug}
-                          onDelete={() => deleteDialog.openFor(row.original)}
+                  width: pixel(96),
+                  align: 'end',
+                  renderCell: (compute) => (
+                      <MoreMenu
+                          label={t('common.openActionsFor', { name: compute.name })}
+                          size="sm"
+                          items={[
+                              {
+                                  label: `${t('actions.copy')} ${t('admin.copyComputeSlug').toLowerCase()}`,
+                                  icon: <Icon icon="copy" size="sm" />,
+                                  onClick: () => {
+                                      void navigator.clipboard.writeText(compute.slug);
+                                      toast({ body: `${t('admin.copyComputeSlug')}: ${t('actions.copied')}` });
+                                  },
+                              },
+                              { label: t('actions.delete'), onClick: () => deleteDialog.openFor(compute) },
+                          ]}
                       />
                   ),
               },
-          ] satisfies Array<ColumnDef<ApiComputeRegistry>>)
-        : computeColumnsBase;
+          ]
+        : columns;
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <Hero icon="cpu">
-                    <div>
-                        <HeroTitle>{t('admin.computeTitle')}</HeroTitle>
-                        <HeroDescription>{t('admin.computeDescription')}</HeroDescription>
-                    </div>
-                </Hero>
+        <VStack gap={6} width="100%">
+            <HStack gap={4} justify="between" align="end" wrap="wrap">
+                <VStack gap={1}>
+                    <Heading level={1}>{t('admin.computeTitle')}</Heading>
+                    <Text type="supporting">{t('admin.computeDescription')}</Text>
+                </VStack>
                 <CreateCompute />
-            </div>
-            <DataTable columns={computeColumns} data={computes} error={error} isLoading={isLoading} pageSize={25} />
+            </HStack>
+            {isLoading && computes.length === 0 ? null : error && computes.length === 0 ? (
+                <Banner status="error" title={error.message} />
+            ) : (
+                <Table
+                    columns={computeColumns}
+                    data={paginateData(computes, currentPage, pageSize)}
+                    density="compact"
+                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    hasHover
+                    idKey="id"
+                    plugins={{ pagination }}
+                />
+            )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
-        </div>
+        </VStack>
     );
 }

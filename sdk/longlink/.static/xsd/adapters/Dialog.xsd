@@ -1,55 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="Types.xsd" />
-  <xsd:complexType name="DialogChildrenOnlyType">
-    <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:any processContents="lax" />
-      </xsd:choice>
-    </xsd:sequence>
+  <xsd:complexType name="DialogType">
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:attribute name="title" type="NonBlankStringType" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
+    <xsd:attribute name="values" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="subtitle" type="xsd:string" use="optional" />
+    <xsd:attribute name="isOpen" type="xsd:string" use="optional" />
+    <xsd:attribute name="triggerLabel" type="NonBlankStringType" use="optional" />
+    <xsd:attribute name="triggerVariant" type="ButtonVariantType" use="optional" default="secondary" />
+    <xsd:attribute name="triggerSize" type="SizeType" use="optional" default="md" />
+    <xsd:attribute name="purpose" type="DialogPurposeType" use="optional" default="info" />
+    <xsd:attribute name="variant" type="DialogVariantType" use="optional" default="standard" />
+    <xsd:attribute name="width" type="xsd:string" use="optional" />
+    <xsd:attribute name="maxHeight" type="xsd:string" use="optional" />
+    <xsd:attribute name="padding" type="SpacingType" use="optional" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
-
-  <xsd:complexType name="DialogType">
-    <xsd:complexContent>
-      <xsd:extension base="DialogChildrenOnlyType">
-        <xsd:attribute name="open" type="xsd:string" use="optional" />
-        <xsd:attribute name="defaultOpen" type="xsd:string" use="optional" />
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="DialogTriggerType">
-    <xsd:complexContent>
-      <xsd:extension base="DialogChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="DialogContentType">
-    <xsd:complexContent>
-      <xsd:extension base="DialogChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="DialogTitleType">
-    <xsd:complexContent>
-      <xsd:extension base="DialogChildrenOnlyType">
-        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="DialogDescriptionType">
-    <xsd:complexContent>
-      <xsd:extension base="DialogChildrenOnlyType">
-        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:element name="Dialog" type="DialogType" />
-  <xsd:element name="DialogTrigger" type="DialogTriggerType" />
-  <xsd:element name="DialogContent" type="DialogContentType" />
-  <xsd:element name="DialogTitle" type="DialogTitleType" />
-  <xsd:element name="DialogDescription" type="DialogDescriptionType" />
+  <xsd:element name="Dialog" type="DialogType">
+    <xsd:annotation><xsd:documentation>Renders a controlled Astryx dialog with an optional trigger.</xsd:documentation></xsd:annotation>
+    <xsd:key name="DialogAccessibleTitle">
+      <xsd:selector xpath="." />
+      <xsd:field xpath="@title | @i18n" />
+    </xsd:key>
+  </xsd:element>
 </xsd:schema>

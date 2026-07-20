@@ -1,12 +1,9 @@
 import re
 import urllib.parse
-from enum import StrEnum
 from uuid import UUID
-from typing import Self, Literal
+from typing import Self
 from pydantic import Field, BaseModel, field_validator, model_validator
-
-DatabaseSSLMode = Literal["disable", "allow", "prefer", "require", "verify-ca", "verify-full"]
-DATABASE_SSL_MODES = frozenset[DatabaseSSLMode]({"disable", "allow", "prefer", "require", "verify-ca", "verify-full"})
+from src.models.types import StorageKind
 
 
 def exoscale_zone(endpoint_url: str) -> str:
@@ -44,17 +41,8 @@ class ComputeConfiguration(BaseModel):
     kubeconfig: str = Field(min_length=1, max_length=1024 * 1024)
 
 
-class DatabaseKind(StrEnum):
-    """Supported database backend kinds."""
-
-    postgresql = "postgresql"
-
-
 class DatabaseConfiguration(BaseModel):
     """Database connection configuration for one registry."""
-
-    # Kind
-    kind: DatabaseKind
 
     # Connection
     host: str = Field(min_length=1, max_length=255)
@@ -90,13 +78,6 @@ class DatabaseConfiguration(BaseModel):
         ):
             raise ValueError("Database host is invalid")
         return value
-
-
-class StorageKind(StrEnum):
-    """Supported storage backend kinds."""
-
-    minio = "minio"
-    exoscale = "exoscale"
 
 
 class StorageConfiguration(BaseModel):

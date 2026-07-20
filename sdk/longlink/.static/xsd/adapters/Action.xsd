@@ -1,25 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="ActionChildrenOnlyType">
+  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:complexType name="ActionType">
     <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:any processContents="lax" />
-      </xsd:choice>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" />
     </xsd:sequence>
+    <xsd:attribute name="action" type="xsd:string" use="optional" />
+    <xsd:attribute name="form" type="xsd:string" use="optional" />
+    <xsd:attribute name="json" type="xsd:string" use="optional" />
+    <xsd:attribute name="invalidate" type="xsd:string" use="optional" />
+    <xsd:attribute name="method" type="ActionMethodType" use="optional" default="POST" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
-
-  <xsd:complexType name="ActionType">
-    <xsd:complexContent>
-      <xsd:extension base="ActionChildrenOnlyType">
-        <xsd:attribute name="action" type="xsd:string" use="optional" />
-        <xsd:attribute name="form" type="xsd:string" use="optional" />
-        <xsd:attribute name="json" type="xsd:string" use="optional" />
-        <xsd:attribute name="invalidate" type="xsd:string" use="optional" />
-        <xsd:attribute name="method" type="xsd:string" use="optional" />
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:element name="Action" type="ActionType" />
+  <xsd:element name="Action" type="ActionType">
+    <xsd:annotation><xsd:documentation>Runs an app-relative request from its child trigger.</xsd:documentation></xsd:annotation>
+  </xsd:element>
 </xsd:schema>

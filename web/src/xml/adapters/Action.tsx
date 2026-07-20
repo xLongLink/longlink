@@ -1,5 +1,5 @@
-import { toast } from 'sonner';
 import { createContext, useContext } from 'react';
+import { useToast } from '@astryxdesign/core/Toast';
 import type { Props } from '@/xml/types';
 import { fetchApiResponse } from '@/lib/api';
 import { renderNode } from '@/xml/core/node';
@@ -10,6 +10,11 @@ import { resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from '.
 const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);
 const ALLOWED_ACTION_METHODS = new Set(['DELETE', 'GET', 'PATCH', 'POST', 'PUT']);
 
+type ActionToast = {
+    success(message: string): void;
+    error(message: string): void;
+};
+
 /** Returns the action handler provided by the nearest XML Action wrapper. */
 export function useActionHandler() {
     return useContext(ActionHandlerContext);
@@ -19,14 +24,19 @@ export function useActionHandler() {
 export function Action({ props, nodes }: Props) {
     const { ctx } = useXmlContext();
     const baseUrl = useUrl('');
+    const showToast = useToast();
+    const toastApi: ActionToast = {
+        success: (message) => showToast({ body: message }),
+        error: (message) => showToast({ body: message, type: 'error' }),
+    };
 
     /** Sends the configured request and shows a minimal toast result. */
     async function handleAction() {
         // Surface action failures through the UI.
         try {
-            await executeAction(props, ctx, baseUrl, fetch, toast);
+            await executeAction(props, ctx, baseUrl, fetch, toastApi);
         } catch (error: unknown) {
-            toast.error(error instanceof Error ? error.message : 'Action failed');
+            toastApi.error(error instanceof Error ? error.message : 'Action failed');
         }
     }
 
@@ -39,7 +49,7 @@ export async function executeAction(
     ctx: ReturnType<typeof useXmlContext>['ctx'],
     baseUrl: string,
     fetchImpl: typeof fetch = fetch,
-    toastApi: { success(message: string): void; error(message: string): void } = toast
+    toastApi: ActionToast
 ): Promise<void> {
     let actionUrl = '';
     let formValue: unknown;

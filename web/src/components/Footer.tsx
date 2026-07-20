@@ -1,105 +1,154 @@
-import { Link } from 'react-router';
 import { Package } from 'lucide-react';
+import { Card } from '@astryxdesign/core/Card';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Center } from '@astryxdesign/core/Center';
+import { Divider } from '@astryxdesign/core/Divider';
 import { GitHub } from '@/svg/GitHub';
 import { LinkedIn } from '@/svg/LinkedIn';
 import { Wordmark } from '@/components/Wordmark';
 
+const footerLinkClassName = 'group hover:!no-underline';
+const footerLinkContentClassName = 'group-hover:text-[var(--color-text-accent)]';
+
+/** Scrolls public pages back to the top after internal navigation. */
+function scrollToTop() {
+    window.scrollTo({ left: 0, top: 0 });
+}
+
 /** Renders the public landing page footer. */
 export function Footer() {
     return (
-        <footer className="px-4 py-6 md:py-8">
-            <div className="mx-auto w-full max-w-[620px] rounded-lg border border-border bg-card/80 px-4 py-3 text-card-foreground shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-md dark:shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_18px_60px_rgba(0,0,0,0.35)]">
-                <div className="flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-                    <div className="flex items-center gap-5">
-                        <Link
-                            to="/"
-                            onClick={() => window.scrollTo({ left: 0, top: 0 })}
-                            className="inline-flex items-center leading-none"
-                            aria-label="LongLink home"
-                        >
-                            <Wordmark className="text-xs" />
-                        </Link>
+        <Stack as="footer" padding={4} paddingBlock={6}>
+            <Center axis="horizontal" width="100%">
+                <Card maxWidth={620} padding={4} width="100%">
+                    <Stack gap={3}>
+                        <Stack direction="horizontal" gap={4} hAlign="between" vAlign="center" wrap="wrap">
+                            <Stack direction="horizontal" gap={4} vAlign="center">
+                                <Link href="/" label="LongLink home" color="inherit" onClick={scrollToTop}>
+                                    <Wordmark />
+                                </Link>
+                                <Stack as="ul" direction="horizontal" gap={3} vAlign="center">
+                                    <li>
+                                        <Link
+                                            as="a"
+                                            className={footerLinkClassName}
+                                            color="secondary"
+                                            href="https://www.linkedin.com/company/swissgpu"
+                                            label="LinkedIn"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <span className={footerLinkContentClassName}>
+                                                <Icon icon={LinkedIn} size="sm" />
+                                            </span>
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            as="a"
+                                            className={footerLinkClassName}
+                                            color="secondary"
+                                            href="https://github.com/xLongLink/longlink"
+                                            label="GitHub"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <span className={footerLinkContentClassName}>
+                                                <Icon icon={GitHub} size="sm" />
+                                            </span>
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            as="a"
+                                            className={footerLinkClassName}
+                                            color="secondary"
+                                            href="https://pypi.org/project/longlink/"
+                                            label="PyPI"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <span className={footerLinkContentClassName}>
+                                                <Icon icon={Package} size="sm" />
+                                            </span>
+                                        </Link>
+                                    </li>
+                                </Stack>
+                            </Stack>
 
-                        <ul className="flex items-center justify-center gap-4 text-muted-foreground">
-                            <li>
-                                <a
-                                    href="https://www.linkedin.com/company/swissgpu"
-                                    aria-label="LinkedIn"
-                                    title="LinkedIn"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex transition-colors hover:text-accent"
+                            <Stack as="nav" direction="horizontal" gap={4} wrap="wrap" aria-label="Footer navigation">
+                                <Link
+                                    href="/"
+                                    className={footerLinkClassName}
+                                    color="secondary"
+                                    onClick={scrollToTop}
+                                    type="supporting"
                                 >
-                                    <LinkedIn className="size-4" />
-                                </a>
-                            </li>
-                            <li>
-                                <a
-                                    href="https://github.com/xLongLink/longlink"
-                                    aria-label="GitHub"
-                                    title="GitHub"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex transition-colors hover:text-accent"
+                                    <span className={footerLinkContentClassName}>Home</span>
+                                </Link>
+                                <Link
+                                    href="/docs"
+                                    className={footerLinkClassName}
+                                    color="secondary"
+                                    onClick={scrollToTop}
+                                    type="supporting"
                                 >
-                                    <GitHub className="size-4" />
-                                </a>
-                            </li>
-                            <li>
-                                <a
-                                    href="https://pypi.org/project/longlink/"
-                                    aria-label="PyPI"
-                                    title="PyPI"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex transition-colors hover:text-accent"
+                                    <span className={footerLinkContentClassName}>Documentation</span>
+                                </Link>
+                                <Link
+                                    href="/pricing"
+                                    className={footerLinkClassName}
+                                    color="secondary"
+                                    onClick={scrollToTop}
+                                    type="supporting"
                                 >
-                                    <Package className="size-4" />
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
+                                    <span className={footerLinkContentClassName}>Pricing</span>
+                                </Link>
+                            </Stack>
+                        </Stack>
 
-                    <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-medium text-muted-foreground sm:justify-end">
-                        <li className="transition-colors hover:text-accent">
-                            <Link to="/" onClick={() => window.scrollTo({ left: 0, top: 0 })}>
-                                Home
-                            </Link>
-                        </li>
-                        <li className="transition-colors hover:text-accent">
-                            <Link to="/docs" onClick={() => window.scrollTo({ left: 0, top: 0 })}>
-                                Documentation
-                            </Link>
-                        </li>
-                        <li className="transition-colors hover:text-accent">
-                            <Link to="/pricing" onClick={() => window.scrollTo({ left: 0, top: 0 })}>
-                                Pricing
-                            </Link>
-                        </li>
-                    </ul>
-                </div>
+                        <Divider />
 
-                <div className="mt-3 flex flex-col items-center justify-between gap-3 border-t border-black/10 pt-3 text-center text-[11px] font-medium text-muted-foreground dark:border-white/10 sm:flex-row sm:text-left">
-                    <p>LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}</p>
-                    <ul className="flex items-center gap-4">
-                        <li className="transition-colors hover:text-accent">
-                            <Link to="/impressum" onClick={() => window.scrollTo({ left: 0, top: 0 })}>
-                                Impressum
-                            </Link>
-                        </li>
-                        <li className="transition-colors hover:text-accent">
-                            <Link to="/terms" onClick={() => window.scrollTo({ left: 0, top: 0 })}>
-                                Terms
-                            </Link>
-                        </li>
-                        <li className="transition-colors hover:text-accent">
-                            <Link to="/privacy" onClick={() => window.scrollTo({ left: 0, top: 0 })}>
-                                Privacy
-                            </Link>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </footer>
+                        <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
+                            <Text type="supporting" color="secondary">
+                                LongLink LLC - 2026 - {import.meta.env.VERSION ?? 'v0.0.0'}
+                            </Text>
+                            <Stack as="nav" direction="horizontal" gap={4} aria-label="Legal navigation">
+                                <Link
+                                    href="/impressum"
+                                    className={footerLinkClassName}
+                                    color="secondary"
+                                    onClick={scrollToTop}
+                                    type="supporting"
+                                >
+                                    <span className={footerLinkContentClassName}>Impressum</span>
+                                </Link>
+                                <Link
+                                    href="/terms"
+                                    className={footerLinkClassName}
+                                    color="secondary"
+                                    onClick={scrollToTop}
+                                    type="supporting"
+                                >
+                                    <span className={footerLinkContentClassName}>Terms</span>
+                                </Link>
+                                <Link
+                                    href="/privacy"
+                                    className={footerLinkClassName}
+                                    color="secondary"
+                                    onClick={scrollToTop}
+                                    type="supporting"
+                                >
+                                    <span className={footerLinkContentClassName}>Privacy</span>
+                                </Link>
+                            </Stack>
+                        </Stack>
+                    </Stack>
+                </Card>
+            </Center>
+        </Stack>
     );
 }

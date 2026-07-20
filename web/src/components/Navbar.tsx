@@ -1,11 +1,16 @@
-import { Link } from 'react-router';
 import { ExternalLink } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Card } from '@astryxdesign/core/Card';
+import { Link } from '@astryxdesign/core/Link';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
+import { Center } from '@astryxdesign/core/Center';
+import { TopNav } from '@astryxdesign/core/TopNav';
 import { useTranslation } from '@/lib/i18n';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
-import { buttonVariants } from '@/components/ui/button';
+
+const navigationLinkContentClassName = 'group-hover:text-[var(--color-text-accent)]';
 
 /** Renders the public landing page navigation. */
 export function Navbar() {
@@ -16,62 +21,69 @@ export function Navbar() {
     return (
         <>
             <DevelopmentNotice />
-            <header className="relative z-20 px-4 py-5">
-                <div className="mx-auto max-w-[620px] rounded-lg border border-border bg-card/80 text-card-foreground shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_18px_60px_rgba(0,0,0,0.18)] backdrop-blur-md dark:shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_18px_60px_rgba(0,0,0,0.35)]">
-                    <nav
-                        className="flex h-11 w-full items-center justify-between gap-4 px-2.5"
-                        aria-label="Main navigation"
-                    >
-                        <Link
-                            to="/"
-                            className="flex items-center gap-2 text-sm font-semibold text-card-foreground"
-                            aria-label="LongLink home"
-                        >
-                            <Wordmark />
-                        </Link>
-
-                        <ul className="hidden items-center gap-7 text-[11px] sm:flex">
-                            <li className="font-medium transition-colors hover:text-accent">
-                                <Link
-                                    to="/docs"
-                                    className="whitespace-nowrap text-card-foreground/70 transition-colors hover:text-card-foreground"
-                                >
-                                    Documentation
+            <Stack as="header" className="relative z-20" padding={4} paddingBlock={5}>
+                <Center axis="horizontal" width="100%">
+                    <Card maxWidth={620} padding={0} width="100%">
+                        <TopNav
+                            endContent={
+                                <Button
+                                    href={getStartedHref}
+                                    label={t('actions.getStarted')}
+                                    size="sm"
+                                    variant="primary"
+                                />
+                            }
+                            heading={
+                                <Link href="/" label={t('common.longlinkHome')} color="inherit">
+                                    <Wordmark />
                                 </Link>
-                            </li>
-                            <li className="font-medium transition-colors hover:text-accent">
-                                <Link
-                                    to="/pricing"
-                                    className="whitespace-nowrap text-card-foreground/70 transition-colors hover:text-card-foreground"
-                                >
-                                    Pricing
-                                </Link>
-                            </li>
-                            <li className="font-medium transition-colors hover:text-accent">
-                                <a
-                                    href="https://github.com/xLongLink/longlink"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 whitespace-nowrap text-card-foreground/70 transition-colors hover:text-card-foreground"
-                                >
-                                    <span>GitHub</span>
-                                    <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
-                                </a>
-                            </li>
-                        </ul>
-
-                        <Link
-                            to={getStartedHref}
-                            className={cn(
-                                buttonVariants({ size: 'sm' }),
-                                'h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90'
-                            )}
-                        >
-                            {t('actions.getStarted')}
-                        </Link>
-                    </nav>
-                </div>
-            </header>
+                            }
+                            label="Main navigation"
+                            centerContent={
+                                <div className="hidden sm:flex">
+                                    <Stack direction="horizontal" gap={4} vAlign="center">
+                                        <Link
+                                            href="/docs"
+                                            className="group hover:!no-underline"
+                                            color="secondary"
+                                            isStandalone
+                                            weight="normal"
+                                        >
+                                            <span className={navigationLinkContentClassName}>Documentation</span>
+                                        </Link>
+                                        <Link
+                                            href="/pricing"
+                                            className="group hover:!no-underline"
+                                            color="secondary"
+                                            isStandalone
+                                            weight="normal"
+                                        >
+                                            <span className={navigationLinkContentClassName}>Pricing</span>
+                                        </Link>
+                                        <Link
+                                            as="a"
+                                            className="group hover:!no-underline"
+                                            color="secondary"
+                                            href="https://github.com/xLongLink/longlink"
+                                            isStandalone
+                                            rel="noopener noreferrer"
+                                            target="_blank"
+                                            weight="normal"
+                                        >
+                                            <span
+                                                className={`inline-flex items-center gap-1 ${navigationLinkContentClassName}`}
+                                            >
+                                                GitHub
+                                                <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
+                                            </span>
+                                        </Link>
+                                    </Stack>
+                                </div>
+                            }
+                        />
+                    </Card>
+                </Center>
+            </Stack>
         </>
     );
 }

@@ -1,9 +1,8 @@
 from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from src.models.users import Theme, Accent, Radius
+from src.models.types import Theme, Accent, Radius, Language
 from src.database.session import session_scope
-from longlink.models.languages import Language
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.organizations import Organization

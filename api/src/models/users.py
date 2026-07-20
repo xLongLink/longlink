@@ -1,45 +1,7 @@
-from enum import StrEnum
 from uuid import UUID
 from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.countries import Country
-from longlink.models.languages import Language
-
-
-class Theme(StrEnum):
-    """Supported user theme preferences."""
-
-    system = "system"
-    light = "light"
-    dark = "dark"
-
-
-class Accent(StrEnum):
-    """Supported user accent colors from the Tailwind palette."""
-
-    slate = "slate"
-    gray = "gray"
-    zinc = "zinc"
-    neutral = "neutral"
-    stone = "stone"
-    red = "red"
-    orange = "orange"
-    amber = "amber"
-    yellow = "yellow"
-    lime = "lime"
-    green = "green"
-    emerald = "emerald"
-    teal = "teal"
-    cyan = "cyan"
-    sky = "sky"
-    blue = "blue"
-    indigo = "indigo"
-    violet = "violet"
-    purple = "purple"
-    fuchsia = "fuchsia"
-    pink = "pink"
-    rose = "rose"
-
+from src.models.types import Theme, Accent, Radius, Country, Language
 
 ACCENT_COLORS: dict[Accent, str] = {
     Accent.slate: "#64748b",
@@ -67,15 +29,6 @@ ACCENT_COLORS: dict[Accent, str] = {
 }
 
 ACCENT_COLOR_VALUES: tuple[str, ...] = tuple(ACCENT_COLORS.values())
-
-
-class Radius(StrEnum):
-    """Supported corner radius preferences."""
-
-    none = "none"
-    small = "small"
-    medium = "medium"
-    large = "large"
 
 
 class UserUpdate(BaseModel):

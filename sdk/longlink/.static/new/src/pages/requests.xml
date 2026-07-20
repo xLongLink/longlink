@@ -9,101 +9,52 @@
         justification="Field auditors need a dedicated machine for onsite audit work."
     />
 
-    <Hero icon="clipboard-list">
-        <HeroTitle i18n="requests.title" />
-        <HeroDescription i18n="requests.description" />
-        <HeroAction>
-            <Dialog>
-                <DialogTrigger>
-                    <Button i18n="requests.create.open">
-                        <Icon name="plus" />
-                    </Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <Stack>
-                        <DialogTitle i18n="requests.create.title" />
-                        <DialogDescription i18n="requests.create.description" />
+    <Stack gap="3">
+        <Heading level="1" i18n="requests.title" />
+        <Text as="p" color="secondary" i18n="requests.description" />
+        <Dialog i18n="requests.create.title" triggerLabel="New request" purpose="form">
+            <Stack gap="3">
+                <Text as="p" i18n="requests.create.description" />
+                <Heading level="2" type="display-3" i18n="requests.create.section" />
+                <FormLayout>
+                    <TextInput
+                        i18n="requests.fields.title"
+                        description="Use a short, searchable name."
+                        value="$draft.title"
+                        isRequired="true"
+                    />
+                    <TextInput i18n="requests.fields.vendor" value="$draft.vendor" isRequired="true" />
+                    <NumberInput i18n="requests.fields.amount" units="CHF" value="$draft.amount" min="0" isRequired="true" />
+                    <TextArea i18n="requests.fields.justification" rows="4" value="$draft.justification" isRequired="true" />
+                </FormLayout>
+                <Action
+                    action="/api/requests"
+                    method="POST"
+                    invalidate='${["requests"]}'
+                    json="${{ title: draft.title, amount: draft.amount, vendor: draft.vendor, justification: draft.justification }}"
+                >
+                    <Button isDisabled="${draft.title in ['']}" variant="primary" i18n="requests.create.submit" />
+                </Action>
+            </Stack>
+        </Dialog>
+    </Stack>
 
-                        <FieldLegend i18n="requests.create.section" />
+    <Text i18n="requests.count" count="${requests.length}" />
 
-                        <Grid columns="2">
-                            <Field>
-                                <FieldLabel htmlFor="request-title" i18n="requests.fields.title" />
-                                <Input id="request-title" value="$draft.title" />
-                                <FieldDescription i18n="requests.fields.titleHelp" />
-                            </Field>
-
-                            <Field>
-                                <FieldLabel htmlFor="request-vendor" i18n="requests.fields.vendor" />
-                                <Input id="request-vendor" value="$draft.vendor" />
-                            </Field>
-                        </Grid>
-
-                        <Field>
-                            <FieldLabel htmlFor="request-amount" i18n="requests.fields.amount" />
-                            <InputGroup>
-                                <InputGroupAddon>
-                                    <Icon name="banknote" />
-                                </InputGroupAddon>
-                                <InputGroupInput id="request-amount" type="number" value="$draft.amount" />
-                                <InputGroupText i18n="requests.fields.currency" />
-                            </InputGroup>
-                        </Field>
-
-                        <Field>
-                            <FieldLabel htmlFor="request-justification" i18n="requests.fields.justification" />
-                            <Textarea id="request-justification" rows="4" value="$draft.justification" />
-                        </Field>
-
-                        <Field orientation="horizontal">
-                            <FieldLabel></FieldLabel>
-                            <Action
-                                action="/api/requests"
-                                method="POST"
-                                invalidate='${["requests"]}'
-                                json="${{ title: draft.title, amount: draft.amount, vendor: draft.vendor, justification: draft.justification }}"
-                            >
-                                <Button disabled="${draft.title in ['']}" i18n="requests.create.submit" />
-                            </Action>
-                        </Field>
-                    </Stack>
-                </DialogContent>
-            </Dialog>
-        </HeroAction>
-    </Hero>
-
-    <P i18n="requests.count" count="${requests.length}" />
-
-    <DataTable data="$requests" as="request" empty="No purchase requests yet.">
-        <DataColumn>
-            <DataHeader i18n="requests.table.request" />
-            <DataCell>
-                <Stack>
-                    <A to="/requests/${request.id}" i18n="requests.table.open">
-                        <Icon name="arrow-right" />
-                    </A>
-                    <P i18n="requests.table.title" title="$request.title" />
-                </Stack>
-            </DataCell>
-        </DataColumn>
-
-        <DataColumn field="vendor" i18n="requests.table.vendor" />
-
-        <DataColumn>
-            <DataHeader i18n="requests.table.amount" />
-            <DataCell value="${`CHF ${request.amount}`}" />
-        </DataColumn>
-
-        <DataColumn>
-            <DataHeader i18n="requests.table.status" />
-            <DataCell>
-                <Badge variant="outline" value="$request.status" />
-            </DataCell>
-        </DataColumn>
-
-        <DataColumn>
-            <DataHeader i18n="requests.table.createdBy" />
-            <DataCell value="$request.created_by.name" />
-        </DataColumn>
-    </DataTable>
+    <Table data="$requests" rowName="request" idKey="id" emptyLabel="No purchase requests yet." hasHover="true">
+        <TableColumn key="request" i18n="requests.table.request">
+            <Stack gap="1">
+                <Link to="/requests/${request.id}" i18n="requests.table.open" />
+                <Text i18n="requests.table.title" values="${{ title: request.title }}" />
+            </Stack>
+        </TableColumn>
+        <TableColumn key="vendor" field="vendor" i18n="requests.table.vendor" />
+        <TableColumn key="amount" i18n="requests.table.amount">
+            <Text value="${`CHF ${request.amount}`}" hasTabularNumbers="true" />
+        </TableColumn>
+        <TableColumn key="status" i18n="requests.table.status">
+            <Badge variant="info" label="$request.status" />
+        </TableColumn>
+        <TableColumn key="createdBy" field="created_by.name" i18n="requests.table.createdBy" />
+    </Table>
 </longlink>

@@ -1,18 +1,22 @@
 import { z } from 'zod';
-import { useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useId, useState } from 'react';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { FieldStatus } from '@astryxdesign/core/FieldStatus';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { fetchApiJson } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { useUserProfile } from '@/hooks/use-user';
 import { apiStorageRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
 import { infrastructureOptionsQueryKey, storagesQueryKey } from '@/lib/query-keys';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const configurationSchema = z.object({
     name: z.string().trim().min(1),
@@ -40,8 +44,10 @@ export default function CreateStorage() {
     const { t } = useTranslation();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
+    const formId = useId();
     const [open, setOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [passwordVisible, setPasswordVisible] = useState(false);
     const form = useForm<Values>({
         defaultValues: {
             name: '',
@@ -90,135 +96,210 @@ export default function CreateStorage() {
     function resetDialogState() {
         form.reset();
         setError(null);
+        setPasswordVisible(false);
+    }
+
+    /** Updates dialog state while protecting an in-flight registration. */
+    function handleOpenChange(nextOpen: boolean) {
+        if (!nextOpen && mutation.isPending) {
+            return;
+        }
+        setOpen(nextOpen);
+        if (!nextOpen) {
+            resetDialogState();
+        }
     }
 
     return (
         <>
-            <Button type="button" onClick={() => setOpen(true)}>
-                {t('dialogs.connectStorageTitle')}
-            </Button>
+            <Button label={t('dialogs.connectStorageTitle')} clickAction={() => setOpen(true)} />
             <Dialog
-                open={open}
-                onOpenChange={(nextOpen) => {
-                    if (!nextOpen && mutation.isPending) {
-                        return;
-                    }
-                    setOpen(nextOpen);
-                    if (!nextOpen) {
-                        resetDialogState();
-                    }
-                }}
+                isOpen={open}
+                onOpenChange={handleOpenChange}
+                purpose={mutation.isPending ? 'required' : 'form'}
+                width={520}
+                maxHeight="calc(100dvh - 2rem)"
             >
-                <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
-                    <DialogTitle>{t('dialogs.connectStorageTitle')}</DialogTitle>
-                    <DialogDescription>{t('dialogs.connectStorageDescription')}</DialogDescription>
-                    <form
-                        className="space-y-4"
-                        onSubmit={form.handleSubmit(async (payload) => {
-                            setError(null);
-                            try {
-                                await mutation.mutateAsync(payload);
-                            } catch (mutationError) {
-                                setError(
-                                    mutationError instanceof Error
-                                        ? mutationError.message
-                                        : t('dialogs.failedConnectStorage')
-                                );
-                            }
-                        })}
-                    >
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="storage-name">{t('labels.name')}</Label>
-                                <Input id="storage-name" {...form.register('name')} autoComplete="off" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="storage-kind">{t('labels.kind')}</Label>
-                                <Select
-                                    value={kind}
-                                    onValueChange={(value) => {
-                                        if (value === 'minio' || value === 'exoscale') {
-                                            form.setValue('kind', value, { shouldValidate: true });
-
-                                            // Remove local credentials when switching to Platform-managed Exoscale.
-                                            if (value === 'exoscale') {
-                                                form.setValue('access_key_id', '', { shouldValidate: true });
-                                                form.setValue('secret_access_key', '', { shouldValidate: true });
-                                            }
-                                        }
-                                    }}
-                                >
-                                    <SelectTrigger id="storage-kind" className="w-full">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="exoscale">Exoscale SOS</SelectItem>
-                                        <SelectItem value="minio">MinIO</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="storage-endpoint">{t('labels.endpointUrl')}</Label>
-                            <Input
-                                id="storage-endpoint"
-                                {...form.register('endpoint_url')}
-                                placeholder={
-                                    kind === 'exoscale' ? 'https://sos-ch-dk-2.exo.io' : 'http://localhost:19000'
-                                }
-                                autoComplete="off"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="storage-runtime-endpoint">
-                                {t('labels.runtimeEndpointUrl')} ({t('dialogs.optional')})
-                            </Label>
-                            <Input
-                                id="storage-runtime-endpoint"
-                                {...form.register('runtime_endpoint_url')}
-                                autoComplete="off"
-                            />
-                        </div>
-                        {kind === 'minio' ? (
-                            <>
-                                <div className="space-y-2">
-                                    <Label htmlFor="storage-access-key">{t('labels.accessKeyId')}</Label>
-                                    <Input
-                                        id="storage-access-key"
-                                        {...form.register('access_key_id')}
-                                        autoComplete="off"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="storage-secret-key">{t('labels.secretAccessKey')}</Label>
-                                    <Input
-                                        id="storage-secret-key"
-                                        type="password"
-                                        {...form.register('secret_access_key')}
-                                        autoComplete="new-password"
-                                    />
-                                </div>
-                            </>
-                        ) : null}
-                        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-                        <div className="flex justify-end gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                disabled={mutation.isPending}
-                                onClick={() => {
-                                    setOpen(false);
-                                    resetDialogState();
-                                }}
+                <Layout
+                    header={
+                        <DialogHeader
+                            title={t('dialogs.connectStorageTitle')}
+                            subtitle={t('dialogs.connectStorageDescription')}
+                            onOpenChange={handleOpenChange}
+                        />
+                    }
+                    content={
+                        <LayoutContent>
+                            <form
+                                id={formId}
+                                onSubmit={form.handleSubmit(async (payload) => {
+                                    setError(null);
+                                    try {
+                                        await mutation.mutateAsync(payload);
+                                    } catch (mutationError) {
+                                        setError(
+                                            mutationError instanceof Error
+                                                ? mutationError.message
+                                                : t('dialogs.failedConnectStorage')
+                                        );
+                                    }
+                                })}
                             >
-                                {t('actions.cancel')}
-                            </Button>
-                            <Button type="submit" disabled={mutation.isPending || !form.formState.isValid}>
-                                {mutation.isPending ? t('actions.creating') : t('actions.create')}
-                            </Button>
-                        </div>
-                    </form>
-                </DialogContent>
+                                <FormLayout>
+                                    <Grid columns={{ minWidth: 180, max: 2, repeat: 'fit' }} gap={4}>
+                                        <Controller
+                                            control={form.control}
+                                            name="name"
+                                            render={({ field }) => (
+                                                <TextInput
+                                                    ref={field.ref}
+                                                    label={t('labels.name')}
+                                                    value={field.value}
+                                                    htmlName={field.name}
+                                                    isRequired
+                                                    onBlur={field.onBlur}
+                                                    onChange={field.onChange}
+                                                />
+                                            )}
+                                        />
+                                        <Selector
+                                            label={t('labels.kind')}
+                                            options={[
+                                                { value: 'exoscale', label: 'Exoscale SOS' },
+                                                { value: 'minio', label: 'MinIO' },
+                                            ]}
+                                            value={kind}
+                                            isRequired
+                                            onChange={(value) => {
+                                                if (value === 'minio' || value === 'exoscale') {
+                                                    form.setValue('kind', value, {
+                                                        shouldDirty: true,
+                                                        shouldValidate: true,
+                                                    });
+
+                                                    // Remove local credentials when switching to Platform-managed Exoscale.
+                                                    if (value === 'exoscale') {
+                                                        form.setValue('access_key_id', '', { shouldValidate: true });
+                                                        form.setValue('secret_access_key', '', {
+                                                            shouldValidate: true,
+                                                        });
+                                                        setPasswordVisible(false);
+                                                    }
+                                                }
+                                            }}
+                                        />
+                                    </Grid>
+                                    <Controller
+                                        control={form.control}
+                                        name="endpoint_url"
+                                        render={({ field }) => (
+                                            <TextInput
+                                                ref={field.ref}
+                                                label={t('labels.endpointUrl')}
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isRequired
+                                                placeholder={
+                                                    kind === 'exoscale'
+                                                        ? 'https://sos-ch-dk-2.exo.io'
+                                                        : 'http://localhost:19000'
+                                                }
+                                                onBlur={field.onBlur}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    <Controller
+                                        control={form.control}
+                                        name="runtime_endpoint_url"
+                                        render={({ field }) => (
+                                            <TextInput
+                                                ref={field.ref}
+                                                label={t('labels.runtimeEndpointUrl')}
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isOptional
+                                                onBlur={field.onBlur}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    {kind === 'minio' ? (
+                                        <>
+                                            <Controller
+                                                control={form.control}
+                                                name="access_key_id"
+                                                render={({ field }) => (
+                                                    <TextInput
+                                                        ref={field.ref}
+                                                        label={t('labels.accessKeyId')}
+                                                        value={field.value}
+                                                        htmlName={field.name}
+                                                        isRequired
+                                                        onBlur={field.onBlur}
+                                                        onChange={field.onChange}
+                                                    />
+                                                )}
+                                            />
+                                            <Controller
+                                                control={form.control}
+                                                name="secret_access_key"
+                                                render={({ field }) => (
+                                                    <Stack gap={1}>
+                                                        <TextInput
+                                                            ref={field.ref}
+                                                            label={t('labels.secretAccessKey')}
+                                                            type={passwordVisible ? 'text' : 'password'}
+                                                            value={field.value}
+                                                            htmlName={field.name}
+                                                            isRequired
+                                                            onBlur={field.onBlur}
+                                                            onChange={field.onChange}
+                                                        />
+                                                        <Button
+                                                            label={
+                                                                passwordVisible
+                                                                    ? t('auth.hidePassword')
+                                                                    : t('auth.showPassword')
+                                                            }
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            aria-pressed={passwordVisible}
+                                                            clickAction={() =>
+                                                                setPasswordVisible((current) => !current)
+                                                            }
+                                                        />
+                                                    </Stack>
+                                                )}
+                                            />
+                                        </>
+                                    ) : null}
+                                    {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
+                                </FormLayout>
+                            </form>
+                        </LayoutContent>
+                    }
+                    footer={
+                        <LayoutFooter>
+                            <Stack direction="horizontal" gap={2} justify="end">
+                                <Button
+                                    label={t('actions.cancel')}
+                                    variant="ghost"
+                                    isDisabled={mutation.isPending}
+                                    clickAction={() => handleOpenChange(false)}
+                                />
+                                <Button
+                                    form={formId}
+                                    type="submit"
+                                    label={mutation.isPending ? t('actions.creating') : t('actions.create')}
+                                    variant="primary"
+                                    isDisabled={!form.formState.isValid}
+                                    isLoading={mutation.isPending}
+                                />
+                            </Stack>
+                        </LayoutFooter>
+                    }
+                />
             </Dialog>
         </>
     );

@@ -1,123 +1,102 @@
 import type { TFunction } from 'i18next';
-import { toast } from 'sonner';
-import { Link } from 'react-router';
-import { type ColumnDef } from '@tanstack/react-table';
+import { useState } from 'react';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Avatar } from '@astryxdesign/core/Avatar';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
+import { useToast } from '@astryxdesign/core/Toast';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+    Table,
+    type TableColumn,
+    pixel,
+    paginateData,
+    proportional,
+    useTablePagination,
+} from '@astryxdesign/core/Table';
 import type { ApiOrganizationSummary } from '@/lib/types';
 import { fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
 import { useOrganizations } from '@/data/admin';
 import { useUserProfile } from '@/hooks/use-user';
-import { DataTable } from '@/components/DataTable';
 import { organizationsQueryKey } from '@/lib/query-keys';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { AdminActionMenu } from '@/components/admin/AdminTableElements';
-import { formatDateTime, getInitials, useDeleteDialog } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { formatDateTime, useDeleteDialog } from '@/lib/utils';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 
 /** Returns localized admin organization table columns. */
-function createOrganizationColumnsBase(t: TFunction): Array<ColumnDef<ApiOrganizationSummary>> {
+function createOrganizationColumns(t: TFunction): TableColumn<ApiOrganizationSummary>[] {
     return [
         {
-            accessorKey: 'name',
+            key: 'name',
             header: t('columns.name'),
-            cell: ({ row, getValue }) => {
-                const name = getValue<string>();
-
-                return (
-                    <div className="flex items-center gap-3">
-                        <Avatar shape="squircle" className="size-8">
-                            <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
-                            <AvatarFallback>{getInitials(row.original.name)}</AvatarFallback>
-                        </Avatar>
-                        <Link to={`/orgs/${row.original.slug}`} className="font-medium text-foreground hover:underline">
-                            {name}
-                        </Link>
-                    </div>
-                );
-            },
+            width: proportional(1),
+            renderCell: (organization) => (
+                <HStack gap={3} align="center">
+                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="small" />
+                    <Link href={`/orgs/${organization.slug}`} weight="semibold">
+                        {organization.name}
+                    </Link>
+                </HStack>
+            ),
         },
         {
-            id: 'created_by',
+            key: 'created_by',
             header: t('columns.createdBy'),
-            cell: ({ row }) => {
-                // Show an empty value when creator data is unavailable.
-                const createdBy = row.original.created_by;
-                if (!createdBy) {
-                    return '—';
-                }
-
-                return (
-                    <div className="flex items-center gap-3">
-                        <Avatar className="size-8">
-                            <AvatarImage src={createdBy.avatar} alt={createdBy.name} />
-                            <AvatarFallback>{getInitials(createdBy.name)}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                            <div className="truncate font-medium text-foreground">{createdBy.name}</div>
-                            <div className="truncate text-xs text-muted-foreground">
-                                {formatDateTime(row.original.created_at)}
-                            </div>
-                        </div>
-                    </div>
-                );
-            },
-            meta: { className: 'w-64' },
+            width: pixel(256),
+            renderCell: (organization) =>
+                organization.created_by ? (
+                    <HStack gap={3} align="center">
+                        <Avatar src={organization.created_by.avatar} name={organization.created_by.name} size="small" />
+                        <VStack gap={1}>
+                            <Text weight="semibold">{organization.created_by.name}</Text>
+                            <Text type="supporting">{formatDateTime(organization.created_at)}</Text>
+                        </VStack>
+                    </HStack>
+                ) : (
+                    '—'
+                ),
         },
         {
-            id: 'updated_by',
+            key: 'updated_by',
             header: t('columns.updatedBy'),
-            cell: ({ row }) => {
-                // Show an empty value when updater data is unavailable.
-                const updatedBy = row.original.updated_by;
-                if (!updatedBy) {
-                    return '—';
-                }
-
-                return (
-                    <div className="flex items-center gap-3">
-                        <Avatar className="size-8">
-                            <AvatarImage src={updatedBy.avatar} alt={updatedBy.name} />
-                            <AvatarFallback>{getInitials(updatedBy.name)}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                            <div className="truncate font-medium text-foreground">{updatedBy.name}</div>
-                            <div className="truncate text-xs text-muted-foreground">
-                                {formatDateTime(row.original.updated_at)}
-                            </div>
-                        </div>
-                    </div>
-                );
-            },
-            meta: { className: 'w-64' },
+            width: pixel(256),
+            renderCell: (organization) =>
+                organization.updated_by ? (
+                    <HStack gap={3} align="center">
+                        <Avatar src={organization.updated_by.avatar} name={organization.updated_by.name} size="small" />
+                        <VStack gap={1}>
+                            <Text weight="semibold">{organization.updated_by.name}</Text>
+                            <Text type="supporting">{formatDateTime(organization.updated_at)}</Text>
+                        </VStack>
+                    </HStack>
+                ) : (
+                    '—'
+                ),
         },
         {
-            id: 'deleted_by',
+            key: 'deleted_by',
             header: t('columns.deletedBy'),
-            cell: ({ row }) => {
-                // Show an empty value when deletion metadata is unavailable.
-                const deletedBy = row.original.deleted_by;
-                if (!deletedBy) {
-                    return '—';
-                }
-
-                return (
-                    <div className="flex items-center gap-3">
-                        <Avatar className="size-8">
-                            <AvatarImage src={deletedBy.avatar} alt={deletedBy.name} />
-                            <AvatarFallback>{getInitials(deletedBy.name)}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                            <div className="truncate font-medium text-foreground">{deletedBy.name}</div>
-                            <div className="truncate text-xs text-muted-foreground">
-                                {row.original.deleted_at ? formatDateTime(row.original.deleted_at) : '—'}
-                            </div>
-                        </div>
-                    </div>
-                );
-            },
-            meta: { className: 'w-64' },
+            width: pixel(256),
+            renderCell: (organization) =>
+                organization.deleted_by ? (
+                    <HStack gap={3} align="center">
+                        <Avatar src={organization.deleted_by.avatar} name={organization.deleted_by.name} size="small" />
+                        <VStack gap={1}>
+                            <Text weight="semibold">{organization.deleted_by.name}</Text>
+                            <Text type="supporting">
+                                {organization.deleted_at ? formatDateTime(organization.deleted_at) : '—'}
+                            </Text>
+                        </VStack>
+                    </HStack>
+                ) : (
+                    '—'
+                ),
         },
     ];
 }
@@ -125,23 +104,32 @@ function createOrganizationColumnsBase(t: TFunction): Array<ColumnDef<ApiOrganiz
 /** Renders the admin organizations page. */
 export default function AdminOrganizations() {
     const { t } = useTranslation();
+    const toast = useToast();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
-
     const deleteOrganization = useMutation({
         mutationFn: async (organizationId: string) => {
-            await fetchApiVoid(`/api/organizations/${organizationId}`, {
-                method: 'DELETE',
-            });
+            await fetchApiVoid(`/api/organizations/${organizationId}`, { method: 'DELETE' });
         },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: organizationsQueryKey() });
-            toast.success(t('admin.organizationDeleted'));
+            toast({ body: t('admin.organizationDeleted') });
         },
     });
-
     const { items: organizations, error, isLoading } = useOrganizations();
+    const [page, setPage] = useState(1);
+    const pageSize = 25;
+    const pageCount = Math.max(1, Math.ceil(organizations.length / pageSize));
+    const currentPage = Math.min(page, pageCount);
+    const pagination = useTablePagination<ApiOrganizationSummary>({
+        page: currentPage,
+        onPageChange: setPage,
+        totalItems: organizations.length,
+        pageSize,
+        label: `${t('actions.previous')} / ${t('actions.next')}`,
+        size: 'sm',
+    });
     const deleteDialog = useDeleteDialog({
         title: t('deleteDialog.deleteOrganizationTitle'),
         mutation: deleteOrganization,
@@ -151,46 +139,56 @@ export default function AdminOrganizations() {
         errorMessage: t('deleteDialog.failedDeleteOrganization'),
         fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
     });
-    const organizationColumnsBase = createOrganizationColumnsBase(t);
-    const organizationColumns = canManage
-        ? ([
-              ...organizationColumnsBase,
+    const columns = createOrganizationColumns(t);
+    const organizationColumns: TableColumn<ApiOrganizationSummary>[] = canManage
+        ? [
+              ...columns,
               {
-                  id: 'actions',
+                  key: 'actions',
                   header: t('columns.action'),
-                  meta: { className: 'w-24 text-right' },
-                  cell: ({ row }) => {
-                      const organization = row.original;
-
-                      return (
-                          <AdminActionMenu
-                              label={organization.name}
-                              copyLabel={t('admin.organizationName')}
-                              copyValue={organization.name}
-                              onDelete={() => deleteDialog.openFor(organization)}
-                          />
-                      );
-                  },
+                  width: pixel(96),
+                  align: 'end',
+                  renderCell: (organization) => (
+                      <MoreMenu
+                          label={t('common.openActionsFor', { name: organization.name })}
+                          size="sm"
+                          items={[
+                              {
+                                  label: `${t('actions.copy')} ${t('admin.organizationName').toLowerCase()}`,
+                                  icon: <Icon icon="copy" size="sm" />,
+                                  onClick: () => {
+                                      void navigator.clipboard.writeText(organization.name);
+                                      toast({ body: `${t('admin.organizationName')}: ${t('actions.copied')}` });
+                                  },
+                              },
+                              { label: t('actions.delete'), onClick: () => deleteDialog.openFor(organization) },
+                          ]}
+                      />
+                  ),
               },
-          ] satisfies Array<ColumnDef<ApiOrganizationSummary>>)
-        : organizationColumnsBase;
+          ]
+        : columns;
 
     return (
-        <div className="space-y-6">
-            <Hero icon="building-2">
-                <div>
-                    <HeroTitle>{t('admin.organizationsTitle')}</HeroTitle>
-                    <HeroDescription>{t('admin.organizationsDescription')}</HeroDescription>
-                </div>
-            </Hero>
-            <DataTable
-                columns={organizationColumns}
-                data={organizations}
-                error={error}
-                isLoading={isLoading}
-                pageSize={25}
-            />
+        <VStack gap={6} width="100%">
+            <VStack gap={1}>
+                <Heading level={1}>{t('admin.organizationsTitle')}</Heading>
+                <Text type="supporting">{t('admin.organizationsDescription')}</Text>
+            </VStack>
+            {isLoading && organizations.length === 0 ? null : error && organizations.length === 0 ? (
+                <Banner status="error" title={error.message} />
+            ) : (
+                <Table
+                    columns={organizationColumns}
+                    data={paginateData(organizations, currentPage, pageSize)}
+                    density="compact"
+                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    hasHover
+                    idKey="id"
+                    plugins={{ pagination }}
+                />
+            )}
             <DeleteConfirmation {...deleteDialog.dialogProps} />
-        </div>
+        </VStack>
     );
 }

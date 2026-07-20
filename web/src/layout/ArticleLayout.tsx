@@ -1,21 +1,21 @@
-import { Link, useLocation } from 'react-router';
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Card } from '@astryxdesign/core/Card';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
+import { useEffect, useRef, useState } from 'react';
+import { Divider } from '@astryxdesign/core/Divider';
+import { Outline } from '@astryxdesign/core/Outline';
+import { AppShell } from '@astryxdesign/core/AppShell';
+import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
+import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 import type { ArticleNavigationGroup, ArticlePage } from '@/pages/catalog';
-import { A } from '@/components/ui/a';
+import { formatDate } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
-import { cn, formatDate } from '@/lib/utils';
 import { Sidebar } from '@/components/Sidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserProfile } from '@/hooks/use-user';
-import { buttonVariants } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import {
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbSeparator,
-    Breadcrumb as UIBreadcrumb,
-} from '@/components/ui/breadcrumb';
 
 type ArticleLayoutProps = {
     page: ArticlePage;
@@ -25,17 +25,20 @@ type ArticleLayoutProps = {
 type ArticleContentProps = Pick<ArticlePage, 'content' | 'metadata'>;
 
 type PageTocItem = {
-    href: string;
+    id: string;
     label: string;
+    level: number;
 };
+
+const DOCS_SIDEBAR_WIDTH = 260;
 
 /** Renders an article page using the shared article shell. */
 export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutProps) {
     const { t } = useTranslation();
     const { user, organizations } = useUserProfile();
+    const isMobile = useIsMobile();
     const location = useLocation();
     const contentRef = useRef<HTMLDivElement>(null);
-    const [activeTocHref, setActiveTocHref] = useState('');
     const [pageToc, setPageToc] = useState<PageTocItem[]>([]);
     const { content, metadata } = page;
     const getStartedHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
@@ -48,19 +51,15 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
             return;
         }
 
-        // Wait for the routed docs content to commit before reading generated heading ids.
+        // Wait for routed documentation content to commit before reading heading IDs.
         const frame = window.requestAnimationFrame(() => {
             const headings = Array.from(contentElement.querySelectorAll<HTMLHeadingElement>('h2[id]'))
-                .filter((heading) => heading.id)
-                .map((heading) => {
-                    const label = heading.textContent?.trim() ?? '';
-
-                    return {
-                        href: `#${heading.id}`,
-                        label,
-                    };
-                })
-                .filter((item) => item.label);
+                .map((heading) => ({
+                    id: heading.id,
+                    label: heading.textContent?.trim() ?? '',
+                    level: 2,
+                }))
+                .filter((item) => item.id && item.label);
 
             setPageToc(headings);
         });
@@ -70,185 +69,128 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
         };
     }, [location.pathname, content]);
 
-    useEffect(() => {
-        // Reset the active item when there are no headings.
-        if (!pageToc.length) {
-            setActiveTocHref('');
-            return;
-        }
+    const breadcrumbs = (
+        <Breadcrumbs
+            className="ms-1 [&_li]:text-[0.875rem] [&_li]:leading-5"
+            separator={<span className="px-1">{'>'}</span>}
+            variant="supporting"
+        >
+            {page.breadcrumbs.map((item, index) => {
+                const isLast = index === page.breadcrumbs.length - 1;
 
-        const headingElements = pageToc
-            .map((item) => document.getElementById(item.href.slice(1)))
-            .filter((heading): heading is HTMLElement => Boolean(heading));
+                return (
+                    <BreadcrumbItem key={item.path} href={isLast ? undefined : item.path} isCurrent={isLast}>
+                        {item.title}
+                    </BreadcrumbItem>
+                );
+            })}
+        </Breadcrumbs>
+    );
 
-        const activeOffset = 112;
-
-        /** Returns the heading nearest to the fixed docs header. */
-        function getActiveHeadingHref(): string {
-            let nextActiveHref = pageToc[0]?.href ?? '';
-
-            // Keep the previous heading active until the next heading passes under the header.
-            for (const heading of headingElements) {
-                // Stop before headings that are still below the header.
-                if (heading.getBoundingClientRect().top > activeOffset) {
-                    break;
-                }
-
-                nextActiveHref = `#${heading.id}`;
-            }
-
-            return nextActiveHref;
-        }
-
-        /** Commits the active heading without re-rendering when it has not changed. */
-        function setNextActiveHeading(nextActiveHref: string): void {
-            setActiveTocHref((currentHref) => (currentHref === nextActiveHref ? currentHref : nextActiveHref));
-        }
-
-        // Respect a hash that targets a known heading.
-        if (location.hash && pageToc.some((item) => item.href === location.hash)) {
-            setNextActiveHeading(location.hash);
-        } else {
-            setNextActiveHeading(getActiveHeadingHref());
-        }
-
-        const observer = new IntersectionObserver(
-            () => {
-                setNextActiveHeading(getActiveHeadingHref());
-            },
-            {
-                rootMargin: `-${activeOffset}px 0px -70% 0px`,
-                threshold: 0,
-            }
-        );
-
-        // Observe each heading used by the generated table of contents.
-        for (const heading of headingElements) {
-            observer.observe(heading);
-        }
-
-        return () => {
-            observer.disconnect();
-        };
-    }, [location.hash, pageToc]);
-
-    return (
-        <SidebarProvider defaultOpen>
-            <Sidebar currentPath={location.pathname} groups={navigationGroups} />
-
-            <SidebarInset className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-20 !w-auto overflow-hidden rounded-lg border border-border bg-background/0 lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2">
-                <div className="flex h-full w-full flex-col shadow-sm">
-                    <div className="pointer-events-auto relative shrink-0 bg-card">
-                        <div className="pointer-events-none absolute right-2 bottom-0 left-2 h-px bg-border" />
-                        <SidebarTrigger className="absolute top-1/2 left-4 z-10 shrink-0 -translate-y-1/2 cursor-pointer active:!-translate-y-1/2 lg:left-6" />
-
-                        <div className="grid h-14 lg:grid-cols-[minmax(0,1fr)_14rem]">
-                            <div className="min-w-0 px-4 lg:px-6">
-                                <div className="mx-auto flex h-full w-full max-w-[60rem] items-center">
-                                    <div className="mx-auto w-full max-w-3xl">
-                                        <UIBreadcrumb className="hidden lg:block">
-                                            <BreadcrumbList>
-                                                {page.breadcrumbs.map((item, index) => {
-                                                    const isLast = index === page.breadcrumbs.length - 1;
-
-                                                    return (
-                                                        <Fragment key={item.path}>
-                                                            {index > 0 ? <BreadcrumbSeparator /> : null}
-                                                            <BreadcrumbItem>
-                                                                <BreadcrumbLink
-                                                                    render={(props) => (
-                                                                        <Link
-                                                                            {...props}
-                                                                            to={item.path}
-                                                                            className={cn(
-                                                                                'transition-colors hover:text-foreground',
-                                                                                isLast && 'font-medium text-foreground'
-                                                                            )}
-                                                                        >
-                                                                            {item.title}
-                                                                        </Link>
-                                                                    )}
-                                                                />
-                                                            </BreadcrumbItem>
-                                                        </Fragment>
-                                                    );
-                                                })}
-                                            </BreadcrumbList>
-                                        </UIBreadcrumb>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <Link
-                                to={getStartedHref}
-                                className={cn(
-                                    buttonVariants({ size: 'sm' }),
-                                    'absolute top-0 bottom-0 right-4 z-10 my-auto h-7 rounded-md bg-foreground px-3 text-xs text-background hover:bg-foreground/90 lg:right-6'
-                                )}
-                            >
-                                {t('actions.getStarted')}
-                            </Link>
-                        </div>
-                    </div>
+    const sidebar = <Sidebar currentPath={location.pathname} groups={navigationGroups} />;
+    const header = (
+        <LayoutHeader padding={0}>
+            <div className="relative grid h-16 grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1fr)_14rem]">
+                <div className="min-w-0 px-4 lg:px-6">
+                    <div className="mx-auto flex h-full w-full max-w-3xl items-center">{breadcrumbs}</div>
                 </div>
-            </SidebarInset>
-
-            <div className="pointer-events-none fixed top-1 right-1 bottom-1 left-1 z-0 rounded-lg bg-card lg:top-2 lg:right-2 lg:bottom-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:peer-data-[state=collapsed]:left-2" />
-            <div className="pointer-events-none fixed top-0 right-1 left-1 z-[15] h-[5px] bg-background lg:right-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:h-[9px] lg:peer-data-[state=collapsed]:left-2" />
-            <div className="pointer-events-none fixed right-1 bottom-0 left-1 z-[15] h-1 bg-background lg:right-2 lg:left-[calc(var(--sidebar-width)+0.5rem)] lg:h-2 lg:peer-data-[state=collapsed]:left-2" />
-            <div className="pointer-events-none fixed top-0 bottom-0 left-0 z-[15] w-[5px] bg-background lg:left-[calc(var(--sidebar-width)-1px)] lg:w-[9px] lg:peer-data-[state=collapsed]:left-0" />
-            <div className="pointer-events-none fixed top-0 right-0 bottom-0 z-[15] w-[5px] bg-background lg:w-[9px]" />
-
-            <div className="relative z-10 w-full px-1 pb-1 pt-[4.25rem] lg:px-2 lg:pb-2 lg:pt-[4.375rem]">
-                <div className="grid lg:grid-cols-[minmax(0,1fr)_14rem]">
-                    <div ref={contentRef} className="px-4 pt-4 pb-32 lg:px-6 lg:pt-6 lg:pb-40">
-                        <div className="mx-auto w-full max-w-[60rem]">
-                            <div className="mx-auto w-full max-w-3xl">
-                                <ArticleContent content={content} metadata={metadata} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <aside className="hidden px-5 pt-4 pb-8 lg:fixed lg:top-[4.5rem] lg:right-2 lg:flex lg:h-[calc(100vh-5rem)] lg:w-56 lg:pt-6">
-                        <div className="relative flex min-h-0 flex-1 pl-4">
-                            <div className="pointer-events-none absolute top-0 bottom-0 left-4 w-px bg-border" />
-                            <div className="flex min-h-0 flex-1 flex-col gap-4">
-                                <div className="shrink-0 pl-4 text-[0.68rem] font-semibold uppercase tracking-normal text-foreground">
-                                    {t('common.onThisPage')}
-                                </div>
-                                <ScrollArea className="-mr-3 min-h-0 flex-1 pr-3">
-                                    <nav aria-label="On this page">
-                                        <div className="space-y-1 text-sm">
-                                            {pageToc.map((item) => {
-                                                const isActive = activeTocHref === item.href;
-
-                                                return (
-                                                    <div key={item.href} className="relative">
-                                                        <A
-                                                            href={item.href}
-                                                            className={cn(
-                                                                'relative block py-1 pl-4 text-muted-foreground no-underline transition-colors before:absolute before:top-1 before:bottom-1 before:left-0 before:w-px before:rounded-full before:bg-transparent hover:text-foreground',
-                                                                isActive &&
-                                                                    'font-medium text-foreground before:bg-foreground'
-                                                            )}
-                                                        >
-                                                            {item.label}
-                                                        </A>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </nav>
-                                </ScrollArea>
-                            </div>
-                        </div>
-                    </aside>
+                <div className="flex items-center justify-end pe-2 lg:px-5">
+                    <Button href={getStartedHref} label={t('actions.getStarted')} size="sm" variant="primary" />
+                </div>
+                <div aria-hidden="true" className="absolute inset-x-2 bottom-0 border-b border-[var(--color-border)]" />
+            </div>
+        </LayoutHeader>
+    );
+    const body = (
+        <div className="grid min-h-full w-full grid-cols-1 lg:grid-cols-[minmax(0,1fr)_14rem]">
+            <div ref={contentRef} className="min-w-0 p-4 pt-7 pb-12 lg:p-6 lg:pt-10 lg:pb-12">
+                <div className="mx-auto w-full max-w-3xl">
+                    <ArticleContent content={content} metadata={metadata} />
                 </div>
             </div>
-        </SidebarProvider>
+
+            {pageToc.length ? (
+                <aside
+                    className="fixed end-2 top-16 bottom-2 z-20 hidden w-56 overflow-auto border-s border-[var(--color-border)] px-5 py-6 lg:block"
+                    aria-label={t('common.onThisPage')}
+                >
+                    <Stack gap={3}>
+                        <Text type="label" weight="semibold">
+                            {t('common.onThisPage')}
+                        </Text>
+                        <Outline items={pageToc} density="compact" label={t('common.onThisPage')} />
+                    </Stack>
+                </aside>
+            ) : null}
+        </div>
+    );
+
+    return (
+        <div style={{ paddingInlineStart: isMobile ? 0 : DOCS_SIDEBAR_WIDTH }}>
+            {!isMobile ? (
+                <div
+                    className="fixed inset-y-0 start-0 z-30 bg-[var(--color-background-body)]"
+                    style={{ width: DOCS_SIDEBAR_WIDTH }}
+                >
+                    {sidebar}
+                </div>
+            ) : null}
+
+            <AppShell contentPadding={2} height="auto" sideNav={isMobile ? sidebar : undefined} variant="wash">
+                {isMobile ? (
+                    <Card minHeight="calc(100dvh - var(--spacing-4))" width="100%">
+                        <Layout
+                            height="auto"
+                            header={header}
+                            content={
+                                <LayoutContent isScrollable={false} padding={0}>
+                                    {body}
+                                </LayoutContent>
+                            }
+                        />
+                    </Card>
+                ) : (
+                    <div className="relative min-h-[calc(100dvh-var(--spacing-4))]">
+                        <Card
+                            style={{
+                                position: 'fixed',
+                                insetBlock: 'var(--spacing-2)',
+                                insetInlineStart: `calc(${DOCS_SIDEBAR_WIDTH}px + var(--spacing-2))`,
+                                insetInlineEnd: 'var(--spacing-2)',
+                                border: 'none',
+                                pointerEvents: 'none',
+                                zIndex: 0,
+                            }}
+                        />
+                        <div
+                            style={{
+                                position: 'fixed',
+                                insetBlockStart: 'var(--spacing-2)',
+                                insetInlineStart: `calc(${DOCS_SIDEBAR_WIDTH}px + var(--spacing-2))`,
+                                insetInlineEnd: 'var(--spacing-2)',
+                                backgroundColor: 'var(--color-background-card)',
+                                borderStartStartRadius: 'var(--radius-container)',
+                                borderStartEndRadius: 'var(--radius-container)',
+                                overflow: 'hidden',
+                                zIndex: 20,
+                            }}
+                        >
+                            {header}
+                        </div>
+                        <div
+                            aria-hidden="true"
+                            className="pointer-events-none fixed inset-y-0 end-0 z-[25] border-8 border-[var(--color-background-body)]"
+                            style={{ insetInlineStart: DOCS_SIDEBAR_WIDTH }}
+                        />
+                        <div className="relative z-10 pt-12">{body}</div>
+                    </div>
+                )}
+            </AppShell>
+        </div>
     );
 }
 
+/** Renders article body content and optional source metadata. */
 function ArticleContent({ content, metadata }: ArticleContentProps) {
     const { t } = useTranslation();
     const lastUpdated = metadata.lastUpdated
@@ -260,17 +202,26 @@ function ArticleContent({ content, metadata }: ArticleContentProps) {
         : '';
 
     return (
-        <article className="space-y-7 text-[1.0625rem] leading-8 text-muted-foreground [&>div]:gap-5 [&_[data-slot=code-block]]:max-w-3xl [&_a]:font-medium [&_code]:text-foreground [&_h1]:border-b [&_h1]:border-border [&_h1]:pb-3 [&_h1]:text-[1.75rem] [&_h1]:leading-tight [&_h1]:font-semibold [&_h1]:tracking-normal [&_h1]:text-foreground [&_h2]:mt-10 [&_h2]:border-b [&_h2]:border-border/80 [&_h2]:pb-3 [&_h2]:text-[1.75rem] [&_h2]:leading-tight [&_h2]:tracking-normal [&_h2]:text-foreground [&_h3]:mt-7 [&_h3]:border-b [&_h3]:border-border/70 [&_h3]:pb-2 [&_h3]:text-[1.35rem] [&_h3]:leading-snug [&_h3]:tracking-normal [&_h3]:text-foreground [&_h4]:mt-5 [&_h4]:border-b [&_h4]:border-border/70 [&_h4]:pb-2 [&_h4]:text-xl [&_h4]:tracking-normal [&_h4]:text-foreground [&_li]:leading-7 [&_p]:max-w-3xl sm:[&_h1]:text-[2rem] sm:[&_h2]:text-[2rem] sm:[&_h3]:text-[1.45rem]">
+        <article className="docs-article space-y-7 text-[1.0625rem] leading-8 text-[var(--color-text-secondary)] [&>div]:gap-5 [&_[data-slot=code-block]]:max-w-3xl [&_a]:font-medium [&_code]:text-[var(--color-text-primary)] [&_h1]:border-b [&_h1]:border-[var(--color-border)] [&_h1]:pb-3 [&_h1]:text-[1.75rem] [&_h1]:leading-tight [&_h1]:font-semibold [&_h1]:tracking-normal [&_h1]:text-[var(--color-text-primary)] [&_h2]:mt-10 [&_h2]:border-b [&_h2]:border-[var(--color-border)] [&_h2]:pb-3 [&_h2]:text-[1.75rem] [&_h2]:leading-tight [&_h2]:tracking-normal [&_h2]:text-[var(--color-text-primary)] [&_h3]:mt-7 [&_h3]:border-b [&_h3]:border-[var(--color-border)] [&_h3]:pb-2 [&_h3]:text-[1.35rem] [&_h3]:leading-snug [&_h3]:tracking-normal [&_h3]:text-[var(--color-text-primary)] [&_h4]:mt-5 [&_h4]:border-b [&_h4]:border-[var(--color-border)] [&_h4]:pb-2 [&_h4]:text-xl [&_h4]:tracking-normal [&_h4]:text-[var(--color-text-primary)] [&_li]:leading-7 [&_p]:max-w-3xl [&_p]:leading-7">
             {content}
             {metadata.lastUpdated || metadata.editUrl ? (
-                <footer className="mt-8 flex flex-col gap-1 border-t border-border pt-4 text-xs font-medium text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-                    {metadata.lastUpdated ? <span>{t('common.lastUpdated', { date: lastUpdated })}</span> : <span />}
-                    {metadata.editUrl ? (
-                        <A href={metadata.editUrl} target="_blank" rel="noopener noreferrer">
-                            {t('docs.editInGithub')}
-                        </A>
-                    ) : null}
-                </footer>
+                <Stack as="footer" gap={3}>
+                    <Divider />
+                    <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
+                        {metadata.lastUpdated ? (
+                            <Text type="supporting" color="secondary">
+                                {t('common.lastUpdated', { date: lastUpdated })}
+                            </Text>
+                        ) : (
+                            <span />
+                        )}
+                        {metadata.editUrl ? (
+                            <Link as="a" href={metadata.editUrl} isExternalLink type="supporting">
+                                {t('docs.editInGithub')}
+                            </Link>
+                        ) : null}
+                    </Stack>
+                </Stack>
             ) : null}
         </article>
     );

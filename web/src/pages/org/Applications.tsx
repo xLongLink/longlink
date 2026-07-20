@@ -1,9 +1,13 @@
-import { Link } from 'react-router';
-import { type ColumnDef } from '@tanstack/react-table';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { ApiOrganizationApplication } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n';
-import { Icon } from '@/components/ui/icon';
-import { DataTable } from '@/components/DataTable';
 
 /** Renders the organization applications table. */
 export default function Applications({
@@ -19,35 +23,42 @@ export default function Applications({
 }) {
     const { t } = useTranslation();
     const applicationsError = error ? new Error(t('errors.loadApplications')) : null;
-
-    const appColumns: Array<ColumnDef<ApiOrganizationApplication>> = [
+    const columns: TableColumn<ApiOrganizationApplication>[] = [
         {
-            accessorKey: 'name',
+            key: 'name',
             header: t('columns.application'),
-            cell: ({ row, getValue }) => {
-                const name = getValue<string>();
-
-                return (
-                    <div className="flex items-center gap-3">
-                        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
-                            <Icon name={row.original.icon ?? 'box'} className="size-4" />
-                        </div>
-                        <div className="min-w-0 space-y-1">
-                            <Link
-                                to={`/orgs/${organization}/apps/${row.original.slug}`}
-                                className="font-medium text-foreground hover:underline"
-                            >
-                                {name}
-                            </Link>
-                            {row.original.description ? (
-                                <p className="text-sm text-muted-foreground">{row.original.description}</p>
-                            ) : null}
-                        </div>
-                    </div>
-                );
-            },
+            width: proportional(1),
+            renderCell: (application) => (
+                <HStack gap={3} align="center">
+                    <Icon icon="wrench" color="accent" />
+                    <VStack gap={1}>
+                        <Link href={`/orgs/${organization}/apps/${application.slug}`} weight="semibold">
+                            {application.name}
+                        </Link>
+                        {application.description ? <Text type="supporting">{application.description}</Text> : null}
+                    </VStack>
+                </HStack>
+            ),
         },
-    ] satisfies Array<ColumnDef<ApiOrganizationApplication>>;
+    ];
 
-    return <DataTable columns={appColumns} data={applications} error={applicationsError} isLoading={isLoading} />;
+    if (isLoading && applications.length === 0) {
+        return null;
+    }
+
+    // Surface application lookup failures when no stale data is available.
+    if (applicationsError && applications.length === 0) {
+        return <Banner status="error" title={applicationsError.message} />;
+    }
+
+    return (
+        <Table
+            columns={columns}
+            data={applications}
+            density="compact"
+            emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+            hasHover
+            idKey="id"
+        />
+    );
 }

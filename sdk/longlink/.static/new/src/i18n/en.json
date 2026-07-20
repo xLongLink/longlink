@@ -145,7 +145,7 @@
             "sup": " v1",
             "underlined": "Attach evidence before approval. "
         },
-        "description": "Showcase application settings with a side menu, local XML state, and form controls.",
+        "description": "Configure application defaults with local XML state and Astryx form controls.",
         "links": {
             "actions": "Links",
             "add": "Add",
@@ -175,7 +175,7 @@
         },
         "title": "Application settings",
         "workflow": {
-            "description": "Combine radio groups, toggle groups, and selects to model workflow defaults.",
+            "description": "Use radio lists and selectors to model workflow defaults.",
             "finance": "Finance",
             "high": "High",
             "low": "Low",

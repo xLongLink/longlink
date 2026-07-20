@@ -1,29 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="SliderChildrenOnlyType">
-    <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:any processContents="lax" />
-      </xsd:choice>
-    </xsd:sequence>
+  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:complexType name="SliderType">
+    <xsd:attribute name="label" type="NonBlankStringType" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
+    <xsd:attribute name="values" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="value" type="xsd:string" use="optional" />
+    <xsd:attribute name="description" type="xsd:string" use="optional" />
+    <xsd:attribute name="htmlName" type="xsd:string" use="optional" />
+    <xsd:attribute name="min" type="xsd:decimal" use="optional" />
+    <xsd:attribute name="max" type="xsd:decimal" use="optional" />
+    <xsd:attribute name="step" type="PositiveDecimalType" use="optional" />
+    <xsd:attribute name="orientation" type="OrientationType" use="optional" default="horizontal" />
+    <xsd:attribute name="valueDisplay" type="SliderValueDisplayType" use="optional" default="tooltip" />
+    <xsd:attribute name="width" type="xsd:string" use="optional" />
+    <xsd:attribute name="disabledMessage" type="xsd:string" use="optional" />
+    <xsd:attribute name="status" type="InputStatusType" use="optional" />
+    <xsd:attribute name="statusMessage" type="xsd:string" use="optional" />
+    <xsd:attribute name="isDisabled" type="xsd:string" use="optional" />
+    <xsd:attribute name="isRequired" type="xsd:string" use="optional" />
+    <xsd:attribute name="isOptional" type="xsd:string" use="optional" />
+    <xsd:attribute name="isLabelHidden" type="xsd:string" use="optional" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
-
-  <xsd:complexType name="SliderType">
-    <xsd:complexContent>
-      <xsd:extension base="SliderChildrenOnlyType">
-        <xsd:attribute name="defaultValue" type="xsd:string" use="optional" />
-        <xsd:attribute name="disabled" type="xsd:string" use="optional" />
-        <xsd:attribute name="id" type="xsd:string" use="optional" />
-        <xsd:attribute name="max" type="xsd:string" use="optional" />
-        <xsd:attribute name="min" type="xsd:string" use="optional" />
-        <xsd:attribute name="name" type="xsd:string" use="optional" />
-        <xsd:attribute name="orientation" type="xsd:string" use="optional" />
-        <xsd:attribute name="step" type="xsd:string" use="optional" />
-        <xsd:attribute name="value" type="xsd:string" use="optional" />
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:element name="Slider" type="SliderType" />
+  <xsd:element name="Slider" type="SliderType">
+    <xsd:annotation><xsd:documentation>Collects one numeric value with Astryx Slider.</xsd:documentation></xsd:annotation>
+    <xsd:key name="SliderAccessibleLabel">
+      <xsd:selector xpath="." />
+      <xsd:field xpath="@label | @i18n" />
+    </xsd:key>
+  </xsd:element>
 </xsd:schema>

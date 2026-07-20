@@ -1,11 +1,19 @@
-import { cn } from '@/lib/utils';
+import type { CSSProperties } from 'react';
 
 /** Renders the LongLink wordmark. */
-export function Wordmark({ className }: { className?: string }) {
+export function Wordmark({ className, style }: { className?: string; style?: CSSProperties }) {
     return (
-        <span className={cn('inline-flex text-sm font-semibold uppercase leading-none tracking-[-0.04em]', className)}>
-            <span className="text-muted-foreground">LONG</span>
-            <span className="text-foreground">LINK</span>
+        <span
+            className={[
+                'inline-flex text-[length:var(--text-label-size)] leading-none font-[var(--font-weight-semibold)] tracking-[-0.04em] uppercase',
+                className,
+            ]
+                .filter(Boolean)
+                .join(' ')}
+            style={style}
+        >
+            <span className="text-[var(--color-text-secondary)]">LONG</span>
+            <span className="text-[var(--color-text-primary)]">LINK</span>
         </span>
     );
 }

@@ -17,7 +17,7 @@ function legalPage(page: Omit<ArticlePage, 'breadcrumbs'>): ArticlePage {
 const termsPage = legalPage({
     title: 'Terms of Service',
     path: '/terms',
-    icon: FileText,
+    icon: <FileText aria-hidden="true" size={16} />,
     content: termsContent,
     metadata: termsMetadata,
 });
@@ -25,7 +25,7 @@ const termsPage = legalPage({
 const impressumPage = legalPage({
     title: 'Impressum',
     path: '/impressum',
-    icon: Landmark,
+    icon: <Landmark aria-hidden="true" size={16} />,
     content: impressumContent,
     metadata: impressumMetadata,
 });
@@ -33,7 +33,7 @@ const impressumPage = legalPage({
 const privacyPage = legalPage({
     title: 'Privacy',
     path: '/privacy',
-    icon: ShieldCheck,
+    icon: <ShieldCheck aria-hidden="true" size={16} />,
     content: privacyContent,
     metadata: privacyMetadata,
 });

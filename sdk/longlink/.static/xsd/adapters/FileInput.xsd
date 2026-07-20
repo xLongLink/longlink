@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:complexType name="FileInputType">
+    <xsd:attribute name="label" type="NonBlankStringType" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
+    <xsd:attribute name="values" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="value" type="xsd:string" use="optional" />
+    <xsd:attribute name="accept" type="xsd:string" use="optional" />
+    <xsd:attribute name="description" type="xsd:string" use="optional" />
+    <xsd:attribute name="placeholder" type="xsd:string" use="optional" />
+    <xsd:attribute name="mode" type="FileInputModeType" use="optional" default="input" />
+    <xsd:attribute name="maxSize" type="xsd:positiveInteger" use="optional" />
+    <xsd:attribute name="maxFiles" type="xsd:positiveInteger" use="optional" />
+    <xsd:attribute name="width" type="xsd:string" use="optional" />
+    <xsd:attribute name="disabledMessage" type="xsd:string" use="optional" />
+    <xsd:attribute name="status" type="InputStatusType" use="optional" />
+    <xsd:attribute name="statusMessage" type="xsd:string" use="optional" />
+    <xsd:attribute name="isMultiple" type="xsd:string" use="optional" />
+    <xsd:attribute name="isDisabled" type="xsd:string" use="optional" />
+    <xsd:attribute name="isLoading" type="xsd:string" use="optional" />
+    <xsd:attribute name="isRequired" type="xsd:string" use="optional" />
+    <xsd:attribute name="isOptional" type="xsd:string" use="optional" />
+    <xsd:attribute name="isLabelHidden" type="xsd:string" use="optional" />
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+  <xsd:element name="FileInput" type="FileInputType">
+    <xsd:annotation><xsd:documentation>Collects File values for multipart actions.</xsd:documentation></xsd:annotation>
+    <xsd:key name="FileInputAccessibleLabel">
+      <xsd:selector xpath="." />
+      <xsd:field xpath="@label | @i18n" />
+    </xsd:key>
+  </xsd:element>
+</xsd:schema>

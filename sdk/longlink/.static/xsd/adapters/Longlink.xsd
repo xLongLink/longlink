@@ -1,26 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="LonglinkChildrenOnlyType">
+  <xsd:complexType name="LonglinkType">
+    <xsd:annotation>
+      <xsd:documentation>Contains one LongLink XML page. Page name and icon are metadata.</xsd:documentation>
+    </xsd:annotation>
     <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:any processContents="lax" />
-      </xsd:choice>
+      <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="strict" />
     </xsd:sequence>
     <xsd:attribute name="name" type="xsd:string" use="optional" />
     <xsd:attribute name="icon" type="xsd:string" use="optional" />
   </xsd:complexType>
-
-  <xsd:complexType name="LonglinkChildrenType">
-    <xsd:complexContent>
-      <xsd:extension base="LonglinkChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="LonglinkType">
-    <xsd:complexContent>
-      <xsd:extension base="LonglinkChildrenType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:element name="longlink" type="LonglinkType" />
+  <xsd:element name="longlink" type="LonglinkType">
+    <xsd:annotation><xsd:documentation>Defines a LongLink XML page.</xsd:documentation></xsd:annotation>
+  </xsd:element>
 </xsd:schema>

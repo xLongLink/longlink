@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="Types.xsd" />
   <xsd:complexType name="IconType">
-    <xsd:attribute name="name" type="xsd:string" use="required" />
+    <xsd:attribute name="icon" type="NonBlankStringType" use="required" />
+    <xsd:attribute name="size" type="IconSizeType" use="optional" default="md" />
+    <xsd:attribute name="color" type="IconColorType" use="optional" default="inherit" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
-
-  <xsd:element name="Icon" type="IconType" />
+  <xsd:element name="Icon" type="IconType">
+    <xsd:annotation><xsd:documentation>Renders a semantic icon from the Astryx theme registry.</xsd:documentation></xsd:annotation>
+  </xsd:element>
 </xsd:schema>

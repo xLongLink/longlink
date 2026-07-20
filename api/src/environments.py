@@ -3,8 +3,8 @@ from uuid import UUID
 from typing import Self
 from pydantic import Field, model_validator
 from src.version import PLATFORM_VERSION_PATTERN
+from src.models.types import DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from src.models.infrastructure import DatabaseSSLMode
 
 DEVELOPMENT = os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
 

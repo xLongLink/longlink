@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="GridChildrenOnlyType">
-    <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:any processContents="lax" />
-      </xsd:choice>
-    </xsd:sequence>
+  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:complexType name="GridType">
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:attribute name="columns" type="xsd:positiveInteger" use="optional" />
+    <xsd:attribute name="minColumnWidth" type="xsd:positiveInteger" use="optional" />
+    <xsd:attribute name="maxColumns" type="xsd:positiveInteger" use="optional" />
+    <xsd:attribute name="repeat" type="GridRepeatType" use="optional" default="fill" />
+    <xsd:attribute name="gap" type="SpacingType" use="optional" />
+    <xsd:attribute name="rowGap" type="SpacingType" use="optional" />
+    <xsd:attribute name="columnGap" type="SpacingType" use="optional" />
+    <xsd:attribute name="align" type="BoxAlignType" use="optional" default="stretch" />
+    <xsd:attribute name="justify" type="BoxAlignType" use="optional" default="stretch" />
+    <xsd:attribute name="width" type="xsd:string" use="optional" />
+    <xsd:attribute name="height" type="xsd:string" use="optional" />
+    <xsd:attribute name="maxWidth" type="xsd:string" use="optional" />
+    <xsd:attribute name="minHeight" type="xsd:string" use="optional" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
-
-  <xsd:complexType name="GridType">
-    <xsd:complexContent>
-      <xsd:extension base="GridChildrenOnlyType">
-        <xsd:attribute name="columns" type="xsd:string" use="optional" />
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:element name="Grid" type="GridType" />
+  <xsd:element name="Grid" type="GridType">
+    <xsd:annotation><xsd:documentation>Arranges XML children in an Astryx grid.</xsd:documentation></xsd:annotation>
+  </xsd:element>
 </xsd:schema>

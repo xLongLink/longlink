@@ -2,10 +2,9 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.roles import ApplicationRoles, OrganizationRoles
+from src.models.types import Icon, Country
 from src.models.users import UserSummary
 from src.models.statuses import ApplicationStatus, OrganizationStatus
-from src.models.countries import Country
-from longlink.models.icons import Icon
 from src.models.operations import OperationResponse
 
 

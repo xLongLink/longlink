@@ -1,20 +1,35 @@
-import { Link } from 'react-router';
-import { P } from '@/components/ui/p';
-import { Li } from '@/components/ui/li';
-import { Ul } from '@/components/ui/ul';
-import { Code } from '@/components/ui/code';
-import { Stack } from '@/components/ui/stack';
-import { Heading } from '@/components/ui/heading';
+import type { ReactNode } from 'react';
+import { Code } from '@astryxdesign/core/Code';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { List, ListItem } from '@astryxdesign/core/List';
 import { CodeBlock } from '@/components/CodeBlock';
 
+/** Renders paragraph text in the pages reference. */
+function P({ children }: { children: ReactNode }) {
+    return <Text as="p">{children}</Text>;
+}
+
+/** Renders a bulleted list in the pages reference. */
+function Ul({ children }: { children: ReactNode }) {
+    return <List listStyle="disc">{children}</List>;
+}
+
+/** Renders one bulleted item in the pages reference. */
+function Li({ children }: { children: ReactNode }) {
+    return <ListItem label={<Text>{children}</Text>} />;
+}
+
 export const metadata = {
-    lastUpdated: '2026-07-10',
+    lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/pages.tsx',
 };
 
 export const content = (
-    <Stack>
-        <Heading id="pages" level="h1">
+    <Stack gap={4}>
+        <Heading id="pages" level={1}>
             Pages
         </Heading>
         <P>
@@ -24,21 +39,21 @@ export const content = (
         </P>
         <P>
             XML page references live in the SDK pages section:{' '}
-            <Link className="text-foreground underline underline-offset-4" to="/docs/sdk/pages/expressions">
+            <Link href="/docs/sdk/pages/expressions" type="inherit" hasUnderline>
                 expressions
             </Link>
             ,{' '}
-            <Link className="text-foreground underline underline-offset-4" to="/docs/sdk/pages/layout">
+            <Link href="/docs/sdk/pages/layout" type="inherit" hasUnderline>
                 layout elements
             </Link>{' '}
             and{' '}
-            <Link className="text-foreground underline underline-offset-4" to="/docs/sdk/pages/components">
+            <Link href="/docs/sdk/pages/components" type="inherit" hasUnderline>
                 component elements
             </Link>
             .
         </P>
-        <Stack className="gap-3">
-            <Heading id="folder-conventions" level="h2">
+        <Stack gap={3}>
+            <Heading id="folder-conventions" level={2}>
                 Folder conventions
             </Heading>
             <P>
@@ -67,8 +82,8 @@ export const content = (
   i18n/
     en.json`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="dynamic-pages" level="h2">
+        <Stack gap={3}>
+            <Heading id="dynamic-pages" level={2}>
                 Dynamic Pages
             </Heading>
             <P>
@@ -98,12 +113,12 @@ export const content = (
             </P>
             <CodeBlock language="xml">{`<longlink>
   <Query id="issue" path="/api/issues/\${params.issue}" />
-  <H1 i18n="issues.detailTitle" />
-  <P i18n="issues.detailSummary" title="$issue.title" />
+  <Heading level="1" i18n="issues.detailTitle" />
+  <Text i18n="issues.detailSummary" values="\${{ title: issue.title }}" />
 </longlink>`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="longlink-page-and-i18n-mounts" level="h2">
+        <Stack gap={3}>
+            <Heading id="longlink-page-and-i18n-mounts" level={2}>
                 LongLink Page and I18n Mounts
             </Heading>
             <P>
@@ -125,8 +140,8 @@ app = LongLink(
                 not use the SDK-managed page or translation mounts.
             </P>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="page-metadata" level="h2">
+        <Stack gap={3}>
+            <Heading id="page-metadata" level={2}>
                 Page Metadata
             </Heading>
             <P>
@@ -143,12 +158,12 @@ app = LongLink(
                 </Li>
             </Ul>
             <CodeBlock language="xml">{`<longlink name="Orders" icon="clipboard-list">
-  <H1 i18n="orders.title" />
-  <P i18n="orders.description" />
+  <Heading level="1" i18n="orders.title" />
+  <Text as="p" i18n="orders.description" />
 </longlink>`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="translations" level="h2">
+        <Stack gap={3}>
+            <Heading id="translations" level={2}>
                 Translations
             </Heading>
             <P>
@@ -158,16 +173,18 @@ app = LongLink(
             </P>
             <CodeBlock language="bash">longlink translations generate</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="state" level="h2">
+        <Stack gap={3}>
+            <Heading id="state" level={2}>
                 State
             </Heading>
             <P>
                 Declares local reactive page state before rendering. Descendant controls can read and write the state
                 through XML value bindings.
             </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+            <Stack gap={2}>
+                <Text as="p" weight="semibold">
+                    Parameters
+                </Text>
                 <Ul>
                     <Li>id: required literal state name.</Li>
                     <Li>
@@ -179,23 +196,23 @@ app = LongLink(
             </Stack>
             <CodeBlock language="xml">{`<State id="form" name="" active="true" />
 
-<Field>
-  <FieldLabel htmlFor="name" i18n="customers.name" />
-  <FieldContent>
-    <Input id="name" value="$form.name" />
-  </FieldContent>
-</Field>`}</CodeBlock>
+<FormLayout>
+  <TextInput i18n="customers.name" value="$form.name" isRequired="true" />
+  <CheckboxInput i18n="customers.active" value="$form.active" />
+</FormLayout>`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="query" level="h2">
+        <Stack gap={3}>
+            <Heading id="query" level={2}>
                 Query
             </Heading>
             <P>
                 Fetches JSON data for the page before rendering. The response is stored in the runtime context and can
                 be used by expressions, loops, and bindings.
             </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+            <Stack gap={2}>
+                <Text as="p" weight="semibold">
+                    Parameters
+                </Text>
                 <Ul>
                     <Li>id: required literal query name.</Li>
                     <Li>
@@ -208,20 +225,23 @@ app = LongLink(
             <CodeBlock language="xml">{`<Query id="orders" path="/api/orders" />
 
 <For each="$orders.items" as="order">
-  <P i18n="orders.row" number="$order.number" status="$order.status" />
+  <Text i18n="orders.row" values="\${{ number: order.number, status: order.status }}" />
 </For>`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="action" level="h2">
+        <Stack gap={3}>
+            <Heading id="action" level={2}>
                 Action
             </Heading>
-            <P>Wraps a clickable trigger such as Button or Icon and sends a mutation request when it is activated.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+            <P>Provides request behavior to a child Button and sends the mutation when that button is activated.</P>
+            <Stack gap={2}>
+                <Text as="p" weight="semibold">
+                    Parameters
+                </Text>
                 <Ul>
                     <Li>action: optional application-relative request path.</Li>
                     <Li>method: optional HTTP method. Defaults to POST.</Li>
                     <Li>json: optional expression payload sent as JSON.</Li>
+                    <Li>form: optional expression object sent as multipart form data instead of JSON.</Li>
                     <Li>invalidate: optional expression resolving to setup ids to refresh.</Li>
                 </Ul>
             </Stack>
@@ -229,16 +249,18 @@ app = LongLink(
   <Button i18n="orders.complete" />
 </Action>`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="for" level="h2">
+        <Stack gap={3}>
+            <Heading id="for" level={2}>
                 For
             </Heading>
             <P>
                 Repeats child XML for each item in an array. Every iteration gets a child scope with the item alias and
                 an index value.
             </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+            <Stack gap={2}>
+                <Text as="p" weight="semibold">
+                    Parameters
+                </Text>
                 <Ul>
                     <Li>each: required expression that must resolve to an array.</Li>
                     <Li>as: required local variable name for each item.</Li>
@@ -246,49 +268,56 @@ app = LongLink(
             </Stack>
             <CodeBlock language="xml">{`<For each="$orders.items" as="order">
   <Card>
-    <H3 i18n="orders.cardTitle" index="\${index + 1}" number="$order.number" />
-    <Badge i18n="orders.status" status="$order.status" />
+    <Heading level="3" i18n="orders.cardTitle" values="\${{ index: index + 1, number: order.number }}" />
+    <Badge i18n="orders.status" values="\${{ status: order.status }}" />
   </Card>
 </For>`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="if" level="h2">
+        <Stack gap={3}>
+            <Heading id="if" level={2}>
                 if
             </Heading>
             <P>
                 Global conditional prop supported by rendered XML nodes. When the expression is falsy, the node and its
                 children are skipped.
             </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+            <Stack gap={2}>
+                <Text as="p" weight="semibold">
+                    Parameters
+                </Text>
                 <Ul>
                     <Li>if: expression evaluated in the current XML runtime scope.</Li>
                 </Ul>
             </Stack>
-            <CodeBlock language="xml">{`<Badge if="$order.blocked" variant="destructive" i18n="orders.blocked" />`}</CodeBlock>
+            <CodeBlock language="xml">{`<Badge if="$order.blocked" variant="error" i18n="orders.blocked" />`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="i18n" level="h2">
+        <Stack gap={3}>
+            <Heading id="i18n" level={2}>
                 i18n
             </Heading>
             <P>
                 Global translation prop used by text-bearing elements. The value is a literal dotted key into the active
                 locale bundle, not an expression.
             </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
+            <Stack gap={2}>
+                <Text as="p" weight="semibold">
+                    Parameters
+                </Text>
                 <Ul>
                     <Li>i18n: dotted translation key.</Li>
                     <Li>count: optional expression used for plural translation entries.</Li>
-                    <Li>{'Any additional attribute can fill {{name}} placeholders inside the translation string.'}</Li>
+                    <Li>
+                        values: optional expression resolving to one object that fills <Code>{'{{name}}'}</Code>{' '}
+                        placeholders.
+                    </Li>
                 </Ul>
             </Stack>
-            <CodeBlock language="xml">{`<H1 i18n="orders.title" />
-<P i18n="orders.count" count="\${orders.items.length}" />
-<Button i18n="orders.assign" user="$assignee.name" />`}</CodeBlock>
+            <CodeBlock language="xml">{`<Heading level="1" i18n="orders.title" />
+<Text i18n="orders.count" count="\${orders.items.length}" />
+<Button i18n="orders.assign" values="\${{ user: assignee.name }}" />`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="expressions" level="h2">
+        <Stack gap={3}>
+            <Heading id="expressions" level={2}>
                 Expressions
             </Heading>
             <P>
@@ -297,14 +326,14 @@ app = LongLink(
             </P>
             <P>
                 Read the{' '}
-                <Link className="text-foreground underline underline-offset-4" to="/docs/sdk/pages/expressions">
+                <Link href="/docs/sdk/pages/expressions" type="inherit" hasUnderline>
                     expressions reference
                 </Link>{' '}
                 before writing complex conditions or action payloads.
             </P>
-            <CodeBlock language="xml">{`<Input value="$form.name" />
-<P i18n="orders.summary" name="$form.name" count="\${orders.items.length}" />
-<Button disabled="\${form.saving || !form.name}" i18n="actions.save" />`}</CodeBlock>
+            <CodeBlock language="xml">{`<TextInput label="Order name" value="$form.name" />
+<Text i18n="orders.summary" values="\${{ name: form.name }}" count="\${orders.items.length}" />
+<Button isDisabled="\${form.saving || !form.name}" i18n="actions.save" />`}</CodeBlock>
         </Stack>
     </Stack>
 );

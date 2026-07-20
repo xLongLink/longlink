@@ -1,56 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="Types.xsd" />
-  <xsd:complexType name="DataTableChildrenOnlyType">
-    <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:any processContents="lax" />
-      </xsd:choice>
-    </xsd:sequence>
+  <xsd:complexType name="TableType">
+    <xsd:sequence><xsd:element ref="TableColumn" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
+    <xsd:attribute name="data" type="NonBlankStringType" use="required" />
+    <xsd:attribute name="rowName" type="NonBlankStringType" use="optional" default="row" />
+    <xsd:attribute name="idKey" type="FieldPathType" use="optional" />
+    <xsd:attribute name="emptyLabel" type="NonBlankStringType" use="optional" default="No data" />
+    <xsd:attribute name="density" type="TableDensityType" use="optional" default="balanced" />
+    <xsd:attribute name="dividers" type="TableDividersType" use="optional" default="rows" />
+    <xsd:attribute name="verticalAlign" type="TableVerticalAlignType" use="optional" default="middle" />
+    <xsd:attribute name="textOverflow" type="TableTextOverflowType" use="optional" default="wrap" />
+    <xsd:attribute name="isStriped" type="xsd:string" use="optional" />
+    <xsd:attribute name="hasHover" type="xsd:string" use="optional" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
-
-  <xsd:complexType name="DataTableType">
-    <xsd:complexContent>
-      <xsd:extension base="DataTableChildrenOnlyType">
-        <xsd:attribute name="as" type="xsd:string" use="optional" />
-        <xsd:attribute name="data" type="xsd:string" use="required" />
-        <xsd:attribute name="empty" type="xsd:string" use="optional" />
-      </xsd:extension>
-    </xsd:complexContent>
+  <xsd:complexType name="TableColumnType">
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:attribute name="key" type="NonBlankStringType" use="required" />
+    <xsd:attribute name="field" type="FieldPathType" use="optional" />
+    <xsd:attribute name="header" type="xsd:string" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
+    <xsd:attribute name="values" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="width" type="PositiveDecimalType" use="optional" />
+    <xsd:attribute name="widthType" type="TableWidthType" use="optional" default="proportional" />
+    <xsd:attribute name="minWidth" type="NonNegativeDecimalType" use="optional" />
+    <xsd:attribute name="align" type="AlignType" use="optional" default="start" />
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
-
-  <xsd:complexType name="DataColumnType">
-    <xsd:complexContent>
-      <xsd:extension base="DataTableChildrenOnlyType">
-        <xsd:attribute name="id" type="xsd:string" use="optional" />
-        <xsd:attribute name="field" type="xsd:string" use="optional" />
-        <xsd:attribute name="header" type="xsd:string" use="optional" />
-        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="DataHeaderType">
-    <xsd:complexContent>
-      <xsd:extension base="DataTableChildrenOnlyType">
-        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-        <xsd:attribute name="value" type="xsd:string" use="optional" />
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:complexType name="DataCellType">
-    <xsd:complexContent>
-      <xsd:extension base="DataTableChildrenOnlyType">
-        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-        <xsd:attribute name="value" type="xsd:string" use="optional" />
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:element name="DataTable" type="DataTableType" />
-  <xsd:element name="DataColumn" type="DataColumnType" />
-  <xsd:element name="DataHeader" type="DataHeaderType" />
-  <xsd:element name="DataCell" type="DataCellType" />
+  <xsd:element name="Table" type="TableType">
+    <xsd:annotation><xsd:documentation>Renders row data with the Astryx Table API.</xsd:documentation></xsd:annotation>
+  </xsd:element>
+  <xsd:element name="TableColumn" type="TableColumnType">
+    <xsd:annotation><xsd:documentation>Defines a keyed Astryx column; field optionally selects a different row path and children form renderCell content.</xsd:documentation></xsd:annotation>
+  </xsd:element>
 </xsd:schema>

@@ -1,57 +1,48 @@
-import { toast } from 'sonner';
-import { Link } from 'react-router';
-import { useEffect, useState } from 'react';
-import { type ColumnDef } from '@tanstack/react-table';
-import { Building2, MoreVertical, Paintbrush, Settings2, UserRound } from 'lucide-react';
+import { useState } from 'react';
+import { useLocation } from 'react-router';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Avatar } from '@astryxdesign/core/Avatar';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
+import { useToast } from '@astryxdesign/core/Toast';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Building2, Paintbrush, UserRound } from 'lucide-react';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import Layout from '@/layout/Layout';
 import { useTranslation } from '@/lib/i18n';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/DataTable';
-import { Menu, MenuSection } from '@/components/ui/menu';
-import { getInitials, useDeleteDialog } from '@/lib/utils';
+import { useDeleteDialog } from '@/lib/utils';
 import { useDeleteOrganization } from '@/hooks/use-organization';
 import { useUpdateUser, useUserProfile } from '@/hooks/use-user';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LANGUAGE_OPTIONS, resolveSupportedLanguage, type Language } from '@/lib/languages';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ACCENT_OPTIONS, RADIUS_OPTIONS, THEME_OPTIONS, type Accent, type Radius, type Theme } from '@/lib/theme';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+
+type SettingsSection = 'account' | 'appearance' | 'organizations';
 
 /** Renders the authenticated settings page. */
 export default function Settings() {
     const { t } = useTranslation();
+    const toast = useToast();
+    const location = useLocation();
     const { user, organizations, theme, accent, radius, language, isLoading } = useUserProfile();
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
     const deleteOrganization = useDeleteOrganization();
-    const [name, setName] = useState(() => user?.name ?? '');
+    const [editedName, setEditedName] = useState<string | null>(null);
     const [accountError, setAccountError] = useState<string | null>(null);
-    const [isNameFocused, setIsNameFocused] = useState(false);
-
-    // Keep the editable fields aligned with the authenticated user record.
-    useEffect(() => {
-        // Wait until the profile has loaded.
-        if (!user) {
-            return;
-        }
-
-        // Avoid overwriting edits while the user is typing.
-        if (!isNameFocused) {
-            setName(user.name);
-        }
-    }, [user, isNameFocused]);
-
+    const hash = location.hash.replace(/^#/, '');
+    const section: SettingsSection =
+        hash === 'appearance' || hash === 'organizations' || hash === 'account' ? hash : 'account';
+    const name = editedName ?? user?.name ?? '';
     const accountName = name.trim();
-    const selectedLanguageValue = resolveSupportedLanguage(language);
+    const selectedLanguage = resolveSupportedLanguage(language);
 
     /** Saves the edited account name when focus leaves its input. */
     const saveAccountName = async () => {
@@ -76,7 +67,8 @@ export default function Settings() {
         // Persist the account name and surface any failure.
         try {
             await updateUser({ name: accountName });
-            toast.success(t('settings.usernameSaved'));
+            setEditedName(accountName);
+            toast({ body: t('settings.usernameSaved') });
         } catch (error) {
             setAccountError(error instanceof Error ? error.message : t('settings.failedUpdateUsername'));
         }
@@ -91,72 +83,42 @@ export default function Settings() {
         errorMessage: t('deleteDialog.failedDeleteOrganization'),
         fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
     });
-
-    const organizationColumns: Array<ColumnDef<(typeof organizations)[number]>> = [
+    const organizationColumns: TableColumn<(typeof organizations)[number]>[] = [
         {
-            accessorKey: 'name',
+            key: 'name',
             header: t('columns.name'),
-            cell: ({ row, getValue }) => (
-                <div className="flex items-center gap-3">
-                    <Avatar shape="squircle" className="size-8 shrink-0">
-                        <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
-                        <AvatarFallback>{getInitials(row.original.name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                        <Link to={`/orgs/${row.original.slug}`} className="font-medium text-foreground hover:underline">
-                            {getValue<string>()}
+            width: proportional(1),
+            renderCell: (organization) => (
+                <HStack gap={3} align="center">
+                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="small" />
+                    <VStack gap={1}>
+                        <Link href={`/orgs/${organization.slug}`} weight="semibold">
+                            {organization.name}
                         </Link>
-                        <div className="truncate text-sm text-muted-foreground">{row.original.country}</div>
-                    </div>
-                </div>
+                        <Text type="supporting">{organization.country}</Text>
+                    </VStack>
+                </HStack>
             ),
         },
         {
-            accessorKey: 'role',
+            key: 'role',
             header: t('columns.role'),
-            meta: { className: 'w-32' },
+            width: pixel(128),
+            renderCell: (organization) => <Badge label={organization.role} />,
         },
         {
-            id: 'actions',
+            key: 'actions',
             header: t('columns.actions'),
-            meta: { className: 'w-44 text-right' },
-            cell: ({ row }) => {
-                // Only owners can delete organizations from settings.
-                if (row.original.role !== 'owner') {
-                    return null;
-                }
-
-                return (
-                    <div className="flex justify-end">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger
-                                render={
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        className="cursor-pointer"
-                                        aria-label={t('common.openActionsFor', { name: row.original.name })}
-                                    />
-                                }
-                            >
-                                <MoreVertical className="size-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    variant="destructive"
-                                    onClick={() => {
-                                        deleteDialog.openFor(row.original);
-                                    }}
-                                >
-                                    {t('actions.delete')}
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                );
-            },
+            width: pixel(96),
+            align: 'end',
+            renderCell: (organization) =>
+                organization.role === 'owner' ? (
+                    <MoreMenu
+                        label={t('common.openActionsFor', { name: organization.name })}
+                        size="sm"
+                        items={[{ label: t('actions.delete'), onClick: () => deleteDialog.openFor(organization) }]}
+                    />
+                ) : null,
         },
     ];
 
@@ -164,190 +126,176 @@ export default function Settings() {
         <Layout
             brandOnly
             tabs={{
-                [t('navigation.organizations')]: { href: '/organizations', icon: Building2 },
-                [t('navigation.settings')]: { href: '/settings', icon: Settings2 },
+                [t('navigation.organizations')]: '/organizations',
+                [t('navigation.settings')]: '/settings',
             }}
         >
-            <section className="mx-auto w-full max-w-[1000px] space-y-8">
-                <Hero icon="settings-2">
-                    <div>
-                        <HeroTitle>{t('settings.title')}</HeroTitle>
-                        <HeroDescription>{t('settings.description')}</HeroDescription>
-                    </div>
-                </Hero>
+            <VStack
+                className="[--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
+                gap={8}
+                width="100%"
+                maxWidth={1000}
+                style={{ marginInline: 'auto' }}
+            >
+                <VStack gap={1}>
+                    <Heading level={1}>{t('settings.title')}</Heading>
+                    <Text type="supporting">{t('settings.description')}</Text>
+                </VStack>
 
-                <Menu defaultValue="account" hashNavigation className="items-start">
-                    <MenuSection value="account" label={t('settings.accountTitle')} icon={UserRound}>
-                        <div className="space-y-4">
-                            <div>
-                                <h2 className="text-lg font-medium text-foreground">{t('settings.accountTitle')}</h2>
-                                <p className="text-sm text-muted-foreground">{t('settings.accountDescription')}</p>
-                            </div>
+                <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
+                    <SideNav style={{ height: 'auto', width: '100%' }}>
+                        <SideNavSection title={t('navigation.settings')} isHeaderHidden>
+                            <SideNavItem
+                                href={`${location.pathname}${location.search}#account`}
+                                icon={UserRound}
+                                isSelected={section === 'account'}
+                                label={t('settings.accountTitle')}
+                            />
+                            <SideNavItem
+                                href={`${location.pathname}${location.search}#appearance`}
+                                icon={Paintbrush}
+                                isSelected={section === 'appearance'}
+                                label={t('settings.appearanceTitle')}
+                            />
+                            <SideNavItem
+                                href={`${location.pathname}${location.search}#organizations`}
+                                icon={Building2}
+                                isSelected={section === 'organizations'}
+                                label={t('settings.organizationsTitle')}
+                            />
+                        </SideNavSection>
+                    </SideNav>
 
-                            <div className="space-y-4">
-                                <div className="grid gap-4 md:grid-cols-[2fr_2fr_1fr]">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="settings-name">{t('labels.username')}</Label>
-                                        <Input
-                                            id="settings-name"
-                                            required
-                                            value={name}
-                                            onChange={(event) => setName(event.target.value)}
-                                            onFocus={() => setIsNameFocused(true)}
-                                            onBlur={() => {
-                                                setIsNameFocused(false);
-                                                void saveAccountName();
-                                            }}
-                                            autoComplete="nickname"
-                                            disabled={isLoading || !user}
-                                        />
-                                    </div>
+                    <div className="min-w-0">
+                        {section === 'account' ? (
+                            <VStack gap={4}>
+                                <VStack gap={1}>
+                                    <Heading level={2}>{t('settings.accountTitle')}</Heading>
+                                    <Text type="supporting">{t('settings.accountDescription')}</Text>
+                                </VStack>
+                                <HStack gap={4} align="start" wrap="wrap">
+                                    <TextInput
+                                        label={t('labels.username')}
+                                        value={name}
+                                        width="100%"
+                                        isRequired
+                                        isDisabled={isLoading || !user}
+                                        status={accountError ? { type: 'error', message: accountError } : undefined}
+                                        onChange={setEditedName}
+                                        onBlur={() => {
+                                            void saveAccountName();
+                                        }}
+                                    />
+                                    <TextInput
+                                        label={t('labels.email')}
+                                        type="email"
+                                        value={user?.email ?? ''}
+                                        width="100%"
+                                        isDisabled
+                                    />
+                                    <Selector
+                                        label={t('labels.language')}
+                                        options={LANGUAGE_OPTIONS.map((option) => ({
+                                            value: option.value,
+                                            label: option.nativeLabel,
+                                        }))}
+                                        value={selectedLanguage}
+                                        width="100%"
+                                        isDisabled={isLoading || isPending || !user}
+                                        placeholder={t('settings.placeholders.language')}
+                                        onChange={(value) => {
+                                            void updateUser({ language: value as Language });
+                                        }}
+                                    />
+                                </HStack>
+                            </VStack>
+                        ) : null}
 
-                                    <div className="space-y-2">
-                                        <Label htmlFor="settings-email">{t('labels.email')}</Label>
-                                        <Input
-                                            id="settings-email"
-                                            type="email"
-                                            readOnly
-                                            value={user?.email ?? ''}
-                                            autoComplete="email"
-                                            disabled={isLoading || !user}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="settings-language">{t('labels.language')}</Label>
-                                        <Select
-                                            value={selectedLanguageValue}
-                                            disabled={isLoading || isPending || !user}
-                                            onValueChange={(value) => {
-                                                void updateUser({ language: value as Language });
-                                            }}
-                                        >
-                                            <SelectTrigger id="settings-language" className="w-full">
-                                                <SelectValue placeholder={t('settings.placeholders.language')} />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {LANGUAGE_OPTIONS.map((option) => (
-                                                    <SelectItem key={option.value} value={option.value}>
-                                                        {option.nativeLabel}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-
-                                {accountError ? <p className="text-sm text-destructive">{accountError}</p> : null}
-                            </div>
-                        </div>
-                    </MenuSection>
-
-                    <MenuSection value="appearance" label={t('settings.appearanceTitle')} icon={Paintbrush}>
-                        <div className="space-y-4">
-                            <div>
-                                <h2 className="text-lg font-medium text-foreground">{t('settings.appearanceTitle')}</h2>
-                                <p className="text-sm text-muted-foreground">{t('settings.appearanceDescription')}</p>
-                            </div>
-
-                            <div className="grid gap-4 md:grid-cols-3">
-                                <div className="space-y-2">
-                                    <p className="text-sm font-medium text-foreground">{t('labels.theme')}</p>
-                                    <Select
+                        {section === 'appearance' ? (
+                            <VStack gap={4}>
+                                <VStack gap={1}>
+                                    <Heading level={2}>{t('settings.appearanceTitle')}</Heading>
+                                    <Text type="supporting">{t('settings.appearanceDescription')}</Text>
+                                </VStack>
+                                <HStack gap={4} align="start" wrap="wrap">
+                                    <Selector
+                                        label={t('labels.theme')}
+                                        options={THEME_OPTIONS}
                                         value={theme}
-                                        disabled={isPending}
-                                        onValueChange={(value) => {
+                                        width={320}
+                                        isDisabled={isPending}
+                                        placeholder={t('settings.placeholders.theme')}
+                                        onChange={(value) => {
                                             void updateUser({ theme: value as Theme });
                                         }}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder={t('settings.placeholders.theme')} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {THEME_OPTIONS.map((option) => (
-                                                <SelectItem key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <p className="text-sm font-medium text-foreground">{t('labels.accentColor')}</p>
-                                    <Select
+                                    />
+                                    <Selector
+                                        label={t('labels.accentColor')}
+                                        options={ACCENT_OPTIONS.map((option) => ({
+                                            value: option.value,
+                                            label: option.label,
+                                            icon: (
+                                                <span
+                                                    aria-hidden="true"
+                                                    style={{
+                                                        display: 'inline-block',
+                                                        width: 10,
+                                                        height: 10,
+                                                        borderRadius: 9999,
+                                                        backgroundColor: option.swatch,
+                                                    }}
+                                                />
+                                            ),
+                                        }))}
                                         value={accent}
-                                        disabled={isPending}
-                                        onValueChange={(value) => {
+                                        width={320}
+                                        isDisabled={isPending}
+                                        placeholder={t('settings.placeholders.color')}
+                                        onChange={(value) => {
                                             void updateUser({ accent: value as Accent });
                                         }}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder={t('settings.placeholders.color')} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {ACCENT_OPTIONS.map((option) => (
-                                                <SelectItem key={option.value} value={option.value}>
-                                                    <span className="flex items-center gap-2">
-                                                        <span
-                                                            className="size-2.5 rounded-full"
-                                                            style={{ backgroundColor: option.swatch }}
-                                                        />
-                                                        {option.label}
-                                                    </span>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <p className="text-sm font-medium text-foreground">{t('labels.radius')}</p>
-                                    <Select
+                                    />
+                                    <Selector
+                                        label={t('labels.radius')}
+                                        options={RADIUS_OPTIONS}
                                         value={radius}
-                                        disabled={isPending}
-                                        onValueChange={(value) => {
+                                        width={320}
+                                        isDisabled={isPending}
+                                        placeholder={t('settings.placeholders.radius')}
+                                        onChange={(value) => {
                                             void updateUser({ radius: value as Radius });
                                         }}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder={t('settings.placeholders.radius')} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {RADIUS_OPTIONS.map((option) => (
-                                                <SelectItem key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                        </div>
-                    </MenuSection>
+                                    />
+                                </HStack>
+                            </VStack>
+                        ) : null}
 
-                    <MenuSection value="organizations" label={t('settings.organizationsTitle')} icon={Building2}>
-                        <div className="space-y-4">
-                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                <div>
-                                    <h2 className="text-lg font-medium text-foreground">
-                                        {t('settings.organizationsTitle')}
-                                    </h2>
-                                    <p className="text-sm text-muted-foreground">
-                                        {t('settings.organizationDescription')}
-                                    </p>
-                                </div>
-
-                                <CreateOrganization />
-                            </div>
-
-                            <DataTable columns={organizationColumns} data={organizations} isLoading={isLoading} />
-                        </div>
-                    </MenuSection>
-                </Menu>
+                        {section === 'organizations' ? (
+                            <VStack gap={4}>
+                                <HStack gap={4} justify="between" align="end" wrap="wrap">
+                                    <VStack gap={1}>
+                                        <Heading level={2}>{t('settings.organizationsTitle')}</Heading>
+                                        <Text type="supporting">{t('settings.organizationDescription')}</Text>
+                                    </VStack>
+                                    <CreateOrganization />
+                                </HStack>
+                                {isLoading && organizations.length === 0 ? null : (
+                                    <Table
+                                        columns={organizationColumns}
+                                        data={organizations}
+                                        density="compact"
+                                        emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                                        hasHover
+                                        idKey="id"
+                                    />
+                                )}
+                            </VStack>
+                        ) : null}
+                    </div>
+                </div>
 
                 <DeleteConfirmation {...deleteDialog.dialogProps} />
-            </section>
+            </VStack>
         </Layout>
     );
 }

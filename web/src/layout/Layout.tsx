@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react';
-import type { LucideIcon } from 'lucide-react';
-import { Link, useLocation } from 'react-router';
-import { cn } from '@/lib/utils';
+import { useLocation } from 'react-router';
+import { Link } from '@astryxdesign/core/Link';
+import { Stack } from '@astryxdesign/core/Stack';
+import { TopNav } from '@astryxdesign/core/TopNav';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { Icon, type IconName, type IconType } from '@astryxdesign/core/Icon';
 import { useTranslation } from '@/lib/i18n';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
@@ -11,7 +14,7 @@ import TopLayout from './TopLayout';
 
 type LayoutTab = {
     href: string;
-    icon?: LucideIcon;
+    icon?: IconName | IconType;
 };
 
 type LayoutProps = {
@@ -22,7 +25,7 @@ type LayoutProps = {
 };
 
 type LayoutTabEntry = {
-    icon?: LucideIcon;
+    icon?: IconName | IconType;
     label: string;
     href: string;
     pathname: string;
@@ -80,64 +83,57 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
     }
 
     const header = (
-        <>
-            <div className="mx-auto w-full px-6 pb-2 pt-4 text-foreground/80">
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        {brandOnly ? (
-                            <Link
-                                to={brandHref}
-                                aria-label={t('common.longlinkHome')}
-                                className="inline-flex items-center"
-                            >
-                                <Wordmark />
-                            </Link>
-                        ) : (
-                            <Breadcrumb />
-                        )}
-                    </div>
-                    {/* Show Documentation when the profile dropdown is not available. */}
-                    {user ? (
+        <Stack gap={0}>
+            <TopNav
+                label={t('common.mainNavigation')}
+                style={{ paddingInline: 'var(--spacing-7)' }}
+                heading={
+                    brandOnly ? (
+                        <Link href={brandHref} label={t('common.longlinkHome')} color="inherit">
+                            <Wordmark />
+                        </Link>
+                    ) : (
+                        <Breadcrumb />
+                    )
+                }
+                endContent={
+                    user ? (
                         <UserProfile />
                     ) : (
-                        <Link
-                            to="/docs"
-                            className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-                        >
+                        <Link href="/docs" color="secondary" isStandalone>
                             {t('common.documentation')}
                         </Link>
-                    )}
-                </div>
-            </div>
+                    )
+                }
+            />
 
             {!tabEntries.length ? null : (
-                <div className="mx-auto w-full px-6 pb-0 pt-0">
-                    <div className="flex w-full items-center gap-2 border-b border-white/10">
-                        {tabEntries.map((tab) => {
-                            const Icon = tab.icon;
-                            const isActive = tab.pathname === activeTabPathname;
-
-                            return (
-                                <Link
-                                    key={tab.label}
-                                    to={tab.href}
-                                    aria-current={isActive ? 'page' : undefined}
-                                    className={cn(
-                                        'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground',
-                                        isActive &&
-                                            'text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-foreground'
-                                    )}
-                                >
-                                    {Icon ? <Icon className="size-4 shrink-0" aria-hidden="true" /> : null}
-                                    {tab.label}
-                                </Link>
-                            );
-                        })}
-                    </div>
-                </div>
+                <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
+                    <TabList
+                        aria-label="Section navigation"
+                        hasDivider
+                        onChange={() => undefined}
+                        size="sm"
+                        value={activeTabPathname ?? ''}
+                    >
+                        {tabEntries.map((tab) => (
+                            <Tab
+                                key={tab.label}
+                                href={tab.href}
+                                icon={tab.icon ? <Icon icon={tab.icon} size="sm" /> : undefined}
+                                label={tab.label}
+                                value={tab.pathname}
+                            />
+                        ))}
+                    </TabList>
+                </Stack>
             )}
-        </>
+        </Stack>
     );
 
-    return <TopLayout header={header}>{children}</TopLayout>;
+    return (
+        <TopLayout header={header} fullHeight={tabEntries.length > 0}>
+            {children}
+        </TopLayout>
+    );
 }

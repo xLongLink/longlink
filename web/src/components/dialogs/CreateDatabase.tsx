@@ -1,38 +1,44 @@
 import { z } from 'zod';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useId, useState } from 'react';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { FieldStatus } from '@astryxdesign/core/FieldStatus';
+import { NumberInput } from '@astryxdesign/core/NumberInput';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { fetchApiJson } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { useUserProfile } from '@/hooks/use-user';
 import { apiDatabaseRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
 import { databasesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
 const schema = z.object({
     name: z.string().trim().min(1),
     host: z.string().trim().min(1),
-    port: z.coerce.number().int().min(1).max(65535),
+    port: z.number().int().min(1).max(65535),
     username: z.string().trim().min(1),
     password: z.string().min(1),
 });
 
-type InputValues = z.input<typeof schema>;
-type Values = z.output<typeof schema>;
+type Values = z.infer<typeof schema>;
 
 /** Registers one database backend. */
 export default function CreateDatabase() {
     const { t } = useTranslation();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
+    const formId = useId();
     const [open, setOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const form = useForm<InputValues, unknown, Values>({
-        defaultValues: { name: '', host: '', port: '5432', username: '', password: '' },
+    const [passwordVisible, setPasswordVisible] = useState(false);
+    const form = useForm<Values>({
+        defaultValues: { name: '', host: '', port: 5432, username: '', password: '' },
         mode: 'onChange',
         resolver: zodResolver(schema),
     });
@@ -43,7 +49,7 @@ export default function CreateDatabase() {
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...payload, kind: 'postgresql' }),
+                    body: JSON.stringify(payload),
                 },
                 (value) => parseApiResponse(apiDatabaseRegistrySchema, value)
             ),
@@ -66,89 +72,176 @@ export default function CreateDatabase() {
     function resetDialogState() {
         form.reset();
         setError(null);
+        setPasswordVisible(false);
+    }
+
+    /** Updates dialog state while protecting an in-flight registration. */
+    function handleOpenChange(nextOpen: boolean) {
+        if (!nextOpen && mutation.isPending) {
+            return;
+        }
+        setOpen(nextOpen);
+        if (!nextOpen) {
+            resetDialogState();
+        }
     }
 
     return (
         <>
-            <Button type="button" onClick={() => setOpen(true)}>
-                {t('dialogs.connectDatabaseTitle')}
-            </Button>
+            <Button label={t('dialogs.connectDatabaseTitle')} clickAction={() => setOpen(true)} />
             <Dialog
-                open={open}
-                onOpenChange={(nextOpen) => {
-                    if (!nextOpen && mutation.isPending) {
-                        return;
-                    }
-                    setOpen(nextOpen);
-                    if (!nextOpen) {
-                        resetDialogState();
-                    }
-                }}
+                isOpen={open}
+                onOpenChange={handleOpenChange}
+                purpose={mutation.isPending ? 'required' : 'form'}
+                width={520}
+                maxHeight="calc(100dvh - 2rem)"
             >
-                <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-lg">
-                    <DialogTitle>{t('dialogs.connectDatabaseTitle')}</DialogTitle>
-                    <DialogDescription>{t('dialogs.connectDatabaseDescription')}</DialogDescription>
-                    <form
-                        className="space-y-4"
-                        onSubmit={form.handleSubmit(async (payload) => {
-                            setError(null);
-                            try {
-                                await mutation.mutateAsync(payload);
-                            } catch (mutationError) {
-                                setError(
-                                    mutationError instanceof Error
-                                        ? mutationError.message
-                                        : t('dialogs.failedConnectDatabase')
-                                );
-                            }
-                        })}
-                    >
-                        <div className="space-y-2">
-                            <Label htmlFor="database-name">{t('labels.name')}</Label>
-                            <Input id="database-name" {...form.register('name')} autoComplete="off" />
-                        </div>
-                        <div className="grid gap-4 sm:grid-cols-[1fr_8rem]">
-                            <div className="space-y-2">
-                                <Label htmlFor="database-host">{t('labels.host')}</Label>
-                                <Input id="database-host" {...form.register('host')} autoComplete="off" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="database-port">{t('labels.port')}</Label>
-                                <Input id="database-port" type="number" {...form.register('port')} />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="database-username">{t('labels.username')}</Label>
-                            <Input id="database-username" {...form.register('username')} autoComplete="off" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="database-password">{t('labels.password')}</Label>
-                            <Input
-                                id="database-password"
-                                type="password"
-                                {...form.register('password')}
-                                autoComplete="new-password"
-                            />
-                        </div>
-                        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-                        <div className="flex justify-end gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                disabled={mutation.isPending}
-                                onClick={() => {
-                                    setOpen(false);
-                                    resetDialogState();
-                                }}
+                <Layout
+                    header={
+                        <DialogHeader
+                            title={t('dialogs.connectDatabaseTitle')}
+                            subtitle={t('dialogs.connectDatabaseDescription')}
+                            onOpenChange={handleOpenChange}
+                        />
+                    }
+                    content={
+                        <LayoutContent>
+                            <form
+                                id={formId}
+                                onSubmit={form.handleSubmit(async (payload) => {
+                                    setError(null);
+                                    try {
+                                        await mutation.mutateAsync(payload);
+                                    } catch (mutationError) {
+                                        setError(
+                                            mutationError instanceof Error
+                                                ? mutationError.message
+                                                : t('dialogs.failedConnectDatabase')
+                                        );
+                                    }
+                                })}
                             >
-                                {t('actions.cancel')}
-                            </Button>
-                            <Button type="submit" disabled={mutation.isPending || !form.formState.isValid}>
-                                {mutation.isPending ? t('actions.creating') : t('actions.create')}
-                            </Button>
-                        </div>
-                    </form>
-                </DialogContent>
+                                <FormLayout>
+                                    <Controller
+                                        control={form.control}
+                                        name="name"
+                                        render={({ field }) => (
+                                            <TextInput
+                                                ref={field.ref}
+                                                label={t('labels.name')}
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isRequired
+                                                onBlur={field.onBlur}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    <Grid columns={{ minWidth: 128, max: 2, repeat: 'fit' }} gap={4}>
+                                        <Controller
+                                            control={form.control}
+                                            name="host"
+                                            render={({ field }) => (
+                                                <TextInput
+                                                    ref={field.ref}
+                                                    label={t('labels.host')}
+                                                    value={field.value}
+                                                    htmlName={field.name}
+                                                    isRequired
+                                                    onBlur={field.onBlur}
+                                                    onChange={field.onChange}
+                                                />
+                                            )}
+                                        />
+                                        <Controller
+                                            control={form.control}
+                                            name="port"
+                                            render={({ field }) => (
+                                                <NumberInput
+                                                    ref={field.ref}
+                                                    label={t('labels.port')}
+                                                    value={field.value}
+                                                    htmlName={field.name}
+                                                    isIntegerOnly
+                                                    isRequired
+                                                    min={1}
+                                                    max={65535}
+                                                    onBlur={field.onBlur}
+                                                    onChange={field.onChange}
+                                                />
+                                            )}
+                                        />
+                                    </Grid>
+                                    <Controller
+                                        control={form.control}
+                                        name="username"
+                                        render={({ field }) => (
+                                            <TextInput
+                                                ref={field.ref}
+                                                label={t('labels.username')}
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isRequired
+                                                onBlur={field.onBlur}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    <Controller
+                                        control={form.control}
+                                        name="password"
+                                        render={({ field }) => (
+                                            <Stack gap={1}>
+                                                <TextInput
+                                                    ref={field.ref}
+                                                    label={t('labels.password')}
+                                                    type={passwordVisible ? 'text' : 'password'}
+                                                    value={field.value}
+                                                    htmlName={field.name}
+                                                    isRequired
+                                                    onBlur={field.onBlur}
+                                                    onChange={field.onChange}
+                                                />
+                                                <Button
+                                                    label={
+                                                        passwordVisible
+                                                            ? t('auth.hidePassword')
+                                                            : t('auth.showPassword')
+                                                    }
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    aria-pressed={passwordVisible}
+                                                    clickAction={() => setPasswordVisible((current) => !current)}
+                                                />
+                                            </Stack>
+                                        )}
+                                    />
+                                    {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
+                                </FormLayout>
+                            </form>
+                        </LayoutContent>
+                    }
+                    footer={
+                        <LayoutFooter>
+                            <Stack direction="horizontal" gap={2} justify="end">
+                                <Button
+                                    label={t('actions.cancel')}
+                                    variant="ghost"
+                                    isDisabled={mutation.isPending}
+                                    clickAction={() => handleOpenChange(false)}
+                                />
+                                <Button
+                                    form={formId}
+                                    type="submit"
+                                    label={mutation.isPending ? t('actions.creating') : t('actions.create')}
+                                    variant="primary"
+                                    isDisabled={!form.formState.isValid}
+                                    isLoading={mutation.isPending}
+                                />
+                            </Stack>
+                        </LayoutFooter>
+                    }
+                />
             </Dialog>
         </>
     );

@@ -1,11 +1,16 @@
-import { Link, useParams } from 'react-router';
-import { type ColumnDef } from '@tanstack/react-table';
+import { useState } from 'react';
+import { useParams } from 'react-router';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Table, type TableColumn, paginateData, proportional, useTablePagination } from '@astryxdesign/core/Table';
 import { useTranslation } from '@/lib/i18n';
-import { DataTable } from '@/components/DataTable';
 import { useComputeNamespaces, useComputes } from '@/data/compute';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 
-type ComputeNamespaceRow = {
+type ComputeNamespaceRow = Record<string, unknown> & {
     name: string;
 };
 
@@ -13,33 +18,41 @@ type ComputeNamespaceRow = {
 export default function ComputeNamespaces() {
     const { t } = useTranslation();
     const { compute = '' } = useParams();
-
+    const [page, setPage] = useState(1);
     const { items: computes, error: computeError, isLoading: computesIsLoading } = useComputes();
-
     const computeRegistry = computes.find((registry) => registry.slug === compute);
-
-    const namespaceColumns: Array<ColumnDef<ComputeNamespaceRow>> = [
+    const columns: TableColumn<ComputeNamespaceRow>[] = [
         {
-            accessorKey: 'name',
+            key: 'name',
             header: t('columns.namespace'),
-            cell: ({ row }) => (
+            width: proportional(1),
+            renderCell: (row) => (
                 <Link
-                    to={`/admin/compute/${encodeURIComponent(compute)}/namespace/${encodeURIComponent(row.original.name)}`}
-                    className="font-medium text-primary underline-offset-4 hover:underline"
+                    href={`/admin/compute/${encodeURIComponent(compute)}/namespace/${encodeURIComponent(row.name)}`}
+                    weight="semibold"
                 >
-                    {row.original.name}
+                    {row.name}
                 </Link>
             ),
-            meta: { className: 'min-w-56' },
         },
     ];
-
     const {
         items: namespaceNames,
         error: namespacesError,
         isLoading: namespacesIsLoading,
     } = useComputeNamespaces(computeRegistry?.id ?? '');
     const rows = namespaceNames.map((name) => ({ name }));
+    const pageSize = 25;
+    const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
+    const currentPage = Math.min(page, pageCount);
+    const pagination = useTablePagination<ComputeNamespaceRow>({
+        page: currentPage,
+        onPageChange: setPage,
+        totalItems: rows.length,
+        pageSize,
+        label: `${t('actions.previous')} / ${t('actions.next')}`,
+        size: 'sm',
+    });
     const error =
         computeError ??
         (!computesIsLoading && !computeRegistry
@@ -47,24 +60,26 @@ export default function ComputeNamespaces() {
             : namespacesError);
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <Hero icon="layers">
-                    <div>
-                        <HeroTitle>{t('resources.namespacesTitle')}</HeroTitle>
-                        <HeroDescription>
-                            {t('resources.namespacesDescription', { name: computeRegistry?.slug || compute })}
-                        </HeroDescription>
-                    </div>
-                </Hero>
-            </div>
-            <DataTable
-                columns={namespaceColumns}
-                data={rows}
-                error={error}
-                isLoading={computesIsLoading || namespacesIsLoading}
-                pageSize={25}
-            />
-        </div>
+        <VStack gap={6} width="100%">
+            <VStack gap={1}>
+                <Heading level={1}>{t('resources.namespacesTitle')}</Heading>
+                <Text type="supporting">
+                    {t('resources.namespacesDescription', { name: computeRegistry?.slug || compute })}
+                </Text>
+            </VStack>
+            {(computesIsLoading || namespacesIsLoading) && rows.length === 0 ? null : error && rows.length === 0 ? (
+                <Banner status="error" title={error.message} />
+            ) : (
+                <Table
+                    columns={columns}
+                    data={paginateData(rows, currentPage, pageSize)}
+                    density="compact"
+                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    hasHover
+                    idKey="name"
+                    plugins={{ pagination }}
+                />
+            )}
+        </VStack>
     );
 }

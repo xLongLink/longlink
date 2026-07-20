@@ -1,18 +1,43 @@
-import { Cloud, FlaskConical, Laptop } from 'lucide-react';
-import { A } from '@/components/ui/a';
-import { P } from '@/components/ui/p';
-import { Code } from '@/components/ui/code';
-import { Stack } from '@/components/ui/stack';
+import type { IconName } from '@astryxdesign/core/Icon';
+import { Code } from '@astryxdesign/core/Code';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { CodeTabs } from '@/components/CodeTabs';
-import { Heading } from '@/components/ui/heading';
 import { CodeBlock } from '@/components/CodeBlock';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-const environmentIcons = {
-    Development: Laptop,
-    Production: Cloud,
-    Testing: FlaskConical,
-} as const;
+const environments: { backend: React.ReactNode; icon: IconName; name: string }[] = [
+    {
+        name: 'Testing',
+        icon: 'checkDouble',
+        backend: (
+            <Text>
+                <Code>memory</Code> SQLite database for isolated test runs.
+            </Text>
+        ),
+    },
+    {
+        name: 'Development',
+        icon: 'wrench',
+        backend: (
+            <Text>
+                <Code>dev.db</Code> SQLite database for local development.
+            </Text>
+        ),
+    },
+    {
+        name: 'Production',
+        icon: 'success',
+        backend: (
+            <Text>
+                <Code>PostgreSQL</Code> database scoped to the application schema.
+            </Text>
+        ),
+    },
+];
 
 export const metadata = {
     lastUpdated: '2026-07-10',
@@ -20,72 +45,47 @@ export const metadata = {
 };
 
 export const content = (
-    <Stack>
-        <Heading id="database" level="h1">
+    <Stack gap={4}>
+        <Heading id="database" level={1}>
             Database
         </Heading>
-        <P>
+        <Text as="p">
             The SDK exposes a small database API for application-owned relational data. Use <Code>Table</Code> to define{' '}
-            <A href="https://sqlmodel.tiangolo.com/">SQLModel</A> tables with LongLink audit fields, and use{' '}
-            <Code>async with get_session()</Code> to open an async <A href="https://www.sqlalchemy.org/">SQLAlchemy</A>{' '}
+            <Link href="https://sqlmodel.tiangolo.com/" isExternalLink type="inherit">
+                SQLModel
+            </Link>{' '}
+            tables with LongLink audit fields, and use <Code>async with get_session()</Code> to open an async{' '}
+            <Link href="https://www.sqlalchemy.org/" isExternalLink type="inherit">
+                SQLAlchemy
+            </Link>{' '}
             database session.
-        </P>
-        <div className="overflow-hidden rounded-md border">
-            <Table>
-                <TableHeader className="bg-muted/50">
-                    <TableRow>
-                        <TableHead className="bg-muted/50">Environment</TableHead>
-                        <TableHead className="bg-muted/50">Database backend</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableRow>
+        </Text>
+        <Table<Record<string, unknown>>>
+            <TableHeader>
+                <TableRow>
+                    <TableHeaderCell>Environment</TableHeaderCell>
+                    <TableHeaderCell>Database backend</TableHeaderCell>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {environments.map((environment) => (
+                    <TableRow key={environment.name}>
                         <TableCell>
-                            <div className="flex items-center gap-3">
-                                <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
-                                    <environmentIcons.Testing aria-hidden={true} className="size-4" />
-                                </div>
-                                <Code>Testing</Code>
-                            </div>
+                            <Stack direction="horizontal" gap={2} align="center">
+                                <Icon icon={environment.icon} size="sm" color="accent" />
+                                <Code>{environment.name}</Code>
+                            </Stack>
                         </TableCell>
-                        <TableCell className="whitespace-normal text-muted-foreground">
-                            <Code>memory</Code> SQLite database for isolated test runs.
-                        </TableCell>
+                        <TableCell>{environment.backend}</TableCell>
                     </TableRow>
-                    <TableRow>
-                        <TableCell>
-                            <div className="flex items-center gap-3">
-                                <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
-                                    <environmentIcons.Development aria-hidden={true} className="size-4" />
-                                </div>
-                                <Code>Development</Code>
-                            </div>
-                        </TableCell>
-                        <TableCell className="whitespace-normal text-muted-foreground">
-                            <Code>dev.db</Code> SQLite database for local development.
-                        </TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell>
-                            <div className="flex items-center gap-3">
-                                <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
-                                    <environmentIcons.Production aria-hidden={true} className="size-4" />
-                                </div>
-                                <Code>Production</Code>
-                            </div>
-                        </TableCell>
-                        <TableCell className="whitespace-normal text-muted-foreground">
-                            <Code>PostgreSQL</Code> database scoped to the application schema.
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
-        </div>
-        <P>
+                ))}
+            </TableBody>
+        </Table>
+        <Text as="p">
             In production, the LongLink Platform provisions the organization database, shared user schema, and
             application schema, then injects the runtime connection settings into the application.
-        </P>
-        <Heading id="usage" level="h2">
+        </Text>
+        <Heading id="usage" level={2}>
             Usage
         </Heading>
         <CodeBlock language="python">{`from longlink import Table, get_session
@@ -99,13 +99,16 @@ async def create_project() -> None:
     async with get_session() as session:
         session.add(Project(name="Launch"))
         await session.commit()`}</CodeBlock>
-        <Heading id="migrations" level="h2">
+        <Heading id="migrations" level={2}>
             Migrations
         </Heading>
-        <P>
-            After you add or change models, run <A href="https://alembic.sqlalchemy.org/en/latest/">Alembic</A>{' '}
+        <Text as="p">
+            After you add or change models, run{' '}
+            <Link href="https://alembic.sqlalchemy.org/en/latest/" isExternalLink type="inherit">
+                Alembic
+            </Link>{' '}
             migrations to keep the database schema aligned:
-        </P>
+        </Text>
         <CodeTabs
             defaultValue="pip"
             items={[
@@ -113,22 +116,22 @@ async def create_project() -> None:
                 { code: 'uv run longlink migrate', label: 'uv', value: 'uv' },
             ]}
         />
-        <P>
+        <Text as="p">
             This manages only application-owned tables in the application schema. The LongLink Platform separately
             executes the SDK-owned migrations for shared tables such as <Code>users</Code>.
-        </P>
-        <Heading id="users" level="h2">
+        </Text>
+        <Heading id="users" level={2}>
             Users
         </Heading>
-        <P>
+        <Text as="p">
             Users are managed by the LongLink platform and exposed by the SDK. Application code should not create,
             update, or authenticate users directly; use <Code>User</Code> as read-only display data when you need to
             show who created or changed a row.
-        </P>
-        <P>
+        </Text>
+        <Text as="p">
             Models that inherit from <Code>Table</Code> expose user relationships such as <Code>created_by</Code> and{' '}
             <Code>updated_by</Code>. Keep your own domain fields separate from platform user data.
-        </P>
+        </Text>
         <CodeBlock language="python">{`from longlink import User, get_session
 from sqlmodel import select
 

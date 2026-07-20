@@ -168,26 +168,39 @@ function firstPluralTemplate(entry: Record<string, unknown>): string | undefined
 
 /** Interpolates simple `{{name}}` placeholders inside a translation string. */
 function interpolate(template: string, props: ASTProps, ctx: ExecutionContext, count?: number): string {
-    // Replace simple placeholders with XML prop values and the resolved count.
+    const values = resolveInterpolationValues(props, ctx);
+
+    // Replace simple placeholders with serialized values and the resolved count.
     return template.replace(/\{\{([A-Za-z_$][\w$]*)\}\}/g, (_match, name: string) => {
         // Prefer the resolved plural count placeholder.
         if (name === 'count' && count != null) {
             return String(count);
         }
 
-        const rawValue = props[name];
+        const value = values[name];
 
-        // Missing placeholders render as empty strings.
-        if (rawValue == null || rawValue === '') {
-            return '';
-        }
-
-        // Nullish evaluated values render as empty strings.
-        const value = evaluate(rawValue, ctx);
+        // Missing and nullish placeholders render as empty strings.
         if (value == null) {
             return '';
         }
 
         return String(value);
     });
+}
+
+/** Resolves the serializable values object used for translation interpolation. */
+function resolveInterpolationValues(props: ASTProps, ctx: ExecutionContext): Record<string, unknown> {
+    const rawValues = props.values;
+
+    // Components without interpolation values use an empty object.
+    if (rawValues == null || rawValues === '') return {};
+
+    const values = evaluate(rawValues, ctx);
+
+    // Keep interpolation input data-oriented and reject arrays or scalar values.
+    if (values == null || typeof values !== 'object' || Array.isArray(values)) {
+        throw new Error('values must evaluate to an object');
+    }
+
+    return values as Record<string, unknown>;
 }

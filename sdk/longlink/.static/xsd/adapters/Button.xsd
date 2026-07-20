@@ -1,58 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="Types.xsd" />
-  <xsd:complexType name="ButtonChildrenOnlyType">
-    <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:any processContents="lax" />
-      </xsd:choice>
-    </xsd:sequence>
-    <xsd:attribute name="if" type="xsd:string" use="optional" />
-    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-  </xsd:complexType>
-
   <xsd:complexType name="ButtonType">
-    <xsd:annotation>
-      <xsd:documentation>Use i18n for the button label key and nested XML children for icons.</xsd:documentation>
-    </xsd:annotation>
-    <xsd:complexContent>
-      <xsd:extension base="ButtonChildrenOnlyType">
-        <xsd:attribute name="append" type="xsd:string" use="optional" />
-        <xsd:attribute name="item" type="xsd:string" use="optional" />
-        <xsd:attribute name="submit" type="xsd:string" use="optional" />
-        <xsd:attribute name="disabled" type="xsd:string" use="optional" />
-        <xsd:attribute name="size" use="optional" default="default">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string">
-              <xsd:enumeration value="default" />
-              <xsd:enumeration value="xs" />
-              <xsd:enumeration value="sm" />
-              <xsd:enumeration value="lg" />
-              <xsd:enumeration value="icon" />
-              <xsd:enumeration value="icon-xs" />
-              <xsd:enumeration value="icon-sm" />
-              <xsd:enumeration value="icon-lg" />
-            </xsd:restriction>
-          </xsd:simpleType>
-        </xsd:attribute>
-        <xsd:attribute name="variant" use="optional" default="default">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string">
-              <xsd:enumeration value="default" />
-              <xsd:enumeration value="outline" />
-              <xsd:enumeration value="ghost" />
-              <xsd:enumeration value="destructive" />
-              <xsd:enumeration value="link" />
-            </xsd:restriction>
-          </xsd:simpleType>
-        </xsd:attribute>
-      </xsd:extension>
-    </xsd:complexContent>
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:attribute name="label" type="NonBlankStringType" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
+    <xsd:attribute name="values" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="variant" type="ButtonVariantType" use="optional" default="secondary" />
+    <xsd:attribute name="size" type="SizeType" use="optional" default="md" />
+    <xsd:attribute name="type" type="ButtonHtmlType" use="optional" default="button" />
+    <xsd:attribute name="isDisabled" type="xsd:string" use="optional" />
+    <xsd:attribute name="isLoading" type="xsd:string" use="optional" />
+    <xsd:attribute name="isIconOnly" type="xsd:string" use="optional" />
+    <xsd:attribute name="tooltip" type="xsd:string" use="optional" />
+    <xsd:attribute name="append" type="xsd:string" use="optional" />
+    <xsd:attribute name="item" type="xsd:string" use="optional" />
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
-
   <xsd:element name="Button" type="ButtonType">
-    <xsd:annotation>
-      <xsd:documentation>Renders an action button.</xsd:documentation>
-    </xsd:annotation>
+    <xsd:annotation><xsd:documentation>Renders an Astryx action button.</xsd:documentation></xsd:annotation>
+    <xsd:key name="ButtonAccessibleLabel">
+      <xsd:selector xpath="." />
+      <xsd:field xpath="@label | @i18n" />
+    </xsd:key>
   </xsd:element>
 </xsd:schema>

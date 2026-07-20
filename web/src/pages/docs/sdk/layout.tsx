@@ -1,242 +1,181 @@
-import { P } from '@/components/ui/p';
-import { Li } from '@/components/ui/li';
-import { Ul } from '@/components/ui/ul';
-import { Code } from '@/components/ui/code';
-import { Stack } from '@/components/ui/stack';
-import { Heading } from '@/components/ui/heading';
+import type { ReactNode } from 'react';
+import { Code } from '@astryxdesign/core/Code';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { List, ListItem } from '@astryxdesign/core/List';
 import { CodeBlock } from '@/components/CodeBlock';
 
+/** Renders paragraph text in the layout reference. */
+function P({ children }: { children: ReactNode }) {
+    return <Text as="p">{children}</Text>;
+}
+
+/** Renders a bulleted list in the layout reference. */
+function Ul({ children }: { children: ReactNode }) {
+    return <List listStyle="disc">{children}</List>;
+}
+
+/** Renders one bulleted item in the layout reference. */
+function Li({ children }: { children: ReactNode }) {
+    return <ListItem label={<Text>{children}</Text>} />;
+}
+
 export const metadata = {
-    lastUpdated: '2026-07-10',
+    lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/layout.tsx',
 };
 
 export const content = (
-    <Stack>
-        <Heading id="layout" level="h1">
+    <Stack gap={4}>
+        <Heading id="layout" level={1}>
             Layout
         </Heading>
-        <P>Layout elements organize XML page content into responsive sections, cards, dialogs, tabs, and menus.</P>
-        <Stack className="gap-3">
-            <Heading id="columns" level="h2">
-                Columns
-            </Heading>
-            <P>
-                Creates a responsive horizontal layout from immediate Column children. Widths are relative, so sibling
-                widths should usually add up to 100.
-            </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Column Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>width</Code>: optional relative width. Defaults to <Code>100</Code> when omitted.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Columns>
-  <Column width="70">...</Column>
-  <Column width="30">...</Column>
-</Columns>`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="grid" level="h2">
-                Grid
-            </Heading>
-            <P>Arranges children in equal columns or a custom CSS grid template.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>columns</Code>: optional number of equal columns or a CSS{' '}
-                        <Code>grid-template-columns</Code> value.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Grid columns="3">
-  <Card>...</Card>
-  <Card>...</Card>
-  <Card>...</Card>
-</Grid>`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="stack" level="h2">
+        <P>
+            XML v2 uses Stack, Grid, Card, and FormLayout for composition. The old Columns, Flex, and Hero elements are
+            removed. Tabs and dialogs now use one flat owner component instead of compound trigger, header, and content
+            tags.
+        </P>
+
+        <Stack gap={3}>
+            <Heading id="stack" level={2}>
                 Stack
             </Heading>
-            <P>Stacks child elements vertically with consistent spacing.</P>
-            <CodeBlock language="xml">{`<Stack>
-  ...
-  ...
+            <P>
+                Stack arranges children vertically by default. Set <Code>direction=&quot;horizontal&quot;</Code> for row
+                layout. It replaces Flex as well as simple list-like visual groups.
+            </P>
+            <Ul>
+                <Li>
+                    <Code>justify</Code>: <Code>start</Code>, <Code>center</Code>, <Code>end</Code>,{' '}
+                    <Code>between</Code>, <Code>around</Code>, or <Code>evenly</Code>.
+                </Li>
+                <Li>
+                    <Code>align</Code>: <Code>start</Code>, <Code>center</Code>, <Code>end</Code>, or{' '}
+                    <Code>stretch</Code>.
+                </Li>
+                <Li>
+                    <Code>gap</Code> and padding attributes use the Astryx spacing scale: 0, 0.5, 1, 1.5, 2, 3, 4, 5, 6,
+                    8, or 10.
+                </Li>
+            </Ul>
+            <CodeBlock language="xml">{`<Stack direction="horizontal" justify="between" align="center" gap="3">
+  <Text i18n="orders.summary" />
+  <Button i18n="orders.open" />
 </Stack>`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="flex" level="h2">
-                Flex
-            </Heading>
-            <P>Places children in a row and controls horizontal distribution.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>space</Code>: optional <Code>center</Code>, <Code>around</Code>, <Code>evenly</Code>, or{' '}
-                        <Code>between</Code>.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Flex space="between">
-  ...
-  ...
-</Flex>`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="card" level="h2">
-                Card
-            </Heading>
-            <P>Groups related content in a bordered card surface.</P>
-            <CodeBlock language="xml">{`<Card>
-  ...
-</Card>`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="hero" level="h2">
-                Hero
-            </Heading>
-            <P>Creates a prominent page introduction with optional icon, title, description, and action slots.</P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Hero Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>icon</Code>: optional Lucide icon name rendered near the title.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Hero icon="layout-grid">
-  <HeroTitle i18n="..." />
-  <HeroDescription i18n="..." />
-  <HeroAction>
-    ...
-  </HeroAction>
-</Hero>`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="tabs" level="h2">
-                Tabs
+
+        <Stack gap={3}>
+            <Heading id="grid" level={2}>
+                Grid
             </Heading>
             <P>
-                Switches between related panels collected from immediate Tab children. A Tab can also render its
-                children directly when used outside Tabs.
+                Grid replaces Columns. Use a fixed numeric <Code>columns</Code> value or create a responsive grid with{' '}
+                <Code>minColumnWidth</Code>, optional <Code>maxColumns</Code>, and <Code>repeat</Code> set to{' '}
+                <Code>fill</Code> or <Code>fit</Code>.
             </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Tabs Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>defaultValue</Code>: optional initially selected tab value.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Tab Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>value</Code>: required inside Tabs.
-                    </Li>
-                    <Li>
-                        <Code>label</Code>: optional trigger text.
-                    </Li>
-                    <Li>
-                        <Code>icon</Code>: optional Lucide icon name.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Tabs defaultValue="overview">
-  <Tab value="overview" i18n="...">
-    ...
-  </Tab>
-  <Tab value="activity" i18n="..." icon="list">
-    ...
-  </Tab>
-</Tabs>`}</CodeBlock>
+            <CodeBlock language="xml">{`<Grid minColumnWidth="280" maxColumns="3" repeat="fit" gap="4">
+  <Card><Text i18n="dashboard.first" /></Card>
+  <Card><Text i18n="dashboard.second" /></Card>
+</Grid>`}</CodeBlock>
         </Stack>
-        <Stack className="gap-3">
-            <Heading id="dialog" level="h2">
+
+        <Stack gap={3}>
+            <Heading id="card" level={2}>
+                Card
+            </Heading>
+            <P>
+                Card groups related content on an Astryx surface. Variants include <Code>default</Code>,{' '}
+                <Code>transparent</Code>, <Code>muted</Code>, and named color surfaces. Width and height attributes
+                accept CSS strings or numeric expressions.
+            </P>
+            <CodeBlock language="xml">{`<Card variant="muted" padding="4" maxWidth="640px">
+  <Stack gap="2">
+    <Heading level="2" i18n="orders.summary" />
+    <Text i18n="orders.description" />
+  </Stack>
+</Card>`}</CodeBlock>
+        </Stack>
+
+        <Stack gap={3}>
+            <Heading id="form-layout" level={2}>
+                FormLayout
+            </Heading>
+            <P>
+                FormLayout provides consistent spacing for controls that own their labels and descriptions. Direction
+                can be <Code>vertical</Code>, <Code>horizontal</Code>, or <Code>horizontal-labels</Code>.
+            </P>
+            <CodeBlock language="xml">{`<FormLayout direction="vertical">
+  <TextInput i18n="customers.fields.name" value="$customer.name" />
+  <TextArea i18n="customers.fields.notes" value="$customer.notes" />
+</FormLayout>`}</CodeBlock>
+        </Stack>
+
+        <Stack gap={3}>
+            <Heading id="page-introductions" level={2}>
+                Page Introductions
+            </Heading>
+            <P>
+                Hero and its slot tags are removed. Compose an introduction from Heading, Text, Stack, and optional
+                actions so its semantics stay explicit.
+            </P>
+            <CodeBlock language="xml">{`<Stack gap="3">
+  <Heading level="1" i18n="orders.title" />
+  <Text as="p" color="secondary" i18n="orders.description" />
+  <Link to="/orders/new" i18n="orders.create" hasUnderline="true" />
+</Stack>`}</CodeBlock>
+        </Stack>
+
+        <Stack gap={3}>
+            <Heading id="tab-list" level={2}>
+                TabList
+            </Heading>
+            <P>
+                TabList replaces Tabs. It requires one or more direct Tab children and an accessible literal{' '}
+                <Code>label</Code>. Each Tab requires a stable <Code>value</Code> and a <Code>label</Code> or{' '}
+                <Code>i18n</Code> key. A writable <Code>value</Code> binding stores the selected tab.
+            </P>
+            <CodeBlock language="xml">{`<State id="view" value="overview" />
+<TabList label="Order views" value="$view" hasDivider="true">
+  <Tab value="overview" i18n="orders.tabs.overview">
+    <Text i18n="orders.overview" />
+  </Tab>
+  <Tab value="activity" i18n="orders.tabs.activity">
+    <Table data="$events" rowName="event">
+      <TableColumn key="message" field="message" i18n="orders.events.message" />
+    </Table>
+  </Tab>
+</TabList>`}</CodeBlock>
+        </Stack>
+
+        <Stack gap={3}>
+            <Heading id="dialog" level={2}>
                 Dialog
             </Heading>
             <P>
-                Creates an overlay dialog for focused actions and confirmations. DialogTrigger opens the dialog,
-                DialogContent renders the panel, and DialogTitle plus DialogDescription provide accessible text.
+                Dialog owns its header, open state, optional trigger, and content. It requires a <Code>title</Code> or{' '}
+                <Code>i18n</Code> key. Set <Code>triggerLabel</Code> for an adapter-owned trigger, or bind{' '}
+                <Code>isOpen</Code> to state when another flow controls the dialog.
             </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Dialog Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>open</Code>: optional controlled open state expression. Omit it for trigger-managed
-                        dialogs.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Dialog>
-  <DialogTrigger>
-    ...
-  </DialogTrigger>
-  <DialogContent>
-    <DialogTitle i18n="..." />
-    <DialogDescription i18n="..." />
-  </DialogContent>
+            <Ul>
+                <Li>
+                    <Code>purpose</Code>: <Code>required</Code>, <Code>form</Code>, or <Code>info</Code>.
+                </Li>
+                <Li>
+                    <Code>variant</Code>: <Code>standard</Code> or <Code>fullscreen</Code>.
+                </Li>
+                <Li>
+                    <Code>triggerVariant</Code> and <Code>triggerSize</Code>: configure the optional trigger button.
+                </Li>
+            </Ul>
+            <CodeBlock language="xml">{`<Dialog i18n="orders.create.title" triggerLabel="Create order" purpose="form">
+  <FormLayout>
+    <TextInput i18n="orders.fields.name" value="$draft.name" isRequired="true" />
+  </FormLayout>
+  <Action action="/api/orders" json="\${{ name: draft.name }}">
+    <Button variant="primary" i18n="orders.create.submit" />
+  </Action>
 </Dialog>`}</CodeBlock>
-        </Stack>
-        <Stack className="gap-3">
-            <Heading id="menu" level="h2">
-                Menu
-            </Heading>
-            <P>
-                Creates sectioned navigation where each MenuSection owns a content panel. MenuSubSection defines nested
-                selectable panels inside a MenuSection.
-            </P>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">Menu Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>defaultValue</Code>: optional initial section value.
-                    </Li>
-                    <Li>
-                        <Code>value</Code>: optional controlled active section value.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">MenuSection Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>value</Code>: required section id.
-                    </Li>
-                    <Li>
-                        <Code>label</Code>: optional visible label.
-                    </Li>
-                    <Li>
-                        <Code>icon</Code>: optional Lucide icon name.
-                    </Li>
-                </Ul>
-            </Stack>
-            <Stack className="gap-2">
-                <P className="font-medium text-foreground">MenuSubSection Parameters</P>
-                <Ul>
-                    <Li>
-                        <Code>value</Code>: required subsection id.
-                    </Li>
-                    <Li>
-                        <Code>label</Code>: optional visible label.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Menu defaultValue="overview">
-  <MenuSection value="overview" i18n="..." icon="layout-grid">
-    ...
-  </MenuSection>
-  <MenuSection value="orders" i18n="..." icon="clipboard-list">
-    <MenuSubSection value="open" i18n="...">
-      ...
-    </MenuSubSection>
-  </MenuSection>
-</Menu>`}</CodeBlock>
         </Stack>
     </Stack>
 );

@@ -249,11 +249,14 @@ def docs_command(component: str | None) -> None:
     adapters = ROOT / ".static" / "xsd" / "adapters"
     docs = []
 
-    # Render only component schemas; shared type-only schemas do not have root elements.
+    # Render every declared component, including data-oriented child tags in grouped schemas.
     for schema_path in sorted(adapters.glob("*.xsd"), key=lambda path: path.stem.casefold()):
         schema = etree.parse(str(schema_path))
-        if schema.find("xsd:element", namespaces=XSD_NAMESPACE) is None:
-            continue
-        docs.append(render_component_docs(schema_path.stem))
+
+        # Add each global element rather than assuming one component per file.
+        for element in schema.findall("xsd:element", namespaces=XSD_NAMESPACE):
+            name = element.get("name")
+            if name:
+                docs.append(render_component_docs(name))
 
     click.echo("\n\n".join(docs))

@@ -1,8 +1,9 @@
-import { getVersion, proxy, useSnapshot } from 'valtio';
+import type { ExpressionResolver } from '../expressions/types';
 import type { ASTProps, ExecutionContext, XmlBindableValue } from '../types';
+import { resolveTranslation } from '../core/i18n';
 import { compile, evaluate } from '../expressions';
 
-const emptyXmlValueState = proxy({ value: undefined as unknown });
+export type XmlSpacing = 0 | 0.5 | 1 | 1.5 | 2 | 3 | 4 | 5 | 6 | 8 | 10;
 
 /** Reads a raw XML prop value without coercion. */
 export function readXmlProp(props: ASTProps, name: string): string | undefined {
@@ -41,7 +42,7 @@ export function requireXmlString(props: ASTProps, name: string, ctx: ExecutionCo
 }
 
 /** Resolves a string XML prop. */
-export function resolveXmlString(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue = ''): any {
+export function resolveXmlString(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue = ''): string {
     // Missing attributes keep the caller-provided default.
     const rawValue = readXmlProp(props, name);
     if (rawValue == null) return defaultValue;
@@ -52,7 +53,12 @@ export function resolveXmlString(props: ASTProps, name: string, ctx: ExecutionCo
 }
 
 /** Resolves a boolean XML prop. */
-export function resolveXmlBoolean(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue?: boolean): any {
+export function resolveXmlBoolean(
+    props: ASTProps,
+    name: string,
+    ctx: ExecutionContext,
+    defaultValue?: boolean
+): boolean | undefined {
     // Missing attributes keep the caller-provided default.
     const rawValue = readXmlProp(props, name);
     if (rawValue == null) return defaultValue;
@@ -72,7 +78,12 @@ export function resolveXmlBoolean(props: ASTProps, name: string, ctx: ExecutionC
 }
 
 /** Resolves a numeric XML prop. */
-export function resolveXmlNumber(props: ASTProps, name: string, ctx: ExecutionContext, defaultValue?: number): any {
+export function resolveXmlNumber(
+    props: ASTProps,
+    name: string,
+    ctx: ExecutionContext,
+    defaultValue?: number
+): number | undefined {
     // Missing attributes keep the caller-provided default.
     const rawValue = readXmlProp(props, name);
     if (rawValue == null) return defaultValue;
@@ -89,7 +100,7 @@ export function resolveXmlStringArray(
     name: string,
     ctx: ExecutionContext,
     defaultValue: string[] = []
-): any {
+): string[] {
     // Missing attributes keep the caller-provided default.
     const rawValue = readXmlProp(props, name);
     if (rawValue == null) return defaultValue;
@@ -110,7 +121,7 @@ export function resolveXmlValue(
     name: string,
     ctx: ExecutionContext,
     defaultValue?: XmlBindableValue
-): any {
+): XmlBindableValue | undefined {
     // Missing attributes keep the caller-provided default.
     const rawValue = readXmlProp(props, name);
     if (rawValue == null) return defaultValue;
@@ -121,7 +132,7 @@ export function resolveXmlValue(
 }
 
 /** Compiles an XML expression prop for deferred execution. */
-export function resolveXmlExpression(props: ASTProps, name: string): any {
+export function resolveXmlExpression(props: ASTProps, name: string): ExpressionResolver | undefined {
     // Missing expression props do not produce deferred evaluators.
     const rawValue = readXmlProp(props, name);
     if (rawValue == null) return undefined;
@@ -129,15 +140,90 @@ export function resolveXmlExpression(props: ASTProps, name: string): any {
     return compile(rawValue);
 }
 
-/** Returns true when a raw XML value is backed by a Valtio proxy. */
-export function isXmlValueState(value: unknown): value is Record<string, unknown> {
-    return value !== null && typeof value === 'object' && getVersion(value as object) !== undefined;
+/** Resolves an accessible XML label from a translation key or label attribute. */
+export function resolveXmlLabel(
+    props: ASTProps,
+    ctx: ExecutionContext,
+    componentName: string,
+    attribute = 'label'
+): string {
+    const label = readXmlProp(props, attribute);
+    const i18n = readXmlProp(props, 'i18n');
+
+    // Accessible names must have one unambiguous literal or translated source.
+    if ((label == null) === (i18n == null)) {
+        throw new Error(`${componentName} requires exactly one of ${attribute} or i18n`);
+    }
+
+    if (i18n != null) return resolveTranslation(props, ctx);
+
+    return requireXmlString(props, attribute, ctx, componentName);
 }
 
-/** Reads a Valtio-backed XML value without changing hook order for literal values. */
-export function useXmlValueSnapshot(value: unknown): { state: Record<string, unknown> | null; snapshot: unknown } {
-    const state = isXmlValueState(value) ? value : emptyXmlValueState;
-    const snapshot = useSnapshot(state);
+/** Resolves and validates a finite string-valued XML attribute. */
+export function resolveXmlEnum<const T extends string>(
+    props: ASTProps,
+    name: string,
+    ctx: ExecutionContext,
+    values: readonly T[],
+    defaultValue: T,
+    componentName: string
+): T {
+    const value = resolveXmlString(props, name, ctx, defaultValue);
 
-    return isXmlValueState(value) ? { state, snapshot } : { state: null, snapshot: undefined };
+    // Keep untrusted XML values out of Astryx lookup maps.
+    if (!values.includes(value as T)) {
+        throw new Error(`Unsupported ${componentName} ${name} '${value}'`);
+    }
+
+    return value as T;
+}
+
+/** Resolves Astryx input status attributes into the component object shape. */
+export function resolveXmlStatus(
+    props: ASTProps,
+    ctx: ExecutionContext
+): { type: 'warning' | 'error' | 'success'; message?: string } | undefined {
+    const rawStatus = readXmlProp(props, 'status');
+
+    // Omit status when the XML attribute is absent.
+    if (rawStatus == null) return undefined;
+
+    const type = resolveXmlEnum(props, 'status', ctx, ['warning', 'error', 'success'], 'error', 'input');
+    const message = resolveXmlString(props, 'statusMessage', ctx);
+
+    return { type, ...(message && { message }) };
+}
+
+/** Resolves an Astryx spacing-scale attribute. */
+export function resolveXmlSpacing(
+    props: ASTProps,
+    name: string,
+    ctx: ExecutionContext,
+    defaultValue?: XmlSpacing
+): XmlSpacing | undefined {
+    const value = resolveXmlNumber(props, name, ctx, defaultValue);
+    const allowed: readonly number[] = [0, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10];
+
+    // Missing optional spacing attributes stay absent.
+    if (value == null) return undefined;
+
+    if (!allowed.includes(value)) {
+        throw new Error(`Unsupported spacing value '${value}'`);
+    }
+
+    return value as XmlSpacing;
+}
+
+/** Resolves a serializable Astryx width or height value. */
+export function resolveXmlSizeValue(props: ASTProps, name: string, ctx: ExecutionContext): string | number | undefined {
+    const value = resolveXmlValue(props, name, ctx);
+
+    // Astryx sizing props only accept CSS strings and pixel numbers.
+    if (value == null || value === '') return undefined;
+    if (typeof value !== 'string' && typeof value !== 'number') {
+        throw new Error(`${name} must evaluate to a string or number`);
+    }
+
+    return value;
 }

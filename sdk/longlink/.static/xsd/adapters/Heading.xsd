@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:complexType name="HeadingType">
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:attribute name="level" type="HeadingLevelType" use="required" />
+    <xsd:attribute name="value" type="xsd:string" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
+    <xsd:attribute name="values" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="type" type="HeadingDisplayType" use="optional" />
+    <xsd:attribute name="color" type="TextColorType" use="optional" default="primary" />
+    <xsd:attribute name="justify" type="AlignType" use="optional" default="start" />
+    <xsd:attribute name="maxLines" type="xsd:nonNegativeInteger" use="optional" />
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+  <xsd:element name="Heading" type="HeadingType">
+    <xsd:annotation><xsd:documentation>Renders an Astryx heading with an explicit semantic level.</xsd:documentation></xsd:annotation>
+  </xsd:element>
+</xsd:schema>

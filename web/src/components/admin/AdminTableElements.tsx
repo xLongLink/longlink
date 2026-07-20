@@ -1,12 +1,6 @@
-import { toast } from 'sonner';
-import { MoreVertical } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Icon } from '@astryxdesign/core/Icon';
+import { useToast } from '@astryxdesign/core/Toast';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 
 /** Renders the shared copy/delete action menu for admin tables. */
 export function AdminActionMenu({
@@ -20,37 +14,22 @@ export function AdminActionMenu({
     copyValue: string;
     onDelete: () => void;
 }) {
+    const toast = useToast();
+
     return (
-        <div className="flex justify-end">
-            <DropdownMenu>
-                <DropdownMenuTrigger
-                    render={
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="cursor-pointer"
-                            aria-label={`Open actions for ${label}`}
-                        />
-                    }
-                >
-                    <MoreVertical className="size-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-44">
-                    <DropdownMenuItem
-                        className="cursor-pointer"
-                        onClick={() => {
-                            void navigator.clipboard.writeText(copyValue);
-                            toast.success(`${copyLabel} copied`);
-                        }}
-                    >
-                        Copy {copyLabel.toLowerCase()}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer" variant="destructive" onClick={onDelete}>
-                        Delete
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
+        <MoreMenu
+            label={`Open actions for ${label}`}
+            items={[
+                {
+                    label: `Copy ${copyLabel.toLowerCase()}`,
+                    icon: <Icon icon="copy" size="sm" />,
+                    onClick: () => {
+                        void navigator.clipboard.writeText(copyValue);
+                        toast({ body: `${copyLabel} copied` });
+                    },
+                },
+                { label: 'Delete', onClick: onDelete },
+            ]}
+        />
     );
 }

@@ -1,88 +1,80 @@
 import type { TFunction } from 'i18next';
-import { Link } from 'react-router';
-import { type ColumnDef } from '@tanstack/react-table';
+import { useState } from 'react';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Avatar } from '@astryxdesign/core/Avatar';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import {
+    Table,
+    type TableColumn,
+    pixel,
+    paginateData,
+    proportional,
+    useTablePagination,
+} from '@astryxdesign/core/Table';
 import type { ApiApplicationResponse } from '@/lib/types';
-import { Icon } from '@/components/ui/icon';
 import { useTranslation } from '@/lib/i18n';
-import { Badge } from '@/components/ui/badge';
+import { formatDateTime } from '@/lib/utils';
 import { useApplications } from '@/data/admin';
-import { DataTable } from '@/components/DataTable';
-import { formatDateTime, getInitials } from '@/lib/utils';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 /** Builds localized admin application table columns. */
-function createAppColumns(t: TFunction): Array<ColumnDef<ApiApplicationResponse>> {
+function createAppColumns(t: TFunction): TableColumn<ApiApplicationResponse>[] {
     return [
         {
-            accessorKey: 'name',
+            key: 'name',
             header: t('columns.application'),
-            cell: ({ row, getValue }) => {
-                const app = row.original;
-
-                return (
-                    <div className="flex items-start gap-3">
-                        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
-                            <Icon name={app.icon ?? 'box'} className="size-4" />
-                        </div>
-                        <div className="min-w-0 space-y-1">
-                            <Link
-                                to={`/orgs/${app.organization.slug}/apps/${app.slug}`}
-                                className="font-medium text-foreground hover:underline"
-                            >
-                                {getValue<string>()}
-                            </Link>
-                            {app.description ? (
-                                <p className="text-sm text-muted-foreground">{app.description}</p>
-                            ) : null}
-                        </div>
-                    </div>
-                );
-            },
+            width: proportional(2),
+            renderCell: (app) => (
+                <HStack gap={3} align="start">
+                    <Icon icon="wrench" color="accent" />
+                    <VStack gap={1}>
+                        <Link href={`/orgs/${app.organization.slug}/apps/${app.slug}`} weight="semibold">
+                            {app.name}
+                        </Link>
+                        {app.description ? <Text type="supporting">{app.description}</Text> : null}
+                    </VStack>
+                </HStack>
+            ),
         },
         {
-            accessorKey: 'organization',
+            key: 'organization',
             header: t('columns.organization'),
-            cell: ({ getValue }) => {
-                const organization = getValue<ApiApplicationResponse['organization']>();
-
-                return (
-                    <div className="flex items-center gap-3">
-                        <Avatar shape="squircle" className="size-9 shrink-0">
-                            <AvatarImage src={organization.avatar ?? ''} alt={organization.name} />
-                            <AvatarFallback>{getInitials(organization.name)}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                            <Link
-                                to={`/orgs/${organization.slug}`}
-                                className="font-medium text-foreground hover:underline"
-                            >
-                                {organization.name}
-                            </Link>
-                            <div className="truncate text-sm text-muted-foreground">{organization.country}</div>
-                        </div>
-                    </div>
-                );
-            },
-            meta: { className: 'min-w-64' },
+            width: proportional(1),
+            renderCell: (app) => (
+                <HStack gap={3} align="center">
+                    <Avatar src={app.organization.avatar ?? undefined} name={app.organization.name} size="small" />
+                    <VStack gap={1}>
+                        <Link href={`/orgs/${app.organization.slug}`} weight="semibold">
+                            {app.organization.name}
+                        </Link>
+                        <Text type="supporting">{app.organization.country}</Text>
+                    </VStack>
+                </HStack>
+            ),
         },
         {
-            accessorKey: 'status',
+            key: 'status',
             header: t('columns.status'),
-            cell: ({ getValue }) => <Badge variant="outline">{getValue<string>()}</Badge>,
-            meta: { className: 'w-32' },
+            width: pixel(128),
+            renderCell: (app) => <Badge label={app.status} />,
         },
         {
-            accessorKey: 'image',
+            key: 'image',
             header: t('columns.image'),
-            cell: ({ getValue }) => <span className="text-sm text-muted-foreground">{getValue<string>()}</span>,
-            meta: { className: 'min-w-72' },
+            width: proportional(2),
+            renderCell: (app) => <Text type="supporting">{app.image}</Text>,
         },
         {
-            accessorKey: 'created_at',
+            key: 'created_at',
             header: t('columns.created'),
-            cell: ({ getValue }) => formatDateTime(getValue<string>()),
-            meta: { className: 'w-52' },
+            width: pixel(208),
+            renderCell: (app) => formatDateTime(app.created_at),
         },
     ];
 }
@@ -91,17 +83,38 @@ function createAppColumns(t: TFunction): Array<ColumnDef<ApiApplicationResponse>
 export default function AdminApplications() {
     const { t } = useTranslation();
     const { items: applications, error, isLoading } = useApplications();
-    const appColumns = createAppColumns(t);
+    const [page, setPage] = useState(1);
+    const pageSize = 25;
+    const pageCount = Math.max(1, Math.ceil(applications.length / pageSize));
+    const currentPage = Math.min(page, pageCount);
+    const pagination = useTablePagination<ApiApplicationResponse>({
+        page: currentPage,
+        onPageChange: setPage,
+        totalItems: applications.length,
+        pageSize,
+        label: `${t('actions.previous')} / ${t('actions.next')}`,
+        size: 'sm',
+    });
 
     return (
-        <div className="space-y-6">
-            <Hero icon="boxes">
-                <div>
-                    <HeroTitle>{t('admin.applicationsTitle')}</HeroTitle>
-                    <HeroDescription>{t('admin.applicationsDescription')}</HeroDescription>
-                </div>
-            </Hero>
-            <DataTable columns={appColumns} data={applications} error={error} isLoading={isLoading} pageSize={25} />
-        </div>
+        <VStack gap={6} width="100%">
+            <VStack gap={1}>
+                <Heading level={1}>{t('admin.applicationsTitle')}</Heading>
+                <Text type="supporting">{t('admin.applicationsDescription')}</Text>
+            </VStack>
+            {isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
+                <Banner status="error" title={error.message} />
+            ) : (
+                <Table
+                    columns={createAppColumns(t)}
+                    data={paginateData(applications, currentPage, pageSize)}
+                    density="compact"
+                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    hasHover
+                    idKey="id"
+                    plugins={{ pagination }}
+                />
+            )}
+        </VStack>
     );
 }

@@ -6,7 +6,6 @@ from sqlalchemy.orm import selectinload
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.models.users import User
-from src.models.infrastructure import DatabaseKind
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.organizations import Organization
 
@@ -56,7 +55,6 @@ async def get(registry_id: UUID, include_deleted: bool = False) -> DatabaseRegis
 async def create(
     name: str,
     slug: str,
-    kind: DatabaseKind,
     host: str,
     port: int,
     username: str,
@@ -68,7 +66,6 @@ async def create(
     # Persist administrator credentials only at the registry control-plane boundary.
     async with session_scope() as session:
         registry = DatabaseRegistry(
-            kind=kind,
             name=name,
             slug=slug,
             host=host,

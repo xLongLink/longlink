@@ -1,15 +1,16 @@
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { Link, useLocation } from 'react-router';
+import { useLocation } from 'react-router';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { AuthPage } from '@/components/AuthPage';
 import { sanitizeRedirectPath } from '@/lib/redirects';
+import { PasswordInput } from '@/components/PasswordInput';
 
 type ResetPasswordValues = {
     password: string;
@@ -44,9 +45,11 @@ export default function ResetPassword() {
     if (!token) {
         return (
             <AuthPage title={t('auth.resetPasswordTitle')} description={t('auth.invalidResetLink')}>
-                <Button render={<Link to={`/auth/forgot-password?${nextQuery}`} />} className="w-full">
-                    {t('auth.requestAnotherReset')}
-                </Button>
+                <Button
+                    href={`/auth/forgot-password?${nextQuery}`}
+                    label={t('auth.requestAnotherReset')}
+                    variant="primary"
+                />
             </AuthPage>
         );
     }
@@ -54,38 +57,41 @@ export default function ResetPassword() {
     return (
         <AuthPage title={t('auth.resetPasswordTitle')} description={t('auth.resetPasswordDescription')}>
             {resetPassword.isSuccess ? (
-                <div className="space-y-4">
-                    <p role="status" className="rounded-lg border border-border p-3 text-sm text-muted-foreground">
-                        {t('auth.passwordReset')}
-                    </p>
-                    <Button render={<Link to={`/organizations?${nextQuery}`} />} className="w-full">
-                        {t('auth.backToSignIn')}
-                    </Button>
-                </div>
+                <Stack gap={4}>
+                    <Banner status="success" title={t('auth.passwordReset')} />
+                    <Button href={`/organizations?${nextQuery}`} label={t('auth.backToSignIn')} variant="primary" />
+                </Stack>
             ) : (
-                <form className="space-y-4" onSubmit={form.handleSubmit((payload) => resetPassword.mutate(payload))}>
-                    <div className="space-y-2">
-                        <Label htmlFor="reset-password">{t('auth.newPassword')}</Label>
-                        <Input
-                            id="reset-password"
-                            type="password"
-                            autoComplete="new-password"
-                            aria-invalid={Boolean(form.formState.errors.password)}
-                            {...form.register('password')}
-                        />
-                        {form.formState.errors.password ? (
-                            <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>
-                        ) : null}
-                    </div>
-                    {resetPassword.error ? (
-                        <p role="alert" className="text-sm text-destructive">
-                            {resetPassword.error.message}
-                        </p>
-                    ) : null}
-                    <Button type="submit" className="w-full" disabled={resetPassword.isPending}>
-                        {resetPassword.isPending ? t('auth.resettingPassword') : t('auth.resetPassword')}
-                    </Button>
-                </form>
+                <Stack as="form" gap={4} onSubmit={form.handleSubmit((payload) => resetPassword.mutate(payload))}>
+                    <Controller
+                        control={form.control}
+                        name="password"
+                        render={({ field, fieldState }) => (
+                            <PasswordInput
+                                ref={field.ref}
+                                autoComplete="new-password"
+                                htmlName={field.name}
+                                isRequired
+                                label={t('auth.newPassword')}
+                                onBlur={field.onBlur}
+                                onChange={field.onChange}
+                                status={
+                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
+                                }
+                                value={field.value}
+                                width="100%"
+                            />
+                        )}
+                    />
+                    {resetPassword.error ? <Banner status="error" title={resetPassword.error.message} /> : null}
+                    <Button
+                        isDisabled={resetPassword.isPending}
+                        isLoading={resetPassword.isPending}
+                        label={resetPassword.isPending ? t('auth.resettingPassword') : t('auth.resetPassword')}
+                        type="submit"
+                        variant="primary"
+                    />
+                </Stack>
             )}
         </AuthPage>
     );

@@ -1,9 +1,11 @@
 import { useParams } from 'react-router';
-import { LayoutGrid, Settings2 } from 'lucide-react';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Center } from '@astryxdesign/core/Center';
+import { Heading } from '@astryxdesign/core/Heading';
 import Layout from '@/layout/Layout';
 import { useTranslation } from '@/lib/i18n';
 import { useOrganization } from '@/hooks/use-organization';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
 import OrganizationSettings, { type SettingsRouteSection } from './org/Settings';
@@ -41,57 +43,57 @@ export default function Organization({ settingsSection }: OrganizationProps) {
         return <NotFound />;
     }
 
-    const content =
-        section === 'applications' ? (
-            <Hero icon="layout-grid" className="w-full">
-                <div className="flex w-full items-center justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                        <HeroTitle>{t('organization.applicationsTitle')}</HeroTitle>
-                        <HeroDescription>{t('organization.applicationsDescription')}</HeroDescription>
-                    </div>
-                </div>
-            </Hero>
-        ) : section === 'settings' ? (
-            <Hero icon="settings-2" className="w-full">
-                <div className="flex w-full items-center justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                        <HeroTitle>{t('organization.settingsTitle')}</HeroTitle>
-                        <HeroDescription>{t('organization.settingsDescription')}</HeroDescription>
-                    </div>
-                </div>
-            </Hero>
-        ) : null;
+    const content = (
+        <Stack gap={1} width="100%">
+            <Heading level={1}>
+                {section === 'applications' ? t('organization.applicationsTitle') : t('organization.settingsTitle')}
+            </Heading>
+            <Text as="p" color="secondary">
+                {section === 'applications'
+                    ? t('organization.applicationsDescription')
+                    : t('organization.settingsDescription')}
+            </Text>
+        </Stack>
+    );
 
+    // Keep edge-aware content aligned within the centered page container.
     return (
         <Layout
             tabs={{
-                [t('navigation.applications')]: { href: `/orgs/${organization}`, icon: LayoutGrid },
-                [t('navigation.settings')]: { href: `/orgs/${organization}/settings`, icon: Settings2 },
+                [t('navigation.applications')]: { href: `/orgs/${organization}`, icon: 'viewColumns' },
+                [t('navigation.settings')]: { href: `/orgs/${organization}/settings`, icon: 'wrench' },
             }}
         >
-            <section className="mx-auto w-full max-w-[1000px] space-y-8">
-                {content}
-                {section === 'applications' ? (
-                    <Applications
-                        organization={organization}
-                        applications={applications}
-                        isLoading={isLoading}
-                        error={error}
-                    />
-                ) : null}
-                {section === 'settings' ? (
-                    <OrganizationSettings
-                        organization={organization}
-                        organizationDetails={organizationDetails}
-                        applications={applications}
-                        people={people}
-                        invitations={invitations}
-                        routeSection={settingsSection ?? 'organization'}
-                        isLoading={isLoading}
-                        error={error}
-                    />
-                ) : null}
-            </section>
+            <Center axis="horizontal" width="100%">
+                <Stack
+                    className="[--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
+                    gap={8}
+                    maxWidth={1000}
+                    width="100%"
+                >
+                    {content}
+                    {section === 'applications' ? (
+                        <Applications
+                            organization={organization}
+                            applications={applications}
+                            isLoading={isLoading}
+                            error={error}
+                        />
+                    ) : null}
+                    {section === 'settings' ? (
+                        <OrganizationSettings
+                            organization={organization}
+                            organizationDetails={organizationDetails}
+                            applications={applications}
+                            people={people}
+                            invitations={invitations}
+                            routeSection={settingsSection ?? 'organization'}
+                            isLoading={isLoading}
+                            error={error}
+                        />
+                    ) : null}
+                </Stack>
+            </Center>
         </Layout>
     );
 }

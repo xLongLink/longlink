@@ -6,7 +6,7 @@ from src.auth import authuser, authadmin
 from src.utils import names, roles
 from src.logger import logger
 from collections.abc import AsyncIterator
-from src.models.roles import APPLICATION_PROXY_METHODS, Ranks, ApplicationRoles, OrganizationRoles, ApplicationProxyMethodRanks
+from src.models.roles import APPLICATION_PROXY_METHODS, APPLICATION_PROXY_METHOD_ROLES, ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
 from starlette.responses import StreamingResponse
 from src.database.services import compute, operations, applications
@@ -239,8 +239,7 @@ async def proxy_application_request(request: Request, application_id: UUID, path
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
 
-    required_role_rank = ApplicationProxyMethodRanks[request.method.upper()].value
-    required_application_role = ApplicationRoles[Ranks(required_role_rank).name]
+    required_application_role = APPLICATION_PROXY_METHOD_ROLES[request.method.upper()]
 
     # Direct application memberships provide application role access.
     if isinstance(membership, UserApplication):

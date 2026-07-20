@@ -1,19 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="CardChildrenOnlyType">
-    <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:any processContents="lax" />
-      </xsd:choice>
-    </xsd:sequence>
+  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:complexType name="CardType">
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:attribute name="variant" type="CardVariantType" use="optional" default="default" />
+    <xsd:attribute name="padding" type="SpacingType" use="optional" />
+    <xsd:attribute name="width" type="xsd:string" use="optional" />
+    <xsd:attribute name="height" type="xsd:string" use="optional" />
+    <xsd:attribute name="maxWidth" type="xsd:string" use="optional" />
+    <xsd:attribute name="minHeight" type="xsd:string" use="optional" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
-
-  <xsd:complexType name="CardType">
-    <xsd:complexContent>
-      <xsd:extension base="CardChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:element name="Card" type="CardType" />
+  <xsd:element name="Card" type="CardType">
+    <xsd:annotation><xsd:documentation>Renders an Astryx card container.</xsd:documentation></xsd:annotation>
+  </xsd:element>
 </xsd:schema>

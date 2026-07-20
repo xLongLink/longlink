@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:complexType name="SelectorType">
+    <xsd:sequence><xsd:element ref="SelectorOption" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
+    <xsd:attribute name="label" type="NonBlankStringType" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
+    <xsd:attribute name="values" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="value" type="xsd:string" use="optional" />
+    <xsd:attribute name="size" type="SizeType" use="optional" default="md" />
+    <xsd:attribute name="description" type="xsd:string" use="optional" />
+    <xsd:attribute name="placeholder" type="xsd:string" use="optional" />
+    <xsd:attribute name="searchPlaceholder" type="xsd:string" use="optional" />
+    <xsd:attribute name="htmlName" type="xsd:string" use="optional" />
+    <xsd:attribute name="width" type="xsd:string" use="optional" />
+    <xsd:attribute name="disabledMessage" type="xsd:string" use="optional" />
+    <xsd:attribute name="status" type="InputStatusType" use="optional" />
+    <xsd:attribute name="statusMessage" type="xsd:string" use="optional" />
+    <xsd:attribute name="hasClear" type="xsd:string" use="optional" />
+    <xsd:attribute name="hasSearch" type="xsd:string" use="optional" />
+    <xsd:attribute name="isDisabled" type="xsd:string" use="optional" />
+    <xsd:attribute name="isRequired" type="xsd:string" use="optional" />
+    <xsd:attribute name="isOptional" type="xsd:string" use="optional" />
+    <xsd:attribute name="isLabelHidden" type="xsd:string" use="optional" />
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+  <xsd:complexType name="SelectorOptionType">
+    <xsd:attribute name="value" type="NonBlankStringType" use="required" />
+    <xsd:attribute name="label" type="NonBlankStringType" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
+    <xsd:attribute name="values" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="isDisabled" type="xsd:string" use="optional" />
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+  <xsd:element name="Selector" type="SelectorType">
+    <xsd:annotation><xsd:documentation>Collects one value from data-oriented Astryx options.</xsd:documentation></xsd:annotation>
+    <xsd:key name="SelectorAccessibleLabel">
+      <xsd:selector xpath="." />
+      <xsd:field xpath="@label | @i18n" />
+    </xsd:key>
+  </xsd:element>
+  <xsd:element name="SelectorOption" type="SelectorOptionType">
+    <xsd:annotation><xsd:documentation>Defines one option for Selector.</xsd:documentation></xsd:annotation>
+  </xsd:element>
+</xsd:schema>

@@ -1,4 +1,6 @@
+/* eslint-disable react-hooks/immutability -- The XML execution context is an intentionally mutable runtime scope. */
 import { getVersion, subscribe } from 'valtio';
+import { Banner } from '@astryxdesign/core/Banner';
 import { useEffect, useState, type ReactNode } from 'react';
 import { fetchApiJson } from '@/lib/api';
 import type { ASTNode, ExecutionContext } from './types';
@@ -15,6 +17,13 @@ type RenderXMLProps = {
     locale?: string;
 };
 
+type SetupFailure = {
+    ast: ASTNode[];
+    baseUrl: string;
+    locale: string;
+    error: unknown;
+};
+
 /**
  * Renders a parsed XML tree with loading state while context initializes.
  */
@@ -25,8 +34,12 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
     const requiresTranslations = hasTranslationNodes(ast);
     const waitsForTranslations = typeof document !== 'undefined' && requiresTranslations;
     const [initializedAst, setInitializedAst] = useState<ASTNode[] | null>(() => (requiresSetup ? null : ast));
-    const [setupError, setSetupError] = useState<unknown>(null);
+    const [setupFailure, setSetupFailure] = useState<SetupFailure | null>(null);
     const [version, setVersion] = useState(0);
+    const setupError =
+        setupFailure?.ast === ast && setupFailure.baseUrl === baseUrl && setupFailure.locale === runtimeLocale
+            ? setupFailure.error
+            : null;
 
     // Reset translations when the active locale changes.
     if (runtimeCtx.locale !== undefined && runtimeCtx.locale !== runtimeLocale) {
@@ -74,7 +87,6 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
 
         runtimeCtx.setups = {};
         runtimeCtx.values = {};
-        setSetupError(null);
 
         // Hydrate translations from the SDK route before localized nodes render.
         if (waitsForTranslations && runtimeCtx.translations === undefined) {
@@ -105,7 +117,12 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
                     // Ignore translation errors after cleanup.
                     if (!mounted) return;
 
-                    setSetupError(error instanceof Error ? error : new Error('Failed to load XML translations'));
+                    setSetupFailure({
+                        ast,
+                        baseUrl,
+                        locale: runtimeLocale,
+                        error: error instanceof Error ? error : new Error('Failed to load XML translations'),
+                    });
                 });
         }
 
@@ -138,7 +155,7 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
             }
         })().catch((error) => {
             // Report setup failures only while mounted.
-            if (mounted) setSetupError(error);
+            if (mounted) setSetupFailure({ ast, baseUrl, locale: runtimeLocale, error });
         });
 
         return () => {
@@ -157,9 +174,10 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
 
         return (
             <XmlErrorBoundary resetKey={`${version}`}>
-                <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
-                    {visibleError instanceof Error ? visibleError.message : 'XML setup failed'}
-                </div>
+                <Banner
+                    status="error"
+                    title={visibleError instanceof Error ? visibleError.message : 'XML setup failed'}
+                />
             </XmlErrorBoundary>
         );
     }

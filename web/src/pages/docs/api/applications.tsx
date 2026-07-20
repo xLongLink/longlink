@@ -1,72 +1,62 @@
-import { BookOpen, Database, GitPullRequest, HardDrive, PenLine, ServerCog, Settings2 } from 'lucide-react';
-import { P } from '@/components/ui/p';
-import { Code } from '@/components/ui/code';
-import { Stack } from '@/components/ui/stack';
-import { Heading } from '@/components/ui/heading';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { IconName } from '@astryxdesign/core/Icon';
+import { Card } from '@astryxdesign/core/Card';
+import { Code } from '@astryxdesign/core/Code';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
-const applicationRoles = [
+const applicationRoles: { access: string; icon: IconName; name: string }[] = [
     {
         name: 'read',
         access: 'View and open the application runtime. Use read runtime methods such as GET.',
-        icon: BookOpen,
+        icon: 'eyeSlash',
     },
     {
         name: 'write',
         access: 'Read access plus write runtime methods such as POST, PUT, and PATCH.',
-        icon: GitPullRequest,
+        icon: 'arrowUp',
     },
     {
         name: 'maintain',
         access: 'Write access plus logs, member roles, application deletion, and DELETE runtime methods.',
-        icon: PenLine,
+        icon: 'wrench',
     },
     {
         name: 'admin',
         access: 'Highest application-specific access with authority to assign application roles up to admin.',
-        icon: Settings2,
+        icon: 'success',
     },
-] as const;
+];
+
+const runtimeResources: { description: string[]; icon: IconName; name: string }[] = [
+    { name: 'Database', icon: 'viewColumns', description: ['Dedicated schema', 'Read access from shared'] },
+    { name: 'File Storage', icon: 'copy', description: ['Application prefix', 'Read access to shared prefix'] },
+    { name: 'Infrastructure', icon: 'wrench', description: ['Versioned runtime', 'Environment management'] },
+];
 
 /** Renders the application database, storage, and infrastructure resource diagram. */
 function ApplicationRuntimeResourcesDiagram() {
     return (
-        <div className="rounded-md border bg-muted/10 p-4">
-            <div className="grid gap-4">
-                <div className="grid gap-4 lg:grid-cols-3">
-                    <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-md border bg-muted/40 px-4 py-5 text-center">
-                        <div className="flex size-9 items-center justify-center text-muted-foreground">
-                            <Database aria-hidden={true} className="size-5" />
-                        </div>
-                        <div className="font-medium text-foreground">Database</div>
-                        <div className="grid gap-2 text-sm text-muted-foreground">
-                            <div>Dedicated schema</div>
-                            <div>Read access from shared</div>
-                        </div>
-                    </div>
-                    <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-md border bg-muted/40 px-4 py-5 text-center">
-                        <div className="flex size-9 items-center justify-center text-muted-foreground">
-                            <HardDrive aria-hidden={true} className="size-5" />
-                        </div>
-                        <div className="font-medium text-foreground">File Storage</div>
-                        <div className="grid gap-2 text-sm text-muted-foreground">
-                            <div>Application prefix</div>
-                            <div>Read access to shared prefix</div>
-                        </div>
-                    </div>
-                    <div className="flex min-h-40 flex-col items-center justify-center gap-3 rounded-md border bg-muted/40 px-4 py-5 text-center">
-                        <div className="flex size-9 items-center justify-center text-muted-foreground">
-                            <ServerCog aria-hidden={true} className="size-5" />
-                        </div>
-                        <div className="font-medium text-foreground">Infrastructure</div>
-                        <div className="grid gap-2 text-sm text-muted-foreground">
-                            <div>Versioned runtime</div>
-                            <div>Environment management</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <Grid columns={{ minWidth: 180, max: 3, repeat: 'fit' }} gap={4}>
+            {runtimeResources.map((resource) => (
+                <Card key={resource.name} variant="muted">
+                    <Stack gap={3} align="center">
+                        <Icon icon={resource.icon} color="accent" />
+                        <Text weight="semibold">{resource.name}</Text>
+                        <Stack gap={1} align="center">
+                            {resource.description.map((line) => (
+                                <Text key={line} type="supporting">
+                                    {line}
+                                </Text>
+                            ))}
+                        </Stack>
+                    </Stack>
+                </Card>
+            ))}
+        </Grid>
     );
 }
 
@@ -76,49 +66,45 @@ export const metadata = {
 };
 
 export const content = (
-    <Stack>
-        <Heading id="applications" level="h1">
+    <Stack gap={4}>
+        <Heading id="applications" level={1}>
             Applications
         </Heading>
-        <P>
+        <Text as="p">
             Applications are containerized LongLink SDK services deployed into an organization. The LongLink Platform
             reads application metadata from the image, provisions runtime resources, verifies the rollout, and routes
             authenticated users to the running service.
-        </P>
-        <P>
+        </Text>
+        <Text as="p">
             In production, each application receives database and storage access scoped to organization resources. The
             runtime can read and write its own application schema and its application prefix in the Organization bucket.
             It can read the shared schema and the bucket's shared prefix without writing to either. The LongLink
             Platform injects direct application IAM credentials and other environment values as runtime secrets.
-        </P>
+        </Text>
         <ApplicationRuntimeResourcesDiagram />
-        <Heading id="roles" level="h2">
+        <Heading id="roles" level={2}>
             Roles
         </Heading>
-        <div className="overflow-hidden rounded-md border">
-            <Table>
-                <TableHeader className="bg-muted/50">
-                    <TableRow>
-                        <TableHead className="bg-muted/50">Role</TableHead>
-                        <TableHead className="bg-muted/50">Access</TableHead>
+        <Table<Record<string, unknown>>>
+            <TableHeader>
+                <TableRow>
+                    <TableHeaderCell>Role</TableHeaderCell>
+                    <TableHeaderCell>Access</TableHeaderCell>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {applicationRoles.map((role) => (
+                    <TableRow key={role.name}>
+                        <TableCell>
+                            <Stack direction="horizontal" gap={2} align="center">
+                                <Icon icon={role.icon} size="sm" color="accent" />
+                                <Code>{role.name}</Code>
+                            </Stack>
+                        </TableCell>
+                        <TableCell>{role.access}</TableCell>
                     </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {applicationRoles.map((role) => (
-                        <TableRow key={role.name}>
-                            <TableCell>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-accent/10 text-accent [&_svg]:size-4 [&_svg]:stroke-[2.5]">
-                                        <role.icon aria-hidden={true} className="size-4" />
-                                    </div>
-                                    <Code>{role.name}</Code>
-                                </div>
-                            </TableCell>
-                            <TableCell className="whitespace-normal text-muted-foreground">{role.access}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
+                ))}
+            </TableBody>
+        </Table>
     </Stack>
 );

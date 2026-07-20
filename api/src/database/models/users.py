@@ -5,10 +5,9 @@ from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Column, UniqueConstraint
 from src.models.roles import PlatformRoles
-from src.models.users import Theme, Accent, Radius
+from src.models.types import Theme, Accent, Radius, Language
 from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
-from longlink.models.languages import Language
 from src.database.models.association import UserApplication, UserOrganization
 
 

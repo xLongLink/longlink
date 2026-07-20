@@ -18,7 +18,6 @@ async def create_database_registry(payload: DatabaseRegistryCreate, user: User =
     return await database.create(
         payload.name,
         names.slugify(payload.name),
-        payload.kind,
         payload.host,
         payload.port,
         payload.username,

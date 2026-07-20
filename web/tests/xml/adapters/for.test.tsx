@@ -10,7 +10,7 @@ describe('For', () => {
         const node: ASTNode = {
             name: 'For',
             params: { each: 'items', as: 'item' },
-            children: [{ name: 'P', params: { i18n: 'for.ignored' } }],
+            children: [{ name: 'Text', params: { i18n: 'for.ignored' } }],
         };
 
         const output = renderXmlToMarkup([node], ctx);
@@ -26,7 +26,9 @@ describe('For', () => {
             translations: { items: { name: '{{name}}' } },
             values: { items: [{ name: 'Alpha' }] },
         };
-        const ast = parseXML('<For each="$items" as="item"><P i18n="items.name" name="$item.name" /></For>');
+        const ast = parseXML(
+            '<For each="$items" as="item"><Text i18n="items.name" values="${{ name: item.name }}" /></For>'
+        );
 
         expect(renderXmlToMarkup(ast, ctx)).toContain('Alpha');
     });
