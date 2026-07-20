@@ -49,7 +49,7 @@ dev = [
     "lxml-stubs>=0.5.1",
     "isort>=8.0.1",
     "httpx>=0.28.1",
-    "httpx2>=2.3.0",
+    "httpx2>=2.7.0",
 ]
 
 [dependency-groups]
@@ -63,7 +63,7 @@ dev = [
     "lxml-stubs>=0.5.1",
     "isort>=8.0.1",
     "httpx>=0.28.1",
-    "httpx2>=2.3.0",
+    "httpx2>=2.7.0",
 ]
 
 [project.urls]
