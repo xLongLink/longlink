@@ -1,20 +1,24 @@
 import { z } from 'zod';
-import { useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useId, useState } from 'react';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { FieldStatus } from '@astryxdesign/core/FieldStatus';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { useTranslation } from '@/lib/i18n';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { useUserProfile } from '@/hooks/use-user';
 import { useCreateOrganization } from '@/hooks/use-organization';
 import { useCountries, useInfrastructureOptions } from '@/data/admin';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const createOrganizationSchema = z.object({
     name: z.string().trim().min(1),
-    avatar: z.string().trim(),
+    avatar: z.union([z.literal(''), z.string().trim().url()]),
     country: z.string().length(2),
     computeId: z.string().min(1),
     databaseId: z.string().min(1),
@@ -38,6 +42,7 @@ export default function CreateOrganization() {
     const { t } = useTranslation();
     const { role } = useUserProfile();
     const createOrganization = useCreateOrganization();
+    const formId = useId();
     const [open, setOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const form = useForm<CreateOrganizationInput, unknown, CreateOrganizationValues>({
@@ -67,187 +72,190 @@ export default function CreateOrganization() {
         setError(null);
     }
 
+    /** Updates dialog state while protecting an in-flight creation. */
+    function handleOpenChange(nextOpen: boolean) {
+        if (!nextOpen && createOrganization.isPending) {
+            return;
+        }
+        setOpen(nextOpen);
+        if (!nextOpen) {
+            resetDialogState();
+        }
+    }
+
     return (
         <>
-            <Button type="button" onClick={() => setOpen(true)}>
-                {t('actions.createOrganization')}
-            </Button>
+            <Button label={t('actions.createOrganization')} clickAction={() => setOpen(true)} />
 
             <Dialog
-                open={open}
-                onOpenChange={(nextOpen) => {
-                    if (!nextOpen && createOrganization.isPending) {
-                        return;
-                    }
-                    setOpen(nextOpen);
-                    // Clear form state when the dialog closes.
-                    if (!nextOpen) {
-                        resetDialogState();
-                    }
-                }}
+                isOpen={open}
+                onOpenChange={handleOpenChange}
+                purpose={createOrganization.isPending ? 'required' : 'form'}
+                width={640}
+                maxHeight="calc(100dvh - 2rem)"
             >
-                <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-2xl">
-                    <div className="space-y-4">
-                        <div className="space-y-1">
-                            <DialogTitle>{t('createOrganization.title')}</DialogTitle>
-                            <DialogDescription>{t('createOrganization.description')}</DialogDescription>
-                        </div>
+                <Layout
+                    header={
+                        <DialogHeader
+                            title={t('createOrganization.title')}
+                            subtitle={t('createOrganization.description')}
+                            onOpenChange={handleOpenChange}
+                        />
+                    }
+                    content={
+                        <LayoutContent>
+                            <form
+                                id={formId}
+                                onSubmit={form.handleSubmit(async (payload) => {
+                                    setError(null);
 
-                        <form
-                            className="space-y-4"
-                            onSubmit={form.handleSubmit(async (payload) => {
-                                setError(null);
-
-                                // Create the org and close the dialog on success.
-                                try {
-                                    await createOrganization.mutateAsync({
-                                        name: payload.name,
-                                        compute_id: payload.computeId,
-                                        database_id: payload.databaseId,
-                                        storage_id: payload.storageId,
-                                        avatar: payload.avatar,
-                                        country: payload.country,
-                                    });
-                                    setOpen(false);
-                                    resetDialogState();
-                                } catch (mutationError) {
-                                    setError(
-                                        mutationError instanceof Error
-                                            ? mutationError.message
-                                            : t('createOrganization.error')
-                                    );
-                                }
-                            })}
-                        >
-                            <div className="space-y-2">
-                                <Label htmlFor="organization-name">{t('createOrganization.nameLabel')}</Label>
-                                <Input
-                                    id="organization-name"
-                                    {...form.register('name')}
-                                    placeholder={t('createOrganization.namePlaceholder')}
-                                    autoComplete="off"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="organization-avatar">{t('createOrganization.avatarLabel')}</Label>
-                                <Input
-                                    id="organization-avatar"
-                                    type="url"
-                                    {...form.register('avatar')}
-                                    placeholder={t('createOrganization.avatarPlaceholder')}
-                                    autoComplete="off"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="organization-country">{t('labels.country')}</Label>
-                                <Select
-                                    value={country}
-                                    onValueChange={(value) =>
-                                        form.setValue('country', value ?? '', { shouldValidate: true })
-                                    }
-                                >
-                                    <SelectTrigger id="organization-country" className="w-full">
-                                        <SelectValue placeholder={t('dialogs.chooseCountry')} />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {countryOptions.map((countryOption) => (
-                                            <SelectItem key={countryOption.code} value={countryOption.code}>
-                                                {countryOption.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="grid gap-4 sm:grid-cols-3">
-                                <div className="space-y-2">
-                                    <Label htmlFor="org-compute">{t('createOrganization.computeLabel')}</Label>
-                                    <Select
-                                        value={computeId}
-                                        onValueChange={(value) =>
-                                            form.setValue('computeId', value ?? '', { shouldValidate: true })
-                                        }
-                                    >
-                                        <SelectTrigger id="org-compute" className="w-full">
-                                            <SelectValue placeholder={t('createOrganization.computePlaceholder')} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {computes.map((compute) => (
-                                                <SelectItem key={compute.id} value={compute.id}>
-                                                    {compute.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="org-database">{t('createOrganization.databaseLabel')}</Label>
-                                    <Select
-                                        value={databaseId}
-                                        onValueChange={(value) =>
-                                            form.setValue('databaseId', value ?? '', { shouldValidate: true })
-                                        }
-                                    >
-                                        <SelectTrigger id="org-database" className="w-full">
-                                            <SelectValue placeholder={t('createOrganization.databasePlaceholder')} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {databases.map((database) => (
-                                                <SelectItem key={database.id} value={database.id}>
-                                                    {database.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="org-storage">{t('createOrganization.storageLabel')}</Label>
-                                    <Select
-                                        value={storageId}
-                                        onValueChange={(value) =>
-                                            form.setValue('storageId', value ?? '', { shouldValidate: true })
-                                        }
-                                    >
-                                        <SelectTrigger id="org-storage" className="w-full">
-                                            <SelectValue placeholder={t('createOrganization.storagePlaceholder')} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {storages.map((storage) => (
-                                                <SelectItem key={storage.id} value={storage.id}>
-                                                    {storage.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-                            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    disabled={createOrganization.isPending}
-                                    onClick={() => {
+                                    // Create the organization and close the dialog on success.
+                                    try {
+                                        await createOrganization.mutateAsync({
+                                            name: payload.name,
+                                            compute_id: payload.computeId,
+                                            database_id: payload.databaseId,
+                                            storage_id: payload.storageId,
+                                            avatar: payload.avatar,
+                                            country: payload.country,
+                                        });
                                         setOpen(false);
                                         resetDialogState();
-                                    }}
-                                >
-                                    {t('actions.cancel')}
-                                </Button>
+                                    } catch (mutationError) {
+                                        setError(
+                                            mutationError instanceof Error
+                                                ? mutationError.message
+                                                : t('createOrganization.error')
+                                        );
+                                    }
+                                })}
+                            >
+                                <FormLayout>
+                                    <Controller
+                                        control={form.control}
+                                        name="name"
+                                        render={({ field }) => (
+                                            <TextInput
+                                                ref={field.ref}
+                                                label={t('createOrganization.nameLabel')}
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isRequired
+                                                placeholder={t('createOrganization.namePlaceholder')}
+                                                onBlur={field.onBlur}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    <Controller
+                                        control={form.control}
+                                        name="avatar"
+                                        render={({ field }) => (
+                                            <TextInput
+                                                ref={field.ref}
+                                                label={t('createOrganization.avatarLabel')}
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isOptional
+                                                placeholder={t('createOrganization.avatarPlaceholder')}
+                                                onBlur={field.onBlur}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    <Selector
+                                        label={t('labels.country')}
+                                        options={countryOptions.map((option) => ({
+                                            value: option.code,
+                                            label: option.name,
+                                        }))}
+                                        value={country}
+                                        hasSearch
+                                        isRequired
+                                        placeholder={t('dialogs.chooseCountry')}
+                                        onChange={(value) =>
+                                            form.setValue('country', value, {
+                                                shouldDirty: true,
+                                                shouldValidate: true,
+                                            })
+                                        }
+                                    />
+                                    <Grid columns={{ minWidth: 160, max: 3, repeat: 'fit' }} gap={4}>
+                                        <Selector
+                                            label={t('createOrganization.computeLabel')}
+                                            options={computes.map((compute) => ({
+                                                value: compute.id,
+                                                label: compute.name,
+                                            }))}
+                                            value={computeId}
+                                            isRequired
+                                            placeholder={t('createOrganization.computePlaceholder')}
+                                            onChange={(value) =>
+                                                form.setValue('computeId', value, {
+                                                    shouldDirty: true,
+                                                    shouldValidate: true,
+                                                })
+                                            }
+                                        />
+                                        <Selector
+                                            label={t('createOrganization.databaseLabel')}
+                                            options={databases.map((database) => ({
+                                                value: database.id,
+                                                label: database.name,
+                                            }))}
+                                            value={databaseId}
+                                            isRequired
+                                            placeholder={t('createOrganization.databasePlaceholder')}
+                                            onChange={(value) =>
+                                                form.setValue('databaseId', value, {
+                                                    shouldDirty: true,
+                                                    shouldValidate: true,
+                                                })
+                                            }
+                                        />
+                                        <Selector
+                                            label={t('createOrganization.storageLabel')}
+                                            options={storages.map((storage) => ({
+                                                value: storage.id,
+                                                label: storage.name,
+                                            }))}
+                                            value={storageId}
+                                            isRequired
+                                            placeholder={t('createOrganization.storagePlaceholder')}
+                                            onChange={(value) =>
+                                                form.setValue('storageId', value, {
+                                                    shouldDirty: true,
+                                                    shouldValidate: true,
+                                                })
+                                            }
+                                        />
+                                    </Grid>
+                                    {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
+                                </FormLayout>
+                            </form>
+                        </LayoutContent>
+                    }
+                    footer={
+                        <LayoutFooter>
+                            <Stack direction="horizontal" gap={2} justify="end">
                                 <Button
+                                    label={t('actions.cancel')}
+                                    variant="ghost"
+                                    isDisabled={createOrganization.isPending}
+                                    clickAction={() => handleOpenChange(false)}
+                                />
+                                <Button
+                                    form={formId}
                                     type="submit"
-                                    disabled={createOrganization.isPending || !form.formState.isValid}
-                                >
-                                    {createOrganization.isPending ? t('actions.creating') : t('actions.create')}
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
-                </DialogContent>
+                                    label={createOrganization.isPending ? t('actions.creating') : t('actions.create')}
+                                    variant="primary"
+                                    isDisabled={!form.formState.isValid}
+                                    isLoading={createOrganization.isPending}
+                                />
+                            </Stack>
+                        </LayoutFooter>
+                    }
+                />
             </Dialog>
         </>
     );

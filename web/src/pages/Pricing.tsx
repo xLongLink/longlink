@@ -1,11 +1,27 @@
-import { BrainCircuit, ChevronRight, Sparkles, Users } from 'lucide-react';
+import type { IconName } from '@astryxdesign/core/Icon';
+import { Card } from '@astryxdesign/core/Card';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Text } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Section } from '@astryxdesign/core/Section';
+import { Heading } from '@astryxdesign/core/Heading';
+import { List, ListItem } from '@astryxdesign/core/List';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 
-const pricingOptions = [
+const pricingOptions: {
+    description: string;
+    features: { description: string | null; label: string }[];
+    icon: IconName;
+    name: string;
+    period: string | null;
+    price: string;
+}[] = [
     {
         name: 'Free',
-        icon: Sparkles,
+        icon: 'success',
         price: 'CHF 0',
         period: '/user/month',
         description: 'Designed for small teams getting started with building and running process apps.',
@@ -21,7 +37,7 @@ const pricingOptions = [
     },
     {
         name: 'Team',
-        icon: Users,
+        icon: 'info',
         price: 'Coming soon',
         period: null,
         description: 'Run production apps with pricing that scales with the people using the workflow.',
@@ -29,127 +45,97 @@ const pricingOptions = [
     },
     {
         name: 'Work',
-        icon: BrainCircuit,
+        icon: 'wrench',
         price: 'Coming soon',
         period: null,
         description: 'Use AI-assisted workflows to build, adapt, and operate process apps faster.',
         features: [{ label: 'Coming soon', description: null }],
     },
-] as const;
+];
 
 /** Renders the public pricing page. */
 export default function Pricing() {
     return (
-        <div className="min-h-screen bg-background text-foreground">
+        <Stack minHeight="100vh" gap={0}>
             <Navbar />
-            <main className="min-h-[calc(100vh-9rem)]">
-                <section className="mx-auto flex w-full max-w-6xl flex-col items-center gap-12 px-6 py-12 sm:gap-16 sm:py-16">
-                    <div className="mx-auto max-w-2xl space-y-3 text-center">
-                        <p className="text-sm font-medium tracking-[0.24em] text-accent uppercase">Pricing</p>
-                        <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-                            Simple workflow, Simple plans
-                        </h1>
-                        <p className="text-lg leading-8 text-muted-foreground">Designed to be extended.</p>
-                    </div>
+            <main>
+                <Section variant="transparent" padding={6}>
+                    <Stack width="100%" maxWidth={1120} gap={10} align="center">
+                        <Stack gap={3} align="center" maxWidth={640}>
+                            <Badge label="Pricing" variant="teal" />
+                            <Heading level={1} type="display-2" justify="center" textWrap="balance">
+                                Simple workflow, Simple plans
+                            </Heading>
+                            <Text as="p" type="large" color="secondary" justify="center">
+                                Designed to be extended.
+                            </Text>
+                        </Stack>
 
-                    <div className="grid w-full gap-4 md:grid-cols-3">
-                        {pricingOptions.map((option) => {
-                            const TierIcon = option.icon;
-
-                            return (
-                                <article
-                                    key={option.name}
-                                    className="flex min-h-[38rem] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-sm"
-                                >
-                                    <div className="flex flex-col items-center px-6 pt-8 pb-7 text-center">
-                                        <div className="mb-5 flex size-9 items-center justify-center text-muted-foreground">
-                                            <TierIcon aria-hidden={true} className="size-5" />
-                                        </div>
-                                        <h2 className="text-2xl font-semibold">{option.name}</h2>
-                                        {option.description ? (
-                                            <p className="mt-2 min-h-10 max-w-64 text-xs leading-5 text-muted-foreground">
+                        <Grid columns={{ minWidth: 280, max: 3, repeat: 'fit' }} gap={4} width="100%">
+                            {pricingOptions.map((option) => (
+                                <Card key={option.name} minHeight={520}>
+                                    <Stack gap={6}>
+                                        <Stack gap={3} align="center">
+                                            <Icon icon={option.icon} color="accent" />
+                                            <Heading level={2} justify="center">
+                                                {option.name}
+                                            </Heading>
+                                            <Text as="p" type="supporting" justify="center">
                                                 {option.description}
-                                            </p>
-                                        ) : (
-                                            <p className="mt-2 min-h-10 max-w-64 text-xs leading-5 text-muted-foreground">
-                                                Larger limits, isolation, and support for apps that need more.
-                                            </p>
-                                        )}
+                                            </Text>
+                                            <Stack direction="horizontal" gap={2} align="end" justify="center">
+                                                <Text type="display-3" weight="semibold">
+                                                    {option.price}
+                                                </Text>
+                                                {option.period ? <Text type="supporting">{option.period}</Text> : null}
+                                            </Stack>
+                                        </Stack>
 
-                                        <div className="mt-6 flex min-h-20 items-end justify-center gap-2">
-                                            <span className="text-5xl font-semibold tracking-tight">
-                                                {option.price}
-                                            </span>
-                                            {option.period ? (
-                                                <span className="pb-1 text-sm text-muted-foreground">
-                                                    {option.period}
-                                                </span>
-                                            ) : null}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-1 flex-col border-t border-border bg-muted/20 px-6 py-8">
                                         {option.name === 'Team' ? (
-                                            <p className="mb-5 text-sm text-foreground">
-                                                Everything included in Free, plus...
-                                            </p>
+                                            <Text as="p">Everything included in Free, plus...</Text>
                                         ) : null}
                                         {option.name === 'Work' ? (
-                                            <p className="mb-5 text-sm text-foreground">
-                                                Everything included in Team, plus...
-                                            </p>
+                                            <Text as="p">Everything included in Team, plus...</Text>
                                         ) : null}
 
-                                        {option.features.length ? (
-                                            <ul className="space-y-4 text-sm text-muted-foreground">
-                                                {option.features.map((feature) => (
-                                                    <li key={feature.label} className="flex gap-3">
-                                                        {feature.description ? (
-                                                            <details className="group flex-1">
-                                                                <summary className="flex cursor-pointer list-none gap-3 text-left text-foreground transition-colors hover:text-accent [&::-webkit-details-marker]:hidden">
-                                                                    <ChevronRight
-                                                                        className="mt-0.5 size-4 shrink-0 transition-transform group-open:rotate-90"
-                                                                        strokeWidth={1.8}
-                                                                    />
-                                                                    <span className="text-foreground">
-                                                                        {feature.label}
-                                                                    </span>
-                                                                </summary>
-                                                                <p className="mt-2 whitespace-pre-line pl-7 text-xs leading-5 text-muted-foreground">
-                                                                    {feature.description}
-                                                                </p>
-                                                            </details>
-                                                        ) : (
-                                                            <>
-                                                                <ChevronRight
-                                                                    className="mt-0.5 size-4 shrink-0"
-                                                                    strokeWidth={1.8}
-                                                                />
-                                                                <span>{feature.label}</span>
-                                                            </>
-                                                        )}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        ) : (
-                                            <p className="text-sm leading-6 text-muted-foreground">
-                                                More compute, storage, bandwidth, retention, and isolation options will
-                                                be available before launch.
-                                            </p>
-                                        )}
-                                    </div>
-                                </article>
-                            );
-                        })}
-                    </div>
+                                        <List hasDividers>
+                                            {option.features.map((feature) => (
+                                                <ListItem
+                                                    key={feature.label}
+                                                    startContent={
+                                                        <Icon icon="chevronRight" size="sm" color="secondary" />
+                                                    }
+                                                    label={<Text weight="semibold">{feature.label}</Text>}
+                                                    description={
+                                                        feature.description ? (
+                                                            <Text type="supporting">
+                                                                {feature.description
+                                                                    .split('\n\n')
+                                                                    .map((paragraph, index) => (
+                                                                        <Text key={paragraph} display="block">
+                                                                            {index > 0 ? <br /> : null}
+                                                                            {paragraph}
+                                                                        </Text>
+                                                                    ))}
+                                                            </Text>
+                                                        ) : null
+                                                    }
+                                                />
+                                            ))}
+                                        </List>
+                                    </Stack>
+                                </Card>
+                            ))}
+                        </Grid>
 
-                    <p className="max-w-3xl text-center text-sm leading-6 text-muted-foreground">
-                        LongLink is currently in beta. Pricing, limits, and included features may change as the platform
-                        evolves.
-                    </p>
-                </section>
+                        <Text as="p" type="supporting" justify="center">
+                            LongLink is currently in beta. Pricing, limits, and included features may change as the
+                            platform evolves.
+                        </Text>
+                    </Stack>
+                </Section>
             </main>
             <Footer />
-        </div>
+        </Stack>
     );
 }

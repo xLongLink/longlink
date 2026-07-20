@@ -1,19 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:complexType name="StackChildrenOnlyType">
-    <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:any processContents="lax" />
-      </xsd:choice>
-    </xsd:sequence>
+  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:complexType name="StackType">
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:attribute name="direction" type="OrientationType" use="optional" default="vertical" />
+    <xsd:attribute name="justify" type="StackJustifyType" use="optional" default="start" />
+    <xsd:attribute name="align" type="BoxAlignType" use="optional" default="stretch" />
+    <xsd:attribute name="wrap" type="StackWrapType" use="optional" default="nowrap" />
+    <xsd:attribute name="gap" type="SpacingType" use="optional" />
+    <xsd:attribute name="padding" type="SpacingType" use="optional" />
+    <xsd:attribute name="paddingInline" type="SpacingType" use="optional" />
+    <xsd:attribute name="paddingBlock" type="SpacingType" use="optional" />
+    <xsd:attribute name="isScrollable" type="xsd:string" use="optional" />
+    <xsd:attribute name="width" type="xsd:string" use="optional" />
+    <xsd:attribute name="height" type="xsd:string" use="optional" />
+    <xsd:attribute name="maxWidth" type="xsd:string" use="optional" />
+    <xsd:attribute name="minHeight" type="xsd:string" use="optional" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
-
-  <xsd:complexType name="StackType">
-    <xsd:complexContent>
-      <xsd:extension base="StackChildrenOnlyType" />
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:element name="Stack" type="StackType" />
+  <xsd:element name="Stack" type="StackType">
+    <xsd:annotation><xsd:documentation>Arranges XML children with Astryx Stack.</xsd:documentation></xsd:annotation>
+  </xsd:element>
 </xsd:schema>

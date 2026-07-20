@@ -167,7 +167,6 @@ export const apiApplicationMemberSchema = z.object({
 
 export const apiDatabaseRegistrySchema = z.object({
     id: z.string(),
-    kind: z.string(),
     name: z.string(),
     slug: z.string(),
     host: z.string(),

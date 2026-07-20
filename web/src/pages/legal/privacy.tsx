@@ -1,7 +1,47 @@
-import { A } from '@/components/ui/a';
-import { Li } from '@/components/ui/li';
-import { Ul } from '@/components/ui/ul';
-import { Heading } from '@/components/ui/heading';
+import type { ReactNode } from 'react';
+import { Code } from '@astryxdesign/core/Code';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { List, ListItem } from '@astryxdesign/core/List';
+import { Heading as AstryxHeading } from '@astryxdesign/core/Heading';
+
+/** Renders links with the external-link behavior used in legal copy. */
+function A({ children, href }: { children: ReactNode; href: string }) {
+    return (
+        <Link href={href} isExternalLink={href.startsWith('http')} type="inherit">
+            {children}
+        </Link>
+    );
+}
+
+/** Renders a legal heading while preserving the document's compact source notation. */
+function Heading({ children, id, level }: { children: ReactNode; id: string; level: 'h1' | 'h2' }) {
+    return (
+        <AstryxHeading id={id} level={level === 'h1' ? 1 : 2}>
+            {children}
+        </AstryxHeading>
+    );
+}
+
+/** Renders a bulleted legal list. */
+function Ul({ children }: { children: ReactNode }) {
+    return <List listStyle="disc">{children}</List>;
+}
+
+/** Renders one item in a legal list. */
+function Li({ children }: { children: ReactNode }) {
+    return <ListItem label={<Text>{children}</Text>} />;
+}
+
+/** Renders a consistently spaced legal section. */
+function Section({ children }: { children: ReactNode }) {
+    return (
+        <Stack as="section" gap={3}>
+            {children}
+        </Stack>
+    );
+}
 
 export const metadata = {
     lastUpdated: '2026-07-20',
@@ -9,12 +49,12 @@ export const metadata = {
 };
 
 export const content = (
-    <>
+    <Stack gap={4}>
         <Heading id="privacy-policy" level="h1">
             Privacy Policy
         </Heading>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="scope-and-controller" level="h2">
                 1. Scope and controller
             </Heading>
@@ -32,9 +72,9 @@ export const content = (
                 deployment tooling, and related support. If a separate service agreement or data processing agreement
                 applies, its definitions and data-processing terms also apply where relevant.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="our-roles" level="h2">
                 2. Our roles
             </Heading>
@@ -55,9 +95,9 @@ export const content = (
                 for providing notices and establishing a lawful basis for personal data they process through
                 applications built or deployed with LongLink.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="personal-data-we-process" level="h2">
                 3. Personal data we process
             </Heading>
@@ -123,9 +163,9 @@ export const content = (
                 We do not sell personal data. We do not currently use third-party advertising trackers or analytics to
                 build advertising profiles about visitors.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="why-we-process-personal-data" level="h2">
                 4. Why we process personal data
             </Heading>
@@ -150,9 +190,9 @@ export const content = (
                 interests in operating and protecting the Service, or consent for an optional use that specifically
                 requests it. You may withdraw consent at any time, without affecting earlier processing.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="service-providers-and-other-recipients" level="h2">
                 5. Service providers and other recipients
             </Heading>
@@ -200,9 +240,9 @@ export const content = (
                 act as independent controllers for their own security, fraud-prevention, service, and legal obligations.
                 Their privacy policies govern those activities.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="international-transfers" level="h2">
                 6. International transfers
             </Heading>
@@ -217,19 +257,17 @@ export const content = (
                 adapted for Swiss law, or another safeguard or exception permitted by applicable law. You may contact us
                 for more information about the safeguards relevant to a particular transfer.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="cookies-and-similar-storage" level="h2">
                 7. Cookies and similar storage
             </Heading>
             <p>
-                We currently use storage needed for the Service. An HTTP-only cookie named{' '}
-                <span className="font-mono text-xs text-foreground">longlink_auth</span> contains an opaque revocable
-                session token. A signed cookie named{' '}
-                <span className="font-mono text-xs text-foreground">longlink_session</span> may contain saved account
-                identifiers used by the account switcher. OAuth, identity, and payment providers may set their own
-                cookies when you visit them.
+                We currently use storage needed for the Service. An HTTP-only cookie named <Code>longlink_auth</Code>{' '}
+                contains an opaque revocable session token. A signed cookie named <Code>longlink_session</Code> may
+                contain saved account identifiers used by the account switcher. OAuth, identity, and payment providers
+                may set their own cookies when you visit them.
             </p>
             <p>
                 In SDK mode and local development, the embedded web runtime may use local storage to remember the
@@ -240,9 +278,9 @@ export const content = (
                 We do not currently set advertising or cross-site behavioral-tracking cookies. If that changes, we will
                 update this Policy and provide any choices required by law before using them.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="retention" level="h2">
                 8. Retention
             </Heading>
@@ -285,9 +323,9 @@ export const content = (
                 required retention schedule. When deletion is due, we delete, anonymize, or securely isolate the data
                 until deletion from backups occurs in the ordinary cycle.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="automated-operational-actions" level="h2">
                 9. Automated operational actions
             </Heading>
@@ -307,9 +345,9 @@ export const content = (
                 We do not otherwise use personal data for automated decisions that produce legal or similarly
                 significant effects.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="security-and-data-incidents" level="h2">
                 10. Security and data incidents
             </Heading>
@@ -327,9 +365,9 @@ export const content = (
                 rights. We notify affected individuals where required by law or where notification is necessary for
                 their protection.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="your-rights" level="h2">
                 11. Your rights
             </Heading>
@@ -350,9 +388,9 @@ export const content = (
                 You may lodge a complaint with the Federal Data Protection and Information Commissioner (FDPIC) or
                 another competent data-protection authority.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="children" level="h2">
                 12. Children
             </Heading>
@@ -361,9 +399,9 @@ export const content = (
                 Contact us if you believe a child has provided personal data so that we can investigate and take
                 appropriate action.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="changes-to-this-policy" level="h2">
                 13. Changes to this Policy
             </Heading>
@@ -372,9 +410,9 @@ export const content = (
                 will post the revised Policy with a new update date. If a change materially affects how we use existing
                 account data, we will provide reasonable advance notice through email or the Service where required.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="contact" level="h2">
                 14. Contact
             </Heading>
@@ -383,6 +421,6 @@ export const content = (
                 Privacy enquiries and data-rights requests: <A href="mailto:info@longlink.ch">info@longlink.ch</A>.
                 Security, technical, and account support: <A href="mailto:info@longlink.dev">info@longlink.dev</A>.
             </p>
-        </section>
-    </>
+        </Section>
+    </Stack>
 );

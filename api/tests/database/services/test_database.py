@@ -3,7 +3,6 @@ from types import SimpleNamespace
 from factories import create_ready_infrastructure
 from src.database.services import database
 from src.database.models.users import User
-from src.models.infrastructure import DatabaseKind
 
 db = SimpleNamespace(database=database)
 
@@ -22,7 +21,6 @@ async def test_get_and_fetch_return_database_registry(users: tuple[User, User, U
     missing = await db.database.get(uuid4())
 
     # Assert
-    assert registry.kind == DatabaseKind.postgresql
     assert registry.name.startswith("Primary database")
     assert registry.slug.endswith("-database")
     assert registry.host == "database.example"

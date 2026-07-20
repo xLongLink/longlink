@@ -1,85 +1,51 @@
-import { getVersion, useSnapshot } from 'valtio';
+import { useState } from 'react';
+import { Slider as AstryxSlider } from '@astryxdesign/core/Slider';
 import type { Props } from '@/xml/types';
 import { useXmlContext } from '@/xml/core/context';
-import { Slider as UISlider } from '@/components/ui/slider';
-import { resolveXmlBoolean, resolveXmlString, resolveXmlValue } from './props';
+import { useBindableValue } from './binding';
+import {
+    resolveXmlBoolean,
+    resolveXmlEnum,
+    resolveXmlLabel,
+    resolveXmlNumber,
+    resolveXmlSizeValue,
+    resolveXmlStatus,
+    resolveXmlString,
+} from './props';
 
-/** Renders a shadcn-backed slider with optional reactive state binding. */
+/** Renders a single-value Astryx slider with numeric Valtio binding. */
 export function Slider({ props }: Props) {
     const { ctx } = useXmlContext();
-    const defaultValue = resolveXmlValue(props, 'defaultValue', ctx);
-    const disabled = resolveXmlBoolean(props, 'disabled', ctx);
-    const id = resolveXmlString(props, 'id', ctx);
-    const max = resolveXmlString(props, 'max', ctx);
-    const min = resolveXmlString(props, 'min', ctx);
-    const name = resolveXmlString(props, 'name', ctx);
-    const orientation = resolveXmlString(props, 'orientation', ctx, 'horizontal');
-    const step = resolveXmlString(props, 'step', ctx);
-    const value = resolveXmlValue(props, 'value', ctx);
-    const numericMin = Number(min);
-    const numericMax = Number(max);
-    const numericStep = Number(step);
-    const resolvedMin = Number.isFinite(numericMin) ? numericMin : 0;
-    const resolvedMax = Number.isFinite(numericMax) ? numericMax : 100;
-    const resolvedStep = Number.isFinite(numericStep) ? numericStep : 1;
-    const fallbackValue = Number.isFinite(resolvedMin) ? [resolvedMin] : [0];
-
-    // Keep the slider controlled when it is bound to a Valtio-backed XML state slot.
-    if (value && typeof value === 'object' && getVersion(value) !== undefined) {
-        const state = value as Record<string, unknown> & { value?: unknown };
-        const snapshot = useSnapshot(state);
-        const currentValue = 'value' in snapshot ? snapshot.value : snapshot;
-        const normalizedValue = Array.isArray(currentValue)
-            ? currentValue.map((item) => Number(item))
-            : currentValue == null
-              ? fallbackValue
-              : [Number(currentValue)];
-
-        return (
-            <UISlider
-                disabled={disabled}
-                id={id}
-                max={resolvedMax}
-                min={resolvedMin}
-                name={name}
-                orientation={orientation}
-                step={resolvedStep}
-                value={normalizedValue}
-                onValueChange={(nextValue) => {
-                    const nextValues = Array.isArray(nextValue) ? nextValue : [nextValue];
-
-                    // Mutate array state in place when the binding target is an array.
-                    if (Array.isArray(state)) {
-                        state.splice(0, state.length, ...nextValues);
-                    } else if ('value' in state) {
-                        state.value = nextValues.length <= 1 ? (nextValues[0] ?? resolvedMin) : nextValues;
-                    }
-                }}
-            />
-        );
-    }
-
-    // Use the XML value as the initial slider position when it is not bound to state.
-    const initialValue = Array.isArray(value)
-        ? value.map((item) => Number(item))
-        : value != null
-          ? [Number(value)]
-          : Array.isArray(defaultValue)
-            ? defaultValue.map((item) => Number(item))
-            : defaultValue != null
-              ? [Number(defaultValue)]
-              : fallbackValue;
+    const binding = useBindableValue(props, 'value', ctx, 'number');
+    const initialValue = Number(binding.initialValue ?? 0);
+    const [localValue, setLocalValue] = useState(initialValue);
+    const currentValue = Number(binding.currentValue ?? initialValue);
+    const value = binding.bound ? currentValue : localValue;
+    const orientation = resolveXmlEnum(props, 'orientation', ctx, ['horizontal', 'vertical'], 'horizontal', 'Slider');
+    const valueDisplay = resolveXmlEnum(props, 'valueDisplay', ctx, ['tooltip', 'text', 'none'], 'tooltip', 'Slider');
 
     return (
-        <UISlider
-            defaultValue={initialValue}
-            disabled={disabled}
-            id={id}
-            max={resolvedMax}
-            min={resolvedMin}
-            name={name}
+        <AstryxSlider
+            description={resolveXmlString(props, 'description', ctx) || undefined}
+            disabledMessage={resolveXmlString(props, 'disabledMessage', ctx) || undefined}
+            htmlName={resolveXmlString(props, 'htmlName', ctx) || undefined}
+            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx, false)}
+            isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
+            isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
+            isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
+            label={resolveXmlLabel(props, ctx, 'Slider')}
+            max={resolveXmlNumber(props, 'max', ctx, 100)}
+            min={resolveXmlNumber(props, 'min', ctx, 0)}
+            onChange={(nextValue: number) => {
+                if (binding.bound) binding.setValue(nextValue);
+                else setLocalValue(nextValue);
+            }}
             orientation={orientation}
-            step={resolvedStep}
+            status={resolveXmlStatus(props, ctx)}
+            step={resolveXmlNumber(props, 'step', ctx, 1)}
+            value={value}
+            valueDisplay={valueDisplay}
+            width={resolveXmlSizeValue(props, 'width', ctx)}
         />
     );
 }

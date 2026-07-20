@@ -5,8 +5,8 @@ from typing import cast
 from src.utils import storage as storage_utils
 from containers import DockerRuntimeContainer, require_docker_daemon
 from collections.abc import AsyncIterator
+from src.models.types import StorageKind
 from botocore.exceptions import EndpointConnectionError
-from src.models.infrastructure import StorageKind
 from src.adapters.storage.minio import MinIO
 from src.database.models.storages import StorageRegistry
 

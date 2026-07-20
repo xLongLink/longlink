@@ -1,23 +1,24 @@
 import { z } from 'zod';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useId, useState } from 'react';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { FieldStatus } from '@astryxdesign/core/FieldStatus';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { ApiImageMetadata } from '@/lib/types';
 import { fetchApiJson } from '@/lib/api';
-import { Icon } from '@/components/ui/icon';
 import { useTranslation } from '@/lib/i18n';
 import { hasMinimumRole } from '@/lib/roles';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useApiQuery } from '@/hooks/use-api';
-import { Button } from '@/components/ui/button';
 import { useUserProfile } from '@/hooks/use-user';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useOrganizationActions } from '@/hooks/use-organization';
 import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
 import { apiIconsSchema, apiImageMetadataSchema, parseApiResponse } from '@/lib/api-schemas';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const createApplicationFormSchema = z.object({
     image: z.string().trim().min(1),
@@ -47,6 +48,9 @@ export default function CreateApplication({ organization }: { organization: stri
     const { t } = useTranslation();
     const { organizations } = useUserProfile();
     const { createApplication, isCreatingApplication } = useOrganizationActions(organization);
+    const imageFormId = useId();
+    const metadataFormId = useId();
+    const environmentFormId = useId();
     const [open, setOpen] = useState(false);
     const [step, setStep] = useState<'image' | 'metadata' | 'envs'>('image');
     const [imageMetadata, setImageMetadata] = useState<ApiImageMetadata | null>(null);
@@ -57,7 +61,9 @@ export default function CreateApplication({ organization }: { organization: stri
         mode: 'onChange',
         resolver: zodResolver(createApplicationFormSchema),
     });
-    const values = form.watch();
+    const image = useWatch({ control: form.control, name: 'image' });
+    const name = useWatch({ control: form.control, name: 'name' });
+    const icon = useWatch({ control: form.control, name: 'icon' });
     const { data: iconCatalog } = useApiQuery<IconName[]>(open ? '/api/icons' : null, {
         parse: (value) => parseApiResponse(apiIconsSchema, value),
         staleTime: Infinity,
@@ -142,246 +148,249 @@ export default function CreateApplication({ organization }: { organization: stri
         }
     }
 
+    /** Updates dialog state while protecting image inspection or application creation. */
+    function handleOpenChange(nextOpen: boolean) {
+        if (!nextOpen && (isInspecting || isCreatingApplication)) {
+            return;
+        }
+        setOpen(nextOpen);
+        if (!nextOpen) {
+            resetDialogState();
+        }
+    }
+
     return (
         <>
-            <Button type="button" onClick={() => setOpen(true)} disabled={organization.length === 0}>
-                {t('actions.create')}
-            </Button>
+            <Button
+                label={t('actions.create')}
+                isDisabled={organization.length === 0}
+                clickAction={() => setOpen(true)}
+            />
 
             <Dialog
-                open={open}
-                onOpenChange={(nextOpen) => {
-                    setOpen(nextOpen);
-                    // Reset transient form state when the dialog closes.
-                    if (!nextOpen) {
-                        resetDialogState();
-                    }
-                }}
+                isOpen={open}
+                onOpenChange={handleOpenChange}
+                purpose={isInspecting || isCreatingApplication ? 'required' : 'form'}
+                width={step === 'envs' ? 520 : 640}
+                maxHeight="calc(100dvh - 2rem)"
             >
-                <DialogContent className={step === 'envs' ? 'sm:max-w-lg' : undefined}>
-                    <div className="space-y-4">
-                        <div className="space-y-1">
-                            <DialogTitle>
-                                {step === 'image'
+                <Layout
+                    header={
+                        <DialogHeader
+                            title={
+                                step === 'image'
                                     ? t('dialogs.inspectImage')
                                     : step === 'metadata'
                                       ? t('dialogs.reviewMetadata')
-                                      : t('dialogs.reviewEnvs')}
-                            </DialogTitle>
-                            <DialogDescription>
-                                <span className={step === 'image' ? 'font-medium text-foreground' : undefined}>
-                                    {t('dialogs.stepImage')}
-                                </span>
-                                <span className="text-muted-foreground"> / </span>
-                                <span className={step === 'metadata' ? 'font-medium text-foreground' : undefined}>
-                                    {t('dialogs.stepMetadata')}
-                                </span>
-                                <span className="text-muted-foreground"> / </span>
-                                <span className={step === 'envs' ? 'font-medium text-foreground' : undefined}>
-                                    {t('dialogs.stepEnvs')}
-                                </span>
-                            </DialogDescription>
-                        </div>
+                                      : t('dialogs.reviewEnvs')
+                            }
+                            subtitle={`${t('dialogs.stepImage')} / ${t('dialogs.stepMetadata')} / ${t(
+                                'dialogs.stepEnvs'
+                            )}`}
+                            onOpenChange={handleOpenChange}
+                        />
+                    }
+                    content={
+                        <LayoutContent>
+                            {step === 'image' ? (
+                                <form id={imageFormId} onSubmit={form.handleSubmit(handleInspectImage)}>
+                                    <FormLayout>
+                                        <Controller
+                                            control={form.control}
+                                            name="image"
+                                            render={({ field }) => (
+                                                <TextInput
+                                                    ref={field.ref}
+                                                    label={t('labels.image')}
+                                                    value={field.value}
+                                                    htmlName={field.name}
+                                                    isRequired
+                                                    placeholder="ghcr.io/longlink/dashboard:latest"
+                                                    onBlur={field.onBlur}
+                                                    onChange={field.onChange}
+                                                />
+                                            )}
+                                        />
+                                        {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
+                                    </FormLayout>
+                                </form>
+                            ) : step === 'metadata' ? (
+                                <form
+                                    id={metadataFormId}
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
 
-                        {step === 'image' ? (
-                            <form className="space-y-4" onSubmit={form.handleSubmit(handleInspectImage)}>
-                                <div className="space-y-2">
-                                    <Label htmlFor="application-image">{t('labels.image')}</Label>
-                                    <Input
-                                        id="application-image"
-                                        {...form.register('image')}
-                                        placeholder="ghcr.io/longlink/dashboard:latest"
-                                        autoComplete="off"
-                                    />
-                                </div>
-
-                                {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-                                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => {
-                                            setOpen(false);
-                                            resetDialogState();
-                                        }}
-                                    >
-                                        {t('actions.cancel')}
-                                    </Button>
-                                    <Button type="submit" disabled={isInspecting || values.image.trim().length === 0}>
-                                        {isInspecting ? t('dialogs.inspecting') : t('dialogs.inspectImage')}
-                                    </Button>
-                                </div>
-                            </form>
-                        ) : step === 'metadata' ? (
-                            <form
-                                className="space-y-4"
-                                onSubmit={(event) => {
-                                    event.preventDefault();
-                                    // Advance only after required metadata is present.
-                                    if (values.name.trim().length > 0 && values.image.trim().length > 0) {
-                                        setStep('envs');
-                                    }
-                                }}
-                            >
-                                <div className="space-y-2">
-                                    <Label htmlFor="application-name">{t('labels.name')}</Label>
-                                    <Input
-                                        id="application-name"
-                                        {...form.register('name')}
-                                        placeholder="dashboard"
-                                        autoComplete="off"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="application-description">{t('labels.description')}</Label>
-                                    <Input
-                                        id="application-description"
-                                        {...form.register('description')}
-                                        placeholder="Dashboard app"
-                                        autoComplete="off"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="application-icon">{t('labels.icon')}</Label>
-                                    <Select
-                                        value={values.icon}
-                                        onValueChange={(value: string | null) =>
-                                            form.setValue('icon', value && isIconName(value) ? value : '', {
-                                                shouldValidate: true,
-                                            })
+                                        // Advance only after required metadata is present.
+                                        if (name.trim().length > 0 && image.trim().length > 0) {
+                                            setStep('envs');
                                         }
-                                    >
-                                        <SelectTrigger id="application-icon" className="w-full">
-                                            {isIconName(values.icon) ? (
-                                                <Icon name={values.icon} className="size-4 text-muted-foreground" />
-                                            ) : null}
-                                            <SelectValue placeholder={t('dialogs.chooseIcon')} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="__none__">{t('dialogs.none')}</SelectItem>
-                                            {iconOptions.map((name) => (
-                                                <SelectItem key={name} value={name}>
-                                                    {name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-                                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => {
-                                            setStep('image');
-                                            setError(null);
-                                        }}
-                                    >
-                                        {t('actions.back')}
-                                    </Button>
-                                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => {
-                                                setOpen(false);
-                                                resetDialogState();
-                                            }}
-                                        >
-                                            {t('actions.cancel')}
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            disabled={
-                                                values.name.trim().length === 0 || values.image.trim().length === 0
+                                    }}
+                                >
+                                    <FormLayout>
+                                        <Controller
+                                            control={form.control}
+                                            name="name"
+                                            render={({ field }) => (
+                                                <TextInput
+                                                    ref={field.ref}
+                                                    label={t('labels.name')}
+                                                    value={field.value}
+                                                    htmlName={field.name}
+                                                    isRequired
+                                                    placeholder="dashboard"
+                                                    onBlur={field.onBlur}
+                                                    onChange={field.onChange}
+                                                />
+                                            )}
+                                        />
+                                        <Controller
+                                            control={form.control}
+                                            name="description"
+                                            render={({ field }) => (
+                                                <TextInput
+                                                    ref={field.ref}
+                                                    label={t('labels.description')}
+                                                    value={field.value}
+                                                    htmlName={field.name}
+                                                    isOptional
+                                                    placeholder="Dashboard app"
+                                                    onBlur={field.onBlur}
+                                                    onChange={field.onChange}
+                                                />
+                                            )}
+                                        />
+                                        <Selector
+                                            label={t('labels.icon')}
+                                            options={[
+                                                { value: '__none__', label: t('dialogs.none') },
+                                                ...iconOptions.map((name) => ({ value: name, label: name })),
+                                            ]}
+                                            value={icon}
+                                            placeholder={t('dialogs.chooseIcon')}
+                                            isOptional
+                                            onChange={(value) =>
+                                                form.setValue('icon', isIconName(value) ? value : '', {
+                                                    shouldDirty: true,
+                                                    shouldValidate: true,
+                                                })
                                             }
-                                            onClick={() => setStep('envs')}
-                                        >
-                                            {t('actions.next')}
-                                        </Button>
-                                    </div>
-                                </div>
-                            </form>
-                        ) : (
-                            <form className="space-y-4" onSubmit={form.handleSubmit(handleCreateApp)}>
-                                {declaredEnvironments.length ? (
-                                    <ScrollArea className="max-h-80 pr-3">
-                                        <div className="space-y-4">
-                                            {declaredEnvironments.map((env) => (
-                                                <div key={env.name} className="space-y-2">
-                                                    <Label htmlFor={`env-${env.name}`}>
-                                                        {env.name}{' '}
-                                                        <span className="text-muted-foreground">
-                                                            (
-                                                            {env.required
-                                                                ? t('dialogs.required')
-                                                                : t('dialogs.optional')}
-                                                            )
-                                                        </span>
-                                                    </Label>
-                                                    <Input
-                                                        id={`env-${env.name}`}
-                                                        {...form.register(`envs.${env.name}` as `envs.${string}`, {
-                                                            required: env.required,
-                                                        })}
+                                        />
+                                        {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
+                                    </FormLayout>
+                                </form>
+                            ) : (
+                                <form id={environmentFormId} onSubmit={form.handleSubmit(handleCreateApp)}>
+                                    <FormLayout>
+                                        {declaredEnvironments.map((env) => (
+                                            <Controller
+                                                key={env.name}
+                                                control={form.control}
+                                                name={`envs.${env.name}` as `envs.${string}`}
+                                                rules={{ required: env.required }}
+                                                render={({ field }) => (
+                                                    <TextInput
+                                                        ref={field.ref}
+                                                        label={env.name}
+                                                        value={field.value ?? ''}
+                                                        htmlName={field.name}
+                                                        isOptional={!env.required}
+                                                        isRequired={env.required}
                                                         placeholder={
                                                             env.description ??
                                                             t('dialogs.enterEnvironment', { name: env.name })
                                                         }
-                                                        autoComplete="off"
+                                                        onBlur={field.onBlur}
+                                                        onChange={field.onChange}
                                                     />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </ScrollArea>
-                                ) : null}
-
-                                {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-                                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+                                                )}
+                                            />
+                                        ))}
+                                        {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
+                                    </FormLayout>
+                                </form>
+                            )}
+                        </LayoutContent>
+                    }
+                    footer={
+                        <LayoutFooter>
+                            {step === 'image' ? (
+                                <Stack direction="horizontal" gap={2} justify="end">
                                     <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => {
+                                        label={t('actions.cancel')}
+                                        variant="ghost"
+                                        isDisabled={isInspecting}
+                                        clickAction={() => handleOpenChange(false)}
+                                    />
+                                    <Button
+                                        form={imageFormId}
+                                        type="submit"
+                                        label={isInspecting ? t('dialogs.inspecting') : t('dialogs.inspectImage')}
+                                        variant="primary"
+                                        isDisabled={image.trim().length === 0}
+                                        isLoading={isInspecting}
+                                    />
+                                </Stack>
+                            ) : step === 'metadata' ? (
+                                <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
+                                    <Button
+                                        label={t('actions.back')}
+                                        variant="ghost"
+                                        clickAction={() => {
+                                            setStep('image');
+                                            setError(null);
+                                        }}
+                                    />
+                                    <Stack direction="horizontal" gap={2}>
+                                        <Button
+                                            label={t('actions.cancel')}
+                                            variant="ghost"
+                                            clickAction={() => handleOpenChange(false)}
+                                        />
+                                        <Button
+                                            form={metadataFormId}
+                                            type="submit"
+                                            label={t('actions.next')}
+                                            variant="primary"
+                                            isDisabled={name.trim().length === 0 || image.trim().length === 0}
+                                        />
+                                    </Stack>
+                                </Stack>
+                            ) : (
+                                <Stack direction="horizontal" gap={2} justify="between" wrap="wrap">
+                                    <Button
+                                        label={t('actions.back')}
+                                        variant="ghost"
+                                        isDisabled={isCreatingApplication}
+                                        clickAction={() => {
                                             setStep('metadata');
                                             setError(null);
                                         }}
-                                    >
-                                        {t('actions.back')}
-                                    </Button>
-                                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                                    />
+                                    <Stack direction="horizontal" gap={2}>
                                         <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() => {
-                                                setOpen(false);
-                                                resetDialogState();
-                                            }}
-                                        >
-                                            {t('actions.cancel')}
-                                        </Button>
+                                            label={t('actions.cancel')}
+                                            variant="ghost"
+                                            isDisabled={isCreatingApplication}
+                                            clickAction={() => handleOpenChange(false)}
+                                        />
                                         <Button
+                                            form={environmentFormId}
                                             type="submit"
-                                            disabled={
-                                                isCreatingApplication ||
-                                                values.name.trim().length === 0 ||
-                                                values.image.trim().length === 0 ||
+                                            label={isCreatingApplication ? t('actions.creating') : t('actions.create')}
+                                            variant="primary"
+                                            isDisabled={
+                                                name.trim().length === 0 ||
+                                                image.trim().length === 0 ||
                                                 !form.formState.isValid
                                             }
-                                        >
-                                            {isCreatingApplication ? t('actions.creating') : t('actions.create')}
-                                        </Button>
-                                    </div>
-                                </div>
-                            </form>
-                        )}
-                    </div>
-                </DialogContent>
+                                            isLoading={isCreatingApplication}
+                                        />
+                                    </Stack>
+                                </Stack>
+                            )}
+                        </LayoutFooter>
+                    }
+                />
             </Dialog>
         </>
     );

@@ -2,6 +2,7 @@ import { renderToString } from 'react-dom/server';
 import { createMemoryRouter } from 'react-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ApiI18nProvider } from '@/lib/i18n';
+import { AstryxProvider } from '@/providers';
 import { UserProvider } from '@/hooks/use-user';
 import { queryClient } from '@/lib/react-query';
 import { DEFAULT_LANGUAGE } from '@/lib/languages';
@@ -17,9 +18,11 @@ export async function render(path: string): Promise<string> {
     return renderToString(
         <QueryClientProvider client={queryClient}>
             <UserProvider>
-                <ApiI18nProvider language={DEFAULT_LANGUAGE}>
-                    <RoutedApp router={router} />
-                </ApiI18nProvider>
+                <AstryxProvider mode="dark">
+                    <ApiI18nProvider language={DEFAULT_LANGUAGE}>
+                        <RoutedApp router={router} />
+                    </ApiI18nProvider>
+                </AstryxProvider>
             </UserProvider>
         </QueryClientProvider>
     );

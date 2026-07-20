@@ -1,19 +1,24 @@
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { Link, useLocation } from 'react-router';
+import { useLocation } from 'react-router';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { AuthPage } from '@/components/AuthPage';
 import { sanitizeRedirectPath } from '@/lib/redirects';
 
 type ForgotPasswordValues = {
     email: string;
 };
+
+const emailInputAttributes = { autoComplete: 'email' };
 
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
@@ -41,48 +46,49 @@ export default function ForgotPassword() {
     return (
         <AuthPage title={t('auth.forgotPasswordTitle')} description={t('auth.forgotPasswordDescription')}>
             {requestReset.isSuccess ? (
-                <div className="space-y-4">
-                    <p role="status" className="rounded-lg border border-border p-3 text-sm text-muted-foreground">
-                        {t('auth.resetEmailSent')}
-                    </p>
-                    <Button render={<Link to={`/organizations?${nextQuery}`} />} className="w-full">
-                        {t('auth.backToSignIn')}
-                    </Button>
-                </div>
+                <Stack gap={4}>
+                    <Banner status="success" title={t('auth.resetEmailSent')} />
+                    <Button href={`/organizations?${nextQuery}`} label={t('auth.backToSignIn')} variant="primary" />
+                </Stack>
             ) : (
-                <form className="space-y-4" onSubmit={form.handleSubmit((payload) => requestReset.mutate(payload))}>
-                    <div className="space-y-2">
-                        <Label htmlFor="forgot-password-email">{t('labels.email')}</Label>
-                        <Input
-                            id="forgot-password-email"
-                            type="email"
-                            autoComplete="email"
-                            aria-invalid={Boolean(form.formState.errors.email)}
-                            {...form.register('email')}
-                        />
-                        {form.formState.errors.email ? (
-                            <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
-                        ) : null}
-                    </div>
-                    {requestReset.error ? (
-                        <p role="alert" className="text-sm text-destructive">
-                            {requestReset.error.message}
-                        </p>
-                    ) : null}
-                    <Button type="submit" className="w-full" disabled={requestReset.isPending}>
-                        {requestReset.isPending ? t('auth.sendingResetEmail') : t('auth.sendResetEmail')}
-                    </Button>
-                </form>
+                <Stack as="form" gap={4} onSubmit={form.handleSubmit((payload) => requestReset.mutate(payload))}>
+                    <Controller
+                        control={form.control}
+                        name="email"
+                        render={({ field, fieldState }) => (
+                            <TextInput
+                                {...emailInputAttributes}
+                                ref={field.ref}
+                                htmlName={field.name}
+                                isRequired
+                                label={t('labels.email')}
+                                onBlur={field.onBlur}
+                                onChange={field.onChange}
+                                status={
+                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
+                                }
+                                type="email"
+                                value={field.value}
+                                width="100%"
+                            />
+                        )}
+                    />
+                    {requestReset.error ? <Banner status="error" title={requestReset.error.message} /> : null}
+                    <Button
+                        isDisabled={requestReset.isPending}
+                        isLoading={requestReset.isPending}
+                        label={requestReset.isPending ? t('auth.sendingResetEmail') : t('auth.sendResetEmail')}
+                        type="submit"
+                        variant="primary"
+                    />
+                </Stack>
             )}
             {!requestReset.isSuccess ? (
-                <p className="text-center text-sm text-muted-foreground">
-                    <Link
-                        className="font-medium text-foreground underline-offset-4 hover:underline"
-                        to={`/organizations?${nextQuery}`}
-                    >
+                <Text as="p" color="secondary" justify="center" type="supporting">
+                    <Link href={`/organizations?${nextQuery}`} type="inherit" weight="medium">
                         {t('auth.backToSignIn')}
                     </Link>
-                </p>
+                </Text>
             ) : null}
         </AuthPage>
     );

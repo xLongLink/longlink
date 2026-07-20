@@ -1,5 +1,6 @@
-import { A } from '@/components/ui/a';
-import { Heading } from '@/components/ui/heading';
+import { Link } from '@astryxdesign/core/Link';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
 
 export const metadata = {
     lastUpdated: '2026-07-06',
@@ -7,27 +8,30 @@ export const metadata = {
 };
 
 export const content = (
-    <>
-        <Heading id="impressum" level="h1">
+    <Stack gap={4}>
+        <Heading id="impressum" level={1}>
             Impressum
         </Heading>
 
-        <section className="space-y-3">
-            <Heading id="company" level="h2">
+        <Stack as="section" gap={3}>
+            <Heading id="company" level={2}>
                 Company
             </Heading>
             <p>LongLink SAGL</p>
             <p>Company registration number (UID): CHE-150.642.313</p>
             <p>Legal form: Limited liability company (Sagl)</p>
-        </section>
+        </Stack>
 
-        <section className="space-y-3">
-            <Heading id="contact" level="h2">
+        <Stack as="section" gap={3}>
+            <Heading id="contact" level={2}>
                 Contact
             </Heading>
             <p>
-                Email: <A href="mailto:info@longlink.ch">info@longlink.ch</A>
+                Email:{' '}
+                <Link href="mailto:info@longlink.ch" type="inherit">
+                    info@longlink.ch
+                </Link>
             </p>
-        </section>
-    </>
+        </Stack>
+    </Stack>
 );

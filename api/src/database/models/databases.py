@@ -2,9 +2,7 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import Enum, Column
 from longlink.utils.time import utcnow
-from src.models.databases import DatabaseKind
 from longlink.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.
@@ -22,11 +20,6 @@ class DatabaseRegistry(SQLModel, table=True):
 
     # Identifier
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-
-    # State
-    kind: DatabaseKind = Field(
-        sa_column=Column(Enum(DatabaseKind, name="database_kind_enum", native_enum=False), nullable=False)
-    )
 
     # Metadata
     name: str = Field(unique=True, max_length=128)

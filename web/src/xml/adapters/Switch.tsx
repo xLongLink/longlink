@@ -1,43 +1,45 @@
+import { useState } from 'react';
+import { Switch as AstryxSwitch } from '@astryxdesign/core/Switch';
 import type { Props } from '@/xml/types';
 import { useXmlContext } from '@/xml/core/context';
-import { Switch as UISwitch } from '@/components/ui/switch';
-import { resolveXmlBoolean, resolveXmlString, resolveXmlValue, useXmlValueSnapshot } from './props';
+import { toXmlBoolean, useBindableValue } from './binding';
+import {
+    resolveXmlBoolean,
+    resolveXmlEnum,
+    resolveXmlLabel,
+    resolveXmlSizeValue,
+    resolveXmlStatus,
+    resolveXmlString,
+} from './props';
 
-/** Renders a shadcn-backed switch. */
+/** Renders an Astryx switch with boolean Valtio binding. */
 export function Switch({ props }: Props) {
     const { ctx } = useXmlContext();
-    const checked = resolveXmlValue(props, 'checked', ctx);
-    const defaultChecked = resolveXmlBoolean(props, 'defaultChecked', ctx);
-    const disabled = resolveXmlBoolean(props, 'disabled', ctx);
-    const id = resolveXmlString(props, 'id', ctx);
-    const size = resolveXmlString(props, 'size', ctx, 'default');
-    const { state, snapshot } = useXmlValueSnapshot(checked);
+    const binding = useBindableValue(props, 'value', ctx);
+    const [localValue, setLocalValue] = useState(toXmlBoolean(binding.initialValue));
+    const value = binding.bound ? toXmlBoolean(binding.currentValue) : localValue;
+    const labelPosition = resolveXmlEnum(props, 'labelPosition', ctx, ['start', 'end'], 'end', 'Switch');
+    const labelSpacing = resolveXmlEnum(props, 'labelSpacing', ctx, ['hug', 'spread'], 'hug', 'Switch');
 
-    // Render bound switches as controlled inputs.
-    if (state) {
-        const currentValue =
-            snapshot && typeof snapshot === 'object' && 'value' in snapshot ? snapshot.value : snapshot;
-
-        return (
-            <UISwitch
-                checked={Boolean(currentValue)}
-                disabled={disabled}
-                id={id}
-                onCheckedChange={(nextChecked) => {
-                    // Write checked changes back to the bound state.
-                    if ('value' in state) state.value = nextChecked;
-                }}
-                size={size}
-            />
-        );
-    }
-
-    // Render explicit checked values as controlled inputs.
-    if (checked !== undefined) {
-        return (
-            <UISwitch checked={Boolean(checked)} disabled={disabled} id={id} onCheckedChange={() => {}} size={size} />
-        );
-    }
-
-    return <UISwitch defaultChecked={defaultChecked} disabled={disabled} id={id} size={size} />;
+    return (
+        <AstryxSwitch
+            description={resolveXmlString(props, 'description', ctx) || undefined}
+            disabledMessage={resolveXmlString(props, 'disabledMessage', ctx) || undefined}
+            htmlName={resolveXmlString(props, 'htmlName', ctx) || undefined}
+            isDisabled={resolveXmlBoolean(props, 'isDisabled', ctx, false)}
+            isLabelHidden={resolveXmlBoolean(props, 'isLabelHidden', ctx, false)}
+            isOptional={resolveXmlBoolean(props, 'isOptional', ctx, false)}
+            isRequired={resolveXmlBoolean(props, 'isRequired', ctx, false)}
+            label={resolveXmlLabel(props, ctx, 'Switch')}
+            labelPosition={labelPosition}
+            labelSpacing={labelSpacing}
+            onChange={(nextValue) => {
+                if (binding.bound) binding.setValue(nextValue);
+                else setLocalValue(nextValue);
+            }}
+            status={resolveXmlStatus(props, ctx)}
+            value={value}
+            width={resolveXmlSizeValue(props, 'width', ctx)}
+        />
+    );
 }

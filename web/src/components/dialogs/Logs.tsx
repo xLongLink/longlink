@@ -1,7 +1,11 @@
+import { Stack } from '@astryxdesign/core/Stack';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Spinner } from '@astryxdesign/core/Spinner';
+import { CodeBlock } from '@astryxdesign/core/CodeBlock';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { useTranslation } from '@/lib/i18n';
 import { useApiQuery } from '@/hooks/use-api';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
 /** Parses the application log response. */
 function parseLogLines(value: unknown): string[] {
@@ -33,28 +37,37 @@ export default function Logs({
     const logsError = open && logsQuery.error ? logsQuery.error.message || t('appView.loadLogsFailed') : null;
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-3xl">
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <DialogTitle>{t('dialogs.podLogsTitle')}</DialogTitle>
-                        <DialogDescription>{t('appView.logsDescription', { applicationName })}</DialogDescription>
-                    </div>
-
-                    {!logsLoading &&
-                        (logsError ? (
-                            <div className="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-                                {logsError}
-                            </div>
+        <Dialog isOpen={open} onOpenChange={onOpenChange} purpose="info" width={768} maxHeight="85vh">
+            <Layout
+                header={
+                    <DialogHeader
+                        title={t('dialogs.podLogsTitle')}
+                        subtitle={t('appView.logsDescription', { applicationName })}
+                        onOpenChange={onOpenChange}
+                    />
+                }
+                content={
+                    <LayoutContent>
+                        {logsLoading ? (
+                            <Stack align="center" padding={6}>
+                                <Spinner />
+                            </Stack>
+                        ) : logsError ? (
+                            <Banner status="error" title={logsError} />
                         ) : (
-                            <ScrollArea className="h-[60vh] overflow-hidden rounded-md border bg-muted/30">
-                                <pre className="p-3 text-xs leading-5 whitespace-pre-wrap text-foreground">
-                                    {logLines.length > 0 ? logLines.join('\n') : t('appView.emptyLogs')}
-                                </pre>
-                            </ScrollArea>
-                        ))}
-                </div>
-            </DialogContent>
+                            <CodeBlock
+                                code={logLines.length > 0 ? logLines.join('\n') : t('appView.emptyLogs')}
+                                hasCopyButton={false}
+                                hasLanguageLabel={false}
+                                isWrapped
+                                maxHeight="60vh"
+                                size="sm"
+                                width="100%"
+                            />
+                        )}
+                    </LayoutContent>
+                }
+            />
         </Dialog>
     );
 }

@@ -3,6 +3,7 @@ import '@/index.css';
 import { createRoot, hydrateRoot } from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ApiI18nProvider } from '@/lib/i18n';
+import { AstryxProvider } from '@/providers';
 import { queryClient } from '@/lib/react-query';
 import { DEFAULT_LANGUAGE } from '@/lib/languages';
 import { UserProvider, useUserProfile } from '@/hooks/use-user';
@@ -10,12 +11,14 @@ import App, { initializeApp } from './App';
 
 /** Applies API-mode translations from the authenticated user preferences. */
 function ApiAppShell() {
-    const { language } = useUserProfile();
+    const { language, theme, accent, radius } = useUserProfile();
 
     return (
-        <ApiI18nProvider language={language}>
-            <App />
-        </ApiI18nProvider>
+        <AstryxProvider accent={accent} mode={theme} radius={radius}>
+            <ApiI18nProvider language={language}>
+                <App />
+            </ApiI18nProvider>
+        </AstryxProvider>
     );
 }
 
@@ -24,9 +27,11 @@ function AppShell() {
     // SDK mode renders the local app shell; authentication is owned by the LongLink Platform.
     if (import.meta.env.MODE === 'sdk') {
         return (
-            <ApiI18nProvider language={DEFAULT_LANGUAGE}>
-                <App />
-            </ApiI18nProvider>
+            <AstryxProvider mode="dark">
+                <ApiI18nProvider language={DEFAULT_LANGUAGE}>
+                    <App />
+                </ApiI18nProvider>
+            </AstryxProvider>
         );
     }
 

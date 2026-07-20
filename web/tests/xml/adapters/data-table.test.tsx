@@ -3,7 +3,7 @@ import type { ExecutionContext } from '@/xml/types';
 import { parseXML } from '@/xml/core/parser';
 import { renderXmlToMarkup } from '../helpers';
 
-describe('DataTable', () => {
+describe('Table', () => {
     /* Shorthand columns should render field values through the shared data table shell. */
     it('renders shorthand field columns', () => {
         const ctx: ExecutionContext = {
@@ -15,7 +15,7 @@ describe('DataTable', () => {
         };
         const output = renderXmlToMarkup(
             parseXML(
-                '<DataTable data="$items" as="item"><DataColumn field="sku" header="SKU" /><DataColumn field="created_by.name" header="Created by" /></DataTable>'
+                '<Table data="$items" rowName="item"><TableColumn key="sku" header="SKU" /><TableColumn key="creator" field="created_by.name" header="Created by" /></Table>'
             ),
             ctx
         );
@@ -38,7 +38,7 @@ describe('DataTable', () => {
         };
         const output = renderXmlToMarkup(
             parseXML(
-                '<DataTable data="$items" as="item"><DataColumn><DataHeader><Flex><P i18n="inventory.item" /><Badge variant="outline" i18n="inventory.sku" /></Flex></DataHeader><DataCell><Flex><P i18n="inventory.name" name="$item.name" /><Badge variant="outline" value="$item.sku" /></Flex></DataCell></DataColumn></DataTable>'
+                '<Table data="$items" rowName="item"><TableColumn key="item" i18n="inventory.item"><Stack direction="horizontal" gap="2"><Text i18n="inventory.name" values="${{ name: item.name }}" /><Badge variant="neutral" label="$item.sku" /></Stack></TableColumn></Table>'
             ),
             ctx
         );

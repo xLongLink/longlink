@@ -1,18 +1,21 @@
 import { z } from 'zod';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useId, useState } from 'react';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { TextArea } from '@astryxdesign/core/TextArea';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { FieldStatus } from '@astryxdesign/core/FieldStatus';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { fetchApiJson } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { useUserProfile } from '@/hooks/use-user';
-import { Textarea } from '@/components/ui/textarea';
 import { computesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
 import { apiComputeMutationResponseSchema, parseApiResponse } from '@/lib/api-schemas';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
 const schema = z.object({
     name: z.string().trim().min(1),
@@ -26,6 +29,7 @@ export default function CreateCompute() {
     const { t } = useTranslation();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
+    const formId = useId();
     const [open, setOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const form = useForm<Values>({
@@ -65,73 +69,110 @@ export default function CreateCompute() {
         setError(null);
     }
 
+    /** Updates dialog state while protecting an in-flight registration. */
+    function handleOpenChange(nextOpen: boolean) {
+        if (!nextOpen && mutation.isPending) {
+            return;
+        }
+        setOpen(nextOpen);
+        if (!nextOpen) {
+            resetDialogState();
+        }
+    }
+
     return (
         <>
-            <Button type="button" onClick={() => setOpen(true)}>
-                {t('dialogs.connectComputeTitle')}
-            </Button>
+            <Button label={t('dialogs.connectComputeTitle')} clickAction={() => setOpen(true)} />
             <Dialog
-                open={open}
-                onOpenChange={(nextOpen) => {
-                    if (!nextOpen && mutation.isPending) {
-                        return;
-                    }
-                    setOpen(nextOpen);
-                    if (!nextOpen) {
-                        resetDialogState();
-                    }
-                }}
+                isOpen={open}
+                onOpenChange={handleOpenChange}
+                purpose={mutation.isPending ? 'required' : 'form'}
+                width={640}
+                maxHeight="calc(100dvh - 2rem)"
             >
-                <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-2xl">
-                    <DialogTitle>{t('dialogs.connectComputeTitle')}</DialogTitle>
-                    <DialogDescription>{t('dialogs.connectComputeDescription')}</DialogDescription>
-                    <form
-                        className="space-y-4"
-                        onSubmit={form.handleSubmit(async (payload) => {
-                            setError(null);
-                            try {
-                                await mutation.mutateAsync(payload);
-                            } catch (mutationError) {
-                                setError(
-                                    mutationError instanceof Error
-                                        ? mutationError.message
-                                        : t('dialogs.failedConnectCompute')
-                                );
-                            }
-                        })}
-                    >
-                        <div className="space-y-2">
-                            <Label htmlFor="compute-name">{t('labels.name')}</Label>
-                            <Input id="compute-name" {...form.register('name')} autoComplete="off" />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="compute-kubeconfig">{t('labels.kubeconfig')}</Label>
-                            <Textarea
-                                id="compute-kubeconfig"
-                                {...form.register('kubeconfig')}
-                                rows={12}
-                                className="font-mono text-xs"
-                            />
-                        </div>
-                        {error ? <p className="text-sm text-destructive">{error}</p> : null}
-                        <div className="flex justify-end gap-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                disabled={mutation.isPending}
-                                onClick={() => {
-                                    setOpen(false);
-                                    resetDialogState();
-                                }}
+                <Layout
+                    header={
+                        <DialogHeader
+                            title={t('dialogs.connectComputeTitle')}
+                            subtitle={t('dialogs.connectComputeDescription')}
+                            onOpenChange={handleOpenChange}
+                        />
+                    }
+                    content={
+                        <LayoutContent>
+                            <form
+                                id={formId}
+                                onSubmit={form.handleSubmit(async (payload) => {
+                                    setError(null);
+                                    try {
+                                        await mutation.mutateAsync(payload);
+                                    } catch (mutationError) {
+                                        setError(
+                                            mutationError instanceof Error
+                                                ? mutationError.message
+                                                : t('dialogs.failedConnectCompute')
+                                        );
+                                    }
+                                })}
                             >
-                                {t('actions.cancel')}
-                            </Button>
-                            <Button type="submit" disabled={mutation.isPending || !form.formState.isValid}>
-                                {mutation.isPending ? t('actions.creating') : t('actions.create')}
-                            </Button>
-                        </div>
-                    </form>
-                </DialogContent>
+                                <FormLayout>
+                                    <Controller
+                                        control={form.control}
+                                        name="name"
+                                        render={({ field }) => (
+                                            <TextInput
+                                                ref={field.ref}
+                                                label={t('labels.name')}
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isRequired
+                                                onBlur={field.onBlur}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    <Controller
+                                        control={form.control}
+                                        name="kubeconfig"
+                                        render={({ field }) => (
+                                            <TextArea
+                                                ref={field.ref}
+                                                label={t('labels.kubeconfig')}
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isRequired
+                                                rows={12}
+                                                onBlur={field.onBlur}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
+                                </FormLayout>
+                            </form>
+                        </LayoutContent>
+                    }
+                    footer={
+                        <LayoutFooter>
+                            <Stack direction="horizontal" gap={2} justify="end">
+                                <Button
+                                    label={t('actions.cancel')}
+                                    variant="ghost"
+                                    isDisabled={mutation.isPending}
+                                    clickAction={() => handleOpenChange(false)}
+                                />
+                                <Button
+                                    form={formId}
+                                    type="submit"
+                                    label={mutation.isPending ? t('actions.creating') : t('actions.create')}
+                                    variant="primary"
+                                    isDisabled={!form.formState.isValid}
+                                    isLoading={mutation.isPending}
+                                />
+                            </Stack>
+                        </LayoutFooter>
+                    }
+                />
             </Dialog>
         </>
     );

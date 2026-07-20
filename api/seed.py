@@ -6,7 +6,7 @@ from src.utils import jobs, names
 from sqlalchemy import select
 from src.operations import computes as operation_computes
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.images import Image
+from src.models.types import Image, StorageKind
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus
 from src.database.session import session_scope
@@ -19,7 +19,6 @@ from src.database.services import organizations as organization_service
 from fastapi_users.password import PasswordHelper
 from src.models.applications import ApplicationCreate
 from src.database.models.users import User
-from src.models.infrastructure import StorageKind, DatabaseKind
 from src.database.models.association import UserOrganization
 
 LOCAL_ORG = "test"
@@ -134,6 +133,7 @@ async def seed_local_development() -> None:
 
     admin = await seed_local_administrator()
     compute_registry = next((item for item in await compute_service.fetch() if item.slug == "local-compute"), None)
+    compute_ready = compute_registry is not None and compute_registry.status == ComputeStatus.ready
 
     # Reconcile the local compute target before assigning Organizations to it.
     if compute_registry is None:
@@ -144,9 +144,7 @@ async def seed_local_development() -> None:
             admin,
         )
         await reconcile_until_complete(compute_registry.id)
-    elif compute_registry.status != ComputeStatus.ready:
-        await operations.enqueue(compute_registry.id)
-        await reconcile_until_complete(compute_registry.id)
+        compute_ready = True
 
     # Register the local database and storage backends independently.
     database_registry = next((item for item in await database_service.fetch() if item.slug == "local-database"), None)
@@ -154,7 +152,6 @@ async def seed_local_development() -> None:
         database_registry = await database_service.create(
             "local database",
             "local-database",
-            DatabaseKind.postgresql,
             local_database_host(),
             LOCAL_DATABASE_PORT,
             "admin",
@@ -176,6 +173,11 @@ async def seed_local_development() -> None:
 
     organization = next((item for item in await organization_service.fetch() if item.slug == LOCAL_ORG), None)
     if organization is None:
+        # Repair an existing compute before a new Organization requires its ready state.
+        if not compute_ready:
+            await operations.enqueue(compute_registry.id)
+            await reconcile_until_complete(compute_registry.id)
+            compute_ready = True
         organization = await organization_service.create(
             LOCAL_ORG,
             LOCAL_ORG,
@@ -191,14 +193,18 @@ async def seed_local_development() -> None:
         await ensure_local_organization_owner(organization.id, admin.id)
 
     # The sample application follows the same desired-state service used by the API route.
+    payload = ApplicationCreate(
+        name=LOCAL_APP_NAME,
+        image=Image(LOCAL_APPLICATION_IMAGE),
+        description="Local SDK development application",
+        envs={"REQUIRED": "local-development"},
+    )
     application = next((item for item in await organization_service.applications(organization.id) if item.slug == LOCAL_APP_NAME), None)
     if application is None:
-        payload = ApplicationCreate(
-            name=LOCAL_APP_NAME,
-            image=Image(LOCAL_APPLICATION_IMAGE),
-            description="Local SDK development application",
-            envs={"REQUIRED": "local-development"},
-        )
+        # Repair an existing compute before Application creation checks its ready state.
+        if not compute_ready:
+            await operations.enqueue(compute_registry.id)
+            await reconcile_until_complete(compute_registry.id)
         await application_service.create(
             organization.id,
             payload.name,
@@ -209,7 +215,20 @@ async def seed_local_development() -> None:
             icon=payload.icon.value if payload.icon is not None else None,
             envs=payload.envs,
         )
-        await reconcile_until_complete(compute_registry.id)
+    else:
+        # Resolve the rebuilt local tag again instead of retaining a prior immutable digest.
+        application = await application_service.update_runtime(
+            application.id,
+            image=payload.image,
+            user=admin,
+            description=payload.description,
+            icon=payload.icon.value if payload.icon is not None else None,
+            envs=payload.envs,
+        )
+        if application is None:
+            raise RuntimeError("Local sample Application no longer exists")
+        await operations.enqueue(compute_registry.id)
+    await reconcile_until_complete(compute_registry.id)
 
 
 def main() -> None:

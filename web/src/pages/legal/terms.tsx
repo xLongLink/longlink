@@ -1,7 +1,46 @@
-import { A } from '@/components/ui/a';
-import { Li } from '@/components/ui/li';
-import { Ul } from '@/components/ui/ul';
-import { Heading } from '@/components/ui/heading';
+import type { ReactNode } from 'react';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { List, ListItem } from '@astryxdesign/core/List';
+import { Heading as AstryxHeading } from '@astryxdesign/core/Heading';
+
+/** Renders links with the external-link behavior used in legal copy. */
+function A({ children, href }: { children: ReactNode; href: string }) {
+    return (
+        <Link href={href} isExternalLink={href.startsWith('http')} type="inherit">
+            {children}
+        </Link>
+    );
+}
+
+/** Renders a legal heading while preserving the document's compact source notation. */
+function Heading({ children, id, level }: { children: ReactNode; id: string; level: 'h1' | 'h2' }) {
+    return (
+        <AstryxHeading id={id} level={level === 'h1' ? 1 : 2}>
+            {children}
+        </AstryxHeading>
+    );
+}
+
+/** Renders a bulleted legal list. */
+function Ul({ children }: { children: ReactNode }) {
+    return <List listStyle="disc">{children}</List>;
+}
+
+/** Renders one item in a legal list. */
+function Li({ children }: { children: ReactNode }) {
+    return <ListItem label={<Text>{children}</Text>} />;
+}
+
+/** Renders a consistently spaced legal section. */
+function Section({ children }: { children: ReactNode }) {
+    return (
+        <Stack as="section" gap={3}>
+            {children}
+        </Stack>
+    );
+}
 
 export const metadata = {
     lastUpdated: '2026-06-20',
@@ -9,12 +48,12 @@ export const metadata = {
 };
 
 export const content = (
-    <>
+    <Stack gap={4}>
         <Heading id="terms-of-service" level="h1">
             Terms of Service
         </Heading>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="provider-acceptance-and-eligibility" level="h2">
                 1. Provider, acceptance and eligibility
             </Heading>
@@ -38,9 +77,9 @@ export const content = (
                 user" is anyone using it mainly for professional or commercial purposes. Provisions that expressly apply
                 to business users do not apply to consumers.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="definitions-and-contract-documents" level="h2">
                 2. Definitions and contract documents
             </Heading>
@@ -64,9 +103,9 @@ export const content = (
                 by both parties are part of the agreement. A signed document prevails over these Terms only for a direct
                 conflict. These Terms prevail over inconsistent marketing material or documentation.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="service-and-beta-status" level="h2">
                 3. Service and beta status
             </Heading>
@@ -90,9 +129,9 @@ export const content = (
                 critical infrastructure, autonomous weapons, safety-critical control, or any activity where failure
                 could reasonably cause death, personal injury, or substantial physical or environmental damage.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="accounts-organizations-and-security" level="h2">
                 4. Accounts, organizations and security
             </Heading>
@@ -114,9 +153,9 @@ export const content = (
                 disable access, or suspend an organization where reasonably necessary to contain a security incident or
                 protect the Service.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="acceptable-use" level="h2">
                 5. Acceptable use
             </Heading>
@@ -174,9 +213,9 @@ export const content = (
                 or comply with a binding legal request. Our handling of personal data is described in the{' '}
                 <A href="/privacy">Privacy Policy</A>.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="plans-fees-and-managed-services" level="h2">
                 6. Plans, fees and managed services
             </Heading>
@@ -203,9 +242,9 @@ export const content = (
                 that cannot lawfully be waived. Overdue amounts accrue default interest at 5% per year, and business
                 users must reimburse reasonable recovery costs to the extent permitted by law.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="refunds-and-consumer-cancellation-rights" level="h2">
                 7. Refunds and consumer cancellation rights
             </Heading>
@@ -227,9 +266,9 @@ export const content = (
                 performance. To the extent permitted by that law, you must pay for the proportion of Service supplied
                 before withdrawal and may lose the withdrawal right once the requested Service has been fully performed.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="content-privacy-and-data-processing" level="h2">
                 8. Content, privacy and data processing
             </Heading>
@@ -279,9 +318,9 @@ export const content = (
                 We act as controller for account, organization, billing, support, security, and operational data, as
                 explained in our <A href="/privacy">Privacy Policy</A>.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="our-technology-and-feedback" level="h2">
                 9. Our technology and feedback
             </Heading>
@@ -295,9 +334,9 @@ export const content = (
                 identify you publicly without permission. Third-party software, dependencies, images, templates, and
                 services remain subject to their own licenses and terms.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="availability-and-third-party-services" level="h2">
                 10. Availability and third-party services
             </Heading>
@@ -313,9 +352,9 @@ export const content = (
                 services. You are responsible for verifying that third-party software, templates, infrastructure, and
                 providers are suitable and properly licensed for your use.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="warranties" level="h2">
                 11. Warranties
             </Heading>
@@ -330,9 +369,9 @@ export const content = (
                 purpose, and non-infringement to the fullest extent permitted by law. Mandatory consumer warranties
                 remain unaffected.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="limitation-of-liability" level="h2">
                 12. Limitation of liability
             </Heading>
@@ -356,9 +395,9 @@ export const content = (
                 including maintaining backups, securing credentials, and promptly responding to security, operational,
                 and billing notices.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="indemnity-for-business-users" level="h2">
                 13. Indemnity for business users
             </Heading>
@@ -374,9 +413,9 @@ export const content = (
                 reasonable cooperation at your cost. You may not settle a claim in a way that admits liability for us or
                 imposes obligations on us without our written consent.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="suspension-deletion-and-termination" level="h2">
                 14. Suspension, deletion and termination
             </Heading>
@@ -401,9 +440,9 @@ export const content = (
                 payment obligations, intellectual property, privacy and data processing, liability, indemnity, and
                 governing law.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="changes-to-these-terms" level="h2">
                 15. Changes to these Terms
             </Heading>
@@ -418,9 +457,9 @@ export const content = (
                 request closure and a refund of prepaid unused fees after valid charges are deducted where applicable.
                 Continued use after the effective date constitutes acceptance where permitted by law.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="force-majeure" level="h2">
                 16. Force majeure
             </Heading>
@@ -431,9 +470,9 @@ export const content = (
                 does not excuse your obligation to pay charges already incurred. The affected party will take reasonable
                 steps to reduce the impact.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="general-and-governing-law" level="h2">
                 17. General and governing law
             </Heading>
@@ -451,9 +490,9 @@ export const content = (
                 you of mandatory protections or access to any court available under applicable consumer or jurisdiction
                 law.
             </p>
-        </section>
+        </Section>
 
-        <section className="space-y-3">
+        <Section>
             <Heading id="contact" level="h2">
                 18. Contact
             </Heading>
@@ -462,6 +501,6 @@ export const content = (
                 and billing enquiries: <A href="mailto:info@longlink.dev">info@longlink.dev</A>.
             </p>
             <p>LongLink SAGL, UID CHE-150.642.313.</p>
-        </section>
-    </>
+        </Section>
+    </Stack>
 );

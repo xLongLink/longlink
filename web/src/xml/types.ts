@@ -18,7 +18,7 @@ export interface Props {
 }
 
 /** Value shape accepted by XML form controls. */
-export type XmlBindableValue = string | number | boolean | Record<string, unknown>;
+export type XmlBindableValue = unknown;
 
 /** XML runtime scope with lexical parent lookup. */
 export type ExecutionContext = {

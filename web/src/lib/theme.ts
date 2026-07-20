@@ -1,3 +1,6 @@
+import { neutralTheme } from '@astryxdesign/theme-neutral';
+import { defineTheme, type DefinedTheme } from '@astryxdesign/core/theme';
+
 /** Theme mode values supported by the API and UI. */
 export const THEME_VALUES = ['light', 'dark', 'system'] as const;
 
@@ -80,6 +83,15 @@ const RADIUS_LABELS: Record<Radius, string> = {
     large: 'Large',
 };
 
+const RADIUS_MULTIPLIERS: Record<Radius, number> = {
+    none: 0,
+    small: 0.5,
+    medium: 1,
+    large: 1.5,
+};
+
+const themes = new Map<string, DefinedTheme>();
+
 /** Theme mode options available in the UI. */
 export const THEME_OPTIONS = THEME_VALUES.map((value) => ({ value, label: THEME_LABELS[value] }));
 
@@ -93,96 +105,36 @@ export const ACCENT_OPTIONS = ACCENT_VALUES.map((value) => ({
 /** Radius options available in the UI. */
 export const RADIUS_OPTIONS = RADIUS_VALUES.map((value) => ({ value, label: RADIUS_LABELS[value] }));
 
-/** Theme controls that the app can set in one place. */
-export type ThemeConfig = {
-    theme: Theme;
-    background: string;
-    border: string;
-    cardForeground: string;
-    primary: string;
-    card: string;
-    input: string;
-    accent: Accent;
-    mutedBackground: string;
-    muted: string;
-    popoverForeground: string;
-    popover: string;
-    ring: string;
-    radius: Radius;
-};
+/** Returns the Astryx theme for one persisted accent and radius selection. */
+export function getAstryxTheme(accentValue: Accent, radius: Radius): DefinedTheme {
+    const key = `${accentValue}-${radius}`;
 
-const RADIUS_TOKENS: Record<Radius, string> = {
-    none: '0rem',
-    small: '0.125rem',
-    medium: '0.25rem',
-    large: '0.5rem',
-};
-
-/** Base color controls for each resolved theme. */
-export const THEME_PRESETS: Record<Exclude<Theme, 'system'>, Omit<ThemeConfig, 'theme'>> = {
-    light: {
-        background: 'oklch(1 0 0)',
-        border: 'oklch(0.928 0 0)',
-        card: 'oklch(1 0 0)',
-        cardForeground: 'oklch(0.145 0 0)',
-        primary: 'oklch(0.145 0 0)',
-        accent: 'neutral',
-        input: 'oklch(0.928 0 0)',
-        mutedBackground: 'oklch(0.97 0 0)',
-        muted: 'oklch(0.556 0 0)',
-        popoverForeground: 'oklch(0.145 0 0)',
-        popover: 'oklch(1 0 0)',
-        ring: 'oklch(0.556 0 0)',
-        radius: 'medium',
-    },
-    dark: {
-        background: 'oklch(0.145 0 0)',
-        border: 'oklch(1 0 0 / 10%)',
-        card: 'oklch(0.205 0 0)',
-        cardForeground: 'oklch(0.985 0 0)',
-        primary: 'oklch(0.985 0 0)',
-        accent: 'neutral',
-        input: 'oklch(1 0 0 / 15%)',
-        mutedBackground: 'oklch(0.269 0 0)',
-        muted: 'oklch(0.708 0 0)',
-        popoverForeground: 'oklch(0.985 0 0)',
-        popover: 'oklch(0.205 0 0)',
-        ring: 'oklch(0.556 0 0)',
-        radius: 'medium',
-    },
-};
-
-/** Resolves the selected theme to a concrete light or dark mode. */
-export function resolveTheme(theme: Theme): Exclude<Theme, 'system'> {
-    // Concrete themes do not need media-query resolution.
-    if (theme !== 'system') {
-        return theme;
+    // Reuse theme objects so Astryx does not reinject equivalent CSS.
+    const existing = themes.get(key);
+    if (existing) {
+        return existing;
     }
 
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
+    const accent = ACCENT_TOKENS[accentValue];
+    const theme = defineTheme({
+        name: `longlink-${key}`,
+        extends: neutralTheme,
+        color: { accent: accent.accent, neutralStyle: 'neutral' },
+        typography: {
+            body: { family: 'Inter Variable', fallbacks: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+            heading: {
+                family: 'Inter Variable',
+                fallbacks: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            },
+        },
+        radius: { base: 4, multiplier: RADIUS_MULTIPLIERS[radius] },
+        tokens: {
+            '--color-accent': accent.accent,
+            '--color-on-accent': accent.accentForeground,
+        },
+    });
 
-/** Applies the resolved theme, palette, and radius to the document root. */
-export function applyTheme(root: HTMLElement, config: ThemeConfig) {
-    const resolvedTheme = resolveTheme(config.theme);
-    const accent = ACCENT_TOKENS[config.accent];
+    themes.set(key, theme);
 
-    root.classList.remove('light', 'dark');
-    root.dataset.theme = resolvedTheme;
-    root.style.setProperty('--background', config.background);
-    root.style.setProperty('--border', config.border);
-    root.style.setProperty('--card', config.card);
-    root.style.setProperty('--card-foreground', config.cardForeground);
-    root.style.setProperty('--input', config.input);
-    root.style.setProperty('--foreground', config.primary);
-    root.style.setProperty('--muted', config.mutedBackground);
-    root.style.setProperty('--muted-foreground', config.muted);
-    root.style.setProperty('--popover', config.popover);
-    root.style.setProperty('--popover-foreground', config.popoverForeground);
-    root.style.setProperty('--accent', accent.accent);
-    root.style.setProperty('--primary', accent.accent);
-    root.style.setProperty('--accent-foreground', accent.accentForeground);
-    root.style.setProperty('--primary-foreground', accent.accentForeground);
-    root.style.setProperty('--ring', config.ring);
-    root.style.setProperty('--radius', RADIUS_TOKENS[config.radius]);
+    return theme;
 }

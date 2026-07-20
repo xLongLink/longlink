@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
+import { Text } from '@astryxdesign/core/Text';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from '@/lib/i18n';
 import { AuthPage } from '@/components/AuthPage';
@@ -41,9 +42,9 @@ export default function Complete() {
 
     return (
         <AuthPage title={t('auth.completingSignIn')} description={t('auth.completingSignInDescription')}>
-            <p role="status" className="text-center text-sm text-muted-foreground">
+            <Text as="p" color="secondary" justify="center" role="status" type="supporting">
                 {t('auth.pleaseWait')}
-            </p>
+            </Text>
         </AuthPage>
     );
 }

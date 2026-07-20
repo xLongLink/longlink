@@ -8,8 +8,8 @@ const EMPTY_BINDING = proxy({ value: undefined }) as Record<string, unknown>;
 
 type BindingResult = {
     bound: boolean;
-    initialValue: string;
-    currentValue: string;
+    initialValue: unknown;
+    currentValue: unknown;
     setValue: (value: unknown) => void;
 };
 
@@ -23,18 +23,18 @@ export function isBindableValue(value: XmlBindableValue | undefined): value is R
     return !!value && typeof value === 'object' && getVersion(value) !== undefined;
 }
 
-/** Returns the selected file value that should be stored for one XML control. */
-export function readBindableFileInputValue(input: HTMLInputElement, multiple: boolean): File | File[] | null {
-    const files = input.files ? Array.from(input.files) : [];
+/** Coerces an evaluated XML control value without treating the string "false" as true. */
+export function toXmlBoolean(value: unknown): boolean {
+    if (value === false || value === 'false' || value == null || value === '') return false;
 
-    return multiple ? files : (files[0] ?? null);
+    return Boolean(value);
 }
 
 /** Resolves XML input binding state for controlled and uncontrolled form controls. */
 export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionContext, type = 'text'): BindingResult {
     const rawValue = props[name];
     const value = resolveXmlValue(props, name, ctx);
-    const [initialValue] = useState(String(value ?? ''));
+    const [initialValue] = useState(value);
     const target = resolveBindableTarget(rawValue, value, ctx);
     const state = target?.state ?? EMPTY_BINDING;
     const snapshot = useSnapshot(state);
@@ -43,7 +43,7 @@ export function useBindableValue(props: ASTProps, name: string, ctx: ExecutionCo
     return {
         bound: !!target,
         initialValue,
-        currentValue: String(currentValue ?? ''),
+        currentValue,
         setValue: (nextValue) => {
             // Skip writes when the value is not bound.
             if (!target) return;

@@ -1,5 +1,7 @@
-import type { ReactNode } from 'react';
-import type { LucideIcon } from 'lucide-react';
+import type { LucideProps } from 'lucide-react';
+import type { ReactElement, ReactNode } from 'react';
+
+type ArticleIcon = ReactElement<LucideProps>;
 
 /** Metadata shared by article-like public pages. */
 export type ArticleMetadata = {
@@ -17,7 +19,7 @@ export type ArticleBreadcrumb = {
 export type ArticleItem = {
     title: string;
     path: string;
-    icon: LucideIcon;
+    icon: ArticleIcon;
     breadcrumbs: ArticleBreadcrumb[];
 };
 
@@ -29,7 +31,7 @@ export type ArticlePage = ArticleItem & {
 
 /** Sidebar navigation item for article-like pages. */
 export type ArticleNavigationItem = Omit<ArticleItem, 'breadcrumbs' | 'icon'> & {
-    icon?: LucideIcon;
+    icon?: ArticleIcon;
     children?: ArticleNavigationItem[];
 };
 

@@ -1,7 +1,11 @@
 import type { ReactNode } from 'react';
-import { Link, useLocation } from 'react-router';
-import { ExternalLink, type LucideIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useLocation } from 'react-router';
+import { Link } from '@astryxdesign/core/Link';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Center } from '@astryxdesign/core/Center';
+import { TopNav } from '@astryxdesign/core/TopNav';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { Icon, type IconName, type IconType } from '@astryxdesign/core/Icon';
 import { useTranslation } from '@/lib/i18n';
 import { Wordmark } from '@/components/Wordmark';
 import { UserProfile } from '@/components/Profile';
@@ -11,7 +15,7 @@ import TopLayout from './TopLayout';
 type LayoutTab = {
     href: string;
     active?: boolean;
-    icon?: LucideIcon;
+    icon?: IconName | IconType;
 };
 
 type LayoutProps = {
@@ -29,87 +33,86 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
     const currentPath = `${location.pathname}${location.search}`;
     const isSdkMode = import.meta.env.MODE === 'sdk';
 
+    const resolvedTabs = tabEntries.map(([label, tab]) => {
+        const href = typeof tab === 'string' ? tab : tab.href;
+        const active = typeof tab === 'string' ? undefined : tab.active;
+        const icon = typeof tab === 'string' ? undefined : tab.icon;
+        const targetUrl = new URL(href, `${window.location.origin}${location.pathname}`);
+
+        return {
+            href,
+            icon,
+            label,
+            isActive: active ?? `${targetUrl.pathname}${targetUrl.search}` === currentPath,
+        };
+    });
+    const activeHref = resolvedTabs.find((tab) => tab.isActive)?.href ?? '';
     const header = (
-        <>
-            <div className="mx-auto w-full px-6 pb-2 pt-4 text-foreground/80">
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        {isSdkMode ? (
-                            <a
-                                href="https://longlink.dev"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label={t('common.longlinkHome')}
-                                className="inline-flex items-center"
-                            >
-                                <Wordmark />
-                            </a>
-                        ) : brandOnly ? (
-                            <Link
-                                to={brandHref}
-                                aria-label={t('common.longlinkHome')}
-                                className="inline-flex items-center"
-                            >
-                                <Wordmark />
-                            </Link>
-                        ) : (
-                            <Breadcrumb />
-                        )}
-                    </div>
-                    {isSdkMode ? (
-                        <a
-                            href="https://longlink.dev/docs"
+        <Stack gap={0}>
+            <TopNav
+                label={t('common.mainNavigation')}
+                heading={
+                    isSdkMode ? (
+                        <Link
+                            as="a"
+                            href="https://longlink.dev"
+                            label={t('common.longlinkHome')}
+                            color="inherit"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground"
                         >
+                            <Wordmark />
+                        </Link>
+                    ) : brandOnly ? (
+                        <Link href={brandHref} label={t('common.longlinkHome')} color="inherit">
+                            <Wordmark />
+                        </Link>
+                    ) : (
+                        <Breadcrumb />
+                    )
+                }
+                endContent={
+                    isSdkMode ? (
+                        <Link as="a" href="https://longlink.dev/docs" isExternalLink isStandalone>
                             {t('common.documentation')}
-                            <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
-                        </a>
+                        </Link>
                     ) : (
                         <UserProfile />
-                    )}
-                </div>
-            </div>
+                    )
+                }
+            />
 
-            {brandOnly || !tabEntries.length ? null : (
-                <div className="mx-auto w-full px-6 pb-0 pt-0">
-                    <div className="flex w-full items-center gap-2 border-b border-white/10">
-                        {tabEntries.map(([label, tab]) => {
-                            const href = typeof tab === 'string' ? tab : tab.href;
-                            const active = typeof tab === 'string' ? undefined : tab.active;
-                            const Icon = typeof tab === 'string' ? undefined : tab.icon;
-                            const targetUrl = new URL(href, `${window.location.origin}${location.pathname}`);
-                            const isActive = active ?? `${targetUrl.pathname}${targetUrl.search}` === currentPath;
-
-                            return (
-                                <Link
-                                    key={label}
-                                    to={href}
-                                    replace
-                                    aria-current={isActive ? 'page' : undefined}
-                                    className={cn(
-                                        'relative inline-flex items-center gap-1.5 rounded-md px-2 py-1 pb-1 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/10 hover:text-foreground',
-                                        isActive &&
-                                            'text-foreground after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-foreground'
-                                    )}
-                                >
-                                    {Icon ? <Icon className="size-4 shrink-0" aria-hidden={true} /> : null}
-                                    {label}
-                                </Link>
-                            );
-                        })}
-                    </div>
-                </div>
+            {brandOnly || !resolvedTabs.length ? null : (
+                <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
+                    <TabList
+                        aria-label="Section navigation"
+                        hasDivider
+                        onChange={() => undefined}
+                        size="sm"
+                        value={activeHref}
+                    >
+                        {resolvedTabs.map((tab) => (
+                            <Tab
+                                key={tab.label}
+                                href={tab.href}
+                                icon={tab.icon ? <Icon icon={tab.icon} size="sm" /> : undefined}
+                                label={tab.label}
+                                value={tab.href}
+                            />
+                        ))}
+                    </TabList>
+                </Stack>
             )}
-        </>
+        </Stack>
     );
 
     return (
         <TopLayout header={header}>
-            <div className={cn('mx-auto flex w-full max-w-[1000px] flex-1 flex-col', isSdkMode && 'min-h-full')}>
-                {children}
-            </div>
+            <Center axis="horizontal" width="100%">
+                <Stack minHeight={isSdkMode ? '100%' : undefined} width="100%" maxWidth={1000}>
+                    {children}
+                </Stack>
+            </Center>
         </TopLayout>
     );
 }

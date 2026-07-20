@@ -2,20 +2,26 @@ import * as React from 'react';
 
 const MOBILE_BREAKPOINT = 768;
 
+/** Subscribes to changes at the mobile viewport breakpoint. */
+function subscribe(onStoreChange: () => void): () => void {
+    const query = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+
+    query.addEventListener('change', onStoreChange);
+
+    return () => query.removeEventListener('change', onStoreChange);
+}
+
+/** Returns whether the browser currently matches the mobile viewport breakpoint. */
+function getSnapshot(): boolean {
+    return window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`).matches;
+}
+
+/** Provides a deterministic desktop snapshot during server rendering. */
+function getServerSnapshot(): boolean {
+    return false;
+}
+
 /** Returns whether the current viewport is narrower than the mobile breakpoint. */
 export function useIsMobile() {
-    const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined);
-
-    React.useEffect(() => {
-        const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-        // Keep the state in sync with both initial viewport width and later media query changes.
-        const onChange = () => {
-            setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-        };
-        mql.addEventListener('change', onChange);
-        setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-        return () => mql.removeEventListener('change', onChange);
-    }, []);
-
-    return !!isMobile;
+    return React.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }

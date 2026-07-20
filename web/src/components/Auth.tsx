@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { useLocation } from 'react-router';
+import { Center } from '@astryxdesign/core/Center';
 import Layout from '@/layout/Layout';
 import NotFound from '@/pages/NotFound';
 import { useUserProfile } from '@/hooks/use-user';
@@ -20,9 +21,9 @@ export function Auth({ children, requiredRole }: { children: ReactElement; requi
     if (!user) {
         return (
             <Layout brandOnly brandHref="/">
-                <section className="mx-auto flex w-full max-w-[1000px] flex-1 items-center justify-center py-12">
+                <Center minHeight="60dvh" width="100%">
                     <SignInCard redirectTo={`${location.pathname}${location.search}${location.hash}`} />
-                </section>
+                </Center>
             </Layout>
         );
     }

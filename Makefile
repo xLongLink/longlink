@@ -185,7 +185,8 @@ api:
 # Start local services, build and push the SDK app image, then run migrations and seed data.
 seed: up
 	cd api && uv sync --locked --extra dev
-	if [ ! -d sdk/dev ]; then cd sdk && uv run --locked longlink init --folder dev; fi
+	rm -rf sdk/dev
+	cd sdk && uv run --locked longlink init --folder dev
 	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'
 	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head

@@ -22,13 +22,16 @@ def upgrade() -> None:
     op.create_table(
         "users",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("name", sa.String(), nullable=False),
-        sa.Column("oidc", sa.String(length=255), nullable=False),
+        sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("email", sa.String(length=254), nullable=False),
         sa.Column("avatar", sa.String(length=2048), nullable=False),
+        sa.Column("hashed_password", sa.String(length=1024), nullable=False),
+        sa.Column("is_verified", sa.Boolean(), nullable=False),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
+        sa.Column("is_active", sa.Boolean(), nullable=False),
+        sa.Column("is_superuser", sa.Boolean(), nullable=False),
         sa.Column("role", sa.Enum("user", "support", "administrator", name="platform_role_enum", native_enum=False), nullable=False),
         sa.Column("theme", sa.Enum("system", "light", "dark", name="theme"), nullable=False),
         sa.Column(
@@ -63,9 +66,39 @@ def upgrade() -> None:
         sa.Column("radius", sa.Enum("none", "small", "medium", "large", name="radius"), nullable=False),
         sa.Column("language", sa.Enum("en", "it", name="language"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("email"),
-        sa.UniqueConstraint("oidc"),
     )
+    op.create_index("ix_users_email", "users", ["email"], unique=True)
+
+    # Store external provider identities separately from stable local users.
+    op.create_table(
+        "oauth_accounts",
+        sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column("user_id", sa.Uuid(), nullable=False),
+        sa.Column("oauth_name", sa.String(length=100), nullable=False),
+        sa.Column("account_id", sa.String(length=320), nullable=False),
+        sa.Column("account_email", sa.String(length=320), nullable=False),
+        sa.Column("access_token", sa.String(length=1024), nullable=False),
+        sa.Column("expires_at", sa.Integer(), nullable=True),
+        sa.Column("refresh_token", sa.String(length=1024), nullable=True),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("oauth_name", "account_id", name="uq_oauth_accounts_provider_subject"),
+    )
+    op.create_index("ix_oauth_accounts_account_id", "oauth_accounts", ["account_id"])
+    op.create_index("ix_oauth_accounts_oauth_name", "oauth_accounts", ["oauth_name"])
+    op.create_index("ix_oauth_accounts_user_id", "oauth_accounts", ["user_id"])
+
+    # Store revocable browser sessions using FastAPI Users' database strategy.
+    op.create_table(
+        "access_tokens",
+        sa.Column("token", sa.String(length=43), nullable=False),
+        sa.Column("user_id", sa.Uuid(), nullable=False),
+        sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("token"),
+    )
+    op.create_index("ix_access_tokens_created_at", "access_tokens", ["created_at"])
+    op.create_index("ix_access_tokens_user_id", "access_tokens", ["user_id"])
 
     # Create compute registries after their user dependencies.
     op.create_table(
@@ -112,7 +145,6 @@ def upgrade() -> None:
     op.create_table(
         "database_registries",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("kind", sa.Enum("postgresql", name="database_kind_enum", native_enum=False), nullable=False),
         sa.Column("name", sa.String(length=128), nullable=False),
         sa.Column("slug", sa.String(length=128), nullable=False),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
@@ -410,4 +442,43 @@ def downgrade() -> None:
     op.drop_table("storage_registries")
     op.drop_table("database_registries")
     op.drop_table("compute_registries")
+    op.drop_index("ix_access_tokens_user_id", table_name="access_tokens")
+    op.drop_index("ix_access_tokens_created_at", table_name="access_tokens")
+    op.drop_table("access_tokens")
+    op.drop_index("ix_oauth_accounts_user_id", table_name="oauth_accounts")
+    op.drop_index("ix_oauth_accounts_oauth_name", table_name="oauth_accounts")
+    op.drop_index("ix_oauth_accounts_account_id", table_name="oauth_accounts")
+    op.drop_table("oauth_accounts")
+    op.drop_index("ix_users_email", table_name="users")
     op.drop_table("users")
+
+    # Remove native preference enum types so a fresh upgrade can recreate them.
+    bind = op.get_bind()
+    sa.Enum("en", "it", name="language").drop(bind, checkfirst=True)
+    sa.Enum("none", "small", "medium", "large", name="radius").drop(bind, checkfirst=True)
+    sa.Enum(
+        "slate",
+        "gray",
+        "zinc",
+        "neutral",
+        "stone",
+        "red",
+        "orange",
+        "amber",
+        "yellow",
+        "lime",
+        "green",
+        "emerald",
+        "teal",
+        "cyan",
+        "sky",
+        "blue",
+        "indigo",
+        "violet",
+        "purple",
+        "fuchsia",
+        "pink",
+        "rose",
+        name="accent",
+    ).drop(bind, checkfirst=True)
+    sa.Enum("system", "light", "dark", name="theme").drop(bind, checkfirst=True)

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:complexType name="TextInputType">
+    <xsd:attribute name="label" type="NonBlankStringType" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
+    <xsd:attribute name="values" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="value" type="xsd:string" use="optional" />
+    <xsd:attribute name="type" type="TextInputKindType" use="optional" default="text" />
+    <xsd:attribute name="size" type="SizeType" use="optional" default="md" />
+    <xsd:attribute name="description" type="xsd:string" use="optional" />
+    <xsd:attribute name="placeholder" type="xsd:string" use="optional" />
+    <xsd:attribute name="htmlName" type="xsd:string" use="optional" />
+    <xsd:attribute name="width" type="xsd:string" use="optional" />
+    <xsd:attribute name="labelTooltip" type="xsd:string" use="optional" />
+    <xsd:attribute name="disabledMessage" type="xsd:string" use="optional" />
+    <xsd:attribute name="status" type="InputStatusType" use="optional" />
+    <xsd:attribute name="statusMessage" type="xsd:string" use="optional" />
+    <xsd:attribute name="isDisabled" type="xsd:string" use="optional" />
+    <xsd:attribute name="isRequired" type="xsd:string" use="optional" />
+    <xsd:attribute name="isOptional" type="xsd:string" use="optional" />
+    <xsd:attribute name="isLabelHidden" type="xsd:string" use="optional" />
+    <xsd:attribute name="hasClear" type="xsd:string" use="optional" />
+    <xsd:attribute name="hasAutoFocus" type="xsd:string" use="optional" />
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+  <xsd:element name="TextInput" type="TextInputType">
+    <xsd:annotation><xsd:documentation>Collects text with an accessible Astryx field.</xsd:documentation></xsd:annotation>
+    <xsd:key name="TextInputAccessibleLabel">
+      <xsd:selector xpath="." />
+      <xsd:field xpath="@label | @i18n" />
+    </xsd:key>
+  </xsd:element>
+</xsd:schema>

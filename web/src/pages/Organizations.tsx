@@ -1,17 +1,19 @@
-import { Link, useLocation } from 'react-router';
-import { Building2, Settings2 } from 'lucide-react';
-import { type ColumnDef } from '@tanstack/react-table';
+import { useLocation } from 'react-router';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Avatar } from '@astryxdesign/core/Avatar';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { proportional } from '@astryxdesign/core/Table';
 import type { ApiUserOrganizationMembership } from '@/lib/types';
 import Layout from '@/layout/Layout';
-import { getInitials } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
 import { useUserProfile } from '@/hooks/use-user';
-import { DataTable } from '@/components/DataTable';
 import { SignInCard } from '@/components/SignInCard';
 import { sanitizeRedirectPath } from '@/lib/redirects';
+import { DataTable, type DataTableColumn } from '@/components/DataTable';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Hero, HeroAction, HeroDescription, HeroTitle } from '@/components/ui/hero';
 
 /** Renders the organizations landing page for signed-in and anonymous users. */
 export default function Organizations() {
@@ -25,65 +27,52 @@ export default function Organizations() {
     if (!user) {
         return (
             <Layout brandOnly brandHref="/">
-                <section className="mx-auto flex w-full max-w-[1000px] flex-1 items-center justify-center py-12">
+                <VStack minHeight="calc(100vh - 5rem)" justify="center" align="center" width="100%">
                     <SignInCard redirectTo={redirectTo} />
-                </section>
+                </VStack>
             </Layout>
         );
     }
 
-    const organizationColumns: Array<ColumnDef<ApiUserOrganizationMembership>> = [
+    const columns: DataTableColumn<ApiUserOrganizationMembership>[] = [
         {
-            accessorKey: 'name',
+            key: 'name',
             header: t('columns.name'),
-            cell: ({ row, getValue }) => (
-                <div className="flex items-center gap-3">
-                    <Avatar shape="squircle" className="size-9 shrink-0">
-                        <AvatarImage src={row.original.avatar ?? ''} alt={row.original.name} />
-                        <AvatarFallback>{getInitials(row.original.name)}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                        <Link to={`/orgs/${row.original.slug}`} className="font-medium text-foreground hover:underline">
-                            {getValue<string>()}
+            width: proportional(1),
+            renderCell: (organization) => (
+                <HStack gap={3} align="center">
+                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="small" />
+                    <VStack gap={1}>
+                        <Link href={`/orgs/${organization.slug}`} weight="semibold">
+                            {organization.name}
                         </Link>
-                        <div className="truncate text-sm text-muted-foreground">{row.original.country}</div>
-                    </div>
-                </div>
+                        <Text type="supporting">{organization.country}</Text>
+                    </VStack>
+                </HStack>
             ),
         },
     ];
+    const tableError = error ? new Error(t('errors.loadOrganizations')) : null;
 
     return (
         <Layout
             brandOnly
             brandHref="/"
             tabs={{
-                [t('navigation.organizations')]: { href: '/organizations', icon: Building2 },
-                [t('navigation.settings')]: { href: '/settings', icon: Settings2 },
+                [t('navigation.organizations')]: '/organizations',
+                [t('navigation.settings')]: '/settings',
             }}
         >
-            <section className="mx-auto w-full max-w-[1000px] space-y-8">
-                <Hero icon="building-2" className="w-full">
-                    <div className="flex w-full items-center justify-between gap-4">
-                        <div className="min-w-0 flex-1">
-                            <HeroTitle>{t('organizations.title')}</HeroTitle>
-                            <HeroDescription>{t('organizations.description')}</HeroDescription>
-                        </div>
-
-                        <HeroAction>
-                            <CreateOrganization />
-                        </HeroAction>
-                    </div>
-                </Hero>
-
-                {isLoading && organizations.length === 0 ? null : error && organizations.length === 0 ? (
-                    <div className="rounded-md border p-4 text-sm text-destructive">
-                        {t('errors.loadOrganizations')}
-                    </div>
-                ) : (
-                    <DataTable columns={organizationColumns} data={organizations} />
-                )}
-            </section>
+            <VStack gap={8} width="100%" maxWidth={1000}>
+                <HStack gap={4} justify="between" align="end" wrap="wrap">
+                    <VStack gap={1}>
+                        <Heading level={1}>{t('organizations.title')}</Heading>
+                        <Text type="supporting">{t('organizations.description')}</Text>
+                    </VStack>
+                    <CreateOrganization />
+                </HStack>
+                <DataTable columns={columns} data={organizations} error={tableError} isLoading={isLoading} />
+            </VStack>
         </Layout>
     );
 }

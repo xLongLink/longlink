@@ -1,11 +1,384 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:simpleType name="NonBlankStringType">
+    <xsd:restriction base="xsd:string">
+      <xsd:minLength value="1" />
+      <xsd:pattern value=".*[^\s].*" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="FieldPathType">
+    <xsd:restriction base="NonBlankStringType">
+      <xsd:pattern value="[^.\s]+(\.[^.\s]+)*" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="PositiveDecimalType">
+    <xsd:restriction base="xsd:decimal">
+      <xsd:minExclusive value="0" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="NonNegativeDecimalType">
+    <xsd:restriction base="xsd:decimal">
+      <xsd:minInclusive value="0" />
+    </xsd:restriction>
+  </xsd:simpleType>
   <xsd:simpleType name="TranslationKeyType">
-    <xsd:annotation>
-      <xsd:documentation>Dotted catalog key such as tasks.title or orders.statusOpen.</xsd:documentation>
-    </xsd:annotation>
     <xsd:restriction base="xsd:string">
       <xsd:pattern value="[a-z][A-Za-z0-9]*(\.[a-z][A-Za-z0-9]*)+" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="ActionMethodType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="DELETE" />
+      <xsd:enumeration value="GET" />
+      <xsd:enumeration value="PATCH" />
+      <xsd:enumeration value="POST" />
+      <xsd:enumeration value="PUT" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="SizeType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="sm" />
+      <xsd:enumeration value="md" />
+      <xsd:enumeration value="lg" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="AvatarSizeType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="tiny" />
+      <xsd:enumeration value="xsmall" />
+      <xsd:enumeration value="small" />
+      <xsd:enumeration value="medium" />
+      <xsd:enumeration value="large" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="IconSizeType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="xsm" />
+      <xsd:enumeration value="sm" />
+      <xsd:enumeration value="md" />
+      <xsd:enumeration value="lg" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="CompactSizeType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="sm" />
+      <xsd:enumeration value="md" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="OrientationType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="horizontal" />
+      <xsd:enumeration value="vertical" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="SpacingType">
+    <xsd:restriction base="xsd:decimal">
+      <xsd:enumeration value="0" />
+      <xsd:enumeration value="0.5" />
+      <xsd:enumeration value="1" />
+      <xsd:enumeration value="1.5" />
+      <xsd:enumeration value="2" />
+      <xsd:enumeration value="3" />
+      <xsd:enumeration value="4" />
+      <xsd:enumeration value="5" />
+      <xsd:enumeration value="6" />
+      <xsd:enumeration value="8" />
+      <xsd:enumeration value="10" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="InputStatusType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="warning" />
+      <xsd:enumeration value="error" />
+      <xsd:enumeration value="success" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="ButtonVariantType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="primary" />
+      <xsd:enumeration value="secondary" />
+      <xsd:enumeration value="ghost" />
+      <xsd:enumeration value="destructive" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="ButtonHtmlType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="button" />
+      <xsd:enumeration value="submit" />
+      <xsd:enumeration value="reset" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BadgeVariantType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="neutral" />
+      <xsd:enumeration value="info" />
+      <xsd:enumeration value="success" />
+      <xsd:enumeration value="warning" />
+      <xsd:enumeration value="error" />
+      <xsd:enumeration value="blue" />
+      <xsd:enumeration value="cyan" />
+      <xsd:enumeration value="green" />
+      <xsd:enumeration value="orange" />
+      <xsd:enumeration value="pink" />
+      <xsd:enumeration value="purple" />
+      <xsd:enumeration value="red" />
+      <xsd:enumeration value="teal" />
+      <xsd:enumeration value="yellow" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BannerStatusType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="info" />
+      <xsd:enumeration value="warning" />
+      <xsd:enumeration value="error" />
+      <xsd:enumeration value="success" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BannerContainerType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="card" />
+      <xsd:enumeration value="section" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="CardVariantType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="default" />
+      <xsd:enumeration value="transparent" />
+      <xsd:enumeration value="muted" />
+      <xsd:enumeration value="blue" />
+      <xsd:enumeration value="cyan" />
+      <xsd:enumeration value="gray" />
+      <xsd:enumeration value="green" />
+      <xsd:enumeration value="orange" />
+      <xsd:enumeration value="pink" />
+      <xsd:enumeration value="purple" />
+      <xsd:enumeration value="red" />
+      <xsd:enumeration value="teal" />
+      <xsd:enumeration value="yellow" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="CodeColorType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="primary" />
+      <xsd:enumeration value="secondary" />
+      <xsd:enumeration value="inherit" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="DialogPurposeType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="required" />
+      <xsd:enumeration value="form" />
+      <xsd:enumeration value="info" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="DialogVariantType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="standard" />
+      <xsd:enumeration value="fullscreen" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="DividerVariantType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="subtle" />
+      <xsd:enumeration value="strong" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="FileInputModeType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="dropzone" />
+      <xsd:enumeration value="input" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="FormDirectionType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="vertical" />
+      <xsd:enumeration value="horizontal" />
+      <xsd:enumeration value="horizontal-labels" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="GridRepeatType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="fill" />
+      <xsd:enumeration value="fit" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="AlignType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="start" />
+      <xsd:enumeration value="center" />
+      <xsd:enumeration value="end" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="BoxAlignType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="start" />
+      <xsd:enumeration value="center" />
+      <xsd:enumeration value="end" />
+      <xsd:enumeration value="stretch" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="HeadingLevelType">
+    <xsd:restriction base="xsd:integer">
+      <xsd:minInclusive value="1" />
+      <xsd:maxInclusive value="6" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="HeadingDisplayType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="display-1" />
+      <xsd:enumeration value="display-2" />
+      <xsd:enumeration value="display-3" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="TextColorType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="primary" />
+      <xsd:enumeration value="secondary" />
+      <xsd:enumeration value="disabled" />
+      <xsd:enumeration value="placeholder" />
+      <xsd:enumeration value="accent" />
+      <xsd:enumeration value="inherit" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="IconColorType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="primary" />
+      <xsd:enumeration value="secondary" />
+      <xsd:enumeration value="tertiary" />
+      <xsd:enumeration value="disabled" />
+      <xsd:enumeration value="accent" />
+      <xsd:enumeration value="success" />
+      <xsd:enumeration value="error" />
+      <xsd:enumeration value="warning" />
+      <xsd:enumeration value="inherit" />
+      <xsd:enumeration value="blue" />
+      <xsd:enumeration value="red" />
+      <xsd:enumeration value="green" />
+      <xsd:enumeration value="gray" />
+      <xsd:enumeration value="cyan" />
+      <xsd:enumeration value="teal" />
+      <xsd:enumeration value="yellow" />
+      <xsd:enumeration value="orange" />
+      <xsd:enumeration value="pink" />
+      <xsd:enumeration value="purple" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="SliderValueDisplayType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="tooltip" />
+      <xsd:enumeration value="text" />
+      <xsd:enumeration value="none" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="StackJustifyType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="start" />
+      <xsd:enumeration value="center" />
+      <xsd:enumeration value="end" />
+      <xsd:enumeration value="between" />
+      <xsd:enumeration value="around" />
+      <xsd:enumeration value="evenly" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="StackWrapType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="nowrap" />
+      <xsd:enumeration value="wrap" />
+      <xsd:enumeration value="wrap-reverse" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="SwitchLabelPositionType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="start" />
+      <xsd:enumeration value="end" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="SwitchLabelSpacingType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="hug" />
+      <xsd:enumeration value="spread" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="TableDensityType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="compact" />
+      <xsd:enumeration value="balanced" />
+      <xsd:enumeration value="spacious" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="TableDividersType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="rows" />
+      <xsd:enumeration value="columns" />
+      <xsd:enumeration value="grid" />
+      <xsd:enumeration value="none" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="TableVerticalAlignType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="middle" />
+      <xsd:enumeration value="top" />
+      <xsd:enumeration value="bottom" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="TableTextOverflowType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="wrap" />
+      <xsd:enumeration value="truncate" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="TableWidthType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="proportional" />
+      <xsd:enumeration value="pixel" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="TabLayoutType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="hug" />
+      <xsd:enumeration value="fill" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="TypographyType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="body" />
+      <xsd:enumeration value="large" />
+      <xsd:enumeration value="label" />
+      <xsd:enumeration value="supporting" />
+      <xsd:enumeration value="code" />
+      <xsd:enumeration value="display-1" />
+      <xsd:enumeration value="display-2" />
+      <xsd:enumeration value="display-3" />
+      <xsd:enumeration value="inherit" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="FontWeightType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="normal" />
+      <xsd:enumeration value="medium" />
+      <xsd:enumeration value="semibold" />
+      <xsd:enumeration value="bold" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="TextDisplayType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="inline" />
+      <xsd:enumeration value="block" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="TextElementType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="span" />
+      <xsd:enumeration value="p" />
+      <xsd:enumeration value="div" />
+      <xsd:enumeration value="label" />
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:simpleType name="TextInputKindType">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="text" />
+      <xsd:enumeration value="password" />
+      <xsd:enumeration value="email" />
     </xsd:restriction>
   </xsd:simpleType>
 </xsd:schema>

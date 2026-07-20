@@ -3,7 +3,8 @@ import urllib.parse
 from typing import TYPE_CHECKING, TypedDict, cast
 from contextlib import AbstractAsyncContextManager
 from src.environments import env
-from src.models.infrastructure import StorageKind, exoscale_zone
+from src.models.types import StorageKind
+from src.models.infrastructure import exoscale_zone
 from src.database.models.storages import StorageRegistry
 
 # Import typing-only S3 stubs without adding runtime dependencies.

@@ -1,34 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <xsd:include schemaLocation="Types.xsd" />
-  <xsd:complexType name="BadgeChildrenOnlyType">
-    <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:any processContents="lax" />
-      </xsd:choice>
-    </xsd:sequence>
+  <xsd:complexType name="BadgeType">
+    <xsd:attribute name="label" type="NonBlankStringType" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
+    <xsd:attribute name="values" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="variant" type="BadgeVariantType" use="optional" default="neutral" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
-
-  <xsd:complexType name="BadgeType">
-    <xsd:complexContent>
-      <xsd:extension base="BadgeChildrenOnlyType">
-        <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
-        <xsd:attribute name="value" type="xsd:string" use="optional" />
-        <xsd:attribute name="variant" use="optional" default="default">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string">
-              <xsd:enumeration value="default" />
-              <xsd:enumeration value="destructive" />
-              <xsd:enumeration value="outline" />
-              <xsd:enumeration value="ghost" />
-              <xsd:enumeration value="link" />
-            </xsd:restriction>
-          </xsd:simpleType>
-        </xsd:attribute>
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:element name="Badge" type="BadgeType" />
+  <xsd:element name="Badge" type="BadgeType">
+    <xsd:annotation><xsd:documentation>Renders an Astryx status or category badge.</xsd:documentation></xsd:annotation>
+    <xsd:key name="BadgeAccessibleLabel">
+      <xsd:selector xpath="." />
+      <xsd:field xpath="@label | @i18n" />
+    </xsd:key>
+  </xsd:element>
 </xsd:schema>

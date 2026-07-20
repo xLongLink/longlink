@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:complexType name="TabListType">
+    <xsd:sequence><xsd:element ref="Tab" minOccurs="1" maxOccurs="unbounded" /></xsd:sequence>
+    <xsd:attribute name="label" type="NonBlankStringType" use="optional" default="Tabs" />
+    <xsd:attribute name="value" type="xsd:string" use="optional" />
+    <xsd:attribute name="size" type="SizeType" use="optional" default="md" />
+    <xsd:attribute name="layout" type="TabLayoutType" use="optional" default="hug" />
+    <xsd:attribute name="orientation" type="OrientationType" use="optional" default="horizontal" />
+    <xsd:attribute name="hasDivider" type="xsd:string" use="optional" />
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+  <xsd:complexType name="TabType">
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:attribute name="value" type="NonBlankStringType" use="required" />
+    <xsd:attribute name="label" type="NonBlankStringType" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
+    <xsd:attribute name="values" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="to" type="xsd:string" use="optional" />
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+  <xsd:element name="TabList" type="TabListType">
+    <xsd:annotation><xsd:documentation>Renders controlled Astryx tab navigation and one panel.</xsd:documentation></xsd:annotation>
+  </xsd:element>
+  <xsd:element name="Tab" type="TabType">
+    <xsd:annotation><xsd:documentation>Defines one tab and its panel children.</xsd:documentation></xsd:annotation>
+    <xsd:key name="TabAccessibleLabel">
+      <xsd:selector xpath="." />
+      <xsd:field xpath="@label | @i18n" />
+    </xsd:key>
+  </xsd:element>
+</xsd:schema>

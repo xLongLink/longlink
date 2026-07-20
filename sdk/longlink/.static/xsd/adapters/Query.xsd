@@ -4,6 +4,7 @@
     <xsd:attribute name="id" type="xsd:string" use="required" />
     <xsd:attribute name="path" type="xsd:string" use="required" />
   </xsd:complexType>
-
-  <xsd:element name="Query" type="QueryType" />
+  <xsd:element name="Query" type="QueryType">
+    <xsd:annotation><xsd:documentation>Loads app-relative JSON into a runtime slot.</xsd:documentation></xsd:annotation>
+  </xsd:element>
 </xsd:schema>

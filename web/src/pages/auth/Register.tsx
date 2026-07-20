@@ -1,22 +1,29 @@
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { fetchApiVoid } from '@/lib/api';
 import { useTranslation } from '@/lib/i18n';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { useAuthConfig } from '@/hooks/use-auth';
 import { AuthPage } from '@/components/AuthPage';
 import { sanitizeRedirectPath } from '@/lib/redirects';
+import { PasswordInput } from '@/components/PasswordInput';
 
 type RegisterValues = {
     name: string;
     email: string;
     password: string;
 };
+
+const emailInputAttributes = { autoComplete: 'email' };
+const nameInputAttributes = { autoComplete: 'name' };
 
 /** Renders account registration when local registration is enabled. */
 export default function Register() {
@@ -61,9 +68,9 @@ export default function Register() {
     if (authConfig.isLoading) {
         return (
             <AuthPage title={t('auth.createAccount')} description={t('auth.registerDescription')}>
-                <p role="status" className="text-center text-sm text-muted-foreground">
+                <Text as="p" color="secondary" justify="center" role="status" type="supporting">
                     {t('auth.loadingAuthentication')}
-                </p>
+                </Text>
             </AuthPage>
         );
     }
@@ -75,72 +82,84 @@ export default function Register() {
                 title={t('auth.registrationUnavailable')}
                 description={t('auth.registrationUnavailableDescription')}
             >
-                <Button render={<Link to={`/organizations?${nextQuery}`} />} variant="outline" className="w-full">
-                    {t('auth.backToSignIn')}
-                </Button>
+                <Button href={`/organizations?${nextQuery}`} label={t('auth.backToSignIn')} variant="secondary" />
             </AuthPage>
         );
     }
 
     return (
         <AuthPage title={t('auth.createAccount')} description={t('auth.registerDescription')}>
-            <form className="space-y-4" onSubmit={form.handleSubmit(handleRegister)}>
-                <div className="space-y-2">
-                    <Label htmlFor="register-name">{t('labels.name')}</Label>
-                    <Input
-                        id="register-name"
-                        autoComplete="name"
-                        aria-invalid={Boolean(form.formState.errors.name)}
-                        {...form.register('name')}
-                    />
-                    {form.formState.errors.name ? (
-                        <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
-                    ) : null}
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="register-email">{t('labels.email')}</Label>
-                    <Input
-                        id="register-email"
-                        type="email"
-                        autoComplete="email"
-                        aria-invalid={Boolean(form.formState.errors.email)}
-                        {...form.register('email')}
-                    />
-                    {form.formState.errors.email ? (
-                        <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
-                    ) : null}
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="register-password">{t('labels.password')}</Label>
-                    <Input
-                        id="register-password"
-                        type="password"
-                        autoComplete="new-password"
-                        aria-invalid={Boolean(form.formState.errors.password)}
-                        {...form.register('password')}
-                    />
-                    {form.formState.errors.password ? (
-                        <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>
-                    ) : null}
-                </div>
-                {registration.error ? (
-                    <p role="alert" className="text-sm text-destructive">
-                        {registration.error.message}
-                    </p>
-                ) : null}
-                <Button type="submit" className="w-full" disabled={registration.isPending}>
-                    {registration.isPending ? t('auth.creatingAccount') : t('auth.createAccount')}
-                </Button>
-            </form>
-            <p className="text-center text-sm text-muted-foreground">
+            <Stack as="form" gap={4} onSubmit={form.handleSubmit(handleRegister)}>
+                <Controller
+                    control={form.control}
+                    name="name"
+                    render={({ field, fieldState }) => (
+                        <TextInput
+                            {...nameInputAttributes}
+                            ref={field.ref}
+                            htmlName={field.name}
+                            isRequired
+                            label={t('labels.name')}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
+                            value={field.value}
+                            width="100%"
+                        />
+                    )}
+                />
+                <Controller
+                    control={form.control}
+                    name="email"
+                    render={({ field, fieldState }) => (
+                        <TextInput
+                            {...emailInputAttributes}
+                            ref={field.ref}
+                            htmlName={field.name}
+                            isRequired
+                            label={t('labels.email')}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
+                            type="email"
+                            value={field.value}
+                            width="100%"
+                        />
+                    )}
+                />
+                <Controller
+                    control={form.control}
+                    name="password"
+                    render={({ field, fieldState }) => (
+                        <PasswordInput
+                            ref={field.ref}
+                            autoComplete="new-password"
+                            htmlName={field.name}
+                            isRequired
+                            label={t('labels.password')}
+                            onBlur={field.onBlur}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
+                            value={field.value}
+                            width="100%"
+                        />
+                    )}
+                />
+                {registration.error ? <Banner status="error" title={registration.error.message} /> : null}
+                <Button
+                    isDisabled={registration.isPending}
+                    isLoading={registration.isPending}
+                    label={registration.isPending ? t('auth.creatingAccount') : t('auth.createAccount')}
+                    type="submit"
+                    variant="primary"
+                />
+            </Stack>
+            <Text as="p" color="secondary" justify="center" type="supporting">
                 {t('auth.haveAccount')}{' '}
-                <Link
-                    className="font-medium text-foreground underline-offset-4 hover:underline"
-                    to={`/organizations?${nextQuery}`}
-                >
+                <Link href={`/organizations?${nextQuery}`} type="inherit" weight="medium">
                     {t('actions.login')}
                 </Link>
-            </p>
+            </Text>
         </AuthPage>
     );
 }

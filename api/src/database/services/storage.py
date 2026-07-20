@@ -4,10 +4,10 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from src.environments import env
+from src.models.types import StorageKind
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.models.users import User
-from src.models.infrastructure import StorageKind
 from src.database.models.storages import StorageRegistry
 from src.database.models.organizations import Organization
 

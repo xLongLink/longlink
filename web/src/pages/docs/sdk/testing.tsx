@@ -1,9 +1,9 @@
-import { A } from '@/components/ui/a';
-import { P } from '@/components/ui/p';
-import { Code } from '@/components/ui/code';
-import { Stack } from '@/components/ui/stack';
+import { Code } from '@astryxdesign/core/Code';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Heading } from '@astryxdesign/core/Heading';
 import { CodeTabs } from '@/components/CodeTabs';
-import { Heading } from '@/components/ui/heading';
 import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
@@ -12,16 +12,23 @@ export const metadata = {
 };
 
 export const content = (
-    <Stack>
-        <Heading id="testing" level="h1">
+    <Stack gap={4}>
+        <Heading id="testing" level={1}>
             Testing
         </Heading>
-        <P>
-            Test LongLink applications with standard <A href="https://docs.pytest.org/en/stable/">pytest</A> and{' '}
-            <A href="https://pytest-asyncio.readthedocs.io/en/stable/">pytest-asyncio</A> workflows. Generated projects
-            also include the dependencies needed by <Code>longlink.testing.TestClient</Code>.
-        </P>
-        <P>To install the development dependencies, run:</P>
+        <Text as="p">
+            Test LongLink applications with standard{' '}
+            <Link href="https://docs.pytest.org/en/stable/" isExternalLink type="inherit">
+                pytest
+            </Link>{' '}
+            and{' '}
+            <Link href="https://pytest-asyncio.readthedocs.io/en/stable/" isExternalLink type="inherit">
+                pytest-asyncio
+            </Link>{' '}
+            workflows. Generated projects also include the dependencies needed by{' '}
+            <Code>longlink.testing.TestClient</Code>.
+        </Text>
+        <Text as="p">To install the development dependencies, run:</Text>
         <CodeTabs
             defaultValue="pip"
             items={[
@@ -29,23 +36,26 @@ export const content = (
                 { code: 'uv sync --extra dev', label: 'uv', value: 'uv' },
             ]}
         />
-        <Heading id="usage" level="h2">
+        <Heading id="usage" level={2}>
             Usage
         </Heading>
-        <P>
+        <Text as="p">
             You can execute all tests or target a specific test file using the LongLink test command. Arguments after{' '}
             <Code>longlink test</Code> are forwarded to <Code>pytest</Code>.
-        </P>
+        </Text>
         <CodeBlock language="bash">{`uv run longlink test
 uv run longlink test tests/test_app.py -q`}</CodeBlock>
-        <Heading id="example" level="h2">
+        <Heading id="example" level={2}>
             Example
         </Heading>
-        <P>
+        <Text as="p">
             LongLink applications are FastAPI applications, and <Code>longlink.testing.TestClient</Code> is a compatible
-            facade over FastAPI's <A href="https://fastapi.tiangolo.com/tutorial/testing/">TestClient</A>. Use async
-            pytest tests for lower-level async services when needed.
-        </P>
+            facade over FastAPI's{' '}
+            <Link href="https://fastapi.tiangolo.com/tutorial/testing/" isExternalLink type="inherit">
+                TestClient
+            </Link>
+            . Use async pytest tests for lower-level async services when needed.
+        </Text>
         <CodeBlock language="python">{`from main import app
 from longlink.testing import TestClient
 

@@ -1,119 +1,79 @@
-import type { TFunction } from 'i18next';
-import { toast } from 'sonner';
-import { MoreVertical } from 'lucide-react';
-import { type ColumnDef } from '@tanstack/react-table';
+import { Text } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Avatar } from '@astryxdesign/core/Avatar';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
+import { useToast } from '@astryxdesign/core/Toast';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApiUserListItem } from '@/lib/types';
 import { useUsers } from '@/data/admin';
-import { getInitials } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
-import { Button } from '@/components/ui/button';
-import { DataTable } from '@/components/DataTable';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-
-/** Builds localized admin user table columns. */
-function createUserColumns(t: TFunction): Array<ColumnDef<ApiUserListItem>> {
-    return [
-        {
-            id: 'user',
-            header: t('columns.user'),
-            meta: { className: 'pr-1' },
-            cell: ({ row }) => {
-                const user = row.original;
-
-                return (
-                    <div className="flex items-center gap-3">
-                        <Avatar className="size-8">
-                            <AvatarImage src={user.avatar} alt={user.name} />
-                            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0">
-                            <div className="truncate font-medium text-foreground">{user.name}</div>
-                            <div className="truncate text-xs text-muted-foreground">{user.email}</div>
-                        </div>
-                    </div>
-                );
-            },
-        },
-        {
-            accessorKey: 'id',
-            header: t('columns.id'),
-            cell: ({ getValue }) => <span className="font-mono text-xs text-foreground">{getValue<string>()}</span>,
-            meta: { className: 'w-72 pl-1 text-left' },
-        },
-        {
-            accessorKey: 'role',
-            header: t('columns.role'),
-            cell: ({ getValue }) => (
-                <span className="rounded-full border border-border px-2 py-0.5 text-xs font-medium capitalize text-muted-foreground">
-                    {getValue<string>()}
-                </span>
-            ),
-            meta: { className: 'w-32' },
-        },
-        {
-            id: 'actions',
-            header: t('columns.action'),
-            meta: { className: 'w-24 text-right' },
-            cell: ({ row }) => {
-                const user = row.original;
-
-                return (
-                    <div className="flex justify-end">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger
-                                render={
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        className="cursor-pointer"
-                                        aria-label={t('common.openActionsFor', { name: user.name })}
-                                    />
-                                }
-                            >
-                                <MoreVertical className="size-4" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
-                                <DropdownMenuItem
-                                    className="cursor-pointer"
-                                    onClick={() => {
-                                        void navigator.clipboard.writeText(user.email);
-                                        toast.success(t('admin.emailCopied'));
-                                    }}
-                                >
-                                    {t('admin.copyEmail')}
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </div>
-                );
-            },
-        },
-    ];
-}
+import { DataTable, type DataTableColumn } from '@/components/DataTable';
 
 /** Renders the admin users page. */
 export default function AdminUsers() {
     const { t } = useTranslation();
+    const toast = useToast();
     const { items: users, error, isLoading } = useUsers();
-    const userColumns = createUserColumns(t);
+    const columns: DataTableColumn<ApiUserListItem>[] = [
+        {
+            key: 'user',
+            header: t('columns.user'),
+            width: proportional(1),
+            renderCell: (user) => (
+                <HStack gap={3} align="center">
+                    <Avatar src={user.avatar} name={user.name} size="small" />
+                    <VStack gap={1}>
+                        <Text weight="semibold">{user.name}</Text>
+                        <Text type="supporting">{user.email}</Text>
+                    </VStack>
+                </HStack>
+            ),
+        },
+        {
+            key: 'id',
+            header: t('columns.id'),
+            width: pixel(288),
+            renderCell: (user) => <Text type="code">{user.id}</Text>,
+        },
+        {
+            key: 'role',
+            header: t('columns.role'),
+            width: pixel(128),
+            renderCell: (user) => <Badge label={user.role} />,
+        },
+        {
+            key: 'actions',
+            header: t('columns.action'),
+            width: pixel(96),
+            align: 'end',
+            renderCell: (user) => (
+                <MoreMenu
+                    label={t('common.openActionsFor', { name: user.name })}
+                    size="sm"
+                    items={[
+                        {
+                            label: t('admin.copyEmail'),
+                            onClick: () => {
+                                void navigator.clipboard.writeText(user.email);
+                                toast({ body: t('admin.emailCopied') });
+                            },
+                        },
+                    ]}
+                />
+            ),
+        },
+    ];
 
     return (
-        <div className="space-y-6">
-            <Hero icon="users">
-                <div>
-                    <HeroTitle>{t('admin.usersTitle')}</HeroTitle>
-                    <HeroDescription>{t('admin.usersDescription')}</HeroDescription>
-                </div>
-            </Hero>
-            <DataTable columns={userColumns} data={users} error={error} isLoading={isLoading} pageSize={25} />
-        </div>
+        <VStack gap={6} width="100%">
+            <VStack gap={1}>
+                <Heading level={1}>{t('admin.usersTitle')}</Heading>
+                <Text type="supporting">{t('admin.usersDescription')}</Text>
+            </VStack>
+            <DataTable columns={columns} data={users} error={error} isLoading={isLoading} pageSize={25} />
+        </VStack>
     );
 }

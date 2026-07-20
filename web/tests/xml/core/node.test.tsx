@@ -6,12 +6,20 @@ import { renderNode } from '@/xml/core/node';
 import { ContextProvider, setupContext } from '@/xml/core/context';
 
 describe('renderNode', () => {
-    it('rejects className on xml nodes', () => {
+    it('rejects styling and event handler attributes on xml nodes', () => {
         const ctx: ExecutionContext = { setups: {}, invalidate: async () => {}, values: {} };
+        const cases = [
+            { name: 'className', expected: 'className is not supported in XML' },
+            { name: 'style', expected: 'style is not supported in XML' },
+            { name: 'xstyle', expected: 'xstyle is not supported in XML' },
+            { name: 'onClick', expected: 'Event handler attribute "onClick" is not supported in XML' },
+        ];
 
-        expect(() => renderNode([{ name: 'Button', params: { className: 'hidden' } }], ctx)).toThrow(
-            'className is not supported in XML'
-        );
+        for (const testCase of cases) {
+            expect(() => renderNode([{ name: 'Button', params: { [testCase.name]: 'value' } }], ctx)).toThrow(
+                testCase.expected
+            );
+        }
     });
 
     it('preserves existing state when reactive conditions re-render', async () => {
@@ -23,7 +31,7 @@ describe('renderNode', () => {
         };
         const nodes: ASTNode[] = [
             { name: 'State', params: { id: 'gridSearch', value: 'Revenue' } },
-            { name: 'P', params: { if: "${gridSearch.value in 'Usage'}", i18n: 'core.visible' } },
+            { name: 'Text', params: { if: "${gridSearch.value in 'Usage'}", i18n: 'core.visible' } },
         ];
 
         await setupContext(nodes, ctx, '');

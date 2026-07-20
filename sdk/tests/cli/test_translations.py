@@ -19,9 +19,9 @@ def test_generate_updates_current_app_translation_catalog(monkeypatch: MonkeyPat
     nested_pages_directory.mkdir(parents=True)
     catalog_path.parent.mkdir(parents=True)
     ignored_static_page.parent.mkdir(parents=True)
-    (pages_directory / "dashboard.xml").write_text('<P i18n="dashboard.title" />', encoding="utf-8")
-    (pages_directory / "tasks.xml").write_text('<P i18n="tasks.count" />', encoding="utf-8")
-    (nested_pages_directory / "users.xml").write_text('<P i18n="admin.users.title" />', encoding="utf-8")
+    (pages_directory / "dashboard.xml").write_text('<Text i18n="dashboard.title" />', encoding="utf-8")
+    (pages_directory / "tasks.xml").write_text('<Text i18n="tasks.count" />', encoding="utf-8")
+    (nested_pages_directory / "users.xml").write_text('<Text i18n="admin.users.title" />', encoding="utf-8")
     catalog_path.write_text(
         json.dumps(
             {
@@ -31,7 +31,7 @@ def test_generate_updates_current_app_translation_catalog(monkeypatch: MonkeyPat
         ),
         encoding="utf-8",
     )
-    ignored_static_page.write_text('<P i18n="examples.ignored.title" />', encoding="utf-8")
+    ignored_static_page.write_text('<Text i18n="examples.ignored.title" />', encoding="utf-8")
     monkeypatch.chdir(tmp_path)
 
     # Act
@@ -57,7 +57,7 @@ def test_generate_rejects_translation_key_collisions(monkeypatch: MonkeyPatch, t
 
     pages_directory.mkdir(parents=True)
     (pages_directory / "tasks.xml").write_text(
-        '<P i18n="tasks.title" /><P i18n="tasks.title.count" />',
+        '<Text i18n="tasks.title" /><Text i18n="tasks.title.count" />',
         encoding="utf-8",
     )
     monkeypatch.chdir(tmp_path)

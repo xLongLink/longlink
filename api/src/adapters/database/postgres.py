@@ -1,20 +1,19 @@
 import contextlib
 from uuid import UUID
-from .base import Database, DatabaseRuntimeConnection
-from .types import DatabaseSchemaUsage
+from .types import DatabaseSchemaUsage, DatabaseRuntimeConnection
 from sqlalchemy import String, text
 from collections.abc import AsyncIterator
 from longlink.shared import migrations as shared_migrations
 from src.environments import env
+from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
 from sqlalchemy.sql.elements import quoted_name
 from longlink.shared.constants import SHARED_SCHEMA
-from src.models.infrastructure import DatabaseSSLMode
 
 
-class Postgres(Database):
+class Postgres:
     """Implement the database tenant topology on PostgreSQL using registry credentials for control-plane provisioning.
 
     Runtime roles can write their application schema and read the organization's shared schema.

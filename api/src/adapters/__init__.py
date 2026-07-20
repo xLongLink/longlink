@@ -1,29 +1,25 @@
 from .storage import MinIO, Storage, Exoscale
-from .database import Database, Postgres, DatabaseRuntimeConnection
+from .database import Postgres
 from .storage.base import StorageRuntimeCredentials
 from src.environments import env
-from src.models.storages import StorageKind
-from src.models.databases import DatabaseKind
+from src.models.types import StorageKind
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 
 
-def database(registry: DatabaseRegistry) -> Database:
-    """Construct the provisioning adapter selected by one database registry record.
+def database(registry: DatabaseRegistry) -> Postgres:
+    """Construct the PostgreSQL provisioning adapter for one database registry.
 
     Registry credentials remain at this control-plane boundary instead of being returned as runtime connection material.
     """
 
-    # Select the PostgreSQL adapter for supported database registries.
-    if registry.kind == DatabaseKind.postgresql:
-        return Postgres(
-            registry.host,
-            registry.port,
-            registry.username,
-            registry.password,
-        )
-
-    raise ValueError(f"Unsupported database registry kind '{registry.kind}'")
+    # Keep registry credential translation centralized for production and test callers.
+    return Postgres(
+        registry.host,
+        registry.port,
+        registry.username,
+        registry.password,
+    )
 
 
 def storage(registry: StorageRegistry) -> Storage:

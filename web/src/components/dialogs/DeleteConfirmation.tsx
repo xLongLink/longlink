@@ -1,7 +1,11 @@
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
+import { FieldStatus } from '@astryxdesign/core/FieldStatus';
+import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { DeleteConfirmationProps } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
 /** Renders a shared destructive confirmation dialog. */
 export function DeleteConfirmation({
@@ -16,32 +20,56 @@ export function DeleteConfirmation({
     const { t } = useTranslation();
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <DialogTitle>{title}</DialogTitle>
-                        <DialogDescription>{description}</DialogDescription>
-                    </div>
-
-                    {error ? <p className="text-sm text-destructive">{error}</p> : null}
-
-                    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => {
-                                onOpenChange(false);
-                            }}
-                        >
-                            {t('actions.cancel')}
-                        </Button>
-                        <Button type="button" variant="destructive" disabled={isPending} onClick={onConfirm}>
-                            {isPending ? t('actions.deleting') : t('actions.delete')}
-                        </Button>
-                    </div>
-                </div>
-            </DialogContent>
+        <Dialog
+            isOpen={open}
+            onOpenChange={(nextOpen) => {
+                if (!nextOpen && isPending) {
+                    return;
+                }
+                onOpenChange(nextOpen);
+            }}
+            purpose={isPending ? 'required' : 'form'}
+        >
+            <Layout
+                header={
+                    <DialogHeader
+                        title={title}
+                        onOpenChange={(nextOpen) => {
+                            if (!isPending) {
+                                onOpenChange(nextOpen);
+                            }
+                        }}
+                    />
+                }
+                content={
+                    <LayoutContent>
+                        <Stack gap={3}>
+                            <Text as="div" color="secondary">
+                                {description}
+                            </Text>
+                            {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
+                        </Stack>
+                    </LayoutContent>
+                }
+                footer={
+                    <LayoutFooter>
+                        <Stack direction="horizontal" gap={2} justify="end">
+                            <Button
+                                label={t('actions.cancel')}
+                                variant="ghost"
+                                isDisabled={isPending}
+                                clickAction={() => onOpenChange(false)}
+                            />
+                            <Button
+                                label={t('actions.delete')}
+                                variant="destructive"
+                                isLoading={isPending}
+                                clickAction={onConfirm}
+                            />
+                        </Stack>
+                    </LayoutFooter>
+                }
+            />
         </Dialog>
     );
 }

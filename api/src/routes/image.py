@@ -1,7 +1,7 @@
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser
 from src.utils import images
-from src.models.images import Image
+from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 from src.database.models.users import User
 

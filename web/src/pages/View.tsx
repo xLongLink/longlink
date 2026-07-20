@@ -1,13 +1,17 @@
 import startCase from 'lodash/startCase';
+import { Card } from '@astryxdesign/core/Card';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Button } from '@astryxdesign/core/Button';
+import { Center } from '@astryxdesign/core/Center';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { getIconRegistry, type IconName } from '@astryxdesign/core/Icon';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { generatePath, Link, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
+import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import type { ApiOrganizationApplication } from '@/lib/types';
 import XML from '@/layout/XmlLayout';
 import { useTranslation } from '@/lib/i18n';
 import { ApiError, fetchApiText } from '@/lib/api';
-import { buttonVariants } from '@/components/ui/button';
 import { usePages, type RuntimePage } from '@/hooks/use-pages';
-import { createLucideIconComponent } from '@/components/ui/icon';
 import {
     createContext as createXmlContext,
     fromXml,
@@ -66,6 +70,56 @@ type RuntimeRoute = RouteObject & {
 };
 
 const emptyRouteParams: Record<string, string> = {};
+const astryxIconRegistry = getIconRegistry();
+const legacyRuntimeIcons: Record<string, IconName> = {
+    activity: 'arrowsUpDown',
+    'arrow-right': 'chevronRight',
+    banknote: 'info',
+    bell: 'info',
+    box: 'viewColumns',
+    boxes: 'viewColumns',
+    'building-2': 'viewColumns',
+    check: 'check',
+    'clipboard-list': 'checkDouble',
+    container: 'viewColumns',
+    cpu: 'wrench',
+    database: 'viewColumns',
+    download: 'arrowDown',
+    'hard-drive': 'copy',
+    layers: 'viewColumns',
+    'layout-dashboard': 'viewColumns',
+    'layout-grid': 'viewColumns',
+    link: 'externalLink',
+    list: 'viewColumns',
+    'list-check': 'checkDouble',
+    'map-pin': 'info',
+    plus: 'arrowUp',
+    rocket: 'arrowUp',
+    'rotate-ccw': 'arrowsUpDown',
+    'settings-2': 'wrench',
+    'shield-check': 'success',
+    'sliders-horizontal': 'wrench',
+    timer: 'clock',
+    users: 'info',
+    x: 'close',
+};
+
+/** Returns whether a runtime icon name is supported by the Astryx registry. */
+function isAstryxIconName(name: string): name is IconName {
+    return Object.hasOwn(astryxIconRegistry, name);
+}
+
+/** Resolves current Astryx names and persisted legacy icon slugs for runtime tabs. */
+function resolveRuntimeIcon(name: string | undefined): IconName | undefined {
+    const iconName = name?.trim();
+
+    // Ignore empty and unsupported icon names.
+    if (!iconName) {
+        return undefined;
+    }
+
+    return isAstryxIconName(iconName) ? iconName : legacyRuntimeIcons[iconName];
+}
 
 /**
  * Removes leading and trailing slashes from a route path.
@@ -241,13 +295,10 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
     const isNotFound = Boolean(registeredPages && normalizedRoutePath && !activeRouteMatch);
     const pagesLoading = error instanceof ApiError && error.status === 503;
 
-    runtimeContextRef.current = runtimeContext;
-
+    // Keep future page contexts aligned with the latest caller-supplied values.
     useEffect(() => {
-        pageStatesRef.current = {};
-        inFlightPageKeysRef.current.clear();
-        setPageStates({});
-    }, [pageCacheKey]);
+        runtimeContextRef.current = runtimeContext;
+    }, [runtimeContext]);
 
     // Make the first page explicit in the URL when the app loads without a selected view.
     useEffect(() => {
@@ -271,7 +322,7 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
             {
                 active: boolean;
                 href: string;
-                icon?: ReturnType<typeof createLucideIconComponent>;
+                icon?: IconName;
                 label: string;
             }
         >();
@@ -279,8 +330,7 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
         // Build one visible navigation target per tab.
         for (const page of registeredPages ?? []) {
             const label = page.name?.trim() || startCase(page.tab);
-            const iconName = page.icon?.trim();
-            const icon = iconName ? createLucideIconComponent(iconName) : undefined;
+            const icon = resolveRuntimeIcon(page.icon);
             const routePattern = pageRoutePattern(page);
             const dynamic = pageRouteIsDynamic(page);
             const currentGroup = tabGroups.get(page.tab);
@@ -328,6 +378,7 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
 
         const pageKey = `${pageCacheKey}\u0000${activePageStateKey}`;
         const existingPageState = pageStatesRef.current[activePageStateKey];
+        const inFlightPageKeys = inFlightPageKeysRef.current;
 
         // Reuse completed page state for matching route instances.
         if (
@@ -346,7 +397,7 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
             existingPageState?.cacheKey === pageCacheKey &&
             existingPageState.path === activePagePath &&
             existingPageState.routePath === activeRoutePath &&
-            inFlightPageKeysRef.current.has(pageKey)
+            inFlightPageKeys.has(pageKey)
         ) {
             return;
         }
@@ -388,7 +439,7 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
 
         const controller = new AbortController();
 
-        inFlightPageKeysRef.current.add(pageKey);
+        inFlightPageKeys.add(pageKey);
         setPageStates((current) => {
             const next = { ...current, [activePageStateKey]: loadingPageState };
 
@@ -470,12 +521,12 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
                 });
             })
             .finally(() => {
-                inFlightPageKeysRef.current.delete(pageKey);
+                inFlightPageKeys.delete(pageKey);
             });
 
         return () => {
             controller.abort();
-            inFlightPageKeysRef.current.delete(pageKey);
+            inFlightPageKeys.delete(pageKey);
         };
     }, [
         activePagePath,
@@ -487,15 +538,16 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
         navigationBaseUrl,
         pageCacheKey,
         resolvedPagesBaseUrl,
+        t,
     ]);
 
     // Show deployment loading before rendering runtime pages.
     if (applicationIsLoading || pagesLoading) {
         return (
             <XML tabs={tabs}>
-                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
+                <Center minHeight="calc(100vh - 14rem)" width="100%">
                     <LoadingState status={applicationStatus ?? 'loading'} />
-                </section>
+                </Center>
             </XML>
         );
     }
@@ -504,14 +556,14 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
     if (error) {
         return (
             <XML tabs={tabs}>
-                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
+                <Center minHeight="calc(100vh - 14rem)" width="100%">
                     <ErrorState
                         actionHref={organization ? `/orgs/${organization}` : '/organizations'}
                         actionLabel={organization ? t('actions.backToOrganization') : t('actions.backToOrganizations')}
                         message={error.message || t('appView.loadApplicationFailed')}
                         title={t('appView.unableToLoadApplication')}
                     />
-                </section>
+                </Center>
             </XML>
         );
     }
@@ -530,7 +582,7 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
         const pageIsActive = pageState.stateKey === activePageStateKey;
 
         return (
-            <section key={pageState.stateKey} hidden={!pageIsActive} aria-hidden={!pageIsActive} className="space-y-6">
+            <Stack key={pageState.stateKey} as="section" gap={6} hidden={!pageIsActive} aria-hidden={!pageIsActive}>
                 <RenderXML
                     key={`${runtimeKey ?? 'runtime'}-${pageState.stateKey}`}
                     active={pageIsActive}
@@ -539,7 +591,7 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
                     ctx={pageState.runtimeContext}
                     locale={locale}
                 />
-            </section>
+            </Stack>
         );
     });
 
@@ -592,9 +644,9 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
         <XML tabs={tabs}>
             {renderedPagePanels}
             {activeFallback ? (
-                <section className="flex min-h-[calc(100vh-14rem)] items-center justify-center px-6 py-12">
+                <Center minHeight="calc(100vh - 14rem)" width="100%">
                     {activeFallback}
-                </section>
+                </Center>
             ) : null}
         </XML>
     );
@@ -608,33 +660,31 @@ function LoadingState({ status }: LoadingStateProps) {
     if (status === 'loading') return null;
 
     return (
-        <div className="w-full max-w-xl rounded-2xl border border-border bg-card/80 px-6 py-8 text-center shadow-sm">
-            <div className="space-y-3">
-                <h1 className="text-2xl font-semibold text-foreground">
-                    {t('appView.applicationIsStatus', { status })}
-                </h1>
-                <p className="text-sm leading-6 text-muted-foreground">{t('appView.retryLater')}</p>
-            </div>
-        </div>
+        <Card maxWidth={576} padding={6} width="100%">
+            <EmptyState
+                description={t('appView.retryLater')}
+                headingLevel={1}
+                title={t('appView.applicationIsStatus', { status })}
+            />
+        </Card>
     );
 }
 
 /** Renders a centered in-shell error message for failed application loads. */
 function ErrorState({ actionHref, actionLabel, message, title }: ErrorStateProps) {
     return (
-        <div className="w-full max-w-xl rounded-2xl border border-border bg-card/80 px-6 py-8 text-center shadow-sm">
-            <div className="space-y-3">
-                <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
-                <p className="text-sm leading-6 text-muted-foreground">{message}</p>
-            </div>
-
-            {actionHref && actionLabel ? (
-                <div className="mt-6 flex items-center justify-center gap-3">
-                    <Link to={actionHref} className={buttonVariants()}>
-                        {actionLabel}
-                    </Link>
-                </div>
-            ) : null}
-        </div>
+        <Card maxWidth={576} padding={6} width="100%">
+            <EmptyState
+                actions={
+                    actionHref && actionLabel ? (
+                        <Button href={actionHref} label={actionLabel} variant="primary" />
+                    ) : undefined
+                }
+                description={message}
+                headingLevel={1}
+                role="alert"
+                title={title}
+            />
+        </Card>
     );
 }

@@ -1,38 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <xsd:include schemaLocation="Button.xsd" />
-  <xsd:include schemaLocation="Action.xsd" />
-  <xsd:include schemaLocation="Input.xsd" />
-  <xsd:include schemaLocation="ButtonGroupText.xsd" />
-  <xsd:include schemaLocation="ButtonGroupSeparator.xsd" />
-
-  <xsd:complexType name="ButtonGroupChildrenOnlyType">
-    <xsd:sequence>
-      <xsd:choice minOccurs="0" maxOccurs="unbounded">
-        <xsd:element ref="Button" />
-        <xsd:element ref="Action" />
-        <xsd:element ref="Input" />
-        <xsd:element ref="ButtonGroupText" />
-        <xsd:element ref="ButtonGroupSeparator" />
-      </xsd:choice>
-    </xsd:sequence>
+  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:complexType name="ButtonGroupType">
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:attribute name="label" type="NonBlankStringType" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
+    <xsd:attribute name="values" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="orientation" type="OrientationType" use="optional" default="horizontal" />
+    <xsd:attribute name="size" type="SizeType" use="optional" default="md" />
+    <xsd:attribute name="isDisabled" type="xsd:string" use="optional" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
-
-  <xsd:complexType name="ButtonGroupType">
-    <xsd:complexContent>
-      <xsd:extension base="ButtonGroupChildrenOnlyType">
-        <xsd:attribute name="orientation" use="optional" default="horizontal">
-          <xsd:simpleType>
-            <xsd:restriction base="xsd:string">
-              <xsd:enumeration value="horizontal" />
-              <xsd:enumeration value="vertical" />
-            </xsd:restriction>
-          </xsd:simpleType>
-        </xsd:attribute>
-      </xsd:extension>
-    </xsd:complexContent>
-  </xsd:complexType>
-
-  <xsd:element name="ButtonGroup" type="ButtonGroupType" />
+  <xsd:element name="ButtonGroup" type="ButtonGroupType">
+    <xsd:annotation><xsd:documentation>Groups Astryx buttons with an accessible label.</xsd:documentation></xsd:annotation>
+    <xsd:key name="ButtonGroupAccessibleLabel">
+      <xsd:selector xpath="." />
+      <xsd:field xpath="@label | @i18n" />
+    </xsd:key>
+  </xsd:element>
 </xsd:schema>

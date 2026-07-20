@@ -1,25 +1,31 @@
 import { z } from 'zod';
-import { toast } from 'sonner';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { Github, KeyRound } from 'lucide-react';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Avatar } from '@astryxdesign/core/Avatar';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
+import { useToast } from '@astryxdesign/core/Toast';
+import { Divider } from '@astryxdesign/core/Divider';
+import { Heading } from '@astryxdesign/core/Heading';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { List, ListItem } from '@astryxdesign/core/List';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { getInitials } from '@/lib/utils';
+import { InputGroup, InputGroupText } from '@astryxdesign/core/InputGroup';
+import { GitHub } from '@/svg/GitHub';
 import { useUser } from '@/hooks/use-user';
 import { useTranslation } from '@/lib/i18n';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import { useAuthConfig } from '@/hooks/use-auth';
 import { Wordmark } from '@/components/Wordmark';
-import { Separator } from '@/components/ui/separator';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { accountsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 import { apiAuthorizationSchema, parseApiResponse } from '@/lib/api-schemas';
 import { AUTH_RETURN_PATH_KEY, sanitizeRedirectPath } from '@/lib/redirects';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 type LoginValues = {
     email: string;
@@ -35,7 +41,9 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
     const queryClient = useQueryClient();
     const { accounts, activateAccount } = useUser();
     const { data: authConfig } = useAuthConfig();
+    const showToast = useToast();
     const [error, setError] = useState<string | null>(null);
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [pendingProvider, setPendingProvider] = useState<AuthProvider | null>(null);
     const safeRedirectTo = sanitizeRedirectPath(redirectTo);
     const nextQuery = new URLSearchParams({ next: safeRedirectTo }).toString();
@@ -66,7 +74,10 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
             await activateAccount(id);
             navigate(safeRedirectTo, { replace: true });
         } catch (accountError) {
-            toast.error(accountError instanceof Error ? accountError.message : t('auth.accountOpenFailed'));
+            showToast({
+                body: accountError instanceof Error ? accountError.message : t('auth.accountOpenFailed'),
+                type: 'error',
+            });
         }
     }
 
@@ -109,157 +120,158 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
     const isPending = login.isPending || pendingProvider !== null;
 
     return (
-        <div className="mx-auto w-full max-w-sm">
-            <div className="space-y-5">
-                <div className="space-y-2 text-center">
-                    <h1 className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1 text-2xl font-medium">
+        <Stack gap={5} maxWidth={384} width="100%">
+            <Stack gap={2} hAlign="center">
+                <Heading level={1} justify="center">
+                    <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
                         <span>{t('auth.welcomeTo')}</span>
-                        <Wordmark className="text-2xl align-baseline" />
-                    </h1>
-                    <p className="text-sm text-muted-foreground">{t('auth.signInDescription')}</p>
-                </div>
+                        <Wordmark style={{ fontSize: 'var(--text-heading-1-size)' }} />
+                    </span>
+                </Heading>
+                <Text as="p" color="secondary" justify="center" type="supporting">
+                    {t('auth.signInDescription')}
+                </Text>
+            </Stack>
 
-                {hasSavedAccounts ? (
-                    <div className="space-y-2">
-                        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                            {t('auth.savedAccounts')}
-                        </p>
+            {hasSavedAccounts ? (
+                <Stack gap={2}>
+                    <List
+                        density="compact"
+                        header={
+                            <Text type="label" color="secondary">
+                                {t('auth.savedAccounts')}
+                            </Text>
+                        }
+                    >
                         {accounts.items.map((account) => (
-                            <button
+                            <ListItem
                                 key={account.id}
-                                type="button"
-                                disabled={isPending}
-                                className="flex w-full cursor-pointer items-center gap-3 rounded-md border border-border/70 px-3 py-2 text-left transition-colors hover:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50"
+                                description={account.email}
+                                isDisabled={isPending}
+                                label={account.name}
                                 onClick={() => void handleAccountSelect(account.id)}
-                            >
-                                <Avatar className="size-9">
-                                    <AvatarImage src={account.avatar} alt={account.name} />
-                                    <AvatarFallback>{getInitials(account.name)}</AvatarFallback>
-                                </Avatar>
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-medium text-foreground">{account.name}</p>
-                                    <p className="truncate text-xs text-muted-foreground">{account.email}</p>
-                                </div>
-                            </button>
+                                startContent={<Avatar src={account.avatar} name={account.name} size="small" />}
+                            />
                         ))}
-                        <div className="flex items-center gap-3 py-1">
-                            <Separator className="flex-1" />
-                            <span className="text-xs text-muted-foreground">{t('auth.orUseAnotherAccount')}</span>
-                            <Separator className="flex-1" />
-                        </div>
-                    </div>
-                ) : null}
+                    </List>
+                    <Divider label={t('auth.orUseAnotherAccount')} />
+                </Stack>
+            ) : null}
 
-                <form className="space-y-4" onSubmit={form.handleSubmit(handlePasswordSignIn)}>
-                    <div className="space-y-2">
-                        <Label htmlFor="sign-in-email">{t('labels.email')}</Label>
-                        <Input
-                            id="sign-in-email"
+            <Stack as="form" gap={4} onSubmit={form.handleSubmit(handlePasswordSignIn)}>
+                <Controller
+                    control={form.control}
+                    name="email"
+                    render={({ field, fieldState }) => (
+                        <TextInput
+                            ref={field.ref}
+                            htmlName={field.name}
+                            label={t('labels.email')}
+                            onChange={field.onChange}
+                            status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
                             type="email"
-                            autoComplete="email"
-                            aria-invalid={Boolean(form.formState.errors.email)}
-                            {...form.register('email')}
+                            value={field.value}
+                            width="100%"
                         />
-                        {form.formState.errors.email ? (
-                            <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
-                        ) : null}
-                    </div>
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between gap-4">
-                            <Label htmlFor="sign-in-password">{t('labels.password')}</Label>
-                            <Link
-                                className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-                                to={`/auth/forgot-password?${nextQuery}`}
-                            >
-                                {t('auth.forgotPassword')}
-                            </Link>
-                        </div>
-                        <Input
-                            id="sign-in-password"
-                            type="password"
-                            autoComplete="current-password"
-                            aria-invalid={Boolean(form.formState.errors.password)}
-                            {...form.register('password')}
-                        />
-                        {form.formState.errors.password ? (
-                            <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>
-                        ) : null}
-                    </div>
-                    {error ? (
-                        <p role="alert" className="text-sm text-destructive">
-                            {error}
-                        </p>
-                    ) : null}
-                    <Button type="submit" className="w-full" disabled={isPending}>
-                        {login.isPending ? t('auth.signingIn') : t('actions.login')}
-                    </Button>
-                </form>
-
-                {hasProviders ? (
-                    <div className="space-y-3">
-                        <div className="flex items-center gap-3">
-                            <Separator className="flex-1" />
-                            <span className="text-xs text-muted-foreground">{t('auth.orContinueWith')}</span>
-                            <Separator className="flex-1" />
-                        </div>
-                        <div
-                            className={
-                                authConfig.github_enabled && authConfig.oidc_enabled
-                                    ? 'grid gap-2 sm:grid-cols-2'
-                                    : 'grid gap-2'
-                            }
-                        >
-                            {authConfig.github_enabled ? (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    disabled={isPending}
-                                    onClick={() => void handleProviderSignIn('github')}
-                                >
-                                    <Github />
-                                    {t('auth.github')}
-                                </Button>
-                            ) : null}
-                            {authConfig.oidc_enabled ? (
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    disabled={isPending}
-                                    onClick={() => void handleProviderSignIn('oidc')}
-                                >
-                                    <KeyRound />
-                                    {t('auth.singleSignOn')}
-                                </Button>
-                            ) : null}
-                        </div>
-                    </div>
-                ) : null}
-
-                {authConfig?.registration_enabled ? (
-                    <p className="text-center text-sm text-muted-foreground">
-                        {t('auth.noAccount')}{' '}
-                        <Link
-                            className="font-medium text-foreground underline-offset-4 hover:underline"
-                            to={`/auth/register?${nextQuery}`}
-                        >
-                            {t('auth.createAccount')}
+                    )}
+                />
+                <Stack gap={1}>
+                    <Stack direction="horizontal" hAlign="end">
+                        <Link href={`/auth/forgot-password?${nextQuery}`} type="supporting">
+                            {t('auth.forgotPassword')}
                         </Link>
-                    </p>
-                ) : null}
-            </div>
+                    </Stack>
+                    <Controller
+                        control={form.control}
+                        name="password"
+                        render={({ field, fieldState }) => (
+                            <InputGroup
+                                label={t('labels.password')}
+                                style={{ width: '100%' }}
+                                status={
+                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
+                                }
+                            >
+                                <TextInput
+                                    ref={field.ref}
+                                    htmlName={field.name}
+                                    isLabelHidden
+                                    label={t('labels.password')}
+                                    onChange={field.onChange}
+                                    style={{ flex: 1, minWidth: 0 }}
+                                    type={isPasswordVisible ? 'text' : 'password'}
+                                    value={field.value}
+                                />
+                                <InputGroupText>
+                                    <Button
+                                        aria-pressed={isPasswordVisible}
+                                        label={isPasswordVisible ? t('auth.hidePassword') : t('auth.showPassword')}
+                                        onClick={() => setIsPasswordVisible((current) => !current)}
+                                        size="sm"
+                                        variant="ghost"
+                                    />
+                                </InputGroupText>
+                            </InputGroup>
+                        )}
+                    />
+                </Stack>
+                {error ? <Banner status="error" title={error} /> : null}
+                <Button
+                    isDisabled={isPending}
+                    isLoading={login.isPending}
+                    label={login.isPending ? t('auth.signingIn') : t('actions.login')}
+                    style={{ width: '100%' }}
+                    type="submit"
+                    variant="primary"
+                />
+            </Stack>
 
-            <p className="mt-6 text-center text-xs text-muted-foreground">
-                <span>{t('auth.agreementLead')}</span>
-                <br />
-                <Link className="underline underline-offset-4 hover:text-foreground" to="/terms">
+            {hasProviders ? (
+                <Stack gap={3}>
+                    <Divider label={t('auth.orContinueWith')} />
+                    <Stack direction="horizontal" gap={2} wrap="wrap">
+                        {authConfig.github_enabled ? (
+                            <Button
+                                icon={<Icon icon={GitHub} size="sm" />}
+                                isDisabled={isPending}
+                                label={t('auth.github')}
+                                onClick={() => void handleProviderSignIn('github')}
+                                variant="secondary"
+                            />
+                        ) : null}
+                        {authConfig.oidc_enabled ? (
+                            <Button
+                                icon={<Icon icon="wrench" size="sm" />}
+                                isDisabled={isPending}
+                                label={t('auth.singleSignOn')}
+                                onClick={() => void handleProviderSignIn('oidc')}
+                                variant="secondary"
+                            />
+                        ) : null}
+                    </Stack>
+                </Stack>
+            ) : null}
+
+            {authConfig?.registration_enabled ? (
+                <Text as="p" color="secondary" justify="center" type="supporting">
+                    {t('auth.noAccount')}{' '}
+                    <Link href={`/auth/register?${nextQuery}`} type="inherit" weight="medium">
+                        {t('auth.createAccount')}
+                    </Link>
+                </Text>
+            ) : null}
+
+            <Text as="p" color="secondary" justify="center" type="supporting">
+                {t('auth.agreementLead')} <br />
+                <Link href="/terms" hasUnderline type="inherit">
                     {t('auth.termsOfService')}
                 </Link>{' '}
                 {t('auth.agreementMiddle')}{' '}
-                <Link className="underline underline-offset-4 hover:text-foreground" to="/privacy">
+                <Link href="/privacy" hasUnderline type="inherit">
                     {t('auth.privacyPolicy')}
                 </Link>
                 .
-            </p>
-        </div>
+            </Text>
+        </Stack>
     );
 }

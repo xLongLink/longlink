@@ -1,8 +1,7 @@
 import pytest
 from src import adapters
 from collections.abc import Callable
-from src.models.storages import StorageKind
-from src.models.databases import DatabaseKind
+from src.models.types import StorageKind
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
 
@@ -13,7 +12,6 @@ FACTORY_CASES = [
         DatabaseRegistry(
             name="postgres",
             slug="postgres",
-            kind=DatabaseKind.postgresql,
             host="db.example.test",
             port=5432,
             username="admin",
@@ -43,8 +41,8 @@ FACTORY_CASES = [
 @pytest.mark.parametrize(("registry", "factory", "expected_type"), FACTORY_CASES)
 def test_factory_builds_backend_adapter(
     registry: DatabaseRegistry | StorageRegistry,
-    factory: Callable[[DatabaseRegistry | StorageRegistry], adapters.Database | adapters.Storage],
-    expected_type: type[adapters.Database] | type[adapters.Storage],
+    factory: Callable[..., object],
+    expected_type: type[object],
 ) -> None:
     """Build the expected adapter for each supported backend registry kind."""
 

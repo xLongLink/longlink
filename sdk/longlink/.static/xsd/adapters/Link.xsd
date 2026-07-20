@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:include schemaLocation="Types.xsd" />
+  <xsd:complexType name="LinkType">
+    <xsd:sequence><xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax" /></xsd:sequence>
+    <xsd:attribute name="href" type="xsd:string" use="optional" />
+    <xsd:attribute name="to" type="xsd:string" use="optional" />
+    <xsd:attribute name="label" type="xsd:string" use="optional" />
+    <xsd:attribute name="i18n" type="TranslationKeyType" use="optional" />
+    <xsd:attribute name="values" type="xsd:string" use="optional" />
+    <xsd:attribute name="count" type="xsd:string" use="optional" />
+    <xsd:attribute name="color" type="TextColorType" use="optional" default="accent" />
+    <xsd:attribute name="hasUnderline" type="xsd:string" use="optional" />
+    <xsd:attribute name="isDisabled" type="xsd:string" use="optional" />
+    <xsd:attribute name="isExternalLink" type="xsd:string" use="optional" />
+    <xsd:attribute name="if" type="xsd:string" use="optional" />
+  </xsd:complexType>
+  <xsd:element name="Link" type="LinkType">
+    <xsd:annotation><xsd:documentation>Renders a URL-safe Astryx link.</xsd:documentation></xsd:annotation>
+  </xsd:element>
+</xsd:schema>

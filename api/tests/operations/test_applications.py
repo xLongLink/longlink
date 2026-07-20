@@ -5,12 +5,11 @@ from src.utils import names
 from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.environments import env
+from src.models.types import StorageKind
 from longlink.utils.time import utcnow
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
-from src.models.storages import StorageKind
 from src.database.session import session_scope
-from src.models.databases import DatabaseKind
 from src.database.services import compute, operations, applications, organizations
 from src.kubernetes.gateway import GatewayTLSMaterial
 from src.kubernetes.reconcile import DesiredCompute, ReconcileResult
@@ -35,7 +34,6 @@ async def create_compute_infrastructure(
             proxy_secret="proxy-secret",
         )
         database_registry = DatabaseRegistry(
-            kind=DatabaseKind.postgresql,
             name=f"{slug.title()} database",
             slug=f"{slug}-database",
             host="postgres.example",

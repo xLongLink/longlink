@@ -4,10 +4,7 @@
     <xsd:attribute name="id" type="xsd:string" use="required" />
     <xsd:anyAttribute processContents="lax" />
   </xsd:complexType>
-
   <xsd:element name="State" type="StateType">
-    <xsd:annotation>
-      <xsd:documentation>Use id to name the slot and any additional attributes as state fields.</xsd:documentation>
-    </xsd:annotation>
+    <xsd:annotation><xsd:documentation>Creates a Valtio state slot from its additional attributes.</xsd:documentation></xsd:annotation>
   </xsd:element>
 </xsd:schema>

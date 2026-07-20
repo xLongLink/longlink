@@ -6,15 +6,15 @@ from src.utils import jobs, names, images
 from src.logger import logger
 from src.version import platform_version_key
 from src.environments import env
-from src.models.images import Image
+from src.models.types import Image, StorageKind
 from src.models.statuses import ApplicationStatus, OrganizationStatus
+from src.adapters.database import Postgres
 from src.database.services import compute, storage, database, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayTLSMaterial
 from src.kubernetes.reconcile import DesiredCompute, DesiredApplication, DesiredOrganization
 from src.adapters.storage.base import Storage
-from src.models.infrastructure import StorageKind, exoscale_zone
-from src.adapters.database.base import Database
+from src.models.infrastructure import exoscale_zone
 from src.database.models.storages import StorageRegistry
 from src.database.models.operations import Operation
 
@@ -79,7 +79,7 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
 
     try:
         # Resolve each Organization's immutable database and storage assignments before provider writes.
-        databases: dict[UUID, Database] = {}
+        databases: dict[UUID, Postgres] = {}
         object_storages: dict[UUID, Storage] = {}
         storage_registries: dict[UUID, StorageRegistry] = {}
         for organization in organization_rows:

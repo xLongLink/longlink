@@ -1,6 +1,6 @@
 import pytest
 from uuid import uuid4
-from src.models.users import Theme, Accent, Radius, Language
+from src.models.types import Theme, Accent, Radius, Language
 from src.database.services import users as user_service
 from src.database.models.users import User
 

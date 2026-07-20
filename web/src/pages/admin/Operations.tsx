@@ -1,15 +1,19 @@
 import type { TFunction } from 'i18next';
-import { type ColumnDef } from '@tanstack/react-table';
+import { Text } from '@astryxdesign/core/Text';
+import { Banner } from '@astryxdesign/core/Banner';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApiOperation } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n';
 import { useOperations } from '@/data/admin';
 import { formatDateTime } from '@/lib/utils';
-import { DataTable } from '@/components/DataTable';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
+import { DataTable, type DataTableColumn } from '@/components/DataTable';
 
 /** Returns localized admin operation table columns. */
-function createOperationColumns(t: TFunction): Array<ColumnDef<ApiOperation>> {
-    const operationStatusLabels: Record<ApiOperation['status'], string> = {
+function createOperationColumns(t: TFunction): DataTableColumn<ApiOperation>[] {
+    const statusLabels: Record<ApiOperation['status'], string> = {
         scheduled: t('admin.operationStatus.scheduled'),
         active: t('admin.operationStatus.active'),
         completed: t('admin.operationStatus.completed'),
@@ -18,86 +22,62 @@ function createOperationColumns(t: TFunction): Array<ColumnDef<ApiOperation>> {
 
     return [
         {
-            id: 'operation',
+            key: 'operation',
             header: t('columns.operation'),
-            cell: ({ row }) => {
-                const operation = row.original;
-
-                return (
-                    <div className="min-w-0">
-                        <div className="truncate font-medium text-foreground">{t('admin.computeReconciliation')}</div>
-                        <div className="text-xs text-muted-foreground">{operationStatusLabels[operation.status]}</div>
-                    </div>
-                );
-            },
-            meta: { className: 'min-w-56' },
+            width: proportional(1),
+            renderCell: (operation) => (
+                <VStack gap={1}>
+                    <Text weight="semibold">{t('admin.computeReconciliation')}</Text>
+                    <Text type="supporting">{statusLabels[operation.status]}</Text>
+                </VStack>
+            ),
         },
         {
-            id: 'timestamp',
+            key: 'timestamp',
             header: t('columns.timestamp'),
-            cell: ({ row }) => {
-                const operation = row.original;
-
-                return (
-                    <div className="flex flex-col gap-1 leading-tight">
-                        <div>
-                            <span className="text-xs text-muted-foreground">{t('columns.created')}</span>{' '}
-                            {formatDateTime(operation.created_at)}
-                        </div>
-                        <div>
-                            <span className="text-xs text-muted-foreground">
-                                {t('admin.operationStatus.scheduled')}
-                            </span>{' '}
-                            {formatDateTime(operation.scheduled_at)}
-                        </div>
-                        <div>
-                            <span className="text-xs text-muted-foreground">{t('columns.started')}</span>{' '}
-                            {operation.started_at ? formatDateTime(operation.started_at) : '—'}
-                        </div>
-                    </div>
-                );
-            },
-            meta: { className: 'w-72' },
+            width: pixel(288),
+            renderCell: (operation) => (
+                <VStack gap={1}>
+                    <Text>
+                        <Text type="supporting">{t('columns.created')}</Text> {formatDateTime(operation.created_at)}
+                    </Text>
+                    <Text>
+                        <Text type="supporting">{t('admin.operationStatus.scheduled')}</Text>{' '}
+                        {formatDateTime(operation.scheduled_at)}
+                    </Text>
+                    <Text>
+                        <Text type="supporting">{t('columns.started')}</Text>{' '}
+                        {operation.started_at ? formatDateTime(operation.started_at) : '—'}
+                    </Text>
+                </VStack>
+            ),
         },
         {
-            accessorKey: 'stopped_at',
+            key: 'stopped_at',
             header: t('columns.stopped'),
-            cell: ({ getValue }) => {
-                const value = getValue<string | null>();
-
-                return value ? formatDateTime(value) : '—';
-            },
-            meta: { className: 'w-52' },
+            width: pixel(208),
+            renderCell: (operation) => (operation.stopped_at ? formatDateTime(operation.stopped_at) : '—'),
         },
         {
-            id: 'metadata',
+            key: 'metadata',
             header: t('columns.metadata'),
-            cell: ({ row }) => {
-                const operation = row.original;
-
-                return (
-                    <div className="min-w-0 space-y-1 text-sm">
-                        <div className="truncate">
-                            <span className="text-xs text-muted-foreground">{t('columns.id')}</span>{' '}
-                            <span className="font-mono text-xs">{operation.id}</span>
-                        </div>
-                        <div className="truncate">
-                            <span className="text-xs text-muted-foreground">{t('admin.computeTitle')}</span>{' '}
-                            <span className="font-mono text-xs">{operation.compute_id}</span>
-                        </div>
-                        <div className="flex gap-3 text-xs text-muted-foreground">
-                            <span>Platform {operation.platform_version}</span>
-                            <span>Attempts {operation.attempt_count}</span>
-                        </div>
-                        {operation.error ? (
-                            <div className="truncate text-destructive">
-                                <span className="text-xs">{t('columns.error')}</span> {operation.error}
-                            </div>
-                        ) : null}
-                    </div>
-                );
-            },
-            meta: { className: 'min-w-80' },
+            width: proportional(2),
+            renderCell: (operation) => (
+                <VStack gap={1}>
+                    <Text>
+                        <Text type="supporting">{t('columns.id')}</Text> <Text type="code">{operation.id}</Text>
+                    </Text>
+                    <Text>
+                        <Text type="supporting">{t('admin.computeTitle')}</Text>{' '}
+                        <Text type="code">{operation.compute_id}</Text>
+                    </Text>
+                    <HStack gap={3}>
+                        <Text type="supporting">Platform {operation.platform_version}</Text>
+                        <Text type="supporting">Attempts {operation.attempt_count}</Text>
+                    </HStack>
+                    {operation.error ? <Banner status="error" title={operation.error} /> : null}
+                </VStack>
+            ),
         },
     ];
 }
@@ -105,24 +85,21 @@ function createOperationColumns(t: TFunction): Array<ColumnDef<ApiOperation>> {
 /** Renders the admin operations page. */
 export default function AdminOperations() {
     const { t } = useTranslation();
-    const { items: operationRows, error, isLoading } = useOperations();
-    const operationColumns = createOperationColumns(t);
+    const { items: operations, error, isLoading } = useOperations();
 
     return (
-        <div className="space-y-6">
-            <Hero icon="activity">
-                <div>
-                    <HeroTitle>{t('admin.operationsTitle')}</HeroTitle>
-                    <HeroDescription>{t('admin.operationsDescription')}</HeroDescription>
-                </div>
-            </Hero>
+        <VStack gap={6} width="100%">
+            <VStack gap={1}>
+                <Heading level={1}>{t('admin.operationsTitle')}</Heading>
+                <Text type="supporting">{t('admin.operationsDescription')}</Text>
+            </VStack>
             <DataTable
-                columns={operationColumns}
-                data={operationRows}
+                columns={createOperationColumns(t)}
+                data={operations}
                 error={error}
                 isLoading={isLoading}
                 pageSize={25}
             />
-        </div>
+        </VStack>
     );
 }

@@ -5,7 +5,7 @@ from typing import Any
 from src.logger import logger
 from collections.abc import Mapping
 from src.environments import env
-from src.models.images import IMAGE_DIGEST_PATTERN, Image
+from src.models.types import IMAGE_DIGEST_PATTERN, Image
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 IMAGE_MANIFEST_ACCEPT = ", ".join(

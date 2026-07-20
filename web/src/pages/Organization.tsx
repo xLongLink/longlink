@@ -1,9 +1,13 @@
 import { useParams } from 'react-router';
-import { LayoutGrid, Settings2 } from 'lucide-react';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Text } from '@astryxdesign/core/Text';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Center } from '@astryxdesign/core/Center';
+import { Heading } from '@astryxdesign/core/Heading';
+import { Section } from '@astryxdesign/core/Section';
 import Layout from '@/layout/Layout';
 import { useTranslation } from '@/lib/i18n';
 import { useOrganization } from '@/hooks/use-organization';
-import { Hero, HeroDescription, HeroTitle } from '@/components/ui/hero';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
 import OrganizationSettings, { type SettingsRouteSection } from './org/Settings';
@@ -43,55 +47,63 @@ export default function Organization({ settingsSection }: OrganizationProps) {
 
     const content =
         section === 'applications' ? (
-            <Hero icon="layout-grid" className="w-full">
-                <div className="flex w-full items-center justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                        <HeroTitle>{t('organization.applicationsTitle')}</HeroTitle>
-                        <HeroDescription>{t('organization.applicationsDescription')}</HeroDescription>
-                    </div>
-                </div>
-            </Hero>
+            <Section variant="muted" width="100%">
+                <Stack direction="horizontal" gap={3} vAlign="center">
+                    <Icon icon="viewColumns" size="lg" color="secondary" />
+                    <Stack gap={1}>
+                        <Heading level={1}>{t('organization.applicationsTitle')}</Heading>
+                        <Text as="p" color="secondary">
+                            {t('organization.applicationsDescription')}
+                        </Text>
+                    </Stack>
+                </Stack>
+            </Section>
         ) : section === 'settings' ? (
-            <Hero icon="settings-2" className="w-full">
-                <div className="flex w-full items-center justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                        <HeroTitle>{t('organization.settingsTitle')}</HeroTitle>
-                        <HeroDescription>{t('organization.settingsDescription')}</HeroDescription>
-                    </div>
-                </div>
-            </Hero>
+            <Section variant="muted" width="100%">
+                <Stack direction="horizontal" gap={3} vAlign="center">
+                    <Icon icon="wrench" size="lg" color="secondary" />
+                    <Stack gap={1}>
+                        <Heading level={1}>{t('organization.settingsTitle')}</Heading>
+                        <Text as="p" color="secondary">
+                            {t('organization.settingsDescription')}
+                        </Text>
+                    </Stack>
+                </Stack>
+            </Section>
         ) : null;
 
     return (
         <Layout
             tabs={{
-                [t('navigation.applications')]: { href: `/orgs/${organization}`, icon: LayoutGrid },
-                [t('navigation.settings')]: { href: `/orgs/${organization}/settings`, icon: Settings2 },
+                [t('navigation.applications')]: { href: `/orgs/${organization}`, icon: 'viewColumns' },
+                [t('navigation.settings')]: { href: `/orgs/${organization}/settings`, icon: 'wrench' },
             }}
         >
-            <section className="mx-auto w-full max-w-[1000px] space-y-8">
-                {content}
-                {section === 'applications' ? (
-                    <Applications
-                        organization={organization}
-                        applications={applications}
-                        isLoading={isLoading}
-                        error={error}
-                    />
-                ) : null}
-                {section === 'settings' ? (
-                    <OrganizationSettings
-                        organization={organization}
-                        organizationDetails={organizationDetails}
-                        applications={applications}
-                        people={people}
-                        invitations={invitations}
-                        routeSection={settingsSection ?? 'organization'}
-                        isLoading={isLoading}
-                        error={error}
-                    />
-                ) : null}
-            </section>
+            <Center axis="horizontal" width="100%">
+                <Stack gap={8} maxWidth={1000} width="100%">
+                    {content}
+                    {section === 'applications' ? (
+                        <Applications
+                            organization={organization}
+                            applications={applications}
+                            isLoading={isLoading}
+                            error={error}
+                        />
+                    ) : null}
+                    {section === 'settings' ? (
+                        <OrganizationSettings
+                            organization={organization}
+                            organizationDetails={organizationDetails}
+                            applications={applications}
+                            people={people}
+                            invitations={invitations}
+                            routeSection={settingsSection ?? 'organization'}
+                            isLoading={isLoading}
+                            error={error}
+                        />
+                    ) : null}
+                </Stack>
+            </Center>
         </Layout>
     );
 }

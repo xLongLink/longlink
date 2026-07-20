@@ -6,188 +6,114 @@
     <State id="quickLinks" value='${[]}' />
     <State id="emailUpdates" value="true" />
     <State id="notifications" value="true" />
-    <State id="pinned" value="false" />
     <State id="budgetLimit" value="2500" />
+    <State id="workflow" owner="manager" risk="medium" />
 
-    <Stack>
-        <H1 i18n="settings.title" />
-        <P i18n="settings.description" />
+    <Stack gap="3">
+        <Heading level="1" i18n="settings.title" />
+        <Text as="p" color="secondary" i18n="settings.description" />
     </Stack>
 
-    <Menu defaultValue="application">
-        <MenuSection value="application" icon="box" i18n="settings.sections.application">
-            <Stack>
-                <H2 i18n="settings.sections.application" />
-                <P i18n="settings.application.description" />
-                <Stack>
-                    <FieldLegend i18n="settings.application.legend" />
-                    <Flex>
-                        <Avatar>
-                            <AvatarImage src="$reviewer.avatarUrl" alt="$reviewer.name" />
-                            <AvatarFallback>
-                                <P i18n="settings.application.initials" initials="$reviewer.initials" />
-                            </AvatarFallback>
-                        </Avatar>
-                        <P i18n="settings.application.reviewer" />
-                        <Badge variant="outline" value="$reviewer.badge" />
-                    </Flex>
-
-                    <Field>
-                        <FieldLabel htmlFor="owner" i18n="settings.application.owner" />
-                        <Input id="owner" value="$profile.owner" />
-                        <FieldDescription i18n="settings.application.ownerHelp" />
-                    </Field>
-
-                    <Field>
-                        <FieldLabel htmlFor="cost-center" i18n="settings.application.costCenter" />
-                        <InputGroup>
-                            <InputGroupAddon>
-                                <Icon name="building-2" />
-                            </InputGroupAddon>
-                            <InputGroupInput id="cost-center" value="$profile.costCenter" />
-                            <InputGroupButton i18n="settings.application.lookup" />
-                        </InputGroup>
-                    </Field>
-
-                    <Field>
-                        <FieldLabel htmlFor="note" i18n="settings.application.note" />
-                        <InputGroup>
-                            <InputGroupTextarea id="note" rows="4" value="$profile.note" />
-                            <InputGroupAddon align="block-end">
-                                <InputGroupText i18n="settings.application.noteHelp" />
-                            </InputGroupAddon>
-                        </InputGroup>
-                    </Field>
-
-                    <H4 i18n="settings.application.runbook" />
-                    <P>
-                        <B i18n="settings.application.bold" />
-                        <U i18n="settings.application.underlined" />
-                        <S i18n="settings.application.outdated" />
-                    </P>
-                    <P>
-                        <Code i18n="settings.application.code" />
-                        <Sup i18n="settings.application.sup" />
-                        <Sub i18n="settings.application.sub" />
-                    </P>
-                    <Br />
-                </Stack>
+    <TabList label="Settings sections">
+        <Tab value="application" i18n="settings.sections.application">
+            <Stack gap="4">
+                <Heading level="2" i18n="settings.sections.application" />
+                <Text as="p" i18n="settings.application.description" />
+                <Card variant="muted">
+                    <Stack direction="horizontal" align="center" gap="3">
+                        <Avatar src="$reviewer.avatarUrl" name="$reviewer.name" alt="$reviewer.name" size="medium" />
+                        <Stack gap="1">
+                            <Text weight="semibold" i18n="settings.application.reviewer" />
+                            <Text color="secondary" i18n="settings.application.initials" values="${{ initials: reviewer.initials }}" />
+                        </Stack>
+                        <Badge label="$reviewer.badge" variant="info" />
+                    </Stack>
+                </Card>
+                <FormLayout>
+                    <TextInput
+                        i18n="settings.application.owner"
+                        description="This state is bound directly from XML."
+                        value="$profile.owner"
+                    />
+                    <TextInput i18n="settings.application.costCenter" value="$profile.costCenter" />
+                    <TextArea
+                        i18n="settings.application.note"
+                        description="Visible to reviewers"
+                        rows="4"
+                        value="$profile.note"
+                    />
+                </FormLayout>
+                <Divider />
+                <Heading level="3" i18n="settings.application.runbook" />
+                <Text as="p" i18n="settings.application.bold" weight="semibold" />
+                <Code i18n="settings.application.code" />
             </Stack>
-            <MenuSubSection value="profile" i18n="settings.sections.profile">
-                <P i18n="settings.application.profileTip" />
-            </MenuSubSection>
-        </MenuSection>
+        </Tab>
 
-        <MenuSection value="preferences" icon="bell" i18n="settings.sections.preferences">
-            <Stack>
-                <H2 i18n="settings.sections.preferences" />
-                <P i18n="settings.preferences.description" />
-                <Stack>
-                    <FieldLegend i18n="settings.preferences.legend" />
-                    <Field orientation="horizontal">
-                        <Checkbox id="email-updates" checked="$emailUpdates" />
-                        <FieldContent>
-                            <Label htmlFor="email-updates" i18n="settings.preferences.email" />
-                            <FieldDescription i18n="settings.preferences.emailHelp" />
-                        </FieldContent>
-                    </Field>
-
-                    <Field orientation="horizontal">
-                        <Switch id="notifications" checked="$notifications" />
-                        <FieldContent>
-                            <FieldTitle i18n="settings.preferences.notifications" />
-                            <FieldDescription i18n="settings.preferences.notificationsHelp" />
-                        </FieldContent>
-                    </Field>
-
-                    <Field>
-                        <FieldLabel htmlFor="budget-limit" i18n="settings.preferences.limit" />
-                        <Slider id="budget-limit" min="500" max="10000" step="500" value="$budgetLimit" />
-                        <P i18n="settings.preferences.limitValue" limit="$budgetLimit.value" />
-                    </Field>
-
-                    <Toggle pressed="$pinned">
-                        <Icon name="map-pin" />
-                        <P i18n="settings.preferences.pin" />
-                    </Toggle>
-                </Stack>
+        <Tab value="preferences" i18n="settings.sections.preferences">
+            <Stack gap="4">
+                <Heading level="2" i18n="settings.sections.preferences" />
+                <Text as="p" i18n="settings.preferences.description" />
+                <FormLayout>
+                    <CheckboxInput
+                        i18n="settings.preferences.email"
+                        description="Send a digest when request status changes."
+                        value="$emailUpdates"
+                    />
+                    <Switch
+                        i18n="settings.preferences.notifications"
+                        description="Show reminders for stale requests."
+                        value="$notifications"
+                    />
+                    <Slider i18n="settings.preferences.limit" min="500" max="10000" step="500" value="$budgetLimit" />
+                </FormLayout>
+                <Text i18n="settings.preferences.limitValue" values="${{ limit: budgetLimit.value }}" />
             </Stack>
-        </MenuSection>
+        </Tab>
 
-        <MenuSection value="workflow" icon="sliders-horizontal" i18n="settings.sections.workflow">
-            <Stack>
-                <H2 i18n="settings.sections.workflow" />
-                <P i18n="settings.workflow.description" />
-                <Stack>
-                    <Field>
-                        <FieldLabel i18n="settings.workflow.owner" />
-                        <RadioGroup defaultValue="manager">
-                            <RadioGroupItem value="manager" i18n="settings.workflow.manager" />
-                            <RadioGroupItem value="finance" i18n="settings.workflow.finance" />
-                            <RadioGroupItem value="owner" i18n="settings.workflow.ownerRole" />
-                        </RadioGroup>
-                    </Field>
-
-                    <Field>
-                        <FieldLabel i18n="settings.workflow.tags" />
-                        <ToggleGroup type="multiple" defaultValue='${["finance"]}'>
-                            <ToggleGroupItem value="finance">
-                                <Icon name="banknote" />
-                            </ToggleGroupItem>
-                            <ToggleGroupItem value="equipment">
-                                <Icon name="box" />
-                            </ToggleGroupItem>
-                            <ToggleGroupItem value="travel">
-                                <Icon name="rocket" />
-                            </ToggleGroupItem>
-                        </ToggleGroup>
-                    </Field>
-
-                    <Field>
-                        <FieldLabel htmlFor="risk" i18n="settings.workflow.risk" />
-                        <Select defaultValue="medium">
-                            <SelectTrigger>
-                                <SelectValue i18n="settings.workflow.riskPlaceholder" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectGroup>
-                                    <SelectLabel i18n="settings.workflow.riskGroup" />
-                                    <SelectItem value="low" i18n="settings.workflow.low" />
-                                    <SelectItem value="medium" i18n="settings.workflow.medium" />
-                                    <SelectSeparator />
-                                    <SelectItem value="high" i18n="settings.workflow.high" />
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                    </Field>
-                </Stack>
+        <Tab value="workflow" i18n="settings.sections.workflow">
+            <Stack gap="4">
+                <Heading level="2" i18n="settings.sections.workflow" />
+                <Text as="p" i18n="settings.workflow.description" />
+                <FormLayout>
+                    <RadioList i18n="settings.workflow.owner" value="$workflow.owner">
+                        <RadioListItem value="manager" i18n="settings.workflow.manager" />
+                        <RadioListItem value="finance" i18n="settings.workflow.finance" />
+                        <RadioListItem value="owner" i18n="settings.workflow.ownerRole" />
+                    </RadioList>
+                    <Selector i18n="settings.workflow.risk" value="$workflow.risk">
+                        <SelectorOption value="low" i18n="settings.workflow.low" />
+                        <SelectorOption value="medium" i18n="settings.workflow.medium" />
+                        <SelectorOption value="high" i18n="settings.workflow.high" />
+                    </Selector>
+                </FormLayout>
             </Stack>
-        </MenuSection>
+        </Tab>
 
-        <MenuSection value="links" icon="link" i18n="settings.sections.links">
-            <Stack>
-                <H2 i18n="settings.sections.links" />
-                <P i18n="settings.links.description" />
-                <Stack>
-                    <FieldLegend i18n="settings.links.legend" />
-                    <Field>
-                        <FieldLabel htmlFor="quick-link" i18n="settings.links.label" />
-                        <Input id="quick-link" value="$draftLink.label" />
-                    </Field>
-                    <ButtonGroup>
-                        <ButtonGroupText i18n="settings.links.actions" />
-                        <Button append="${'quickLinks.value'}" item="${{ label: draftLink.label }}" disabled="${draftLink.label in ['']}" i18n="settings.links.add" />
-                        <ButtonGroupSeparator />
-                        <Action invalidate='${["quickLinks"]}'>
-                            <Button variant="outline" i18n="settings.links.reset" />
-                        </Action>
-                    </ButtonGroup>
-                    <P if="${quickLinks.value.length in [0]}" i18n="settings.links.empty" />
+        <Tab value="links" i18n="settings.sections.links">
+            <Stack gap="4">
+                <Heading level="2" i18n="settings.sections.links" />
+                <Text as="p" i18n="settings.links.description" />
+                <TextInput i18n="settings.links.label" value="$draftLink.label" />
+                <ButtonGroup i18n="settings.links.actions">
+                    <Button
+                        append="${'quickLinks.value'}"
+                        item="${{ label: draftLink.label }}"
+                        isDisabled="${draftLink.label in ['']}"
+                        variant="primary"
+                        i18n="settings.links.add"
+                    />
+                    <Action invalidate='${["quickLinks"]}'>
+                        <Button i18n="settings.links.reset" />
+                    </Action>
+                </ButtonGroup>
+                <Text if="${quickLinks.value.length in [0]}" i18n="settings.links.empty" />
+                <Stack direction="horizontal" wrap="wrap" gap="2">
                     <For each="$quickLinks.value" as="link">
-                        <Badge variant="outline" value="$link.label" />
+                        <Badge label="$link.label" />
                     </For>
                 </Stack>
             </Stack>
-        </MenuSection>
-    </Menu>
+        </Tab>
+    </TabList>
 </longlink>

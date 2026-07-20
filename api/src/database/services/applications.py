@@ -7,7 +7,7 @@ from sqlalchemy import and_, delete, select
 from sqlalchemy.orm import selectinload
 from collections.abc import Callable, Awaitable
 from src.models.roles import ApplicationRoles
-from src.models.images import Image
+from src.models.types import Image
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope

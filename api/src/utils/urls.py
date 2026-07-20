@@ -1,6 +1,6 @@
 import urllib.parse
 import sqlalchemy.engine
-from src.models.infrastructure import DATABASE_SSL_MODES, DatabaseSSLMode
+from src.models.types import DATABASE_SSL_MODES, DatabaseSSLMode
 
 POSTGRESQL_DRIVER_NAMES = {
     "postgres",

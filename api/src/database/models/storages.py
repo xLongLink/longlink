@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum, Column
+from src.models.types import StorageKind
 from longlink.utils.time import utcnow
-from src.models.storages import StorageKind
 from longlink.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.

@@ -1,6 +1,7 @@
 import { act } from 'react';
 import { expect, it } from 'bun:test';
 import { createRoot } from 'react-dom/client';
+import { LayerProvider } from '@astryxdesign/core/Layer';
 import { parseXML } from '@/xml/core/parser';
 import { RenderXML } from '@/xml/renderers.tsx';
 import { withGlobalValue } from '../../helpers/globals';
@@ -29,12 +30,16 @@ it('sends the latest bound input value when its action button is clicked', async
     try {
         await withGlobalValue('fetch', fetchImpl, async () => {
             const ast = parseXML(
-                '<longlink><State id="form" name="Ada Lovelace" /><Input id="name" value="$form.name" /><Action action="/profiles" json="${{ name: form.name }}"><Button /></Action></longlink>'
+                '<longlink><State id="form" name="Ada Lovelace" /><TextInput label="Name" value="$form.name" /><Action action="/profiles" json="${{ name: form.name }}"><Button label="Save" /></Action></longlink>'
             );
 
             // Mount the parsed page and wait for State setup to publish the interactive controls.
             await act(async () => {
-                root.render(<RenderXML ast={ast} />);
+                root.render(
+                    <LayerProvider>
+                        <RenderXML ast={ast} />
+                    </LayerProvider>
+                );
             });
 
             const input = container.querySelector('input');

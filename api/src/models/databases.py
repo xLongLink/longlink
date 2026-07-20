@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.users import UserSummary
 from src.models.resources import OrganizationResourceApplicationResponse
-from src.models.infrastructure import DatabaseKind, DatabaseConfiguration
+from src.models.infrastructure import DatabaseConfiguration
 
 
 class DatabaseRegistryCreate(DatabaseConfiguration):
@@ -45,7 +45,6 @@ class DatabaseRegistryResponse(BaseModel):
     id: UUID
 
     # Metadata
-    kind: DatabaseKind
     name: str
     slug: str
 

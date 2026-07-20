@@ -1,7 +1,7 @@
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict
+from src.models.types import Icon
 from src.models.statuses import ApplicationStatus
-from longlink.models.icons import Icon
 
 
 class OrganizationResourceApplicationResponse(BaseModel):

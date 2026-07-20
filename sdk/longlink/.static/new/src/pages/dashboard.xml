@@ -3,121 +3,91 @@
     <Query id="requests" path="/api/requests" />
     <State id="limits" monthlyBudget="12000" approvalTarget="2" />
 
-    <Hero icon="layout-dashboard">
-        <HeroTitle i18n="dashboard.title" />
-        <HeroDescription i18n="dashboard.description" />
-        <HeroAction>
-            <Flex>
-                <Avatar size="lg">
-                    <AvatarImage src="/api/assets/logo" alt="Organization logo" />
-                    <AvatarFallback i18n="dashboard.logoFallback" />
-                </Avatar>
-                <A to="/requests" i18n="dashboard.openRequests">
-                    <Icon name="arrow-right" />
-                </A>
-            </Flex>
-        </HeroAction>
-    </Hero>
+    <Stack gap="3">
+        <Heading level="1" i18n="dashboard.title" />
+        <Text as="p" color="secondary" i18n="dashboard.description" />
+        <Stack direction="horizontal" align="center" gap="3">
+            <Avatar src="/api/assets/logo" name="LongLink" alt="Organization logo" size="large" />
+            <Link to="/requests" i18n="dashboard.openRequests" hasUnderline="true" />
+        </Stack>
+    </Stack>
 
-    <Grid columns="2">
+    <Grid columns="2" gap="4">
         <Card>
-            <Stack>
-                <Flex space="between">
-                    <P i18n="dashboard.metrics.requests.label" />
-                    <Icon name="clipboard-list" />
-                </Flex>
-                <P i18n="dashboard.metrics.requests.count" count="${requests.length}" />
+            <Stack gap="2">
+                <Stack direction="horizontal" justify="between" align="center">
+                    <Text weight="semibold" i18n="dashboard.metrics.requests.label" />
+                    <Icon icon="info" color="accent" />
+                </Stack>
+                <Text type="large" i18n="dashboard.metrics.requests.count" count="${requests.length}" />
             </Stack>
         </Card>
 
         <Card>
-            <Stack>
-                <Flex space="between">
-                    <P i18n="dashboard.metrics.budget.label" />
-                    <Icon name="banknote" />
-                </Flex>
-                <P i18n="dashboard.metrics.budget.value" amount="$limits.monthlyBudget" />
-                <Flex space="between">
-                    <P i18n="dashboard.metrics.target.label" />
-                    <Icon name="timer" />
-                </Flex>
-                <P i18n="dashboard.metrics.target.value" days="$limits.approvalTarget" />
+            <Stack gap="2">
+                <Text weight="semibold" i18n="dashboard.metrics.budget.label" />
+                <Text type="large" i18n="dashboard.metrics.budget.value" values="${{ amount: limits.monthlyBudget }}" />
+                <Divider />
+                <Text weight="semibold" i18n="dashboard.metrics.target.label" />
+                <Text i18n="dashboard.metrics.target.value" values="${{ days: limits.approvalTarget }}" />
             </Stack>
         </Card>
     </Grid>
 
-    <Columns>
-        <Column width="65">
-            <Tabs defaultValue="recent">
-                <Tab value="recent" icon="list-check" i18n="dashboard.tabs.recent">
-                    <Stack>
-                        <H2 i18n="dashboard.recent.title" />
-                        <P if="${requests.length in [0]}" i18n="dashboard.recent.empty" />
-                        <For each="$requests" as="request">
-                            <Flex space="between">
-                                <Stack>
-                                    <A to="/requests/${request.id}" i18n="dashboard.recent.open">
-                                        <Icon name="arrow-right" />
-                                    </A>
-                                    <P i18n="dashboard.recent.summary" vendor="$request.vendor" amount="$request.amount" />
-                                </Stack>
-                                <P i18n="dashboard.recent.status" status="$request.status" />
-                            </Flex>
-                        </For>
-                    </Stack>
-                </Tab>
+    <Grid minColumnWidth="320" maxColumns="2" repeat="fit" gap="4">
+        <TabList label="Dashboard views">
+            <Tab value="recent" i18n="dashboard.tabs.recent">
+                <Stack gap="3">
+                    <Heading level="2" i18n="dashboard.recent.title" />
+                    <Text if="${requests.length in [0]}" i18n="dashboard.recent.empty" />
+                    <For each="$requests" as="request">
+                        <Card variant="muted">
+                            <Stack gap="2">
+                                <Link to="/requests/${request.id}" i18n="dashboard.recent.open" />
+                                <Text i18n="dashboard.recent.summary" values="${{ vendor: request.vendor, amount: request.amount }}" />
+                                <Text color="secondary" i18n="dashboard.recent.status" values="${{ status: request.status }}" />
+                            </Stack>
+                        </Card>
+                    </For>
+                </Stack>
+            </Tab>
 
-                <Tab value="policy" icon="shield-check" i18n="dashboard.tabs.policy">
-                    <Stack>
-                        <H2 i18n="dashboard.policy.title" />
-                        <P i18n="dashboard.policy.description" />
-                        <DataTable data="${[{ tier: 'small' }, { tier: 'medium' }, { tier: 'large' }, { tier: 'footer' }]}" as="policy">
-                            <DataColumn>
-                                <DataHeader i18n="dashboard.policy.table.amount" />
-                                <DataCell>
-                                    <P if="${policy.tier === 'small'}" i18n="dashboard.policy.table.small" />
-                                    <P if="${policy.tier === 'medium'}" i18n="dashboard.policy.table.medium" />
-                                    <P if="${policy.tier === 'large'}" i18n="dashboard.policy.table.large" />
-                                    <P if="${policy.tier === 'footer'}" i18n="dashboard.policy.table.footer" />
-                                </DataCell>
-                            </DataColumn>
-                            <DataColumn>
-                                <DataHeader i18n="dashboard.policy.table.approver" />
-                                <DataCell>
-                                    <P if="${policy.tier === 'small'}" i18n="dashboard.policy.table.manager" />
-                                    <P if="${policy.tier === 'medium'}" i18n="dashboard.policy.table.finance" />
-                                    <P if="${policy.tier === 'large'}" i18n="dashboard.policy.table.owner" />
-                                </DataCell>
-                            </DataColumn>
-                            <DataColumn>
-                                <DataHeader i18n="dashboard.policy.table.sla" />
-                                <DataCell>
-                                    <P if="${policy.tier === 'small'}" i18n="dashboard.policy.table.oneDay" />
-                                    <P if="${policy.tier === 'medium'}" i18n="dashboard.policy.table.twoDays" />
-                                    <P if="${policy.tier === 'large'}" i18n="dashboard.policy.table.fiveDays" />
-                                </DataCell>
-                            </DataColumn>
-                        </DataTable>
-                    </Stack>
-                </Tab>
-            </Tabs>
-        </Column>
+            <Tab value="policy" i18n="dashboard.tabs.policy">
+                <Stack gap="3">
+                    <Heading level="2" i18n="dashboard.policy.title" />
+                    <Text as="p" i18n="dashboard.policy.description" />
+                    <Table data="${[{ tier: 'small' }, { tier: 'medium' }, { tier: 'large' }]}" rowName="policy">
+                        <TableColumn key="amount" i18n="dashboard.policy.table.amount">
+                            <Text if="${policy.tier === 'small'}" i18n="dashboard.policy.table.small" />
+                            <Text if="${policy.tier === 'medium'}" i18n="dashboard.policy.table.medium" />
+                            <Text if="${policy.tier === 'large'}" i18n="dashboard.policy.table.large" />
+                        </TableColumn>
+                        <TableColumn key="approver" i18n="dashboard.policy.table.approver">
+                            <Text if="${policy.tier === 'small'}" i18n="dashboard.policy.table.manager" />
+                            <Text if="${policy.tier === 'medium'}" i18n="dashboard.policy.table.finance" />
+                            <Text if="${policy.tier === 'large'}" i18n="dashboard.policy.table.owner" />
+                        </TableColumn>
+                        <TableColumn key="sla" i18n="dashboard.policy.table.sla">
+                            <Text if="${policy.tier === 'small'}" i18n="dashboard.policy.table.oneDay" />
+                            <Text if="${policy.tier === 'medium'}" i18n="dashboard.policy.table.twoDays" />
+                            <Text if="${policy.tier === 'large'}" i18n="dashboard.policy.table.fiveDays" />
+                        </TableColumn>
+                    </Table>
+                </Stack>
+            </Tab>
+        </TabList>
 
-        <Column width="35">
-            <Stack>
-                <H3 i18n="dashboard.checklist.title" />
-                <Ul>
-                    <Li i18n="dashboard.checklist.items.context" />
-                    <Li i18n="dashboard.checklist.items.budget" />
-                    <Li i18n="dashboard.checklist.items.attachment" />
-                </Ul>
-                <Hr />
-                <Ol>
-                    <Li i18n="dashboard.checklist.steps.create" />
-                    <Li i18n="dashboard.checklist.steps.review" />
-                    <Li i18n="dashboard.checklist.steps.archive" />
-                </Ol>
+        <Card>
+            <Stack gap="3">
+                <Heading level="2" i18n="dashboard.checklist.title" />
+                <Text i18n="dashboard.checklist.items.context" />
+                <Text i18n="dashboard.checklist.items.budget" />
+                <Text i18n="dashboard.checklist.items.attachment" />
+                <Divider />
+                <Text i18n="dashboard.checklist.steps.create" />
+                <Text i18n="dashboard.checklist.steps.review" />
+                <Text i18n="dashboard.checklist.steps.archive" />
             </Stack>
-        </Column>
-    </Columns>
+        </Card>
+    </Grid>
 </longlink>

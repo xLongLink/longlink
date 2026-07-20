@@ -1,14 +1,7 @@
-import { Fragment } from 'react';
 import startCase from 'lodash/startCase';
-import { Link, useLocation } from 'react-router';
+import { useLocation } from 'react-router';
+import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Wordmark } from '@/components/Wordmark';
-import {
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbSeparator,
-    Breadcrumb as UIBreadcrumb,
-} from '@/components/ui/breadcrumb';
 
 type BreadcrumbTrailItem = {
     href: string;
@@ -31,7 +24,6 @@ function decodeSegment(segment: string): string {
 function buildOrganizationCrumbs(segments: string[]): BreadcrumbTrailItem[] {
     const organization = segments[1] ?? '';
     const application = segments[2] === 'apps' ? segments[3] : null;
-
     const organizationCrumb: BreadcrumbTrailItem = {
         label: startCase(decodeSegment(organization)),
         href: `/orgs/${organization}`,
@@ -68,15 +60,12 @@ function buildDefaultCrumbs(segments: string[]): BreadcrumbTrailItem[] {
     });
 }
 
-/**
- * Render the top navigation breadcrumb for organization, app, and profile routes.
- */
+/** Renders the top navigation breadcrumb for organization, app, and profile routes. */
 export function Breadcrumb() {
     const { pathname } = useLocation();
     const segments = pathname.split('/').filter(Boolean);
     const isAdminSection = segments[0] === 'admin';
     const isOrganizationSection = segments[0] === 'orgs' && segments.length >= 2;
-
     const crumbs = isAdminSection
         ? [{ href: '/admin/users', label: 'Admin' }]
         : isOrganizationSection
@@ -84,37 +73,15 @@ export function Breadcrumb() {
           : buildDefaultCrumbs(segments);
 
     return (
-        <UIBreadcrumb>
-            <BreadcrumbList>
-                <BreadcrumbItem>
-                    <Link to="/organizations" aria-label="LongLink home" className="inline-flex items-center">
-                        <Wordmark />
-                    </Link>
+        <Breadcrumbs separator=">" variant="supporting">
+            <BreadcrumbItem href="/organizations">
+                <Wordmark />
+            </BreadcrumbItem>
+            {crumbs.map((crumb) => (
+                <BreadcrumbItem key={crumb.href} href={crumb.href}>
+                    {crumb.label}
                 </BreadcrumbItem>
-                {crumbs.length ? (
-                    <BreadcrumbSeparator className="px-0.5 text-muted-foreground">&gt;</BreadcrumbSeparator>
-                ) : null}
-                {crumbs.map((crumb, index) => (
-                    <Fragment key={crumb.href}>
-                        {index > 0 ? (
-                            <BreadcrumbSeparator className="px-0.5 text-muted-foreground">&gt;</BreadcrumbSeparator>
-                        ) : null}
-                        <BreadcrumbItem>
-                            <BreadcrumbLink
-                                render={(props) => (
-                                    <Link
-                                        {...props}
-                                        to={crumb.href}
-                                        className="text-sm font-semibold text-muted-foreground hover:text-foreground hover:underline"
-                                    >
-                                        {crumb.label}
-                                    </Link>
-                                )}
-                            />
-                        </BreadcrumbItem>
-                    </Fragment>
-                ))}
-            </BreadcrumbList>
-        </UIBreadcrumb>
+            ))}
+        </Breadcrumbs>
     );
 }

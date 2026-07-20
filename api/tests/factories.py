@@ -2,10 +2,10 @@ import secrets
 from uuid import UUID, uuid4
 from dataclasses import dataclass
 from src.environments import env
+from src.models.types import StorageKind
 from src.models.statuses import ComputeStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.database.models.users import User
-from src.models.infrastructure import StorageKind, DatabaseKind
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
@@ -44,7 +44,6 @@ async def create_ready_infrastructure(
             updated_id=owner.id,
         )
         database = DatabaseRegistry(
-            kind=DatabaseKind.postgresql,
             name=f"{name} database {suffix}",
             slug=f"{slug}-{suffix}-database",
             host="database.example",

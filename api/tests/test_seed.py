@@ -126,7 +126,6 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
     assert calls["database"] == (
         "local database",
         "local-database",
-        seed.DatabaseKind.postgresql,
         "172.19.0.1",
         seed.LOCAL_DATABASE_PORT,
         "admin",
@@ -160,8 +159,8 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
     assert claimed == []
 
 
-async def test_seed_local_development_reuses_complete_state(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reuse local registries, Organization, and Application without provider work."""
+async def test_seed_local_development_refreshes_existing_sample_application(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reuse local infrastructure and reconcile the rebuilt sample Application image."""
 
     # Arrange
     user = fake_resource(id=UUID("11111111-1111-1111-1111-111111111111"))
@@ -175,7 +174,10 @@ async def test_seed_local_development_reuses_complete_state(monkeypatch: pytest.
     storage = fake_resource(id=UUID("66666666-6666-6666-6666-666666666666"), slug="local-storage")
     organization = fake_resource(id=UUID("33333333-3333-3333-3333-333333333333"), slug=seed.LOCAL_ORG)
     application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
+    operation = fake_resource(compute_id=compute.id, platform_version=env.VERSION)
+    completed = fake_resource(compute_id=compute.id, platform_version=env.VERSION, stopped_at=object(), error=None)
     calls: dict[str, object] = {}
+    executed: list[object] = []
 
     async def seed_administrator() -> SimpleNamespace:
         """Return the fixed local administrator."""
@@ -218,10 +220,29 @@ async def test_seed_local_development_reuses_complete_state(monkeypatch: pytest.
 
         raise AssertionError(f"Unexpected seed creation: {args}, {kwargs}")
 
-    async def fail_claim() -> None:
-        """Reject reconciliation when seed makes no desired-state changes."""
+    async def update_application(*args: object, **fields: object) -> SimpleNamespace:
+        """Record the sample Application image refresh."""
 
-        raise AssertionError("Unexpected reconciliation claim")
+        calls["application_update"] = (args, fields)
+        return application
+
+    async def enqueue_operation(compute_id: UUID) -> SimpleNamespace:
+        """Record the reconciliation requested for the refreshed image."""
+
+        calls["enqueue"] = compute_id
+        return operation
+
+    async def claim_operation() -> SimpleNamespace:
+        """Return the reconciliation queued for the refreshed image."""
+
+        return operation
+
+    async def execute_operation(claimed_operation: object, handler: object) -> SimpleNamespace:
+        """Complete reconciliation without invoking infrastructure providers."""
+
+        assert handler is seed.operation_computes.reconcile
+        executed.append(claimed_operation)
+        return completed
 
     monkeypatch.setattr(seed, "seed_local_administrator", seed_administrator)
     monkeypatch.setattr(seed.compute_service, "fetch", fetch_compute)
@@ -235,7 +256,10 @@ async def test_seed_local_development_reuses_complete_state(monkeypatch: pytest.
     monkeypatch.setattr(seed, "ensure_local_organization_owner", ensure_owner)
     monkeypatch.setattr(seed.organization_service, "applications", list_applications)
     monkeypatch.setattr(seed.application_service, "create", fail_create)
-    monkeypatch.setattr(seed.operations, "claim_next", fail_claim)
+    monkeypatch.setattr(seed.application_service, "update_runtime", update_application)
+    monkeypatch.setattr(seed.operations, "enqueue", enqueue_operation)
+    monkeypatch.setattr(seed.operations, "claim_next", claim_operation)
+    monkeypatch.setattr(seed.jobs, "run_claimed_operation", execute_operation)
 
     # Act
     await seed.seed_local_development()
@@ -243,3 +267,15 @@ async def test_seed_local_development_reuses_complete_state(monkeypatch: pytest.
     # Assert
     assert calls["owner"] == (organization.id, user.id)
     assert calls["application_lookup"] == organization.id
+    assert calls["application_update"] == (
+        (application.id,),
+        {
+            "image": seed.LOCAL_APPLICATION_IMAGE,
+            "user": user,
+            "description": "Local SDK development application",
+            "icon": None,
+            "envs": {"REQUIRED": "local-development"},
+        },
+    )
+    assert calls["enqueue"] == compute.id
+    assert executed == [operation]

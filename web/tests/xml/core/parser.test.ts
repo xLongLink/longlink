@@ -4,12 +4,12 @@ import { parseXML } from '@/xml/core/parser';
 describe('parseXML', () => {
     /* XML attributes are component props and must stay as strings for runtime resolution. */
     it('keeps attributes as string params', () => {
-        expect(parseXML('<Button disabled="false" count="5" label="Save" />')).toEqual([
+        expect(parseXML('<Button isDisabled="false" count="5" label="Save" />')).toEqual([
             {
                 name: 'Button',
                 params: {
                     count: '5',
-                    disabled: 'false',
+                    isDisabled: 'false',
                     label: 'Save',
                 },
                 children: [],

@@ -1,9 +1,9 @@
 from uuid import uuid4
 from types import SimpleNamespace
 from factories import create_ready_infrastructure
+from src.models.types import StorageKind
 from src.database.services import storage
 from src.database.models.users import User
-from src.models.infrastructure import StorageKind
 
 db = SimpleNamespace(storage=storage)
 

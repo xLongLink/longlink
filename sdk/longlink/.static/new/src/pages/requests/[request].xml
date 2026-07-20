@@ -4,80 +4,78 @@
     <Query id="attachments" path="/api/requests/${params.request}/attachments" />
     <State id="attachment" file="${null}" />
 
-    <Stack>
-        <A to="/requests" i18n="requests.detail.back">
-            <Icon name="list" />
-        </A>
-        <H1 i18n="requests.detail.title" />
-        <P i18n="requests.detail.description" />
+    <Stack gap="3">
+        <Link to="/requests" i18n="requests.detail.back" hasUnderline="true" />
+        <Heading level="1" i18n="requests.detail.title" />
+        <Text as="p" color="secondary" i18n="requests.detail.description" />
     </Stack>
 
-    <Grid columns="2">
-        <Stack>
-            <H2 i18n="requests.detail.summary" />
-            <Flex space="between">
-                <P i18n="requests.detail.requestTitle" title="$request.title" />
-                <P i18n="requests.detail.requestStatus" status="$request.status" />
-            </Flex>
-            <P i18n="requests.detail.vendorAmount" vendor="$request.vendor" amount="$request.amount" />
-            <P i18n="requests.detail.justification" justification="$request.justification" />
-            <P i18n="requests.detail.createdBy" name="$request.created_by.name" />
-            <P if="${request.status in ['approved']}" i18n="requests.detail.approvedNote" />
-            <P if="${request.status in ['rejected']}" i18n="requests.detail.rejectedNote" />
+    <Grid minColumnWidth="320" maxColumns="2" repeat="fit" gap="4">
+        <Card>
+            <Stack gap="3">
+                <Heading level="2" i18n="requests.detail.summary" />
+                <Stack direction="horizontal" justify="between" gap="3">
+                    <Text i18n="requests.detail.requestTitle" values="${{ title: request.title }}" />
+                    <Badge label="$request.status" variant="info" />
+                </Stack>
+                <Text i18n="requests.detail.vendorAmount" values="${{ vendor: request.vendor, amount: request.amount }}" />
+                <Text as="p" i18n="requests.detail.justification" values="${{ justification: request.justification }}" />
+                <Text color="secondary" i18n="requests.detail.createdBy" values="${{ name: request.created_by.name }}" />
+                <Banner if="${request.status in ['approved']}" status="success" i18n="requests.detail.approvedNote" />
+                <Banner if="${request.status in ['rejected']}" status="error" i18n="requests.detail.rejectedNote" />
 
-            <ButtonGroup>
-                <ButtonGroupText i18n="requests.actions.decision" />
-                <Action action="/api/requests/${params.request}/status" method="PATCH" invalidate='${["request"]}' json='${{ status: "approved" }}'>
-                    <Button i18n="requests.actions.approve">
-                        <Icon name="check" />
-                    </Button>
-                </Action>
-                <ButtonGroupSeparator />
-                <Action action="/api/requests/${params.request}/status" method="PATCH" invalidate='${["request"]}' json='${{ status: "rejected" }}'>
-                    <Button variant="outline" i18n="requests.actions.reject">
-                        <Icon name="x" />
-                    </Button>
-                </Action>
-                <Action action="/api/requests/${params.request}/status" method="PATCH" invalidate='${["request"]}' json='${{ status: "submitted" }}'>
-                    <Icon name="rotate-ccw" />
-                </Action>
-            </ButtonGroup>
-        </Stack>
+                <ButtonGroup i18n="requests.actions.decision">
+                    <Action
+                        action="/api/requests/${params.request}/status"
+                        method="PATCH"
+                        invalidate='${["request"]}'
+                        json='${{ status: "approved" }}'
+                    >
+                        <Button variant="primary" i18n="requests.actions.approve" />
+                    </Action>
+                    <Action
+                        action="/api/requests/${params.request}/status"
+                        method="PATCH"
+                        invalidate='${["request"]}'
+                        json='${{ status: "rejected" }}'
+                    >
+                        <Button variant="destructive" i18n="requests.actions.reject" />
+                    </Action>
+                </ButtonGroup>
+            </Stack>
+        </Card>
 
-        <Stack>
-            <H2 i18n="requests.attachments.title" />
-            <Field>
-                <FieldLabel htmlFor="attachment-file" i18n="requests.attachments.file" />
-                <Input id="attachment-file" type="file" value="$attachment.file" />
-                <FieldDescription i18n="requests.attachments.help" />
-            </Field>
-            <Action
-                action="/api/requests/${params.request}/attachments"
-                method="POST"
-                invalidate='${["attachments"]}'
-                form="${{ file: attachment.file }}"
-            >
-                <Button disabled="${attachment.file in [null]}" i18n="requests.attachments.upload" />
-            </Action>
-        </Stack>
+        <Card>
+            <Stack gap="3">
+                <Heading level="2" i18n="requests.attachments.title" />
+                <FileInput
+                    i18n="requests.attachments.file"
+                    description="Files use the same storage API in local and production environments."
+                    value="$attachment.file"
+                    isRequired="true"
+                />
+                <Action
+                    action="/api/requests/${params.request}/attachments"
+                    method="POST"
+                    invalidate='${["attachments"]}'
+                    form="${{ file: attachment.file }}"
+                >
+                    <Button isDisabled="${attachment.file in [null]}" variant="primary" i18n="requests.attachments.upload" />
+                </Action>
+            </Stack>
+        </Card>
     </Grid>
 
-    <DataTable data="$attachments" as="attachment" empty="No attachments uploaded yet.">
-        <DataColumn field="name" header="File" />
-        <DataColumn field="size" header="Bytes" />
-
-        <DataColumn>
-            <DataHeader i18n="requests.attachments.actions" />
-            <DataCell>
-                <Flex>
-                    <A href="$attachment.download_url" i18n="requests.attachments.download">
-                        <Icon name="download" />
-                    </A>
-                    <Action action="$attachment.download_url" method="DELETE" invalidate='${["attachments"]}'>
-                        <Button variant="outline" size="sm" i18n="requests.attachments.delete" />
-                    </Action>
-                </Flex>
-            </DataCell>
-        </DataColumn>
-    </DataTable>
+    <Table data="$attachments" rowName="attachment" idKey="id" emptyLabel="No attachments uploaded yet.">
+        <TableColumn key="name" field="name" header="File" />
+        <TableColumn key="size" field="size" header="Bytes" align="end" />
+        <TableColumn key="actions" i18n="requests.attachments.actions">
+            <Stack direction="horizontal" gap="2">
+                <Link href="$attachment.download_url" i18n="requests.attachments.download" />
+                <Action action="$attachment.download_url" method="DELETE" invalidate='${["attachments"]}'>
+                    <Button variant="destructive" size="sm" i18n="requests.attachments.delete" />
+                </Action>
+            </Stack>
+        </TableColumn>
+    </Table>
 </longlink>

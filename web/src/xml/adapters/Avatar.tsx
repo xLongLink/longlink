@@ -1,84 +1,25 @@
-import type { ComponentProps } from 'react';
-import { hasProtocol } from 'ufo';
+import { Avatar as AstryxAvatar, type AvatarSize } from '@astryxdesign/core/Avatar';
 import type { Props } from '@/xml/types';
-import { renderNode } from '@/xml/core/node';
+import { useAnchorUrl } from '@/xml/core/url';
 import { useXmlContext } from '@/xml/core/context';
-import { resolveTranslation } from '@/xml/core/i18n';
-import { isAppRelativeUrl, resolveUrl, useUrl } from '@/xml/core/url';
-import {
-    Avatar as UIAvatar,
-    AvatarBadge as UIAvatarBadge,
-    AvatarFallback as UIAvatarFallback,
-    AvatarImage as UIAvatarImage,
-} from '@/components/ui/avatar';
-import { resolveXmlString } from './props';
+import { resolveXmlEnum, resolveXmlString } from './props';
 
-type AvatarSize = NonNullable<ComponentProps<typeof UIAvatar>['size']>;
-
-/** Returns a safe browser image URL for an XML avatar source. */
-function resolveAvatarImageSource(baseUrl: string, src: string): string | undefined {
-    const value = src.trim();
-
-    // Drop empty, protocol-relative, and backslash-containing sources.
-    if (!value || value.startsWith('//') || value.includes('\\')) return undefined;
-
-    // Validate absolute avatar URLs before using them.
-    if (hasProtocol(value)) {
-        // Parse absolute URLs with the platform URL implementation.
-        try {
-            const url = new URL(value);
-
-            return url.protocol === 'http:' || url.protocol === 'https:' ? value : undefined;
-        } catch {
-            return undefined;
-        }
-    }
-
-    return isAppRelativeUrl(value) ? resolveUrl(baseUrl, value) : undefined;
-}
-
-/** Renders the avatar shell used for a single user or record. */
-export function Avatar({ props, nodes }: Props) {
+/** Renders a data-oriented Astryx avatar with safe image URLs. */
+export function Avatar({ props }: Props) {
     const { ctx } = useXmlContext();
-    const size = resolveAvatarSize(resolveXmlString(props, 'size', ctx, 'default'));
-
-    return <UIAvatar size={size}>{renderNode(nodes, ctx)}</UIAvatar>;
-}
-
-/** Resolves a validated XML avatar size. */
-function resolveAvatarSize(value: string): AvatarSize {
-    // Accept only avatar sizes supported by the UI component.
-    switch (value) {
-        case 'default':
-        case 'sm':
-        case 'lg':
-            return value;
-        default:
-            throw new Error(`Unsupported Avatar size '${value}'`);
-    }
-}
-
-/** Renders the avatar image slot. */
-export function AvatarImage({ props }: Props) {
-    const { ctx } = useXmlContext();
-    const baseUrl = useUrl('');
+    const src = useAnchorUrl(resolveXmlString(props, 'src', ctx));
+    const fallbackSrc = useAnchorUrl(resolveXmlString(props, 'fallbackSrc', ctx));
+    const name = resolveXmlString(props, 'name', ctx);
     const alt = resolveXmlString(props, 'alt', ctx);
-    const src = resolveXmlString(props, 'src', ctx);
-    return <UIAvatarImage alt={alt} src={resolveAvatarImageSource(baseUrl, src)} />;
-}
+    const size = resolveXmlEnum(props, 'size', ctx, ['tiny', 'xsmall', 'small', 'medium', 'large'], 'small', 'Avatar');
 
-/** Renders the avatar fallback slot. */
-export function AvatarFallback({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
-    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
-
-    return <UIAvatarFallback>{text}</UIAvatarFallback>;
-}
-
-/** Renders the avatar badge overlay. */
-export function AvatarBadge({ props, nodes }: Props) {
-    const { ctx } = useXmlContext();
-    const text = props.i18n ? resolveTranslation(props, ctx) : renderNode(nodes, ctx);
-
-    return <UIAvatarBadge>{text}</UIAvatarBadge>;
+    return (
+        <AstryxAvatar
+            alt={alt || undefined}
+            fallbackSrc={fallbackSrc || undefined}
+            name={name || undefined}
+            size={size as AvatarSize}
+            src={src || undefined}
+        />
+    );
 }
