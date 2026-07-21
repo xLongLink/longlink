@@ -44,6 +44,22 @@ function Section({ children }: { children: ReactNode }) {
 }
 
 export const metadata = {
+    toc: [
+        { id: 'scope-and-controller', label: '1. Scope and controller' },
+        { id: 'our-roles', label: '2. Our roles' },
+        { id: 'personal-data-we-process', label: '3. Personal data we process' },
+        { id: 'why-we-process-personal-data', label: '4. Why we process personal data' },
+        { id: 'service-providers-and-other-recipients', label: '5. Service providers and other recipients' },
+        { id: 'international-transfers', label: '6. International transfers' },
+        { id: 'cookies-and-similar-storage', label: '7. Cookies and similar storage' },
+        { id: 'retention', label: '8. Retention' },
+        { id: 'automated-operational-actions', label: '9. Automated operational actions' },
+        { id: 'security-and-data-incidents', label: '10. Security and data incidents' },
+        { id: 'your-rights', label: '11. Your rights' },
+        { id: 'children', label: '12. Children' },
+        { id: 'changes-to-this-policy', label: '13. Changes to this Policy' },
+        { id: 'contact', label: '14. Contact' },
+    ],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/legal/privacy.tsx',
 };

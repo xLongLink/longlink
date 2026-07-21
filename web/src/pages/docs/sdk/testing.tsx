@@ -7,6 +7,10 @@ import { CodeTabs } from '@/components/CodeTabs';
 import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
+    toc: [
+        { id: 'usage', label: 'Usage' },
+        { id: 'example', label: 'Example' },
+    ],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/testing.tsx',
 };

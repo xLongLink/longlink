@@ -1,3 +1,4 @@
+import { Monitor, Package } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -15,7 +16,7 @@ function LocalRuntimeDiagram() {
         <Grid columns={{ minWidth: 190, max: 2, repeat: 'fit' }} gap={4}>
             <Card variant="muted">
                 <Stack gap={2} align="center">
-                    <Icon icon="info" color="accent" />
+                    <Icon icon={Monitor} color="accent" />
                     <Text weight="semibold">User</Text>
                     <Text type="supporting">Browser</Text>
                     <Text type="supporting">Languages, theming, and application shell</Text>
@@ -23,7 +24,7 @@ function LocalRuntimeDiagram() {
             </Card>
             <Card variant="muted">
                 <Stack gap={2} align="center">
-                    <Icon icon="wrench" color="accent" />
+                    <Icon icon={Package} color="accent" />
                     <Text weight="semibold">Application</Text>
                     <Text type="supporting">Runtime at localhost:1707</Text>
                     <Text type="supporting">Application logic, database logic, and file storage</Text>
@@ -34,6 +35,10 @@ function LocalRuntimeDiagram() {
 }
 
 export const metadata = {
+    toc: [
+        { id: 'create-a-project', label: 'Create a Project' },
+        { id: 'local-development', label: 'Local Runtime' },
+    ],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/index.tsx',
 };

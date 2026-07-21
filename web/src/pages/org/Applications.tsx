@@ -4,10 +4,10 @@ import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { ApiOrganizationApplication } from '@/lib/types';
-import { useTranslation } from '@/lib/i18n';
 
 /** Renders the organization applications table. */
 export default function Applications({
@@ -21,7 +21,7 @@ export default function Applications({
     isLoading: boolean;
     error: Error | null;
 }) {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const applicationsError = error ? new Error(t('errors.loadApplications')) : null;
     const columns: TableColumn<ApiOrganizationApplication>[] = [
         {

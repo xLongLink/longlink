@@ -1,10 +1,10 @@
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Spinner } from '@astryxdesign/core/Spinner';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { CodeBlock } from '@astryxdesign/core/CodeBlock';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
-import { useTranslation } from '@/lib/i18n';
 import { useApiQuery } from '@/hooks/use-api';
 
 /** Parses the application log response. */
@@ -29,7 +29,7 @@ export default function Logs({
     open: boolean;
     onOpenChange: (open: boolean) => void;
 }) {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const logsPath = open ? `/api/applications/${applicationId}/logs` : null;
     const logsQuery = useApiQuery<string[]>(logsPath, { parse: parseLogLines });
     const logLines = open ? (logsQuery.data ?? []) : [];

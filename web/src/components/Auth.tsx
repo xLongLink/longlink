@@ -20,8 +20,8 @@ export function Auth({ children, requiredRole }: { children: ReactElement; requi
     // Show sign-in UI for unauthenticated users.
     if (!user) {
         return (
-            <Layout brandOnly brandHref="/">
-                <Center minHeight="60dvh" width="100%">
+            <Layout brandOnly brandHref="/" fillViewport reserveTabSpace>
+                <Center height="100%" width="100%">
                     <SignInCard redirectTo={`${location.pathname}${location.search}${location.hash}`} />
                 </Center>
             </Layout>

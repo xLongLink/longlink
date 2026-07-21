@@ -3,8 +3,16 @@ import type { ReactElement, ReactNode } from 'react';
 
 type ArticleIcon = ReactElement<LucideProps>;
 
+/** One link in an article table of contents. */
+export type ArticleTocItem = {
+    id: string;
+    label: string;
+    level?: number;
+};
+
 /** Metadata shared by article-like public pages. */
 export type ArticleMetadata = {
+    toc?: ArticleTocItem[];
     lastUpdated?: string;
     editUrl?: string;
 };

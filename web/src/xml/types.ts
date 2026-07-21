@@ -1,3 +1,5 @@
+import type { Catalog, TranslatorFn } from '@astryxdesign/core/i18n';
+
 /** A single node in the XML abstract syntax tree produced by the compiler. */
 export type ASTNode = {
     name: string;
@@ -8,8 +10,8 @@ export type ASTNode = {
 /** Raw XML attributes attached to an AST node. */
 export type ASTProps = Record<string, string>;
 
-/** Nested translation bundle used by the XML text component. */
-export type XmlTranslations = Record<string, unknown>;
+/** Native Astryx translation catalog loaded for one LongLink Application locale. */
+export type XmlTranslations = Catalog;
 
 /** Adapter surface used by XML-backed React components. */
 export interface Props {
@@ -23,7 +25,9 @@ export type XmlBindableValue = unknown;
 /** XML runtime scope with lexical parent lookup. */
 export type ExecutionContext = {
     locale?: string;
+    translate?: TranslatorFn;
     translations?: XmlTranslations;
+    translationsLocale?: string;
     parent?: ExecutionContext;
     setups: Record<string, () => Promise<void> | void>;
     invalidate: (ids: string | string[]) => Promise<void>;

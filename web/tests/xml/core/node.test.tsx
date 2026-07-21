@@ -26,7 +26,8 @@ describe('renderNode', () => {
         const ctx: ExecutionContext = {
             setups: {},
             invalidate: async () => {},
-            translations: { core: { visible: 'Visible' } },
+            translate: () => 'Visible',
+            translations: { 'core.visible': { defaultMessage: 'Visible' } },
             values: {},
         };
         const nodes: ASTNode[] = [

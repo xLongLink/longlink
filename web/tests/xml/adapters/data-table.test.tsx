@@ -31,7 +31,11 @@ describe('Table', () => {
         const ctx: ExecutionContext = {
             setups: {},
             invalidate: async () => {},
-            translations: { inventory: { item: 'Item', name: '{{name}}', sku: 'SKU' } },
+            translations: {
+                'inventory.item': { defaultMessage: 'Item' },
+                'inventory.name': { defaultMessage: '{name}' },
+                'inventory.sku': { defaultMessage: 'SKU' },
+            },
             values: {
                 items: [{ sku: 'SKU-001', name: 'Warehouse Widget' }],
             },

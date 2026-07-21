@@ -7,9 +7,9 @@ import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { fetchApiVoid } from '@/lib/api';
-import { useTranslation } from '@/lib/i18n';
 import { AuthPage } from '@/components/AuthPage';
 import { sanitizeRedirectPath } from '@/lib/redirects';
 
@@ -21,7 +21,7 @@ const emailInputAttributes = { autoComplete: 'email' };
 
 /** Verifies an emailed token and supports requesting a replacement verification email. */
 export default function VerifyEmail() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const location = useLocation();
     const search = new URLSearchParams(location.search);
     const token = search.get('token');

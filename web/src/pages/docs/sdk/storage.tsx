@@ -39,6 +39,10 @@ const environments: { backend: React.ReactNode; icon: IconName; name: string }[]
 ];
 
 export const metadata = {
+    toc: [
+        { id: 'usage', label: 'Usage' },
+        { id: 'assets', label: 'Assets' },
+    ],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/storage.tsx',
 };

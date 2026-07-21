@@ -3,8 +3,8 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Heading } from '@astryxdesign/core/Heading';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import Layout from '@/layout/Layout';
-import { useTranslation } from '@/lib/i18n';
 import { useOrganization } from '@/hooks/use-organization';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
@@ -16,7 +16,7 @@ type OrganizationProps = {
 
 /** Renders the organization page shell and tab-specific hero content. */
 export default function Organization({ settingsSection }: OrganizationProps) {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const { organization = '', settingsApplication = '' } = useParams();
     const section = settingsSection === undefined ? 'applications' : 'settings';
     const {

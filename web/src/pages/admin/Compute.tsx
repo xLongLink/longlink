@@ -1,4 +1,3 @@
-import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
@@ -11,6 +10,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
 import {
     Table,
     type TableColumn,
@@ -20,7 +20,6 @@ import {
     useTablePagination,
 } from '@astryxdesign/core/Table';
 import type { ApiComputeRegistry } from '@/lib/types';
-import { useTranslation } from '@/lib/i18n';
 import { useComputes } from '@/data/compute';
 import { useDeleteDialog } from '@/lib/utils';
 import { useUserProfile } from '@/hooks/use-user';
@@ -31,7 +30,7 @@ import { computesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-key
 import { apiComputeMutationResponseSchema, parseApiResponse } from '@/lib/api-schemas';
 
 /** Returns localized admin compute table columns. */
-function createComputeColumns(t: TFunction): TableColumn<ApiComputeRegistry>[] {
+function createComputeColumns(t: TranslatorFn): TableColumn<ApiComputeRegistry>[] {
     return [
         {
             key: 'compute',
@@ -60,7 +59,7 @@ function createComputeColumns(t: TFunction): TableColumn<ApiComputeRegistry>[] {
 
 /** Renders the admin compute page. */
 export default function AdminCompute() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const toast = useToast();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();

@@ -10,6 +10,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { useLocation, useNavigate, useParams } from 'react-router';
@@ -27,7 +28,6 @@ import type {
     ApiOrganizationStorageResource,
 } from '@/lib/types';
 import { S3 } from '@/svg/S3';
-import { useTranslation } from '@/lib/i18n';
 import Logs from '@/components/dialogs/Logs';
 import { useApiQuery } from '@/hooks/use-api';
 import { PostgreSQL } from '@/svg/PostgreSQL';
@@ -67,7 +67,7 @@ export default function Settings({
     isLoading,
     error,
 }: SettingsProps) {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const navigate = useNavigate();
     const location = useLocation();
     const { settingsApplication = '' } = useParams();

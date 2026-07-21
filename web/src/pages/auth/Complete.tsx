@@ -2,14 +2,14 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Text } from '@astryxdesign/core/Text';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { AuthPage } from '@/components/AuthPage';
 import { accountsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 import { AUTH_RETURN_PATH_KEY, sanitizeRedirectPath } from '@/lib/redirects';
 
 /** Refreshes session state after external authentication and returns to the saved page. */
 export default function Complete() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
 

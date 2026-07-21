@@ -23,6 +23,20 @@ function Li({ children }: { children: ReactNode }) {
 }
 
 export const metadata = {
+    toc: [
+        { id: 'folder-conventions', label: 'Folder conventions' },
+        { id: 'dynamic-pages', label: 'Dynamic Pages' },
+        { id: 'longlink-page-and-i18n-mounts', label: 'LongLink Page and I18n Mounts' },
+        { id: 'page-metadata', label: 'Page Metadata' },
+        { id: 'translations', label: 'Translations' },
+        { id: 'state', label: 'State' },
+        { id: 'query', label: 'Query' },
+        { id: 'action', label: 'Action' },
+        { id: 'for', label: 'For' },
+        { id: 'if', label: 'if' },
+        { id: 'i18n', label: 'i18n' },
+        { id: 'expressions', label: 'Expressions' },
+    ],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/pages.tsx',
 };
@@ -169,9 +183,32 @@ app = LongLink(
             <P>
                 XML pages keep visible copy in translation catalogs through the <Code>i18n</Code> attribute. After
                 adding or renaming translation keys in page XML, run the generator from the app root to refresh{' '}
-                <Code>src/i18n/en.json</Code> while preserving existing translated values.
+                <Code>src/i18n/en.json</Code>. The generator sorts the dotted keys, preserves valid entries by exact
+                key, and adds missing entries with an empty <Code>defaultMessage</Code>.
             </P>
             <CodeBlock language="bash">longlink translations generate</CodeBlock>
+            <P>
+                Application catalogs use the native Astryx catalog shape. The catalog is flat: every dotted key maps to
+                an object with a required string <Code>defaultMessage</Code> and an optional string{' '}
+                <Code>description</Code>. Messages use ICU syntax for interpolation and plurals. Nested catalogs, bare
+                strings, double-brace placeholders, and plural-map entries are not supported.
+            </P>
+            <CodeBlock language="json">{`{
+  "orders.assign": {
+    "defaultMessage": "Assign to {user}",
+    "description": "Assignment action label"
+  },
+  "orders.count": {
+    "defaultMessage": "{count, plural, =0 {No orders} one {# order} other {# orders}}"
+  },
+  "orders.title": {
+    "defaultMessage": "Orders"
+  },
+  "requests.statusRoute": {
+    "defaultMessage": "PATCH /requests/'{id}'/status"
+  }
+}`}</CodeBlock>
+            <P>ICU apostrophe quoting keeps the braces in the status route literal.</P>
         </Stack>
         <Stack gap={3}>
             <Heading id="state" level={2}>
@@ -296,8 +333,8 @@ app = LongLink(
                 i18n
             </Heading>
             <P>
-                Global translation prop used by text-bearing elements. The value is a literal dotted key into the active
-                locale bundle, not an expression.
+                Global translation prop used by text-bearing elements. The value is a literal dotted key that exactly
+                matches a flat entry in the active locale catalog, not an expression.
             </P>
             <Stack gap={2}>
                 <Text as="p" weight="semibold">
@@ -305,9 +342,9 @@ app = LongLink(
                 </Text>
                 <Ul>
                     <Li>i18n: dotted translation key.</Li>
-                    <Li>count: optional expression used for plural translation entries.</Li>
+                    <Li>count: optional expression supplied to an ICU plural message.</Li>
                     <Li>
-                        values: optional expression resolving to one object that fills <Code>{'{{name}}'}</Code>{' '}
+                        values: optional expression resolving to one object that fills <Code>{'{name}'}</Code>{' '}
                         placeholders.
                     </Li>
                 </Ul>

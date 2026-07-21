@@ -5,6 +5,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
+    toc: [{ id: 'usage', label: 'Usage' }],
     lastUpdated: '2026-07-14',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/routes.tsx',
 };

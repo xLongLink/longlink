@@ -6,11 +6,11 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { ApiUserOrganizationMembership } from '@/lib/types';
 import Layout from '@/layout/Layout';
-import { useTranslation } from '@/lib/i18n';
 import { useUserProfile } from '@/hooks/use-user';
 import { SignInCard } from '@/components/SignInCard';
 import { sanitizeRedirectPath } from '@/lib/redirects';
@@ -18,7 +18,7 @@ import CreateOrganization from '@/components/dialogs/CreateOrganization';
 
 /** Renders the organizations landing page for signed-in and anonymous users. */
 export default function Organizations() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const { user, organizations, isLoading, error } = useUserProfile();
     const location = useLocation();
     const nextPath = new URLSearchParams(location.search).get('next');
@@ -27,8 +27,8 @@ export default function Organizations() {
     // Show sign-in prompt for anonymous visitors.
     if (!user) {
         return (
-            <Layout brandOnly brandHref="/">
-                <VStack minHeight="calc(100vh - 5rem)" justify="center" align="center" width="100%">
+            <Layout brandOnly brandHref="/" fillViewport reserveTabSpace>
+                <VStack height="100%" justify="center" align="center" width="100%">
                     <SignInCard redirectTo={redirectTo} />
                 </VStack>
             </Layout>

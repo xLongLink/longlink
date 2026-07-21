@@ -12,20 +12,24 @@ export function AuthPage({
     title,
 }: {
     children: ReactNode;
-    description: string;
-    title: string;
+    description: ReactNode;
+    title: ReactNode;
 }) {
     return (
-        <Layout brandOnly brandHref="/">
-            <Center minHeight="60dvh" width="100%">
-                <Stack gap={6} maxWidth={384} width="100%">
-                    <Stack gap={2}>
+        <Layout brandOnly brandHref="/" fillViewport>
+            <Center height="100%" width="100%">
+                <Stack gap={4} maxWidth={384} width="100%">
+                    <Stack gap={1}>
                         <Heading justify="center" level={1}>
                             {title}
                         </Heading>
-                        <Text as="p" color="secondary" justify="center" type="supporting">
-                            {description}
-                        </Text>
+                        {typeof description === 'string' ? (
+                            <Text as="p" color="secondary" justify="center" type="supporting">
+                                {description}
+                            </Text>
+                        ) : (
+                            description
+                        )}
                     </Stack>
                     {children}
                 </Stack>

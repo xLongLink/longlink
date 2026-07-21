@@ -20,9 +20,16 @@
 }
 
 @layer components {
+    .docs-sidebar .astryx-side-nav-item:not([data-selected='selected']) {
+        color: var(--color-text-secondary);
+    }
+
+    .docs-sidebar .astryx-side-nav-item:not([data-selected='selected']) svg {
+        color: var(--color-icon-secondary);
+    }
+
     .docs-sidebar .astryx-side-nav-item[data-selected='selected'] {
         background-color: var(--color-accent-muted);
-        box-shadow: inset 3px 0 0 var(--color-accent);
         color: var(--color-text-primary);
     }
 

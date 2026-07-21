@@ -10,13 +10,13 @@ import { useToast } from '@astryxdesign/core/Toast';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Building2, Paintbrush, UserRound } from 'lucide-react';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import Layout from '@/layout/Layout';
-import { useTranslation } from '@/lib/i18n';
 import { useDeleteDialog } from '@/lib/utils';
 import { useDeleteOrganization } from '@/hooks/use-organization';
 import { useUpdateUser, useUserProfile } from '@/hooks/use-user';
@@ -29,7 +29,7 @@ type SettingsSection = 'account' | 'appearance' | 'organizations';
 
 /** Renders the authenticated settings page. */
 export default function Settings() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const toast = useToast();
     const location = useLocation();
     const { user, organizations, theme, accent, radius, language, isLoading } = useUserProfile();

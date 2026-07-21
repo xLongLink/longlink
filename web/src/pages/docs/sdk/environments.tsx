@@ -6,6 +6,10 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
+    toc: [
+        { id: 'usage', label: 'Usage' },
+        { id: 'settings', label: 'Settings' },
+    ],
     lastUpdated: '2026-07-14',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/environments.tsx',
 };

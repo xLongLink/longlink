@@ -3,6 +3,10 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 
 export const metadata = {
+    toc: [
+        { id: 'company', label: 'Company' },
+        { id: 'contact', label: 'Contact' },
+    ],
     lastUpdated: '2026-07-06',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/legal/impressum.tsx',
 };

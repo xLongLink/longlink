@@ -5,9 +5,9 @@ import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, paginateData, proportional, useTablePagination } from '@astryxdesign/core/Table';
-import { useTranslation } from '@/lib/i18n';
 import { useComputeNamespaces, useComputes } from '@/data/compute';
 
 type ComputeNamespaceRow = Record<string, unknown> & {
@@ -16,7 +16,7 @@ type ComputeNamespaceRow = Record<string, unknown> & {
 
 /** Renders namespaces for a compute backend. */
 export default function ComputeNamespaces() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const { compute = '' } = useParams();
     const [page, setPage] = useState(1);
     const { items: computes, error: computeError, isLoading: computesIsLoading } = useComputes();

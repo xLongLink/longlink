@@ -73,11 +73,7 @@ export function Breadcrumb() {
           : buildDefaultCrumbs(segments);
 
     return (
-        <Breadcrumbs
-            className="[&_li]:text-[0.875rem] [&_li]:leading-5"
-            separator={<span className="px-1">{'>'}</span>}
-            variant="supporting"
-        >
+        <Breadcrumbs separator=">" variant="supporting">
             <BreadcrumbItem href="/organizations">
                 <Wordmark />
             </BreadcrumbItem>

@@ -5,7 +5,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { TopNav } from '@astryxdesign/core/TopNav';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
@@ -14,7 +14,7 @@ const navigationLinkContentClassName = 'group-hover:text-[var(--color-text-accen
 
 /** Renders the public landing page navigation. */
 export function Navbar() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const { user, organizations } = useUserProfile();
     const getStartedHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
 

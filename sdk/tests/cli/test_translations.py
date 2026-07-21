@@ -6,7 +6,7 @@ from click.testing import CliRunner
 
 
 def test_generate_updates_current_app_translation_catalog(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    """Generate current application keys while preserving existing and plural values."""
+    """Generate a flat catalog while preserving native Astryx entries by exact key."""
 
     # Arrange
     pages_directory = tmp_path / "src" / "pages"
@@ -25,8 +25,13 @@ def test_generate_updates_current_app_translation_catalog(monkeypatch: MonkeyPat
     catalog_path.write_text(
         json.dumps(
             {
-                "dashboard": {"title": "Dashboard"},
-                "tasks": {"count": {"one": "One task", "other": "{count} tasks"}},
+                "dashboard.title": {
+                    "defaultMessage": "Dashboard",
+                    "description": "Dashboard page heading",
+                },
+                "tasks.count": {
+                    "defaultMessage": "{count, plural, one {# task} other {# tasks}}"
+                },
             }
         ),
         encoding="utf-8",
@@ -40,16 +45,22 @@ def test_generate_updates_current_app_translation_catalog(monkeypatch: MonkeyPat
     # Assert
     assert result.exit_code == 0
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    assert list(catalog) == ["admin.users.title", "dashboard.title", "tasks.count"]
     assert catalog == {
-        "admin": {"users": {"title": ""}},
-        "dashboard": {"title": "Dashboard"},
-        "tasks": {"count": {"one": "One task", "other": "{count} tasks"}},
+        "admin.users.title": {"defaultMessage": ""},
+        "dashboard.title": {
+            "defaultMessage": "Dashboard",
+            "description": "Dashboard page heading",
+        },
+        "tasks.count": {
+            "defaultMessage": "{count, plural, one {# task} other {# tasks}}"
+        },
     }
     assert "Generated src/i18n/en.json from 3 translation keys." in result.output
 
 
-def test_generate_rejects_translation_key_collisions(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
-    """Reject catalogs where a key is both a leaf and a namespace."""
+def test_generate_allows_translation_key_prefixes(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    """Generate independent flat entries when one dotted key prefixes another."""
 
     # Arrange
     pages_directory = tmp_path / "src" / "pages"
@@ -66,5 +77,9 @@ def test_generate_rejects_translation_key_collisions(monkeypatch: MonkeyPatch, t
     result = runner.invoke(translations.generate_command)
 
     # Assert
-    assert result.exit_code == 1
-    assert "Translation key collision at title" in result.output
+    assert result.exit_code == 0
+    catalog_path = tmp_path / "src" / "i18n" / "en.json"
+    assert json.loads(catalog_path.read_text(encoding="utf-8")) == {
+        "tasks.title": {"defaultMessage": ""},
+        "tasks.title.count": {"defaultMessage": ""},
+    }

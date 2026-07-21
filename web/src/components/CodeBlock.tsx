@@ -1,10 +1,10 @@
 import { useToast } from '@astryxdesign/core/Toast';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { CodeBlock as AstryxCodeBlock } from '@astryxdesign/core/CodeBlock';
-import { useTranslation } from '@/lib/i18n';
 
 /** Renders a syntax-highlighted code block for docs and examples. */
 export function CodeBlock({ children, language = 'text' }: { children: string; language?: string }) {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const showToast = useToast();
 
     return (

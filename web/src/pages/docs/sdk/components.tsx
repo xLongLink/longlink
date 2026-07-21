@@ -22,6 +22,21 @@ function Li({ children }: { children: ReactNode }) {
 }
 
 export const metadata = {
+    toc: [
+        { id: 'text', label: 'Text, Heading, and Code' },
+        { id: 'link', label: 'Link' },
+        { id: 'icon', label: 'Icon' },
+        { id: 'avatar', label: 'Avatar' },
+        { id: 'badge', label: 'Badge' },
+        { id: 'banner', label: 'Banner' },
+        { id: 'divider', label: 'Divider' },
+        { id: 'button', label: 'Button and ButtonGroup' },
+        { id: 'text-inputs', label: 'TextInput, NumberInput, FileInput, and TextArea' },
+        { id: 'boolean-and-range-inputs', label: 'CheckboxInput, Switch, and Slider' },
+        { id: 'selector', label: 'Selector' },
+        { id: 'radio-list', label: 'RadioList' },
+        { id: 'table', label: 'Table' },
+    ],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/components.tsx',
 };
@@ -56,7 +71,7 @@ export const content = (
                     <Code>values</Code>: expression resolving to an object used for translation placeholders.
                 </Li>
                 <Li>
-                    <Code>count</Code>: numeric expression used for plural translation entries.
+                    <Code>count</Code>: numeric expression supplied to an ICU plural message.
                 </Li>
                 <Li>
                     <Code>Text as</Code>: <Code>span</Code>, <Code>p</Code>, <Code>div</Code>, or <Code>label</Code>.

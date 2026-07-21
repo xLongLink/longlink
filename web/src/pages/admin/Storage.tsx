@@ -1,4 +1,3 @@
-import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
@@ -10,6 +9,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
 import {
     Table,
     type TableColumn,
@@ -21,7 +21,6 @@ import {
 import type { ApiStorageRegistry } from '@/lib/types';
 import { S3 } from '@/svg/S3';
 import { fetchApiJson } from '@/lib/api';
-import { useTranslation } from '@/lib/i18n';
 import { useStorages } from '@/data/storage';
 import { useDeleteDialog } from '@/lib/utils';
 import { useUserProfile } from '@/hooks/use-user';
@@ -31,7 +30,7 @@ import { apiStorageRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
 import { infrastructureOptionsQueryKey, storagesQueryKey } from '@/lib/query-keys';
 
 /** Returns localized admin storage table columns. */
-function createStorageColumns(t: TFunction): TableColumn<ApiStorageRegistry>[] {
+function createStorageColumns(t: TranslatorFn): TableColumn<ApiStorageRegistry>[] {
     return [
         {
             key: 'storage',
@@ -68,7 +67,7 @@ function createStorageColumns(t: TFunction): TableColumn<ApiStorageRegistry>[] {
 
 /** Renders the admin storage page. */
 export default function AdminStorage() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const toast = useToast();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();

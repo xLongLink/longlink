@@ -3,13 +3,13 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import Layout from '@/layout/Layout';
-import { useTranslation } from '@/lib/i18n';
 
 /** Renders the shared 404 page for unknown or unavailable routes. */
 export default function NotFound() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const location = useLocation();
 
     return (

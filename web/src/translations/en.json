@@ -1,418 +1,1100 @@
 {
-    "actions": {
-        "back": "Back",
-        "backToApplications": "Back to applications",
-        "backToHome": "Back to Home",
-        "backToOrganization": "Back to organization",
-        "backToOrganizations": "Back to organizations",
-        "cancel": "Cancel",
-        "changeRole": "Change role",
-        "connect": "Connect",
-        "connecting": "Connecting...",
-        "copy": "Copy",
-        "copied": "Copied",
-        "copyCode": "Copy code",
-        "copiedCode": "Copied code",
-        "create": "Create",
-        "creating": "Creating...",
-        "createOrganization": "Create Organization",
-        "delete": "Delete",
-        "deleting": "Deleting...",
-        "getStarted": "Get Started",
-        "invite": "Invite",
-        "inviting": "Inviting...",
-        "next": "Next",
-        "previous": "Previous",
-        "login": "Sign In",
-        "readDocs": "Read docs",
-        "saveChanges": "Save changes",
-        "saving": "Saving...",
-        "seeDocs": "See the Docs",
-        "signOut": "Sign out"
+    "actions.back": {
+        "defaultMessage": "Back"
     },
-    "admin": {
-        "applicationsDescription": "Review all applications across organizations and deployment states.",
-        "applicationsTitle": "Applications",
-        "computeTitle": "Compute",
-        "computeDeleted": "Compute deleted",
-        "computeDescription": "Inspect runtime workloads, node capacity, and orchestration status.",
-        "copyEmail": "Copy email",
-        "copyComputeSlug": "Compute slug",
-        "copyDatabaseSlug": "Database slug",
-        "copyStorageSlug": "Storage slug",
-        "databaseTitle": "Database",
-        "databaseDeleted": "Database deleted",
-        "databaseDescription": "Monitor platform data, schema health, and persistence state.",
-        "deleteComputeDescription": "Delete compute {{slug}}?",
-        "deleteComputeFallback": "Delete this compute registry?",
-        "deleteComputeTitle": "Delete compute",
-        "deleteDatabaseDescription": "Delete database {{slug}}?",
-        "deleteDatabaseFallback": "Delete this database?",
-        "deleteDatabaseTitle": "Delete database",
-        "deleteOrganizationDescription": "Delete organization {{name}}?",
-        "deleteStorageDescription": "Delete storage {{slug}}?",
-        "deleteStorageFallback": "Delete this storage registry?",
-        "deleteStorageTitle": "Delete storage",
-        "emailCopied": "Email copied",
-        "failedDeleteCompute": "Failed to delete compute",
-        "failedDeleteDatabase": "Failed to delete database",
-        "failedDeleteStorage": "Failed to delete storage",
-        "computeReconciliation": "Compute reconciliation",
-        "operationsTitle": "Operations",
-        "operationStatus": {
-            "active": "Active",
-            "completed": "Completed",
-            "failed": "Failed",
-            "scheduled": "Scheduled"
-        },
-        "organizationsDescription": "Review organization lifecycle, ownership, and access boundaries.",
-        "organizationsTitle": "Organizations",
-        "organizationDeleted": "Organization deleted",
-        "organizationName": "Organization name",
-        "storageTitle": "Storage",
-        "storageDeleted": "Storage deleted",
-        "storageDescription": "Review file storage integrations and object storage configuration.",
-        "operationsDescription": "Track long-running platform tasks, their start time, and when they stopped.",
-        "tabs": {
-            "applications": "Applications",
-            "compute": "Compute",
-            "database": "Database",
-            "operations": "Operations",
-            "organizations": "Organizations",
-            "storage": "Storage",
-            "users": "Users"
-        },
-        "usersDescription": "Review account access, elevated users, and admin onboarding.",
-        "usersTitle": "Users"
+    "actions.backToApplications": {
+        "defaultMessage": "Back to applications"
     },
-    "appView": {
-        "applicationIsStatus": "Application is {{status}}",
-        "applicationLogs": "Application logs",
-        "emptyApplication": "The application did not expose any pages to render.",
-        "emptyLogs": "No logs available.",
-        "emptyResponse": "The application returned an empty response.",
-        "invalidPageUrl": "Invalid page URL",
-        "loadApplicationFailed": "The application definition could not be loaded.",
-        "loadLogsFailed": "Failed to load logs",
-        "loadPageFailed": "Failed to load page",
-        "logsDescription": "Recent logs for {{applicationName}}.",
-        "parseXmlFailed": "Failed to parse page XML",
-        "retryLater": "Please try again in a moment.",
-        "unableToLoadApplication": "Unable to load this application",
-        "unableToLoadPage": "Unable to load this page",
-        "unexpectedApplicationResponse": "Unexpected application response"
+    "actions.backToHome": {
+        "defaultMessage": "Back to Home"
     },
-    "auth": {
-        "accountOpenFailed": "Failed to open account",
-        "agreementLead": "By continuing, you agree to our",
-        "agreementMiddle": "and",
-        "back": "Back",
-        "backToSignIn": "Back to sign in",
-        "completingSignIn": "Completing sign in",
-        "completingSignInDescription": "LongLink is restoring your session and return path.",
-        "createAccount": "Create account",
-        "creatingAccount": "Creating account...",
-        "emailInvalid": "Enter a valid email address",
-        "emailRequired": "Email is required",
-        "emailVerified": "Your email is verified. You can now sign in.",
-        "forgotPassword": "Forgot password?",
-        "forgotPasswordDescription": "Enter your account email and LongLink will send password reset instructions.",
-        "forgotPasswordTitle": "Reset your password",
-        "github": "GitHub",
-        "haveAccount": "Already have an account?",
-        "hidePassword": "Hide password",
-        "invalidResetLink": "This password reset link is missing its token. Request a new link to continue.",
-        "loadingAuthentication": "Loading authentication settings...",
-        "loginFailed": "Sign in failed",
-        "nameRequired": "Name is required",
-        "newPassword": "New password",
-        "noAccount": "New to LongLink?",
-        "orContinueWith": "or continue with",
-        "orUseAnotherAccount": "or use another account",
-        "passwordRequired": "Password is required",
-        "passwordTooShort": "Password must contain at least 12 characters",
-        "passwordReset": "Your password has been reset. You can now sign in.",
-        "pleaseWait": "Please wait...",
-        "privacyPolicy": "Privacy Policy",
-        "providerSignInFailed": "Provider sign in failed",
-        "registerDescription": "Create your LongLink account with an email address and password.",
-        "registrationUnavailable": "Registration unavailable",
-        "registrationUnavailableDescription": "New account registration is not enabled on this LongLink Platform.",
-        "requestAnotherReset": "Request another reset link",
-        "resendVerificationEmail": "Resend verification email",
-        "resetEmailSent": "If an account exists for that email, password reset instructions are on the way.",
-        "resetPassword": "Reset password",
-        "resetPasswordDescription": "Choose a new password for your LongLink account.",
-        "resetPasswordTitle": "Set a new password",
-        "resettingPassword": "Resetting password...",
-        "savedAccounts": "Saved accounts",
-        "sendResetEmail": "Send reset email",
-        "sendingResetEmail": "Sending reset email...",
-        "sendingVerificationEmail": "Sending verification email...",
-        "signInDescription": "Sign in with your email and password.",
-        "signingIn": "Signing in...",
-        "singleSignOn": "Single sign-on",
-        "showPassword": "Show password",
-        "switchAccountFailed": "Failed to switch account",
-        "termsOfService": "Terms of Service",
-        "verificationEmailSent": "Check your inbox for a verification email.",
-        "verifyEmailDescription": "Enter your email to request a new verification link.",
-        "verifyEmailTitle": "Verify your email",
-        "verifyingEmail": "Verifying your email...",
-        "welcomeTo": "Welcome to"
+    "actions.backToOrganization": {
+        "defaultMessage": "Back to organization"
     },
-    "columns": {
-        "action": "Action",
-        "actions": "Actions",
-        "accessKey": "Access key",
-        "application": "Application",
-        "appRole": "App role",
-        "created": "Created",
-        "createdBy": "Created by",
-        "database": "Database",
-        "deletedBy": "Deleted by",
-        "email": "Email",
-        "error": "Error",
-        "id": "ID",
-        "image": "Image",
-        "kind": "Kind",
-        "metadata": "Metadata",
-        "modified": "Modified",
-        "name": "Name",
-        "namespace": "Namespace",
-        "node": "Node",
-        "operation": "Operation",
-        "organization": "Organization",
-        "owner": "Owner",
-        "pod": "Pod",
-        "resource": "Resource",
-        "resources": "Resources",
-        "role": "Role",
-        "status": "Status",
-        "started": "Started",
-        "step": "Step",
-        "stopped": "Stopped",
-        "timestamp": "Timestamp",
-        "usage": "Usage",
-        "updatedBy": "Updated by",
-        "user": "User"
+    "actions.backToOrganizations": {
+        "defaultMessage": "Back to organizations"
     },
-    "common": {
-        "documentation": "Documentation",
-        "lastUpdated": "Last updated: {{date}}",
-        "longlinkHome": "LongLink home",
-        "mainNavigation": "Main navigation",
-        "noResults": "No results.",
-        "onThisPage": "On this page",
-        "openActionsFor": "Open actions for {{name}}",
-        "overview": "Overview",
-        "runtime": "Runtime",
-        "used": "Used",
-        "unknown": "Unknown"
+    "actions.cancel": {
+        "defaultMessage": "Cancel"
     },
-    "createOrganization": {
-        "avatarLabel": "Avatar URL",
-        "avatarPlaceholder": "https://example.com/org.png",
-        "description": "Create a new workspace for your account.",
-        "error": "Failed to create organization",
-        "computeLabel": "Compute",
-        "computePlaceholder": "Choose compute",
-        "databaseLabel": "Database",
-        "databasePlaceholder": "Choose a database",
-        "nameLabel": "Name",
-        "namePlaceholder": "Example LongLink",
-        "storageLabel": "Storage",
-        "storagePlaceholder": "Choose storage",
-        "title": "New organization"
+    "actions.changeRole": {
+        "defaultMessage": "Change role"
     },
-    "deleteDialog": {
-        "deleteOrganizationDescription": "Delete {{name}} from your account?",
-        "deleteOrganizationFallback": "Delete this organization?",
-        "deleteOrganizationTitle": "Delete organization",
-        "failedDeleteOrganization": "Failed to delete organization"
+    "actions.connect": {
+        "defaultMessage": "Connect"
     },
-    "docs": {
-        "editInGithub": "Edit this page in GitHub"
+    "actions.connecting": {
+        "defaultMessage": "Connecting..."
     },
-    "errors": {
-        "loadApplications": "Failed to load applications.",
-        "loadInvitations": "Failed to load invitations.",
-        "loadOrganizations": "Failed to load organizations.",
-        "loadPeople": "Failed to load people.",
-        "loginFailed": "Login failed",
-        "updateAccount": "Failed to update account"
+    "actions.copy": {
+        "defaultMessage": "Copy"
     },
-    "labels": {
-        "accentColor": "Accent color",
-        "accessKeyId": "Access key ID",
-        "country": "Country",
-        "description": "Description",
-        "endpointUrl": "Endpoint URL",
-        "email": "Email",
-        "host": "Host",
-        "icon": "Icon",
-        "image": "Image",
-        "gatewayUrl": "Gateway URL",
-        "kind": "Kind",
-        "kubeconfig": "Kubeconfig",
-        "language": "Language",
-        "name": "Name",
-        "password": "Password",
-        "port": "Port",
-        "radius": "Radius",
-        "runtimeEndpointUrl": "Runtime endpoint URL",
-        "secretAccessKey": "Secret access key",
-        "theme": "Theme",
-        "username": "Username"
+    "actions.copied": {
+        "defaultMessage": "Copied"
     },
-    "navigation": {
-        "applications": "Applications",
-        "database": "Database",
-        "organizations": "Organizations",
-        "people": "People",
-        "settings": "Settings",
-        "storage": "Storage"
+    "actions.copyCode": {
+        "defaultMessage": "Copy code"
     },
-    "notFound": {
-        "description": "The page {{path}} doesn't exist or isn't available.",
-        "title": "We can't find that page"
+    "actions.copiedCode": {
+        "defaultMessage": "Copied code"
     },
-    "organization": {
-        "applicationsDescription": "Manage the applications attached to this organization.",
-        "applicationsTitle": "Applications",
-        "peopleDescription": "See the members and collaborators in this workspace.",
-        "peopleTitle": "People",
-        "settingsDescription": "Configure the organization and its runtime defaults.",
-        "settingsTitle": "Settings"
+    "actions.create": {
+        "defaultMessage": "Create"
     },
-    "organizations": {
-        "description": "Manage the workspaces connected to your LongLink account.",
-        "title": "Organizations"
+    "actions.creating": {
+        "defaultMessage": "Creating..."
     },
-    "people": {
-        "changeRoleDescription": "Grant {{role}} permission to {{name}} in this organization?",
-        "changeRoleFallback": "Change this member role?",
-        "changeRoleTitle": "Change member role",
-        "failedChangeMemberRole": "Failed to change member role",
-        "failedInviteUser": "Failed to invite user",
-        "grantPermission": "Grant {{role}} permission",
-        "inviteDescription": "Send an invitation to join this organization.",
-        "invitePermissionHint": "You need maintainer, admin, or owner access to invite members.",
-        "inviteTitle": "Invite user",
-        "invitationsDescription": "Pending invitations to join this organization.",
-        "invitationsPermissionHint": "Only maintainers, admins, and owners can send invitations.",
-        "invitationsTitle": "Invitations",
-        "menuAria": "People menu",
-        "membersDescription": "Users who have access to this organization.",
-        "membersTitle": "Members",
-        "noInvitations": "No invitations yet.",
-        "noPeople": "No people found.",
-        "roleChanged": "{{name}} now has {{role}} permission"
+    "actions.createOrganization": {
+        "defaultMessage": "Create Organization"
     },
-    "profile": {
-        "applications": "Applications",
-        "compute": "Compute",
-        "database": "Database",
-        "operations": "Operations",
-        "organizations": "Organizations",
-        "settings": "Settings",
-        "signOutFailed": "Failed to sign out",
-        "storage": "Storage",
-        "users": "Users"
+    "actions.delete": {
+        "defaultMessage": "Delete"
     },
-    "resources": {
-        "allApplications": "All applications",
-        "computeNotFound": "Compute \"{{name}}\" not found",
-        "allocatablePercent": "{{percent}}% Allocatable",
-        "noActiveApp": "No active app",
-        "noColumns": "No columns",
-        "noOrganizationMembers": "No organization members found.",
-        "noStorageResources": "No storage resources found.",
-        "objectCount": "{{count}} objects",
-        "podsDescription": "Pods in namespace {{namespace}} on compute backend {{name}}.",
-        "podsTitle": "Pods",
-        "shared": "shared",
-        "sharedOrganizationUsers": "Shared organization users",
-        "tableCount": "{{count}} tables",
-        "unknownObjects": "Unknown objects",
-        "unknownTables": "Unknown tables",
-        "namespacesDescription": "Namespaces managed by compute backend {{name}}.",
-        "namespacesTitle": "Namespaces"
+    "actions.deleting": {
+        "defaultMessage": "Deleting..."
     },
-    "dialogs": {
-        "chooseCountry": "Choose a country",
-        "chooseDatabaseKind": "Choose a database kind",
-        "chooseIcon": "Choose an icon",
-        "chooseStorageKind": "Choose a storage kind",
-        "connectComputeDescription": "Register a compute backend for orchestration.",
-        "connectComputeTitle": "Connect compute",
-        "connectDatabaseDescription": "Register a database backend for the LongLink Platform.",
-        "connectDatabaseTitle": "Connect database",
-        "connectStorageDescription": "Register an object storage backend.",
-        "connectStorageTitle": "Connect storage",
-        "createApplicationFailed": "Failed to create application",
-        "enterEnvironment": "Enter {{name}}",
-        "failedConnectCompute": "Failed to connect compute",
-        "failedConnectDatabase": "Failed to connect database",
-        "failedConnectStorage": "Failed to connect storage",
-        "inspectImage": "Inspect image",
-        "inspectImageFailed": "Failed to inspect image",
-        "inspecting": "Inspecting...",
-        "logs": "Logs",
-        "none": "None",
-        "optional": "optional",
-        "podLogsTitle": "Pod logs",
-        "required": "required",
-        "reviewEnvs": "Review envs",
-        "reviewMetadata": "Review metadata",
-        "stepEnvs": "3. Envs",
-        "stepImage": "1. Image",
-        "stepMetadata": "2. Metadata"
+    "actions.getStarted": {
+        "defaultMessage": "Get Started"
     },
-    "settings": {
-        "accountDescription": "Update your username and language. Your account email is read-only here.",
-        "accountTitle": "Account",
-        "appearanceDescription": "Customize the theme, accent color, and radius for the interface.",
-        "appearanceTitle": "Appearance",
-        "description": "Manage your account, preferences, and workspace access.",
-        "failedUpdateUsername": "Failed to update username",
-        "organizationDescription": "Review the organizations connected to your personal account.",
-        "organizationsTitle": "Organizations",
-        "placeholders": {
-            "color": "Choose a color",
-            "language": "Choose a language",
-            "radius": "Choose a radius",
-            "theme": "Choose a theme"
-        },
-        "title": "Settings",
-        "usernameRequired": "Username is required",
-        "usernameSaved": "Username saved"
+    "actions.invite": {
+        "defaultMessage": "Invite"
     },
-    "organizationSettings": {
-        "allApplications": "All applications",
-        "applicationPermission": "Application permission",
-        "applicationPermissionsTitle": "{{name}} permissions",
-        "back": "Back",
-        "cannotChangePermissions": "You can view application permissions, but cannot change them.",
-        "deleteApplicationDescription": "Delete {{name}} from this organization?",
-        "deleteApplicationFallback": "Delete this application?",
-        "deleteApplicationTitle": "Delete application",
-        "failedChangeApplicationPermission": "Failed to change application permission",
-        "failedDeleteApplication": "Failed to delete application",
-        "loadApplicationsFailed": "Failed to load applications.",
-        "logs": "Logs",
-        "noActiveApp": "No active app",
-        "noAppAccess": "No app access",
-        "noApplications": "No applications found.",
-        "notAssigned": "Not assigned",
-        "organizationDescription": "View and manage organization details.",
-        "organizationPermission": "Organization permission",
-        "reviewApplications": "Review applications connected to this organization.",
-        "reviewDatabase": "Review database usage for this organization.",
-        "reviewStorage": "Review storage usage for this organization.",
-        "sharedOrganizationUsers": "Shared organization users"
+    "actions.inviting": {
+        "defaultMessage": "Inviting..."
     },
-    "toasts": {
-        "copiedToClipboard": "Copied to clipboard"
+    "actions.next": {
+        "defaultMessage": "Next"
+    },
+    "actions.previous": {
+        "defaultMessage": "Previous"
+    },
+    "actions.login": {
+        "defaultMessage": "Sign In"
+    },
+    "actions.readDocs": {
+        "defaultMessage": "Read docs"
+    },
+    "actions.saveChanges": {
+        "defaultMessage": "Save changes"
+    },
+    "actions.saving": {
+        "defaultMessage": "Saving..."
+    },
+    "actions.seeDocs": {
+        "defaultMessage": "See the Docs"
+    },
+    "actions.signOut": {
+        "defaultMessage": "Sign out"
+    },
+    "admin.applicationsDescription": {
+        "defaultMessage": "Review all applications across organizations and deployment states."
+    },
+    "admin.applicationsTitle": {
+        "defaultMessage": "Applications"
+    },
+    "admin.computeTitle": {
+        "defaultMessage": "Compute"
+    },
+    "admin.computeDeleted": {
+        "defaultMessage": "Compute deleted"
+    },
+    "admin.computeDescription": {
+        "defaultMessage": "Inspect runtime workloads, node capacity, and orchestration status."
+    },
+    "admin.copyEmail": {
+        "defaultMessage": "Copy email"
+    },
+    "admin.copyComputeSlug": {
+        "defaultMessage": "Compute slug"
+    },
+    "admin.copyDatabaseSlug": {
+        "defaultMessage": "Database slug"
+    },
+    "admin.copyStorageSlug": {
+        "defaultMessage": "Storage slug"
+    },
+    "admin.databaseTitle": {
+        "defaultMessage": "Database"
+    },
+    "admin.databaseDeleted": {
+        "defaultMessage": "Database deleted"
+    },
+    "admin.databaseDescription": {
+        "defaultMessage": "Monitor platform data, schema health, and persistence state."
+    },
+    "admin.deleteComputeDescription": {
+        "defaultMessage": "Delete compute {slug}?"
+    },
+    "admin.deleteComputeFallback": {
+        "defaultMessage": "Delete this compute registry?"
+    },
+    "admin.deleteComputeTitle": {
+        "defaultMessage": "Delete compute"
+    },
+    "admin.deleteDatabaseDescription": {
+        "defaultMessage": "Delete database {slug}?"
+    },
+    "admin.deleteDatabaseFallback": {
+        "defaultMessage": "Delete this database?"
+    },
+    "admin.deleteDatabaseTitle": {
+        "defaultMessage": "Delete database"
+    },
+    "admin.deleteOrganizationDescription": {
+        "defaultMessage": "Delete organization {name}?"
+    },
+    "admin.deleteStorageDescription": {
+        "defaultMessage": "Delete storage {slug}?"
+    },
+    "admin.deleteStorageFallback": {
+        "defaultMessage": "Delete this storage registry?"
+    },
+    "admin.deleteStorageTitle": {
+        "defaultMessage": "Delete storage"
+    },
+    "admin.emailCopied": {
+        "defaultMessage": "Email copied"
+    },
+    "admin.failedDeleteCompute": {
+        "defaultMessage": "Failed to delete compute"
+    },
+    "admin.failedDeleteDatabase": {
+        "defaultMessage": "Failed to delete database"
+    },
+    "admin.failedDeleteStorage": {
+        "defaultMessage": "Failed to delete storage"
+    },
+    "admin.computeReconciliation": {
+        "defaultMessage": "Compute reconciliation"
+    },
+    "admin.operationsTitle": {
+        "defaultMessage": "Operations"
+    },
+    "admin.operationStatus.active": {
+        "defaultMessage": "Active"
+    },
+    "admin.operationStatus.completed": {
+        "defaultMessage": "Completed"
+    },
+    "admin.operationStatus.failed": {
+        "defaultMessage": "Failed"
+    },
+    "admin.operationStatus.scheduled": {
+        "defaultMessage": "Scheduled"
+    },
+    "admin.organizationsDescription": {
+        "defaultMessage": "Review organization lifecycle, ownership, and access boundaries."
+    },
+    "admin.organizationsTitle": {
+        "defaultMessage": "Organizations"
+    },
+    "admin.organizationDeleted": {
+        "defaultMessage": "Organization deleted"
+    },
+    "admin.organizationName": {
+        "defaultMessage": "Organization name"
+    },
+    "admin.storageTitle": {
+        "defaultMessage": "Storage"
+    },
+    "admin.storageDeleted": {
+        "defaultMessage": "Storage deleted"
+    },
+    "admin.storageDescription": {
+        "defaultMessage": "Review file storage integrations and object storage configuration."
+    },
+    "admin.operationsDescription": {
+        "defaultMessage": "Track long-running platform tasks, their start time, and when they stopped."
+    },
+    "admin.tabs.applications": {
+        "defaultMessage": "Applications"
+    },
+    "admin.tabs.compute": {
+        "defaultMessage": "Compute"
+    },
+    "admin.tabs.database": {
+        "defaultMessage": "Database"
+    },
+    "admin.tabs.operations": {
+        "defaultMessage": "Operations"
+    },
+    "admin.tabs.organizations": {
+        "defaultMessage": "Organizations"
+    },
+    "admin.tabs.storage": {
+        "defaultMessage": "Storage"
+    },
+    "admin.tabs.users": {
+        "defaultMessage": "Users"
+    },
+    "admin.usersDescription": {
+        "defaultMessage": "Review account access, elevated users, and admin onboarding."
+    },
+    "admin.usersTitle": {
+        "defaultMessage": "Users"
+    },
+    "appView.applicationIsStatus": {
+        "defaultMessage": "Application is {status}"
+    },
+    "appView.applicationLogs": {
+        "defaultMessage": "Application logs"
+    },
+    "appView.emptyApplication": {
+        "defaultMessage": "The application did not expose any pages to render."
+    },
+    "appView.emptyLogs": {
+        "defaultMessage": "No logs available."
+    },
+    "appView.emptyResponse": {
+        "defaultMessage": "The application returned an empty response."
+    },
+    "appView.invalidPageUrl": {
+        "defaultMessage": "Invalid page URL"
+    },
+    "appView.loadApplicationFailed": {
+        "defaultMessage": "The application definition could not be loaded."
+    },
+    "appView.loadLogsFailed": {
+        "defaultMessage": "Failed to load logs"
+    },
+    "appView.loadPageFailed": {
+        "defaultMessage": "Failed to load page"
+    },
+    "appView.logsDescription": {
+        "defaultMessage": "Recent logs for {applicationName}."
+    },
+    "appView.parseXmlFailed": {
+        "defaultMessage": "Failed to parse page XML"
+    },
+    "appView.retryLater": {
+        "defaultMessage": "Please try again in a moment."
+    },
+    "appView.unableToLoadApplication": {
+        "defaultMessage": "Unable to load this application"
+    },
+    "appView.unableToLoadPage": {
+        "defaultMessage": "Unable to load this page"
+    },
+    "appView.unexpectedApplicationResponse": {
+        "defaultMessage": "Unexpected application response"
+    },
+    "auth.accountOpenFailed": {
+        "defaultMessage": "Failed to open account"
+    },
+    "auth.agreementLead": {
+        "defaultMessage": "By continuing, you agree to our"
+    },
+    "auth.agreementMiddle": {
+        "defaultMessage": "and"
+    },
+    "auth.back": {
+        "defaultMessage": "Back"
+    },
+    "auth.backToSignIn": {
+        "defaultMessage": "Back to sign in"
+    },
+    "auth.completingSignIn": {
+        "defaultMessage": "Completing sign in"
+    },
+    "auth.completingSignInDescription": {
+        "defaultMessage": "LongLink is restoring your session and return path."
+    },
+    "auth.createAccount": {
+        "defaultMessage": "Create account"
+    },
+    "auth.creatingAccount": {
+        "defaultMessage": "Creating account..."
+    },
+    "auth.emailInvalid": {
+        "defaultMessage": "Enter a valid email address"
+    },
+    "auth.emailRequired": {
+        "defaultMessage": "Email is required"
+    },
+    "auth.emailVerified": {
+        "defaultMessage": "Your email is verified. You can now sign in."
+    },
+    "auth.forgotPassword": {
+        "defaultMessage": "Forgot password?"
+    },
+    "auth.forgotPasswordDescription": {
+        "defaultMessage": "Enter your account email and LongLink will send password reset instructions."
+    },
+    "auth.forgotPasswordTitle": {
+        "defaultMessage": "Reset your password"
+    },
+    "auth.github": {
+        "defaultMessage": "GitHub"
+    },
+    "auth.haveAccount": {
+        "defaultMessage": "Already have an account?"
+    },
+    "auth.hidePassword": {
+        "defaultMessage": "Hide password"
+    },
+    "auth.invalidResetLink": {
+        "defaultMessage": "This password reset link is missing its token. Request a new link to continue."
+    },
+    "auth.loadingAuthentication": {
+        "defaultMessage": "Loading authentication settings..."
+    },
+    "auth.loginFailed": {
+        "defaultMessage": "Sign in failed"
+    },
+    "auth.nameRequired": {
+        "defaultMessage": "Name is required"
+    },
+    "auth.newPassword": {
+        "defaultMessage": "New password"
+    },
+    "auth.noAccount": {
+        "defaultMessage": "New to LongLink?"
+    },
+    "auth.orContinueWith": {
+        "defaultMessage": "or continue with"
+    },
+    "auth.orUseAnotherAccount": {
+        "defaultMessage": "or use another account"
+    },
+    "auth.passwordRequired": {
+        "defaultMessage": "Password is required"
+    },
+    "auth.passwordTooShort": {
+        "defaultMessage": "Password must contain at least 12 characters"
+    },
+    "auth.passwordReset": {
+        "defaultMessage": "Your password has been reset. You can now sign in."
+    },
+    "auth.pleaseWait": {
+        "defaultMessage": "Please wait..."
+    },
+    "auth.privacyPolicy": {
+        "defaultMessage": "Privacy Policy"
+    },
+    "auth.providerSignInFailed": {
+        "defaultMessage": "Provider sign in failed"
+    },
+    "auth.registerDescription": {
+        "defaultMessage": "Sign up with email and password."
+    },
+    "auth.registrationUnavailable": {
+        "defaultMessage": "Registration unavailable"
+    },
+    "auth.registrationUnavailableDescription": {
+        "defaultMessage": "New account registration is not enabled on this LongLink Platform."
+    },
+    "auth.requestAnotherReset": {
+        "defaultMessage": "Request another reset link"
+    },
+    "auth.resendVerificationEmail": {
+        "defaultMessage": "Resend verification email"
+    },
+    "auth.resetEmailSent": {
+        "defaultMessage": "If an account exists for that email, password reset instructions are on the way."
+    },
+    "auth.resetPassword": {
+        "defaultMessage": "Reset password"
+    },
+    "auth.resetPasswordDescription": {
+        "defaultMessage": "Choose a new password for your LongLink account."
+    },
+    "auth.resetPasswordTitle": {
+        "defaultMessage": "Set a new password"
+    },
+    "auth.resettingPassword": {
+        "defaultMessage": "Resetting password..."
+    },
+    "auth.savedAccounts": {
+        "defaultMessage": "Saved accounts"
+    },
+    "auth.sendResetEmail": {
+        "defaultMessage": "Send reset email"
+    },
+    "auth.sendingResetEmail": {
+        "defaultMessage": "Sending reset email..."
+    },
+    "auth.sendingVerificationEmail": {
+        "defaultMessage": "Sending verification email..."
+    },
+    "auth.signInDescription": {
+        "defaultMessage": "Sign in with your email and password."
+    },
+    "auth.signingIn": {
+        "defaultMessage": "Signing in..."
+    },
+    "auth.singleSignOn": {
+        "defaultMessage": "Single sign-on"
+    },
+    "auth.showPassword": {
+        "defaultMessage": "Show password"
+    },
+    "auth.switchAccountFailed": {
+        "defaultMessage": "Failed to switch account"
+    },
+    "auth.termsOfService": {
+        "defaultMessage": "Terms of Service"
+    },
+    "auth.verificationEmailSent": {
+        "defaultMessage": "Check your inbox for a verification email."
+    },
+    "auth.verifyEmailDescription": {
+        "defaultMessage": "Enter your email to request a new verification link."
+    },
+    "auth.verifyEmailTitle": {
+        "defaultMessage": "Verify your email"
+    },
+    "auth.verifyingEmail": {
+        "defaultMessage": "Verifying your email..."
+    },
+    "auth.welcomeTo": {
+        "defaultMessage": "Welcome to"
+    },
+    "columns.action": {
+        "defaultMessage": "Action"
+    },
+    "columns.actions": {
+        "defaultMessage": "Actions"
+    },
+    "columns.accessKey": {
+        "defaultMessage": "Access key"
+    },
+    "columns.application": {
+        "defaultMessage": "Application"
+    },
+    "columns.appRole": {
+        "defaultMessage": "App role"
+    },
+    "columns.created": {
+        "defaultMessage": "Created"
+    },
+    "columns.createdBy": {
+        "defaultMessage": "Created by"
+    },
+    "columns.database": {
+        "defaultMessage": "Database"
+    },
+    "columns.deletedBy": {
+        "defaultMessage": "Deleted by"
+    },
+    "columns.email": {
+        "defaultMessage": "Email"
+    },
+    "columns.error": {
+        "defaultMessage": "Error"
+    },
+    "columns.id": {
+        "defaultMessage": "ID"
+    },
+    "columns.image": {
+        "defaultMessage": "Image"
+    },
+    "columns.kind": {
+        "defaultMessage": "Kind"
+    },
+    "columns.metadata": {
+        "defaultMessage": "Metadata"
+    },
+    "columns.modified": {
+        "defaultMessage": "Modified"
+    },
+    "columns.name": {
+        "defaultMessage": "Name"
+    },
+    "columns.namespace": {
+        "defaultMessage": "Namespace"
+    },
+    "columns.node": {
+        "defaultMessage": "Node"
+    },
+    "columns.operation": {
+        "defaultMessage": "Operation"
+    },
+    "columns.organization": {
+        "defaultMessage": "Organization"
+    },
+    "columns.owner": {
+        "defaultMessage": "Owner"
+    },
+    "columns.pod": {
+        "defaultMessage": "Pod"
+    },
+    "columns.resource": {
+        "defaultMessage": "Resource"
+    },
+    "columns.resources": {
+        "defaultMessage": "Resources"
+    },
+    "columns.role": {
+        "defaultMessage": "Role"
+    },
+    "columns.status": {
+        "defaultMessage": "Status"
+    },
+    "columns.started": {
+        "defaultMessage": "Started"
+    },
+    "columns.step": {
+        "defaultMessage": "Step"
+    },
+    "columns.stopped": {
+        "defaultMessage": "Stopped"
+    },
+    "columns.timestamp": {
+        "defaultMessage": "Timestamp"
+    },
+    "columns.usage": {
+        "defaultMessage": "Usage"
+    },
+    "columns.updatedBy": {
+        "defaultMessage": "Updated by"
+    },
+    "columns.user": {
+        "defaultMessage": "User"
+    },
+    "common.documentation": {
+        "defaultMessage": "Documentation"
+    },
+    "common.lastUpdated": {
+        "defaultMessage": "Last updated: {date}"
+    },
+    "common.longlinkHome": {
+        "defaultMessage": "LongLink home"
+    },
+    "common.mainNavigation": {
+        "defaultMessage": "Main navigation"
+    },
+    "common.noResults": {
+        "defaultMessage": "No results."
+    },
+    "common.onThisPage": {
+        "defaultMessage": "On this page"
+    },
+    "common.openActionsFor": {
+        "defaultMessage": "Open actions for {name}"
+    },
+    "common.overview": {
+        "defaultMessage": "Overview"
+    },
+    "common.runtime": {
+        "defaultMessage": "Runtime"
+    },
+    "common.used": {
+        "defaultMessage": "Used"
+    },
+    "common.unknown": {
+        "defaultMessage": "Unknown"
+    },
+    "createOrganization.avatarLabel": {
+        "defaultMessage": "Avatar URL"
+    },
+    "createOrganization.avatarPlaceholder": {
+        "defaultMessage": "https://example.com/org.png"
+    },
+    "createOrganization.description": {
+        "defaultMessage": "Create a new workspace for your account."
+    },
+    "createOrganization.error": {
+        "defaultMessage": "Failed to create organization"
+    },
+    "createOrganization.computeLabel": {
+        "defaultMessage": "Compute"
+    },
+    "createOrganization.computePlaceholder": {
+        "defaultMessage": "Choose compute"
+    },
+    "createOrganization.databaseLabel": {
+        "defaultMessage": "Database"
+    },
+    "createOrganization.databasePlaceholder": {
+        "defaultMessage": "Choose a database"
+    },
+    "createOrganization.nameLabel": {
+        "defaultMessage": "Name"
+    },
+    "createOrganization.namePlaceholder": {
+        "defaultMessage": "Example LongLink"
+    },
+    "createOrganization.storageLabel": {
+        "defaultMessage": "Storage"
+    },
+    "createOrganization.storagePlaceholder": {
+        "defaultMessage": "Choose storage"
+    },
+    "createOrganization.title": {
+        "defaultMessage": "New organization"
+    },
+    "deleteDialog.deleteOrganizationDescription": {
+        "defaultMessage": "Delete {name} from your account?"
+    },
+    "deleteDialog.deleteOrganizationFallback": {
+        "defaultMessage": "Delete this organization?"
+    },
+    "deleteDialog.deleteOrganizationTitle": {
+        "defaultMessage": "Delete organization"
+    },
+    "deleteDialog.failedDeleteOrganization": {
+        "defaultMessage": "Failed to delete organization"
+    },
+    "docs.editInGithub": {
+        "defaultMessage": "Edit this page in GitHub"
+    },
+    "errors.loadApplications": {
+        "defaultMessage": "Failed to load applications."
+    },
+    "errors.loadInvitations": {
+        "defaultMessage": "Failed to load invitations."
+    },
+    "errors.loadOrganizations": {
+        "defaultMessage": "Failed to load organizations."
+    },
+    "errors.loadPeople": {
+        "defaultMessage": "Failed to load people."
+    },
+    "errors.loginFailed": {
+        "defaultMessage": "Login failed"
+    },
+    "errors.updateAccount": {
+        "defaultMessage": "Failed to update account"
+    },
+    "labels.accentColor": {
+        "defaultMessage": "Accent color"
+    },
+    "labels.accessKeyId": {
+        "defaultMessage": "Access key ID"
+    },
+    "labels.country": {
+        "defaultMessage": "Country"
+    },
+    "labels.description": {
+        "defaultMessage": "Description"
+    },
+    "labels.endpointUrl": {
+        "defaultMessage": "Endpoint URL"
+    },
+    "labels.email": {
+        "defaultMessage": "Email"
+    },
+    "labels.host": {
+        "defaultMessage": "Host"
+    },
+    "labels.icon": {
+        "defaultMessage": "Icon"
+    },
+    "labels.image": {
+        "defaultMessage": "Image"
+    },
+    "labels.gatewayUrl": {
+        "defaultMessage": "Gateway URL"
+    },
+    "labels.kind": {
+        "defaultMessage": "Kind"
+    },
+    "labels.kubeconfig": {
+        "defaultMessage": "Kubeconfig"
+    },
+    "labels.language": {
+        "defaultMessage": "Language"
+    },
+    "labels.name": {
+        "defaultMessage": "Name"
+    },
+    "labels.password": {
+        "defaultMessage": "Password"
+    },
+    "labels.port": {
+        "defaultMessage": "Port"
+    },
+    "labels.radius": {
+        "defaultMessage": "Radius"
+    },
+    "labels.runtimeEndpointUrl": {
+        "defaultMessage": "Runtime endpoint URL"
+    },
+    "labels.secretAccessKey": {
+        "defaultMessage": "Secret access key"
+    },
+    "labels.theme": {
+        "defaultMessage": "Theme"
+    },
+    "labels.username": {
+        "defaultMessage": "Username"
+    },
+    "navigation.applications": {
+        "defaultMessage": "Applications"
+    },
+    "navigation.database": {
+        "defaultMessage": "Database"
+    },
+    "navigation.organizations": {
+        "defaultMessage": "Organizations"
+    },
+    "navigation.people": {
+        "defaultMessage": "People"
+    },
+    "navigation.settings": {
+        "defaultMessage": "Settings"
+    },
+    "navigation.storage": {
+        "defaultMessage": "Storage"
+    },
+    "notFound.description": {
+        "defaultMessage": "The page {path} doesn't exist or isn't available."
+    },
+    "notFound.title": {
+        "defaultMessage": "We can't find that page"
+    },
+    "organization.applicationsDescription": {
+        "defaultMessage": "Manage the applications attached to this organization."
+    },
+    "organization.applicationsTitle": {
+        "defaultMessage": "Applications"
+    },
+    "organization.peopleDescription": {
+        "defaultMessage": "See the members and collaborators in this workspace."
+    },
+    "organization.peopleTitle": {
+        "defaultMessage": "People"
+    },
+    "organization.settingsDescription": {
+        "defaultMessage": "Configure the organization and its runtime defaults."
+    },
+    "organization.settingsTitle": {
+        "defaultMessage": "Settings"
+    },
+    "organizations.description": {
+        "defaultMessage": "Manage the workspaces connected to your LongLink account."
+    },
+    "organizations.title": {
+        "defaultMessage": "Organizations"
+    },
+    "people.changeRoleDescription": {
+        "defaultMessage": "Grant {role} permission to {name} in this organization?"
+    },
+    "people.changeRoleFallback": {
+        "defaultMessage": "Change this member role?"
+    },
+    "people.changeRoleTitle": {
+        "defaultMessage": "Change member role"
+    },
+    "people.failedChangeMemberRole": {
+        "defaultMessage": "Failed to change member role"
+    },
+    "people.failedInviteUser": {
+        "defaultMessage": "Failed to invite user"
+    },
+    "people.grantPermission": {
+        "defaultMessage": "Grant {role} permission"
+    },
+    "people.inviteDescription": {
+        "defaultMessage": "Send an invitation to join this organization."
+    },
+    "people.invitePermissionHint": {
+        "defaultMessage": "You need maintainer, admin, or owner access to invite members."
+    },
+    "people.inviteTitle": {
+        "defaultMessage": "Invite user"
+    },
+    "people.invitationsDescription": {
+        "defaultMessage": "Pending invitations to join this organization."
+    },
+    "people.invitationsPermissionHint": {
+        "defaultMessage": "Only maintainers, admins, and owners can send invitations."
+    },
+    "people.invitationsTitle": {
+        "defaultMessage": "Invitations"
+    },
+    "people.menuAria": {
+        "defaultMessage": "People menu"
+    },
+    "people.membersDescription": {
+        "defaultMessage": "Users who have access to this organization."
+    },
+    "people.membersTitle": {
+        "defaultMessage": "Members"
+    },
+    "people.noInvitations": {
+        "defaultMessage": "No invitations yet."
+    },
+    "people.noPeople": {
+        "defaultMessage": "No people found."
+    },
+    "people.roleChanged": {
+        "defaultMessage": "{name} now has {role} permission"
+    },
+    "profile.applications": {
+        "defaultMessage": "Applications"
+    },
+    "profile.compute": {
+        "defaultMessage": "Compute"
+    },
+    "profile.database": {
+        "defaultMessage": "Database"
+    },
+    "profile.operations": {
+        "defaultMessage": "Operations"
+    },
+    "profile.organizations": {
+        "defaultMessage": "Organizations"
+    },
+    "profile.settings": {
+        "defaultMessage": "Settings"
+    },
+    "profile.signOutFailed": {
+        "defaultMessage": "Failed to sign out"
+    },
+    "profile.storage": {
+        "defaultMessage": "Storage"
+    },
+    "profile.users": {
+        "defaultMessage": "Users"
+    },
+    "resources.allApplications": {
+        "defaultMessage": "All applications"
+    },
+    "resources.computeNotFound": {
+        "defaultMessage": "Compute \"{name}\" not found"
+    },
+    "resources.allocatablePercent": {
+        "defaultMessage": "{percent}% Allocatable"
+    },
+    "resources.noActiveApp": {
+        "defaultMessage": "No active app"
+    },
+    "resources.noColumns": {
+        "defaultMessage": "No columns"
+    },
+    "resources.noOrganizationMembers": {
+        "defaultMessage": "No organization members found."
+    },
+    "resources.noStorageResources": {
+        "defaultMessage": "No storage resources found."
+    },
+    "resources.objectCount": {
+        "defaultMessage": "{count} objects"
+    },
+    "resources.podsDescription": {
+        "defaultMessage": "Pods in namespace {namespace} on compute backend {name}."
+    },
+    "resources.podsTitle": {
+        "defaultMessage": "Pods"
+    },
+    "resources.shared": {
+        "defaultMessage": "shared"
+    },
+    "resources.sharedOrganizationUsers": {
+        "defaultMessage": "Shared organization users"
+    },
+    "resources.tableCount": {
+        "defaultMessage": "{count} tables"
+    },
+    "resources.unknownObjects": {
+        "defaultMessage": "Unknown objects"
+    },
+    "resources.unknownTables": {
+        "defaultMessage": "Unknown tables"
+    },
+    "resources.namespacesDescription": {
+        "defaultMessage": "Namespaces managed by compute backend {name}."
+    },
+    "resources.namespacesTitle": {
+        "defaultMessage": "Namespaces"
+    },
+    "dialogs.chooseCountry": {
+        "defaultMessage": "Choose a country"
+    },
+    "dialogs.chooseDatabaseKind": {
+        "defaultMessage": "Choose a database kind"
+    },
+    "dialogs.chooseIcon": {
+        "defaultMessage": "Choose an icon"
+    },
+    "dialogs.chooseStorageKind": {
+        "defaultMessage": "Choose a storage kind"
+    },
+    "dialogs.connectComputeDescription": {
+        "defaultMessage": "Register a compute backend for orchestration."
+    },
+    "dialogs.connectComputeTitle": {
+        "defaultMessage": "Connect compute"
+    },
+    "dialogs.connectDatabaseDescription": {
+        "defaultMessage": "Register a database backend for the LongLink Platform."
+    },
+    "dialogs.connectDatabaseTitle": {
+        "defaultMessage": "Connect database"
+    },
+    "dialogs.connectStorageDescription": {
+        "defaultMessage": "Register an object storage backend."
+    },
+    "dialogs.connectStorageTitle": {
+        "defaultMessage": "Connect storage"
+    },
+    "dialogs.createApplicationFailed": {
+        "defaultMessage": "Failed to create application"
+    },
+    "dialogs.enterEnvironment": {
+        "defaultMessage": "Enter {name}"
+    },
+    "dialogs.failedConnectCompute": {
+        "defaultMessage": "Failed to connect compute"
+    },
+    "dialogs.failedConnectDatabase": {
+        "defaultMessage": "Failed to connect database"
+    },
+    "dialogs.failedConnectStorage": {
+        "defaultMessage": "Failed to connect storage"
+    },
+    "dialogs.inspectImage": {
+        "defaultMessage": "Inspect image"
+    },
+    "dialogs.inspectImageFailed": {
+        "defaultMessage": "Failed to inspect image"
+    },
+    "dialogs.inspecting": {
+        "defaultMessage": "Inspecting..."
+    },
+    "dialogs.logs": {
+        "defaultMessage": "Logs"
+    },
+    "dialogs.none": {
+        "defaultMessage": "None"
+    },
+    "dialogs.optional": {
+        "defaultMessage": "optional"
+    },
+    "dialogs.podLogsTitle": {
+        "defaultMessage": "Pod logs"
+    },
+    "dialogs.required": {
+        "defaultMessage": "required"
+    },
+    "dialogs.reviewEnvs": {
+        "defaultMessage": "Review envs"
+    },
+    "dialogs.reviewMetadata": {
+        "defaultMessage": "Review metadata"
+    },
+    "dialogs.stepEnvs": {
+        "defaultMessage": "3. Envs"
+    },
+    "dialogs.stepImage": {
+        "defaultMessage": "1. Image"
+    },
+    "dialogs.stepMetadata": {
+        "defaultMessage": "2. Metadata"
+    },
+    "settings.accountDescription": {
+        "defaultMessage": "Update your username and language. Your account email is read-only here."
+    },
+    "settings.accountTitle": {
+        "defaultMessage": "Account"
+    },
+    "settings.appearanceDescription": {
+        "defaultMessage": "Customize the theme, accent color, and radius for the interface."
+    },
+    "settings.appearanceTitle": {
+        "defaultMessage": "Appearance"
+    },
+    "settings.description": {
+        "defaultMessage": "Manage your account, preferences, and workspace access."
+    },
+    "settings.failedUpdateUsername": {
+        "defaultMessage": "Failed to update username"
+    },
+    "settings.organizationDescription": {
+        "defaultMessage": "Review the organizations connected to your personal account."
+    },
+    "settings.organizationsTitle": {
+        "defaultMessage": "Organizations"
+    },
+    "settings.placeholders.color": {
+        "defaultMessage": "Choose a color"
+    },
+    "settings.placeholders.language": {
+        "defaultMessage": "Choose a language"
+    },
+    "settings.placeholders.radius": {
+        "defaultMessage": "Choose a radius"
+    },
+    "settings.placeholders.theme": {
+        "defaultMessage": "Choose a theme"
+    },
+    "settings.title": {
+        "defaultMessage": "Settings"
+    },
+    "settings.usernameRequired": {
+        "defaultMessage": "Username is required"
+    },
+    "settings.usernameSaved": {
+        "defaultMessage": "Username saved"
+    },
+    "organizationSettings.allApplications": {
+        "defaultMessage": "All applications"
+    },
+    "organizationSettings.applicationPermission": {
+        "defaultMessage": "Application permission"
+    },
+    "organizationSettings.applicationPermissionsTitle": {
+        "defaultMessage": "{name} permissions"
+    },
+    "organizationSettings.back": {
+        "defaultMessage": "Back"
+    },
+    "organizationSettings.cannotChangePermissions": {
+        "defaultMessage": "You can view application permissions, but cannot change them."
+    },
+    "organizationSettings.deleteApplicationDescription": {
+        "defaultMessage": "Delete {name} from this organization?"
+    },
+    "organizationSettings.deleteApplicationFallback": {
+        "defaultMessage": "Delete this application?"
+    },
+    "organizationSettings.deleteApplicationTitle": {
+        "defaultMessage": "Delete application"
+    },
+    "organizationSettings.failedChangeApplicationPermission": {
+        "defaultMessage": "Failed to change application permission"
+    },
+    "organizationSettings.failedDeleteApplication": {
+        "defaultMessage": "Failed to delete application"
+    },
+    "organizationSettings.loadApplicationsFailed": {
+        "defaultMessage": "Failed to load applications."
+    },
+    "organizationSettings.logs": {
+        "defaultMessage": "Logs"
+    },
+    "organizationSettings.noActiveApp": {
+        "defaultMessage": "No active app"
+    },
+    "organizationSettings.noAppAccess": {
+        "defaultMessage": "No app access"
+    },
+    "organizationSettings.noApplications": {
+        "defaultMessage": "No applications found."
+    },
+    "organizationSettings.notAssigned": {
+        "defaultMessage": "Not assigned"
+    },
+    "organizationSettings.organizationDescription": {
+        "defaultMessage": "View and manage organization details."
+    },
+    "organizationSettings.organizationPermission": {
+        "defaultMessage": "Organization permission"
+    },
+    "organizationSettings.reviewApplications": {
+        "defaultMessage": "Review applications connected to this organization."
+    },
+    "organizationSettings.reviewDatabase": {
+        "defaultMessage": "Review database usage for this organization."
+    },
+    "organizationSettings.reviewStorage": {
+        "defaultMessage": "Review storage usage for this organization."
+    },
+    "organizationSettings.sharedOrganizationUsers": {
+        "defaultMessage": "Shared organization users"
+    },
+    "toasts.copiedToClipboard": {
+        "defaultMessage": "Copied to clipboard"
     }
 }

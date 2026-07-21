@@ -5,13 +5,13 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Selector } from '@astryxdesign/core/Selector';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { useTranslation } from '@/lib/i18n';
 import { useUserProfile } from '@/hooks/use-user';
 import { useCreateOrganization } from '@/hooks/use-organization';
 import { useCountries, useInfrastructureOptions } from '@/data/admin';
@@ -39,7 +39,7 @@ const defaultCreateOrganizationValues = {
 
 /** Renders the create-organization dialog. */
 export default function CreateOrganization() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const { role } = useUserProfile();
     const createOrganization = useCreateOrganization();
     const formId = useId();

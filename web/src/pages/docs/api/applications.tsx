@@ -61,6 +61,7 @@ function ApplicationRuntimeResourcesDiagram() {
 }
 
 export const metadata = {
+    toc: [{ id: 'roles', label: 'Roles' }],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/applications.tsx',
 };

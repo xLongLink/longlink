@@ -4,15 +4,14 @@ import { Text } from '@astryxdesign/core/Text';
 import { Card } from '@astryxdesign/core/Card';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { useEffect, useRef, useState } from 'react';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Outline } from '@astryxdesign/core/Outline';
 import { AppShell } from '@astryxdesign/core/AppShell';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
 import type { ArticleNavigationGroup, ArticlePage } from '@/pages/catalog';
 import { formatDate } from '@/lib/utils';
-import { useTranslation } from '@/lib/i18n';
 import { Sidebar } from '@/components/Sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserProfile } from '@/hooks/use-user';
@@ -24,57 +23,20 @@ type ArticleLayoutProps = {
 
 type ArticleContentProps = Pick<ArticlePage, 'content' | 'metadata'>;
 
-type PageTocItem = {
-    id: string;
-    label: string;
-    level: number;
-};
-
 const DOCS_SIDEBAR_WIDTH = 260;
 
 /** Renders an article page using the shared article shell. */
 export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutProps) {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const { user, organizations } = useUserProfile();
     const isMobile = useIsMobile();
     const location = useLocation();
-    const contentRef = useRef<HTMLDivElement>(null);
-    const [pageToc, setPageToc] = useState<PageTocItem[]>([]);
     const { content, metadata } = page;
+    const pageToc = metadata.toc?.map((item) => ({ id: item.id, label: item.label, level: item.level ?? 2 })) ?? [];
     const getStartedHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
 
-    useEffect(() => {
-        // Clear the table of contents until content is mounted.
-        const contentElement = contentRef.current;
-        if (!contentElement) {
-            setPageToc([]);
-            return;
-        }
-
-        // Wait for routed documentation content to commit before reading heading IDs.
-        const frame = window.requestAnimationFrame(() => {
-            const headings = Array.from(contentElement.querySelectorAll<HTMLHeadingElement>('h2[id]'))
-                .map((heading) => ({
-                    id: heading.id,
-                    label: heading.textContent?.trim() ?? '',
-                    level: 2,
-                }))
-                .filter((item) => item.id && item.label);
-
-            setPageToc(headings);
-        });
-
-        return () => {
-            window.cancelAnimationFrame(frame);
-        };
-    }, [location.pathname, content]);
-
     const breadcrumbs = (
-        <Breadcrumbs
-            className="ms-1 [&_li]:text-[0.875rem] [&_li]:leading-5"
-            separator={<span className="px-1">{'>'}</span>}
-            variant="supporting"
-        >
+        <Breadcrumbs separator=">" variant="supporting">
             {page.breadcrumbs.map((item, index) => {
                 const isLast = index === page.breadcrumbs.length - 1;
 
@@ -103,7 +65,7 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
     );
     const body = (
         <div className="grid min-h-full w-full grid-cols-1 lg:grid-cols-[minmax(0,1fr)_14rem]">
-            <div ref={contentRef} className="min-w-0 p-4 pt-7 pb-12 lg:p-6 lg:pt-10 lg:pb-12">
+            <div className="min-w-0 p-4 pt-7 pb-12 lg:p-6 lg:pt-10 lg:pb-12">
                 <div className="mx-auto w-full max-w-3xl">
                     <ArticleContent content={content} metadata={metadata} />
                 </div>
@@ -111,7 +73,7 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
 
             {pageToc.length ? (
                 <aside
-                    className="fixed end-2 top-16 bottom-2 z-20 hidden w-56 overflow-auto border-s border-[var(--color-border)] px-5 py-6 lg:block"
+                    className="fixed end-2 top-16 bottom-2 z-20 hidden w-56 overflow-auto px-5 py-6 lg:block"
                     aria-label={t('common.onThisPage')}
                 >
                     <Stack gap={3}>
@@ -190,39 +152,28 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
     );
 }
 
-/** Renders article body content and optional source metadata. */
+/** Renders article body content and source metadata. */
 function ArticleContent({ content, metadata }: ArticleContentProps) {
-    const { t } = useTranslation();
-    const lastUpdated = metadata.lastUpdated
-        ? (() => {
-              const parsedDate = new Date(metadata.lastUpdated);
-
-              return Number.isNaN(parsedDate.getTime()) ? metadata.lastUpdated : formatDate(parsedDate);
-          })()
-        : '';
+    const t = useTranslator();
+    const lastUpdatedDate = new Date(metadata.lastUpdated ?? Date.now());
+    const lastUpdated = formatDate(Number.isNaN(lastUpdatedDate.getTime()) ? Date.now() : lastUpdatedDate);
 
     return (
         <article className="docs-article space-y-7 text-[1.0625rem] leading-8 text-[var(--color-text-secondary)] [&>div]:gap-5 [&_[data-slot=code-block]]:max-w-3xl [&_a]:font-medium [&_code]:text-[var(--color-text-primary)] [&_h1]:border-b [&_h1]:border-[var(--color-border)] [&_h1]:pb-3 [&_h1]:text-[1.75rem] [&_h1]:leading-tight [&_h1]:font-semibold [&_h1]:tracking-normal [&_h1]:text-[var(--color-text-primary)] [&_h2]:mt-10 [&_h2]:border-b [&_h2]:border-[var(--color-border)] [&_h2]:pb-3 [&_h2]:text-[1.75rem] [&_h2]:leading-tight [&_h2]:tracking-normal [&_h2]:text-[var(--color-text-primary)] [&_h3]:mt-7 [&_h3]:border-b [&_h3]:border-[var(--color-border)] [&_h3]:pb-2 [&_h3]:text-[1.35rem] [&_h3]:leading-snug [&_h3]:tracking-normal [&_h3]:text-[var(--color-text-primary)] [&_h4]:mt-5 [&_h4]:border-b [&_h4]:border-[var(--color-border)] [&_h4]:pb-2 [&_h4]:text-xl [&_h4]:tracking-normal [&_h4]:text-[var(--color-text-primary)] [&_li]:leading-7 [&_p]:max-w-3xl [&_p]:leading-7">
             {content}
-            {metadata.lastUpdated || metadata.editUrl ? (
-                <Stack as="footer" gap={3}>
-                    <Divider />
-                    <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
-                        {metadata.lastUpdated ? (
-                            <Text type="supporting" color="secondary">
-                                {t('common.lastUpdated', { date: lastUpdated })}
-                            </Text>
-                        ) : (
-                            <span />
-                        )}
-                        {metadata.editUrl ? (
-                            <Link as="a" href={metadata.editUrl} isExternalLink type="supporting">
-                                {t('docs.editInGithub')}
-                            </Link>
-                        ) : null}
-                    </Stack>
+            <Stack as="footer" gap={3}>
+                <Divider />
+                <Stack direction="horizontal" gap={3} hAlign="between" vAlign="center" wrap="wrap">
+                    <Text type="supporting" color="secondary">
+                        {t('common.lastUpdated', { date: lastUpdated })}
+                    </Text>
+                    {metadata.editUrl ? (
+                        <Link as="a" href={metadata.editUrl} isExternalLink type="supporting">
+                            {t('docs.editInGithub')}
+                        </Link>
+                    ) : null}
                 </Stack>
-            ) : null}
+            </Stack>
         </article>
     );
 }

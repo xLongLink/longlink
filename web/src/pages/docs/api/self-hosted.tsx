@@ -6,6 +6,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 export const metadata = {
+    toc: [{ id: 'api-environment-variables', label: 'API Environment Variables' }],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/self-hosted.tsx',
 };

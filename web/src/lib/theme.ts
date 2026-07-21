@@ -129,6 +129,17 @@ export function getAstryxTheme(accentValue: Accent, radius: Radius): DefinedThem
         },
         radius: { base: 4, multiplier: RADIUS_MULTIPLIERS[radius] },
         components: {
+            breadcrumbs: {
+                base: { marginInlineStart: 'calc(-1 * var(--spacing-1))' },
+            },
+            'breadcrumb-item': {
+                base: {
+                    fontSize: '0.875rem',
+                    gap: 'var(--spacing-2)',
+                    lineHeight: '1.25rem',
+                    marginInlineStart: 'var(--spacing-1)',
+                },
+            },
             table: {
                 base: {
                     borderColor: 'var(--color-border-emphasized)',
