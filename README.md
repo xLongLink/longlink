@@ -55,7 +55,7 @@ longlink dev
 
 ## Principles
 
-- TODO
+- The usage must be intuitive. Anything unclear is considered a bug.
 
 <br />
 

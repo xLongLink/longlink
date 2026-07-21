@@ -5,6 +5,7 @@ import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Building2, Settings2 } from 'lucide-react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
@@ -60,8 +61,8 @@ export default function Organizations() {
             brandOnly
             brandHref="/"
             tabs={{
-                [t('navigation.organizations')]: '/organizations',
-                [t('navigation.settings')]: '/settings',
+                [t('navigation.organizations')]: { href: '/organizations', icon: Building2 },
+                [t('navigation.settings')]: { href: '/settings', icon: Settings2 },
             }}
         >
             <VStack

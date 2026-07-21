@@ -32,6 +32,7 @@ dependencies = [
     'kr8s>=0.20.15',
     'longlink',
     'uvicorn>=0.51.0',
+    'mjml>=0.12.0',
 ]
 
 [tool.uv.sources]
@@ -64,6 +65,7 @@ include = ['src*']
 
 [tool.setuptools.package-data]
 "src.kubernetes.templates" = ["*.yml"]
+"src.utils" = ["templates/*.mjml"]
 
 [tool.ruff]
 line-length = 140

@@ -1,6 +1,6 @@
 import contextlib
 from uuid import UUID
-from .types import DatabaseSchemaUsage, DatabaseRuntimeConnection
+from typing import TypedDict
 from sqlalchemy import String, text
 from collections.abc import AsyncIterator
 from longlink.shared import migrations as shared_migrations
@@ -11,6 +11,25 @@ from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection, create_async_engine
 from sqlalchemy.sql.elements import quoted_name
 from longlink.shared.constants import SHARED_SCHEMA
+
+
+class DatabaseRuntimeConnection(TypedDict):
+    """Describe least-privilege connection material injected into one Application runtime."""
+
+    host: str
+    port: int
+    password: str
+    sslmode: DatabaseSSLMode
+    username: str
+    database_name: str
+
+
+class DatabaseSchemaUsage(TypedDict):
+    """Describe storage usage for one database schema."""
+
+    name: str
+    space_used: int
+    table_count: int
 
 
 class Postgres:

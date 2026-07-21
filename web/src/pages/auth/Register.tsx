@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { useToast } from '@astryxdesign/core/Toast';
 import { useMutation } from '@tanstack/react-query';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Controller, useForm } from 'react-hook-form';
@@ -11,9 +11,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocation, useNavigate } from 'react-router';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { fetchApiVoid } from '@/lib/api';
 import { AuthPage } from '@/components/AuthPage';
 import { Wordmark } from '@/components/Wordmark';
+import { ApiError, fetchApiVoid } from '@/lib/api';
 import { sanitizeRedirectPath } from '@/lib/redirects';
 import { PasswordInput } from '@/components/PasswordInput';
 
@@ -31,6 +31,7 @@ export default function Register() {
     const t = useTranslator();
     const location = useLocation();
     const navigate = useNavigate();
+    const showToast = useToast();
     const nextPath = sanitizeRedirectPath(new URLSearchParams(location.search).get('next'));
     const nextQuery = new URLSearchParams({ next: nextPath }).toString();
     const welcomeTitle = (
@@ -51,7 +52,7 @@ export default function Register() {
     });
     const registration = useMutation({
         mutationFn: async (payload: RegisterValues) => {
-            await fetchApiVoid('/auth/register', {
+            await fetchApiVoid('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -66,8 +67,18 @@ export default function Register() {
             const verificationQuery = new URLSearchParams({ email: payload.email, next: nextPath, sent: 'true' });
 
             navigate(`/auth/verify-email?${verificationQuery.toString()}`, { replace: true });
-        } catch {
-            // The mutation exposes its normalized API error below the form.
+        } catch (error) {
+            // Show API failures as toasts so raw backend error codes never appear in the form.
+            const message =
+                error instanceof ApiError
+                    ? error.message === 'REGISTER_USER_ALREADY_EXISTS'
+                        ? t('auth.accountAlreadyExists')
+                        : t('auth.registrationFailed')
+                    : error instanceof Error
+                      ? error.message
+                      : t('auth.registrationFailed');
+
+            showToast({ body: message, type: 'error' });
         }
     }
 
@@ -141,7 +152,6 @@ export default function Register() {
                             />
                         )}
                     />
-                    {registration.error ? <Banner status="error" title={registration.error.message} /> : null}
                     <Button
                         isDisabled={registration.isPending}
                         isLoading={registration.isPending}

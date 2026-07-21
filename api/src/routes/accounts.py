@@ -9,7 +9,7 @@ from fastapi_users.authentication.strategy.db import DatabaseStrategy
 router = APIRouter()
 
 
-@router.post("/auth/accounts/{user_id}/activate", status_code=204, include_in_schema=False)
+@router.post("/api/auth/accounts/{user_id}/activate", status_code=204, include_in_schema=False)
 async def activate_account(
     user_id: UUID,
     request: Request,
@@ -38,7 +38,7 @@ async def activate_account(
     return await cookie_backend.login(strategy, user)
 
 
-@router.post("/auth/accounts/deactivate", response_model=list[UserListItem], include_in_schema=False)
+@router.post("/api/auth/accounts/deactivate", response_model=list[UserListItem], include_in_schema=False)
 async def deactivate_account(
     request: Request,
     response: Response,
@@ -65,7 +65,7 @@ async def deactivate_account(
     return accounts
 
 
-@router.get("/auth/accounts", response_model=list[UserListItem], include_in_schema=False)
+@router.get("/api/auth/accounts", response_model=list[UserListItem], include_in_schema=False)
 async def list_accounts(request: Request):
     """Return accounts previously authenticated in this browser session."""
 
@@ -79,7 +79,7 @@ async def list_accounts(request: Request):
     return accounts
 
 
-@router.post("/auth/logout", status_code=204, include_in_schema=False)
+@router.post("/api/auth/logout", status_code=204, include_in_schema=False)
 async def logout(
     request: Request,
     authentication: tuple[User | None, str | None] = Depends(current_optional_user_token),

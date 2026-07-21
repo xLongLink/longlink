@@ -305,6 +305,12 @@
     "auth.creatingAccount": {
         "defaultMessage": "Creating account..."
     },
+    "auth.accountAlreadyExists": {
+        "defaultMessage": "An account with this email already exists. Sign in or reset your password to continue."
+    },
+    "auth.registrationFailed": {
+        "defaultMessage": "Could not create the account. Check your details and try again."
+    },
     "auth.emailInvalid": {
         "defaultMessage": "Enter a valid email address"
     },
@@ -312,7 +318,7 @@
         "defaultMessage": "Email is required"
     },
     "auth.emailVerified": {
-        "defaultMessage": "Your email is verified. You can now sign in."
+        "defaultMessage": "Your email is verified. Opening LongLink..."
     },
     "auth.forgotPassword": {
         "defaultMessage": "Forgot password?"
@@ -378,7 +384,7 @@
         "defaultMessage": "Request another reset link"
     },
     "auth.resendVerificationEmail": {
-        "defaultMessage": "Resend verification code"
+        "defaultMessage": "Resend verification link"
     },
     "auth.resetEmailSent": {
         "defaultMessage": "If an account exists for that email, password reset instructions are on the way."
@@ -405,7 +411,7 @@
         "defaultMessage": "Sending reset email..."
     },
     "auth.sendingVerificationEmail": {
-        "defaultMessage": "Sending verification code..."
+        "defaultMessage": "Sending verification link..."
     },
     "auth.signInDescription": {
         "defaultMessage": "Sign in with your email and password."
@@ -423,7 +429,7 @@
         "defaultMessage": "Terms of Service"
     },
     "auth.verificationEmailSent": {
-        "defaultMessage": "Check your inbox for a verification code."
+        "defaultMessage": "Check your inbox for a verification link."
     },
     "auth.verificationCode": {
         "defaultMessage": "Verification code"
@@ -435,7 +441,7 @@
         "defaultMessage": "Verify email"
     },
     "auth.verifyEmailDescription": {
-        "defaultMessage": "Enter the code LongLink sent to your email address."
+        "defaultMessage": "Use the link LongLink sent to your email address."
     },
     "auth.verifyEmailTitle": {
         "defaultMessage": "Verify your email"
@@ -817,6 +823,12 @@
     },
     "people.roleChanged": {
         "defaultMessage": "{name} now has {role} permission"
+    },
+    "profile.accountSection": {
+        "defaultMessage": "Account"
+    },
+    "profile.adminSection": {
+        "defaultMessage": "Administration"
     },
     "profile.applications": {
         "defaultMessage": "Applications"

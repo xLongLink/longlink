@@ -480,7 +480,7 @@ function PythonCardVisual() {
 /** Renders the public home page. */
 export default function Home() {
     return (
-        <div className="min-h-screen overflow-hidden">
+        <div className="min-h-screen overflow-hidden [&_a]:no-underline">
             <Navbar />
             <main className="relative -mt-[84px] flex min-h-screen w-full items-center justify-center px-6 pb-10 pt-28">
                 <div

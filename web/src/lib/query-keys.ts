@@ -2,7 +2,7 @@ import { apiQueryKey } from '@/lib/api';
 
 /** Builds the saved accounts query key. */
 export function accountsQueryKey() {
-    return apiQueryKey('/auth/accounts');
+    return apiQueryKey('/api/auth/accounts');
 }
 
 /** Builds the current user profile query key. */

@@ -215,10 +215,15 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
     fake_database = FakeDatabase()
     fake_storage = FakeStorage()
 
-    def database_adapter(registry: DatabaseRegistry) -> FakeDatabase:
+    def database_adapter(host: str, port: int, username: str, password: str) -> FakeDatabase:
         """Return the test database adapter for the selected registry."""
 
-        assert registry.id == database_registry.id
+        assert (host, port, username, password) == (
+            database_registry.host,
+            database_registry.port,
+            database_registry.username,
+            database_registry.password,
+        )
         return fake_database
 
     def storage_adapter(registry: StorageRegistry) -> FakeStorage:
@@ -241,7 +246,7 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
         metadata.image = "ghcr.io/longlink/dashboard@sha256:resolved"
         return metadata
 
-    monkeypatch.setattr(compute_operations.adapters, "database", database_adapter)
+    monkeypatch.setattr(compute_operations.adapters, "Postgres", database_adapter)
     monkeypatch.setattr(compute_operations.adapters, "storage", storage_adapter)
     monkeypatch.setattr(compute_operations.projections, "sync_organization_users", sync_organization_users)
     monkeypatch.setattr(compute_operations.images, "metadata", image_metadata)

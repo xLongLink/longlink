@@ -24,16 +24,15 @@ class AuthUserCreate(schemas.BaseUserCreate):
     password: str = Field(min_length=12, max_length=1024)
 
 
-class VerificationCodeRequest(BaseModel):
-    """Validate an email verification-code request."""
+class VerificationRequest(BaseModel):
+    """Validate an email verification-link request."""
 
     # Account
     email: EmailStr = Field(max_length=254)
 
 
-class VerificationCodeConfirm(BaseModel):
-    """Validate one emailed account verification code."""
+class VerificationTokenConfirm(BaseModel):
+    """Validate one emailed account verification token."""
 
-    # Account
-    code: str = Field(min_length=8, max_length=8, pattern=r"^\d{8}$")
-    email: EmailStr = Field(max_length=254)
+    # Verification
+    token: str = Field(min_length=1)

@@ -8,8 +8,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from longlink.shared import users as shared_users
 from src.environments import env
 from sqlalchemy.engine import URL
+from src.adapters.postgres import Postgres
 from sqlalchemy.ext.asyncio import create_async_engine
-from src.adapters.database.postgres import Postgres
 
 pytestmark = pytest.mark.no_db
 POSTGRES_PORT = 5432

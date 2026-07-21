@@ -8,7 +8,6 @@ from src.version import platform_version_key
 from src.environments import env
 from src.models.types import Image, StorageKind
 from src.models.statuses import ApplicationStatus, OrganizationStatus
-from src.adapters.database import Postgres
 from src.database.services import compute, storage, database, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayTLSMaterial
@@ -79,7 +78,7 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
 
     try:
         # Resolve each Organization's immutable database and storage assignments before provider writes.
-        databases: dict[UUID, Postgres] = {}
+        databases: dict[UUID, adapters.Postgres] = {}
         object_storages: dict[UUID, Storage] = {}
         storage_registries: dict[UUID, StorageRegistry] = {}
         for organization in organization_rows:
@@ -93,7 +92,12 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
                     operation.platform_version,
                 )
                 return jobs.fail(f"Organization '{organization.slug}' infrastructure is incomplete")
-            databases[organization.id] = adapters.database(database_registry)
+            databases[organization.id] = adapters.Postgres(
+                database_registry.host,
+                database_registry.port,
+                database_registry.username,
+                database_registry.password,
+            )
             object_storages[organization.id] = adapters.storage(storage_registry)
             storage_registries[organization.id] = storage_registry
 

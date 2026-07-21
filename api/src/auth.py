@@ -1,54 +1,27 @@
-import asyncio
-import hashlib
-import hmac
-import logging
-import secrets
-import smtplib
+import jwt
 from uuid import UUID
 from typing import cast
-from datetime import timedelta
 from fastapi import Depends, Request, Response, HTTPException
-from src.utils import roles
+from src.utils import mail, roles
 from src.database import session as database
-from email.message import EmailMessage
 from fastapi_users import UUIDIDMixin, FastAPIUsers, BaseUserManager, schemas
 from collections.abc import AsyncIterator
 from fastapi_users.db import SQLAlchemyUserDatabase
 from src.environments import env
 from src.models.roles import PlatformRoles
 from fastapi.responses import RedirectResponse
-from longlink.utils.time import utcnow
+from fastapi_users.jwt import decode_jwt
 from src.database.services import users
 from httpx_oauth.exceptions import GetIdEmailError
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi_users.exceptions import InvalidPasswordException, InvalidVerifyToken, UserAlreadyVerified, UserNotExists
+from fastapi_users.exceptions import InvalidID, UserNotExists, InvalidVerifyToken, UserAlreadyVerified, InvalidPasswordException
 from src.database.models.users import User, AccessToken, OAuthAccount
 from httpx_oauth.clients.github import GitHubOAuth2
 from fastapi_users.authentication import CookieTransport, AuthenticationBackend
 from fastapi_users.authentication.strategy.db import DatabaseStrategy
 from fastapi_users_db_sqlalchemy.access_token import SQLAlchemyAccessTokenDatabase
 
-logger = logging.getLogger("longlink.auth")
 AUTH_COOKIE = "longlink_auth"
-EMAIL_VERIFICATION_CODE_DIGITS = 8
-EMAIL_VERIFICATION_CODE_MAX = 10**EMAIL_VERIFICATION_CODE_DIGITS
-EMAIL_VERIFICATION_CODE_TTL_SECONDS = 15 * 60
-
-
-def generate_verification_code() -> str:
-    """Return one random numeric email verification code."""
-
-    # Preserve leading zeroes so every code has a consistent length.
-    code = secrets.randbelow(EMAIL_VERIFICATION_CODE_MAX)
-    return f"{code:0{EMAIL_VERIFICATION_CODE_DIGITS}d}"
-
-
-def verification_code_hash(user_id: UUID, email: str, code: str) -> str:
-    """Return a keyed digest for one verification code without storing the plaintext value."""
-
-    # Bind the code to the account identity so a copied hash cannot verify another user.
-    payload = f"{user_id}:{email.casefold()}:{code}".encode()
-    return hmac.new(env.SESSION_KEY.encode(), payload, hashlib.sha256).hexdigest()
 
 
 class SessionAccountsService:
@@ -164,40 +137,6 @@ async def get_access_token_database(
     yield SQLAlchemyAccessTokenDatabase(session, AccessToken)
 
 
-def send_smtp_message(message: EmailMessage) -> None:
-    """Send one prepared authentication message through configured SMTP."""
-
-    if env.SMTP_HOST is None:
-        raise RuntimeError("SMTP_HOST is not configured")
-
-    # Open the configured SMTP transport and upgrade it with STARTTLS when requested.
-    smtp_type = smtplib.SMTP_SSL if env.SMTP_USE_TLS else smtplib.SMTP
-    with smtp_type(env.SMTP_HOST, env.SMTP_PORT, timeout=15) as client:
-        if env.SMTP_START_TLS:
-            client.starttls()
-        if env.SMTP_USERNAME is not None:
-            client.login(env.SMTP_USERNAME, env.SMTP_PASSWORD or "")
-        client.send_message(message)
-
-
-async def send_authentication_email(recipient: str, subject: str, body: str) -> None:
-    """Deliver an authentication email or log it during local development."""
-
-    # Keep local development self-contained when no SMTP server is configured.
-    if env.SMTP_HOST is None and env.DEVELOPMENT:
-        logger.warning("Development authentication email to %s: %s\n%s", recipient, subject, body)
-        return
-
-    message = EmailMessage()
-    message["From"] = env.SMTP_FROM
-    message["To"] = recipient
-    message["Subject"] = subject
-    message.set_content(body)
-
-    # SMTP is synchronous, so isolate it from the API event loop.
-    await asyncio.to_thread(send_smtp_message, message)
-
-
 class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
     """Connect FastAPI Users lifecycle events to LongLink account policy."""
 
@@ -212,35 +151,36 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         if len(password) > 1024:
             raise InvalidPasswordException(reason="Password cannot exceed 1024 characters")
 
-    async def verify_code(self, email: str, code: str, request: Request | None = None) -> User:
-        """Verify one account with its latest emailed code."""
+    async def verify_email_token(self, token: str, request: Request | None = None) -> User:
+        """Verify one signed email token and return the account for login."""
 
-        # Resolve the target user without leaking whether the submitted email exists.
+        # Decode the signed token using the same constraints FastAPI Users applies.
+        try:
+            data = decode_jwt(token, self.verification_token_secret, [self.verification_token_audience])
+        except jwt.PyJWTError as exc:
+            raise InvalidVerifyToken() from exc
+
+        # Require the token identity claims before resolving the account.
+        user_id = data.get("sub")
+        email = data.get("email")
+        if not isinstance(user_id, str) or not isinstance(email, str):
+            raise InvalidVerifyToken()
+
+        # Load and match the target account exactly before changing verification state.
         try:
             user = await self.get_by_email(email)
-        except UserNotExists as exc:
+            parsed_id = self.parse_id(user_id)
+        except (InvalidID, UserNotExists) as exc:
             raise InvalidVerifyToken() from exc
+        if parsed_id != user.id:
+            raise InvalidVerifyToken()
+
+        # Treat valid already-used links as login links for the same verified account.
         if user.is_verified:
-            raise UserAlreadyVerified()
+            return user
 
-        # Require an unexpired stored challenge before comparing code hashes.
-        expires_at = user.verification_code_expires_at
-        stored_hash = user.verification_code_hash
-        if expires_at is None or stored_hash is None or expires_at <= utcnow():
-            raise InvalidVerifyToken()
-        submitted_hash = verification_code_hash(user.id, user.email, code)
-        if not hmac.compare_digest(stored_hash, submitted_hash):
-            raise InvalidVerifyToken()
-
-        # Mark the account verified and clear the one-time challenge.
-        verified_user = await self.user_db.update(
-            user,
-            {
-                "is_verified": True,
-                "verification_code_hash": None,
-                "verification_code_expires_at": None,
-            },
-        )
+        # Mark the account verified before issuing the browser session cookie.
+        verified_user = await self.user_db.update(user, {"is_verified": True})
         await self.on_after_verify(verified_user, request)
         return verified_user
 
@@ -263,29 +203,15 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
             await self.request_verify(user, request)
 
     async def on_after_request_verify(self, user: User, token: str, request: Request | None = None) -> None:
-        """Send the email verification code generated for a local account."""
+        """Send the email verification link generated for a local account."""
 
-        # Replace the upstream token email with a short one-time code stored only as a keyed hash.
-        code = generate_verification_code()
-        expires_at = utcnow() + timedelta(seconds=EMAIL_VERIFICATION_CODE_TTL_SECONDS)
-        await self.user_db.update(
-            user,
-            {
-                "verification_code_hash": verification_code_hash(user.id, user.email, code),
-                "verification_code_expires_at": expires_at,
-            },
-        )
-        await send_authentication_email(
-            user.email,
-            "Verify your LongLink account",
-            f"Your LongLink verification code is:\n\n{code}\n\nThis code expires in 15 minutes.\n",
-        )
+        await mail.send_signup_verification_email(user.email, token)
 
     async def on_after_forgot_password(self, user: User, token: str, request: Request | None = None) -> None:
         """Send the password reset link generated by FastAPI Users."""
 
         url = f"{env.PUBLIC_URL.rstrip('/')}/auth/reset-password?token={token}"
-        await send_authentication_email(user.email, "Reset your LongLink password", f"Reset your password:\n\n{url}\n")
+        await mail.send_authentication_email(user.email, "Reset your LongLink password", f"Reset your password:\n\n{url}\n")
 
     async def on_after_login(self, user: User, request: Request | None = None, response: Response | None = None) -> None:
         """Remember the local account for the browser account switcher."""

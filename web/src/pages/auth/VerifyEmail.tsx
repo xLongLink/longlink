@@ -1,78 +1,99 @@
 import { z } from 'zod';
-import { useLocation } from 'react-router';
+import { useEffect } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { useMutation } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useLocation, useNavigate } from 'react-router';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchApiVoid } from '@/lib/api';
 import { AuthPage } from '@/components/AuthPage';
 import { sanitizeRedirectPath } from '@/lib/redirects';
+import { accountsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 
 type VerifyEmailValues = {
-    code: string;
+    token: string;
+};
+
+type RequestVerificationValues = {
     email: string;
 };
 
-type RequestVerificationValues = Pick<VerifyEmailValues, 'email'>;
-
-const codeInputAttributes = { autoComplete: 'one-time-code', inputMode: 'numeric' } as const;
 const emailInputAttributes = { autoComplete: 'email' } as const;
+const submittedVerificationLinks = new Set<string>();
+const verificationSchema = z.object({
+    token: z.string().trim().min(1),
+});
 
-/** Verifies an emailed code and supports requesting a replacement verification email. */
+/** Verifies an emailed link and supports requesting a replacement verification email. */
 export default function VerifyEmail() {
     const t = useTranslator();
     const location = useLocation();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const search = new URLSearchParams(location.search);
     const email = search.get('email') ?? '';
+    const token = search.get('token') ?? '';
     const wasSent = search.get('sent') === 'true';
     const nextPath = sanitizeRedirectPath(search.get('next'));
     const nextQuery = new URLSearchParams({ next: nextPath }).toString();
-    const schema = z.object({
-        code: z.string().trim().regex(/^\d{8}$/, t('auth.verificationCodeInvalid')),
+    const requestSchema = z.object({
         email: z.string().trim().min(1, t('auth.emailRequired')).email(t('auth.emailInvalid')),
     });
-    const form = useForm<VerifyEmailValues>({
-        defaultValues: { code: '', email },
-        resolver: zodResolver(schema),
+    const form = useForm<RequestVerificationValues>({
+        defaultValues: { email },
+        resolver: zodResolver(requestSchema),
     });
     const verification = useMutation({
         mutationFn: async (payload: VerifyEmailValues) => {
-            await fetchApiVoid('/auth/verify', {
+            await fetchApiVoid('/api/auth/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
+        },
+        onSuccess: async () => {
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: userProfileQueryKey() }),
+                queryClient.invalidateQueries({ queryKey: accountsQueryKey() }),
+            ]);
+            navigate(`/organizations?${nextQuery}`, { replace: true });
         },
     });
     const requestVerification = useMutation({
         mutationFn: async (payload: RequestVerificationValues) => {
-            await fetchApiVoid('/auth/request-verify-token', {
+            await fetchApiVoid('/api/auth/request-verify-token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
         },
     });
+    const verifyEmail = verification.mutate;
 
-    /** Sends another code to the email currently entered in the form. */
-    async function handleRequestVerification() {
-        const emailIsValid = await form.trigger('email');
+    useEffect(() => {
+        const payload = { token };
 
-        // Do not request a code until the email field passes client validation.
-        if (!emailIsValid) {
+        // Automatically verify one-time links while keeping manual resend available.
+        if (!token || submittedVerificationLinks.has(token)) {
             return;
         }
 
-        requestVerification.mutate({ email: form.getValues('email') });
-    }
+        const result = verificationSchema.safeParse(payload);
+        if (!result.success) {
+            return;
+        }
+
+        submittedVerificationLinks.add(token);
+        verifyEmail(result.data);
+    }, [token, verifyEmail]);
 
     let statusMessage = wasSent ? t('auth.verificationEmailSent') : t('auth.verifyEmailDescription');
 
-    // Code processing takes precedence over the informational resend state.
+    // Link processing takes precedence over the informational resend state.
     if (verification.isPending) {
         statusMessage = t('auth.verifyingEmail');
     } else if (verification.isSuccess) {
@@ -86,7 +107,7 @@ export default function VerifyEmail() {
             {verification.isSuccess ? (
                 <Button href={`/organizations?${nextQuery}`} label={t('auth.backToSignIn')} variant="primary" />
             ) : (
-                <Stack as="form" gap={4} onSubmit={form.handleSubmit((payload) => verification.mutate(payload))}>
+                <Stack as="form" gap={4} onSubmit={form.handleSubmit((payload) => requestVerification.mutate(payload))}>
                     <Controller
                         control={form.control}
                         name="email"
@@ -108,26 +129,6 @@ export default function VerifyEmail() {
                             />
                         )}
                     />
-                    <Controller
-                        control={form.control}
-                        name="code"
-                        render={({ field, fieldState }) => (
-                            <TextInput
-                                {...codeInputAttributes}
-                                ref={field.ref}
-                                htmlName={field.name}
-                                isRequired
-                                label={t('auth.verificationCode')}
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
-                                status={
-                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
-                                }
-                                value={field.value}
-                                width="100%"
-                            />
-                        )}
-                    />
                     {requestVerification.isSuccess ? (
                         <Banner status="success" title={t('auth.verificationEmailSent')} />
                     ) : null}
@@ -142,14 +143,6 @@ export default function VerifyEmail() {
                                 ? t('auth.sendingVerificationEmail')
                                 : t('auth.resendVerificationEmail')
                         }
-                        onClick={() => void handleRequestVerification()}
-                        type="button"
-                        variant="secondary"
-                    />
-                    <Button
-                        isDisabled={verification.isPending}
-                        isLoading={verification.isPending}
-                        label={verification.isPending ? t('auth.verifyingEmail') : t('auth.verifyEmail')}
                         type="submit"
                         variant="primary"
                     />

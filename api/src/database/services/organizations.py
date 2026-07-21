@@ -293,7 +293,13 @@ async def create(
             raise HTTPException(status_code=404, detail="Storage registry not found")
 
         # Derive the immutable Organization connection from its selected database registry.
-        shared_schema_url = adapters.database(database_registry).shared_schema_url(organization_id)
+        db = adapters.Postgres(
+            database_registry.host,
+            database_registry.port,
+            database_registry.username,
+            database_registry.password,
+        )
+        shared_schema_url = db.shared_schema_url(organization_id)
 
         organization = Organization(
             id=organization_id,

@@ -298,7 +298,7 @@ async def _database_usage_rows(
 
     # Inspect backend schema usage for the organization database.
     try:
-        db = adapters.database(registry)
+        db = adapters.Postgres(registry.host, registry.port, registry.username, registry.password)
         schemas = await db.schema_usage(database)
 
     # Convert database inspection failures to availability errors.

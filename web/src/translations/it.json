@@ -305,6 +305,12 @@
     "auth.creatingAccount": {
         "defaultMessage": "Creazione account..."
     },
+    "auth.accountAlreadyExists": {
+        "defaultMessage": "Esiste gia un account con questa email. Accedi o reimposta la password per continuare."
+    },
+    "auth.registrationFailed": {
+        "defaultMessage": "Impossibile creare l'account. Controlla i dati e riprova."
+    },
     "auth.emailInvalid": {
         "defaultMessage": "Inserisci un indirizzo email valido"
     },
@@ -312,7 +318,7 @@
         "defaultMessage": "L'email e obbligatoria"
     },
     "auth.emailVerified": {
-        "defaultMessage": "La tua email e verificata. Ora puoi accedere."
+        "defaultMessage": "La tua email e verificata. Apertura di LongLink..."
     },
     "auth.forgotPassword": {
         "defaultMessage": "Password dimenticata?"
@@ -378,7 +384,7 @@
         "defaultMessage": "Richiedi un altro link"
     },
     "auth.resendVerificationEmail": {
-        "defaultMessage": "Invia di nuovo il codice"
+        "defaultMessage": "Invia di nuovo il link"
     },
     "auth.resetEmailSent": {
         "defaultMessage": "Se esiste un account per questa email, le istruzioni per reimpostare la password sono in arrivo."
@@ -405,7 +411,7 @@
         "defaultMessage": "Invio email di ripristino..."
     },
     "auth.sendingVerificationEmail": {
-        "defaultMessage": "Invio codice di verifica..."
+        "defaultMessage": "Invio link di verifica..."
     },
     "auth.signInDescription": {
         "defaultMessage": "Accedi con email e password."
@@ -423,7 +429,7 @@
         "defaultMessage": "Termini di servizio"
     },
     "auth.verificationEmailSent": {
-        "defaultMessage": "Controlla la posta per il codice di verifica."
+        "defaultMessage": "Controlla la posta per il link di verifica."
     },
     "auth.verificationCode": {
         "defaultMessage": "Codice di verifica"
@@ -435,7 +441,7 @@
         "defaultMessage": "Verifica email"
     },
     "auth.verifyEmailDescription": {
-        "defaultMessage": "Inserisci il codice che LongLink ha inviato al tuo indirizzo email."
+        "defaultMessage": "Usa il link che LongLink ha inviato al tuo indirizzo email."
     },
     "auth.verifyEmailTitle": {
         "defaultMessage": "Verifica la tua email"
@@ -817,6 +823,12 @@
     },
     "people.roleChanged": {
         "defaultMessage": "{name} ora ha il permesso {role}"
+    },
+    "profile.accountSection": {
+        "defaultMessage": "Account"
+    },
+    "profile.adminSection": {
+        "defaultMessage": "Amministrazione"
     },
     "profile.applications": {
         "defaultMessage": "Applicazioni"
