@@ -6,15 +6,15 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Slider } from '@astryxdesign/core/Slider';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
-import { Slider } from '@astryxdesign/core/Slider';
 import { Selector } from '@astryxdesign/core/Selector';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Building2, Paintbrush, UserRound } from 'lucide-react';
+import { Building2, Paintbrush, Settings2, UserRound } from 'lucide-react';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import Layout from '@/layout/Layout';
@@ -146,8 +146,8 @@ export default function Settings() {
         <Layout
             brandOnly
             tabs={{
-                [t('navigation.organizations')]: '/organizations',
-                [t('navigation.settings')]: '/settings',
+                [t('navigation.organizations')]: { href: '/organizations', icon: Building2 },
+                [t('navigation.settings')]: { href: '/settings', icon: Settings2 },
             }}
         >
             <VStack

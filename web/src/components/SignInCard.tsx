@@ -58,7 +58,7 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
         mutationFn: async (payload: LoginValues) => {
             const body = new URLSearchParams({ username: payload.email, password: payload.password });
 
-            await fetchApiVoid('/auth/password/login', {
+            await fetchApiVoid('/api/auth/password/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body,
@@ -102,7 +102,7 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
         setPendingProvider(provider);
 
         try {
-            const authorization = await fetchApiJson(`/auth/${provider}/authorize`, undefined, (value) =>
+            const authorization = await fetchApiJson(`/api/auth/${provider}/authorize`, undefined, (value) =>
                 parseApiResponse(apiAuthorizationSchema, value)
             );
 

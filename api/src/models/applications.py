@@ -31,7 +31,7 @@ class ApplicationCreate(BaseModel):
     @field_validator("envs")
     @classmethod
     def validate_environment_variables(cls, envs: dict[str, str]) -> dict[str, str]:
-        """Validate application environment names and bounded value sizes."""
+        """Validate application environment names, ownership, and bounded value sizes."""
 
         # Limit the number of environment values accepted per application.
         if len(envs) > APPLICATION_ENVIRONMENT_COUNT_MAX:
@@ -46,6 +46,10 @@ class ApplicationCreate(BaseModel):
             # Environment names must be shell-compatible identifiers.
             if not APPLICATION_ENVIRONMENT_NAME_PATTERN.fullmatch(name):
                 raise ValueError(f"Environment variable '{name}' is invalid")
+
+            # Reserve Platform-managed runtime variables for reconciliation.
+            if name.startswith("LONGLINK_"):
+                raise ValueError(f"Environment variable '{name}' is reserved for the LongLink Platform")
 
             # Bound environment values to avoid oversized runtime secrets.
             if len(value) > APPLICATION_ENVIRONMENT_VALUE_MAX_LENGTH:

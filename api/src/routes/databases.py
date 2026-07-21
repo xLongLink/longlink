@@ -66,9 +66,8 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
     if registry is None:
         raise HTTPException(status_code=404, detail="Database registry not found")
 
-    db = adapters.database(registry)
-
     # Inspect backend usage through the adapter.
+    db = adapters.Postgres(registry.host, registry.port, registry.username, registry.password)
     try:
         data = await db.usage()
     except Exception as exc:

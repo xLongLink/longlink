@@ -46,15 +46,17 @@ async def test_database_usage_endpoint_returns_backend_capacity(
     class FakePostgres:
         """Return deterministic database usage without contacting PostgreSQL."""
 
+        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+            """Validate the database registry connection fields."""
+
+            assert (host, port, username, password) == (registry.host, registry.port, registry.username, registry.password)
+
         async def usage(self) -> dict[str, int]:
             """Return fake backend capacity counters."""
 
             return {"space_used": 987654321}
 
-    monkeypatch.setattr(
-        "src.routes.databases.adapters.database",
-        lambda registry_argument: FakePostgres(),
-    )
+    monkeypatch.setattr("src.routes.databases.adapters.Postgres", FakePostgres)
 
     # Act
     response = client.get(f"/api/databases/{registry.id}/usage")

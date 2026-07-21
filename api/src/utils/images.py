@@ -27,10 +27,6 @@ SUPPORTED_REGISTRIES = {
 async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongLinkMetadata | None:
     """Fetch LongLink metadata from a remote image via the OCI Distribution API."""
 
-    # Reject application values reserved for Platform injection before accessing the registry.
-    if envs is not None and any(name.startswith("LONGLINK_") for name in envs):
-        return None
-
     # Resolve the supported registry before opening a network client.
     try:
         registry_url = _registry_url(image.registry)
@@ -132,6 +128,8 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
         except (httpx2.HTTPError, json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
             logger.warning("Failed to inspect image metadata: %s", exc)
             return None
+
+
 def _registry_url(registry: str) -> str:
     """Return the supported OCI Distribution API base URL for one registry."""
 

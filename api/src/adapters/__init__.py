@@ -1,25 +1,9 @@
 from .storage import MinIO, Storage, Exoscale
-from .database import Postgres
+from .postgres import Postgres
 from .storage.base import StorageRuntimeCredentials
 from src.environments import env
 from src.models.types import StorageKind
 from src.database.models.storages import StorageRegistry
-from src.database.models.databases import DatabaseRegistry
-
-
-def database(registry: DatabaseRegistry) -> Postgres:
-    """Construct the PostgreSQL provisioning adapter for one database registry.
-
-    Registry credentials remain at this control-plane boundary instead of being returned as runtime connection material.
-    """
-
-    # Keep registry credential translation centralized for production and test callers.
-    return Postgres(
-        registry.host,
-        registry.port,
-        registry.username,
-        registry.password,
-    )
 
 
 def storage(registry: StorageRegistry) -> Storage:

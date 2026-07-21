@@ -50,7 +50,7 @@ DOCKER_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]
 DOCKER_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
 DEFAULT_ENVIRONMENT_IMPORT = "src.envs:Env"
 
-DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:python3.14-bookworm AS builder
+DOCKERFILE_TEMPLATE = """FROM ghcr.io/astral-sh/uv:0.9.30-python3.14-bookworm@sha256:73868e084ba4de5da1f7fb3c0cfa29edf93e1d965f9a1afe9a496fd6f97db574 AS builder
 
 COPY . /workspace
 
@@ -60,7 +60,7 @@ ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_LONGLINK={sdk_version}
 
 RUN uv sync --no-dev && find /workspace -name .git -type d -prune -exec rm -rf {{}} +
 
-FROM python:3.14-slim-bookworm
+FROM python:3.14.6-slim-bookworm@sha256:86f975aca15cf04a40b399eebede9aea7c82eae084d1f1a0a6ef6bcaae871a30
 
 WORKDIR {workdir}
 

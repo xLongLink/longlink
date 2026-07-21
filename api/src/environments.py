@@ -32,7 +32,7 @@ class Env(BaseSettings):
     SMTP_PASSWORD: str | None = None
     SMTP_START_TLS: bool = True
     SMTP_USE_TLS: bool = False
-    SMTP_FROM: str = "LongLink <no-reply@longlink.dev>"
+    SMTP_FROM: str | None = None
 
     # Optional authentication providers
     GITHUB_CLIENT_ID: str | None = None

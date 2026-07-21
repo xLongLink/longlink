@@ -1,10 +1,10 @@
 import { createContext, useContext } from 'react';
 import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import { DEFAULT_RADIUS, type Accent, type Theme } from '@/lib/theme';
 import type { ApiUserListItem, ApiUserOrganizationMembership, ApiUserProfile } from '@/lib/types';
 import { useApiQuery } from '@/hooks/use-api';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { DEFAULT_RADIUS, type Accent, type Theme } from '@/lib/theme';
 import { accountsQueryKey, userOrganizationsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 import {
     apiUserListItemSchema,
@@ -118,7 +118,7 @@ export function useUserProfile(): UserProfileState {
 export function useUser() {
     const profile = useUserProfile();
     const queryClient = useQueryClient();
-    const accountsQuery = useCollectionQuery<ApiUserListItem>('/auth/accounts', {
+    const accountsQuery = useCollectionQuery<ApiUserListItem>('/api/auth/accounts', {
         parse: (value) => parseApiCollection(apiUserListItemSchema, value),
         refetchOnMount: 'always',
         retry: false,
@@ -131,14 +131,14 @@ export function useUser() {
 
     /** Signs the current user out and clears cached session state. */
     const signOut = async () => {
-        await fetchApiVoid('/auth/logout', { method: 'POST' });
+        await fetchApiVoid('/api/auth/logout', { method: 'POST' });
         queryClient.clear();
         window.location.assign('/organizations');
     };
 
     /** Activates one saved account and refreshes the current user session. */
     const activateAccount = async (id: string) => {
-        await fetchApiVoid(`/auth/accounts/${encodeURIComponent(id)}/activate`, {
+        await fetchApiVoid(`/api/auth/accounts/${encodeURIComponent(id)}/activate`, {
             method: 'POST',
         });
 
@@ -151,7 +151,7 @@ export function useUser() {
     /** Clears the active user on the server so another account can be selected. */
     const switchAccount = async () => {
         const savedAccounts = await fetchApiJson(
-            '/auth/accounts/deactivate',
+            '/api/auth/accounts/deactivate',
             {
                 method: 'POST',
             },

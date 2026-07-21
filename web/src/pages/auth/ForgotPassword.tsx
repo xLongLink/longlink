@@ -35,7 +35,7 @@ export default function ForgotPassword() {
     });
     const requestReset = useMutation({
         mutationFn: async (payload: ForgotPasswordValues) => {
-            await fetchApiVoid('/auth/forgot-password', {
+            await fetchApiVoid('/api/auth/forgot-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),

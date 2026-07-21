@@ -63,12 +63,12 @@ async def test_logout_clears_the_active_account(users: tuple[User, User, User]) 
     )
 
     # Revoke the database token and remove its local UUID from the account list.
-    response = client.post("/auth/logout")
+    response = client.post("/api/auth/logout")
 
     assert response.status_code == 204
 
     # Preserve other remembered accounts while protected routes become anonymous.
-    accounts_response = client.get("/auth/accounts")
+    accounts_response = client.get("/api/auth/accounts")
     assert accounts_response.status_code == 200
     assert accounts_response.json() == [UserListItem.model_validate(user_two).model_dump(mode="json")]
 

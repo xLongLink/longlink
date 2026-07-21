@@ -1,4 +1,4 @@
-FROM oven/bun:1 AS web-builder
+FROM oven/bun:1.3.14@sha256:e10577f0db68676a7024391c6e5cb4b879ebd17188ab750cf10024a6d700e5c4 AS web-builder
 
 WORKDIR /repo
 COPY web/package.json web/bun.lock web/ ./web/
@@ -9,7 +9,7 @@ ENV VERSION=${VERSION}
 RUN bun install --frozen-lockfile
 RUN bun run build:api
 
-FROM python:3.14-slim
+FROM python:3.14.6-slim@sha256:cea0e6040540fb2b965b6e7fb5ffa00871e632eef63719f0ea54bca189ce14a6
 
 ARG VERSION=v0.0.0
 ENV VERSION=${VERSION}
@@ -21,7 +21,7 @@ LABEL org.opencontainers.image.source="https://github.com/xLongLink/longlink"
 WORKDIR /app
 ENV PATH="/app/.venv/bin:${PATH}"
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+COPY --from=ghcr.io/astral-sh/uv:0.11.30@sha256:93b61e21202b1dab861092748e46bbd6e0e41dd84f59b9174efd2353186e1b47 /uv /uvx /usr/local/bin/
 
 COPY sdk/ /sdk/
 COPY api/ /app/

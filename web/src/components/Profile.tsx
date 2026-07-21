@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Icon } from '@astryxdesign/core/Icon';
+import { Item } from '@astryxdesign/core/Item';
 import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
@@ -9,6 +9,7 @@ import { useToast } from '@astryxdesign/core/Toast';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Popover } from '@astryxdesign/core/Popover';
 import { useTranslator } from '@astryxdesign/core/i18n';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { useUser } from '@/hooks/use-user';
 
 /** Renders a user profile popover with authentication and navigation actions. */
@@ -38,21 +39,9 @@ export function UserProfile() {
             width={280}
             content={
                 <Stack gap={2} width="100%">
-                    <Button
-                        children={
-                            <Stack direction="horizontal" gap={3} vAlign="center">
-                                <Avatar src={user.avatar} name={user.name} size="small" />
-                                <Stack gap={0}>
-                                    <Text maxLines={1} type="label">
-                                        {user.name}
-                                    </Text>
-                                    <Text color="secondary" maxLines={1} type="supporting">
-                                        {user.email}
-                                    </Text>
-                                </Stack>
-                                <Icon icon="arrowsUpDown" size="sm" />
-                            </Stack>
-                        }
+                    <Item
+                        description={user.email}
+                        endContent={<Icon icon="arrowsUpDown" size="sm" />}
                         label={user.name}
                         onClick={() => {
                             setIsOpen(false);
@@ -60,7 +49,7 @@ export function UserProfile() {
                                 showToast({ body: t('auth.switchAccountFailed'), type: 'error' });
                             });
                         }}
-                        variant="ghost"
+                        startContent={<Avatar src={user.avatar} name={user.name} size="small" />}
                     />
                     <Divider />
                     <Link href="/organizations" isStandalone onClick={closeProfile}>
@@ -112,10 +101,10 @@ export function UserProfile() {
                 </Stack>
             }
         >
-            <Button
-                children={<Avatar src={user.avatar} name={user.name} size="small" />}
+            <IconButton
+                icon={<Avatar src={user.avatar} name={user.name} size="small" />}
                 label={user.name}
-                size="sm"
+                size="md"
                 variant="ghost"
             />
         </Popover>

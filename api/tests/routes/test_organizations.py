@@ -277,8 +277,8 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
             ]
 
     monkeypatch.setattr(
-        "src.routes.organizations.adapters.database",
-        lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
+        "src.routes.organizations.adapters.Postgres",
+        FakePostgres,
     )
 
     # Act
@@ -332,8 +332,8 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
             raise RuntimeError("database offline")
 
     monkeypatch.setattr(
-        "src.routes.organizations.adapters.database",
-        lambda registry: FakePostgres(registry.host, registry.port, registry.username, registry.password),
+        "src.routes.organizations.adapters.Postgres",
+        FakePostgres,
     )
 
     # Act
