@@ -824,6 +824,12 @@
     "people.roleChanged": {
         "defaultMessage": "{name} ora ha il permesso {role}"
     },
+    "profile.accountSection": {
+        "defaultMessage": "Account"
+    },
+    "profile.adminSection": {
+        "defaultMessage": "Amministrazione"
+    },
     "profile.applications": {
         "defaultMessage": "Applicazioni"
     },

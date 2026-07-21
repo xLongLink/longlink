@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Item } from '@astryxdesign/core/Item';
-import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
@@ -9,7 +9,9 @@ import { useToast } from '@astryxdesign/core/Toast';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Popover } from '@astryxdesign/core/Popover';
 import { useTranslator } from '@astryxdesign/core/i18n';
+import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { BookOpen, Building2, Database, HardDrive, Settings2, Users } from 'lucide-react';
 import { useUser } from '@/hooks/use-user';
 
 /** Renders a user profile popover with authentication and navigation actions. */
@@ -52,39 +54,99 @@ export function UserProfile() {
                         startContent={<Avatar src={user.avatar} name={user.name} size="small" />}
                     />
                     <Divider />
-                    <Link href="/organizations" isStandalone onClick={closeProfile}>
-                        {t('profile.organizations')}
-                    </Link>
-                    <Link href="/settings" isStandalone onClick={closeProfile}>
-                        {t('profile.settings')}
-                    </Link>
-                    <Link href="/docs" isStandalone onClick={closeProfile} rel="noopener noreferrer" target="_blank">
-                        {t('common.documentation')} <Icon icon="externalLink" size="xsm" />
-                    </Link>
+                    <List
+                        density="compact"
+                        header={
+                            <Text color="secondary" type="label">
+                                {t('profile.accountSection')}
+                            </Text>
+                        }
+                    >
+                        <ListItem
+                            endContent={<Icon color="secondary" icon="chevronRight" size="xsm" />}
+                            href="/organizations"
+                            label={t('profile.organizations')}
+                            onClickCapture={closeProfile}
+                            startContent={<Icon color="secondary" icon={Building2} size="sm" />}
+                        />
+                        <ListItem
+                            endContent={<Icon color="secondary" icon="chevronRight" size="xsm" />}
+                            href="/settings"
+                            label={t('profile.settings')}
+                            onClickCapture={closeProfile}
+                            startContent={<Icon color="secondary" icon={Settings2} size="sm" />}
+                        />
+                        <ListItem
+                            endContent={<Icon color="secondary" icon="externalLink" size="xsm" />}
+                            href="/docs"
+                            label={t('common.documentation')}
+                            onClickCapture={closeProfile}
+                            rel="noopener noreferrer"
+                            startContent={<Icon color="secondary" icon={BookOpen} size="sm" />}
+                            target="_blank"
+                        />
+                    </List>
                     {user.role !== 'user' ? (
                         <>
                             <Divider />
-                            <Link href="/admin/users" isStandalone onClick={closeProfile}>
-                                {t('profile.users')}
-                            </Link>
-                            <Link href="/admin/applications" isStandalone onClick={closeProfile}>
-                                {t('profile.applications')}
-                            </Link>
-                            <Link href="/admin/organizations" isStandalone onClick={closeProfile}>
-                                {t('profile.organizations')}
-                            </Link>
-                            <Link href="/admin/database" isStandalone onClick={closeProfile}>
-                                {t('profile.database')}
-                            </Link>
-                            <Link href="/admin/storage" isStandalone onClick={closeProfile}>
-                                {t('profile.storage')}
-                            </Link>
-                            <Link href="/admin/compute" isStandalone onClick={closeProfile}>
-                                {t('profile.compute')}
-                            </Link>
-                            <Link href="/admin/operations" isStandalone onClick={closeProfile}>
-                                {t('profile.operations')}
-                            </Link>
+                            <List
+                                density="compact"
+                                header={
+                                    <Text color="secondary" type="label">
+                                        {t('profile.adminSection')}
+                                    </Text>
+                                }
+                            >
+                                <ListItem
+                                    endContent={<Icon color="secondary" icon="chevronRight" size="xsm" />}
+                                    href="/admin/users"
+                                    label={t('profile.users')}
+                                    onClickCapture={closeProfile}
+                                    startContent={<Icon color="secondary" icon={Users} size="sm" />}
+                                />
+                                <ListItem
+                                    endContent={<Icon color="secondary" icon="chevronRight" size="xsm" />}
+                                    href="/admin/applications"
+                                    label={t('profile.applications')}
+                                    onClickCapture={closeProfile}
+                                    startContent={<Icon color="secondary" icon="viewColumns" size="sm" />}
+                                />
+                                <ListItem
+                                    endContent={<Icon color="secondary" icon="chevronRight" size="xsm" />}
+                                    href="/admin/organizations"
+                                    label={t('profile.organizations')}
+                                    onClickCapture={closeProfile}
+                                    startContent={<Icon color="secondary" icon={Building2} size="sm" />}
+                                />
+                                <ListItem
+                                    endContent={<Icon color="secondary" icon="chevronRight" size="xsm" />}
+                                    href="/admin/database"
+                                    label={t('profile.database')}
+                                    onClickCapture={closeProfile}
+                                    startContent={<Icon color="secondary" icon={Database} size="sm" />}
+                                />
+                                <ListItem
+                                    endContent={<Icon color="secondary" icon="chevronRight" size="xsm" />}
+                                    href="/admin/storage"
+                                    label={t('profile.storage')}
+                                    onClickCapture={closeProfile}
+                                    startContent={<Icon color="secondary" icon={HardDrive} size="sm" />}
+                                />
+                                <ListItem
+                                    endContent={<Icon color="secondary" icon="chevronRight" size="xsm" />}
+                                    href="/admin/compute"
+                                    label={t('profile.compute')}
+                                    onClickCapture={closeProfile}
+                                    startContent={<Icon color="secondary" icon="wrench" size="sm" />}
+                                />
+                                <ListItem
+                                    endContent={<Icon color="secondary" icon="chevronRight" size="xsm" />}
+                                    href="/admin/operations"
+                                    label={t('profile.operations')}
+                                    onClickCapture={closeProfile}
+                                    startContent={<Icon color="secondary" icon="arrowsUpDown" size="sm" />}
+                                />
+                            </List>
                             <Divider />
                         </>
                     ) : null}
