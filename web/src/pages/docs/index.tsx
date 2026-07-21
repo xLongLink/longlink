@@ -96,7 +96,7 @@ export const metadata = {
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="introduction" level={1}>
             Introduction
         </Heading>
@@ -127,19 +127,20 @@ export const content = (
             <TableHeader>
                 <TableRow>
                     <TableHeaderCell>Approach</TableHeaderCell>
-                    <TableHeaderCell></TableHeaderCell>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {approaches.map((approach) => (
                     <TableRow key={approach.name}>
                         <TableCell>
-                            <Stack direction="horizontal" gap={2} align="center">
-                                <Icon icon={approach.icon} size="sm" color="accent" />
-                                <Text weight="semibold">{approach.name}</Text>
+                            <Stack gap={1}>
+                                <Stack direction="horizontal" gap={2} align="center">
+                                    <Icon icon={approach.icon} size="sm" color="accent" />
+                                    <Text weight="semibold">{approach.name}</Text>
+                                </Stack>
+                                <Text type="supporting">{approach.description}</Text>
                             </Stack>
                         </TableCell>
-                        <TableCell>{approach.description}</TableCell>
                     </TableRow>
                 ))}
             </TableBody>

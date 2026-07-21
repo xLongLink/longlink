@@ -8,6 +8,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import {
     Table,
@@ -19,11 +20,10 @@ import {
 } from '@astryxdesign/core/Table';
 import type { ApiUserListItem } from '@/lib/types';
 import { useUsers } from '@/data/admin';
-import { useTranslation } from '@/lib/i18n';
 
 /** Renders the admin users page. */
 export default function AdminUsers() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const toast = useToast();
     const { items: users, error, isLoading } = useUsers();
     const [page, setPage] = useState(1);

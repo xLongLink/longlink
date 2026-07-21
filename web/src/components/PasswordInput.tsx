@@ -1,17 +1,21 @@
+import { Eye, EyeOff } from 'lucide-react';
 import { Icon } from '@astryxdesign/core/Icon';
 import { useState, type ComponentProps } from 'react';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { InputGroup, InputGroupText } from '@astryxdesign/core/InputGroup';
 import { TextInput, type TextInputProps } from '@astryxdesign/core/TextInput';
-import { useTranslation } from '@/lib/i18n';
 
 type PasswordInputProps = Omit<TextInputProps, 'isLabelHidden' | 'type'> &
-    Pick<ComponentProps<'input'>, 'autoComplete'>;
+    Pick<ComponentProps<'input'>, 'autoComplete'> & {
+        isLabelHidden?: boolean;
+    };
 
 /** Renders a password field with an accessible visibility toggle. */
 export function PasswordInput({
     description,
     isDisabled,
+    isLabelHidden,
     isOptional,
     isRequired,
     label,
@@ -20,7 +24,7 @@ export function PasswordInput({
     status,
     ...props
 }: PasswordInputProps) {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const [visible, setVisible] = useState(false);
     const toggleLabel = visible ? t('auth.hidePassword') : t('auth.showPassword');
 
@@ -28,6 +32,7 @@ export function PasswordInput({
         <InputGroup
             description={description}
             isDisabled={isDisabled}
+            isLabelHidden={isLabelHidden}
             isOptional={isOptional}
             isRequired={isRequired}
             label={label}
@@ -43,13 +48,12 @@ export function PasswordInput({
                 isRequired={isRequired}
                 label={label}
                 status={status ? { type: status.type } : undefined}
-                style={{ flex: 1, minWidth: 0 }}
                 type={visible ? 'text' : 'password'}
             />
             <InputGroupText>
                 <IconButton
                     aria-pressed={visible}
-                    icon={<Icon icon="eyeSlash" size="sm" />}
+                    icon={<Icon icon={visible ? EyeOff : Eye} size="sm" />}
                     label={toggleLabel}
                     onClick={() => setVisible((current) => !current)}
                     size="sm"

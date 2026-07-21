@@ -5,7 +5,7 @@ from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Column, UniqueConstraint
 from src.models.roles import PlatformRoles
-from src.models.types import Theme, Accent, Radius, Language
+from src.models.types import Theme, Accent, Language
 from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
 from src.database.models.association import UserApplication, UserOrganization
@@ -27,6 +27,8 @@ class User(SQLModel, table=True):
     # Authentication
     hashed_password: str = Field(max_length=1024)
     is_verified: bool = Field(default=False, nullable=False)
+    verification_code_hash: str | None = Field(default=None, max_length=64)
+    verification_code_expires_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
 
     # Audit
     created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
@@ -47,7 +49,7 @@ class User(SQLModel, table=True):
     )
     theme: Theme = Field(default=Theme.dark)
     accent: Accent = Field(default=Accent.neutral, max_length=7)
-    radius: Radius = Field(default=Radius.medium, max_length=6)
+    radius: float = Field(default=1.0, nullable=False)
     language: Language = Field(default=Language.en, max_length=2)
 
     # Relationships
@@ -72,7 +74,7 @@ class User(SQLModel, table=True):
 
 
 class OAuthAccount(SQLModel, table=True):
-    """Link a LongLink user to an external OAuth or OIDC identity."""
+    """Link a LongLink user to an external OAuth identity."""
 
     __tablename__: ClassVar[str] = "oauth_accounts"
     __table_args__ = (UniqueConstraint("oauth_name", "account_id", name="uq_oauth_accounts_provider_subject"),)

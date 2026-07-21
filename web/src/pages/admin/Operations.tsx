@@ -1,4 +1,3 @@
-import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -6,6 +5,7 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
 import {
     Table,
     type TableColumn,
@@ -15,12 +15,11 @@ import {
     useTablePagination,
 } from '@astryxdesign/core/Table';
 import type { ApiOperation } from '@/lib/types';
-import { useTranslation } from '@/lib/i18n';
 import { useOperations } from '@/data/admin';
 import { formatDateTime } from '@/lib/utils';
 
 /** Returns localized admin operation table columns. */
-function createOperationColumns(t: TFunction): TableColumn<ApiOperation>[] {
+function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
     const statusLabels: Record<ApiOperation['status'], string> = {
         scheduled: t('admin.operationStatus.scheduled'),
         active: t('admin.operationStatus.active'),
@@ -92,7 +91,7 @@ function createOperationColumns(t: TFunction): TableColumn<ApiOperation>[] {
 
 /** Renders the admin operations page. */
 export default function AdminOperations() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const { items: operations, error, isLoading } = useOperations();
     const [page, setPage] = useState(1);
     const pageSize = 25;

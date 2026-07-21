@@ -43,12 +43,32 @@ function Section({ children }: { children: ReactNode }) {
 }
 
 export const metadata = {
+    toc: [
+        { id: 'provider-acceptance-and-eligibility', label: '1. Provider, acceptance and eligibility' },
+        { id: 'definitions-and-contract-documents', label: '2. Definitions and contract documents' },
+        { id: 'service-and-beta-status', label: '3. Service and beta status' },
+        { id: 'accounts-organizations-and-security', label: '4. Accounts, organizations and security' },
+        { id: 'acceptable-use', label: '5. Acceptable use' },
+        { id: 'plans-fees-and-managed-services', label: '6. Plans, fees and managed services' },
+        { id: 'refunds-and-consumer-cancellation-rights', label: '7. Refunds and consumer cancellation rights' },
+        { id: 'content-privacy-and-data-processing', label: '8. Content, privacy and data processing' },
+        { id: 'our-technology-and-feedback', label: '9. Our technology and feedback' },
+        { id: 'availability-and-third-party-services', label: '10. Availability and third-party services' },
+        { id: 'warranties', label: '11. Warranties' },
+        { id: 'limitation-of-liability', label: '12. Limitation of liability' },
+        { id: 'indemnity-for-business-users', label: '13. Indemnity for business users' },
+        { id: 'suspension-deletion-and-termination', label: '14. Suspension, deletion and termination' },
+        { id: 'changes-to-these-terms', label: '15. Changes to these Terms' },
+        { id: 'force-majeure', label: '16. Force majeure' },
+        { id: 'general-and-governing-law', label: '17. General and governing law' },
+        { id: 'contact', label: '18. Contact' },
+    ],
     lastUpdated: '2026-06-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/legal/terms.tsx',
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="terms-of-service" level="h1">
             Terms of Service
         </Heading>
@@ -141,7 +161,7 @@ export const content = (
                 and users whom you authorize.
             </p>
             <p>
-                You must protect passwords, OAuth or OIDC access, API credentials, deployment secrets, kubeconfigs,
+                You must protect passwords, OAuth access, API credentials, deployment secrets, kubeconfigs,
                 database credentials, object-storage keys, application environment values, SSH keys, and other access
                 materials. You must use reasonable access controls and notify{' '}
                 <A href="mailto:info@longlink.dev">info@longlink.dev</A> promptly if you suspect compromise.

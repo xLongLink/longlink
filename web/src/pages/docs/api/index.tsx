@@ -6,12 +6,31 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
+import {
+    Activity,
+    AppWindow,
+    ArrowLeftRight,
+    Building2,
+    Code2,
+    Database,
+    HardDrive,
+    KeyRound,
+    Languages,
+    Logs,
+    Palette,
+    PanelTop,
+    Rocket,
+    Route,
+    ServerCog,
+    ShieldCheck,
+    UserRound,
+} from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
 
 const sharedFoundationItems: { description: string; icon: IconName; name: string }[] = [
     {
         name: 'Authentication',
-        description: 'Email, password, OAuth, OIDC, sessions, and current-user context.',
+        description: 'Email, password, OAuth, sessions, and current-user context.',
         icon: 'success',
     },
     {
@@ -67,42 +86,76 @@ const sharedFoundationItems: { description: string; icon: IconName; name: string
 /** Renders the production request flow diagram. */
 function PlatformFlowDiagram() {
     return (
-        <Grid columns={{ minWidth: 180, max: 3, repeat: 'fit' }} gap={4}>
-            <Card variant="muted">
-                <Stack gap={2} align="center">
-                    <Icon icon="info" color="accent" />
-                    <Text weight="semibold">User</Text>
-                    <Text type="supporting">Browser</Text>
-                    <Text type="supporting">Languages, theming, and application shell</Text>
-                </Stack>
-            </Card>
-            <Card variant="teal">
-                <Stack gap={2} align="center">
-                    <Icon icon="success" color="accent" />
+        <Grid columns={{ minWidth: 180, max: 3, repeat: 'fit' }} gap={6} align="center">
+            <Stack direction="horizontal" gap={6} align="center" justify="end">
+                <Card width="80%" variant="muted">
+                    <Stack gap={3} align="center">
+                        <Icon icon={UserRound} color="accent" aria-hidden />
+                        <Text weight="semibold">User</Text>
+                        <Text type="supporting">Browser</Text>
+                        <Stack direction="horizontal" gap={3} justify="center">
+                            <Icon icon={Languages} size="sm" color="secondary" aria-label="Languages" />
+                            <Icon icon={Palette} size="sm" color="secondary" aria-label="Theming" />
+                            <Icon icon={PanelTop} size="sm" color="secondary" aria-label="Application shell" />
+                        </Stack>
+                    </Stack>
+                </Card>
+                <Icon icon={ArrowLeftRight} size="sm" color="secondary" aria-label="User and platform request flow" />
+            </Stack>
+            <Card padding={6} variant="muted">
+                <Stack gap={3} align="center">
+                    <Icon icon={ServerCog} color="accent" aria-hidden />
                     <Wordmark />
                     <Text type="supporting">Platform</Text>
-                    <Text type="supporting">Identity, policy, routing, deployment, logs, and status</Text>
+                    <Stack gap={3} align="center">
+                        <Stack direction="horizontal" gap={3} justify="center">
+                            <Icon icon={KeyRound} size="sm" color="secondary" aria-label="Identity" />
+                            <Icon icon={Building2} size="sm" color="secondary" aria-label="Organizations" />
+                        </Stack>
+                        <Stack direction="horizontal" gap={3} justify="center">
+                            <Icon icon={ShieldCheck} size="sm" color="secondary" aria-label="Policy" />
+                            <Icon icon={Route} size="sm" color="secondary" aria-label="Routing" />
+                            <Icon icon={Rocket} size="sm" color="secondary" aria-label="Deployment" />
+                        </Stack>
+                        <Stack direction="horizontal" gap={3} justify="center">
+                            <Icon icon={Logs} size="sm" color="secondary" aria-label="Logs" />
+                            <Icon icon={Activity} size="sm" color="secondary" aria-label="Status" />
+                        </Stack>
+                    </Stack>
                 </Stack>
             </Card>
-            <Card variant="muted">
-                <Stack gap={2} align="center">
-                    <Icon icon="wrench" color="accent" />
-                    <Text weight="semibold">Application</Text>
-                    <Text type="supporting">Runtime</Text>
-                    <Text type="supporting">Application logic, database logic, and file storage</Text>
-                </Stack>
-            </Card>
+            <Stack direction="horizontal" gap={6} align="center" justify="start">
+                <Icon
+                    icon={ArrowLeftRight}
+                    size="sm"
+                    color="secondary"
+                    aria-label="Platform and application request flow"
+                />
+                <Card width="80%" variant="muted">
+                    <Stack gap={3} align="center">
+                        <Icon icon={AppWindow} color="accent" aria-hidden />
+                        <Text weight="semibold">Application</Text>
+                        <Text type="supporting">Runtime</Text>
+                        <Stack direction="horizontal" gap={3} justify="center">
+                            <Icon icon={Code2} size="sm" color="secondary" aria-label="Application logic" />
+                            <Icon icon={Database} size="sm" color="secondary" aria-label="Database logic" />
+                            <Icon icon={HardDrive} size="sm" color="secondary" aria-label="File storage" />
+                        </Stack>
+                    </Stack>
+                </Card>
+            </Stack>
         </Grid>
     );
 }
 
 export const metadata = {
+    toc: [{ id: 'shared-foundation', label: 'Shared Foundation' }],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/index.tsx',
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="platform" level={1}>
             Platform
         </Heading>
@@ -129,19 +182,20 @@ export const content = (
             <TableHeader>
                 <TableRow>
                     <TableHeaderCell>Capability</TableHeaderCell>
-                    <TableHeaderCell>Platform responsibility</TableHeaderCell>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {sharedFoundationItems.map((item) => (
                     <TableRow key={item.name}>
                         <TableCell>
-                            <Stack direction="horizontal" gap={2} align="center">
-                                <Icon icon={item.icon} size="sm" color="accent" />
-                                <Text weight="semibold">{item.name}</Text>
+                            <Stack gap={1}>
+                                <Stack direction="horizontal" gap={2} align="center">
+                                    <Icon icon={item.icon} size="sm" color="accent" />
+                                    <Text weight="semibold">{item.name}</Text>
+                                </Stack>
+                                <Text type="supporting">{item.description}</Text>
                             </Stack>
                         </TableCell>
-                        <TableCell>{item.description}</TableCell>
                     </TableRow>
                 ))}
             </TableBody>

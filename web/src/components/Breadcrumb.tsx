@@ -73,19 +73,19 @@ export function Breadcrumb() {
           : buildDefaultCrumbs(segments);
 
     return (
-        <Breadcrumbs
-            className="[&_li]:text-[0.875rem] [&_li]:leading-5"
-            separator={<span className="px-1">{'>'}</span>}
-            variant="supporting"
-        >
+        <Breadcrumbs separator=">" variant="supporting">
             <BreadcrumbItem href="/organizations">
                 <Wordmark />
             </BreadcrumbItem>
-            {crumbs.map((crumb) => (
-                <BreadcrumbItem key={crumb.href} href={crumb.href}>
-                    {crumb.label}
-                </BreadcrumbItem>
-            ))}
+            {crumbs.map((crumb, index) => {
+                const isCurrent = index === crumbs.length - 1;
+
+                return (
+                    <BreadcrumbItem key={crumb.href} href={isCurrent ? undefined : crumb.href} isCurrent={isCurrent}>
+                        {crumb.label}
+                    </BreadcrumbItem>
+                );
+            })}
         </Breadcrumbs>
     );
 }

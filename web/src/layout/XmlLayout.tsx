@@ -4,9 +4,9 @@ import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { TopNav } from '@astryxdesign/core/TopNav';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Icon, type IconName, type IconType } from '@astryxdesign/core/Icon';
-import { useTranslation } from '@/lib/i18n';
 import { Wordmark } from '@/components/Wordmark';
 import { UserProfile } from '@/components/Profile';
 import { Breadcrumb } from '@/components/Breadcrumb';
@@ -27,7 +27,7 @@ type LayoutProps = {
 
 /** Renders the XML build shell with SDK-specific header chrome. */
 export default function Layout({ tabs, brandOnly = false, brandHref = '/organizations', children }: LayoutProps) {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const location = useLocation();
     const tabEntries = Object.entries(tabs ?? {});
     const currentPath = `${location.pathname}${location.search}`;

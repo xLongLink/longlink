@@ -7,6 +7,19 @@
 @import '@fontsource-variable/inter';
 @import 'tailwindcss/utilities.css' layer(utilities);
 
+@theme inline {
+    --color-primary: var(--color-text-primary);
+    --color-secondary: var(--color-text-secondary);
+    --color-accent: var(--color-text-accent);
+    --color-body: var(--color-background-body);
+    --color-card: var(--color-background-card);
+    --color-accent-bg: var(--color-accent);
+    --color-on-accent: var(--color-on-accent);
+    --color-border: var(--color-border);
+    --radius-element: var(--radius-element);
+    --radius-container: var(--radius-container);
+}
+
 @layer base {
     body {
         background-color: var(--color-background-body);
@@ -20,13 +33,15 @@
 }
 
 @layer components {
-    .docs-sidebar .astryx-side-nav-item[data-selected='selected'] {
-        background-color: var(--color-accent-muted);
-        box-shadow: inset 3px 0 0 var(--color-accent);
-        color: var(--color-text-primary);
+    .docs-sidebar .astryx-side-nav-item:not([data-selected='selected']) {
+        color: var(--color-text-secondary);
     }
 
-    .docs-sidebar .astryx-side-nav-item[data-selected='selected']:hover {
+    .docs-sidebar .astryx-side-nav-item:not([data-selected='selected']) svg {
+        color: var(--color-icon-secondary);
+    }
+
+    .docs-sidebar .astryx-side-nav-item[data-selected='selected'] {
         background-color: var(--color-accent-muted);
     }
 
@@ -35,13 +50,10 @@
     }
 
     .docs-article .astryx-table-scroll-wrapper {
-        margin-inline: 0 !important;
-        max-width: 100%;
-        width: 100% !important;
+        margin-inline: 0;
+        width: 100%;
     }
-}
 
-@layer components {
     .longlink-code-block > button {
         margin-inline-end: 0;
     }

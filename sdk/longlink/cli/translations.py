@@ -2,11 +2,10 @@ import re
 import json
 import click
 from lxml import etree
-from typing import TypeGuard
 from pathlib import Path
 
-PLURAL_KEYS = {"zero", "one", "two", "few", "many", "other"}
 DEFAULT_TRANSLATION_FILE = Path("src") / "i18n" / "en.json"
+TRANSLATION_KEY_PATTERN = re.compile(r"[a-z][A-Za-z0-9]*(?:\.[a-z][A-Za-z0-9]*)+")
 
 
 @click.group(name="translations")
@@ -17,6 +16,60 @@ def translations_command() -> None:
 @click.command(name="generate")
 def generate_command() -> None:
     """Generate the current application's translation file from XML `i18n` keys."""
+
+    # Load and validate the current native Astryx catalog when it exists.
+    source_catalog: object = {}
+    if DEFAULT_TRANSLATION_FILE.exists():
+        try:
+            source_catalog = json.loads(
+                DEFAULT_TRANSLATION_FILE.read_text(encoding="utf-8")
+            )
+        except json.JSONDecodeError as error:
+            raise click.ClickException(
+                f"Invalid JSON in {DEFAULT_TRANSLATION_FILE}: {error}"
+            ) from error
+
+    if not isinstance(source_catalog, dict):
+        raise click.ClickException(
+            f"Invalid translation catalog in {DEFAULT_TRANSLATION_FILE}: root must be an object."
+        )
+
+    existing_catalog: dict[str, dict[str, str]] = {}
+    for key, entry in source_catalog.items():
+        if TRANSLATION_KEY_PATTERN.fullmatch(key) is None:
+            raise click.ClickException(
+                f'Invalid translation key "{key}" in {DEFAULT_TRANSLATION_FILE}. '
+                'Use dotted keys like "tasks.title".'
+            )
+
+        if not isinstance(entry, dict):
+            raise click.ClickException(
+                f'Invalid translation entry "{key}" in {DEFAULT_TRANSLATION_FILE}: expected an object.'
+            )
+
+        unsupported_fields = set(entry) - {"defaultMessage", "description"}
+        if unsupported_fields:
+            fields = ", ".join(sorted(unsupported_fields))
+            raise click.ClickException(
+                f'Invalid translation entry "{key}" in {DEFAULT_TRANSLATION_FILE}: unsupported fields: {fields}.'
+            )
+
+        default_message = entry.get("defaultMessage")
+        if not isinstance(default_message, str):
+            raise click.ClickException(
+                f'Invalid translation entry "{key}" in {DEFAULT_TRANSLATION_FILE}: defaultMessage must be a string.'
+            )
+
+        description = entry.get("description")
+        if "description" in entry and not isinstance(description, str):
+            raise click.ClickException(
+                f'Invalid translation entry "{key}" in {DEFAULT_TRANSLATION_FILE}: description must be a string.'
+            )
+
+        existing_catalog[key] = {
+            "defaultMessage": default_message,
+            **({"description": description} if isinstance(description, str) else {}),
+        }
 
     # Parse XML fragments without loading external resources.
     parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
@@ -39,52 +92,17 @@ def generate_command() -> None:
                 continue
 
             key = key.strip()
-            if re.fullmatch(r"[a-z][A-Za-z0-9]*(?:\.[a-z][A-Za-z0-9]*)+", key) is None:
+            if TRANSLATION_KEY_PATTERN.fullmatch(key) is None:
                 raise click.ClickException(
                     f'Invalid translation key "{key}" in {path}. Use dotted keys like "tasks.title".'
                 )
 
             keys.add(key)
 
-    # Load the current catalog when it exists.
-    source_catalog: object = {}
-    if DEFAULT_TRANSLATION_FILE.exists():
-        try:
-            source_catalog = json.loads(
-                DEFAULT_TRANSLATION_FILE.read_text(encoding="utf-8")
-            )
-        except json.JSONDecodeError as error:
-            raise click.ClickException(
-                f"Invalid JSON in {DEFAULT_TRANSLATION_FILE}: {error}"
-            ) from error
-
-    # Flatten existing leaves so their translations can be preserved by dotted key.
-    existing_catalog: dict[str, object] = {}
-    pending = [("", source_catalog)]
-    while pending:
-        prefix, value = pending.pop()
-        if not is_translation_branch(value) or is_plural_catalog(value):
-            if prefix:
-                existing_catalog[prefix] = value
-            continue
-
-        for key, entry in value.items():
-            next_prefix = f"{prefix}.{key}" if prefix else key
-            pending.append((next_prefix, entry))
-
-    # Build a deterministic nested catalog from the discovered keys.
-    generated_catalog: dict[str, object] = {}
+    # Build a deterministic flat catalog and preserve entries by exact key.
+    generated_catalog: dict[str, dict[str, str]] = {}
     for key in sorted(keys):
-        segments = key.split(".")
-        current = generated_catalog
-        for segment in segments[:-1]:
-            entry = current.setdefault(segment, {})
-            if not is_translation_branch(entry) or is_plural_catalog(entry):
-                raise click.ClickException(f"Translation key collision at {segment}")
-
-            current = entry
-
-        current[segments[-1]] = existing_catalog.get(key, "")
+        generated_catalog[key] = existing_catalog.get(key, {"defaultMessage": ""})
 
     # Write the generated catalog to the conventional application path.
     DEFAULT_TRANSLATION_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -99,19 +117,3 @@ def generate_command() -> None:
 
 
 translations_command.add_command(generate_command)
-
-
-def is_translation_branch(value: object) -> TypeGuard[dict[str, object]]:
-    """Return true when a translation value is a string-keyed object."""
-
-    return isinstance(value, dict) and all(isinstance(key, str) for key in value)
-
-
-def is_plural_catalog(value: dict[str, object]) -> bool:
-    """Return true when a translation leaf uses plural categories."""
-
-    return (
-        bool(value)
-        and value.keys() <= PLURAL_KEYS
-        and all(isinstance(entry, str) for entry in value.values())
-    )

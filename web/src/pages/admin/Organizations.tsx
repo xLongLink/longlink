@@ -1,4 +1,3 @@
-import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
@@ -12,6 +11,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
 import {
     Table,
     type TableColumn,
@@ -22,7 +22,6 @@ import {
 } from '@astryxdesign/core/Table';
 import type { ApiOrganizationSummary } from '@/lib/types';
 import { fetchApiVoid } from '@/lib/api';
-import { useTranslation } from '@/lib/i18n';
 import { useOrganizations } from '@/data/admin';
 import { useUserProfile } from '@/hooks/use-user';
 import { organizationsQueryKey } from '@/lib/query-keys';
@@ -30,7 +29,7 @@ import { formatDateTime, useDeleteDialog } from '@/lib/utils';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 
 /** Returns localized admin organization table columns. */
-function createOrganizationColumns(t: TFunction): TableColumn<ApiOrganizationSummary>[] {
+function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganizationSummary>[] {
     return [
         {
             key: 'name',
@@ -103,7 +102,7 @@ function createOrganizationColumns(t: TFunction): TableColumn<ApiOrganizationSum
 
 /** Renders the admin organizations page. */
 export default function AdminOrganizations() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const toast = useToast();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();

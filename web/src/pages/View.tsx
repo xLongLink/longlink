@@ -3,13 +3,13 @@ import { Card } from '@astryxdesign/core/Card';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { getIconRegistry, type IconName } from '@astryxdesign/core/Icon';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import type { ApiOrganizationApplication } from '@/lib/types';
 import XML from '@/layout/XmlLayout';
-import { useTranslation } from '@/lib/i18n';
 import { ApiError, fetchApiText } from '@/lib/api';
 import { usePages, type RuntimePage } from '@/hooks/use-pages';
 import {
@@ -254,7 +254,7 @@ function parsePageContent(content: string): PageParseResult {
  * Renders registered XML pages for platform and application routes.
  */
 export default function View({ applicationStatus, locale, pages, runtimeContext, runtimeKey }: ViewProps) {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
     const [pageStates, setPageStates] = useState<Record<string, PageState>>({});
@@ -654,7 +654,7 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
 
 /** Renders the in-shell loading page for an application that is not ready yet. */
 function LoadingState({ status }: LoadingStateProps) {
-    const { t } = useTranslation();
+    const t = useTranslator();
 
     // Hide the loading shell when status is unresolved.
     if (status === 'loading') return null;

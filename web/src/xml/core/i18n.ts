@@ -1,14 +1,51 @@
-import i18next, { type Resource, type i18n } from 'i18next';
 import type { ASTProps, ExecutionContext, XmlTranslations } from '../types';
 import { evaluate } from '../expressions';
 
-const defaultLocale = 'en';
-const pluralCategoryOrder = ['other', 'one', 'few', 'many', 'two', 'zero'] as const;
-const pluralCategories = new Set<string>(pluralCategoryOrder);
 const translationKeyPattern = /^[a-z][A-Za-z0-9]*(?:\.[a-z][A-Za-z0-9]*)+$/;
-const i18nCache = new WeakMap<XmlTranslations, Map<string, i18n>>();
 
-/** Resolves a localized string or plural form from the active XML translation bundle. */
+/** Validates and returns a native Astryx catalog loaded from an application boundary. */
+export function validateTranslationCatalog(input: unknown): XmlTranslations {
+    // Require a flat object at the catalog root.
+    if (input == null || typeof input !== 'object' || Array.isArray(input)) {
+        throw new Error('Translation catalog must be an object');
+    }
+
+    const catalog: XmlTranslations = {};
+
+    // Validate every key and message entry before the catalog reaches the renderer.
+    for (const [key, value] of Object.entries(input)) {
+        if (!isTranslationKey(key)) {
+            throw new Error(`Invalid translation key "${key}"`);
+        }
+
+        if (value == null || typeof value !== 'object' || Array.isArray(value)) {
+            throw new Error(`Translation entry "${key}" must be an object`);
+        }
+
+        const entry = value as Record<string, unknown>;
+        const unsupported = Object.keys(entry).filter((field) => field !== 'defaultMessage' && field !== 'description');
+        if (unsupported.length > 0) {
+            throw new Error(`Translation entry "${key}" has unsupported fields: ${unsupported.join(', ')}`);
+        }
+
+        if (typeof entry.defaultMessage !== 'string') {
+            throw new Error(`Translation entry "${key}" must define a string defaultMessage`);
+        }
+
+        if (entry.description !== undefined && typeof entry.description !== 'string') {
+            throw new Error(`Translation entry "${key}" must define a string description`);
+        }
+
+        catalog[key] = {
+            defaultMessage: entry.defaultMessage,
+            ...(typeof entry.description === 'string' && { description: entry.description }),
+        };
+    }
+
+    return catalog;
+}
+
+/** Resolves a localized ICU message from the active XML translation bundle. */
 export function resolveTranslation(props: ASTProps, ctx: ExecutionContext): string {
     // The i18n prop is a literal dotted lookup key, never fallback text.
     const key = props.i18n?.trim();
@@ -24,32 +61,23 @@ export function resolveTranslation(props: ASTProps, ctx: ExecutionContext): stri
         throw new Error(`Missing translation catalog for key "${key}"`);
     }
 
-    const xmlI18n = getXmlI18n(translations, ctx.locale ?? defaultLocale);
-    const count = resolveCount(props, ctx);
-    const hasText = xmlI18n.exists(key);
-    const hasPlural = xmlI18n.exists(key, { count: count ?? 0 });
-
-    // Require counts for plural-only translations.
-    if (count == null && !hasText && hasPlural) {
-        throw new Error(`Plural translation key "${key}" requires a count prop`);
-    }
-
     // Fail fast when the key is absent from the catalog.
-    if (!hasText && !hasPlural) {
+    if (translations[key] === undefined) {
         throw new Error(`Missing translation for key "${key}"`);
     }
 
-    const template = xmlI18n.t(key, {
-        ...(count != null && { count }),
-        interpolation: { skipOnVariables: true },
-    });
-
-    // Only string templates can be interpolated.
-    if (typeof template !== 'string') {
-        throw new Error(`Translation key "${key}" must resolve to a string or plural map`);
+    // Require the translator installed by the XML Astryx provider boundary.
+    const translate = ctx.translate;
+    if (!translate) {
+        throw new Error(`Missing Astryx translator for key "${key}"`);
     }
 
-    return interpolate(template, props, ctx, count ?? undefined);
+    const values = resolveInterpolationValues(props, ctx);
+    const count = resolveCount(props, ctx);
+    if (count != null) values.count = count;
+
+    // Always format through ICU so malformed messages and missing values fail visibly.
+    return translate(key, values);
 }
 
 /** Returns whether a value can be used as a LongLink translation catalog key. */
@@ -71,124 +99,7 @@ function resolveCount(props: ASTProps, ctx: ExecutionContext): number | null {
     return Number.isNaN(numberValue) ? null : numberValue;
 }
 
-/** Returns an i18next instance for one XML translation catalog and locale. */
-function getXmlI18n(translations: XmlTranslations, locale: string): i18n {
-    const cachedByLocale = i18nCache.get(translations);
-    const cached = cachedByLocale?.get(locale);
-
-    // Reuse the initialized instance for this catalog and locale.
-    if (cached) return cached;
-
-    const instance = i18next.createInstance();
-
-    void instance.init({
-        defaultNS: 'translation',
-        fallbackLng: false,
-        initAsync: false,
-        interpolation: {
-            escapeValue: false,
-        },
-        lng: locale,
-        resources: {
-            [locale]: {
-                translation: toI18nextResources(translations),
-            },
-        } as Resource,
-        returnNull: false,
-        returnObjects: false,
-    });
-
-    const nextByLocale = cachedByLocale ?? new Map<string, i18n>();
-    nextByLocale.set(locale, instance);
-    i18nCache.set(translations, nextByLocale);
-
-    return instance;
-}
-
-/** Converts LongLink plural leaves into i18next plural suffix keys. */
-function toI18nextResources(input: unknown): unknown {
-    // Leave scalar and array values unchanged.
-    if (input == null || typeof input !== 'object' || Array.isArray(input)) {
-        return input;
-    }
-
-    const output: Record<string, unknown> = {};
-
-    // Convert each nested key into i18next-compatible resources.
-    for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
-        // Expand plural leaves into i18next plural suffix entries.
-        if (
-            value != null &&
-            typeof value === 'object' &&
-            !Array.isArray(value) &&
-            isPluralEntry(value as Record<string, unknown>)
-        ) {
-            const pluralEntry = value as Record<string, string>;
-            const fallback = firstPluralTemplate(pluralEntry);
-
-            // Fill every known category so i18next has a fallback.
-            for (const category of pluralCategoryOrder) {
-                output[`${key}_${category}`] = pluralEntry[category] ?? fallback;
-            }
-
-            continue;
-        }
-
-        output[key] = toI18nextResources(value);
-    }
-
-    return output;
-}
-
-/** Returns whether a translation object is a pluralized message leaf. */
-function isPluralEntry(entry: Record<string, unknown>): boolean {
-    const entries = Object.entries(entry);
-
-    // Empty objects are nested namespaces, not plural leaves.
-    if (!entries.length) return false;
-
-    // Plural leaves only contain Intl.PluralRules category names with string templates.
-    return entries.every(([key, value]) => pluralCategories.has(key) && typeof value === 'string');
-}
-
-/** Returns the first usable plural template when the exact category is missing. */
-function firstPluralTemplate(entry: Record<string, unknown>): string | undefined {
-    // Keep the first usable plural string if the exact category is missing.
-    for (const key of pluralCategoryOrder) {
-        const candidate = entry[key];
-
-        // Use the first category with a string template.
-        if (typeof candidate === 'string') {
-            return candidate;
-        }
-    }
-
-    return undefined;
-}
-
-/** Interpolates simple `{{name}}` placeholders inside a translation string. */
-function interpolate(template: string, props: ASTProps, ctx: ExecutionContext, count?: number): string {
-    const values = resolveInterpolationValues(props, ctx);
-
-    // Replace simple placeholders with serialized values and the resolved count.
-    return template.replace(/\{\{([A-Za-z_$][\w$]*)\}\}/g, (_match, name: string) => {
-        // Prefer the resolved plural count placeholder.
-        if (name === 'count' && count != null) {
-            return String(count);
-        }
-
-        const value = values[name];
-
-        // Missing and nullish placeholders render as empty strings.
-        if (value == null) {
-            return '';
-        }
-
-        return String(value);
-    });
-}
-
-/** Resolves the serializable values object used for translation interpolation. */
+/** Resolves the values object used for ICU message formatting. */
 function resolveInterpolationValues(props: ASTProps, ctx: ExecutionContext): Record<string, unknown> {
     const rawValues = props.values;
 

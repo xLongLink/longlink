@@ -144,7 +144,7 @@ const homepageCards = [
 function XmlShowcaseVisual() {
     return (
         <div aria-hidden="true" className="relative h-44 overflow-hidden">
-            <div className="absolute inset-0 rounded-[var(--radius-element)] p-3 transition-[transform,opacity] duration-500 ease-out group-hover:-translate-y-4 group-hover:scale-[0.97] group-hover:opacity-0 motion-reduce:transition-none">
+            <div className="absolute inset-0 rounded-element p-3 transition-[transform,opacity] duration-500 ease-out group-hover:-translate-y-4 group-hover:scale-[0.97] group-hover:opacity-0 motion-reduce:transition-none">
                 <div className="mb-2 flex gap-1.5">
                     <span className="size-1.5 rounded-full bg-[#d99c64]/80" />
                     <span className="size-1.5 rounded-full bg-[#84e2d1]/70" />
@@ -161,23 +161,23 @@ function XmlShowcaseVisual() {
                 </pre>
             </div>
 
-            <div className="absolute inset-0 translate-y-6 scale-[0.96] rounded-[var(--radius-element)] p-3 opacity-0 transition-[transform,opacity] duration-500 ease-out group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 motion-reduce:transition-none">
+            <div className="absolute inset-0 translate-y-6 scale-[0.96] rounded-element p-3 opacity-0 transition-[transform,opacity] duration-500 ease-out group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 motion-reduce:transition-none">
                 <div className="mb-3 text-sm font-medium text-[#f5f5f5]">Access request</div>
                 <div className="space-y-2">
                     <div className="space-y-1">
                         <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#a3a3a3]">Email</div>
-                        <div className="rounded-[var(--radius-element)] border border-[var(--color-border)] bg-[var(--color-background-card)] px-2.5 py-1.5 text-xs text-[var(--color-text-primary)]">
+                        <div className="rounded-element border border-border bg-card px-2.5 py-1.5 text-xs text-primary">
                             alex@company.com
                         </div>
                     </div>
                     <div className="space-y-1">
                         <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#a3a3a3]">Role</div>
-                        <div className="flex items-center justify-between rounded-[var(--radius-element)] border border-[var(--color-border)] bg-[var(--color-background-card)] px-2.5 py-1.5 text-xs text-[var(--color-text-primary)]">
+                        <div className="flex items-center justify-between rounded-element border border-border bg-card px-2.5 py-1.5 text-xs text-primary">
                             Reviewer
-                            <ChevronDown className="size-3 text-[var(--color-text-secondary)]" strokeWidth={1.8} />
+                            <ChevronDown className="size-3 text-secondary" strokeWidth={1.8} />
                         </div>
                     </div>
-                    <div className="inline-flex rounded-[var(--radius-element)] bg-[var(--color-accent)] px-3 py-1.5 text-xs font-medium text-[var(--color-on-accent)]">
+                    <div className="inline-flex rounded-element bg-accent-bg px-3 py-1.5 text-xs font-medium text-on-accent">
                         Submit
                     </div>
                 </div>
@@ -319,13 +319,13 @@ function FoundationCardVisual() {
                         {tiles.map(({ key, icon: TileIcon }) => (
                             <div
                                 key={key}
-                                className="relative flex size-9 items-center justify-center rounded-[var(--radius-element)] border border-[#29534d] bg-[#14211f]/92 text-[#84e2d1] shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_10px_30px_rgba(0,0,0,0.35),0_0_26px_rgba(70,190,170,0.16)]"
+                                className="relative flex size-9 items-center justify-center rounded-element border border-[#29534d] bg-[#14211f]/92 text-[#84e2d1] shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_10px_30px_rgba(0,0,0,0.35),0_0_26px_rgba(70,190,170,0.16)]"
                             >
                                 <TileIcon
                                     className="size-4 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
                                     strokeWidth={1.8}
                                 />
-                                <span className="absolute inset-0 rounded-[var(--radius-element)] bg-gradient-to-br from-white/10 to-transparent" />
+                                <span className="absolute inset-0 rounded-element bg-gradient-to-br from-white/10 to-transparent" />
                             </div>
                         ))}
                     </div>
@@ -336,7 +336,7 @@ function FoundationCardVisual() {
                 (className) => (
                     <div
                         key={className}
-                        className={`absolute size-9 rounded-[var(--radius-element)] bg-black/12 shadow-inner ${className}`}
+                        className={`absolute size-9 rounded-element bg-black/12 shadow-inner ${className}`}
                     />
                 )
             )}
@@ -423,9 +423,9 @@ function WorkNetworkVisual() {
                 />
             </svg>
 
-            <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-[var(--radius-element)] border border-[#6a3e49] bg-[#181013]/95 px-5 py-3 shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_16px_36px_rgba(0,0,0,0.38),0_0_30px_rgba(224,151,166,0.2)]">
+            <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-element border border-[#6a3e49] bg-[#181013]/95 px-5 py-3 shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_16px_36px_rgba(0,0,0,0.38),0_0_30px_rgba(224,151,166,0.2)]">
                 <Wordmark className="[&>span:first-child]:text-[#f0a6b6] [&>span:last-child]:text-[#f5f5f5]" />
-                <span className="pointer-events-none absolute inset-0 rounded-[var(--radius-element)] bg-gradient-to-br from-white/10 to-transparent" />
+                <span className="pointer-events-none absolute inset-0 rounded-element bg-gradient-to-br from-white/10 to-transparent" />
             </div>
 
             {workNetworkNodes.map(({ label, icon: NodeIcon, className }) => (
@@ -480,7 +480,7 @@ function PythonCardVisual() {
 /** Renders the public home page. */
 export default function Home() {
     return (
-        <div className="min-h-screen overflow-hidden bg-[var(--color-background-body)] text-[var(--color-text-primary)]">
+        <div className="min-h-screen overflow-hidden">
             <Navbar />
             <main className="relative -mt-[84px] flex min-h-screen w-full items-center justify-center px-6 pb-10 pt-28">
                 <div
@@ -537,13 +537,13 @@ export default function Home() {
                 </div>
                 <section className="relative z-10 mx-auto flex w-full max-w-5xl -translate-y-16 flex-col items-center text-center sm:-translate-y-24">
                     <div className="space-y-5">
-                        <h1 className="mx-auto flex max-w-4xl flex-col items-center text-center text-[1.875rem] leading-[1.02] font-medium text-[var(--color-text-primary)] min-[420px]:text-[2.25rem] sm:text-6xl lg:text-7xl">
+                        <h1 className="mx-auto flex max-w-4xl flex-col items-center text-center text-[1.875rem] leading-[1.02] font-medium text-primary min-[420px]:text-[2.25rem] sm:text-6xl lg:text-7xl">
                             <span className="block whitespace-nowrap text-center">Just another dashboard</span>
                             <span className="mt-1 block whitespace-nowrap text-center line-through">
                                 Nothing to see here
                             </span>
                         </h1>
-                        <p className="mx-auto text-sm leading-6 text-[var(--color-text-secondary)] sm:text-lg">
+                        <p className="mx-auto text-sm leading-6 text-secondary sm:text-lg">
                             <span className="mx-auto block">
                                 The narrative has changed, but you are still buying the old story
                             </span>
@@ -559,9 +559,9 @@ export default function Home() {
                     </div>
                 </section>
 
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-24 bg-gradient-to-t from-[var(--color-background-body)] to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-24 bg-gradient-to-t from-body to-transparent" />
             </main>
-            <section className="relative z-10 bg-[var(--color-background-body)] px-6 py-10">
+            <section className="relative z-10 bg-body px-6 py-10">
                 <div className="mx-auto grid w-full max-w-[1000px] auto-rows-[minmax(190px,auto)] grid-cols-1 gap-3 md:grid-cols-6">
                     {homepageCards.map(({ title, description, details, layoutClassName, variant }) => {
                         const isXmlCard = variant === 'xml';
@@ -573,7 +573,7 @@ export default function Home() {
                         return (
                             <article
                                 key={title}
-                                className={`group relative overflow-hidden rounded-[var(--radius-container)] border p-5 text-[var(--color-text-primary)] shadow-[0_24px_80px_rgba(0,0,0,0.12)] ${layoutClassName} ${
+                                className={`group relative overflow-hidden rounded-container border p-5 text-primary shadow-[0_24px_80px_rgba(0,0,0,0.12)] ${layoutClassName} ${
                                     isFoundationCard
                                         ? 'border-[#294943] bg-[#0d1214]'
                                         : isPythonCard
@@ -584,7 +584,7 @@ export default function Home() {
                                               ? 'border-[#3d3321] bg-[#12100b]'
                                               : isWorkCard
                                                 ? 'border-[#3b2c32] bg-[#120d10]'
-                                                : 'border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-background-card)_80%,transparent)]'
+                                                : 'border-border bg-[color-mix(in_srgb,var(--color-background-card)_80%,transparent)]'
                                 }`}
                             >
                                 <div
@@ -643,16 +643,14 @@ export default function Home() {
                     })}
                 </div>
             </section>
-            <section className="relative z-10 bg-[var(--color-background-body)] px-6 py-24 text-center sm:py-28">
+            <section className="relative z-10 bg-body px-6 py-24 text-center sm:py-28">
                 <div className="mx-auto flex max-w-2xl flex-col items-center gap-8">
                     <div className="space-y-3">
-                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">
-                            Next step
-                        </p>
-                        <h2 className="text-2xl font-medium tracking-tight text-[var(--color-text-primary)] sm:text-4xl">
+                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-secondary">Next step</p>
+                        <h2 className="text-2xl font-medium tracking-tight text-primary sm:text-4xl">
                             Start building on LongLink
                         </h2>
-                        <p className="text-sm leading-6 text-[var(--color-text-secondary)] sm:text-base">
+                        <p className="text-sm leading-6 text-secondary sm:text-base">
                             Explore LongLink, build an app, or talk to us.
                         </p>
                     </div>
@@ -675,7 +673,7 @@ export default function Home() {
                     </div>
                 </div>
             </section>
-            <div className="relative z-10 bg-[var(--color-background-body)]">
+            <div className="relative z-10 bg-body">
                 <Footer />
             </div>
         </div>

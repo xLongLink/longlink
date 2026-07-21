@@ -23,7 +23,7 @@ describe('For', () => {
         const ctx: ExecutionContext = {
             setups: {},
             invalidate: async () => {},
-            translations: { items: { name: '{{name}}' } },
+            translations: { 'items.name': { defaultMessage: '{name}' } },
             values: { items: [{ name: 'Alpha' }] },
         };
         const ast = parseXML(

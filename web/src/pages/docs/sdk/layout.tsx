@@ -22,12 +22,21 @@ function Li({ children }: { children: ReactNode }) {
 }
 
 export const metadata = {
+    toc: [
+        { id: 'stack', label: 'Stack' },
+        { id: 'grid', label: 'Grid' },
+        { id: 'card', label: 'Card' },
+        { id: 'form-layout', label: 'FormLayout' },
+        { id: 'page-introductions', label: 'Page Introductions' },
+        { id: 'tab-list', label: 'TabList' },
+        { id: 'dialog', label: 'Dialog' },
+    ],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/layout.tsx',
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="layout" level={1}>
             Layout
         </Heading>

@@ -1,4 +1,3 @@
-import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
@@ -10,6 +9,7 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
 import {
     Table,
     type TableColumn,
@@ -19,12 +19,11 @@ import {
     useTablePagination,
 } from '@astryxdesign/core/Table';
 import type { ApiApplicationResponse } from '@/lib/types';
-import { useTranslation } from '@/lib/i18n';
 import { formatDateTime } from '@/lib/utils';
 import { useApplications } from '@/data/admin';
 
 /** Builds localized admin application table columns. */
-function createAppColumns(t: TFunction): TableColumn<ApiApplicationResponse>[] {
+function createAppColumns(t: TranslatorFn): TableColumn<ApiApplicationResponse>[] {
     return [
         {
             key: 'name',
@@ -81,7 +80,7 @@ function createAppColumns(t: TFunction): TableColumn<ApiApplicationResponse>[] {
 
 /** Renders the admin applications page. */
 export default function AdminApplications() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const { items: applications, error, isLoading } = useApplications();
     const [page, setPage] = useState(1);
     const pageSize = 25;

@@ -91,9 +91,11 @@ Runtime tags are `<longlink>`, `<State>`, `<Query>`, `<For>`, and `<Action>`.
 - The renderer in `src/xml/renderers.tsx` seeds runtime state and renders the AST through `src/xml/core/node.tsx`.
 - Component names must exist in `src/xml/core/registry.tsx`; unknown tags fail at render time.
 - Child content is rendered recursively, so nested XML components stay under the same runtime context.
-- The localization boundary is the text-bearing component itself. Use dotted translation keys like `i18n="tasks.title"` on `Text`, `Heading`, `Button`, and similar tags, then keep translation strings in the app catalog at `src/i18n/en.json`.
+- The localization boundary is the text-bearing component itself. Use dotted translation keys like `i18n="tasks.title"` on `Text`, `Heading`, `Button`, and similar tags. Keep `src/i18n/en.json` as a flat Astryx catalog where each key maps to an object with a required string `defaultMessage` and optional string `description`.
 - Pass interpolation data through one object expression such as `values="${{ name: item.name }}"`; arbitrary interpolation attributes are not part of XML v2.
-- Pluralized text uses `Intl.PluralRules` categories in the translation bundle, for example `{ "items": { "one": "1 item", "other": "{{count}} items" } }`.
+- Catalog interpolation uses ICU placeholders such as `{name}`. The XML expression syntax in `values="${{ name: item.name }}"` is separate and remains unchanged.
+- Pluralized text uses one ICU message, for example `{ "items.count": { "defaultMessage": "{count, plural, =0 {No items} one {# item} other {# items}}" } }`.
+- Nested catalogs, bare string entries, `{{name}}` placeholders, and plural-map entries are not supported.
 - XML rejects `className`, `style`, `xstyle`, and event-handler attributes. Adapters own all visual styling and callbacks.
 
 ## Keep changes aligned

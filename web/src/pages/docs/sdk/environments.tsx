@@ -6,12 +6,16 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
+    toc: [
+        { id: 'usage', label: 'Usage' },
+        { id: 'settings', label: 'Settings' },
+    ],
     lastUpdated: '2026-07-14',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/environments.tsx',
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="environments" level={1}>
             Environments
         </Heading>

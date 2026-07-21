@@ -25,7 +25,7 @@ Specific workflows can be customized through code, built quickly with modern AI-
 
 <br />
 
-## Get Started
+## Getting Started
 
 Requirements: `Python 3.14` or newer.
 
@@ -53,12 +53,17 @@ longlink dev
 
 <br />
 
+## Principles
+
+- TODO
+
+<br />
+
 ## Development
 
 Work on the LongLink Platform:
 
 ```bash
-make up
 make seed
 make api    # In one terminal
 make web    # In another terminal
@@ -68,6 +73,12 @@ Work on the LongLink SDK runtime:
 
 ```bash
 make sdk
+```
+
+Cleanup
+
+```bash
+make down
 ```
 
 <br />

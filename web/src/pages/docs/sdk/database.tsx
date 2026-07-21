@@ -14,38 +14,43 @@ const environments: { backend: React.ReactNode; icon: IconName; name: string }[]
         name: 'Testing',
         icon: 'checkDouble',
         backend: (
-            <Text>
+            <>
                 <Code>memory</Code> SQLite database for isolated test runs.
-            </Text>
+            </>
         ),
     },
     {
         name: 'Development',
         icon: 'wrench',
         backend: (
-            <Text>
+            <>
                 <Code>dev.db</Code> SQLite database for local development.
-            </Text>
+            </>
         ),
     },
     {
         name: 'Production',
         icon: 'success',
         backend: (
-            <Text>
+            <>
                 <Code>PostgreSQL</Code> database scoped to the application schema.
-            </Text>
+            </>
         ),
     },
 ];
 
 export const metadata = {
+    toc: [
+        { id: 'usage', label: 'Usage' },
+        { id: 'migrations', label: 'Migrations' },
+        { id: 'users', label: 'Users' },
+    ],
     lastUpdated: '2026-07-10',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/database.tsx',
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="database" level={1}>
             Database
         </Heading>
@@ -64,19 +69,20 @@ export const content = (
             <TableHeader>
                 <TableRow>
                     <TableHeaderCell>Environment</TableHeaderCell>
-                    <TableHeaderCell>Database backend</TableHeaderCell>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {environments.map((environment) => (
                     <TableRow key={environment.name}>
                         <TableCell>
-                            <Stack direction="horizontal" gap={2} align="center">
-                                <Icon icon={environment.icon} size="sm" color="accent" />
-                                <Code>{environment.name}</Code>
+                            <Stack gap={1}>
+                                <Stack direction="horizontal" gap={2} align="center">
+                                    <Icon icon={environment.icon} size="sm" color="accent" />
+                                    <Text weight="semibold">{environment.name}</Text>
+                                </Stack>
+                                <Text type="supporting">{environment.backend}</Text>
                             </Stack>
                         </TableCell>
-                        <TableCell>{environment.backend}</TableCell>
                     </TableRow>
                 ))}
             </TableBody>

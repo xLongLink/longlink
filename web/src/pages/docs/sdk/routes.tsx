@@ -5,12 +5,13 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { CodeBlock } from '@/components/CodeBlock';
 
 export const metadata = {
+    toc: [{ id: 'usage', label: 'Usage' }],
     lastUpdated: '2026-07-14',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/routes.tsx',
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="routes" level={1}>
             Routes
         </Heading>

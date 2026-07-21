@@ -44,12 +44,28 @@ function Section({ children }: { children: ReactNode }) {
 }
 
 export const metadata = {
+    toc: [
+        { id: 'scope-and-controller', label: '1. Scope and controller' },
+        { id: 'our-roles', label: '2. Our roles' },
+        { id: 'personal-data-we-process', label: '3. Personal data we process' },
+        { id: 'why-we-process-personal-data', label: '4. Why we process personal data' },
+        { id: 'service-providers-and-other-recipients', label: '5. Service providers and other recipients' },
+        { id: 'international-transfers', label: '6. International transfers' },
+        { id: 'cookies-and-similar-storage', label: '7. Cookies and similar storage' },
+        { id: 'retention', label: '8. Retention' },
+        { id: 'automated-operational-actions', label: '9. Automated operational actions' },
+        { id: 'security-and-data-incidents', label: '10. Security and data incidents' },
+        { id: 'your-rights', label: '11. Your rights' },
+        { id: 'children', label: '12. Children' },
+        { id: 'changes-to-this-policy', label: '13. Changes to this Policy' },
+        { id: 'contact', label: '14. Contact' },
+    ],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/legal/privacy.tsx',
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="privacy-policy" level="h1">
             Privacy Policy
         </Heading>
@@ -104,7 +120,7 @@ export const content = (
             <p>Depending on how you use the Service, we may process the following categories of personal data:</p>
             <Ul>
                 <Li>
-                    Account and identity data: internal account ID, OAuth or OIDC provider ID, name, email address,
+                    Account and identity data: internal account ID, OAuth provider ID, name, email address,
                     optional avatar URL, platform role, account status, selected theme, accent, radius, language,
                     account creation, update, deletion, and sign-in session information.
                 </Li>
@@ -199,9 +215,9 @@ export const content = (
             <p>We disclose only the data reasonably needed for the recipient's role:</p>
             <Ul>
                 <Li>
-                    OAuth and OIDC providers: optional authentication when you sign in. They receive the information
+                    OAuth providers: optional authentication when you sign in. They receive the information
                     required for sign-in and return your provider ID, name, email, and, where available, avatar and
-                    profile claims. GitHub or an installation-specific single sign-on provider may be configured.
+                    profile claims. GitHub may be configured.
                 </Li>
                 <Li>
                     Infrastructure providers and connected registries: Kubernetes, database, object-storage, container
@@ -353,7 +369,7 @@ export const content = (
             </Heading>
             <p>
                 We use technical and organizational measures appropriate to the nature and risk of the processing,
-                including access controls, password hashing, optional OAuth or OIDC authentication, revocable session
+                including access controls, password hashing, optional OAuth authentication, revocable session
                 tokens, signed session cookies, transport encryption, namespace, database-schema, and storage-bucket
                 isolation, credential hashing or encryption where appropriate, secret management, logging, and
                 restricted administrative access. No system is completely secure, and you are responsible for securing

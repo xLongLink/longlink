@@ -3,11 +3,9 @@ import { parseXML } from '@/xml/core/parser';
 import { renderXmlToMarkup } from '../helpers';
 
 const translations = {
-    anchors: {
-        download: 'Download',
-        labelOnly: 'Label only',
-        openIssue: 'Open issue',
-    },
+    'anchors.download': { defaultMessage: 'Download' },
+    'anchors.labelOnly': { defaultMessage: 'Label only' },
+    'anchors.openIssue': { defaultMessage: 'Open issue' },
 };
 
 describe('Link', () => {

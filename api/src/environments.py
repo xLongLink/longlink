@@ -22,7 +22,6 @@ class Env(BaseSettings):
     # Authentication
     SESSION_KEY: str = Field(min_length=32)
     PUBLIC_URL: str = Field(default="http://localhost:5173", pattern=r"^https?://")
-    AUTH_REGISTRATION_ENABLED: bool = True
     AUTH_SESSION_LIFETIME_SECONDS: int = Field(default=2592000, ge=300, le=31536000)
     INITIAL_ADMIN_EMAIL: str | None = None
 
@@ -38,10 +37,6 @@ class Env(BaseSettings):
     # Optional authentication providers
     GITHUB_CLIENT_ID: str | None = None
     GITHUB_CLIENT_SECRET: str | None = None
-    OIDC_ISSUER: str | None = None
-    OIDC_CLIENT_ID: str | None = None
-    OIDC_CLIENT_SECRET: str | None = None
-    OIDC_EMAIL_VERIFIED: bool = False
 
     # Control plane database URL
     DATABASE_URL: str
@@ -71,21 +66,11 @@ class Env(BaseSettings):
         if any(github_values) and not all(github_values):
             raise ValueError("GitHub authentication requires GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET")
 
-        # Reject partial OIDC configuration instead of failing during login.
-        oidc_values = (self.OIDC_ISSUER, self.OIDC_CLIENT_ID, self.OIDC_CLIENT_SECRET)
-        if any(oidc_values) and not all(oidc_values):
-            raise ValueError("OIDC authentication requires OIDC_ISSUER, OIDC_CLIENT_ID, and OIDC_CLIENT_SECRET")
-
         # Implicit TLS and STARTTLS are mutually exclusive SMTP transports.
         if self.SMTP_USE_TLS and self.SMTP_START_TLS:
             raise ValueError("SMTP_USE_TLS and SMTP_START_TLS cannot both be enabled")
 
         return self
-
-    def registration(self) -> bool:
-        """Return whether this installation can accept local registrations."""
-
-        return self.AUTH_REGISTRATION_ENABLED and (self.DEVELOPMENT or self.SMTP_HOST is not None)
 
     def exoscale(self) -> tuple[str, str, UUID]:
         """Return complete Platform-only Exoscale provisioning credentials."""

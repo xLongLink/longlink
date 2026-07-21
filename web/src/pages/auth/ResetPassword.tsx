@@ -6,8 +6,8 @@ import { Button } from '@astryxdesign/core/Button';
 import { useMutation } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { fetchApiVoid } from '@/lib/api';
-import { useTranslation } from '@/lib/i18n';
 import { AuthPage } from '@/components/AuthPage';
 import { sanitizeRedirectPath } from '@/lib/redirects';
 import { PasswordInput } from '@/components/PasswordInput';
@@ -18,7 +18,7 @@ type ResetPasswordValues = {
 
 /** Accepts a password reset token and saves a new password. */
 export default function ResetPassword() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const location = useLocation();
     const search = new URLSearchParams(location.search);
     const token = search.get('token');

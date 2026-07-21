@@ -12,8 +12,8 @@ export function Wordmark({ className, style }: { className?: string; style?: CSS
                 .join(' ')}
             style={style}
         >
-            <span className="text-[var(--color-text-secondary)]">LONG</span>
-            <span className="text-[var(--color-text-primary)]">LINK</span>
+            <span className="text-secondary">LONG</span>
+            <span className="text-primary">LINK</span>
         </span>
     );
 }

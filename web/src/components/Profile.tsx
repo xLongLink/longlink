@@ -8,12 +8,12 @@ import { Button } from '@astryxdesign/core/Button';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Popover } from '@astryxdesign/core/Popover';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { useUser } from '@/hooks/use-user';
-import { useTranslation } from '@/lib/i18n';
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function UserProfile() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const { user, signOut, switchAccount } = useUser();
     const showToast = useToast();
     const [isOpen, setIsOpen] = useState(false);

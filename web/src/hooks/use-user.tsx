@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import type { Accent, Radius, Theme } from '@/lib/theme';
+import { DEFAULT_RADIUS, type Accent, type Theme } from '@/lib/theme';
 import type { ApiUserListItem, ApiUserOrganizationMembership, ApiUserProfile } from '@/lib/types';
 import { useApiQuery } from '@/hooks/use-api';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
@@ -45,7 +45,7 @@ const UserContext = createContext<UserQueryResult | undefined>(undefined);
 const DEFAULT_USER_PREFERENCES = {
     theme: 'dark' as Theme,
     accent: 'neutral' as Accent,
-    radius: 'medium' as Radius,
+    radius: DEFAULT_RADIUS,
     language: 'en',
 } as const satisfies UserPreferences;
 

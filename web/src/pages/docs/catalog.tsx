@@ -1,15 +1,12 @@
 import {
     AppWindow,
     BookOpen,
-    Braces,
     Building2,
-    Component,
     Database,
     FileCode2,
     FlaskConical,
     Globe,
     HardDrive,
-    LayoutTemplate,
     Package,
     Rocket,
     ServerCog,
@@ -17,28 +14,20 @@ import {
     Waypoints,
 } from 'lucide-react';
 import type { ArticleBreadcrumb, ArticleNavigationGroup, ArticleNavigationItem, ArticlePage } from '@/pages/catalog';
+import { pageElementDocPages } from '@/pages/docs/sdk/elements';
 import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/pages/docs/index';
 import { content as docsApiIndexContent, metadata as docsApiIndexMetadata } from '@/pages/docs/api/index';
 import { content as docsSdkIndexContent, metadata as docsSdkIndexMetadata } from '@/pages/docs/sdk/index';
 import { content as docsSdkPagesContent, metadata as docsSdkPagesMetadata } from '@/pages/docs/sdk/pages';
-import { content as docsSdkLayoutContent, metadata as docsSdkLayoutMetadata } from '@/pages/docs/sdk/layout';
 import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } from '@/pages/docs/sdk/routes';
 import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/pages/docs/sdk/storage';
 import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } from '@/pages/docs/sdk/testing';
 import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/pages/docs/sdk/building';
 import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/pages/docs/sdk/database';
 import {
-    content as docsSdkComponentsContent,
-    metadata as docsSdkComponentsMetadata,
-} from '@/pages/docs/sdk/components';
-import {
     content as docsApiSelfHostedContent,
     metadata as docsApiSelfHostedMetadata,
 } from '@/pages/docs/api/self-hosted';
-import {
-    content as docsSdkExpressionsContent,
-    metadata as docsSdkExpressionsMetadata,
-} from '@/pages/docs/sdk/expressions';
 import {
     content as docsApiApplicationsContent,
     metadata as docsApiApplicationsMetadata,
@@ -52,16 +41,18 @@ import {
     metadata as docsApiOrganizationsMetadata,
 } from '@/pages/docs/api/organizations';
 
-type DocGroupTitle = 'Overview' | 'Platform' | 'Applications / SDK';
+type DocGroupTitle = 'Overview' | 'Platform' | 'Applications';
 
 type GroupedDocPage = ArticlePage & { group: DocGroupTitle };
 
 type DocNavigationPage = GroupedDocPage & {
     children?: DocNavigationPage[];
+    routes?: DocNavigationPage[];
 };
 
 type DocPageOptions = Omit<ArticlePage, 'breadcrumbs'> & {
     children?: DocPageOptions[];
+    routes?: DocPageOptions[];
 };
 
 type DocSection = {
@@ -71,32 +62,39 @@ type DocSection = {
 
 const documentationBreadcrumb: ArticleBreadcrumb = { title: 'Documentation', path: '/docs' };
 const platformBreadcrumb: ArticleBreadcrumb = { title: 'Platform', path: '/docs/api' };
-const applicationsSdkBreadcrumb: ArticleBreadcrumb = { title: 'Applications / SDK', path: '/docs/sdk' };
+const applicationsBreadcrumb: ArticleBreadcrumb = { title: 'Applications', path: '/docs/sdk' };
 const docBreadcrumbsByGroup: Record<DocGroupTitle, ArticleBreadcrumb[]> = {
     Overview: [documentationBreadcrumb],
     Platform: [documentationBreadcrumb, platformBreadcrumb],
-    'Applications / SDK': [documentationBreadcrumb, applicationsSdkBreadcrumb],
+    Applications: [documentationBreadcrumb, applicationsBreadcrumb],
 };
 
 /** Builds a docs navigation page with breadcrumbs derived from its section. */
-function docPage(group: DocGroupTitle, { children, ...page }: DocPageOptions): DocNavigationPage {
-    const groupBreadcrumbs = docBreadcrumbsByGroup[group];
-    const sectionBreadcrumb = groupBreadcrumbs.at(-1);
-    // Section overview pages use the section breadcrumb; child pages append themselves.
+function docPage(
+    group: DocGroupTitle,
+    { children, routes, ...page }: DocPageOptions,
+    parentBreadcrumbs = docBreadcrumbsByGroup[group]
+): DocNavigationPage {
+    const parentBreadcrumb = parentBreadcrumbs.at(-1);
+
+    // Section overview pages use the parent breadcrumb; descendants append themselves.
     const breadcrumbs =
-        sectionBreadcrumb?.path === page.path
-            ? groupBreadcrumbs
-            : [...groupBreadcrumbs, { title: page.title, path: page.path }];
+        parentBreadcrumb?.path === page.path
+            ? parentBreadcrumbs
+            : [...parentBreadcrumbs, { title: page.title, path: page.path }];
     const articlePage = { ...page, group, breadcrumbs };
+    const childPages = children?.map((child) => docPage(group, child, breadcrumbs)) ?? [];
+    const routePages = routes?.map((route) => docPage(group, route, breadcrumbs)) ?? [];
 
     // Return leaf pages without nested navigation.
-    if (!children?.length) {
+    if (!childPages.length && !routePages.length) {
         return articlePage;
     }
 
     return {
         ...articlePage,
-        children: children.map((child) => docPage(group, child)),
+        ...(childPages.length ? { children: childPages } : {}),
+        ...(routePages.length ? { routes: routePages } : {}),
     };
 }
 
@@ -119,6 +117,11 @@ function flattenDocPages(items: DocNavigationPage[]): GroupedDocPage[] {
         // Recurse into nested pages.
         if (item.children?.length) {
             pages.push(...flattenDocPages(item.children));
+        }
+
+        // Recurse into hidden routes excluded from sidebar navigation.
+        if (item.routes?.length) {
+            pages.push(...flattenDocPages(item.routes));
         }
     }
 
@@ -181,7 +184,7 @@ const DOC_SECTIONS: DocSection[] = [
             metadata: docsApiSelfHostedMetadata,
         },
     ]),
-    docSection('Applications / SDK', [
+    docSection('Applications', [
         {
             title: 'Overview',
             path: '/docs/sdk',
@@ -218,6 +221,14 @@ const DOC_SECTIONS: DocSection[] = [
             metadata: docsSdkDatabaseMetadata,
         },
         {
+            title: 'Pages',
+            path: '/docs/sdk/pages',
+            icon: <FileCode2 aria-hidden="true" size={16} />,
+            content: docsSdkPagesContent,
+            metadata: docsSdkPagesMetadata,
+            routes: pageElementDocPages,
+        },
+        {
             title: 'Testing',
             path: '/docs/sdk/testing',
             icon: <FlaskConical aria-hidden="true" size={16} />,
@@ -230,36 +241,6 @@ const DOC_SECTIONS: DocSection[] = [
             icon: <Rocket aria-hidden="true" size={16} />,
             content: docsSdkBuildingContent,
             metadata: docsSdkBuildingMetadata,
-        },
-        {
-            title: 'Pages',
-            path: '/docs/sdk/pages',
-            icon: <FileCode2 aria-hidden="true" size={16} />,
-            content: docsSdkPagesContent,
-            metadata: docsSdkPagesMetadata,
-            children: [
-                {
-                    title: 'Expressions',
-                    path: '/docs/sdk/pages/expressions',
-                    icon: <Braces aria-hidden="true" size={16} />,
-                    content: docsSdkExpressionsContent,
-                    metadata: docsSdkExpressionsMetadata,
-                },
-                {
-                    title: 'Layout',
-                    path: '/docs/sdk/pages/layout',
-                    icon: <LayoutTemplate aria-hidden="true" size={16} />,
-                    content: docsSdkLayoutContent,
-                    metadata: docsSdkLayoutMetadata,
-                },
-                {
-                    title: 'Components',
-                    path: '/docs/sdk/pages/components',
-                    icon: <Component aria-hidden="true" size={16} />,
-                    content: docsSdkComponentsContent,
-                    metadata: docsSdkComponentsMetadata,
-                },
-            ],
         },
     ]),
 ];

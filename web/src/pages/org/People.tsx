@@ -11,6 +11,7 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
@@ -22,7 +23,6 @@ import type { Role } from '@/lib/roles';
 import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
 import { ROLE_NAMES } from '@/lib/roles';
 import { formatDate } from '@/lib/utils';
-import { useTranslation } from '@/lib/i18n';
 import { useOrganizationActions } from '@/hooks/use-organization';
 
 type PeopleProps = {
@@ -51,7 +51,7 @@ export default function People({
     isLoading,
     error,
 }: PeopleProps) {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const toast = useToast();
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');

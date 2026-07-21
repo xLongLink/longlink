@@ -22,12 +22,22 @@ function Li({ children }: { children: ReactNode }) {
 }
 
 export const metadata = {
+    toc: [
+        { id: 'syntax-forms', label: 'Syntax Forms' },
+        { id: 'runtime-scope', label: 'Runtime Scope' },
+        { id: 'operators', label: 'Operators' },
+        { id: 'arrays-objects-and-templates', label: 'Arrays, Objects, and Templates' },
+        { id: 'safe-calls', label: 'Safe Calls' },
+        { id: 'bindings', label: 'Bindings' },
+        { id: 'xml-escaping', label: 'XML Escaping' },
+        { id: 'unsupported-syntax', label: 'Unsupported Syntax' },
+    ],
     lastUpdated: '2026-07-20',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/expressions.tsx',
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="expressions" level={1}>
             Expressions
         </Heading>

@@ -1,4 +1,3 @@
-import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
@@ -10,6 +9,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
 import {
     Table,
     type TableColumn,
@@ -20,7 +20,6 @@ import {
 } from '@astryxdesign/core/Table';
 import type { ApiDatabaseRegistry } from '@/lib/types';
 import { fetchApiJson } from '@/lib/api';
-import { useTranslation } from '@/lib/i18n';
 import { PostgreSQL } from '@/svg/PostgreSQL';
 import { useDeleteDialog } from '@/lib/utils';
 import { useDatabases } from '@/data/database';
@@ -31,7 +30,7 @@ import { apiDatabaseRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
 import { databasesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
 
 /** Returns localized admin database table columns. */
-function createDatabaseColumns(t: TFunction): TableColumn<ApiDatabaseRegistry>[] {
+function createDatabaseColumns(t: TranslatorFn): TableColumn<ApiDatabaseRegistry>[] {
     return [
         {
             key: 'database',
@@ -58,7 +57,7 @@ function createDatabaseColumns(t: TFunction): TableColumn<ApiDatabaseRegistry>[]
 
 /** Renders the admin database page. */
 export default function AdminDatabase() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const toast = useToast();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();

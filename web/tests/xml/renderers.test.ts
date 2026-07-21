@@ -7,7 +7,7 @@ describe('renderNode', () => {
         const ctx: ExecutionContext = {
             setups: {},
             invalidate: async () => {},
-            translations: { copy: { count: 'Count {{count}}' } },
+            translations: { 'copy.count': { defaultMessage: 'Count {count}' } },
             values: {},
             count: 7,
         };

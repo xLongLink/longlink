@@ -2,11 +2,14 @@
 import { getVersion, subscribe } from 'valtio';
 import { Banner } from '@astryxdesign/core/Banner';
 import { useEffect, useState, type ReactNode } from 'react';
+import { InternationalizationProvider, useTranslator, type MessagesByLocale } from '@astryxdesign/core/i18n';
 import { fetchApiJson } from '@/lib/api';
+import { translationCatalogs } from '@/lib/i18n';
 import type { ASTNode, ExecutionContext } from './types';
 import { renderNode } from './core/node';
 import { XmlErrorBoundary } from './core/errors';
 import { BaseUrlContext, resolveUrl } from './core/url';
+import { validateTranslationCatalog } from './core/i18n';
 import { ContextProvider, createContext, setupContext, validateSetupNodes } from './core/context';
 
 type RenderXMLProps = {
@@ -44,6 +47,7 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
     // Reset translations when the active locale changes.
     if (runtimeCtx.locale !== undefined && runtimeCtx.locale !== runtimeLocale) {
         runtimeCtx.translations = undefined;
+        runtimeCtx.translationsLocale = undefined;
     }
 
     runtimeCtx.hashNavigation = active;
@@ -92,9 +96,10 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
         if (waitsForTranslations && runtimeCtx.translations === undefined) {
             const locale = runtimeCtx.locale ?? 'en';
 
-            void fetchApiJson<Record<string, unknown>>(resolveUrl(baseUrl, `/i18n/${locale}.json`), {
+            void fetchApiJson<unknown>(resolveUrl(baseUrl, `/i18n/${locale}.json`), {
                 cache: 'no-cache',
             })
+                .then((translations) => ({ locale, translations }))
                 .catch((error: unknown) => {
                     // Let missing English catalogs fail visibly.
                     if (locale === 'en') {
@@ -102,15 +107,16 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
                     }
 
                     // Keep localized apps usable when a selected account language has no catalog yet.
-                    return fetchApiJson<Record<string, unknown>>(resolveUrl(baseUrl, '/i18n/en.json'), {
-                        cache: 'no-cache',
-                    });
+                    return fetchApiJson<unknown>(resolveUrl(baseUrl, '/i18n/en.json'), { cache: 'no-cache' }).then(
+                        (translations) => ({ locale: 'en', translations })
+                    );
                 })
-                .then((translations) => {
+                .then(({ locale: translationsLocale, translations }) => {
                     // Ignore translations after cleanup.
                     if (!mounted) return;
 
-                    runtimeCtx.translations = translations;
+                    runtimeCtx.translations = validateTranslationCatalog(translations);
+                    runtimeCtx.translationsLocale = translationsLocale;
                     setVersion((current) => current + 1);
                 })
                 .catch((error: unknown) => {
@@ -188,12 +194,32 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
     // Wait for translations before localized nodes render.
     if (waitsForTranslations && runtimeCtx.translations === undefined) return null;
 
+    const translationsLocale = runtimeCtx.translationsLocale ?? runtimeLocale;
+    const messages: MessagesByLocale = {
+        ...translationCatalogs,
+        [translationsLocale]: {
+            ...translationCatalogs[translationsLocale],
+            ...runtimeCtx.translations,
+        },
+    };
+
     return (
         <XmlErrorBoundary resetKey={`${version}`}>
-            <BaseUrlContext.Provider value={baseUrl}>
-                <ContextProvider value={runtimeCtx}>{renderNode(ast, runtimeCtx)}</ContextProvider>
-            </BaseUrlContext.Provider>
+            <InternationalizationProvider locale={translationsLocale} messages={messages}>
+                <XmlContent ast={ast} baseUrl={baseUrl} ctx={runtimeCtx} />
+            </InternationalizationProvider>
         </XmlErrorBoundary>
+    );
+}
+
+/** Installs the active Astryx translator into the mutable XML execution scope. */
+function XmlContent({ ast, baseUrl, ctx }: { ast: ASTNode[]; baseUrl: string; ctx: ExecutionContext }) {
+    ctx.translate = useTranslator();
+
+    return (
+        <BaseUrlContext.Provider value={baseUrl}>
+            <ContextProvider value={ctx}>{renderNode(ast, ctx)}</ContextProvider>
+        </BaseUrlContext.Provider>
     );
 }
 

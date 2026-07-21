@@ -9,33 +9,53 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { Slider } from '@astryxdesign/core/Slider';
 import { Selector } from '@astryxdesign/core/Selector';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Building2, Paintbrush, UserRound } from 'lucide-react';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import Layout from '@/layout/Layout';
-import { useTranslation } from '@/lib/i18n';
 import { useDeleteDialog } from '@/lib/utils';
 import { useDeleteOrganization } from '@/hooks/use-organization';
 import { useUpdateUser, useUserProfile } from '@/hooks/use-user';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { LANGUAGE_OPTIONS, resolveSupportedLanguage, type Language } from '@/lib/languages';
-import { ACCENT_OPTIONS, RADIUS_OPTIONS, THEME_OPTIONS, type Accent, type Radius, type Theme } from '@/lib/theme';
+import {
+    ACCENT_OPTIONS,
+    DEFAULT_RADIUS,
+    MAX_RADIUS,
+    MIN_RADIUS,
+    THEME_OPTIONS,
+    type Accent,
+    type Theme,
+} from '@/lib/theme';
 
 type SettingsSection = 'account' | 'appearance' | 'organizations';
 
+const RADIUS_STEP = 0.05;
+const RADIUS_MARKS = [MIN_RADIUS, 0.5, DEFAULT_RADIUS, MAX_RADIUS].map((value) => ({
+    value,
+    label: formatRadius(value),
+}));
+
+function formatRadius(value: number): string {
+    return value === 0 ? 'None' : `${value.toFixed(2)}x`;
+}
+
 /** Renders the authenticated settings page. */
 export default function Settings() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const toast = useToast();
     const location = useLocation();
     const { user, organizations, theme, accent, radius, language, isLoading } = useUserProfile();
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
     const deleteOrganization = useDeleteOrganization();
     const [editedName, setEditedName] = useState<string | null>(null);
+    const [editedRadius, setEditedRadius] = useState<number | null>(null);
     const [accountError, setAccountError] = useState<string | null>(null);
     const hash = location.hash.replace(/^#/, '');
     const section: SettingsSection =
@@ -131,11 +151,10 @@ export default function Settings() {
             }}
         >
             <VStack
-                className="[--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
+                className="mx-auto [--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
                 gap={8}
                 width="100%"
                 maxWidth={1000}
-                style={{ marginInline: 'auto' }}
             >
                 <VStack gap={1}>
                     <Heading level={1}>{t('settings.title')}</Heading>
@@ -255,15 +274,23 @@ export default function Settings() {
                                             void updateUser({ accent: value as Accent });
                                         }}
                                     />
-                                    <Selector
+                                    <Slider
                                         label={t('labels.radius')}
-                                        options={RADIUS_OPTIONS}
-                                        value={radius}
+                                        value={editedRadius ?? radius}
                                         width={320}
+                                        min={MIN_RADIUS}
+                                        max={MAX_RADIUS}
+                                        step={RADIUS_STEP}
+                                        marks={RADIUS_MARKS}
+                                        formatValue={formatRadius}
                                         isDisabled={isPending}
-                                        placeholder={t('settings.placeholders.radius')}
-                                        onChange={(value) => {
-                                            void updateUser({ radius: value as Radius });
+                                        onChange={(value: number) => {
+                                            setEditedRadius(value);
+                                        }}
+                                        onChangeEnd={(value: number) => {
+                                            void updateUser({ radius: value }).finally(() => {
+                                                setEditedRadius(null);
+                                            });
                                         }}
                                     />
                                 </HStack>

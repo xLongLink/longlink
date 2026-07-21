@@ -4,6 +4,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Selector } from '@astryxdesign/core/Selector';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
@@ -12,7 +13,6 @@ import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { ApiImageMetadata } from '@/lib/types';
 import { fetchApiJson } from '@/lib/api';
-import { useTranslation } from '@/lib/i18n';
 import { hasMinimumRole } from '@/lib/roles';
 import { useApiQuery } from '@/hooks/use-api';
 import { useUserProfile } from '@/hooks/use-user';
@@ -45,7 +45,7 @@ const defaultCreateApplicationValues = {
 
 /** Renders the create-application dialog for an organization. */
 export default function CreateApplication({ organization }: { organization: string }) {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const { organizations } = useUserProfile();
     const { createApplication, isCreatingApplication } = useOrganizationActions(organization);
     const imageFormId = useId();

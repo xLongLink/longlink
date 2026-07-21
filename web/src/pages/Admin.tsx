@@ -1,13 +1,13 @@
 import { Outlet } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import Layout from '@/layout/Layout';
 import { Auth } from '@/components/Auth';
-import { useTranslation } from '@/lib/i18n';
 
 /** Renders the admin shell with tabbed navigation. */
 export default function Admin() {
-    const { t } = useTranslation();
+    const t = useTranslator();
 
     return (
         <Auth requiredRole="support">

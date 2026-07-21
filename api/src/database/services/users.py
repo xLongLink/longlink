@@ -1,7 +1,7 @@
 from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from src.models.types import Theme, Accent, Radius, Language
+from src.models.types import Theme, Accent, Language
 from src.database.session import session_scope
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
@@ -24,7 +24,7 @@ async def update(
     avatar: str | None = None,
     theme: Theme | None = None,
     accent: Accent | None = None,
-    radius: Radius | None = None,
+    radius: float | None = None,
     language: Language | None = None,
 ) -> User:
     """Patch one LongLink Platform user profile by local identifier."""

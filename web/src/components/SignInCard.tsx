@@ -13,16 +13,16 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { InputGroup, InputGroupText } from '@astryxdesign/core/InputGroup';
 import { GitHub } from '@/svg/GitHub';
 import { useUser } from '@/hooks/use-user';
-import { useTranslation } from '@/lib/i18n';
 import { useAuthConfig } from '@/hooks/use-auth';
 import { Wordmark } from '@/components/Wordmark';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { PasswordInput } from '@/components/PasswordInput';
 import { accountsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 import { apiAuthorizationSchema, parseApiResponse } from '@/lib/api-schemas';
 import { AUTH_RETURN_PATH_KEY, sanitizeRedirectPath } from '@/lib/redirects';
@@ -32,18 +32,17 @@ type LoginValues = {
     password: string;
 };
 
-type AuthProvider = 'github' | 'oidc';
+type AuthProvider = 'github';
 
 /** Renders the shared LongLink sign-in form and saved account switcher. */
 export function SignInCard({ redirectTo }: { redirectTo: string }) {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { accounts, activateAccount } = useUser();
     const { data: authConfig } = useAuthConfig();
     const showToast = useToast();
     const [error, setError] = useState<string | null>(null);
-    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [pendingProvider, setPendingProvider] = useState<AuthProvider | null>(null);
     const safeRedirectTo = sanitizeRedirectPath(redirectTo);
     const nextQuery = new URLSearchParams({ next: safeRedirectTo }).toString();
@@ -116,21 +115,19 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
     }
 
     const hasSavedAccounts = accounts.items.length > 0;
-    const hasProviders = authConfig?.github_enabled || authConfig?.oidc_enabled;
+    const hasProviders = authConfig?.github_enabled;
     const isPending = login.isPending || pendingProvider !== null;
 
     return (
-        <Stack gap={5} maxWidth={384} width="100%">
-            <Stack gap={2} hAlign="center">
+        <Stack gap={4} maxWidth={384} width="100%">
+            <Stack gap={1} hAlign="center">
                 <Heading level={1} justify="center">
                     <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
                         <span>{t('auth.welcomeTo')}</span>
                         <Wordmark style={{ fontSize: 'var(--text-heading-1-size)' }} />
                     </span>
                 </Heading>
-                <Text as="p" color="secondary" justify="center" type="supporting">
-                    {t('auth.signInDescription')}
-                </Text>
+                <Divider label={t('auth.signInDescription')} />
             </Stack>
 
             {hasSavedAccounts ? (
@@ -158,7 +155,7 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
                 </Stack>
             ) : null}
 
-            <Stack as="form" gap={4} onSubmit={form.handleSubmit(handlePasswordSignIn)}>
+            <Stack as="form" gap={3} onSubmit={form.handleSubmit(handlePasswordSignIn)}>
                 <Controller
                     control={form.control}
                     name="email"
@@ -176,7 +173,8 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
                     )}
                 />
                 <Stack gap={1}>
-                    <Stack direction="horizontal" hAlign="end">
+                    <Stack direction="horizontal" hAlign="between" vAlign="center">
+                        <Text type="label">{t('labels.password')}</Text>
                         <Link href={`/auth/forgot-password?${nextQuery}`} type="supporting">
                             {t('auth.forgotPassword')}
                         </Link>
@@ -185,33 +183,20 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
                         control={form.control}
                         name="password"
                         render={({ field, fieldState }) => (
-                            <InputGroup
+                            <PasswordInput
+                                ref={field.ref}
+                                autoComplete="current-password"
+                                htmlName={field.name}
+                                isLabelHidden
                                 label={t('labels.password')}
-                                style={{ width: '100%' }}
+                                onBlur={field.onBlur}
+                                onChange={field.onChange}
                                 status={
                                     fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
                                 }
-                            >
-                                <TextInput
-                                    ref={field.ref}
-                                    htmlName={field.name}
-                                    isLabelHidden
-                                    label={t('labels.password')}
-                                    onChange={field.onChange}
-                                    style={{ flex: 1, minWidth: 0 }}
-                                    type={isPasswordVisible ? 'text' : 'password'}
-                                    value={field.value}
-                                />
-                                <InputGroupText>
-                                    <Button
-                                        aria-pressed={isPasswordVisible}
-                                        label={isPasswordVisible ? t('auth.hidePassword') : t('auth.showPassword')}
-                                        onClick={() => setIsPasswordVisible((current) => !current)}
-                                        size="sm"
-                                        variant="ghost"
-                                    />
-                                </InputGroupText>
-                            </InputGroup>
+                                value={field.value}
+                                width="100%"
+                            />
                         )}
                     />
                 </Stack>
@@ -220,9 +205,9 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
                     isDisabled={isPending}
                     isLoading={login.isPending}
                     label={login.isPending ? t('auth.signingIn') : t('actions.login')}
-                    style={{ width: '100%' }}
                     type="submit"
                     variant="primary"
+                    width="100%"
                 />
             </Stack>
 
@@ -239,27 +224,20 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
                                 variant="secondary"
                             />
                         ) : null}
-                        {authConfig.oidc_enabled ? (
-                            <Button
-                                icon={<Icon icon="wrench" size="sm" />}
-                                isDisabled={isPending}
-                                label={t('auth.singleSignOn')}
-                                onClick={() => void handleProviderSignIn('oidc')}
-                                variant="secondary"
-                            />
-                        ) : null}
                     </Stack>
                 </Stack>
             ) : null}
 
-            {authConfig?.registration_enabled ? (
-                <Text as="p" color="secondary" justify="center" type="supporting">
-                    {t('auth.noAccount')}{' '}
-                    <Link href={`/auth/register?${nextQuery}`} type="inherit" weight="medium">
-                        {t('auth.createAccount')}
-                    </Link>
-                </Text>
-            ) : null}
+            <Divider
+                label={
+                    <>
+                        {t('auth.noAccount')}{' '}
+                        <Link href={`/auth/register?${nextQuery}`} type="inherit" weight="medium">
+                            {t('auth.createAccount')}
+                        </Link>
+                    </>
+                }
+            />
 
             <Text as="p" color="secondary" justify="center" type="supporting">
                 {t('auth.agreementLead')} <br />

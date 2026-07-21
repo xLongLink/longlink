@@ -3,9 +3,9 @@ import { useLocation } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Icon, type IconName, type IconType } from '@astryxdesign/core/Icon';
-import { useTranslation } from '@/lib/i18n';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
 import { UserProfile } from '@/components/Profile';
@@ -21,6 +21,8 @@ type LayoutProps = {
     tabs?: Record<string, string | LayoutTab>;
     brandOnly?: boolean;
     brandHref?: string;
+    fillViewport?: boolean;
+    reserveTabSpace?: boolean;
     children: ReactNode;
 };
 
@@ -32,8 +34,15 @@ type LayoutTabEntry = {
 };
 
 /** Renders the shared page shell with either breadcrumbs or brand-only header chrome. */
-export default function Layout({ tabs, brandOnly = false, brandHref = '/organizations', children }: LayoutProps) {
-    const { t } = useTranslation();
+export default function Layout({
+    tabs,
+    brandOnly = false,
+    brandHref = '/organizations',
+    fillViewport = false,
+    reserveTabSpace = false,
+    children,
+}: LayoutProps) {
+    const t = useTranslator();
     const location = useLocation();
     const currentPathname = location.pathname;
     const normalizedCurrentPathname = normalizePathname(currentPathname);
@@ -86,7 +95,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
         <Stack gap={0}>
             <TopNav
                 label={t('common.mainNavigation')}
-                style={{ paddingInline: 'var(--spacing-7)' }}
+                style={{ minHeight: 'var(--spacing-11)', paddingInline: 'var(--spacing-7)' }}
                 heading={
                     brandOnly ? (
                         <Link href={brandHref} label={t('common.longlinkHome')} color="inherit">
@@ -100,14 +109,14 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                     user ? (
                         <UserProfile />
                     ) : (
-                        <Link href="/docs" color="secondary" isStandalone>
-                            {t('common.documentation')}
+                        <Link href="/docs" color="secondary" isStandalone rel="noopener noreferrer" target="_blank">
+                            {t('common.documentation')} <Icon icon="externalLink" size="xsm" />
                         </Link>
                     )
                 }
             />
 
-            {!tabEntries.length ? null : (
+            {!tabEntries.length && !reserveTabSpace ? null : (
                 <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
                     <TabList
                         aria-label="Section navigation"
@@ -116,15 +125,25 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                         size="sm"
                         value={activeTabPathname ?? ''}
                     >
-                        {tabEntries.map((tab) => (
+                        {tabEntries.length ? (
+                            tabEntries.map((tab) => (
+                                <Tab
+                                    key={tab.label}
+                                    href={tab.href}
+                                    icon={tab.icon ? <Icon icon={tab.icon} size="sm" /> : undefined}
+                                    label={tab.label}
+                                    value={tab.pathname}
+                                />
+                            ))
+                        ) : (
                             <Tab
-                                key={tab.label}
-                                href={tab.href}
-                                icon={tab.icon ? <Icon icon={tab.icon} size="sm" /> : undefined}
-                                label={tab.label}
-                                value={tab.pathname}
+                                aria-disabled="true"
+                                aria-hidden="true"
+                                className="invisible pointer-events-none"
+                                label=""
+                                value="reserved-tab-space"
                             />
-                        ))}
+                        )}
                     </TabList>
                 </Stack>
             )}
@@ -132,7 +151,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
     );
 
     return (
-        <TopLayout header={header} fullHeight={tabEntries.length > 0}>
+        <TopLayout header={header} fullHeight={tabEntries.length > 0} height={fillViewport ? 'fill' : 'auto'}>
             {children}
         </TopLayout>
     );

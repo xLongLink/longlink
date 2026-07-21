@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ICON_NAMES } from '@/lib/icons';
 import { LANGUAGE_VALUES } from '@/lib/languages';
-import { ACCENT_VALUES, RADIUS_VALUES, THEME_VALUES } from '@/lib/theme';
+import { ACCENT_VALUES, MAX_RADIUS, MIN_RADIUS, THEME_VALUES } from '@/lib/theme';
 import { APPLICATION_ROLE_NAMES, PLATFORM_ROLE_NAMES, ROLE_NAMES } from '@/lib/roles';
 
 const applicationStatusSchema = z.enum(['creating', 'running', 'failed', 'deleting']);
@@ -10,14 +10,12 @@ const platformRoleSchema = z.enum(PLATFORM_ROLE_NAMES);
 const roleSchema = z.enum(ROLE_NAMES);
 const themeSchema = z.enum(THEME_VALUES);
 const accentSchema = z.enum(ACCENT_VALUES);
-const radiusSchema = z.enum(RADIUS_VALUES);
+const radiusSchema = z.number().min(MIN_RADIUS).max(MAX_RADIUS);
 const iconNameSchema = z.enum(ICON_NAMES).nullable();
 const languageSchema = z.enum(LANGUAGE_VALUES);
 
 export const apiAuthConfigSchema = z.object({
-    oidc_enabled: z.boolean(),
     github_enabled: z.boolean(),
-    registration_enabled: z.boolean(),
 });
 
 export const apiAuthorizationSchema = z.object({

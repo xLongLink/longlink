@@ -1,418 +1,1268 @@
 {
-    "actions": {
-        "back": "Indietro",
-        "backToApplications": "Torna alle applicazioni",
-        "backToHome": "Torna alla home",
-        "backToOrganization": "Torna all'organizzazione",
-        "backToOrganizations": "Torna alle organizzazioni",
-        "cancel": "Annulla",
-        "changeRole": "Cambia ruolo",
-        "connect": "Connetti",
-        "connecting": "Connessione...",
-        "copy": "Copia",
-        "copied": "Copiato",
-        "copyCode": "Copia codice",
-        "copiedCode": "Codice copiato",
-        "create": "Crea",
-        "creating": "Creazione...",
-        "createOrganization": "Crea organizzazione",
-        "delete": "Elimina",
-        "deleting": "Eliminazione...",
-        "getStarted": "Inizia",
-        "invite": "Invita",
-        "inviting": "Invio invito...",
-        "next": "Avanti",
-        "previous": "Precedente",
-        "login": "Accedi",
-        "readDocs": "Leggi la documentazione",
-        "saveChanges": "Salva modifiche",
-        "saving": "Salvataggio...",
-        "seeDocs": "Vedi la documentazione",
-        "signOut": "Esci"
+    "actions.back": {
+        "defaultMessage": "Indietro"
     },
-    "admin": {
-        "applicationsDescription": "Controlla tutte le applicazioni nelle organizzazioni e i relativi stati di distribuzione.",
-        "applicationsTitle": "Applicazioni",
-        "computeTitle": "Calcolo",
-        "computeDeleted": "Calcolo eliminato",
-        "computeDescription": "Ispeziona workload runtime, capacita nodi e stato di orchestrazione.",
-        "copyEmail": "Copia email",
-        "copyComputeSlug": "Slug calcolo",
-        "copyDatabaseSlug": "Slug database",
-        "copyStorageSlug": "Slug archiviazione",
-        "databaseTitle": "Database",
-        "databaseDeleted": "Database eliminato",
-        "databaseDescription": "Monitora dati della piattaforma, salute degli schemi e stato della persistenza.",
-        "deleteComputeDescription": "Eliminare il calcolo {{slug}}?",
-        "deleteComputeFallback": "Eliminare questo registro di calcolo?",
-        "deleteComputeTitle": "Elimina calcolo",
-        "deleteDatabaseDescription": "Eliminare il database {{slug}}?",
-        "deleteDatabaseFallback": "Eliminare questo database?",
-        "deleteDatabaseTitle": "Elimina database",
-        "deleteOrganizationDescription": "Eliminare l'organizzazione {{name}}?",
-        "deleteStorageDescription": "Eliminare l'archiviazione {{slug}}?",
-        "deleteStorageFallback": "Eliminare questo registro di archiviazione?",
-        "deleteStorageTitle": "Elimina archiviazione",
-        "emailCopied": "Email copiata",
-        "failedDeleteCompute": "Impossibile eliminare il calcolo",
-        "failedDeleteDatabase": "Impossibile eliminare il database",
-        "failedDeleteStorage": "Impossibile eliminare l'archiviazione",
-        "computeReconciliation": "Riconciliazione del calcolo",
-        "operationsTitle": "Operazioni",
-        "operationStatus": {
-            "active": "Attiva",
-            "completed": "Completata",
-            "failed": "Fallita",
-            "scheduled": "Programmato"
-        },
-        "organizationsDescription": "Controlla ciclo di vita, proprieta e confini di accesso delle organizzazioni.",
-        "organizationsTitle": "Organizzazioni",
-        "organizationDeleted": "Organizzazione eliminata",
-        "organizationName": "Nome organizzazione",
-        "storageTitle": "Archiviazione",
-        "storageDeleted": "Archiviazione eliminata",
-        "storageDescription": "Controlla integrazioni file storage e configurazione object storage.",
-        "operationsDescription": "Traccia attivita di piattaforma lunghe, ora di avvio e completamento.",
-        "tabs": {
-            "applications": "Applicazioni",
-            "compute": "Calcolo",
-            "database": "Database",
-            "operations": "Operazioni",
-            "organizations": "Organizzazioni",
-            "storage": "Archiviazione",
-            "users": "Utenti"
-        },
-        "usersDescription": "Controlla accesso account, utenti elevati e onboarding amministrativo.",
-        "usersTitle": "Utenti"
+    "actions.backToApplications": {
+        "defaultMessage": "Torna alle applicazioni"
     },
-    "appView": {
-        "applicationIsStatus": "L'applicazione e {{status}}",
-        "applicationLogs": "Log dell'applicazione",
-        "emptyApplication": "L'applicazione non espone pagine da renderizzare.",
-        "emptyLogs": "Nessun log disponibile.",
-        "emptyResponse": "L'applicazione ha restituito una risposta vuota.",
-        "invalidPageUrl": "URL pagina non valido",
-        "loadApplicationFailed": "Non e stato possibile caricare la definizione dell'applicazione.",
-        "loadLogsFailed": "Impossibile caricare i log",
-        "loadPageFailed": "Impossibile caricare la pagina",
-        "logsDescription": "Log recenti per {{applicationName}}.",
-        "parseXmlFailed": "Impossibile analizzare XML della pagina",
-        "retryLater": "Riprova tra poco.",
-        "unableToLoadApplication": "Impossibile caricare questa applicazione",
-        "unableToLoadPage": "Impossibile caricare questa pagina",
-        "unexpectedApplicationResponse": "Risposta dell'applicazione inattesa"
+    "actions.backToHome": {
+        "defaultMessage": "Torna alla home"
     },
-    "auth": {
-        "accountOpenFailed": "Impossibile aprire l'account",
-        "agreementLead": "Continuando accetti i nostri",
-        "agreementMiddle": "e la",
-        "back": "Indietro",
-        "backToSignIn": "Torna all'accesso",
-        "completingSignIn": "Completamento accesso",
-        "completingSignInDescription": "LongLink sta ripristinando la sessione e il percorso di ritorno.",
-        "createAccount": "Crea account",
-        "creatingAccount": "Creazione account...",
-        "emailInvalid": "Inserisci un indirizzo email valido",
-        "emailRequired": "L'email e obbligatoria",
-        "emailVerified": "La tua email e verificata. Ora puoi accedere.",
-        "forgotPassword": "Password dimenticata?",
-        "forgotPasswordDescription": "Inserisci l'email dell'account e LongLink inviera le istruzioni per reimpostare la password.",
-        "forgotPasswordTitle": "Reimposta la password",
-        "github": "GitHub",
-        "haveAccount": "Hai gia un account?",
-        "hidePassword": "Nascondi password",
-        "invalidResetLink": "Il link per reimpostare la password non contiene il token. Richiedi un nuovo link per continuare.",
-        "loadingAuthentication": "Caricamento impostazioni di autenticazione...",
-        "loginFailed": "Accesso non riuscito",
-        "nameRequired": "Il nome e obbligatorio",
-        "newPassword": "Nuova password",
-        "noAccount": "Non hai un account LongLink?",
-        "orContinueWith": "oppure continua con",
-        "orUseAnotherAccount": "oppure usa un altro account",
-        "passwordRequired": "La password e obbligatoria",
-        "passwordTooShort": "La password deve contenere almeno 12 caratteri",
-        "passwordReset": "La password e stata reimpostata. Ora puoi accedere.",
-        "pleaseWait": "Attendi...",
-        "privacyPolicy": "Privacy Policy",
-        "providerSignInFailed": "Accesso con provider non riuscito",
-        "registerDescription": "Crea il tuo account LongLink con email e password.",
-        "registrationUnavailable": "Registrazione non disponibile",
-        "registrationUnavailableDescription": "La registrazione di nuovi account non e abilitata su questa LongLink Platform.",
-        "requestAnotherReset": "Richiedi un altro link",
-        "resendVerificationEmail": "Invia di nuovo l'email di verifica",
-        "resetEmailSent": "Se esiste un account per questa email, le istruzioni per reimpostare la password sono in arrivo.",
-        "resetPassword": "Reimposta password",
-        "resetPasswordDescription": "Scegli una nuova password per il tuo account LongLink.",
-        "resetPasswordTitle": "Imposta una nuova password",
-        "resettingPassword": "Reimpostazione password...",
-        "savedAccounts": "Account salvati",
-        "sendResetEmail": "Invia email di ripristino",
-        "sendingResetEmail": "Invio email di ripristino...",
-        "sendingVerificationEmail": "Invio email di verifica...",
-        "signInDescription": "Accedi con email e password.",
-        "signingIn": "Accesso...",
-        "singleSignOn": "Single sign-on",
-        "showPassword": "Mostra password",
-        "switchAccountFailed": "Impossibile cambiare account",
-        "termsOfService": "Termini di servizio",
-        "verificationEmailSent": "Controlla la posta per l'email di verifica.",
-        "verifyEmailDescription": "Inserisci l'email per richiedere un nuovo link di verifica.",
-        "verifyEmailTitle": "Verifica la tua email",
-        "verifyingEmail": "Verifica email...",
-        "welcomeTo": "Benvenuto in"
+    "actions.backToOrganization": {
+        "defaultMessage": "Torna all'organizzazione"
     },
-    "columns": {
-        "action": "Azione",
-        "actions": "Azioni",
-        "accessKey": "Chiave accesso",
-        "application": "Applicazione",
-        "appRole": "Ruolo app",
-        "created": "Creato",
-        "createdBy": "Creato da",
-        "database": "Database",
-        "deletedBy": "Eliminato da",
-        "email": "Email",
-        "error": "Errore",
-        "id": "ID",
-        "image": "Immagine",
-        "kind": "Tipo",
-        "metadata": "Metadati",
-        "modified": "Modificato",
-        "name": "Nome",
-        "namespace": "Namespace",
-        "node": "Nodo",
-        "operation": "Operazione",
-        "organization": "Organizzazione",
-        "owner": "Proprietario",
-        "pod": "Pod",
-        "resource": "Risorsa",
-        "resources": "Risorse",
-        "role": "Ruolo",
-        "status": "Stato",
-        "started": "Avviato",
-        "step": "Passo",
-        "stopped": "Fermato",
-        "timestamp": "Timestamp",
-        "usage": "Utilizzo",
-        "updatedBy": "Aggiornato da",
-        "user": "Utente"
+    "actions.backToOrganizations": {
+        "defaultMessage": "Torna alle organizzazioni"
     },
-    "common": {
-        "documentation": "Documentazione",
-        "lastUpdated": "Ultimo aggiornamento: {{date}}",
-        "longlinkHome": "Home LongLink",
-        "mainNavigation": "Navigazione principale",
-        "noResults": "Nessun risultato.",
-        "onThisPage": "In questa pagina",
-        "openActionsFor": "Apri azioni per {{name}}",
-        "overview": "Panoramica",
-        "runtime": "Runtime",
-        "used": "Usato",
-        "unknown": "Sconosciuto"
+    "actions.cancel": {
+        "defaultMessage": "Annulla"
     },
-    "createOrganization": {
-        "avatarLabel": "URL avatar",
-        "avatarPlaceholder": "https://example.com/org.png",
-        "description": "Crea un nuovo spazio di lavoro per il tuo account.",
-        "error": "Impossibile creare l'organizzazione",
-        "computeLabel": "Calcolo",
-        "computePlaceholder": "Scegli il calcolo",
-        "databaseLabel": "Database",
-        "databasePlaceholder": "Scegli un database",
-        "nameLabel": "Nome",
-        "namePlaceholder": "Esempio LongLink",
-        "storageLabel": "Archiviazione",
-        "storagePlaceholder": "Scegli l'archiviazione",
-        "title": "Nuova organizzazione"
+    "actions.changeRole": {
+        "defaultMessage": "Cambia ruolo"
     },
-    "deleteDialog": {
-        "deleteOrganizationDescription": "Eliminare {{name}} dal tuo account?",
-        "deleteOrganizationFallback": "Eliminare questa organizzazione?",
-        "deleteOrganizationTitle": "Elimina organizzazione",
-        "failedDeleteOrganization": "Impossibile eliminare l'organizzazione"
+    "actions.connect": {
+        "defaultMessage": "Connetti"
     },
-    "docs": {
-        "editInGithub": "Modifica questa pagina su GitHub"
+    "actions.connecting": {
+        "defaultMessage": "Connessione..."
     },
-    "errors": {
-        "loadApplications": "Impossibile caricare le applicazioni.",
-        "loadInvitations": "Impossibile caricare gli inviti.",
-        "loadOrganizations": "Impossibile caricare le organizzazioni.",
-        "loadPeople": "Impossibile caricare le persone.",
-        "loginFailed": "Accesso non riuscito",
-        "updateAccount": "Impossibile aggiornare l'account"
+    "actions.copy": {
+        "defaultMessage": "Copia"
     },
-    "labels": {
-        "accentColor": "Colore accento",
-        "accessKeyId": "ID chiave accesso",
-        "country": "Paese",
-        "description": "Descrizione",
-        "endpointUrl": "URL endpoint",
-        "email": "Email",
-        "host": "Host",
-        "icon": "Icona",
-        "image": "Immagine",
-        "gatewayUrl": "URL gateway",
-        "kind": "Tipo",
-        "kubeconfig": "Kubeconfig",
-        "language": "Lingua",
-        "name": "Nome",
-        "password": "Password",
-        "port": "Porta",
-        "radius": "Raggio",
-        "runtimeEndpointUrl": "URL endpoint runtime",
-        "secretAccessKey": "Chiave accesso segreta",
-        "theme": "Tema",
-        "username": "Nome utente"
+    "actions.copied": {
+        "defaultMessage": "Copiato"
     },
-    "navigation": {
-        "applications": "Applicazioni",
-        "database": "Database",
-        "organizations": "Organizzazioni",
-        "people": "Persone",
-        "settings": "Impostazioni",
-        "storage": "Archiviazione"
+    "actions.copyCode": {
+        "defaultMessage": "Copia codice"
     },
-    "notFound": {
-        "description": "La pagina {{path}} non esiste o non e disponibile.",
-        "title": "Pagina non trovata"
+    "actions.copiedCode": {
+        "defaultMessage": "Codice copiato"
     },
-    "organization": {
-        "applicationsDescription": "Gestisci le applicazioni collegate a questa organizzazione.",
-        "applicationsTitle": "Applicazioni",
-        "peopleDescription": "Vedi membri e collaboratori di questo workspace.",
-        "peopleTitle": "Persone",
-        "settingsDescription": "Configura l'organizzazione e i default runtime.",
-        "settingsTitle": "Impostazioni"
+    "actions.create": {
+        "defaultMessage": "Crea"
     },
-    "organizations": {
-        "description": "Gestisci i workspace collegati al tuo account LongLink.",
-        "title": "Organizzazioni"
+    "actions.creating": {
+        "defaultMessage": "Creazione..."
     },
-    "people": {
-        "changeRoleDescription": "Concedere il permesso {{role}} a {{name}} in questa organizzazione?",
-        "changeRoleFallback": "Cambiare il ruolo di questo membro?",
-        "changeRoleTitle": "Cambia ruolo membro",
-        "failedChangeMemberRole": "Impossibile cambiare il ruolo del membro",
-        "failedInviteUser": "Impossibile invitare l'utente",
-        "grantPermission": "Concedi permesso {{role}}",
-        "inviteDescription": "Invia un invito per unirsi a questa organizzazione.",
-        "invitePermissionHint": "Serve accesso maintainer, admin o owner per invitare membri.",
-        "inviteTitle": "Invita utente",
-        "invitationsDescription": "Inviti in sospeso per unirsi a questa organizzazione.",
-        "invitationsPermissionHint": "Solo maintainer, admin e owner possono inviare inviti.",
-        "invitationsTitle": "Inviti",
-        "menuAria": "Menu persone",
-        "membersDescription": "Utenti che hanno accesso a questa organizzazione.",
-        "membersTitle": "Membri",
-        "noInvitations": "Nessun invito.",
-        "noPeople": "Nessuna persona trovata.",
-        "roleChanged": "{{name}} ora ha il permesso {{role}}"
+    "actions.createOrganization": {
+        "defaultMessage": "Crea organizzazione"
     },
-    "profile": {
-        "applications": "Applicazioni",
-        "compute": "Calcolo",
-        "database": "Database",
-        "operations": "Operazioni",
-        "organizations": "Organizzazioni",
-        "settings": "Impostazioni",
-        "signOutFailed": "Impossibile uscire",
-        "storage": "Archiviazione",
-        "users": "Utenti"
+    "actions.delete": {
+        "defaultMessage": "Elimina"
     },
-    "resources": {
-        "allApplications": "Tutte le applicazioni",
-        "computeNotFound": "Calcolo \"{{name}}\" non trovato",
-        "allocatablePercent": "{{percent}}% allocabile",
-        "noActiveApp": "Nessuna app attiva",
-        "noColumns": "Nessuna colonna",
-        "noOrganizationMembers": "Nessun membro organizzazione trovato.",
-        "noStorageResources": "Nessuna risorsa di archiviazione trovata.",
-        "objectCount": "{{count}} oggetti",
-        "podsDescription": "Pod nel namespace {{namespace}} sul backend di calcolo {{name}}.",
-        "podsTitle": "Pod",
-        "shared": "condiviso",
-        "sharedOrganizationUsers": "Utenti organizzazione condivisi",
-        "tableCount": "{{count}} tabelle",
-        "unknownObjects": "Oggetti sconosciuti",
-        "unknownTables": "Tabelle sconosciute",
-        "namespacesDescription": "Namespace gestiti dal backend di calcolo {{name}}.",
-        "namespacesTitle": "Namespace"
+    "actions.deleting": {
+        "defaultMessage": "Eliminazione..."
     },
-    "dialogs": {
-        "chooseCountry": "Scegli un paese",
-        "chooseDatabaseKind": "Scegli un tipo di database",
-        "chooseIcon": "Scegli un'icona",
-        "chooseStorageKind": "Scegli un tipo di archiviazione",
-        "connectComputeDescription": "Registra un backend di calcolo per l'orchestrazione.",
-        "connectComputeTitle": "Connetti calcolo",
-        "connectDatabaseDescription": "Registra un backend database per la LongLink Platform.",
-        "connectDatabaseTitle": "Connetti database",
-        "connectStorageDescription": "Registra un backend object storage.",
-        "connectStorageTitle": "Connetti archiviazione",
-        "createApplicationFailed": "Impossibile creare l'applicazione",
-        "enterEnvironment": "Inserisci {{name}}",
-        "failedConnectCompute": "Impossibile connettere il calcolo",
-        "failedConnectDatabase": "Impossibile connettere il database",
-        "failedConnectStorage": "Impossibile connettere l'archiviazione",
-        "inspectImage": "Ispeziona immagine",
-        "inspectImageFailed": "Impossibile ispezionare l'immagine",
-        "inspecting": "Ispezione...",
-        "logs": "Log",
-        "none": "Nessuno",
-        "optional": "opzionale",
-        "podLogsTitle": "Log pod",
-        "required": "obbligatorio",
-        "reviewEnvs": "Controlla env",
-        "reviewMetadata": "Controlla metadati",
-        "stepEnvs": "3. Env",
-        "stepImage": "1. Immagine",
-        "stepMetadata": "2. Metadati"
+    "actions.getStarted": {
+        "defaultMessage": "Inizia"
     },
-    "settings": {
-        "accountDescription": "Aggiorna nome utente e lingua. Qui l'email dell'account e in sola lettura.",
-        "accountTitle": "Account",
-        "appearanceDescription": "Personalizza tema, colore accento e raggio dell'interfaccia.",
-        "appearanceTitle": "Aspetto",
-        "description": "Gestisci account, preferenze e accesso ai workspace.",
-        "failedUpdateUsername": "Impossibile aggiornare il nome utente",
-        "organizationDescription": "Controlla le organizzazioni collegate al tuo account personale.",
-        "organizationsTitle": "Organizzazioni",
-        "placeholders": {
-            "color": "Scegli un colore",
-            "language": "Scegli una lingua",
-            "radius": "Scegli un raggio",
-            "theme": "Scegli un tema"
-        },
-        "title": "Impostazioni",
-        "usernameRequired": "Il nome utente e obbligatorio",
-        "usernameSaved": "Nome utente salvato"
+    "actions.invite": {
+        "defaultMessage": "Invita"
     },
-    "organizationSettings": {
-        "allApplications": "Tutte le applicazioni",
-        "applicationPermission": "Permesso applicazione",
-        "applicationPermissionsTitle": "Permessi di {{name}}",
-        "back": "Indietro",
-        "cannotChangePermissions": "Puoi vedere i permessi applicazione, ma non modificarli.",
-        "deleteApplicationDescription": "Eliminare {{name}} da questa organizzazione?",
-        "deleteApplicationFallback": "Eliminare questa applicazione?",
-        "deleteApplicationTitle": "Elimina applicazione",
-        "failedChangeApplicationPermission": "Impossibile cambiare il permesso applicazione",
-        "failedDeleteApplication": "Impossibile eliminare l'applicazione",
-        "loadApplicationsFailed": "Impossibile caricare le applicazioni.",
-        "logs": "Log",
-        "noActiveApp": "Nessuna app attiva",
-        "noAppAccess": "Nessun accesso app",
-        "noApplications": "Nessuna applicazione trovata.",
-        "notAssigned": "Non assegnato",
-        "organizationDescription": "Visualizza e gestisci i dettagli dell'organizzazione.",
-        "organizationPermission": "Permesso organizzazione",
-        "reviewApplications": "Controlla le applicazioni collegate a questa organizzazione.",
-        "reviewDatabase": "Controlla l'utilizzo del database per questa organizzazione.",
-        "reviewStorage": "Controlla l'utilizzo dell'archiviazione per questa organizzazione.",
-        "sharedOrganizationUsers": "Utenti organizzazione condivisi"
+    "actions.inviting": {
+        "defaultMessage": "Invio invito..."
     },
-    "toasts": {
-        "copiedToClipboard": "Copiato negli appunti"
+    "actions.next": {
+        "defaultMessage": "Avanti"
+    },
+    "actions.previous": {
+        "defaultMessage": "Precedente"
+    },
+    "actions.login": {
+        "defaultMessage": "Accedi"
+    },
+    "actions.readDocs": {
+        "defaultMessage": "Leggi la documentazione"
+    },
+    "actions.saveChanges": {
+        "defaultMessage": "Salva modifiche"
+    },
+    "actions.saving": {
+        "defaultMessage": "Salvataggio..."
+    },
+    "actions.seeDocs": {
+        "defaultMessage": "Vedi la documentazione"
+    },
+    "actions.signOut": {
+        "defaultMessage": "Esci"
+    },
+    "admin.applicationsDescription": {
+        "defaultMessage": "Controlla tutte le applicazioni nelle organizzazioni e i relativi stati di distribuzione."
+    },
+    "admin.applicationsTitle": {
+        "defaultMessage": "Applicazioni"
+    },
+    "admin.computeTitle": {
+        "defaultMessage": "Calcolo"
+    },
+    "admin.computeDeleted": {
+        "defaultMessage": "Calcolo eliminato"
+    },
+    "admin.computeDescription": {
+        "defaultMessage": "Ispeziona workload runtime, capacita nodi e stato di orchestrazione."
+    },
+    "admin.copyEmail": {
+        "defaultMessage": "Copia email"
+    },
+    "admin.copyComputeSlug": {
+        "defaultMessage": "Slug calcolo"
+    },
+    "admin.copyDatabaseSlug": {
+        "defaultMessage": "Slug database"
+    },
+    "admin.copyStorageSlug": {
+        "defaultMessage": "Slug archiviazione"
+    },
+    "admin.databaseTitle": {
+        "defaultMessage": "Database"
+    },
+    "admin.databaseDeleted": {
+        "defaultMessage": "Database eliminato"
+    },
+    "admin.databaseDescription": {
+        "defaultMessage": "Monitora dati della piattaforma, salute degli schemi e stato della persistenza."
+    },
+    "admin.deleteComputeDescription": {
+        "defaultMessage": "Eliminare il calcolo {slug}?"
+    },
+    "admin.deleteComputeFallback": {
+        "defaultMessage": "Eliminare questo registro di calcolo?"
+    },
+    "admin.deleteComputeTitle": {
+        "defaultMessage": "Elimina calcolo"
+    },
+    "admin.deleteDatabaseDescription": {
+        "defaultMessage": "Eliminare il database {slug}?"
+    },
+    "admin.deleteDatabaseFallback": {
+        "defaultMessage": "Eliminare questo database?"
+    },
+    "admin.deleteDatabaseTitle": {
+        "defaultMessage": "Elimina database"
+    },
+    "admin.deleteOrganizationDescription": {
+        "defaultMessage": "Eliminare l'organizzazione {name}?"
+    },
+    "admin.deleteStorageDescription": {
+        "defaultMessage": "Eliminare l'archiviazione {slug}?"
+    },
+    "admin.deleteStorageFallback": {
+        "defaultMessage": "Eliminare questo registro di archiviazione?"
+    },
+    "admin.deleteStorageTitle": {
+        "defaultMessage": "Elimina archiviazione"
+    },
+    "admin.emailCopied": {
+        "defaultMessage": "Email copiata"
+    },
+    "admin.failedDeleteCompute": {
+        "defaultMessage": "Impossibile eliminare il calcolo"
+    },
+    "admin.failedDeleteDatabase": {
+        "defaultMessage": "Impossibile eliminare il database"
+    },
+    "admin.failedDeleteStorage": {
+        "defaultMessage": "Impossibile eliminare l'archiviazione"
+    },
+    "admin.computeReconciliation": {
+        "defaultMessage": "Riconciliazione del calcolo"
+    },
+    "admin.operationsTitle": {
+        "defaultMessage": "Operazioni"
+    },
+    "admin.operationStatus.active": {
+        "defaultMessage": "Attiva"
+    },
+    "admin.operationStatus.completed": {
+        "defaultMessage": "Completata"
+    },
+    "admin.operationStatus.failed": {
+        "defaultMessage": "Fallita"
+    },
+    "admin.operationStatus.scheduled": {
+        "defaultMessage": "Programmato"
+    },
+    "admin.organizationsDescription": {
+        "defaultMessage": "Controlla ciclo di vita, proprieta e confini di accesso delle organizzazioni."
+    },
+    "admin.organizationsTitle": {
+        "defaultMessage": "Organizzazioni"
+    },
+    "admin.organizationDeleted": {
+        "defaultMessage": "Organizzazione eliminata"
+    },
+    "admin.organizationName": {
+        "defaultMessage": "Nome organizzazione"
+    },
+    "admin.storageTitle": {
+        "defaultMessage": "Archiviazione"
+    },
+    "admin.storageDeleted": {
+        "defaultMessage": "Archiviazione eliminata"
+    },
+    "admin.storageDescription": {
+        "defaultMessage": "Controlla integrazioni file storage e configurazione object storage."
+    },
+    "admin.operationsDescription": {
+        "defaultMessage": "Traccia attivita di piattaforma lunghe, ora di avvio e completamento."
+    },
+    "admin.tabs.applications": {
+        "defaultMessage": "Applicazioni"
+    },
+    "admin.tabs.compute": {
+        "defaultMessage": "Calcolo"
+    },
+    "admin.tabs.database": {
+        "defaultMessage": "Database"
+    },
+    "admin.tabs.operations": {
+        "defaultMessage": "Operazioni"
+    },
+    "admin.tabs.organizations": {
+        "defaultMessage": "Organizzazioni"
+    },
+    "admin.tabs.storage": {
+        "defaultMessage": "Archiviazione"
+    },
+    "admin.tabs.users": {
+        "defaultMessage": "Utenti"
+    },
+    "admin.usersDescription": {
+        "defaultMessage": "Controlla accesso account, utenti elevati e onboarding amministrativo."
+    },
+    "admin.usersTitle": {
+        "defaultMessage": "Utenti"
+    },
+    "appView.applicationIsStatus": {
+        "defaultMessage": "L'applicazione e {status}"
+    },
+    "appView.applicationLogs": {
+        "defaultMessage": "Log dell'applicazione"
+    },
+    "appView.emptyApplication": {
+        "defaultMessage": "L'applicazione non espone pagine da renderizzare."
+    },
+    "appView.emptyLogs": {
+        "defaultMessage": "Nessun log disponibile."
+    },
+    "appView.emptyResponse": {
+        "defaultMessage": "L'applicazione ha restituito una risposta vuota."
+    },
+    "appView.invalidPageUrl": {
+        "defaultMessage": "URL pagina non valido"
+    },
+    "appView.loadApplicationFailed": {
+        "defaultMessage": "Non e stato possibile caricare la definizione dell'applicazione."
+    },
+    "appView.loadLogsFailed": {
+        "defaultMessage": "Impossibile caricare i log"
+    },
+    "appView.loadPageFailed": {
+        "defaultMessage": "Impossibile caricare la pagina"
+    },
+    "appView.logsDescription": {
+        "defaultMessage": "Log recenti per {applicationName}."
+    },
+    "appView.parseXmlFailed": {
+        "defaultMessage": "Impossibile analizzare XML della pagina"
+    },
+    "appView.retryLater": {
+        "defaultMessage": "Riprova tra poco."
+    },
+    "appView.unableToLoadApplication": {
+        "defaultMessage": "Impossibile caricare questa applicazione"
+    },
+    "appView.unableToLoadPage": {
+        "defaultMessage": "Impossibile caricare questa pagina"
+    },
+    "appView.unexpectedApplicationResponse": {
+        "defaultMessage": "Risposta dell'applicazione inattesa"
+    },
+    "auth.accountOpenFailed": {
+        "defaultMessage": "Impossibile aprire l'account"
+    },
+    "auth.agreementLead": {
+        "defaultMessage": "Continuando accetti i nostri"
+    },
+    "auth.agreementMiddle": {
+        "defaultMessage": "e la"
+    },
+    "auth.back": {
+        "defaultMessage": "Indietro"
+    },
+    "auth.backToSignIn": {
+        "defaultMessage": "Torna all'accesso"
+    },
+    "auth.completingSignIn": {
+        "defaultMessage": "Completamento accesso"
+    },
+    "auth.completingSignInDescription": {
+        "defaultMessage": "LongLink sta ripristinando la sessione e il percorso di ritorno."
+    },
+    "auth.createAccount": {
+        "defaultMessage": "Crea account"
+    },
+    "auth.creatingAccount": {
+        "defaultMessage": "Creazione account..."
+    },
+    "auth.emailInvalid": {
+        "defaultMessage": "Inserisci un indirizzo email valido"
+    },
+    "auth.emailRequired": {
+        "defaultMessage": "L'email e obbligatoria"
+    },
+    "auth.emailVerified": {
+        "defaultMessage": "La tua email e verificata. Ora puoi accedere."
+    },
+    "auth.forgotPassword": {
+        "defaultMessage": "Password dimenticata?"
+    },
+    "auth.forgotPasswordDescription": {
+        "defaultMessage": "Inserisci l'email dell'account e LongLink inviera le istruzioni per reimpostare la password."
+    },
+    "auth.forgotPasswordTitle": {
+        "defaultMessage": "Reimposta la password"
+    },
+    "auth.github": {
+        "defaultMessage": "GitHub"
+    },
+    "auth.haveAccount": {
+        "defaultMessage": "Hai gia un account?"
+    },
+    "auth.hidePassword": {
+        "defaultMessage": "Nascondi password"
+    },
+    "auth.invalidResetLink": {
+        "defaultMessage": "Il link per reimpostare la password non contiene il token. Richiedi un nuovo link per continuare."
+    },
+    "auth.loginFailed": {
+        "defaultMessage": "Accesso non riuscito"
+    },
+    "auth.nameRequired": {
+        "defaultMessage": "Il nome e obbligatorio"
+    },
+    "auth.newPassword": {
+        "defaultMessage": "Nuova password"
+    },
+    "auth.noAccount": {
+        "defaultMessage": "Non hai un account LongLink?"
+    },
+    "auth.orContinueWith": {
+        "defaultMessage": "oppure continua con"
+    },
+    "auth.orUseAnotherAccount": {
+        "defaultMessage": "oppure usa un altro account"
+    },
+    "auth.passwordRequired": {
+        "defaultMessage": "La password e obbligatoria"
+    },
+    "auth.passwordTooShort": {
+        "defaultMessage": "La password deve contenere almeno 12 caratteri"
+    },
+    "auth.passwordReset": {
+        "defaultMessage": "La password e stata reimpostata. Ora puoi accedere."
+    },
+    "auth.pleaseWait": {
+        "defaultMessage": "Attendi..."
+    },
+    "auth.privacyPolicy": {
+        "defaultMessage": "Privacy Policy"
+    },
+    "auth.providerSignInFailed": {
+        "defaultMessage": "Accesso con provider non riuscito"
+    },
+    "auth.registerDescription": {
+        "defaultMessage": "Registrati con email e password."
+    },
+    "auth.requestAnotherReset": {
+        "defaultMessage": "Richiedi un altro link"
+    },
+    "auth.resendVerificationEmail": {
+        "defaultMessage": "Invia di nuovo il codice"
+    },
+    "auth.resetEmailSent": {
+        "defaultMessage": "Se esiste un account per questa email, le istruzioni per reimpostare la password sono in arrivo."
+    },
+    "auth.resetPassword": {
+        "defaultMessage": "Reimposta password"
+    },
+    "auth.resetPasswordDescription": {
+        "defaultMessage": "Scegli una nuova password per il tuo account LongLink."
+    },
+    "auth.resetPasswordTitle": {
+        "defaultMessage": "Imposta una nuova password"
+    },
+    "auth.resettingPassword": {
+        "defaultMessage": "Reimpostazione password..."
+    },
+    "auth.savedAccounts": {
+        "defaultMessage": "Account salvati"
+    },
+    "auth.sendResetEmail": {
+        "defaultMessage": "Invia email di ripristino"
+    },
+    "auth.sendingResetEmail": {
+        "defaultMessage": "Invio email di ripristino..."
+    },
+    "auth.sendingVerificationEmail": {
+        "defaultMessage": "Invio codice di verifica..."
+    },
+    "auth.signInDescription": {
+        "defaultMessage": "Accedi con email e password."
+    },
+    "auth.signingIn": {
+        "defaultMessage": "Accesso..."
+    },
+    "auth.showPassword": {
+        "defaultMessage": "Mostra password"
+    },
+    "auth.switchAccountFailed": {
+        "defaultMessage": "Impossibile cambiare account"
+    },
+    "auth.termsOfService": {
+        "defaultMessage": "Termini di servizio"
+    },
+    "auth.verificationEmailSent": {
+        "defaultMessage": "Controlla la posta per il codice di verifica."
+    },
+    "auth.verificationCode": {
+        "defaultMessage": "Codice di verifica"
+    },
+    "auth.verificationCodeInvalid": {
+        "defaultMessage": "Inserisci il codice di verifica a 8 cifre"
+    },
+    "auth.verifyEmail": {
+        "defaultMessage": "Verifica email"
+    },
+    "auth.verifyEmailDescription": {
+        "defaultMessage": "Inserisci il codice che LongLink ha inviato al tuo indirizzo email."
+    },
+    "auth.verifyEmailTitle": {
+        "defaultMessage": "Verifica la tua email"
+    },
+    "auth.verifyingEmail": {
+        "defaultMessage": "Verifica email..."
+    },
+    "auth.welcomeTo": {
+        "defaultMessage": "Benvenuto in"
+    },
+    "columns.action": {
+        "defaultMessage": "Azione"
+    },
+    "columns.actions": {
+        "defaultMessage": "Azioni"
+    },
+    "columns.accessKey": {
+        "defaultMessage": "Chiave accesso"
+    },
+    "columns.application": {
+        "defaultMessage": "Applicazione"
+    },
+    "columns.appRole": {
+        "defaultMessage": "Ruolo app"
+    },
+    "columns.created": {
+        "defaultMessage": "Creato"
+    },
+    "columns.createdBy": {
+        "defaultMessage": "Creato da"
+    },
+    "columns.database": {
+        "defaultMessage": "Database"
+    },
+    "columns.deletedBy": {
+        "defaultMessage": "Eliminato da"
+    },
+    "columns.email": {
+        "defaultMessage": "Email"
+    },
+    "columns.error": {
+        "defaultMessage": "Errore"
+    },
+    "columns.id": {
+        "defaultMessage": "ID"
+    },
+    "columns.image": {
+        "defaultMessage": "Immagine"
+    },
+    "columns.kind": {
+        "defaultMessage": "Tipo"
+    },
+    "columns.metadata": {
+        "defaultMessage": "Metadati"
+    },
+    "columns.modified": {
+        "defaultMessage": "Modificato"
+    },
+    "columns.name": {
+        "defaultMessage": "Nome"
+    },
+    "columns.namespace": {
+        "defaultMessage": "Namespace"
+    },
+    "columns.node": {
+        "defaultMessage": "Nodo"
+    },
+    "columns.operation": {
+        "defaultMessage": "Operazione"
+    },
+    "columns.organization": {
+        "defaultMessage": "Organizzazione"
+    },
+    "columns.owner": {
+        "defaultMessage": "Proprietario"
+    },
+    "columns.pod": {
+        "defaultMessage": "Pod"
+    },
+    "columns.resource": {
+        "defaultMessage": "Risorsa"
+    },
+    "columns.resources": {
+        "defaultMessage": "Risorse"
+    },
+    "columns.role": {
+        "defaultMessage": "Ruolo"
+    },
+    "columns.status": {
+        "defaultMessage": "Stato"
+    },
+    "columns.started": {
+        "defaultMessage": "Avviato"
+    },
+    "columns.step": {
+        "defaultMessage": "Passo"
+    },
+    "columns.stopped": {
+        "defaultMessage": "Fermato"
+    },
+    "columns.timestamp": {
+        "defaultMessage": "Timestamp"
+    },
+    "columns.usage": {
+        "defaultMessage": "Utilizzo"
+    },
+    "columns.updatedBy": {
+        "defaultMessage": "Aggiornato da"
+    },
+    "columns.user": {
+        "defaultMessage": "Utente"
+    },
+    "common.documentation": {
+        "defaultMessage": "Documentazione"
+    },
+    "common.lastUpdated": {
+        "defaultMessage": "Ultimo aggiornamento: {date}"
+    },
+    "common.longlinkHome": {
+        "defaultMessage": "Home LongLink"
+    },
+    "common.mainNavigation": {
+        "defaultMessage": "Navigazione principale"
+    },
+    "common.noResults": {
+        "defaultMessage": "Nessun risultato."
+    },
+    "common.onThisPage": {
+        "defaultMessage": "In questa pagina"
+    },
+    "common.openActionsFor": {
+        "defaultMessage": "Apri azioni per {name}"
+    },
+    "common.overview": {
+        "defaultMessage": "Panoramica"
+    },
+    "common.runtime": {
+        "defaultMessage": "Runtime"
+    },
+    "common.used": {
+        "defaultMessage": "Usato"
+    },
+    "common.unknown": {
+        "defaultMessage": "Sconosciuto"
+    },
+    "createOrganization.avatarLabel": {
+        "defaultMessage": "URL avatar"
+    },
+    "createOrganization.avatarPlaceholder": {
+        "defaultMessage": "https://example.com/org.png"
+    },
+    "createOrganization.description": {
+        "defaultMessage": "Crea un nuovo spazio di lavoro per il tuo account."
+    },
+    "createOrganization.error": {
+        "defaultMessage": "Impossibile creare l'organizzazione"
+    },
+    "createOrganization.computeLabel": {
+        "defaultMessage": "Calcolo"
+    },
+    "createOrganization.computePlaceholder": {
+        "defaultMessage": "Scegli il calcolo"
+    },
+    "createOrganization.databaseLabel": {
+        "defaultMessage": "Database"
+    },
+    "createOrganization.databasePlaceholder": {
+        "defaultMessage": "Scegli un database"
+    },
+    "createOrganization.nameLabel": {
+        "defaultMessage": "Nome"
+    },
+    "createOrganization.namePlaceholder": {
+        "defaultMessage": "Esempio LongLink"
+    },
+    "createOrganization.storageLabel": {
+        "defaultMessage": "Archiviazione"
+    },
+    "createOrganization.storagePlaceholder": {
+        "defaultMessage": "Scegli l'archiviazione"
+    },
+    "createOrganization.title": {
+        "defaultMessage": "Nuova organizzazione"
+    },
+    "deleteDialog.deleteOrganizationDescription": {
+        "defaultMessage": "Eliminare {name} dal tuo account?"
+    },
+    "deleteDialog.deleteOrganizationFallback": {
+        "defaultMessage": "Eliminare questa organizzazione?"
+    },
+    "deleteDialog.deleteOrganizationTitle": {
+        "defaultMessage": "Elimina organizzazione"
+    },
+    "deleteDialog.failedDeleteOrganization": {
+        "defaultMessage": "Impossibile eliminare l'organizzazione"
+    },
+    "docs.editInGithub": {
+        "defaultMessage": "Modifica questa pagina su GitHub"
+    },
+    "errors.loadApplications": {
+        "defaultMessage": "Impossibile caricare le applicazioni."
+    },
+    "errors.loadInvitations": {
+        "defaultMessage": "Impossibile caricare gli inviti."
+    },
+    "errors.loadOrganizations": {
+        "defaultMessage": "Impossibile caricare le organizzazioni."
+    },
+    "errors.loadPeople": {
+        "defaultMessage": "Impossibile caricare le persone."
+    },
+    "errors.loginFailed": {
+        "defaultMessage": "Accesso non riuscito"
+    },
+    "errors.updateAccount": {
+        "defaultMessage": "Impossibile aggiornare l'account"
+    },
+    "labels.accentColor": {
+        "defaultMessage": "Colore accento"
+    },
+    "labels.accessKeyId": {
+        "defaultMessage": "ID chiave accesso"
+    },
+    "labels.country": {
+        "defaultMessage": "Paese"
+    },
+    "labels.description": {
+        "defaultMessage": "Descrizione"
+    },
+    "labels.endpointUrl": {
+        "defaultMessage": "URL endpoint"
+    },
+    "labels.email": {
+        "defaultMessage": "Email"
+    },
+    "labels.host": {
+        "defaultMessage": "Host"
+    },
+    "labels.icon": {
+        "defaultMessage": "Icona"
+    },
+    "labels.image": {
+        "defaultMessage": "Immagine"
+    },
+    "labels.gatewayUrl": {
+        "defaultMessage": "URL gateway"
+    },
+    "labels.kind": {
+        "defaultMessage": "Tipo"
+    },
+    "labels.kubeconfig": {
+        "defaultMessage": "Kubeconfig"
+    },
+    "labels.language": {
+        "defaultMessage": "Lingua"
+    },
+    "labels.name": {
+        "defaultMessage": "Nome"
+    },
+    "labels.password": {
+        "defaultMessage": "Password"
+    },
+    "labels.port": {
+        "defaultMessage": "Porta"
+    },
+    "labels.radius": {
+        "defaultMessage": "Raggio"
+    },
+    "labels.runtimeEndpointUrl": {
+        "defaultMessage": "URL endpoint runtime"
+    },
+    "labels.secretAccessKey": {
+        "defaultMessage": "Chiave accesso segreta"
+    },
+    "labels.theme": {
+        "defaultMessage": "Tema"
+    },
+    "labels.username": {
+        "defaultMessage": "Nome utente"
+    },
+    "navigation.applications": {
+        "defaultMessage": "Applicazioni"
+    },
+    "navigation.database": {
+        "defaultMessage": "Database"
+    },
+    "navigation.organizations": {
+        "defaultMessage": "Organizzazioni"
+    },
+    "navigation.people": {
+        "defaultMessage": "Persone"
+    },
+    "navigation.settings": {
+        "defaultMessage": "Impostazioni"
+    },
+    "navigation.storage": {
+        "defaultMessage": "Archiviazione"
+    },
+    "notFound.description": {
+        "defaultMessage": "La pagina {path} non esiste o non e disponibile."
+    },
+    "notFound.title": {
+        "defaultMessage": "Pagina non trovata"
+    },
+    "organization.applicationsDescription": {
+        "defaultMessage": "Gestisci le applicazioni collegate a questa organizzazione."
+    },
+    "organization.applicationsTitle": {
+        "defaultMessage": "Applicazioni"
+    },
+    "organization.peopleDescription": {
+        "defaultMessage": "Vedi membri e collaboratori di questo workspace."
+    },
+    "organization.peopleTitle": {
+        "defaultMessage": "Persone"
+    },
+    "organization.settingsDescription": {
+        "defaultMessage": "Configura l'organizzazione e i default runtime."
+    },
+    "organization.settingsTitle": {
+        "defaultMessage": "Impostazioni"
+    },
+    "organizations.description": {
+        "defaultMessage": "Gestisci i workspace collegati al tuo account LongLink."
+    },
+    "organizations.title": {
+        "defaultMessage": "Organizzazioni"
+    },
+    "people.changeRoleDescription": {
+        "defaultMessage": "Concedere il permesso {role} a {name} in questa organizzazione?"
+    },
+    "people.changeRoleFallback": {
+        "defaultMessage": "Cambiare il ruolo di questo membro?"
+    },
+    "people.changeRoleTitle": {
+        "defaultMessage": "Cambia ruolo membro"
+    },
+    "people.failedChangeMemberRole": {
+        "defaultMessage": "Impossibile cambiare il ruolo del membro"
+    },
+    "people.failedInviteUser": {
+        "defaultMessage": "Impossibile invitare l'utente"
+    },
+    "people.grantPermission": {
+        "defaultMessage": "Concedi permesso {role}"
+    },
+    "people.inviteDescription": {
+        "defaultMessage": "Invia un invito per unirsi a questa organizzazione."
+    },
+    "people.invitePermissionHint": {
+        "defaultMessage": "Serve accesso maintainer, admin o owner per invitare membri."
+    },
+    "people.inviteTitle": {
+        "defaultMessage": "Invita utente"
+    },
+    "people.invitationsDescription": {
+        "defaultMessage": "Inviti in sospeso per unirsi a questa organizzazione."
+    },
+    "people.invitationsPermissionHint": {
+        "defaultMessage": "Solo maintainer, admin e owner possono inviare inviti."
+    },
+    "people.invitationsTitle": {
+        "defaultMessage": "Inviti"
+    },
+    "people.menuAria": {
+        "defaultMessage": "Menu persone"
+    },
+    "people.membersDescription": {
+        "defaultMessage": "Utenti che hanno accesso a questa organizzazione."
+    },
+    "people.membersTitle": {
+        "defaultMessage": "Membri"
+    },
+    "people.noInvitations": {
+        "defaultMessage": "Nessun invito."
+    },
+    "people.noPeople": {
+        "defaultMessage": "Nessuna persona trovata."
+    },
+    "people.roleChanged": {
+        "defaultMessage": "{name} ora ha il permesso {role}"
+    },
+    "profile.applications": {
+        "defaultMessage": "Applicazioni"
+    },
+    "profile.compute": {
+        "defaultMessage": "Calcolo"
+    },
+    "profile.database": {
+        "defaultMessage": "Database"
+    },
+    "profile.operations": {
+        "defaultMessage": "Operazioni"
+    },
+    "profile.organizations": {
+        "defaultMessage": "Organizzazioni"
+    },
+    "profile.settings": {
+        "defaultMessage": "Impostazioni"
+    },
+    "profile.signOutFailed": {
+        "defaultMessage": "Impossibile uscire"
+    },
+    "profile.storage": {
+        "defaultMessage": "Archiviazione"
+    },
+    "profile.users": {
+        "defaultMessage": "Utenti"
+    },
+    "resources.allApplications": {
+        "defaultMessage": "Tutte le applicazioni"
+    },
+    "resources.computeNotFound": {
+        "defaultMessage": "Calcolo \"{name}\" non trovato"
+    },
+    "resources.allocatablePercent": {
+        "defaultMessage": "{percent}% allocabile"
+    },
+    "resources.noActiveApp": {
+        "defaultMessage": "Nessuna app attiva"
+    },
+    "resources.noColumns": {
+        "defaultMessage": "Nessuna colonna"
+    },
+    "resources.noOrganizationMembers": {
+        "defaultMessage": "Nessun membro organizzazione trovato."
+    },
+    "resources.noStorageResources": {
+        "defaultMessage": "Nessuna risorsa di archiviazione trovata."
+    },
+    "resources.objectCount": {
+        "defaultMessage": "{count} oggetti"
+    },
+    "resources.podsDescription": {
+        "defaultMessage": "Pod nel namespace {namespace} sul backend di calcolo {name}."
+    },
+    "resources.podsTitle": {
+        "defaultMessage": "Pod"
+    },
+    "resources.shared": {
+        "defaultMessage": "condiviso"
+    },
+    "resources.sharedOrganizationUsers": {
+        "defaultMessage": "Utenti organizzazione condivisi"
+    },
+    "resources.tableCount": {
+        "defaultMessage": "{count} tabelle"
+    },
+    "resources.unknownObjects": {
+        "defaultMessage": "Oggetti sconosciuti"
+    },
+    "resources.unknownTables": {
+        "defaultMessage": "Tabelle sconosciute"
+    },
+    "resources.namespacesDescription": {
+        "defaultMessage": "Namespace gestiti dal backend di calcolo {name}."
+    },
+    "resources.namespacesTitle": {
+        "defaultMessage": "Namespace"
+    },
+    "dialogs.chooseCountry": {
+        "defaultMessage": "Scegli un paese"
+    },
+    "dialogs.chooseDatabaseKind": {
+        "defaultMessage": "Scegli un tipo di database"
+    },
+    "dialogs.chooseIcon": {
+        "defaultMessage": "Scegli un'icona"
+    },
+    "dialogs.chooseStorageKind": {
+        "defaultMessage": "Scegli un tipo di archiviazione"
+    },
+    "dialogs.connectComputeDescription": {
+        "defaultMessage": "Registra un backend di calcolo per l'orchestrazione."
+    },
+    "dialogs.connectComputeTitle": {
+        "defaultMessage": "Connetti calcolo"
+    },
+    "dialogs.connectDatabaseDescription": {
+        "defaultMessage": "Registra un backend database per la LongLink Platform."
+    },
+    "dialogs.connectDatabaseTitle": {
+        "defaultMessage": "Connetti database"
+    },
+    "dialogs.connectStorageDescription": {
+        "defaultMessage": "Registra un backend object storage."
+    },
+    "dialogs.connectStorageTitle": {
+        "defaultMessage": "Connetti archiviazione"
+    },
+    "dialogs.createApplicationFailed": {
+        "defaultMessage": "Impossibile creare l'applicazione"
+    },
+    "dialogs.enterEnvironment": {
+        "defaultMessage": "Inserisci {name}"
+    },
+    "dialogs.failedConnectCompute": {
+        "defaultMessage": "Impossibile connettere il calcolo"
+    },
+    "dialogs.failedConnectDatabase": {
+        "defaultMessage": "Impossibile connettere il database"
+    },
+    "dialogs.failedConnectStorage": {
+        "defaultMessage": "Impossibile connettere l'archiviazione"
+    },
+    "dialogs.inspectImage": {
+        "defaultMessage": "Ispeziona immagine"
+    },
+    "dialogs.inspectImageFailed": {
+        "defaultMessage": "Impossibile ispezionare l'immagine"
+    },
+    "dialogs.inspecting": {
+        "defaultMessage": "Ispezione..."
+    },
+    "dialogs.logs": {
+        "defaultMessage": "Log"
+    },
+    "dialogs.none": {
+        "defaultMessage": "Nessuno"
+    },
+    "dialogs.optional": {
+        "defaultMessage": "opzionale"
+    },
+    "dialogs.podLogsTitle": {
+        "defaultMessage": "Log pod"
+    },
+    "dialogs.required": {
+        "defaultMessage": "obbligatorio"
+    },
+    "dialogs.reviewEnvs": {
+        "defaultMessage": "Controlla env"
+    },
+    "dialogs.reviewMetadata": {
+        "defaultMessage": "Controlla metadati"
+    },
+    "dialogs.stepEnvs": {
+        "defaultMessage": "3. Env"
+    },
+    "dialogs.stepImage": {
+        "defaultMessage": "1. Immagine"
+    },
+    "dialogs.stepMetadata": {
+        "defaultMessage": "2. Metadati"
+    },
+    "settings.accountDescription": {
+        "defaultMessage": "Aggiorna nome utente e lingua. Qui l'email dell'account e in sola lettura."
+    },
+    "settings.accountTitle": {
+        "defaultMessage": "Account"
+    },
+    "settings.appearanceDescription": {
+        "defaultMessage": "Personalizza tema, colore accento e raggio dell'interfaccia."
+    },
+    "settings.appearanceTitle": {
+        "defaultMessage": "Aspetto"
+    },
+    "settings.description": {
+        "defaultMessage": "Gestisci account, preferenze e accesso ai workspace."
+    },
+    "settings.failedUpdateUsername": {
+        "defaultMessage": "Impossibile aggiornare il nome utente"
+    },
+    "settings.organizationDescription": {
+        "defaultMessage": "Controlla le organizzazioni collegate al tuo account personale."
+    },
+    "settings.organizationsTitle": {
+        "defaultMessage": "Organizzazioni"
+    },
+    "settings.placeholders.color": {
+        "defaultMessage": "Scegli un colore"
+    },
+    "settings.placeholders.language": {
+        "defaultMessage": "Scegli una lingua"
+    },
+    "settings.placeholders.theme": {
+        "defaultMessage": "Scegli un tema"
+    },
+    "settings.title": {
+        "defaultMessage": "Impostazioni"
+    },
+    "settings.usernameRequired": {
+        "defaultMessage": "Il nome utente e obbligatorio"
+    },
+    "settings.usernameSaved": {
+        "defaultMessage": "Nome utente salvato"
+    },
+    "organizationSettings.allApplications": {
+        "defaultMessage": "Tutte le applicazioni"
+    },
+    "organizationSettings.applicationPermission": {
+        "defaultMessage": "Permesso applicazione"
+    },
+    "organizationSettings.applicationPermissionsTitle": {
+        "defaultMessage": "Permessi di {name}"
+    },
+    "organizationSettings.back": {
+        "defaultMessage": "Indietro"
+    },
+    "organizationSettings.cannotChangePermissions": {
+        "defaultMessage": "Puoi vedere i permessi applicazione, ma non modificarli."
+    },
+    "organizationSettings.deleteApplicationDescription": {
+        "defaultMessage": "Eliminare {name} da questa organizzazione?"
+    },
+    "organizationSettings.deleteApplicationFallback": {
+        "defaultMessage": "Eliminare questa applicazione?"
+    },
+    "organizationSettings.deleteApplicationTitle": {
+        "defaultMessage": "Elimina applicazione"
+    },
+    "organizationSettings.failedChangeApplicationPermission": {
+        "defaultMessage": "Impossibile cambiare il permesso applicazione"
+    },
+    "organizationSettings.failedDeleteApplication": {
+        "defaultMessage": "Impossibile eliminare l'applicazione"
+    },
+    "organizationSettings.loadApplicationsFailed": {
+        "defaultMessage": "Impossibile caricare le applicazioni."
+    },
+    "organizationSettings.logs": {
+        "defaultMessage": "Log"
+    },
+    "organizationSettings.noActiveApp": {
+        "defaultMessage": "Nessuna app attiva"
+    },
+    "organizationSettings.noAppAccess": {
+        "defaultMessage": "Nessun accesso app"
+    },
+    "organizationSettings.noApplications": {
+        "defaultMessage": "Nessuna applicazione trovata."
+    },
+    "organizationSettings.notAssigned": {
+        "defaultMessage": "Non assegnato"
+    },
+    "organizationSettings.organizationDescription": {
+        "defaultMessage": "Visualizza e gestisci i dettagli dell'organizzazione."
+    },
+    "organizationSettings.organizationPermission": {
+        "defaultMessage": "Permesso organizzazione"
+    },
+    "organizationSettings.reviewApplications": {
+        "defaultMessage": "Controlla le applicazioni collegate a questa organizzazione."
+    },
+    "organizationSettings.reviewDatabase": {
+        "defaultMessage": "Controlla l'utilizzo del database per questa organizzazione."
+    },
+    "organizationSettings.reviewStorage": {
+        "defaultMessage": "Controlla l'utilizzo dell'archiviazione per questa organizzazione."
+    },
+    "organizationSettings.sharedOrganizationUsers": {
+        "defaultMessage": "Utenti organizzazione condivisi"
+    },
+    "toasts.copiedToClipboard": {
+        "defaultMessage": "Copiato negli appunti"
+    },
+    "@astryx.alertDialog.cancel": {
+        "defaultMessage": "Annulla"
+    },
+    "@astryx.appShell.mobileNavigation": {
+        "defaultMessage": "Navigazione mobile"
+    },
+    "@astryx.banner.collapse": {
+        "defaultMessage": "Comprimi"
+    },
+    "@astryx.banner.dismiss": {
+        "defaultMessage": "Chiudi"
+    },
+    "@astryx.banner.expand": {
+        "defaultMessage": "Espandi"
+    },
+    "@astryx.breadcrumbs.label": {
+        "defaultMessage": "Percorso di navigazione"
+    },
+    "@astryx.dialog.close": {
+        "defaultMessage": "Chiudi"
+    },
+    "@astryx.fileInput.clearLabel": {
+        "defaultMessage": "Cancella {label}"
+    },
+    "@astryx.link.newTab": {
+        "defaultMessage": "(si apre in una nuova scheda)"
+    },
+    "@astryx.moreMenu.label": {
+        "defaultMessage": "Altre opzioni"
+    },
+    "@astryx.numberInput.clearLabel": {
+        "defaultMessage": "Cancella {label}"
+    },
+    "@astryx.outline.label": {
+        "defaultMessage": "Indice"
+    },
+    "@astryx.pagination.count": {
+        "defaultMessage": "{from, number}-{to, number} di {total, number}"
+    },
+    "@astryx.pagination.goToPage": {
+        "defaultMessage": "Vai alla pagina {page, number}"
+    },
+    "@astryx.pagination.itemsPerPage": {
+        "defaultMessage": "Elementi per pagina"
+    },
+    "@astryx.pagination.label": {
+        "defaultMessage": "Paginazione"
+    },
+    "@astryx.pagination.next": {
+        "defaultMessage": "Vai alla pagina successiva"
+    },
+    "@astryx.pagination.pageAnnounce": {
+        "defaultMessage": "Pagina {current, number}"
+    },
+    "@astryx.pagination.pageIndicators": {
+        "defaultMessage": "Indicatori di pagina"
+    },
+    "@astryx.pagination.pageOfTotal": {
+        "defaultMessage": "Pagina {current, number} di {total, number}"
+    },
+    "@astryx.pagination.previous": {
+        "defaultMessage": "Vai alla pagina precedente"
+    },
+    "@astryx.selector.clearLabel": {
+        "defaultMessage": "Cancella {label}"
+    },
+    "@astryx.selector.placeholder": {
+        "defaultMessage": "Seleziona..."
+    },
+    "@astryx.selector.searchOptions": {
+        "defaultMessage": "Cerca opzioni"
+    },
+    "@astryx.selector.searchPlaceholder": {
+        "defaultMessage": "Cerca..."
+    },
+    "@astryx.sideNav.heading.dialogLabel": {
+        "defaultMessage": "Menu di navigazione"
+    },
+    "@astryx.sideNav.heading.openMenu": {
+        "defaultMessage": "Apri menu"
+    },
+    "@astryx.sideNav.label": {
+        "defaultMessage": "Navigazione laterale"
+    },
+    "@astryx.sideNav.resizeSidebar": {
+        "defaultMessage": "Ridimensiona barra laterale"
+    },
+    "@astryx.sideNavCollapseButton.collapseSidebar": {
+        "defaultMessage": "Comprimi barra laterale"
+    },
+    "@astryx.sideNavCollapseButton.expandSidebar": {
+        "defaultMessage": "Espandi barra laterale"
+    },
+    "@astryx.sideNavItem.collapse": {
+        "defaultMessage": "Comprimi {label}"
+    },
+    "@astryx.sideNavItem.expand": {
+        "defaultMessage": "Espandi {label}"
+    },
+    "@astryx.tabList.label": {
+        "defaultMessage": "Schede"
+    },
+    "@astryx.table.filter.allPlaceholder": {
+        "defaultMessage": "Tutti"
+    },
+    "@astryx.table.filter.apply": {
+        "defaultMessage": "Applica"
+    },
+    "@astryx.table.filter.reset": {
+        "defaultMessage": "Reimposta"
+    },
+    "@astryx.table.label": {
+        "defaultMessage": "Tabella"
+    },
+    "@astryx.table.noData": {
+        "defaultMessage": "Nessun dato"
+    },
+    "@astryx.table.pagination.label": {
+        "defaultMessage": "Paginazione tabella"
+    },
+    "@astryx.table.selection.selectAllRows": {
+        "defaultMessage": "Seleziona tutte le righe"
+    },
+    "@astryx.table.selection.selectRow": {
+        "defaultMessage": "Seleziona riga"
+    },
+    "@astryx.table.sort.ascending": {
+        "defaultMessage": "Ordina in modo crescente"
+    },
+    "@astryx.table.sort.clear": {
+        "defaultMessage": "Rimuovi ordinamento"
+    },
+    "@astryx.table.sort.descending": {
+        "defaultMessage": "Ordina in modo decrescente"
+    },
+    "@astryx.tableFiltering.filterByColumn": {
+        "defaultMessage": "Filtra {header}"
+    },
+    "@astryx.tableGroupedRows.collapseGroup": {
+        "defaultMessage": "Comprimi gruppo {groupKey}"
+    },
+    "@astryx.tableGroupedRows.expandGroup": {
+        "defaultMessage": "Espandi gruppo {groupKey}"
+    },
+    "@astryx.tableRowExpansion.collapseAllRows": {
+        "defaultMessage": "Comprimi tutte le righe"
+    },
+    "@astryx.tableRowExpansion.collapseRow": {
+        "defaultMessage": "Comprimi riga"
+    },
+    "@astryx.tableRowExpansion.expandAllRows": {
+        "defaultMessage": "Espandi tutte le righe"
+    },
+    "@astryx.tableRowExpansion.expandRow": {
+        "defaultMessage": "Espandi riga"
+    },
+    "@astryx.textInput.clearLabel": {
+        "defaultMessage": "Cancella {label}"
+    },
+    "@astryx.toast.dismiss": {
+        "defaultMessage": "Chiudi notifica"
+    },
+    "@astryx.toast.viewport": {
+        "defaultMessage": "Notifiche"
+    },
+    "@astryx.topNav.heading.dialogLabel": {
+        "defaultMessage": "Menu di navigazione"
+    },
+    "@astryx.topNav.heading.openMenu": {
+        "defaultMessage": "Apri menu"
+    },
+    "@astryx.topNav.landmarkLabel": {
+        "defaultMessage": "Navigazione superiore"
     }
 }

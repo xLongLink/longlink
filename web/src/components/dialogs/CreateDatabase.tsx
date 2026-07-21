@@ -5,6 +5,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
@@ -13,7 +14,6 @@ import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { fetchApiJson } from '@/lib/api';
-import { useTranslation } from '@/lib/i18n';
 import { useUserProfile } from '@/hooks/use-user';
 import { apiDatabaseRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
 import { databasesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
@@ -30,7 +30,7 @@ type Values = z.infer<typeof schema>;
 
 /** Registers one database backend. */
 export default function CreateDatabase() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const formId = useId();

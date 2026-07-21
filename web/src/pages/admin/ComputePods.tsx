@@ -4,6 +4,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import {
     Table,
@@ -14,12 +15,11 @@ import {
     useTablePagination,
 } from '@astryxdesign/core/Table';
 import type { ApiComputePod } from '@/lib/types';
-import { useTranslation } from '@/lib/i18n';
 import { useComputePods, useComputes } from '@/data/compute';
 
 /** Renders pods in a namespace on a compute backend. */
 export default function ComputePods() {
-    const { t } = useTranslation();
+    const t = useTranslator();
     const { compute = '', namespace = '' } = useParams();
     const [page, setPage] = useState(1);
     const columns: TableColumn<ApiComputePod>[] = [
