@@ -1,6 +1,5 @@
 import type { IconName } from '@astryxdesign/core/Icon';
 import { Card } from '@astryxdesign/core/Card';
-import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
@@ -67,7 +66,7 @@ export const metadata = {
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="applications" level={1}>
             Applications
         </Heading>
@@ -90,19 +89,22 @@ export const content = (
             <TableHeader>
                 <TableRow>
                     <TableHeaderCell>Role</TableHeaderCell>
-                    <TableHeaderCell>Access</TableHeaderCell>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {applicationRoles.map((role) => (
                     <TableRow key={role.name}>
                         <TableCell>
-                            <Stack direction="horizontal" gap={2} align="center">
-                                <Icon icon={role.icon} size="sm" color="accent" />
-                                <Code>{role.name}</Code>
+                            <Stack gap={1}>
+                                <Stack direction="horizontal" gap={2} align="center">
+                                    <Icon icon={role.icon} size="sm" color="accent" />
+                                    <Text type="body" weight="semibold">
+                                        {role.name}
+                                    </Text>
+                                </Stack>
+                                <Text type="supporting">{role.access}</Text>
                             </Stack>
                         </TableCell>
-                        <TableCell>{role.access}</TableCell>
                     </TableRow>
                 ))}
             </TableBody>

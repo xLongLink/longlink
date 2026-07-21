@@ -24,9 +24,6 @@ os.environ["ENVIRONMENT"] = "testing"
 for provider_setting in (
     "GITHUB_CLIENT_ID",
     "GITHUB_CLIENT_SECRET",
-    "OIDC_CLIENT_ID",
-    "OIDC_CLIENT_SECRET",
-    "OIDC_ISSUER",
 ):
     os.environ.pop(provider_setting, None)
 

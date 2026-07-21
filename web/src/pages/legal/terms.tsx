@@ -68,7 +68,7 @@ export const metadata = {
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="terms-of-service" level="h1">
             Terms of Service
         </Heading>
@@ -161,7 +161,7 @@ export const content = (
                 and users whom you authorize.
             </p>
             <p>
-                You must protect passwords, OAuth or OIDC access, API credentials, deployment secrets, kubeconfigs,
+                You must protect passwords, OAuth access, API credentials, deployment secrets, kubeconfigs,
                 database credentials, object-storage keys, application environment values, SSH keys, and other access
                 materials. You must use reasonable access controls and notify{' '}
                 <A href="mailto:info@longlink.dev">info@longlink.dev</A> promptly if you suspect compromise.

@@ -77,11 +77,15 @@ export function Breadcrumb() {
             <BreadcrumbItem href="/organizations">
                 <Wordmark />
             </BreadcrumbItem>
-            {crumbs.map((crumb) => (
-                <BreadcrumbItem key={crumb.href} href={crumb.href}>
-                    {crumb.label}
-                </BreadcrumbItem>
-            ))}
+            {crumbs.map((crumb, index) => {
+                const isCurrent = index === crumbs.length - 1;
+
+                return (
+                    <BreadcrumbItem key={crumb.href} href={isCurrent ? undefined : crumb.href} isCurrent={isCurrent}>
+                        {crumb.label}
+                    </BreadcrumbItem>
+                );
+            })}
         </Breadcrumbs>
     );
 }

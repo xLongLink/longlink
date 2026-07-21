@@ -335,9 +335,6 @@
     "auth.invalidResetLink": {
         "defaultMessage": "Il link per reimpostare la password non contiene il token. Richiedi un nuovo link per continuare."
     },
-    "auth.loadingAuthentication": {
-        "defaultMessage": "Caricamento impostazioni di autenticazione..."
-    },
     "auth.loginFailed": {
         "defaultMessage": "Accesso non riuscito"
     },
@@ -377,17 +374,11 @@
     "auth.registerDescription": {
         "defaultMessage": "Registrati con email e password."
     },
-    "auth.registrationUnavailable": {
-        "defaultMessage": "Registrazione non disponibile"
-    },
-    "auth.registrationUnavailableDescription": {
-        "defaultMessage": "La registrazione di nuovi account non e abilitata su questa LongLink Platform."
-    },
     "auth.requestAnotherReset": {
         "defaultMessage": "Richiedi un altro link"
     },
     "auth.resendVerificationEmail": {
-        "defaultMessage": "Invia di nuovo l'email di verifica"
+        "defaultMessage": "Invia di nuovo il codice"
     },
     "auth.resetEmailSent": {
         "defaultMessage": "Se esiste un account per questa email, le istruzioni per reimpostare la password sono in arrivo."
@@ -414,16 +405,13 @@
         "defaultMessage": "Invio email di ripristino..."
     },
     "auth.sendingVerificationEmail": {
-        "defaultMessage": "Invio email di verifica..."
+        "defaultMessage": "Invio codice di verifica..."
     },
     "auth.signInDescription": {
         "defaultMessage": "Accedi con email e password."
     },
     "auth.signingIn": {
         "defaultMessage": "Accesso..."
-    },
-    "auth.singleSignOn": {
-        "defaultMessage": "Single sign-on"
     },
     "auth.showPassword": {
         "defaultMessage": "Mostra password"
@@ -435,10 +423,19 @@
         "defaultMessage": "Termini di servizio"
     },
     "auth.verificationEmailSent": {
-        "defaultMessage": "Controlla la posta per l'email di verifica."
+        "defaultMessage": "Controlla la posta per il codice di verifica."
+    },
+    "auth.verificationCode": {
+        "defaultMessage": "Codice di verifica"
+    },
+    "auth.verificationCodeInvalid": {
+        "defaultMessage": "Inserisci il codice di verifica a 8 cifre"
+    },
+    "auth.verifyEmail": {
+        "defaultMessage": "Verifica email"
     },
     "auth.verifyEmailDescription": {
-        "defaultMessage": "Inserisci l'email per richiedere un nuovo link di verifica."
+        "defaultMessage": "Inserisci il codice che LongLink ha inviato al tuo indirizzo email."
     },
     "auth.verifyEmailTitle": {
         "defaultMessage": "Verifica la tua email"
@@ -1012,9 +1009,6 @@
     },
     "settings.placeholders.language": {
         "defaultMessage": "Scegli una lingua"
-    },
-    "settings.placeholders.radius": {
-        "defaultMessage": "Scegli un raggio"
     },
     "settings.placeholders.theme": {
         "defaultMessage": "Scegli un tema"

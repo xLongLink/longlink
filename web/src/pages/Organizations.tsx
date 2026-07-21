@@ -65,11 +65,10 @@ export default function Organizations() {
             }}
         >
             <VStack
-                className="[--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
+                className="mx-auto [--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
                 gap={8}
                 width="100%"
                 maxWidth={1000}
-                style={{ marginInline: 'auto' }}
             >
                 <HStack gap={4} justify="between" align="end" wrap="wrap">
                     <VStack gap={1}>

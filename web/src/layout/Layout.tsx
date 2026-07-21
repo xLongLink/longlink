@@ -109,8 +109,8 @@ export default function Layout({
                     user ? (
                         <UserProfile />
                     ) : (
-                        <Link href="/docs" color="secondary" isStandalone>
-                            {t('common.documentation')}
+                        <Link href="/docs" color="secondary" isStandalone rel="noopener noreferrer" target="_blank">
+                            {t('common.documentation')} <Icon icon="externalLink" size="xsm" />
                         </Link>
                     )
                 }

@@ -36,7 +36,7 @@ export const metadata = {
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="layout" level={1}>
             Layout
         </Heading>

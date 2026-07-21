@@ -17,9 +17,7 @@ def test_auth_config_reports_local_development_capabilities() -> None:
 
     assert response.status_code == 200
     assert response.json() == {
-        "registration_enabled": True,
         "github_enabled": False,
-        "oidc_enabled": False,
     }
 
 
@@ -36,7 +34,7 @@ async def test_register_verify_and_password_login(monkeypatch: pytest.MonkeyPatc
     monkeypatch.setattr(auth_module, "send_authentication_email", capture_email)
     client = TestClient(app)
 
-    # Register an unverified local account and capture its verification token.
+    # Register an unverified local account and capture its verification code.
     register_response = client.post(
         "/auth/register",
         json={"name": "Registered User", "email": "registered@example.com", "password": TEST_PASSWORD},
@@ -47,14 +45,16 @@ async def test_register_verify_and_password_login(monkeypatch: pytest.MonkeyPatc
     assert register_response.json()["email"] == "registered@example.com"
     assert register_response.json()["is_verified"] is False
     assert messages[0][:2] == ("registered@example.com", "Verify your LongLink account")
+    verification_code = messages[0][2].split("\n\n", 2)[1]
+    assert verification_code.isdigit()
+    assert len(verification_code) == auth_module.EMAIL_VERIFICATION_CODE_DIGITS
 
-    # Require verification before password login, then accept the emailed token.
+    # Require verification before password login, then accept the emailed code.
     unverified_login = client.post(
         "/auth/password/login",
         data={"username": "registered@example.com", "password": TEST_PASSWORD},
     )
-    verification_token = messages[0][2].split("token=", 1)[1].strip()
-    verify_response = client.post("/auth/verify", json={"token": verification_token})
+    verify_response = client.post("/auth/verify", json={"email": "registered@example.com", "code": verification_code})
 
     assert unverified_login.status_code == 400
     assert unverified_login.json() == {"detail": "LOGIN_USER_NOT_VERIFIED"}

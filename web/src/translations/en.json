@@ -335,9 +335,6 @@
     "auth.invalidResetLink": {
         "defaultMessage": "This password reset link is missing its token. Request a new link to continue."
     },
-    "auth.loadingAuthentication": {
-        "defaultMessage": "Loading authentication settings..."
-    },
     "auth.loginFailed": {
         "defaultMessage": "Sign in failed"
     },
@@ -377,17 +374,11 @@
     "auth.registerDescription": {
         "defaultMessage": "Sign up with email and password."
     },
-    "auth.registrationUnavailable": {
-        "defaultMessage": "Registration unavailable"
-    },
-    "auth.registrationUnavailableDescription": {
-        "defaultMessage": "New account registration is not enabled on this LongLink Platform."
-    },
     "auth.requestAnotherReset": {
         "defaultMessage": "Request another reset link"
     },
     "auth.resendVerificationEmail": {
-        "defaultMessage": "Resend verification email"
+        "defaultMessage": "Resend verification code"
     },
     "auth.resetEmailSent": {
         "defaultMessage": "If an account exists for that email, password reset instructions are on the way."
@@ -414,16 +405,13 @@
         "defaultMessage": "Sending reset email..."
     },
     "auth.sendingVerificationEmail": {
-        "defaultMessage": "Sending verification email..."
+        "defaultMessage": "Sending verification code..."
     },
     "auth.signInDescription": {
         "defaultMessage": "Sign in with your email and password."
     },
     "auth.signingIn": {
         "defaultMessage": "Signing in..."
-    },
-    "auth.singleSignOn": {
-        "defaultMessage": "Single sign-on"
     },
     "auth.showPassword": {
         "defaultMessage": "Show password"
@@ -435,10 +423,19 @@
         "defaultMessage": "Terms of Service"
     },
     "auth.verificationEmailSent": {
-        "defaultMessage": "Check your inbox for a verification email."
+        "defaultMessage": "Check your inbox for a verification code."
+    },
+    "auth.verificationCode": {
+        "defaultMessage": "Verification code"
+    },
+    "auth.verificationCodeInvalid": {
+        "defaultMessage": "Enter the 8-digit verification code"
+    },
+    "auth.verifyEmail": {
+        "defaultMessage": "Verify email"
     },
     "auth.verifyEmailDescription": {
-        "defaultMessage": "Enter your email to request a new verification link."
+        "defaultMessage": "Enter the code LongLink sent to your email address."
     },
     "auth.verifyEmailTitle": {
         "defaultMessage": "Verify your email"
@@ -1012,9 +1009,6 @@
     },
     "settings.placeholders.language": {
         "defaultMessage": "Choose a language"
-    },
-    "settings.placeholders.radius": {
-        "defaultMessage": "Choose a radius"
     },
     "settings.placeholders.theme": {
         "defaultMessage": "Choose a theme"

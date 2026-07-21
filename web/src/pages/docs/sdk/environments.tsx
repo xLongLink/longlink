@@ -15,7 +15,7 @@ export const metadata = {
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="environments" level={1}>
             Environments
         </Heading>

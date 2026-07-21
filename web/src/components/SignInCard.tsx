@@ -32,7 +32,7 @@ type LoginValues = {
     password: string;
 };
 
-type AuthProvider = 'github' | 'oidc';
+type AuthProvider = 'github';
 
 /** Renders the shared LongLink sign-in form and saved account switcher. */
 export function SignInCard({ redirectTo }: { redirectTo: string }) {
@@ -115,7 +115,7 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
     }
 
     const hasSavedAccounts = accounts.items.length > 0;
-    const hasProviders = authConfig?.github_enabled || authConfig?.oidc_enabled;
+    const hasProviders = authConfig?.github_enabled;
     const isPending = login.isPending || pendingProvider !== null;
 
     return (
@@ -205,9 +205,9 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
                     isDisabled={isPending}
                     isLoading={login.isPending}
                     label={login.isPending ? t('auth.signingIn') : t('actions.login')}
-                    style={{ width: '100%' }}
                     type="submit"
                     variant="primary"
+                    width="100%"
                 />
             </Stack>
 
@@ -224,31 +224,20 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
                                 variant="secondary"
                             />
                         ) : null}
-                        {authConfig.oidc_enabled ? (
-                            <Button
-                                icon={<Icon icon="wrench" size="sm" />}
-                                isDisabled={isPending}
-                                label={t('auth.singleSignOn')}
-                                onClick={() => void handleProviderSignIn('oidc')}
-                                variant="secondary"
-                            />
-                        ) : null}
                     </Stack>
                 </Stack>
             ) : null}
 
-            {authConfig?.registration_enabled ? (
-                <Divider
-                    label={
-                        <>
-                            {t('auth.noAccount')}{' '}
-                            <Link href={`/auth/register?${nextQuery}`} type="inherit" weight="medium">
-                                {t('auth.createAccount')}
-                            </Link>
-                        </>
-                    }
-                />
-            ) : null}
+            <Divider
+                label={
+                    <>
+                        {t('auth.noAccount')}{' '}
+                        <Link href={`/auth/register?${nextQuery}`} type="inherit" weight="medium">
+                            {t('auth.createAccount')}
+                        </Link>
+                    </>
+                }
+            />
 
             <Text as="p" color="secondary" justify="center" type="supporting">
                 {t('auth.agreementLead')} <br />

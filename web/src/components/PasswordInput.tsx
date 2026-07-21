@@ -48,7 +48,6 @@ export function PasswordInput({
                 isRequired={isRequired}
                 label={label}
                 status={status ? { type: status.type } : undefined}
-                style={{ flex: 1, minWidth: 0 }}
                 type={visible ? 'text' : 'password'}
             />
             <InputGroupText>

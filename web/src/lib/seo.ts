@@ -28,12 +28,6 @@ const descriptionsByPath: Record<string, string> = {
     '/docs/sdk/building':
         'Package LongLink applications into deployable images with metadata and environment requirements.',
     '/docs/sdk/pages': 'Build LongLink application pages with XML components, data bindings, and runtime metadata.',
-    '/docs/sdk/pages/expressions':
-        'Use expressions in LongLink XML pages for bindings, conditionals, loops, and actions.',
-    '/docs/sdk/pages/layout':
-        'Compose LongLink XML pages with layout components for readable business application screens.',
-    '/docs/sdk/pages/components':
-        'Use LongLink XML components for forms, tables, actions, navigation, and application interfaces.',
     '/terms': 'Read the LongLink terms of service.',
     '/privacy': 'Read the LongLink privacy policy.',
     '/impressum': 'Read the LongLink legal notice and company information.',
@@ -42,7 +36,7 @@ const descriptionsByPath: Record<string, string> = {
 const titlesByPath: Record<string, string> = {
     '/docs': 'Documentation | LongLink',
     '/docs/api': 'Platform Documentation | LongLink',
-    '/docs/sdk': 'Applications / SDK Documentation | LongLink',
+    '/docs/sdk': 'Applications Documentation | LongLink',
     '/terms': 'Terms of Service | LongLink',
     '/privacy': 'Privacy | LongLink',
     '/impressum': 'Impressum | LongLink',

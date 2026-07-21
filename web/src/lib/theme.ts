@@ -30,14 +30,14 @@ export const ACCENT_VALUES = [
     'rose',
 ] as const;
 
-/** Radius values supported by the API and UI. */
-export const RADIUS_VALUES = ['none', 'small', 'medium', 'large'] as const;
+/** Radius multiplier bounds supported by the API and UI. */
+export const MIN_RADIUS = 0;
+export const MAX_RADIUS = 1.5;
+export const DEFAULT_RADIUS = 1;
 
 export type Theme = (typeof THEME_VALUES)[number];
 
 export type Accent = (typeof ACCENT_VALUES)[number];
-
-export type Radius = (typeof RADIUS_VALUES)[number];
 
 const THEME_LABELS: Record<Theme, string> = {
     light: 'Light',
@@ -76,20 +76,6 @@ const ACCENT_TOKENS: Record<Accent, AccentToken> = {
     rose: { label: 'Rose', accent: '#f43f5e', accentForeground: '#0f172a' },
 };
 
-const RADIUS_LABELS: Record<Radius, string> = {
-    none: 'None',
-    small: 'Small',
-    medium: 'Medium',
-    large: 'Large',
-};
-
-const RADIUS_MULTIPLIERS: Record<Radius, number> = {
-    none: 0,
-    small: 0.5,
-    medium: 1,
-    large: 1.5,
-};
-
 const themes = new Map<string, DefinedTheme>();
 
 /** Theme mode options available in the UI. */
@@ -102,11 +88,8 @@ export const ACCENT_OPTIONS = ACCENT_VALUES.map((value) => ({
     swatch: ACCENT_TOKENS[value].accent,
 }));
 
-/** Radius options available in the UI. */
-export const RADIUS_OPTIONS = RADIUS_VALUES.map((value) => ({ value, label: RADIUS_LABELS[value] }));
-
 /** Returns the Astryx theme for one persisted accent and radius selection. */
-export function getAstryxTheme(accentValue: Accent, radius: Radius): DefinedTheme {
+export function getAstryxTheme(accentValue: Accent, radius: number): DefinedTheme {
     const key = `${accentValue}-${radius}`;
 
     // Reuse theme objects so Astryx does not reinject equivalent CSS.
@@ -127,7 +110,7 @@ export function getAstryxTheme(accentValue: Accent, radius: Radius): DefinedThem
                 fallbacks: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
             },
         },
-        radius: { base: 4, multiplier: RADIUS_MULTIPLIERS[radius] },
+        radius: { base: 4, multiplier: radius },
         components: {
             breadcrumbs: {
                 base: { marginInlineStart: 'calc(-1 * var(--spacing-1))' },
@@ -139,6 +122,9 @@ export function getAstryxTheme(accentValue: Accent, radius: Radius): DefinedThem
                     lineHeight: '1.25rem',
                     marginInlineStart: 'var(--spacing-1)',
                 },
+            },
+            link: {
+                base: { textDecoration: 'underline' },
             },
             table: {
                 base: {

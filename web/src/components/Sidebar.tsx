@@ -15,12 +15,17 @@ function articleNavigationItemIsActive(item: ArticleNavigationItem, currentPath:
         return true;
     }
 
+    // Hidden docs routes should keep their closest visible section selected.
+    if (currentPath.startsWith(`${item.path}/`) && item.path.split('/').filter(Boolean).length > 2) {
+        return true;
+    }
+
     return item.children?.some((child) => articleNavigationItemIsActive(child, currentPath)) ?? false;
 }
 
 /** Renders a nested article navigation item. */
 function renderArticleNavigationItem(item: ArticleNavigationItem, currentPath: string) {
-    const isSelected = currentPath === item.path;
+    const isSelected = articleNavigationItemIsActive(item, currentPath);
     const hasActiveChild = item.children?.some((child) => articleNavigationItemIsActive(child, currentPath)) ?? false;
 
     return (
@@ -45,7 +50,7 @@ export function Sidebar({ currentPath, groups }: SidebarProps) {
             className="docs-sidebar"
             style={{ width: '100%' }}
             header={
-                <div className="flex h-16 w-full shrink-0 items-center justify-center border-b border-[var(--color-border)]">
+                <div className="flex h-16 w-full shrink-0 items-center justify-center border-b border-border">
                     <Link href="/" label="LongLink home" color="inherit">
                         <Wordmark className="tracking-normal" style={{ fontSize: '1.375rem' }} />
                     </Link>
@@ -55,7 +60,7 @@ export function Sidebar({ currentPath, groups }: SidebarProps) {
             {groups.map((group) => (
                 <SideNavSection
                     key={group.title}
-                    className="py-2 [&>div:first-child]:py-0.5 [&>div:last-child]:gap-0 [&>div:first-child>span:first-child>span:first-child]:text-[0.75rem] [&>div:first-child>span:first-child>span:first-child]:font-semibold [&>div:first-child>span:first-child>span:first-child]:tracking-normal [&>div:first-child>span:first-child>span:first-child]:text-[#9eb3c7] [&>div:first-child>span:first-child>span:first-child]:uppercase"
+                    className="py-2 [&>div:first-child]:py-0.5 [&>div:last-child]:gap-0"
                     title={group.title}
                 >
                     {group.items.map((item) => renderArticleNavigationItem(item, currentPath))}

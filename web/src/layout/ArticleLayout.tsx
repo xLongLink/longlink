@@ -59,7 +59,7 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
                 <div className="flex items-center justify-end pe-2 lg:px-5">
                     <Button href={getStartedHref} label={t('actions.getStarted')} size="sm" variant="primary" />
                 </div>
-                <div aria-hidden="true" className="absolute inset-x-2 bottom-0 border-b border-[var(--color-border)]" />
+                <div aria-hidden="true" className="absolute inset-x-2 bottom-0 border-b border-border" />
             </div>
         </LayoutHeader>
     );
@@ -90,10 +90,7 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
     return (
         <div style={{ paddingInlineStart: isMobile ? 0 : DOCS_SIDEBAR_WIDTH }}>
             {!isMobile ? (
-                <div
-                    className="fixed inset-y-0 start-0 z-30 bg-[var(--color-background-body)]"
-                    style={{ width: DOCS_SIDEBAR_WIDTH }}
-                >
+                <div className="fixed inset-y-0 start-0 z-30 bg-body" style={{ width: DOCS_SIDEBAR_WIDTH }}>
                     {sidebar}
                 </div>
             ) : null}
@@ -141,7 +138,7 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
                         </div>
                         <div
                             aria-hidden="true"
-                            className="pointer-events-none fixed inset-y-0 end-0 z-[25] border-8 border-[var(--color-background-body)]"
+                            className="pointer-events-none fixed inset-y-0 end-0 z-[25] border-8 border-body"
                             style={{ insetInlineStart: DOCS_SIDEBAR_WIDTH }}
                         />
                         <div className="relative z-10 pt-12">{body}</div>
@@ -159,7 +156,7 @@ function ArticleContent({ content, metadata }: ArticleContentProps) {
     const lastUpdated = formatDate(Number.isNaN(lastUpdatedDate.getTime()) ? Date.now() : lastUpdatedDate);
 
     return (
-        <article className="docs-article space-y-7 text-[1.0625rem] leading-8 text-[var(--color-text-secondary)] [&>div]:gap-5 [&_[data-slot=code-block]]:max-w-3xl [&_a]:font-medium [&_code]:text-[var(--color-text-primary)] [&_h1]:border-b [&_h1]:border-[var(--color-border)] [&_h1]:pb-3 [&_h1]:text-[1.75rem] [&_h1]:leading-tight [&_h1]:font-semibold [&_h1]:tracking-normal [&_h1]:text-[var(--color-text-primary)] [&_h2]:mt-10 [&_h2]:border-b [&_h2]:border-[var(--color-border)] [&_h2]:pb-3 [&_h2]:text-[1.75rem] [&_h2]:leading-tight [&_h2]:tracking-normal [&_h2]:text-[var(--color-text-primary)] [&_h3]:mt-7 [&_h3]:border-b [&_h3]:border-[var(--color-border)] [&_h3]:pb-2 [&_h3]:text-[1.35rem] [&_h3]:leading-snug [&_h3]:tracking-normal [&_h3]:text-[var(--color-text-primary)] [&_h4]:mt-5 [&_h4]:border-b [&_h4]:border-[var(--color-border)] [&_h4]:pb-2 [&_h4]:text-xl [&_h4]:tracking-normal [&_h4]:text-[var(--color-text-primary)] [&_li]:leading-7 [&_p]:max-w-3xl [&_p]:leading-7">
+        <article className="docs-article space-y-7 text-[1.0625rem] leading-8 text-secondary [&_a]:font-medium [&_h1]:border-b [&_h1]:border-border [&_h1]:pb-3 [&_h1]:text-[1.75rem] [&_h1]:leading-tight [&_h1]:tracking-normal [&_h2]:mt-10 [&_h2]:border-b [&_h2]:border-border [&_h2]:pb-3 [&_h2]:text-[1.75rem] [&_h2]:leading-tight [&_h2]:tracking-normal [&_h3]:mt-7 [&_h3]:border-b [&_h3]:border-border [&_h3]:pb-2 [&_h3]:text-[1.35rem] [&_h3]:leading-snug [&_h3]:tracking-normal [&_h4]:mt-5 [&_h4]:border-b [&_h4]:border-border [&_h4]:pb-2 [&_h4]:text-xl [&_h4]:tracking-normal [&_li]:leading-7 [&_p]:leading-7">
             {content}
             <Stack as="footer" gap={3}>
                 <Divider />

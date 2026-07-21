@@ -1,4 +1,3 @@
-import { Monitor, Package } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -7,29 +6,55 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
+import {
+    AppWindow,
+    ArrowLeftRight,
+    Code2,
+    Database,
+    HardDrive,
+    Languages,
+    Palette,
+    PanelTop,
+    UserRound,
+} from 'lucide-react';
 import { CodeTabs } from '@/components/CodeTabs';
 import { CodeBlock } from '@/components/CodeBlock';
 
 /** Renders the local SDK runtime request flow diagram. */
 function LocalRuntimeDiagram() {
     return (
-        <Grid columns={{ minWidth: 190, max: 2, repeat: 'fit' }} gap={4}>
-            <Card variant="muted">
-                <Stack gap={2} align="center">
-                    <Icon icon={Monitor} color="accent" />
-                    <Text weight="semibold">User</Text>
-                    <Text type="supporting">Browser</Text>
-                    <Text type="supporting">Languages, theming, and application shell</Text>
-                </Stack>
-            </Card>
-            <Card variant="muted">
-                <Stack gap={2} align="center">
-                    <Icon icon={Package} color="accent" />
-                    <Text weight="semibold">Application</Text>
-                    <Text type="supporting">Runtime at localhost:1707</Text>
-                    <Text type="supporting">Application logic, database logic, and file storage</Text>
-                </Stack>
-            </Card>
+        <Grid columns={{ minWidth: 180, max: 3, repeat: 'fit' }} gap={6} align="center">
+            <Stack align="end">
+                <Card width="80%" variant="muted">
+                    <Stack gap={3} align="center">
+                        <Icon icon={UserRound} color="accent" aria-hidden />
+                        <Text weight="semibold">User</Text>
+                        <Text type="supporting">Browser</Text>
+                        <Stack direction="horizontal" gap={3} justify="center">
+                            <Icon icon={Languages} size="sm" color="secondary" aria-label="Languages" />
+                            <Icon icon={Palette} size="sm" color="secondary" aria-label="Theming" />
+                            <Icon icon={PanelTop} size="sm" color="secondary" aria-label="Application shell" />
+                        </Stack>
+                    </Stack>
+                </Card>
+            </Stack>
+            <Stack align="center">
+                <Icon icon={ArrowLeftRight} color="secondary" aria-label="Local runtime request flow" />
+            </Stack>
+            <Stack align="start">
+                <Card width="80%" variant="muted">
+                    <Stack gap={3} align="center">
+                        <Icon icon={AppWindow} color="accent" aria-hidden />
+                        <Text weight="semibold">Application</Text>
+                        <Text type="supporting">Runtime at localhost:1707</Text>
+                        <Stack direction="horizontal" gap={3} justify="center">
+                            <Icon icon={Code2} size="sm" color="secondary" aria-label="Application logic" />
+                            <Icon icon={Database} size="sm" color="secondary" aria-label="Database logic" />
+                            <Icon icon={HardDrive} size="sm" color="secondary" aria-label="File storage" />
+                        </Stack>
+                    </Stack>
+                </Card>
+            </Stack>
         </Grid>
     );
 }
@@ -44,9 +69,9 @@ export const metadata = {
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="application-sdk" level={1}>
-            LongLink Applications / SDK
+            LongLink Applications
         </Heading>
         <Text as="p">
             The LongLink SDK is the runtime and tooling layer for LongLink Applications. It provides the application

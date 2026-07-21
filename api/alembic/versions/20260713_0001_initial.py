@@ -27,6 +27,8 @@ def upgrade() -> None:
         sa.Column("avatar", sa.String(length=2048), nullable=False),
         sa.Column("hashed_password", sa.String(length=1024), nullable=False),
         sa.Column("is_verified", sa.Boolean(), nullable=False),
+        sa.Column("verification_code_hash", sa.String(length=64), nullable=True),
+        sa.Column("verification_code_expires_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
@@ -63,7 +65,7 @@ def upgrade() -> None:
             ),
             nullable=False,
         ),
-        sa.Column("radius", sa.Enum("none", "small", "medium", "large", name="radius"), nullable=False),
+        sa.Column("radius", sa.Float(), nullable=False),
         sa.Column("language", sa.Enum("en", "it", name="language"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -455,7 +457,6 @@ def downgrade() -> None:
     # Remove native preference enum types so a fresh upgrade can recreate them.
     bind = op.get_bind()
     sa.Enum("en", "it", name="language").drop(bind, checkfirst=True)
-    sa.Enum("none", "small", "medium", "large", name="radius").drop(bind, checkfirst=True)
     sa.Enum(
         "slate",
         "gray",

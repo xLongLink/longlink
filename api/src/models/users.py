@@ -1,7 +1,7 @@
 from uuid import UUID
 from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.types import Theme, Accent, Radius, Country, Language
+from src.models.types import Theme, Accent, Country, Language
 
 ACCENT_COLORS: dict[Accent, str] = {
     Accent.slate: "#64748b",
@@ -41,7 +41,7 @@ class UserUpdate(BaseModel):
     # Preferences
     theme: Theme | None = None
     accent: Accent | None = None
-    radius: Radius | None = None
+    radius: float | None = Field(default=None, ge=0, le=1.5)
     language: Language | None = None
 
 
@@ -88,5 +88,5 @@ class UserProfile(UserSummary):
     # Preferences
     theme: Theme
     accent: Accent
-    radius: Radius
+    radius: float
     language: Language

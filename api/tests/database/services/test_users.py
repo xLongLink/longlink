@@ -1,6 +1,6 @@
 import pytest
 from uuid import uuid4
-from src.models.types import Theme, Accent, Radius, Language
+from src.models.types import Theme, Accent, Language
 from src.database.services import users as user_service
 from src.database.models.users import User
 
@@ -43,7 +43,7 @@ async def test_update_applies_profile_settings_and_preserves_authentication(user
         avatar="https://example.com/updated.png",
         theme=Theme.light,
         accent=Accent.blue,
-        radius=Radius.large,
+        radius=1.5,
         language=Language.it,
     )
 
@@ -52,7 +52,7 @@ async def test_update_applies_profile_settings_and_preserves_authentication(user
     assert updated.avatar == "https://example.com/updated.png"
     assert updated.theme == Theme.light
     assert updated.accent == Accent.blue
-    assert updated.radius == Radius.large
+    assert updated.radius == 1.5
     assert updated.language == Language.it
     assert updated.hashed_password == user.hashed_password
     assert updated.is_active is True
@@ -68,7 +68,7 @@ async def test_update_preserves_omitted_profile_fields(users: tuple[User, User, 
         avatar="https://example.com/settings.png",
         theme=Theme.light,
         accent=Accent.blue,
-        radius=Radius.large,
+        radius=1.5,
         language=Language.it,
     )
 
@@ -79,7 +79,7 @@ async def test_update_preserves_omitted_profile_fields(users: tuple[User, User, 
     assert updated.avatar == "https://example.com/settings.png"
     assert updated.theme == Theme.light
     assert updated.accent == Accent.blue
-    assert updated.radius == Radius.large
+    assert updated.radius == 1.5
     assert updated.language == Language.it
 
 

@@ -1,376 +1,620 @@
-import type { ReactNode } from 'react';
+import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Link as RouterLink } from 'react-router';
+import { Avatar } from '@astryxdesign/core/Avatar';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
+import { Center } from '@astryxdesign/core/Center';
+import { Slider } from '@astryxdesign/core/Slider';
+import { Switch } from '@astryxdesign/core/Switch';
 import { Heading } from '@astryxdesign/core/Heading';
-import { List, ListItem } from '@astryxdesign/core/List';
-import { CodeBlock } from '@/components/CodeBlock';
+import { Divider } from '@astryxdesign/core/Divider';
+import { Selector } from '@astryxdesign/core/Selector';
+import { TextArea } from '@astryxdesign/core/TextArea';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { FileInput } from '@astryxdesign/core/FileInput';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { ButtonGroup } from '@astryxdesign/core/ButtonGroup';
+import { NumberInput } from '@astryxdesign/core/NumberInput';
+import { Table as AstryxTable } from '@astryxdesign/core/Table';
+import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
+import { pageElementHrefByName } from '@/pages/docs/sdk/elements';
 
-/** Renders paragraph text in the pages reference. */
-function P({ children }: { children: ReactNode }) {
-    return <Text as="p">{children}</Text>;
-}
+type ComponentSummary = {
+    name: string;
+    description: string;
+};
 
-/** Renders a bulleted list in the pages reference. */
-function Ul({ children }: { children: ReactNode }) {
-    return <List listStyle="disc">{children}</List>;
-}
+type ComponentCategory = {
+    id: string;
+    title: string;
+    description: string;
+    components: ComponentSummary[];
+};
 
-/** Renders one bulleted item in the pages reference. */
-function Li({ children }: { children: ReactNode }) {
-    return <ListItem label={<Text>{children}</Text>} />;
-}
+const componentCategories: ComponentCategory[] = [
+    {
+        id: 'longlink-runtime-concepts',
+        title: 'LongLink Runtime Concepts',
+        description:
+            'Cross-cutting page runtime rules for conditional rendering, translations, expressions, bindings, and file discovery.',
+        components: [
+            {
+                name: 'if',
+                description: 'Conditionally renders a node when an expression evaluates to a truthy value.',
+            },
+            {
+                name: 'i18n',
+                description: 'Looks up visible copy from the active XML translation catalog.',
+            },
+            {
+                name: 'values',
+                description: 'Supplies interpolation values for translated ICU messages.',
+            },
+            {
+                name: 'count',
+                description: 'Passes a numeric count into ICU plural translations.',
+            },
+            {
+                name: 'Expressions',
+                description: 'Evaluates a safe JavaScript expression subset against the XML runtime scope.',
+            },
+            {
+                name: 'Bindings',
+                description: 'Connects writable control values to State objects.',
+            },
+            {
+                name: 'Translations',
+                description: 'Defines localized XML page copy in flat catalog files under src/i18n.',
+            },
+            {
+                name: 'Dynamic Pages',
+                description: 'Maps bracketed XML filenames to browser route parameters.',
+            },
+            {
+                name: 'Page Files',
+                description: 'Registers XML pages from conventional SDK application source folders.',
+            },
+        ],
+    },
+    {
+        id: 'longlink-state-elements',
+        title: 'LongLink State Elements',
+        description:
+            'LongLink-specific XML elements prepare page state, data, actions, and repeated scopes before Astryx components render.',
+        components: [
+            {
+                name: 'longlink',
+                description: 'Wraps an XML page and declares optional page tab metadata such as name and icon.',
+            },
+            {
+                name: 'State',
+                description: 'Declares local reactive page state that controls can read from and write to.',
+            },
+            {
+                name: 'Query',
+                description: 'Fetches JSON before rendering and exposes the response as a named runtime value.',
+            },
+            {
+                name: 'Action',
+                description: 'Wraps a trigger, sends an app-relative request, and invalidates selected runtime values.',
+            },
+            {
+                name: 'For',
+                description: 'Repeats child elements for each array item with a scoped item value and index.',
+            },
+        ],
+    },
+    {
+        id: 'action',
+        title: 'Action',
+        description: 'Command and navigation elements for starting work or moving users to another destination.',
+        components: [
+            {
+                name: 'Button',
+                description: 'Renders a labeled command, submit trigger, or action trigger.',
+            },
+            {
+                name: 'ButtonGroup',
+                description: 'Groups related buttons and actions under one accessible label.',
+            },
+            {
+                name: 'Link',
+                description: 'Navigates inside a LongLink Application or points to an external URL.',
+            },
+        ],
+    },
+    {
+        id: 'container',
+        title: 'Container',
+        description: 'Bounded surfaces for content that should read as one independent item.',
+        components: [
+            {
+                name: 'Card',
+                description: 'Groups a discrete piece of content on an Astryx surface.',
+            },
+        ],
+    },
+    {
+        id: 'content',
+        title: 'Content',
+        description: 'Text, identity, and visual primitives for readable page content.',
+        components: [
+            {
+                name: 'Avatar',
+                description: 'Shows a user or team identity from an image, name, or fallback.',
+            },
+            {
+                name: 'Code',
+                description: 'Renders an inline code value using LongLink XML content precedence.',
+            },
+            {
+                name: 'Heading',
+                description: 'Creates semantic section headings with explicit levels from 1 to 6.',
+            },
+            {
+                name: 'Icon',
+                description: 'Displays a semantic Astryx icon name such as info, success, warning, or error.',
+            },
+            {
+                name: 'Text',
+                description: 'Renders paragraph, label, span, and supporting text content.',
+            },
+        ],
+    },
+    {
+        id: 'data-input',
+        title: 'Data Input',
+        description: 'Controls that collect page data through literal values, expressions, or writable state bindings.',
+        components: [
+            {
+                name: 'CheckboxInput',
+                description: 'Captures one required or optional boolean value.',
+            },
+            {
+                name: 'FileInput',
+                description: 'Stores browser File values for action form payloads.',
+            },
+            {
+                name: 'NumberInput',
+                description: 'Collects numeric values with optional ranges, steps, and units.',
+            },
+            {
+                name: 'RadioList',
+                description: 'Presents a single-choice list of RadioListItem children.',
+            },
+            {
+                name: 'RadioListItem',
+                description: 'Defines one selectable option inside a RadioList.',
+            },
+            {
+                name: 'Selector',
+                description: 'Presents a dropdown selection control with flat SelectorOption children.',
+            },
+            {
+                name: 'SelectorOption',
+                description: 'Defines one selectable value inside a Selector.',
+            },
+            {
+                name: 'Slider',
+                description: 'Captures bounded numeric values through a range control.',
+            },
+            {
+                name: 'Switch',
+                description: 'Captures an on/off state for compact boolean settings.',
+            },
+            {
+                name: 'TextArea',
+                description: 'Collects longer text values with labels, descriptions, and validation state.',
+            },
+            {
+                name: 'TextInput',
+                description: 'Collects short text values with labels, descriptions, and validation state.',
+            },
+        ],
+    },
+    {
+        id: 'feedback-and-status',
+        title: 'Feedback & Status',
+        description: 'Status elements that communicate state, severity, or persistent page feedback.',
+        components: [
+            {
+                name: 'Badge',
+                description: 'Displays a compact status or enumerated label.',
+            },
+            {
+                name: 'Banner',
+                description: 'Shows persistent page-level information, warnings, errors, or success messages.',
+            },
+        ],
+    },
+    {
+        id: 'layout',
+        title: 'Layout',
+        description: 'Composition primitives for arranging content without handwritten layout markup.',
+        components: [
+            {
+                name: 'Divider',
+                description: 'Separates related regions with a horizontal or vertical rule.',
+            },
+            {
+                name: 'FormLayout',
+                description: 'Arranges controls with consistent field spacing and label placement.',
+            },
+            {
+                name: 'Grid',
+                description: 'Creates fixed or responsive multi-column layouts.',
+            },
+            {
+                name: 'Stack',
+                description: 'Arranges children vertically or horizontally with Astryx spacing values.',
+            },
+        ],
+    },
+    {
+        id: 'navigation',
+        title: 'Navigation',
+        description: 'Navigation structures for tabs, side navigation, and application page movement.',
+        components: [
+            {
+                name: 'SideNav',
+                description: 'Renders application navigation in a sidebar container.',
+            },
+            {
+                name: 'SideNavItem',
+                description: 'Defines one destination inside a SideNav.',
+            },
+            {
+                name: 'Tab',
+                description: 'Defines one tab destination inside a TabList.',
+            },
+            {
+                name: 'TabList',
+                description: 'Renders flat tab navigation for switching between page views.',
+            },
+        ],
+    },
+    {
+        id: 'overlay',
+        title: 'Overlay',
+        description: 'Layered surfaces for focused workflows that should appear above the page.',
+        components: [
+            {
+                name: 'Dialog',
+                description: 'Renders a modal workflow from one flat owner element.',
+            },
+        ],
+    },
+    {
+        id: 'table-and-list',
+        title: 'Table & List',
+        description: 'Structured display elements for row-oriented business data.',
+        components: [
+            {
+                name: 'Table',
+                description: 'Displays tabular data from an array using declared columns.',
+            },
+            {
+                name: 'TableColumn',
+                description: 'Declares one Table column with label, value, and optional formatting.',
+            },
+        ],
+    },
+];
+
+const previewRows: Array<Record<string, string>> = [{ item: 'Order', status: 'Open' }];
+const previewColumns = [
+    { key: 'item', header: 'Item' },
+    { key: 'status', header: 'Status' },
+];
 
 export const metadata = {
-    toc: [
-        { id: 'folder-conventions', label: 'Folder conventions' },
-        { id: 'dynamic-pages', label: 'Dynamic Pages' },
-        { id: 'longlink-page-and-i18n-mounts', label: 'LongLink Page and I18n Mounts' },
-        { id: 'page-metadata', label: 'Page Metadata' },
-        { id: 'translations', label: 'Translations' },
-        { id: 'state', label: 'State' },
-        { id: 'query', label: 'Query' },
-        { id: 'action', label: 'Action' },
-        { id: 'for', label: 'For' },
-        { id: 'if', label: 'if' },
-        { id: 'i18n', label: 'i18n' },
-        { id: 'expressions', label: 'Expressions' },
-    ],
-    lastUpdated: '2026-07-20',
+    toc: componentCategories.map((category) => ({ id: category.id, label: category.title })),
+    lastUpdated: '2026-07-21',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/sdk/pages.tsx',
 };
 
+/** Renders one categorized group of XML page components. */
+function ComponentCategorySection({ category }: { category: ComponentCategory }) {
+    return (
+        <Stack gap={3}>
+            <Stack gap={2}>
+                <Heading id={category.id} level={2}>
+                    {category.title}
+                </Heading>
+                <Text as="p" color="secondary">
+                    {category.description}
+                </Text>
+            </Stack>
+            <Grid columns={{ minWidth: 190, max: 3, repeat: 'fit' }} gap={4}>
+                {category.components.map((component) => (
+                    <ComponentSummaryCard key={component.name} component={component} />
+                ))}
+            </Grid>
+        </Stack>
+    );
+}
+
+/** Renders one component summary card in the XML page gallery. */
+function ComponentSummaryCard({ component }: { component: ComponentSummary }) {
+    const href = pageElementHrefByName[component.name];
+
+    return (
+        <Stack className="group relative" gap={2}>
+            <Card aria-hidden="true" inert minHeight={190} variant="muted">
+                <Center minHeight={150}>{renderComponentPreview(component.name)}</Center>
+            </Card>
+            <Text color="secondary" type="supporting">
+                {component.name}
+            </Text>
+            <RouterLink
+                aria-label={`Open ${component.name} documentation`}
+                className="absolute inset-0 z-10 rounded-container focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                to={href}
+            />
+        </Stack>
+    );
+}
+
+/** Renders a compact live or symbolic preview for one XML page element. */
+function renderComponentPreview(name: string) {
+    switch (name) {
+        case 'if':
+            return <Code>{'if="${order.open}"'}</Code>;
+        case 'i18n':
+            return <Code>{'i18n="orders.title"'}</Code>;
+        case 'values':
+            return <Code>{'values="${{ name: user.name }}"'}</Code>;
+        case 'count':
+            return <Code>{'count="${orders.length}"'}</Code>;
+        case 'Expressions':
+            return <Code>{'${order.total > 0}'}</Code>;
+        case 'Bindings':
+            return <Code>{'value="$form.name"'}</Code>;
+        case 'Translations':
+            return <Code>{'orders.title'}</Code>;
+        case 'Dynamic Pages':
+            return <Code>{'[issue].xml'}</Code>;
+        case 'Page Files':
+            return <Code>{'src/pages/index.xml'}</Code>;
+        case 'longlink':
+            return <Code>{'<longlink />'}</Code>;
+        case 'State':
+            return <Code>{'<State id="form" />'}</Code>;
+        case 'Query':
+            return <Code>{'<Query id="orders" />'}</Code>;
+        case 'Action':
+            return <Button label="Run" size="sm" variant="primary" />;
+        case 'For':
+            return <Code>{'<For each="$items" />'}</Code>;
+        case 'Button':
+            return (
+                <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
+                    <Button label="Save" size="sm" variant="primary" />
+                    <Button label="Edit" size="sm" variant="secondary" />
+                    <Button label="View" size="sm" variant="ghost" />
+                </Stack>
+            );
+        case 'ButtonGroup':
+            return (
+                <ButtonGroup label="Document actions" size="sm">
+                    <Button label="Copy" variant="secondary" />
+                    <Button label="Paste" variant="secondary" />
+                </ButtonGroup>
+            );
+        case 'Link':
+            return (
+                <Link href={pageElementHrefByName.Link} type="inherit" hasUnderline>
+                    Docs
+                </Link>
+            );
+        case 'Card':
+            return (
+                <Stack gap={1} align="center">
+                    <Text weight="semibold">Card surface</Text>
+                    <Text type="supporting">Grouped content</Text>
+                </Stack>
+            );
+        case 'Avatar':
+            return <Avatar name="Ada Lovelace" size="medium" />;
+        case 'Code':
+            return <Code>order.status</Code>;
+        case 'Heading':
+            return <Heading level={3}>Orders</Heading>;
+        case 'Icon':
+            return <Icon icon="info" color="accent" />;
+        case 'Text':
+            return <Text type="supporting">Readable text</Text>;
+        case 'CheckboxInput':
+            return <CheckboxInput label="Approved" size="sm" value onChange={() => undefined} />;
+        case 'FileInput':
+            return (
+                <Stack width={140}>
+                    <FileInput
+                        accept=".pdf"
+                        isLabelHidden
+                        label="Attachment"
+                        mode="input"
+                        placeholder="File"
+                        value={null}
+                        onChange={() => undefined}
+                    />
+                </Stack>
+            );
+        case 'NumberInput':
+            return (
+                <NumberInput
+                    isLabelHidden
+                    label="Quantity"
+                    min={1}
+                    size="sm"
+                    units="qty"
+                    value={3}
+                    width={130}
+                    onChange={() => undefined}
+                />
+            );
+        case 'RadioList':
+            return (
+                <Stack width={150}>
+                    <RadioList
+                        label="Plan"
+                        orientation="horizontal"
+                        size="sm"
+                        value="team"
+                        onChange={() => undefined}
+                        isLabelHidden
+                    >
+                        <RadioListItem label="Solo" value="solo" />
+                        <RadioListItem label="Team" value="team" />
+                    </RadioList>
+                </Stack>
+            );
+        case 'RadioListItem':
+            return <Code>{'<RadioListItem />'}</Code>;
+        case 'Selector':
+            return (
+                <Selector
+                    label="Status"
+                    options={[
+                        { value: 'open', label: 'Open' },
+                        { value: 'closed', label: 'Closed' },
+                    ]}
+                    size="sm"
+                    value="open"
+                    width={120}
+                    onChange={() => undefined}
+                    isLabelHidden
+                />
+            );
+        case 'SelectorOption':
+            return <Code>{'<SelectorOption />'}</Code>;
+        case 'Slider':
+            return (
+                <Stack width={150}>
+                    <Slider label="Progress" value={60} valueDisplay="none" onChange={() => undefined} isLabelHidden />
+                </Stack>
+            );
+        case 'Switch':
+            return <Switch label="Enabled" value onChange={() => undefined} />;
+        case 'TextArea':
+            return (
+                <Stack width={150}>
+                    <TextArea
+                        isLabelHidden
+                        label="Notes"
+                        rows={1}
+                        size="sm"
+                        value="Review complete"
+                        onChange={() => undefined}
+                    />
+                </Stack>
+            );
+        case 'TextInput':
+            return (
+                <TextInput
+                    isLabelHidden
+                    label="Name"
+                    size="sm"
+                    value="New order"
+                    width={140}
+                    onChange={() => undefined}
+                />
+            );
+        case 'Badge':
+            return <Badge label="Open" variant="info" />;
+        case 'Banner':
+            return <Banner status="success" title="Saved" />;
+        case 'Divider':
+            return (
+                <Stack gap={3} width="100%">
+                    <Text type="supporting">Before</Text>
+                    <Divider />
+                    <Text type="supporting">After</Text>
+                </Stack>
+            );
+        case 'FormLayout':
+            return (
+                <Stack width={150}>
+                    <FormLayout direction="vertical">
+                        <TextInput isLabelHidden label="Title" size="sm" value="Request" onChange={() => undefined} />
+                        <CheckboxInput label="Active" size="sm" value onChange={() => undefined} />
+                    </FormLayout>
+                </Stack>
+            );
+        case 'Grid':
+            return (
+                <Grid columns={2} gap={2}>
+                    <Badge label="One" />
+                    <Badge label="Two" />
+                    <Badge label="Three" />
+                    <Badge label="Four" />
+                </Grid>
+            );
+        case 'Stack':
+            return (
+                <Stack gap={2} align="center">
+                    <Badge label="First" />
+                    <Badge label="Second" />
+                    <Badge label="Third" />
+                </Stack>
+            );
+        case 'SideNav':
+            return <Code>{'<SideNav />'}</Code>;
+        case 'SideNavItem':
+            return <Code>{'<SideNavItem />'}</Code>;
+        case 'Tab':
+            return <Code>{'<Tab />'}</Code>;
+        case 'TabList':
+            return (
+                <Stack width={170}>
+                    <TabList aria-label="Preview tabs" size="sm" value="overview" onChange={() => undefined}>
+                        <Tab label="Overview" value="overview" />
+                        <Tab label="Activity" value="activity" />
+                    </TabList>
+                </Stack>
+            );
+        case 'Dialog':
+            return <Code>{'<Dialog />'}</Code>;
+        case 'Table':
+            return (
+                <Stack width={170}>
+                    <AstryxTable columns={previewColumns} data={previewRows} density="compact" />
+                </Stack>
+            );
+        case 'TableColumn':
+            return <Code>{'<TableColumn />'}</Code>;
+        default:
+            return <Code>{`<${name} />`}</Code>;
+    }
+}
+
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="pages" level={1}>
             Pages
         </Heading>
-        <P>
-            Pages define the XML UI returned by SDK page handlers. The root page covers the runtime concepts shared by
-            every element: state, queries, actions, loops, conditions, translations, expressions, bindings, and
-            invalidation.
-        </P>
-        <P>
-            XML page references live in the SDK pages section:{' '}
-            <Link href="/docs/sdk/pages/expressions" type="inherit" hasUnderline>
-                expressions
-            </Link>
-            ,{' '}
-            <Link href="/docs/sdk/pages/layout" type="inherit" hasUnderline>
-                layout elements
-            </Link>{' '}
-            and{' '}
-            <Link href="/docs/sdk/pages/components" type="inherit" hasUnderline>
-                component elements
-            </Link>
-            .
-        </P>
-        <Stack gap={3}>
-            <Heading id="folder-conventions" level={2}>
-                Folder conventions
-            </Heading>
-            <P>
-                SDK applications use conventional folders under <Code>src</Code>. LongLink registers these folders at
-                startup when they exist, so pages and translations can be added without writing Python route code.
-            </P>
-            <Ul>
-                <Li>
-                    <Code>src/pages</Code> contains XML page files. Files are registered recursively under{' '}
-                    <Code>/pages</Code>, so <Code>src/pages/admin/users.xml</Code> is served as{' '}
-                    <Code>/pages/admin/users.xml</Code>, listed in <Code>/pages.json</Code>, and available in the
-                    browser at <Code>/admin/users</Code>.
-                </Li>
-                <Li>
-                    <Code>src/i18n</Code> contains locale catalogs. JSON files are served under <Code>/i18n</Code>, so{' '}
-                    <Code>src/i18n/en.json</Code> is available as <Code>/i18n/en.json</Code> for the XML runtime.
-                </Li>
-            </Ul>
-            <CodeBlock language="text">{`src/
-  pages/
-    index.xml
-    dashboard.xml
-    issues.xml
-    issues/[issue].xml
-    admin/users.xml
-  i18n/
-    en.json`}</CodeBlock>
-        </Stack>
-        <Stack gap={3}>
-            <Heading id="dynamic-pages" level={2}>
-                Dynamic Pages
-            </Heading>
-            <P>
-                Dynamic browser pages come from file names. Use square brackets around one path segment to declare a
-                route parameter; the SDK keeps serving the XML file from its literal <Code>/pages</Code> path and
-                exposes the derived browser route through <Code>/pages.json</Code>.
-            </P>
-            <Ul>
-                <Li>
-                    <Code>src/pages/index.xml</Code>: browser route <Code>/</Code>.
-                </Li>
-                <Li>
-                    <Code>src/pages/issues.xml</Code>: browser route <Code>/issues</Code>.
-                </Li>
-                <Li>
-                    <Code>src/pages/issues/[issue].xml</Code>: browser route <Code>/issues/:issue</Code>.
-                </Li>
-                <Li>
-                    <Code>src/pages/issues/[issue]/comments.xml</Code>: browser route{' '}
-                    <Code>/issues/:issue/comments</Code>.
-                </Li>
-            </Ul>
-            <P>
-                Dynamic pages inherit their navigation tab from the first static segment, so <Code>/issues</Code> and{' '}
-                <Code>/issues/123</Code> keep the same <Code>Issues</Code> tab active. Matched parameters are available
-                as <Code>params</Code> in XML expressions.
-            </P>
-            <CodeBlock language="xml">{`<longlink>
-  <Query id="issue" path="/api/issues/\${params.issue}" />
-  <Heading level="1" i18n="issues.detailTitle" />
-  <Text i18n="issues.detailSummary" values="\${{ title: issue.title }}" />
-</longlink>`}</CodeBlock>
-        </Stack>
-        <Stack gap={3}>
-            <Heading id="longlink-page-and-i18n-mounts" level={2}>
-                LongLink Page and I18n Mounts
-            </Heading>
-            <P>
-                <Code>LongLink()</Code> registers XML pages and translation catalogs from conventional source folders.
-                The scaffolded application uses the defaults through <Code>LongLink()</Code>, which is equivalent to
-                mounting pages from <Code>src/pages</Code> at <Code>/pages</Code> and translations from{' '}
-                <Code>src/i18n</Code> at <Code>/i18n</Code>.
-            </P>
-            <CodeBlock language="python">{`from longlink import LongLink
-
-app = LongLink(
-    pages="/pages",
-    i18n="/i18n",
-)`}</CodeBlock>
-            <P>
-                Change the paths when your application uses different source folders. For example,{' '}
-                <Code>pages=&quot;/screens&quot;</Code> registers XML files from <Code>src/screens</Code> under{' '}
-                <Code>/screens</Code>. Set <Code>pages=None</Code> or <Code>i18n=None</Code> when the application should
-                not use the SDK-managed page or translation mounts.
-            </P>
-        </Stack>
-        <Stack gap={3}>
-            <Heading id="page-metadata" level={2}>
-                Page Metadata
-            </Heading>
-            <P>
-                The root <Code>longlink</Code> element can define page tab metadata with <Code>name</Code> and{' '}
-                <Code>icon</Code>. During page registration, the SDK reads these values and includes them in{' '}
-                <Code>/pages.json</Code> so the web runtime can render application navigation consistently.
-            </P>
-            <Ul>
-                <Li>
-                    <Code>name</Code>: readable label shown for the page tab.
-                </Li>
-                <Li>
-                    <Code>icon</Code>: Lucide icon slug shown next to the page tab label.
-                </Li>
-            </Ul>
-            <CodeBlock language="xml">{`<longlink name="Orders" icon="clipboard-list">
-  <Heading level="1" i18n="orders.title" />
-  <Text as="p" i18n="orders.description" />
-</longlink>`}</CodeBlock>
-        </Stack>
-        <Stack gap={3}>
-            <Heading id="translations" level={2}>
-                Translations
-            </Heading>
-            <P>
-                XML pages keep visible copy in translation catalogs through the <Code>i18n</Code> attribute. After
-                adding or renaming translation keys in page XML, run the generator from the app root to refresh{' '}
-                <Code>src/i18n/en.json</Code>. The generator sorts the dotted keys, preserves valid entries by exact
-                key, and adds missing entries with an empty <Code>defaultMessage</Code>.
-            </P>
-            <CodeBlock language="bash">longlink translations generate</CodeBlock>
-            <P>
-                Application catalogs use the native Astryx catalog shape. The catalog is flat: every dotted key maps to
-                an object with a required string <Code>defaultMessage</Code> and an optional string{' '}
-                <Code>description</Code>. Messages use ICU syntax for interpolation and plurals. Nested catalogs, bare
-                strings, double-brace placeholders, and plural-map entries are not supported.
-            </P>
-            <CodeBlock language="json">{`{
-  "orders.assign": {
-    "defaultMessage": "Assign to {user}",
-    "description": "Assignment action label"
-  },
-  "orders.count": {
-    "defaultMessage": "{count, plural, =0 {No orders} one {# order} other {# orders}}"
-  },
-  "orders.title": {
-    "defaultMessage": "Orders"
-  },
-  "requests.statusRoute": {
-    "defaultMessage": "PATCH /requests/'{id}'/status"
-  }
-}`}</CodeBlock>
-            <P>ICU apostrophe quoting keeps the braces in the status route literal.</P>
-        </Stack>
-        <Stack gap={3}>
-            <Heading id="state" level={2}>
-                State
-            </Heading>
-            <P>
-                Declares local reactive page state before rendering. Descendant controls can read and write the state
-                through XML value bindings.
-            </P>
-            <Stack gap={2}>
-                <Text as="p" weight="semibold">
-                    Parameters
-                </Text>
-                <Ul>
-                    <Li>id: required literal state name.</Li>
-                    <Li>
-                        Any additional attribute becomes an initial state field. JSON values are parsed when possible,
-                        otherwise the value is evaluated.
-                    </Li>
-                    <Li>State is setup-only, does not render, and cannot have children.</Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<State id="form" name="" active="true" />
-
-<FormLayout>
-  <TextInput i18n="customers.name" value="$form.name" isRequired="true" />
-  <CheckboxInput i18n="customers.active" value="$form.active" />
-</FormLayout>`}</CodeBlock>
-        </Stack>
-        <Stack gap={3}>
-            <Heading id="query" level={2}>
-                Query
-            </Heading>
-            <P>
-                Fetches JSON data for the page before rendering. The response is stored in the runtime context and can
-                be used by expressions, loops, and bindings.
-            </P>
-            <Stack gap={2}>
-                <Text as="p" weight="semibold">
-                    Parameters
-                </Text>
-                <Ul>
-                    <Li>id: required literal query name.</Li>
-                    <Li>
-                        path: required request path, resolved relative to the current application base URL and evaluated
-                        against the XML runtime scope.
-                    </Li>
-                    <Li>Query is setup-only, does not render, and cannot have children.</Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Query id="orders" path="/api/orders" />
-
-<For each="$orders.items" as="order">
-  <Text i18n="orders.row" values="\${{ number: order.number, status: order.status }}" />
-</For>`}</CodeBlock>
-        </Stack>
-        <Stack gap={3}>
-            <Heading id="action" level={2}>
-                Action
-            </Heading>
-            <P>Provides request behavior to a child Button and sends the mutation when that button is activated.</P>
-            <Stack gap={2}>
-                <Text as="p" weight="semibold">
-                    Parameters
-                </Text>
-                <Ul>
-                    <Li>action: optional application-relative request path.</Li>
-                    <Li>method: optional HTTP method. Defaults to POST.</Li>
-                    <Li>json: optional expression payload sent as JSON.</Li>
-                    <Li>form: optional expression object sent as multipart form data instead of JSON.</Li>
-                    <Li>invalidate: optional expression resolving to setup ids to refresh.</Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Action action="/api/orders/\${order.id}/complete" invalidate="\${['orders']}">
-  <Button i18n="orders.complete" />
-</Action>`}</CodeBlock>
-        </Stack>
-        <Stack gap={3}>
-            <Heading id="for" level={2}>
-                For
-            </Heading>
-            <P>
-                Repeats child XML for each item in an array. Every iteration gets a child scope with the item alias and
-                an index value.
-            </P>
-            <Stack gap={2}>
-                <Text as="p" weight="semibold">
-                    Parameters
-                </Text>
-                <Ul>
-                    <Li>each: required expression that must resolve to an array.</Li>
-                    <Li>as: required local variable name for each item.</Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<For each="$orders.items" as="order">
-  <Card>
-    <Heading level="3" i18n="orders.cardTitle" values="\${{ index: index + 1, number: order.number }}" />
-    <Badge i18n="orders.status" values="\${{ status: order.status }}" />
-  </Card>
-</For>`}</CodeBlock>
-        </Stack>
-        <Stack gap={3}>
-            <Heading id="if" level={2}>
-                if
-            </Heading>
-            <P>
-                Global conditional prop supported by rendered XML nodes. When the expression is falsy, the node and its
-                children are skipped.
-            </P>
-            <Stack gap={2}>
-                <Text as="p" weight="semibold">
-                    Parameters
-                </Text>
-                <Ul>
-                    <Li>if: expression evaluated in the current XML runtime scope.</Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Badge if="$order.blocked" variant="error" i18n="orders.blocked" />`}</CodeBlock>
-        </Stack>
-        <Stack gap={3}>
-            <Heading id="i18n" level={2}>
-                i18n
-            </Heading>
-            <P>
-                Global translation prop used by text-bearing elements. The value is a literal dotted key that exactly
-                matches a flat entry in the active locale catalog, not an expression.
-            </P>
-            <Stack gap={2}>
-                <Text as="p" weight="semibold">
-                    Parameters
-                </Text>
-                <Ul>
-                    <Li>i18n: dotted translation key.</Li>
-                    <Li>count: optional expression supplied to an ICU plural message.</Li>
-                    <Li>
-                        values: optional expression resolving to one object that fills <Code>{'{name}'}</Code>{' '}
-                        placeholders.
-                    </Li>
-                </Ul>
-            </Stack>
-            <CodeBlock language="xml">{`<Heading level="1" i18n="orders.title" />
-<Text i18n="orders.count" count="\${orders.items.length}" />
-<Button i18n="orders.assign" values="\${{ user: assignee.name }}" />`}</CodeBlock>
-        </Stack>
-        <Stack gap={3}>
-            <Heading id="expressions" level={2}>
-                Expressions
-            </Heading>
-            <P>
-                Expressions have a dedicated reference covering <Code>$</Code> bindings, <Code>{'${...}'}</Code> typed
-                values, interpolation, supported operators, safe calls, and XML escaping.
-            </P>
-            <P>
-                Read the{' '}
-                <Link href="/docs/sdk/pages/expressions" type="inherit" hasUnderline>
-                    expressions reference
-                </Link>{' '}
-                before writing complex conditions or action payloads.
-            </P>
-            <CodeBlock language="xml">{`<TextInput label="Order name" value="$form.name" />
-<Text i18n="orders.summary" values="\${{ name: form.name }}" count="\${orders.items.length}" />
-<Button isDisabled="\${form.saving || !form.name}" i18n="actions.save" />`}</CodeBlock>
-        </Stack>
+        <Text as="p">
+            Pages define the XML UI returned by SDK page handlers. Use this page as the component map for LongLink
+            Applications: start with LongLink state elements, then compose the screen with supported Astryx-backed XML
+            components.
+        </Text>
+        <Text as="p">
+            XML files live under <Code>src/pages</Code> and are registered by the LongLink SDK. Keep visible copy in{' '}
+            <Code>src/i18n</Code>, bind state with <Code>$state.path</Code>, and use expressions only at XML runtime
+            boundaries. Open a card below for that element&apos;s definition, attributes, child contract, and XML
+            example.
+        </Text>
+        {componentCategories.map((category) => (
+            <ComponentCategorySection key={category.id} category={category} />
+        ))}
     </Stack>
 );

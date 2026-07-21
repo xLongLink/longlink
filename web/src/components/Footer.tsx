@@ -10,9 +10,6 @@ import { GitHub } from '@/svg/GitHub';
 import { LinkedIn } from '@/svg/LinkedIn';
 import { Wordmark } from '@/components/Wordmark';
 
-const footerLinkClassName = 'group hover:!no-underline';
-const footerLinkContentClassName = 'group-hover:text-[var(--color-text-accent)]';
-
 /** Scrolls public pages back to the top after internal navigation. */
 function scrollToTop() {
     window.scrollTo({ left: 0, top: 0 });
@@ -34,14 +31,14 @@ export function Footer() {
                                     <li>
                                         <Link
                                             as="a"
-                                            className={footerLinkClassName}
+                                            className="group"
                                             color="secondary"
-                                            href="https://www.linkedin.com/company/swissgpu"
+                                            href="https://www.linkedin.com/company/longlink"
                                             label="LinkedIn"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
-                                            <span className={footerLinkContentClassName}>
+                                            <span className="group-hover:text-accent">
                                                 <Icon icon={LinkedIn} size="sm" />
                                             </span>
                                         </Link>
@@ -49,14 +46,14 @@ export function Footer() {
                                     <li>
                                         <Link
                                             as="a"
-                                            className={footerLinkClassName}
+                                            className="group"
                                             color="secondary"
                                             href="https://github.com/xLongLink/longlink"
                                             label="GitHub"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
-                                            <span className={footerLinkContentClassName}>
+                                            <span className="group-hover:text-accent">
                                                 <Icon icon={GitHub} size="sm" />
                                             </span>
                                         </Link>
@@ -64,14 +61,14 @@ export function Footer() {
                                     <li>
                                         <Link
                                             as="a"
-                                            className={footerLinkClassName}
+                                            className="group"
                                             color="secondary"
                                             href="https://pypi.org/project/longlink/"
                                             label="PyPI"
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
-                                            <span className={footerLinkContentClassName}>
+                                            <span className="group-hover:text-accent">
                                                 <Icon icon={Package} size="sm" />
                                             </span>
                                         </Link>
@@ -82,30 +79,30 @@ export function Footer() {
                             <Stack as="nav" direction="horizontal" gap={4} wrap="wrap" aria-label="Footer navigation">
                                 <Link
                                     href="/"
-                                    className={footerLinkClassName}
+                                    className="group"
                                     color="secondary"
                                     onClick={scrollToTop}
                                     type="supporting"
                                 >
-                                    <span className={footerLinkContentClassName}>Home</span>
+                                    <span className="group-hover:text-accent">Home</span>
                                 </Link>
                                 <Link
                                     href="/docs"
-                                    className={footerLinkClassName}
+                                    className="group"
                                     color="secondary"
                                     onClick={scrollToTop}
                                     type="supporting"
                                 >
-                                    <span className={footerLinkContentClassName}>Documentation</span>
+                                    <span className="group-hover:text-accent">Documentation</span>
                                 </Link>
                                 <Link
                                     href="/pricing"
-                                    className={footerLinkClassName}
+                                    className="group"
                                     color="secondary"
                                     onClick={scrollToTop}
                                     type="supporting"
                                 >
-                                    <span className={footerLinkContentClassName}>Pricing</span>
+                                    <span className="group-hover:text-accent">Pricing</span>
                                 </Link>
                             </Stack>
                         </Stack>
@@ -119,30 +116,30 @@ export function Footer() {
                             <Stack as="nav" direction="horizontal" gap={4} aria-label="Legal navigation">
                                 <Link
                                     href="/impressum"
-                                    className={footerLinkClassName}
+                                    className="group"
                                     color="secondary"
                                     onClick={scrollToTop}
                                     type="supporting"
                                 >
-                                    <span className={footerLinkContentClassName}>Impressum</span>
+                                    <span className="group-hover:text-accent">Impressum</span>
                                 </Link>
                                 <Link
                                     href="/terms"
-                                    className={footerLinkClassName}
+                                    className="group"
                                     color="secondary"
                                     onClick={scrollToTop}
                                     type="supporting"
                                 >
-                                    <span className={footerLinkContentClassName}>Terms</span>
+                                    <span className="group-hover:text-accent">Terms</span>
                                 </Link>
                                 <Link
                                     href="/privacy"
-                                    className={footerLinkClassName}
+                                    className="group"
                                     color="secondary"
                                     onClick={scrollToTop}
                                     type="supporting"
                                 >
-                                    <span className={footerLinkContentClassName}>Privacy</span>
+                                    <span className="group-hover:text-accent">Privacy</span>
                                 </Link>
                             </Stack>
                         </Stack>

@@ -12,7 +12,6 @@ import { useLocation, useNavigate } from 'react-router';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { fetchApiVoid } from '@/lib/api';
-import { useAuthConfig } from '@/hooks/use-auth';
 import { AuthPage } from '@/components/AuthPage';
 import { Wordmark } from '@/components/Wordmark';
 import { sanitizeRedirectPath } from '@/lib/redirects';
@@ -32,7 +31,6 @@ export default function Register() {
     const t = useTranslator();
     const location = useLocation();
     const navigate = useNavigate();
-    const authConfig = useAuthConfig();
     const nextPath = sanitizeRedirectPath(new URLSearchParams(location.search).get('next'));
     const nextQuery = new URLSearchParams({ next: nextPath }).toString();
     const welcomeTitle = (
@@ -73,33 +71,15 @@ export default function Register() {
         }
     }
 
-    // Wait for configuration before exposing the registration form.
-    if (authConfig.isLoading) {
-        return (
-            <AuthPage title={welcomeTitle} description={registerDescription}>
-                <Text as="p" color="secondary" justify="center" role="status" type="supporting">
-                    {t('auth.loadingAuthentication')}
-                </Text>
-            </AuthPage>
-        );
-    }
-
-    // Explain unavailable registration instead of rendering a form that cannot succeed.
-    if (authConfig.error || !authConfig.data?.registration_enabled) {
-        return (
-            <AuthPage
-                title={t('auth.registrationUnavailable')}
-                description={t('auth.registrationUnavailableDescription')}
-            >
-                <Button href={`/organizations?${nextQuery}`} label={t('auth.backToSignIn')} variant="secondary" />
-            </AuthPage>
-        );
-    }
-
     return (
         <AuthPage title={welcomeTitle} description={registerDescription}>
             <Stack gap={3}>
-                <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleRegister)}>
+                <Stack
+                    as="form"
+                    className="[&_.astryx-field-label>span]:hidden"
+                    gap={3}
+                    onSubmit={form.handleSubmit(handleRegister)}
+                >
                     <Controller
                         control={form.control}
                         name="name"

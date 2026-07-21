@@ -10,8 +10,6 @@ import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
-const navigationLinkContentClassName = 'group-hover:text-[var(--color-text-accent)]';
-
 /** Renders the public landing page navigation. */
 export function Navbar() {
     const t = useTranslator();
@@ -44,25 +42,25 @@ export function Navbar() {
                                     <Stack direction="horizontal" gap={4} vAlign="center">
                                         <Link
                                             href="/docs"
-                                            className="group hover:!no-underline"
+                                            className="group"
                                             color="secondary"
                                             isStandalone
                                             weight="normal"
                                         >
-                                            <span className={navigationLinkContentClassName}>Documentation</span>
+                                            <span className="group-hover:text-accent">Documentation</span>
                                         </Link>
                                         <Link
                                             href="/pricing"
-                                            className="group hover:!no-underline"
+                                            className="group"
                                             color="secondary"
                                             isStandalone
                                             weight="normal"
                                         >
-                                            <span className={navigationLinkContentClassName}>Pricing</span>
+                                            <span className="group-hover:text-accent">Pricing</span>
                                         </Link>
                                         <Link
                                             as="a"
-                                            className="group hover:!no-underline"
+                                            className="group"
                                             color="secondary"
                                             href="https://github.com/xLongLink/longlink"
                                             isStandalone
@@ -70,9 +68,7 @@ export function Navbar() {
                                             target="_blank"
                                             weight="normal"
                                         >
-                                            <span
-                                                className={`inline-flex items-center gap-1 ${navigationLinkContentClassName}`}
-                                            >
+                                            <span className="inline-flex items-center gap-1 group-hover:text-accent">
                                                 GitHub
                                                 <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
                                             </span>

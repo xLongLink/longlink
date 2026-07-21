@@ -58,15 +58,6 @@ class Accent(StrEnum):
     rose = "rose"
 
 
-class Radius(StrEnum):
-    """Supported corner radius preferences."""
-
-    none = "none"
-    small = "small"
-    medium = "medium"
-    large = "large"
-
-
 class Country(str):
     """Represent one exact ISO 3166-1 alpha-2 country code."""
 

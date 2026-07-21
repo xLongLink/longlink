@@ -13,27 +13,27 @@ const environments: { backend: React.ReactNode; icon: IconName; name: string }[]
         name: 'Testing',
         icon: 'checkDouble',
         backend: (
-            <Text>
+            <>
                 <Code>memory</Code> backend for isolated in-memory test files.
-            </Text>
+            </>
         ),
     },
     {
         name: 'Development',
         icon: 'wrench',
         backend: (
-            <Text>
+            <>
                 <Code>file</Code> backend for inspectable local files.
-            </Text>
+            </>
         ),
     },
     {
         name: 'Production',
         icon: 'success',
         backend: (
-            <Text>
+            <>
                 <Code>s3</Code> backend using application and shared prefixes in one Organization bucket.
-            </Text>
+            </>
         ),
     },
 ];
@@ -48,7 +48,7 @@ export const metadata = {
 };
 
 export const content = (
-    <Stack gap={4}>
+    <Stack gap={5}>
         <Heading id="storage" level={1}>
             Storage
         </Heading>
@@ -63,19 +63,20 @@ export const content = (
             <TableHeader>
                 <TableRow>
                     <TableHeaderCell>Environment</TableHeaderCell>
-                    <TableHeaderCell>Storage backend</TableHeaderCell>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {environments.map((environment) => (
                     <TableRow key={environment.name}>
                         <TableCell>
-                            <Stack direction="horizontal" gap={2} align="center">
-                                <Icon icon={environment.icon} size="sm" color="accent" />
-                                <Code>{environment.name}</Code>
+                            <Stack gap={1}>
+                                <Stack direction="horizontal" gap={2} align="center">
+                                    <Icon icon={environment.icon} size="sm" color="accent" />
+                                    <Text weight="semibold">{environment.name}</Text>
+                                </Stack>
+                                <Text type="supporting">{environment.backend}</Text>
                             </Stack>
                         </TableCell>
-                        <TableCell>{environment.backend}</TableCell>
                     </TableRow>
                 ))}
             </TableBody>
