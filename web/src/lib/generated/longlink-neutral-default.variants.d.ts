@@ -9,7 +9,7 @@
 export {};
 
 declare module '@astryxdesign/core/Badge' {
-  interface BadgeVariantMap {
-    'gray': true;
-  }
+    interface BadgeVariantMap {
+        gray: true;
+    }
 }

@@ -3,10 +3,10 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
+from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.models.users import User
-from src.models.types import DatabaseSSLMode
 from src.database.models.databases import DatabaseRegistry
 from src.database.models.organizations import Organization
 

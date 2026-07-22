@@ -2,8 +2,8 @@ import pytest
 from uuid import UUID
 from types import SimpleNamespace
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
-from src.utils import names
 from src.utils import mail as mail_module
+from src.utils import names
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from fastapi.testclient import TestClient

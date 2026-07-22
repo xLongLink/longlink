@@ -2,8 +2,8 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
-from longlink.utils.time import utcnow
 from src.models.types import DatabaseSSLMode
+from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
 
 # Import relationship targets only during type checking.
