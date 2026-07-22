@@ -52,6 +52,12 @@ function createDatabaseColumns(t: TranslatorFn): TableColumn<ApiDatabaseRegistry
             width: proportional(1),
             renderCell: (database) => database.username,
         },
+        {
+            key: 'sslmode',
+            header: t('labels.sslMode'),
+            width: pixel(128),
+            renderCell: (database) => database.sslmode,
+        },
     ];
 }
 

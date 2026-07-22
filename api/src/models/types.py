@@ -2,7 +2,7 @@ import re
 import pycountry
 import urllib.parse
 from enum import StrEnum
-from typing import Self, Literal
+from typing import Self
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
 from longlink.models.icons import Icon
@@ -12,8 +12,19 @@ IMAGE_NAME_COMPONENT_PATTERN = re.compile(r"^[a-z0-9]+(?:(?:[._]|__|-+)[a-z0-9]+
 IMAGE_TAG_PATTERN = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
 IMAGE_DIGEST_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9]*(?:[+._-][A-Za-z][A-Za-z0-9]*)*:[A-Za-z0-9=_+.-]+$")
 
-DatabaseSSLMode = Literal["disable", "allow", "prefer", "require", "verify-ca", "verify-full"]
-DATABASE_SSL_MODES = frozenset[DatabaseSSLMode]({"disable", "allow", "prefer", "require", "verify-ca", "verify-full"})
+
+class DatabaseSSLMode(StrEnum):
+    """Supported PostgreSQL SSL modes."""
+
+    disable = "disable"
+    allow = "allow"
+    prefer = "prefer"
+    require = "require"
+    verify_ca = "verify-ca"
+    verify_full = "verify-full"
+
+
+DATABASE_SSL_MODES = frozenset(mode.value for mode in DatabaseSSLMode)
 
 
 class StorageKind(StrEnum):

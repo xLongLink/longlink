@@ -246,13 +246,14 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     dashboard_schema = dashboard.id.hex
 
     class FakePostgres:
-        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+        def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
             """Store database registry configuration for assertions."""
 
             self.host = host
             self.port = port
             self.username = username
             self.password = password
+            assert sslmode == registry.sslmode
 
         async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
             """Return fake schema usage rows for the organization database."""
@@ -318,13 +319,14 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     )
 
     class FakePostgres:
-        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+        def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
             """Store database registry configuration for assertions."""
 
             self.host = host
             self.port = port
             self.username = username
             self.password = password
+            assert sslmode == infrastructure.database.sslmode
 
         async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
             """Raise the backend error expected by the test."""

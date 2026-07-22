@@ -6,7 +6,7 @@ from src.utils import jobs, names
 from sqlalchemy import select
 from src.operations import computes as operation_computes
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.types import Image, StorageKind
+from src.models.types import Image, StorageKind, DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus
 from src.database.session import session_scope
@@ -156,6 +156,7 @@ async def seed_local_development() -> None:
             LOCAL_DATABASE_PORT,
             "admin",
             "admin",
+            DatabaseSSLMode.disable,
             admin,
         )
     storage_registry = next((item for item in await storage_service.fetch() if item.slug == "local-storage"), None)

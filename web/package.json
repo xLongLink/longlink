@@ -5,6 +5,7 @@
     "type": "module",
     "scripts": {
         "astryx": "node node_modules/@astryxdesign/cli/bin/astryx.mjs",
+        "theme:build": "bun run astryx theme build src/lib/default-theme.ts --out src/lib/generated/longlink-neutral-default.css",
         "typecheck": "tsc -b",
         "build:api": "tsc -b && vite build --mode api && bun scripts/prerender-public-pages.ts",
         "build:api:bundle": "vite build --mode api && bun scripts/prerender-public-pages.ts",

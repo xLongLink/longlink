@@ -3,7 +3,7 @@ import urllib.parse
 from uuid import UUID
 from typing import Self
 from pydantic import Field, BaseModel, field_validator, model_validator
-from src.models.types import StorageKind
+from src.models.types import StorageKind, DatabaseSSLMode
 
 
 def exoscale_zone(endpoint_url: str) -> str:
@@ -48,6 +48,7 @@ class DatabaseConfiguration(BaseModel):
     host: str = Field(min_length=1, max_length=255)
     port: int = Field(ge=1, le=65535)
     password: str = Field(min_length=1, max_length=255)
+    sslmode: DatabaseSSLMode = DatabaseSSLMode.require
     username: str = Field(min_length=1, max_length=255)
 
     @field_validator("host")

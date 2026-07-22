@@ -6,7 +6,6 @@ from containers import DockerRuntimeContainer, wait_for_postgres, require_docker
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from longlink.shared import users as shared_users
-from src.environments import env
 from sqlalchemy.engine import URL
 from src.adapters.postgres import Postgres
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -44,6 +43,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
             port=container.port(POSTGRES_PORT),
             username="longlink",
             password="secret",
+            sslmode="disable",
         )
         wait_for_postgres(container, "longlink", "secret", "postgres", POSTGRES_PORT)
         active_user: shared_users.UserRow = {
@@ -130,7 +130,7 @@ async def test_postgres_adapter_manages_real_database_schema_runtime_role_and_cl
         assert database_url.database == organization_id.hex
         assert retried_runtime_connection == runtime_connection
         assert runtime_connection["password"] == runtime_password
-        assert runtime_connection["sslmode"] == env.DATABASE_SSLMODE
+        assert runtime_connection["sslmode"] == "disable"
         assert runtime_connection["username"].startswith("longlink_")
         assert len(runtime_connection["username"]) <= 63
         assert shared_user == {"email": "owner@example.com", "role": "owner"}

@@ -97,6 +97,7 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
                 database_registry.port,
                 database_registry.username,
                 database_registry.password,
+                database_registry.sslmode,
             )
             object_storages[organization.id] = adapters.storage(storage_registry)
             storage_registries[organization.id] = storage_registry

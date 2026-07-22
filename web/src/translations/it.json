@@ -707,6 +707,9 @@
     "labels.port": {
         "defaultMessage": "Porta"
     },
+    "labels.sslMode": {
+        "defaultMessage": "Modalità SSL"
+    },
     "labels.radius": {
         "defaultMessage": "Raggio"
     },

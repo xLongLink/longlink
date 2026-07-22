@@ -3,7 +3,6 @@ from uuid import UUID
 from typing import Self
 from pydantic import Field, model_validator
 from src.version import PLATFORM_VERSION_PATTERN
-from src.models.types import DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEVELOPMENT = os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
@@ -41,9 +40,6 @@ class Env(BaseSettings):
     # Control plane database URL
     DATABASE_URL: str
 
-    # PostgreSQL adapter defaults.
-    DATABASE_SSLMODE: DatabaseSSLMode = "require"
-
     # Reconciliation
     RECONCILE_INTERVAL_SECONDS: int = Field(default=300, ge=30, le=86400)
 
@@ -55,6 +51,7 @@ class Env(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(".env.sample", ".env") if DEVELOPMENT else (".env",),
         env_file_encoding="utf-8",
+        extra="ignore",
     )
 
     @model_validator(mode="after")

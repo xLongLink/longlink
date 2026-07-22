@@ -39,6 +39,7 @@ async def create_compute_infrastructure(
             host="postgres.example",
             port=5432,
             password="control-password",
+            sslmode="disable",
             username="longlink",
         )
         storage_registry = StorageRegistry(
@@ -215,7 +216,7 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
     fake_database = FakeDatabase()
     fake_storage = FakeStorage()
 
-    def database_adapter(host: str, port: int, username: str, password: str) -> FakeDatabase:
+    def database_adapter(host: str, port: int, username: str, password: str, sslmode: str) -> FakeDatabase:
         """Return the test database adapter for the selected registry."""
 
         assert (host, port, username, password) == (
@@ -224,6 +225,7 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
             database_registry.username,
             database_registry.password,
         )
+        assert sslmode == database_registry.sslmode
         return fake_database
 
     def storage_adapter(registry: StorageRegistry) -> FakeStorage:

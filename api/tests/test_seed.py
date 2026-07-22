@@ -130,6 +130,7 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
         seed.LOCAL_DATABASE_PORT,
         "admin",
         "admin",
+        seed.DatabaseSSLMode.disable,
         user,
     )
     assert calls["storage"] == (

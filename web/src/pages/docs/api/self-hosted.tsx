@@ -88,24 +88,8 @@ export const content = (
                             </Stack>
                             <Text type="supporting">
                                 Control-plane database URL used by the API and Alembic migrations. PostgreSQL URLs
-                                preserve <Code>sslmode</Code> when they are normalized for asyncpg.
-                            </Text>
-                        </Stack>
-                    </TableCell>
-                </TableRow>
-                <TableRow>
-                    <TableCell>
-                        <Stack gap={1}>
-                            <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-                                <Code>DATABASE_SSLMODE</Code>
-                                <Text type="supporting">
-                                    Default: <Code>require</Code>
-                                </Text>
-                            </Stack>
-                            <Text type="supporting">
-                                PostgreSQL SSL mode used when <Code>DATABASE_URL</Code> omits one and when the API
-                                provisions organization databases and application schemas. The same mode is injected
-                                into managed LongLink Application database connections.
+                                preserve <Code>sslmode</Code> when they are normalized for asyncpg, and default to{' '}
+                                <Code>require</Code> when no SSL mode is present.
                             </Text>
                         </Stack>
                     </TableCell>

@@ -11,7 +11,7 @@ POSTGRESQL_DRIVER_NAMES = {
 }
 
 
-def database(database_url: str, default_sslmode: DatabaseSSLMode = "require") -> str:
+def database(database_url: str, default_sslmode: DatabaseSSLMode = DatabaseSSLMode.require) -> str:
     """Normalize the control database URL and translate PostgreSQL SSL mode for asyncpg."""
 
     parsed_url = sqlalchemy.engine.make_url(database_url)
@@ -49,7 +49,7 @@ def database(database_url: str, default_sslmode: DatabaseSSLMode = "require") ->
 
         # Apply the deployment default when the URL does not select a mode explicitly.
         else:
-            parsed_url = parsed_url.update_query_dict({"ssl": default_sslmode})
+            parsed_url = parsed_url.update_query_dict({"ssl": default_sslmode.value})
 
         return parsed_url.render_as_string(hide_password=False)
 

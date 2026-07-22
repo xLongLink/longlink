@@ -13,6 +13,7 @@ const accentSchema = z.enum(ACCENT_VALUES);
 const radiusSchema = z.number().min(MIN_RADIUS).max(MAX_RADIUS);
 const iconNameSchema = z.enum(ICON_NAMES).nullable();
 const languageSchema = z.enum(LANGUAGE_VALUES);
+const databaseSslModeSchema = z.enum(['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full']);
 
 export const apiAuthConfigSchema = z.object({
     github_enabled: z.boolean(),
@@ -169,6 +170,7 @@ export const apiDatabaseRegistrySchema = z.object({
     slug: z.string(),
     host: z.string(),
     port: z.number(),
+    sslmode: databaseSslModeSchema,
     username: z.string(),
     created_at: z.string(),
     created_by: nullableUserSummarySchema,

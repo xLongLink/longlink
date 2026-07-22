@@ -50,6 +50,7 @@ async def create_ready_infrastructure(
             port=5432,
             username="admin",
             password="secret",
+            sslmode="disable",
             created_id=owner.id,
             updated_id=owner.id,
         )

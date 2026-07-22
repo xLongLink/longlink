@@ -1,4 +1,4 @@
-import { StrictMode } from 'react';
+import { StrictMode, useLayoutEffect } from 'react';
 import '@/index.css';
 import { createRoot, hydrateRoot } from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -11,7 +11,14 @@ import App, { initializeApp } from './App';
 
 /** Applies API-mode translations from the authenticated user preferences. */
 function ApiAppShell() {
-    const { language, theme, accent, radius } = useUserProfile();
+    const { language, theme, accent, radius, isLoading } = useUserProfile();
+
+    // Keep cached first-paint overrides until the server-backed theme is ready.
+    useLayoutEffect(() => {
+        if (!isLoading) {
+            document.getElementById('longlink-theme-bootstrap')?.remove();
+        }
+    }, [isLoading]);
 
     return (
         <I18nProvider language={language}>
@@ -24,6 +31,13 @@ function ApiAppShell() {
 
 /** Renders the bundle-specific app shell. */
 function AppShell() {
+    // SDK mode has no user profile query to replace cached Platform preferences.
+    useLayoutEffect(() => {
+        if (import.meta.env.MODE === 'sdk') {
+            document.getElementById('longlink-theme-bootstrap')?.remove();
+        }
+    }, []);
+
     // SDK mode renders the local app shell; authentication is owned by the LongLink Platform.
     if (import.meta.env.MODE === 'sdk') {
         return (

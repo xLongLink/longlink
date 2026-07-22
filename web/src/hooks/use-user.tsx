@@ -1,10 +1,10 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import type { ApiUserListItem, ApiUserOrganizationMembership, ApiUserProfile } from '@/lib/types';
 import { useApiQuery } from '@/hooks/use-api';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
-import { DEFAULT_RADIUS, type Accent, type Theme } from '@/lib/theme';
+import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
 import { accountsQueryKey, userOrganizationsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 import {
     apiUserListItemSchema,
@@ -19,6 +19,8 @@ export type User = ApiUserProfile;
 type UserUpdate = Partial<Pick<User, 'name' | 'avatar' | 'theme' | 'accent' | 'radius' | 'language'>>;
 
 type UserPreferences = Pick<User, 'theme' | 'accent' | 'radius' | 'language'>;
+
+type StoredThemePreferences = Pick<User, 'theme' | 'accent' | 'radius'>;
 
 type UserQueryResult = UseQueryResult<User | null, Error>;
 
@@ -49,6 +51,11 @@ const DEFAULT_USER_PREFERENCES = {
     language: 'en',
 } as const satisfies UserPreferences;
 
+/** Caches non-sensitive theme preferences for the next page's first paint. */
+function storeThemePreferences({ theme, accent, radius }: StoredThemePreferences): void {
+    localStorage.setItem(THEME_PREFERENCES_KEY, JSON.stringify({ theme, accent, radius }));
+}
+
 /** Hook that fetches the current user. */
 function useUserQuery() {
     return useApiQuery<User | null>('/api/me', {
@@ -71,6 +78,15 @@ function useUserOrganizationsQuery(user: User | null | undefined) {
 /** Provides the authenticated user query to the app tree. */
 export function UserProvider({ children }: { children: React.ReactNode }) {
     const user = useUserQuery();
+
+    // Synchronize the browser cache with the server-backed active session.
+    useEffect(() => {
+        if (user.data) {
+            storeThemePreferences(user.data);
+        } else if (user.data === null) {
+            localStorage.removeItem(THEME_PREFERENCES_KEY);
+        }
+    }, [user.data]);
 
     return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
 }
@@ -133,6 +149,7 @@ export function useUser() {
     const signOut = async () => {
         await fetchApiVoid('/api/auth/logout', { method: 'POST' });
         queryClient.clear();
+        localStorage.removeItem(THEME_PREFERENCES_KEY);
         window.location.assign('/organizations');
     };
 
@@ -162,6 +179,7 @@ export function useUser() {
         queryClient.setQueryData(accountsQueryKey(), savedAccounts);
         queryClient.setQueryData(userProfileQueryKey(), null);
         queryClient.setQueryData(userOrganizationsQueryKey(), []);
+        localStorage.removeItem(THEME_PREFERENCES_KEY);
     };
 
     return {
@@ -190,6 +208,7 @@ export function useUpdateUser() {
             );
         },
         onSuccess: (user) => {
+            storeThemePreferences(user);
             queryClient.setQueryData(userProfileQueryKey(), user);
         },
     });
