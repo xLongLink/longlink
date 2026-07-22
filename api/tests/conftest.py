@@ -28,6 +28,7 @@ for provider_setting in (
 
 from main import app
 from sqlmodel import SQLModel
+from src.auth import access_token_digest
 from src.database import session
 from src.environments import env
 from src.models.roles import PlatformRoles
@@ -120,9 +121,9 @@ async def users() -> tuple[User, User, User]:
         db_session.add_all([user1, user2, user3])
         db_session.add_all(
             [
-                AccessToken(token=str(user1.id), user_id=user1.id),
-                AccessToken(token=str(user2.id), user_id=user2.id),
-                AccessToken(token=str(user3.id), user_id=user3.id),
+                AccessToken(token=access_token_digest(str(user1.id)), user_id=user1.id),
+                AccessToken(token=access_token_digest(str(user2.id)), user_id=user2.id),
+                AccessToken(token=access_token_digest(str(user3.id)), user_id=user3.id),
             ]
         )
         await db_session.commit()

@@ -90,10 +90,10 @@ def upgrade() -> None:
     op.create_index("ix_oauth_accounts_oauth_name", "oauth_accounts", ["oauth_name"])
     op.create_index("ix_oauth_accounts_user_id", "oauth_accounts", ["user_id"])
 
-    # Store revocable browser sessions using FastAPI Users' database strategy.
+    # Store revocable browser-session digests using FastAPI Users' database strategy.
     op.create_table(
         "access_tokens",
-        sa.Column("token", sa.String(length=43), nullable=False),
+        sa.Column("token", sa.String(length=64), nullable=False),
         sa.Column("user_id", sa.Uuid(), nullable=False),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
@@ -157,6 +157,7 @@ def upgrade() -> None:
         sa.Column("host", sa.String(length=255), nullable=False),
         sa.Column("port", sa.Integer(), nullable=False),
         sa.Column("password", sa.String(length=255), nullable=False),
+        sa.Column("sslmode", sa.Enum("disable", "allow", "prefer", "require", "verify-ca", "verify-full", name="databasesslmode", native_enum=False), nullable=False),
         sa.Column("username", sa.String(length=255), nullable=False),
         sa.Column("deleted_id", sa.Uuid(), nullable=True),
         sa.ForeignKeyConstraint(

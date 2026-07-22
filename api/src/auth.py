@@ -1,4 +1,7 @@
 import jwt
+import hmac
+import hashlib
+import secrets
 from uuid import UUID
 from typing import cast
 from fastapi import Depends, Request, Response, HTTPException
@@ -22,6 +25,13 @@ from fastapi_users.authentication.strategy.db import DatabaseStrategy
 from fastapi_users_db_sqlalchemy.access_token import SQLAlchemyAccessTokenDatabase
 
 AUTH_COOKIE = "longlink_auth"
+
+
+def access_token_digest(token: str) -> str:
+    """Return the stored digest for one browser access token."""
+
+    # Keep the database value deterministic while avoiding raw bearer-token storage.
+    return hmac.new(env.SESSION_KEY.encode("utf-8"), token.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
 class SessionAccountsService:
@@ -137,6 +147,32 @@ async def get_access_token_database(
     yield SQLAlchemyAccessTokenDatabase(session, AccessToken)
 
 
+class HashedDatabaseStrategy(DatabaseStrategy[User, UUID, AccessToken]):
+    """Store only HMAC digests for revocable browser access tokens."""
+
+    async def read_token(self, token: str | None, user_manager: BaseUserManager[User, UUID]) -> User | None:
+        """Read one access token after hashing the browser cookie value."""
+
+        # Anonymous requests have no cookie value to hash or load.
+        if token is None:
+            return None
+        return await super().read_token(access_token_digest(token), user_manager)
+
+    async def write_token(self, user: User) -> str:
+        """Create one access token while storing only its digest."""
+
+        # Keep the raw token client-side and persist only the lookup digest.
+        token = secrets.token_urlsafe()
+        await self.database.create({"token": access_token_digest(token), "user_id": user.id})
+        return token
+
+    async def destroy_token(self, token: str, user: User) -> None:
+        """Destroy one access token after hashing the browser cookie value."""
+
+        # Convert the bearer token to its stored database identity before deletion.
+        await super().destroy_token(access_token_digest(token), user)
+
+
 class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
     """Connect FastAPI Users lifecycle events to LongLink account policy."""
 
@@ -244,10 +280,10 @@ oauth_cookie_transport = OAuthCookieTransport(
 
 def get_database_strategy(
     access_tokens: SQLAlchemyAccessTokenDatabase[AccessToken] = Depends(get_access_token_database),
-) -> DatabaseStrategy[User, UUID, AccessToken]:
+) -> HashedDatabaseStrategy:
     """Return the revocable database-token authentication strategy."""
 
-    return DatabaseStrategy(access_tokens, lifetime_seconds=env.AUTH_SESSION_LIFETIME_SECONDS)
+    return HashedDatabaseStrategy(access_tokens, lifetime_seconds=env.AUTH_SESSION_LIFETIME_SECONDS)
 
 
 cookie_backend = AuthenticationBackend(name="cookie", transport=cookie_transport, get_strategy=get_database_strategy)

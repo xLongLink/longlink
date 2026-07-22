@@ -2,7 +2,7 @@ from src import adapters
 from uuid import UUID, uuid4
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authsupport
-from src.utils import names, roles
+from src.utils import mail, names, roles
 from src.utils import storage as storage_utils
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
@@ -221,7 +221,8 @@ async def create_organization_invitation(
     if roles.rank(payload.role) > roles.rank(membership.role):
         raise HTTPException(status_code=403, detail="Invitation role permissions required")
 
-    await invitations.create(membership.organization_id, payload.email, payload.role, user)
+    invitation = await invitations.create(membership.organization_id, payload.email, payload.role, user)
+    await mail.send_organization_invitation_email(invitation.email, membership.organization.name, invitation.role)
 
 
 @router.patch("/api/organizations/{organization_id}/members/{member_id}", status_code=204)
