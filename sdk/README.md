@@ -30,7 +30,7 @@ make sdk
 
 This builds the SDK web bundle, recreates `sdk/dev`, links that generated app to the local SDK source, and starts the SDK development app. Do not keep manual changes in `sdk/dev`; it is recreated by this command.
 
-> Requirements: Python 3.14 or newer, `uv`, and Docker if you want to build an image. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for more details.
+> Requirements: Python 3.12 or newer, `uv`, and Docker if you want to build an image. See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for more details.
 
 <br/>
 

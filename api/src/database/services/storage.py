@@ -60,29 +60,20 @@ async def create(
     kind: StorageKind,
     endpoint_url: str,
     runtime_endpoint_url: str | None,
-    access_key_id: str | None,
-    secret_access_key: str | None,
     user: User,
 ) -> StorageRegistry:
-    """Register one object-storage backend."""
+    """Register one Exoscale SOS backend."""
 
-    # Root MinIO credentials are a local-development convenience, not a production provisioning contract.
-    if kind == StorageKind.minio and not env.DEVELOPMENT:
-        raise HTTPException(status_code=409, detail="MinIO storage is supported only for local development")
-    if kind == StorageKind.minio and (access_key_id is None or secret_access_key is None):
-        raise ValueError("MinIO storage requires registry credentials")
-    if kind == StorageKind.exoscale:
-        env.exoscale()
+    # Fail registration when the Platform cannot provision Exoscale resources.
+    env.exoscale()
 
-    # Persist provisioning credentials only at the registry control-plane boundary.
+    # Persist provider routing while credentials remain in Platform settings.
     async with session_scope() as session:
         registry = StorageRegistry(
             kind=kind,
             name=name,
             slug=slug,
             endpoint_url=endpoint_url,
-            access_key_id=access_key_id,
-            secret_access_key=secret_access_key,
             runtime_endpoint_url=runtime_endpoint_url or endpoint_url,
             created_id=user.id,
             updated_id=user.id,

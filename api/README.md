@@ -40,6 +40,10 @@ The API folder contains the LongLink Platform API. It manages authentication, pe
 
 ## Development
 
+Create `api/.env` with the Exoscale provisioning values shown in `.env.sample`. Local seeding requires
+`EXOSCALE_API_KEY`, `EXOSCALE_API_SECRET`, `EXOSCALE_ORGANIZATION_ID`, and `EXOSCALE_STORAGE_ENDPOINT_URL` so storage
+provisioning follows the same SOS and IAM path as production.
+
 Run from `api/`:
 
 ```bash

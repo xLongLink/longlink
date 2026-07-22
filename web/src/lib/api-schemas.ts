@@ -182,11 +182,10 @@ export const apiDatabaseRegistrySchema = z.object({
 
 export const apiStorageRegistrySchema = z.object({
     id: z.string(),
-    kind: z.string(),
+    kind: z.literal('exoscale'),
     name: z.string(),
     slug: z.string(),
     endpoint_url: z.string(),
-    access_key_id: z.string().nullable(),
     runtime_endpoint_url: z.string(),
     created_at: z.string(),
     created_by: nullableUserSummarySchema,

@@ -43,13 +43,11 @@ async def create_compute_infrastructure(
             username="longlink",
         )
         storage_registry = StorageRegistry(
-            kind=StorageKind.minio,
+            kind=StorageKind.exoscale,
             name=f"{slug.title()} storage",
             slug=f"{slug}-storage",
-            endpoint_url="http://minio.example:9000",
-            runtime_endpoint_url="http://minio:9000",
-            access_key_id="control-access",
-            secret_access_key="control-secret",
+            endpoint_url="https://sos-ch-gva-2.exo.io",
+            runtime_endpoint_url="https://sos-ch-gva-2.exo.io",
         )
         session.add_all([compute_registry, database_registry, storage_registry])
         await session.commit()
@@ -286,9 +284,10 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
         "LONGLINK_DATABASE_SSLMODE": "disable",
         "LONGLINK_DATABASE_USERNAME": "runtime-user",
         "LONGLINK_STORAGE_BUCKET": names.organization_bucket(active_organization.id),
-        "LONGLINK_STORAGE_ENDPOINT_URL": "http://minio:9000",
+        "LONGLINK_STORAGE_ENDPOINT_URL": "https://sos-ch-gva-2.exo.io",
         "LONGLINK_STORAGE_PASSWORD": "runtime-secret",
         "LONGLINK_STORAGE_PREFIX": names.application_storage_prefix(active_application.id),
+        "LONGLINK_STORAGE_REGION": "ch-gva-2",
         "LONGLINK_STORAGE_SHARED_PREFIX": names.shared_storage_prefix(),
         "LONGLINK_STORAGE_USERNAME": "runtime-access",
     }

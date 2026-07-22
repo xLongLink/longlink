@@ -20,7 +20,7 @@ dependencies = [
     "sqlmodel>=0.0.39",
     "uvicorn>=0.51.0",
 ]
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 authors = [
     {name = "LongLink SAGL", email = "info@longlink.ch"}
 ]
@@ -35,7 +35,7 @@ classifiers = [
   "Programming Language :: Python",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.12",
 ]
 
 [project.optional-dependencies]
@@ -96,7 +96,7 @@ longlink = [".static/new/.venv", ".static/new/.venv/*", ".static/new/.venv/**"]
 
 [tool.ruff]
 line-length = 140
-target-version = "py314"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["UP", "D300"]
@@ -123,7 +123,7 @@ omit = [
 
 [tool.pyright]
 typeCheckingMode = "basic"
-pythonVersion = "3.14"
+pythonVersion = "3.12"
 venvPath = "."
 venv = ".venv"
 include = ["longlink", "tests"]

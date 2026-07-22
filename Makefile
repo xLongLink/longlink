@@ -165,8 +165,9 @@ up:
 	@printf "Local registry is ready.\n"
 
 
-# Stop local services, remove the cluster, and clean Python caches.
+# Remove remote development resources, stop local services, and clean local state.
 down:
+	@if [ -f api/dev.db ]; then cd api && DEVELOPMENT=true uv run --locked python seed.py --cleanup; fi
 	rm -f api/dev.db api/kubeconfig.yaml
 	-docker compose -f dev/compose.yml down --volumes --remove-orphans
 	-k3d cluster delete compute

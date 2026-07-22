@@ -32,7 +32,7 @@ class S3:
         self,
         access_key_id: str | None = None,
         secret_access_key: str | None = None,
-    ) -> AbstractAsyncContextManager[S3Client]:
+    ) -> "AbstractAsyncContextManager[S3Client]":
         """Create an async S3 client context manager for one credential pair."""
 
         return cast(
@@ -111,7 +111,7 @@ class S3:
                 if error.get("Code") not in {"NoSuchBucket", "NoSuchKey", "404"}:
                     raise
 
-    async def _delete_objects(self, client: S3Client, bucket: str, objects: list[ObjectIdentifierTypeDef]) -> None:
+    async def _delete_objects(self, client: "S3Client", bucket: str, objects: "list[ObjectIdentifierTypeDef]") -> None:
         """Delete one object batch and reject S3's successful response when individual deletions failed."""
 
         # Bulk deletes report per-object failures in a successful HTTP response.

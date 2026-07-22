@@ -40,7 +40,7 @@ class K3SRuntimeContainer(DockerRuntimeContainer):
             tmpfs={"/run": "", "/var/run": ""},
         )
 
-    def start(self) -> K3SRuntimeContainer:
+    def start(self) -> "K3SRuntimeContainer":
         """Start k3s and wait until the server reports readiness."""
 
         super().start()

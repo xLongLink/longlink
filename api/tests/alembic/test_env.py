@@ -38,7 +38,7 @@ class _FakeConfig:
 class _FakeTransaction:
     """Minimal sync transaction context manager for Alembic tests."""
 
-    def __enter__(self) -> _FakeTransaction:
+    def __enter__(self) -> "_FakeTransaction":
         """Enter the fake transaction context."""
 
         return self
@@ -52,7 +52,7 @@ class _FakeTransaction:
 class _FakeConnection:
     """Minimal async connection used by the Alembic engine stub."""
 
-    async def __aenter__(self) -> _FakeConnection:
+    async def __aenter__(self) -> "_FakeConnection":
         """Enter the fake async connection context."""
 
         return self

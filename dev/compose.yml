@@ -9,17 +9,6 @@ services:
     ports:
       - "15432:5432"
 
-  minio:
-    image: minio/minio:latest
-    restart: unless-stopped
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: admin
-      MINIO_ROOT_PASSWORD: adminadmin
-    ports:
-      - "19000:9000"
-      - "19001:9001"
-
   registry:
     image: registry:3
     restart: unless-stopped

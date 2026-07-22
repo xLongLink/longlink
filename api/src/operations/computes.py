@@ -6,7 +6,7 @@ from src.utils import jobs, names, images
 from src.logger import logger
 from src.version import platform_version_key
 from src.environments import env
-from src.models.types import Image, StorageKind
+from src.models.types import Image
 from src.models.statuses import ApplicationStatus, OrganizationStatus
 from src.database.services import compute, storage, database, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
@@ -194,11 +194,10 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
                 "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.runtime_endpoint_url,
                 "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
                 "LONGLINK_STORAGE_PREFIX": prefix,
+                "LONGLINK_STORAGE_REGION": exoscale_zone(storage_registry.runtime_endpoint_url),
                 "LONGLINK_STORAGE_SHARED_PREFIX": shared_prefix,
                 "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
             }
-            if storage_registry.kind == StorageKind.exoscale:
-                envs["LONGLINK_STORAGE_REGION"] = exoscale_zone(storage_registry.runtime_endpoint_url)
             desired_applications.append(
                 DesiredApplication(
                     id=application.id,

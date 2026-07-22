@@ -27,7 +27,7 @@ Specific workflows can be customized through code, built quickly with modern AI-
 
 ## Getting Started
 
-Requirements: `Python 3.14` or newer.
+Requirements: `Python 3.12` or newer.
 
 ```bash
 uvx longlink init --folder <folder>
@@ -61,6 +61,10 @@ longlink dev
 
 ## Development
 
+Configure `EXOSCALE_API_KEY`, `EXOSCALE_API_SECRET`, `EXOSCALE_ORGANIZATION_ID`, and
+`EXOSCALE_STORAGE_ENDPOINT_URL` in `api/.env`. Development uses Exoscale SOS and IAM so storage behavior matches production.
+PostgreSQL and the OCI registry continue to run locally.
+
 Work on the LongLink Platform:
 
 ```bash
@@ -80,6 +84,8 @@ Cleanup
 ```bash
 make down
 ```
+
+`make down` removes the seeded Exoscale bucket and Application IAM credentials before deleting local Platform state.
 
 <br />
 <br />

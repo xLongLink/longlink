@@ -3,7 +3,6 @@ import urllib.parse
 from typing import TYPE_CHECKING, TypedDict, cast
 from contextlib import AbstractAsyncContextManager
 from src.environments import env
-from src.models.types import StorageKind
 from src.models.infrastructure import exoscale_zone
 from src.database.models.storages import StorageRegistry
 
@@ -19,7 +18,7 @@ class StorageUsage(TypedDict):
     object_count: int
 
 
-def client(registry: StorageRegistry) -> AbstractAsyncContextManager[S3Client]:
+def client(registry: StorageRegistry) -> "AbstractAsyncContextManager[S3Client]":
     """Create an async S3 client context manager for one storage registry."""
 
     # Derive TLS behavior from the endpoint URL so registry data has one source of truth.
@@ -27,16 +26,9 @@ def client(registry: StorageRegistry) -> AbstractAsyncContextManager[S3Client]:
     if parsed_url.scheme not in {"http", "https"}:
         raise ValueError("Storage endpoint URL must use http or https")
 
-    # Resolve provider credentials from their authoritative control-plane boundary.
-    region = None
-    if registry.kind == StorageKind.exoscale:
-        region = exoscale_zone(registry.endpoint_url)
-        access_key_id, secret_access_key, _organization_id = env.exoscale()
-    else:
-        if registry.access_key_id is None or registry.secret_access_key is None:
-            raise ValueError("Storage registry credentials are missing")
-        access_key_id = registry.access_key_id
-        secret_access_key = registry.secret_access_key
+    # Resolve Exoscale credentials from their authoritative control-plane boundary.
+    region = exoscale_zone(registry.endpoint_url)
+    access_key_id, secret_access_key, _organization_id = env.exoscale()
 
     return cast(
         "AbstractAsyncContextManager[S3Client]",

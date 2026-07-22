@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } f
 
 export const metadata = {
     toc: [{ id: 'api-environment-variables', label: 'API Environment Variables' }],
-    lastUpdated: '2026-07-20',
+    lastUpdated: '2026-07-22',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/pages/docs/api/self-hosted.tsx',
 };
 
@@ -18,7 +18,7 @@ export const content = (
         </Heading>
         <Text as="p">
             Self-hosted mode runs the LongLink Platform and managed application workloads on infrastructure you operate.
-            You register Kubernetes compute, PostgreSQL, and S3-compatible object storage independently, then assign one
+            You register Kubernetes compute, PostgreSQL, and Exoscale SOS object storage independently, then assign one
             registry of each kind to every Organization. The Kubernetes service must implement{' '}
             <Code>type: LoadBalancer</Code>; LongLink derives the public TLS gateway address and reconciles Organization
             and Application resources asynchronously. The cluster CNI must enforce Kubernetes NetworkPolicy because
@@ -61,6 +61,23 @@ export const content = (
                             <Text type="supporting">
                                 Interval used to enqueue compute drift repair. Multiple Platform containers may scan
                                 safely; the Operation queue coalesces concurrent requests per compute target.
+                            </Text>
+                        </Stack>
+                    </TableCell>
+                </TableRow>
+                <TableRow>
+                    <TableCell>
+                        <Stack gap={1}>
+                            <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
+                                <Text>
+                                    <Code>EXOSCALE_API_KEY</Code>, <Code>EXOSCALE_API_SECRET</Code>, and{' '}
+                                    <Code>EXOSCALE_ORGANIZATION_ID</Code>
+                                </Text>
+                                <Text type="supporting">Required for Exoscale storage</Text>
+                            </Stack>
+                            <Text type="supporting">
+                                Platform-only provisioning identity used to manage SOS buckets and Application-scoped
+                                IAM credentials. LongLink does not inject these credentials into Application runtimes.
                             </Text>
                         </Stack>
                     </TableCell>

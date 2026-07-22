@@ -4,6 +4,7 @@ from typing import Self
 from pydantic import Field, model_validator
 from src.version import PLATFORM_VERSION_PATTERN
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from src.models.infrastructure import exoscale_zone
 
 DEVELOPMENT = os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
 
@@ -47,6 +48,7 @@ class Env(BaseSettings):
     EXOSCALE_API_KEY: str | None = None
     EXOSCALE_API_SECRET: str | None = None
     EXOSCALE_ORGANIZATION_ID: UUID | None = None
+    EXOSCALE_STORAGE_ENDPOINT_URL: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=(".env.sample", ".env") if DEVELOPMENT else (".env",),
@@ -77,6 +79,15 @@ class Env(BaseSettings):
             raise ValueError("Exoscale provisioning requires EXOSCALE_API_KEY, EXOSCALE_API_SECRET, and EXOSCALE_ORGANIZATION_ID")
 
         return self.EXOSCALE_API_KEY, self.EXOSCALE_API_SECRET, self.EXOSCALE_ORGANIZATION_ID
+
+    def exoscale_storage_endpoint(self) -> str:
+        """Return the Exoscale SOS endpoint used by local development seeding."""
+
+        # Local seeding requires an explicit production-equivalent SOS zone.
+        if self.EXOSCALE_STORAGE_ENDPOINT_URL is None:
+            raise ValueError("Local seeding requires EXOSCALE_STORAGE_ENDPOINT_URL")
+        exoscale_zone(self.EXOSCALE_STORAGE_ENDPOINT_URL)
+        return self.EXOSCALE_STORAGE_ENDPOINT_URL
 
 
 env = Env(**{})

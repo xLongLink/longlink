@@ -3,7 +3,7 @@ name = "longlink-app"
 version = "0.0.0"
 description = "Minimal LongLink office operations application."
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
   "longlink",
   "python-multipart",

@@ -1,10 +1,12 @@
 import asyncio
+import argparse
 import subprocess
 from pathlib import Path
 from sqlmodel import col
 from src.utils import jobs, names
-from sqlalchemy import select
+from sqlalchemy import text, select, inspect
 from src.operations import computes as operation_computes
+from src.environments import env
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.types import Image, StorageKind, DatabaseSSLMode
 from longlink.utils.time import utcnow
@@ -164,11 +166,9 @@ async def seed_local_development() -> None:
         storage_registry = await storage_service.create(
             "local storage",
             "local-storage",
-            StorageKind.minio,
-            "http://localhost:19000",
-            "http://host.k3d.internal:19000",
-            "admin",
-            "adminadmin",
+            StorageKind.exoscale,
+            env.exoscale_storage_endpoint(),
+            None,
             admin,
         )
 
@@ -232,11 +232,64 @@ async def seed_local_development() -> None:
     await reconcile_until_complete(compute_registry.id)
 
 
-def main() -> None:
-    """Seed local development resources from a synchronous entrypoint."""
+async def cleanup_local_development() -> None:
+    """Delete seeded provider resources before local Platform state is removed."""
 
-    asyncio.run(seed_local_development())
-    print(f"Local administrator: {LOCAL_ADMIN_EMAIL} / {LOCAL_ADMIN_PASSWORD}")
+    # Older local databases used disposable local storage and require no remote cleanup.
+    async with session_scope() as session:
+        connection = await session.connection()
+        tables = await connection.run_sync(lambda sync_connection: inspect(sync_connection).get_table_names())
+        if "storage_registries" not in tables:
+            return
+        result = await session.execute(
+            text("SELECT kind FROM storage_registries WHERE slug = :slug"),
+            {"slug": "local-storage"},
+        )
+        storage_kind = result.scalar_one_or_none()
+    if storage_kind != StorageKind.exoscale.value:
+        print("No Exoscale development resources require cleanup.")
+        return
+
+    # Locate the seeded compute aggregate, including cleanup already in progress.
+    compute_registry = next(
+        (item for item in await compute_service.fetch(include_deleted=True) if item.slug == "local-compute"),
+        None,
+    )
+    if compute_registry is None:
+        return
+    organization = next(
+        (item for item in await organization_service.for_compute(compute_registry.id, include_deleted=True) if item.slug == LOCAL_ORG),
+        None,
+    )
+    if organization is None:
+        return
+
+    # Tombstone active seeded state or resume its queued cleanup before deleting the local database.
+    if organization.deleted_at is None:
+        async with session_scope() as session:
+            result = await session.execute(select(User).where(col(User.email) == LOCAL_ADMIN_EMAIL))
+            admin = result.scalar_one_or_none()
+        if admin is None:
+            raise RuntimeError("Local administrator is missing; Exoscale resources were not removed")
+        await organization_service.soft_delete(organization.id, admin)
+    else:
+        await operations.enqueue(compute_registry.id)
+    await reconcile_until_complete(compute_registry.id)
+    print("Exoscale development bucket and Application credentials removed.")
+
+
+def main() -> None:
+    """Seed or clean local development resources from a synchronous entrypoint."""
+
+    # Cleanup runs through reconciliation so remote resources disappear before local state.
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cleanup", action="store_true")
+    arguments = parser.parse_args()
+    if arguments.cleanup:
+        asyncio.run(cleanup_local_development())
+    else:
+        asyncio.run(seed_local_development())
+        print(f"Local administrator: {LOCAL_ADMIN_EMAIL} / {LOCAL_ADMIN_PASSWORD}")
 
 
 if __name__ == "__main__":

@@ -13,10 +13,7 @@ if TYPE_CHECKING:
 
 
 class StorageRegistry(SQLModel, table=True):
-    """Persist one object-storage backend available to Organizations.
-
-    Reconciliation manages Organization buckets, scoped Application credentials, and local development access through this configuration.
-    """
+    """Persist one Exoscale SOS backend available to Organizations."""
 
     __tablename__: ClassVar[str] = "storage_registries"
 
@@ -32,8 +29,6 @@ class StorageRegistry(SQLModel, table=True):
 
     # Connection
     endpoint_url: str = Field(max_length=255)
-    access_key_id: str | None = Field(default=None, max_length=255)
-    secret_access_key: str | None = Field(default=None, max_length=255)
     runtime_endpoint_url: str = Field(max_length=255)
 
     # Audit

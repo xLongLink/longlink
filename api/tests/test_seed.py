@@ -102,6 +102,7 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
         return completed
 
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
+    monkeypatch.setattr(env, "EXOSCALE_STORAGE_ENDPOINT_URL", "https://sos-ch-gva-2.exo.io")
     monkeypatch.setattr(seed, "local_database_host", local_database_host)
     monkeypatch.setattr(seed, "seed_local_administrator", seed_administrator)
     monkeypatch.setattr(seed.compute_service, "fetch", fetch_no_resources)
@@ -136,11 +137,9 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
     assert calls["storage"] == (
         "local storage",
         "local-storage",
-        seed.StorageKind.minio,
-        "http://localhost:19000",
-        "http://host.k3d.internal:19000",
-        "admin",
-        "adminadmin",
+        seed.StorageKind.exoscale,
+        "https://sos-ch-gva-2.exo.io",
+        None,
         user,
     )
     assert calls["organization"] == (
