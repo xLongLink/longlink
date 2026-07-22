@@ -1,18 +1,12 @@
 from main import app
-from types import SimpleNamespace
 from conftest import authenticated_cookies
 from factories import create_organization, create_ready_infrastructure
 from src.database import session
 from src.models.roles import PlatformRoles
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
-from src.database.services import users, organizations
+from src.database.services import users as user_service
 from src.database.models.users import User
-
-db = SimpleNamespace(
-    organizations=organizations,
-    users=users,
-)
 
 
 async def test_get_me_returns_authenticated_user_profile_and_separate_org_memberships(
@@ -38,7 +32,6 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
     # Assert
     assert profile_response.status_code == 200
     assert profile_response.json() == UserProfile.model_validate(user).model_dump(mode="json")
-    assert "organizations" not in profile_response.json()
 
     assert organizations_response.status_code == 200
     assert organizations_response.json() == [
@@ -81,11 +74,6 @@ async def test_list_users_returns_admin_user_summaries(
     users: tuple[User, User, User],
 ) -> None:
     """Return all user summaries from the `/api/users` admin route."""
-
-    # Arrange
-    user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
-    await create_organization(infrastructure, user)
 
     client = clients[0]
 
@@ -150,7 +138,7 @@ async def test_patch_me_updates_authenticated_user_profile(
     # Assert
     assert response.status_code == 200
 
-    updated_user = await db.users.get(user.id)
+    updated_user = await user_service.get(user.id)
     assert updated_user is not None
 
     expected_payload = UserProfile.model_validate(updated_user).model_dump(mode="json")

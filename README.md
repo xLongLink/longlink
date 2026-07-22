@@ -81,9 +81,6 @@ Cleanup
 make down
 ```
 
-`make down` removes all Exoscale buckets and Application IAM credentials tracked by local Platform state before deleting it.
-Local PostgreSQL, registry, Kubernetes, API, and Web frontend ports bind to loopback by default.
-
 <br />
 <br />
 

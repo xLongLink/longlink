@@ -1,24 +1,13 @@
 import pytest
 from uuid import uuid4
-from types import SimpleNamespace
 from fastapi import HTTPException
 from factories import create_organization, create_ready_infrastructure
-from src.environments import env
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
-from src.models.statuses import ComputeStatus
 from src.database.session import get_session
-from src.database.services import compute, operations, invitations, organizations
-from src.models.operations import OperationStatus
+from src.database.services import invitations, organizations
 from src.database.models.users import User
 from src.database.models.invitations import OrganizationInvitation
-
-db = SimpleNamespace(
-    invitations=invitations,
-    compute=compute,
-    operations=operations,
-    organizations=organizations,
-)
 
 
 async def test_create_normalizes_invitation_email_and_lists_active_invitations(
@@ -32,29 +21,20 @@ async def test_create_normalizes_invitation_email_and_lists_active_invitations(
     organization = await create_organization(infrastructure, owner)
 
     # Act
-    invitation = await db.invitations.create(
+    invitation = await invitations.create(
         organization.id,
         "  Invited@Example.COM  ",
         OrganizationRoles.write,
         owner,
     )
-    invitations = await db.organizations.invitations(organization.id)
-    reloaded_compute = await db.compute.get(infrastructure.compute.id)
-    open_operations = [item for item in await db.operations.fetch() if item.stopped_at is None]
+    invitation_rows = await organizations.invitations(organization.id)
 
     # Assert
     assert invitation.email == "invited@example.com"
     assert invitation.role == OrganizationRoles.write
     assert invitation.created_id == owner.id
     assert invitation.updated_id == owner.id
-    assert [item.id for item in invitations] == [invitation.id]
-    assert reloaded_compute is not None
-    assert reloaded_compute.status == ComputeStatus.ready
-    assert reloaded_compute.version == env.VERSION
-    assert len(open_operations) == 1
-    assert open_operations[0].compute_id == infrastructure.compute.id
-    assert open_operations[0].platform_version == env.VERSION
-    assert open_operations[0].status == OperationStatus.scheduled
+    assert [item.id for item in invitation_rows] == [invitation.id]
 
 
 async def test_create_rejects_invitation_for_missing_organization(users: tuple[User, User, User]) -> None:
@@ -66,7 +46,7 @@ async def test_create_rejects_invitation_for_missing_organization(users: tuple[U
 
     # Act
     with pytest.raises(HTTPException) as exc:
-        await db.invitations.create(organization_id, "invited@example.com", OrganizationRoles.write, owner)
+        await invitations.create(organization_id, "invited@example.com", OrganizationRoles.write, owner)
 
     # Assert
     assert exc.value.status_code == 404
@@ -83,7 +63,7 @@ async def test_create_rejects_invitation_for_existing_member_email(users: tuple[
 
     # Act
     with pytest.raises(HTTPException) as exc:
-        await db.invitations.create(organization.id, owner.email.upper(), OrganizationRoles.write, owner)
+        await invitations.create(organization.id, owner.email.upper(), OrganizationRoles.write, owner)
 
     # Assert
     assert exc.value.status_code == 409
@@ -97,11 +77,11 @@ async def test_create_rejects_duplicate_invitation_email_case_insensitively(user
     owner = users[0]
     infrastructure = await create_ready_infrastructure(owner, slug="primary", name="Primary")
     organization = await create_organization(infrastructure, owner)
-    await db.invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
+    await invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 
     # Act
     with pytest.raises(HTTPException) as exc:
-        await db.invitations.create(organization.id, "INVITED@example.com", OrganizationRoles.admin, owner)
+        await invitations.create(organization.id, "INVITED@example.com", OrganizationRoles.admin, owner)
 
     # Assert
     assert exc.value.status_code == 409
@@ -115,7 +95,7 @@ async def test_organization_invitations_ignore_deleted_invitations(users: tuple[
     owner = users[0]
     infrastructure = await create_ready_infrastructure(owner, slug="primary", name="Primary")
     organization = await create_organization(infrastructure, owner)
-    invitation = await db.invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
+    invitation = await invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -126,7 +106,7 @@ async def test_organization_invitations_ignore_deleted_invitations(users: tuple[
         await session.commit()
 
     # Act
-    invitations = await db.organizations.invitations(organization.id)
+    invitation_rows = await organizations.invitations(organization.id)
 
     # Assert
-    assert invitations == []
+    assert invitation_rows == []

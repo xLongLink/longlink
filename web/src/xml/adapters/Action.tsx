@@ -51,11 +51,11 @@ export async function executeAction(
     fetchImpl: typeof fetch = fetch,
     toastApi: ActionToast
 ): Promise<void> {
-    let actionUrl = '';
+    let actionUrl: string;
     let formValue: unknown;
-    let invalidate: string[] = [];
+    let invalidate: string[];
     let jsonValue: unknown;
-    let method = 'POST';
+    let method: string;
 
     // Resolve action inputs before building the request.
     try {

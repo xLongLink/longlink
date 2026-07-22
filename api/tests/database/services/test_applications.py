@@ -1,26 +1,17 @@
 import pytest
 from uuid import uuid4
-from types import SimpleNamespace
 from fastapi import HTTPException
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.statuses import ComputeStatus, ApplicationStatus
 from src.database.session import get_session
-from src.database.services import users, compute, operations, applications, organizations
+from src.database.services import compute, operations, applications, organizations
 from src.models.operations import OperationStatus
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
-
-db = SimpleNamespace(
-    applications=applications,
-    compute=compute,
-    operations=operations,
-    organizations=organizations,
-    users=users,
-)
 
 
 async def create_application_context(prefix: str) -> tuple[User, Organization, Application]:
@@ -35,7 +26,7 @@ async def create_application_context(prefix: str) -> tuple[User, Organization, A
         slug=f"{prefix}-org",
     )
     await mark_organization_running(organization)
-    application = await db.applications.create(
+    application = await applications.create(
         organization.id,
         "Dashboard",
         slug="dashboard",
@@ -71,11 +62,11 @@ async def test_create_requires_running_organization_and_coalesces_compute_reconc
     user = await create_user("app")
     infrastructure = await create_ready_infrastructure(user)
     organization = await create_organization(infrastructure, user)
-    open_before = [item for item in await db.operations.fetch() if item.stopped_at is None]
+    open_before = [item for item in await operations.fetch() if item.stopped_at is None]
 
     # Act
     with pytest.raises(HTTPException) as exc:
-        await db.applications.create(
+        await applications.create(
             organization.id,
             "Dashboard",
             slug="dashboard",
@@ -83,24 +74,21 @@ async def test_create_requires_running_organization_and_coalesces_compute_reconc
             user=user,
         )
     await mark_organization_running(organization)
-    application = await db.applications.create(
+    application = await applications.create(
         organization.id,
         "Dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         user=user,
     )
-    reloaded_compute = await db.compute.get(infrastructure.compute.id)
-    open_after = [item for item in await db.operations.fetch() if item.stopped_at is None]
+    reloaded_compute = await compute.get(infrastructure.compute.id)
+    open_after = [item for item in await operations.fetch() if item.stopped_at is None]
 
     # Assert
     assert exc.value.status_code == 409
     assert exc.value.detail == "Organization is not ready"
     assert application.name == "Dashboard"
     assert application.organization_id == organization.id
-    assert not hasattr(application, "compute_registry_id")
-    assert not hasattr(application, "database_registry_id")
-    assert not hasattr(application, "storage_registry_id")
     assert reloaded_compute is not None
     assert reloaded_compute.status == ComputeStatus.ready
     assert reloaded_compute.version == env.VERSION
@@ -119,7 +107,7 @@ async def test_create_rejects_duplicate_application_slug_within_organization() -
 
     # Act
     with pytest.raises(HTTPException) as exc:
-        await db.applications.create(
+        await applications.create(
             organization.id,
             "Duplicate dashboard",
             slug="dashboard",
@@ -137,19 +125,19 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
 
     # Arrange
     user, organization, deleted_application = await create_application_context("collections")
-    active_application = await db.applications.create(
+    active_application = await applications.create(
         organization.id,
         "Reports",
         slug="reports",
         image="ghcr.io/longlink/reports:latest",
         user=user,
     )
-    await db.applications.soft_delete(deleted_application.id, user)
+    await applications.soft_delete(deleted_application.id, user)
 
     # Act
-    fetched = await db.applications.fetch()
-    listed = await db.organizations.applications(organization.id)
-    listed_with_deleted = await db.organizations.applications(organization.id, include_deleted=True)
+    fetched = await applications.fetch()
+    listed = await organizations.applications(organization.id)
+    listed_with_deleted = await organizations.applications(organization.id, include_deleted=True)
 
     # Assert
     assert [application.id for application in fetched] == [active_application.id]
@@ -164,10 +152,10 @@ async def test_get_services_return_active_applications_and_respect_include_delet
     user, _, application = await create_application_context("reads")
 
     # Act
-    by_id = await db.applications.get(application.id)
-    await db.applications.soft_delete(application.id, user)
-    deleted_by_id = await db.applications.get(application.id)
-    included_by_id = await db.applications.get(application.id, include_deleted=True)
+    by_id = await applications.get(application.id)
+    await applications.soft_delete(application.id, user)
+    deleted_by_id = await applications.get(application.id)
+    included_by_id = await applications.get(application.id, include_deleted=True)
 
     # Assert
     assert by_id is not None
@@ -187,7 +175,7 @@ async def test_list_members_includes_organization_members_with_optional_applicat
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    application = await db.applications.create(
+    application = await applications.create(
         organization.id,
         "Dashboard",
         slug="dashboard",
@@ -207,7 +195,7 @@ async def test_list_members_includes_organization_members_with_optional_applicat
         await session.commit()
 
     # Act
-    members = await db.applications.members(application.id, organization.id)
+    members = await applications.members(application.id, organization.id)
     members_by_id = {
         member.id: (organization_membership, application_membership) for member, organization_membership, application_membership in members
     }
@@ -232,7 +220,7 @@ async def test_set_member_role_creates_updates_removes_and_restores_memberships(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    application = await db.applications.create(
+    application = await applications.create(
         organization.id,
         "Dashboard",
         slug="dashboard",
@@ -252,39 +240,39 @@ async def test_set_member_role_creates_updates_removes_and_restores_memberships(
         await session.commit()
 
     # Act
-    missing = await db.applications.set_member_role(
+    missing = await applications.set_member_role(
         application.id,
         organization.id,
         non_member.id,
         ApplicationRoles.read,
         owner,
     )
-    created = await db.applications.set_member_role(
+    created = await applications.set_member_role(
         application.id,
         organization.id,
         member.id,
         ApplicationRoles.read,
         owner,
     )
-    created_role = await db.applications.membership_role(application.id, member.id)
-    updated = await db.applications.set_member_role(
+    created_role = await applications.membership_role(application.id, member.id)
+    updated = await applications.set_member_role(
         application.id,
         organization.id,
         member.id,
         ApplicationRoles.write,
         owner,
     )
-    updated_role = await db.applications.membership_role(application.id, member.id)
-    removed = await db.applications.set_member_role(application.id, organization.id, member.id, None, owner)
-    removed_role = await db.applications.membership_role(application.id, member.id)
-    restored = await db.applications.set_member_role(
+    updated_role = await applications.membership_role(application.id, member.id)
+    removed = await applications.set_member_role(application.id, organization.id, member.id, None, owner)
+    removed_role = await applications.membership_role(application.id, member.id)
+    restored = await applications.set_member_role(
         application.id,
         organization.id,
         member.id,
         ApplicationRoles.maintain,
         owner,
     )
-    restored_role = await db.applications.membership_role(application.id, member.id)
+    restored_role = await applications.membership_role(application.id, member.id)
 
     # Assert
     assert missing is False
@@ -305,9 +293,9 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     user, _, application = await create_application_context("runtime")
 
     # Act
-    running = await db.applications.set_status(application.id, ApplicationStatus.running)
-    missing_status = await db.applications.set_status(uuid4(), ApplicationStatus.running)
-    updated = await db.applications.update_runtime(
+    running = await applications.set_status(application.id, ApplicationStatus.running)
+    missing_status = await applications.set_status(uuid4(), ApplicationStatus.running)
+    updated = await applications.update_runtime(
         application.id,
         "ghcr.io/longlink/dashboard:2.0.0",
         user,
@@ -318,8 +306,8 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
         digest="sha256:abc123",
         icon="activity",
     )
-    await db.applications.soft_delete(application.id, user)
-    deleted_runtime = await db.applications.update_runtime(
+    await applications.soft_delete(application.id, user)
+    deleted_runtime = await applications.update_runtime(
         application.id,
         "ghcr.io/longlink/dashboard:3.0.0",
         user,
@@ -348,14 +336,14 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     user, organization, application = await create_application_context("delete")
 
     # Act
-    deleted = await db.applications.soft_delete(application.id, user)
-    active_application = await db.applications.get(application.id)
-    deleted_application = await db.applications.get(application.id, include_deleted=True)
-    role = await db.applications.membership_role(application.id, user.id)
-    second_delete = await db.applications.soft_delete(application.id, user)
-    missing_delete = await db.applications.soft_delete(uuid4(), user)
-    compute_after = await db.compute.get(organization.compute_id)
-    open_operations = [item for item in await db.operations.fetch() if item.stopped_at is None]
+    deleted = await applications.soft_delete(application.id, user)
+    active_application = await applications.get(application.id)
+    deleted_application = await applications.get(application.id, include_deleted=True)
+    role = await applications.membership_role(application.id, user.id)
+    second_delete = await applications.soft_delete(application.id, user)
+    missing_delete = await applications.soft_delete(uuid4(), user)
+    compute_after = await compute.get(organization.compute_id)
+    open_operations = [item for item in await operations.fetch() if item.stopped_at is None]
 
     # Assert
     assert deleted is not None

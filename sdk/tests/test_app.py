@@ -50,6 +50,12 @@ def test_production_health_and_root_are_served_without_sdk_auth() -> None:
     ("relative_path", "content", "expected_metadata"),
     [
         pytest.param(
+            "index.xml",
+            '<longlink><Text i18n="home.title" /></longlink>',
+            {"tab": "index", "route": ""},
+            id="index",
+        ),
+        pytest.param(
             "dashboard.xml",
             '<longlink name="Dashboard" icon="layout-dashboard"><Text i18n="dashboard.title" /></longlink>',
             {"tab": "dashboard", "route": "dashboard", "name": "Dashboard", "icon": "layout-dashboard"},
