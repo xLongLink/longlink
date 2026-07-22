@@ -8,22 +8,28 @@
 
 ## k3d local cluster
 
-Start local PostgreSQL and the local OCI registry on `localhost:15000`:
+`make up` creates the private `longlink-dev` Docker network, starts PostgreSQL and the OCI registry, and creates the k3d
+cluster. Host-facing ports bind to loopback, while k3d reaches PostgreSQL and the registry through the private bridge
+gateway. They are not exposed to the local network.
 
 ```bash
-docker compose -f dev/compose.yml up -d
+make up
 ```
 
-Use a fixed gateway entry point for the compute cluster so local traffic stays stable:
+If a `compute` cluster predates the isolated network, run `make down` before `make up` so k3d can recreate it safely.
+
+The equivalent manual setup is:
 
 ```bash
+docker network inspect longlink-dev >/dev/null 2>&1 || docker network create longlink-dev
+gateway=$(docker network inspect longlink-dev --format '{{(index .IPAM.Config 0).Gateway}}')
+LONGLINK_DEV_GATEWAY="$gateway" docker compose -f dev/compose.yml up --detach --wait
 k3d cluster create compute \
-  --api-port 0.0.0.0:8001 \
-  -p "8080:80@loadbalancer" \
-  -p "8443:443@loadbalancer" \
+  --network longlink-dev \
+  --api-port 127.0.0.1:8001 \
+  -p "127.0.0.1:8443:443@loadbalancer" \
   --registry-config dev/registries.yml \
-  --k3s-arg "--disable=traefik@server:0" \
-  || true
+  --k3s-arg "--disable=traefik@server:0"
 ```
 
 LongLink owns the local gateway LoadBalancer. The `8443` host mapping is available for manual HTTPS checks, while reconciliation records the Kubernetes-published endpoint for API proxy traffic.
@@ -32,12 +38,13 @@ Use `localhost:15000/<image>:<tag>` for images pushed to the local registry.
 Export the kubeconfig afterward:
 
 ```bash
+umask 077
 k3d kubeconfig get compute > api/kubeconfig.yaml
 ```
 
 ## Local seed setup
 
-Configure the Exoscale provisioning identity and SOS endpoint in `api/.env`:
+Configure the Exoscale provisioning identity and select the development SOS zone in `api/.env`:
 
 ```bash
 EXOSCALE_API_KEY=EXO...
@@ -56,6 +63,9 @@ make seed
 ```
 
 The pushed image is `localhost:15000/longlink-app:dev` by default.
-LongLink creates a short-lived Exoscale bucket and scoped Application IAM credentials. Run `make down` to remove those
-resources before local Platform state is deleted. PostgreSQL remains local because it matches the production PostgreSQL
-contract without provisioning a remote database.
+LongLink creates short-lived Exoscale buckets and scoped Application IAM credentials. Run `make down` to remove all
+resources tracked by local Platform state before that state is deleted. PostgreSQL remains local because it matches the
+production PostgreSQL contract without provisioning a remote database.
+
+`make down` stops on cleanup or infrastructure errors and preserves `api/dev.db` and `api/kubeconfig.yaml` for recovery.
+Retry the command after resolving the reported error.

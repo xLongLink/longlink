@@ -83,7 +83,7 @@ class Env(BaseSettings):
     def exoscale_storage_endpoint(self) -> str:
         """Return the Exoscale SOS endpoint used by local development seeding."""
 
-        # Local seeding requires an explicit production-equivalent SOS zone.
+        # Local development uses an explicitly selected production-equivalent SOS zone.
         if self.EXOSCALE_STORAGE_ENDPOINT_URL is None:
             raise ValueError("Local seeding requires EXOSCALE_STORAGE_ENDPOINT_URL")
         exoscale_zone(self.EXOSCALE_STORAGE_ENDPOINT_URL)

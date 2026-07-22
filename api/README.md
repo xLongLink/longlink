@@ -40,9 +40,9 @@ The API folder contains the LongLink Platform API. It manages authentication, pe
 
 ## Development
 
-Create `api/.env` with the Exoscale provisioning values shown in `.env.sample`. Local seeding requires
-`EXOSCALE_API_KEY`, `EXOSCALE_API_SECRET`, `EXOSCALE_ORGANIZATION_ID`, and `EXOSCALE_STORAGE_ENDPOINT_URL` so storage
-provisioning follows the same SOS and IAM path as production.
+Create `api/.env` with `EXOSCALE_API_KEY`, `EXOSCALE_API_SECRET`, `EXOSCALE_ORGANIZATION_ID`, and
+`EXOSCALE_STORAGE_ENDPOINT_URL`. The endpoint selects the development SOS zone explicitly so storage provisioning follows
+the same SOS and IAM path as production.
 
 Run from `api/`:
 
@@ -50,7 +50,7 @@ Run from `api/`:
 uv sync --extra dev
 uv run alembic upgrade head
 uv run python seed.py
-DEVELOPMENT=true uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for migration, seeding, testing, and contribution details.

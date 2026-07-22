@@ -2,8 +2,12 @@
   "$schema": "https://opencode.ai/config.json",
   "permission": {
     "read": {
-      "*.env": "allow",
-      "*.env.*": "allow"
+      "*.env": "deny",
+      "*.env.*": "deny",
+      ".env*": "deny",
+      "**/.env*": "deny",
+      ".env.sample": "allow",
+      "**/.env.sample": "allow"
     }
   },
   "lsp": true

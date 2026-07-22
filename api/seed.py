@@ -1,6 +1,8 @@
 import asyncio
 import argparse
 import subprocess
+from src import adapters
+from uuid import UUID
 from pathlib import Path
 from sqlmodel import col
 from src.utils import jobs, names
@@ -9,6 +11,7 @@ from src.operations import computes as operation_computes
 from src.environments import env
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.types import Image, StorageKind, DatabaseSSLMode
+from sqlalchemy.engine import make_url
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus
 from src.database.session import session_scope
@@ -29,7 +32,7 @@ LOCAL_ADMIN_NAME = "Example LongLink"
 LOCAL_ADMIN_EMAIL = "example@longlink.dev"
 LOCAL_ADMIN_PASSWORD = "longlink-admin"
 LOCAL_DATABASE_PORT = 15432
-LOCAL_DOCKER_NETWORK = "k3d-compute"
+LOCAL_DOCKER_NETWORK = "longlink-dev"
 LOCAL_APPLICATION_IMAGE = "localhost:15000/longlink-app:dev"
 LOCAL_APP_NAME = "sample"
 KUBECONFIG = Path(__file__).with_name("kubeconfig.yaml")
@@ -133,6 +136,10 @@ async def reconcile_until_complete(compute_id) -> None:
 async def seed_local_development() -> None:
     """Create or repair local infrastructure, Organization, and sample Application desired state."""
 
+    # Validate the complete Exoscale development target before creating any local desired state.
+    env.exoscale()
+    storage_endpoint_url = env.exoscale_storage_endpoint()
+
     admin = await seed_local_administrator()
     compute_registry = next((item for item in await compute_service.fetch() if item.slug == "local-compute"), None)
     compute_ready = compute_registry is not None and compute_registry.status == ComputeStatus.ready
@@ -167,10 +174,12 @@ async def seed_local_development() -> None:
             "local storage",
             "local-storage",
             StorageKind.exoscale,
-            env.exoscale_storage_endpoint(),
+            storage_endpoint_url,
             None,
             admin,
         )
+    elif storage_registry.endpoint_url != storage_endpoint_url:
+        raise ValueError("Local storage registry uses a different Exoscale endpoint; run make down before changing zones")
 
     organization = next((item for item in await organization_service.fetch() if item.slug == LOCAL_ORG), None)
     if organization is None:
@@ -233,55 +242,64 @@ async def seed_local_development() -> None:
 
 
 async def cleanup_local_development() -> None:
-    """Delete seeded provider resources before local Platform state is removed."""
+    """Delete Exoscale resources tracked by local Platform state."""
 
-    # Older local databases used disposable local storage and require no remote cleanup.
+    # Avoid creating a new SQLite database when local development has no persisted state.
+    database_url = make_url(env.DATABASE_URL)
+    database_name = database_url.database
+    if database_url.get_backend_name() == "sqlite" and database_name is not None and database_name not in {"", ":memory:"}:
+        database_path = Path(database_name)
+        if not database_path.is_absolute():
+            database_path = Path.cwd() / database_path
+        if not database_path.is_file():
+            print("No local Platform state requires cleanup.")
+            return
+
+    # Inventory every Exoscale resource before make removes the local database.
     async with session_scope() as session:
         connection = await session.connection()
         tables = await connection.run_sync(lambda sync_connection: inspect(sync_connection).get_table_names())
-        if "storage_registries" not in tables:
+        if not {"applications", "organizations", "storage_registries"}.issubset(tables):
+            print("No Exoscale development resources require cleanup.")
             return
         result = await session.execute(
-            text("SELECT kind FROM storage_registries WHERE slug = :slug"),
-            {"slug": "local-storage"},
+            text(
+                """
+                SELECT storage_registries.endpoint_url, organizations.id, applications.id
+                FROM organizations
+                JOIN storage_registries ON storage_registries.id = organizations.storage_id
+                LEFT JOIN applications ON applications.organization_id = organizations.id
+                WHERE storage_registries.kind = :kind
+                """
+            ),
+            {"kind": StorageKind.exoscale.value},
         )
-        storage_kind = result.scalar_one_or_none()
-    if storage_kind != StorageKind.exoscale.value:
+        resources: dict[tuple[str, UUID], set[UUID]] = {}
+        for endpoint_url, organization_id, application_id in result:
+            key = (str(endpoint_url), UUID(str(organization_id)))
+            applications = resources.setdefault(key, set())
+            if application_id is not None:
+                applications.add(UUID(str(application_id)))
+
+    if not resources:
         print("No Exoscale development resources require cleanup.")
         return
 
-    # Locate the seeded compute aggregate, including cleanup already in progress.
-    compute_registry = next(
-        (item for item in await compute_service.fetch(include_deleted=True) if item.slug == "local-compute"),
-        None,
-    )
-    if compute_registry is None:
-        return
-    organization = next(
-        (item for item in await organization_service.for_compute(compute_registry.id, include_deleted=True) if item.slug == LOCAL_ORG),
-        None,
-    )
-    if organization is None:
-        return
+    # Remove scoped credentials before emptying and deleting each Organization bucket.
+    access_key_id, secret_access_key, exoscale_organization_id = env.exoscale()
+    for (endpoint_url, organization_id), application_ids in resources.items():
+        storage = adapters.Exoscale(endpoint_url, access_key_id, secret_access_key, exoscale_organization_id)
+        for application_id in application_ids:
+            await storage.revoke(application_id.hex)
+        await storage.delete(names.organization_bucket(organization_id))
 
-    # Tombstone active seeded state or resume its queued cleanup before deleting the local database.
-    if organization.deleted_at is None:
-        async with session_scope() as session:
-            result = await session.execute(select(User).where(col(User.email) == LOCAL_ADMIN_EMAIL))
-            admin = result.scalar_one_or_none()
-        if admin is None:
-            raise RuntimeError("Local administrator is missing; Exoscale resources were not removed")
-        await organization_service.soft_delete(organization.id, admin)
-    else:
-        await operations.enqueue(compute_registry.id)
-    await reconcile_until_complete(compute_registry.id)
-    print("Exoscale development bucket and Application credentials removed.")
+    print(f"Removed Exoscale resources for {len(resources)} development Organizations.")
 
 
 def main() -> None:
     """Seed or clean local development resources from a synchronous entrypoint."""
 
-    # Cleanup runs through reconciliation so remote resources disappear before local state.
+    # Cleanup removes remote resources before make deletes their local inventory.
     parser = argparse.ArgumentParser()
     parser.add_argument("--cleanup", action="store_true")
     arguments = parser.parse_args()

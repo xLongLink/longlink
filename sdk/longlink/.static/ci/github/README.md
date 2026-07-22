@@ -16,7 +16,9 @@ uv run longlink test
 
 ## Release
 
-The release workflow runs when a GitHub release is published. It builds the LongLink image with the release tag.
+The release workflow runs when a GitHub release is published. It builds the LongLink image with the release tag and pushes
+it to `ghcr.io/<repository-owner>/<project-name>:<release-tag>`. Commit `uv.lock` so release builds use the reviewed dependency
+set. GitHub packages are private by default unless the repository or package settings make them public.
 
 Create and publish a release tag:
 

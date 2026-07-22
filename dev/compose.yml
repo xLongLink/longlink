@@ -7,10 +7,26 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: admin
     ports:
-      - "15432:5432"
+      - "127.0.0.1:15432:5432"
+      - "${LONGLINK_DEV_GATEWAY:?Run development services through make up}:15432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready --username admin --dbname admin"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    networks:
+      - longlink
 
   registry:
     image: registry:3
     restart: unless-stopped
     ports:
-      - "15000:5000"
+      - "127.0.0.1:15000:5000"
+      - "${LONGLINK_DEV_GATEWAY:?Run development services through make up}:15000:5000"
+    networks:
+      - longlink
+
+networks:
+  longlink:
+    name: longlink-dev
+    external: true

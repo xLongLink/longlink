@@ -61,10 +61,6 @@ longlink dev
 
 ## Development
 
-Configure `EXOSCALE_API_KEY`, `EXOSCALE_API_SECRET`, `EXOSCALE_ORGANIZATION_ID`, and
-`EXOSCALE_STORAGE_ENDPOINT_URL` in `api/.env`. Development uses Exoscale SOS and IAM so storage behavior matches production.
-PostgreSQL and the OCI registry continue to run locally.
-
 Work on the LongLink Platform:
 
 ```bash
@@ -85,7 +81,8 @@ Cleanup
 make down
 ```
 
-`make down` removes the seeded Exoscale bucket and Application IAM credentials before deleting local Platform state.
+`make down` removes all Exoscale buckets and Application IAM credentials tracked by local Platform state before deleting it.
+Local PostgreSQL, registry, Kubernetes, API, and Web frontend ports bind to loopback by default.
 
 <br />
 <br />
