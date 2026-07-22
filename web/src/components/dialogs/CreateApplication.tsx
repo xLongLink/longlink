@@ -13,12 +13,10 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { ApiImageMetadata } from '@/lib/types';
-import { hasMinimumRole } from '@/lib/roles';
 import { useApiQuery } from '@/hooks/use-api';
-import { useUserProfile } from '@/hooks/use-user';
 import { ApiError, fetchApiJson } from '@/lib/api';
-import { useOrganizationActions } from '@/hooks/use-organization';
 import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
+import { useCreateOrganizationApplication } from '@/hooks/use-organization';
 import { apiIconsSchema, apiImageMetadataSchema, parseApiResponse } from '@/lib/api-schemas';
 
 const createApplicationFormSchema = z.object({
@@ -45,11 +43,17 @@ const defaultCreateApplicationValues = {
 } satisfies CreateApplicationInput;
 
 /** Renders the create-application dialog for an organization. */
-export default function CreateApplication({ organization }: { organization: string }) {
+export default function CreateApplication({
+    organizationId,
+    canCreate,
+}: {
+    organizationId: string;
+    canCreate: boolean;
+}) {
     const t = useTranslator();
     const toast = useToast();
-    const { organizations } = useUserProfile();
-    const { createApplication, isCreatingApplication } = useOrganizationActions(organization);
+    const createApplication = useCreateOrganizationApplication(organizationId);
+    const isCreatingApplication = createApplication.isPending;
     const imageFormId = useId();
     const metadataFormId = useId();
     const environmentFormId = useId();
@@ -72,10 +76,9 @@ export default function CreateApplication({ organization }: { organization: stri
     });
     const iconOptions = iconCatalog ?? [];
     const declaredEnvironments = imageMetadata?.environments ?? [];
-    const organizationMembership = organizations.find((item) => item.slug === organization);
 
     // Hide creation for roles without application access.
-    if (!hasMinimumRole(organizationMembership?.role, 'maintain')) {
+    if (!canCreate) {
         return null;
     }
 
@@ -107,7 +110,14 @@ export default function CreateApplication({ organization }: { organization: stri
             setStep('metadata');
         } catch (inspectError) {
             // Keep image input and domain failures with the field; surface operational failures globally.
-            if (inspectError instanceof ApiError && inspectError.status >= 400 && inspectError.status < 500) {
+            if (
+                inspectError instanceof ApiError &&
+                inspectError.status >= 400 &&
+                inspectError.status < 500 &&
+                inspectError.status !== 401 &&
+                inspectError.status !== 403 &&
+                inspectError.status !== 429
+            ) {
                 setError(inspectError.message);
             } else {
                 toast({
@@ -144,7 +154,7 @@ export default function CreateApplication({ organization }: { organization: stri
 
         // Submit the new app and close the dialog on success.
         try {
-            await createApplication({
+            await createApplication.mutateAsync({
                 name: application.data.name,
                 image: application.data.image,
                 description: application.data.description.length > 0 ? application.data.description : null,
@@ -176,7 +186,7 @@ export default function CreateApplication({ organization }: { organization: stri
         <>
             <Button
                 label={t('actions.create')}
-                isDisabled={organization.length === 0}
+                isDisabled={organizationId.length === 0}
                 clickAction={() => setOpen(true)}
             />
 

@@ -1,9 +1,8 @@
 import pytest
 from main import app
-from conftest import AUTH_COOKIE, TEST_PASSWORD, authenticated_cookies
+from conftest import AUTH_COOKIE, TEST_PASSWORD
 from src.utils import mail as mail_module
 from urllib.parse import parse_qs, urlparse
-from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
 from src.database.models.users import User
 
@@ -182,92 +181,3 @@ async def test_forgot_and_reset_password(users: tuple[User, User, User], monkeyp
     assert old_login.status_code == 400
     assert old_login.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
     assert new_login.status_code == 204
-
-
-async def test_list_accounts_returns_saved_local_accounts(users: tuple[User, User, User]) -> None:
-    """Return the local users retained by the signed browser session."""
-
-    user_one, user_two, _ = users
-    client = TestClient(
-        app,
-        cookies=authenticated_cookies(user_two.id, [user_one.id, user_two.id]),
-    )
-
-    # Read the account switcher independently of the active auth token.
-    response = client.get("/api/auth/accounts")
-
-    assert response.status_code == 200
-    assert response.json() == [
-        UserListItem.model_validate(user_one).model_dump(mode="json"),
-        UserListItem.model_validate(user_two).model_dump(mode="json"),
-    ]
-
-
-async def test_activate_account_switches_the_active_local_user(users: tuple[User, User, User]) -> None:
-    """Replace the active database token with one for a saved local account."""
-
-    user_one, user_two, _ = users
-    client = TestClient(
-        app,
-        cookies=authenticated_cookies(user_one.id, [user_one.id, user_two.id]),
-    )
-
-    # Activate another UUID already retained in the signed account list.
-    response = client.post(f"/api/auth/accounts/{user_two.id}/activate")
-
-    assert response.status_code == 204
-
-    # Preserve the account list while changing the authenticated profile.
-    accounts_response = client.get("/api/auth/accounts")
-    profile_response = client.get("/api/me")
-
-    assert accounts_response.status_code == 200
-    assert accounts_response.json() == [
-        UserListItem.model_validate(user_one).model_dump(mode="json"),
-        UserListItem.model_validate(user_two).model_dump(mode="json"),
-    ]
-    assert profile_response.status_code == 200
-    assert profile_response.json() == UserProfile.model_validate(user_two).model_dump(mode="json")
-
-
-async def test_activate_account_rejects_user_not_saved_in_session(users: tuple[User, User, User]) -> None:
-    """Reject a local account UUID absent from the signed browser session."""
-
-    user_one, user_two, _ = users
-    client = TestClient(app, cookies=authenticated_cookies(user_one.id))
-
-    # Attempt to switch to a valid user not remembered by this browser.
-    response = client.post(f"/api/auth/accounts/{user_two.id}/activate")
-
-    assert response.status_code == 403
-    assert response.json() == {"detail": "Account is not saved in this session"}
-
-
-async def test_deactivate_account_clears_only_the_auth_cookie(users: tuple[User, User, User]) -> None:
-    """Clear active authentication while retaining saved local accounts."""
-
-    user_one, user_two, _ = users
-    client = TestClient(
-        app,
-        cookies=authenticated_cookies(user_one.id, [user_one.id, user_two.id]),
-    )
-
-    # Revoke the active token without removing UUIDs from the account switcher.
-    response = client.post("/api/auth/accounts/deactivate")
-
-    assert response.status_code == 200
-    assert response.json() == [
-        UserListItem.model_validate(user_one).model_dump(mode="json"),
-        UserListItem.model_validate(user_two).model_dump(mode="json"),
-    ]
-
-    # Keep saved accounts available while protected routes become anonymous.
-    accounts_response = client.get("/api/auth/accounts")
-    profile_response = client.get("/api/me")
-
-    assert accounts_response.status_code == 200
-    assert accounts_response.json() == [
-        UserListItem.model_validate(user_one).model_dump(mode="json"),
-        UserListItem.model_validate(user_two).model_dump(mode="json"),
-    ]
-    assert profile_response.status_code == 401

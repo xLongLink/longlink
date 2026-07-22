@@ -1,11 +1,9 @@
-from main import app
-from conftest import authenticated_cookies
 from factories import create_organization, create_ready_infrastructure
 from src.database import session
 from src.models.roles import PlatformRoles
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
-from src.database.services import users as user_service
+from src.database.services import users as user_service, organizations as organization_service
 from src.database.models.users import User
 
 
@@ -46,27 +44,27 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
     ]
 
 
-async def test_logout_clears_the_active_account(users: tuple[User, User, User]) -> None:
-    """Remove only the active account from the saved browser session."""
+async def test_get_my_organizations_excludes_soft_deleted_organizations(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Hide soft-deleted Organizations from the authenticated user's organization switcher."""
 
-    user_one, user_two, _ = users
-    client = TestClient(
-        app,
-        cookies=authenticated_cookies(user_one.id, [user_one.id, user_two.id]),
-    )
+    # Arrange
+    user = users[0]
+    infrastructure = await create_ready_infrastructure(user)
+    active = await create_organization(infrastructure, user, name="active", slug="active")
+    deleted = await create_organization(infrastructure, user, name="deleted", slug="deleted")
+    deleted_organization = await organization_service.soft_delete(deleted.id, user)
+    assert deleted_organization is not None
+    client = clients[0]
 
-    # Revoke the database token and remove its local UUID from the account list.
-    response = client.post("/api/auth/logout")
+    # Act
+    response = client.get("/api/me/organizations")
 
-    assert response.status_code == 204
-
-    # Preserve other remembered accounts while protected routes become anonymous.
-    accounts_response = client.get("/api/auth/accounts")
-    assert accounts_response.status_code == 200
-    assert accounts_response.json() == [UserListItem.model_validate(user_two).model_dump(mode="json")]
-
-    me_response = client.get("/api/me")
-    assert me_response.status_code == 401
+    # Assert
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == [str(active.id)]
 
 
 async def test_list_users_returns_admin_user_summaries(

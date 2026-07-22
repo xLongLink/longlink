@@ -339,7 +339,7 @@
         "defaultMessage": "Hide password"
     },
     "auth.invalidResetLink": {
-        "defaultMessage": "This password reset link is missing its token. Request a new link to continue."
+        "defaultMessage": "This password reset link is invalid or expired. Request a new link to continue."
     },
     "auth.loginFailed": {
         "defaultMessage": "Sign in failed"

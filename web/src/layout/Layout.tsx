@@ -118,15 +118,15 @@ export default function Layout({
 
             {!tabEntries.length && !reserveTabSpace ? null : (
                 <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
-                    <TabList
-                        aria-label="Section navigation"
-                        hasDivider
-                        onChange={() => undefined}
-                        size="sm"
-                        value={activeTabPathname ?? ''}
-                    >
-                        {tabEntries.length ? (
-                            tabEntries.map((tab) => (
+                    {tabEntries.length ? (
+                        <TabList
+                            aria-label="Section navigation"
+                            hasDivider
+                            onChange={() => undefined}
+                            size="sm"
+                            value={activeTabPathname ?? ''}
+                        >
+                            {tabEntries.map((tab) => (
                                 <Tab
                                     key={tab.label}
                                     href={tab.href}
@@ -134,17 +134,16 @@ export default function Layout({
                                     label={tab.label}
                                     value={tab.pathname}
                                 />
-                            ))
-                        ) : (
-                            <Tab
-                                aria-disabled="true"
-                                aria-hidden="true"
-                                className="invisible pointer-events-none"
-                                label=""
-                                value="reserved-tab-space"
-                            />
-                        )}
-                    </TabList>
+                            ))}
+                        </TabList>
+                    ) : (
+                        <Stack
+                            aria-hidden="true"
+                            className="border-b border-border"
+                            height="var(--size-element-sm)"
+                            width="100%"
+                        />
+                    )}
                 </Stack>
             )}
         </Stack>

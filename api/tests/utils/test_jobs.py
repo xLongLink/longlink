@@ -178,3 +178,48 @@ async def test_execute_fails_retry_at_attempt_limit(monkeypatch: pytest.MonkeyPa
     assert result.status == OperationStatus.failed
     assert operation_worker.OPERATION_ATTEMPT_LIMIT == 6
     assert transitions == [(operation.id, "workloads are still starting", 6)]
+
+
+async def test_run_claimed_operation_cancels_action_when_heartbeat_loses_lease(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Cancel the handler task when the heartbeat detects a lost operation lease first."""
+
+    # Arrange
+    operation = leased_operation()
+    started = asyncio.Event()
+    cancelled = False
+
+    async def handler(claimed: Operation) -> operation_worker.OperationOutcome:
+        """Return a completion outcome if the action is allowed to finish."""
+
+        assert claimed is operation
+        return operation_worker.complete()
+
+    async def fake_execute(claimed: Operation, supplied_handler: operation_worker.JobHandler) -> Operation:
+        """Wait until cancellation so the heartbeat wins the race."""
+
+        nonlocal cancelled
+        assert claimed is operation
+        assert supplied_handler is handler
+        started.set()
+        try:
+            await asyncio.sleep(3600)
+        except asyncio.CancelledError:
+            cancelled = True
+            raise
+        raise AssertionError("action should not finish after lease loss")
+
+    async def fake_renew_operation_lease(operation_id: UUID, attempt_count: int) -> None:
+        """Raise lease loss after the action task has started."""
+
+        assert operation_id == operation.id
+        assert attempt_count == operation.attempt_count
+        await started.wait()
+        raise operation_worker.OperationLeaseLost(operation_id)
+
+    monkeypatch.setattr(operation_worker, "execute", fake_execute)
+    monkeypatch.setattr(operation_worker, "renew_operation_lease", fake_renew_operation_lease)
+
+    # Act and assert
+    with pytest.raises(operation_worker.OperationLeaseLost, match=str(operation.id)):
+        await operation_worker.run_claimed_operation(operation, handler)
+    assert cancelled is True

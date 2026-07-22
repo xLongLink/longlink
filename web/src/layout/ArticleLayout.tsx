@@ -14,7 +14,7 @@ import type { ArticleNavigationGroup, ArticlePage } from '@/pages/catalog';
 import { formatDate } from '@/lib/utils';
 import { Sidebar } from '@/components/Sidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useUserProfile } from '@/hooks/use-user';
+import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 
 type ArticleLayoutProps = {
     page: ArticlePage;
@@ -29,7 +29,8 @@ const FALLBACK_UPDATED_AT = Date.now();
 /** Renders an article page using the shared article shell. */
 export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutProps) {
     const t = useTranslator();
-    const { user, organizations } = useUserProfile();
+    const { user } = useUserProfile();
+    const { organizations } = useUserOrganizations();
     const isMobile = useIsMobile();
     const location = useLocation();
     const { content, metadata } = page;

@@ -45,7 +45,7 @@ export default function ResetPassword() {
     const tokenError =
         resetPassword.error instanceof ApiError &&
         resetPassword.error.status === 400 &&
-        resetPassword.error.message === 'RESET_PASSWORD_BAD_TOKEN'
+        resetPassword.error.code === 'RESET_PASSWORD_BAD_TOKEN'
             ? resetPassword.error
             : null;
 
@@ -55,7 +55,13 @@ export default function ResetPassword() {
             await resetPassword.mutateAsync(payload);
         } catch (error) {
             // The bad-token response blocks this workflow and is rendered below.
-            if (error instanceof ApiError && error.status === 400 && error.message === 'RESET_PASSWORD_BAD_TOKEN') {
+            if (error instanceof ApiError && error.status === 400 && error.code === 'RESET_PASSWORD_BAD_TOKEN') {
+                return;
+            }
+
+            // Keep server-side password policy failures with the password field.
+            if (error instanceof ApiError && error.code === 'RESET_PASSWORD_INVALID_PASSWORD') {
+                form.setError('password', { message: error.message, type: 'server' });
                 return;
             }
 
@@ -81,7 +87,16 @@ export default function ResetPassword() {
 
     return (
         <AuthPage title={t('auth.resetPasswordTitle')} description={t('auth.resetPasswordDescription')}>
-            {resetPassword.isSuccess ? (
+            {tokenError ? (
+                <Stack gap={4}>
+                    <Banner status="error" title={t('auth.invalidResetLink')} />
+                    <Button
+                        href={`/auth/forgot-password?${nextQuery}`}
+                        label={t('auth.requestAnotherReset')}
+                        variant="primary"
+                    />
+                </Stack>
+            ) : resetPassword.isSuccess ? (
                 <Stack gap={4}>
                     <Banner status="success" title={t('auth.passwordReset')} />
                     <Button href={`/organizations?${nextQuery}`} label={t('auth.backToSignIn')} variant="primary" />
@@ -108,7 +123,6 @@ export default function ResetPassword() {
                             />
                         )}
                     />
-                    {tokenError ? <Banner status="error" title={tokenError.message} /> : null}
                     <Button
                         isDisabled={resetPassword.isPending}
                         isLoading={resetPassword.isPending}

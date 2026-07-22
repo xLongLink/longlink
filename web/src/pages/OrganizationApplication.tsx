@@ -18,11 +18,14 @@ export default function OrganizationApplication() {
 /** Resolves an organization application slug to its proxy-backed XML view. */
 function OrganizationApplicationView() {
     const { organization = '', application = '' } = useParams();
-    const { organization: organizationDetails, isLoading, error } = useOrganization(organization);
-    const { organizations: userOrganizations, language } = useUserProfile();
+    const {
+        organization: organizationDetails,
+        role: organizationRole,
+        isLoading,
+        error,
+    } = useOrganization(organization);
+    const { language } = useUserProfile();
     const organizationApplication = organizationDetails?.applications.find((item) => item.slug === application);
-    const organizationMembership = userOrganizations.find((item) => item.slug === organization);
-    const organizationRole = organizationMembership?.role ?? null;
     const applicationRole = organizationApplication?.role ?? null;
     const hasApplicationAccess = applicationRole !== null || hasMinimumRole(organizationRole, 'maintain');
 

@@ -23,13 +23,15 @@ import type { Role } from '@/lib/roles';
 import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
 import { ROLE_NAMES } from '@/lib/roles';
 import { formatDate } from '@/lib/utils';
-import { useOrganizationActions } from '@/hooks/use-organization';
+import { useChangeOrganizationMemberRole, useInviteOrganizationMember } from '@/hooks/use-organization';
 
 type PeopleProps = {
-    organization: string;
+    organizationId: string;
     people: ApiOrganizationMemberSummary[];
     invitations: ApiInvitation[];
     activeSection?: 'members' | 'invitations';
+    canInviteMembers: boolean;
+    canManageMembers: boolean;
     isLoading: boolean;
     error: Error | null;
 };
@@ -44,10 +46,12 @@ const ORGANIZATION_ROLE_LABELS: Record<Role, string> = {
 
 /** Renders the organization people lists for settings sections. */
 export default function People({
-    organization,
+    organizationId,
     people,
     invitations,
     activeSection = 'members',
+    canInviteMembers,
+    canManageMembers,
     isLoading,
     error,
 }: PeopleProps) {
@@ -60,8 +64,8 @@ export default function People({
         user: ApiOrganizationMemberSummary;
         role: Role;
     } | null>(null);
-    const { inviteMember, isInviting, canInviteMembers, changeMemberRole, isChangingMemberRole, canManageMembers } =
-        useOrganizationActions(organization);
+    const inviteMember = useInviteOrganizationMember(organizationId, canInviteMembers);
+    const changeMemberRole = useChangeOrganizationMemberRole(organizationId, canManageMembers);
     const roleChangeTargetLabel = roleChangeTarget ? ORGANIZATION_ROLE_LABELS[roleChangeTarget.role] : '';
 
     const peopleColumns: TableColumn<ApiOrganizationMemberSummary>[] = [
@@ -165,7 +169,7 @@ export default function People({
                         <Button
                             label={t('actions.invite')}
                             variant="primary"
-                            isDisabled={organization.length === 0}
+                            isDisabled={organizationId.length === 0}
                             onClick={() => setInviteOpen(true)}
                         />
                     </HStack>
@@ -205,7 +209,7 @@ export default function People({
                 cancelLabel={t('actions.cancel')}
                 actionLabel={t('actions.changeRole')}
                 actionVariant="primary"
-                isActionLoading={isChangingMemberRole}
+                isActionLoading={changeMemberRole.isPending}
                 onAction={async () => {
                     // Ignore submissions without a selected role change.
                     if (roleChangeTarget === null) {
@@ -214,7 +218,7 @@ export default function People({
 
                     // Persist the selected organization role.
                     try {
-                        await changeMemberRole({
+                        await changeMemberRole.mutateAsync({
                             memberId: roleChangeTarget.user.id,
                             role: roleChangeTarget.role,
                         });
@@ -256,7 +260,7 @@ export default function People({
 
                                     // Submit the invitation and surface any failure.
                                     try {
-                                        await inviteMember({ email: inviteEmail.trim(), role: inviteRole });
+                                        await inviteMember.mutateAsync({ email: inviteEmail.trim(), role: inviteRole });
                                         setInviteOpen(false);
                                         setInviteEmail('');
                                         setInviteRole('write');
@@ -294,10 +298,10 @@ export default function People({
                                     <HStack gap={2} justify="end" wrap="wrap">
                                         <Button label={t('actions.cancel')} onClick={() => setInviteOpen(false)} />
                                         <Button
-                                            label={isInviting ? t('actions.inviting') : t('actions.invite')}
+                                            label={inviteMember.isPending ? t('actions.inviting') : t('actions.invite')}
                                             type="submit"
                                             variant="primary"
-                                            isLoading={isInviting}
+                                            isLoading={inviteMember.isPending}
                                             isDisabled={inviteEmail.trim().length === 0 || !canInviteMembers}
                                         />
                                     </HStack>

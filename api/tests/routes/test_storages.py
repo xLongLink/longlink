@@ -1,7 +1,9 @@
 from uuid import uuid4
 from factories import create_organization
 from factories import create_ready_infrastructure
+from src.database import session
 from src.environments import env
+from src.models.roles import PlatformRoles
 from fastapi.testclient import TestClient
 from src.database.models.users import User
 
@@ -86,3 +88,46 @@ async def test_storage_registry_delete_rejects_assigned_registry(
     # Assert
     assert response.status_code == 409
     assert response.json() == {"detail": "Storage registry is used by organizations"}
+
+
+async def test_storage_registry_routes_enforce_support_and_admin_roles(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Allow support storage reads while keeping storage writes admin-only."""
+
+    # Arrange
+    owner = users[0]
+    support = users[2]
+    infrastructure = await create_ready_infrastructure(owner)
+    registry = infrastructure.storage
+    Session = await session.get_session()
+    async with Session() as db_session:
+        persisted_support = await db_session.get(User, support.id)
+        assert persisted_support is not None
+        persisted_support.role = PlatformRoles.support
+        await db_session.commit()
+
+    support_client = clients[2]
+    ordinary_client = clients[1]
+
+    # Act
+    support_read_response = support_client.get("/api/storages")
+    support_write_response = support_client.post(
+        "/api/storages",
+        json={
+            "kind": "exoscale",
+            "name": "Support Storage",
+            "endpoint_url": "https://sos-ch-gva-2.exo.io",
+            "runtime_endpoint_url": "https://sos-ch-gva-2.exo.io",
+        },
+    )
+    ordinary_read_response = ordinary_client.get("/api/storages")
+
+    # Assert
+    assert support_read_response.status_code == 200
+    assert [item["id"] for item in support_read_response.json()] == [str(registry.id)]
+    assert support_write_response.status_code == 403
+    assert support_write_response.json() == {"detail": "Permission required"}
+    assert ordinary_read_response.status_code == 403
+    assert ordinary_read_response.json() == {"detail": "Permission required"}

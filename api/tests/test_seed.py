@@ -14,6 +14,50 @@ def fake_resource(**fields: object) -> SimpleNamespace:
     return SimpleNamespace(**fields)
 
 
+async def test_reconcile_until_complete_drains_until_target_operation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Drain local seed operations until the requested compute reconciliation finishes."""
+
+    # Arrange
+    target_compute_id = UUID("22222222-2222-2222-2222-222222222222")
+    other_compute_id = UUID("33333333-3333-3333-3333-333333333333")
+    unrelated_operation = fake_resource(compute_id=other_compute_id)
+    target_operation = fake_resource(compute_id=target_compute_id)
+    claims: list[SimpleNamespace | None] = [None, unrelated_operation, target_operation]
+    executed: list[SimpleNamespace] = []
+    sleeps: list[float] = []
+
+    async def claim_operation() -> SimpleNamespace | None:
+        """Return one queued operation or an empty poll result."""
+
+        if not claims:
+            raise AssertionError("Seed attempted to claim unexpected reconciliation work")
+        return claims.pop(0)
+
+    async def execute_operation(claimed_operation: SimpleNamespace, handler: object) -> SimpleNamespace:
+        """Complete each claimed operation without invoking infrastructure providers."""
+
+        assert handler is seed.operation_computes.reconcile
+        executed.append(claimed_operation)
+        return fake_resource(compute_id=claimed_operation.compute_id, stopped_at=object(), error=None)
+
+    async def sleep(seconds: float) -> None:
+        """Record queue polling backoff without slowing the test."""
+
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(seed.operations, "claim_next", claim_operation)
+    monkeypatch.setattr(seed.jobs, "run_claimed_operation", execute_operation)
+    monkeypatch.setattr(seed.asyncio, "sleep", sleep)
+
+    # Act
+    await seed.reconcile_until_complete(target_compute_id)
+
+    # Assert
+    assert executed == [unrelated_operation, target_operation]
+    assert sleeps == [1]
+    assert claims == []
+
+
 async def test_seed_local_development_creates_registries_and_drains_reconciliation(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path,

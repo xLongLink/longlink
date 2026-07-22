@@ -20,9 +20,9 @@ import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core
 import Layout from '@/layout/Layout';
 import { useDeleteDialog } from '@/lib/utils';
 import { useDeleteOrganization } from '@/hooks/use-organization';
-import { useUpdateUser, useUserProfile } from '@/hooks/use-user';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { useUpdateUser, useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 import { LANGUAGE_OPTIONS, resolveSupportedLanguage, type Language } from '@/lib/languages';
 import {
     ACCENT_OPTIONS,
@@ -51,7 +51,8 @@ export default function Settings() {
     const t = useTranslator();
     const toast = useToast();
     const location = useLocation();
-    const { user, organizations, theme, accent, radius, language, isLoading } = useUserProfile();
+    const { user, theme, accent, radius, language, isLoading: isProfileLoading } = useUserProfile();
+    const { organizations, isLoading: areOrganizationsLoading } = useUserOrganizations();
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
     const deleteOrganization = useDeleteOrganization();
     const [editedName, setEditedName] = useState<string | null>(null);
@@ -63,6 +64,7 @@ export default function Settings() {
     const name = editedName ?? user?.name ?? '';
     const accountName = name.trim();
     const selectedLanguage = resolveSupportedLanguage(language);
+    const isLoading = isProfileLoading || areOrganizationsLoading;
 
     /** Saves the edited account name when focus leaves its input. */
     const saveAccountName = async () => {

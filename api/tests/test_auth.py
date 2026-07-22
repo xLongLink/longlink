@@ -1,11 +1,26 @@
 import pytest
 from uuid import uuid4
 from fastapi import Request
-from src.auth import UserManager, SessionAccountsService
+from src.auth import UserManager, access_token_digest, SessionAccountsService
 from src.models.auth import AuthUserCreate
 from fastapi_users.exceptions import InvalidPasswordException
 
 pytestmark = pytest.mark.no_db
+
+
+def test_access_token_digest_is_deterministic_and_hides_raw_token() -> None:
+    """Hash browser tokens before persistence."""
+
+    # Act
+    first = access_token_digest("browser-token")
+    repeated = access_token_digest("browser-token")
+    other = access_token_digest("other-token")
+
+    # Assert
+    assert first == repeated
+    assert first != other
+    assert first != "browser-token"
+    assert len(first) == 64
 
 
 def test_session_accounts_filters_invalid_and_duplicate_ids() -> None:

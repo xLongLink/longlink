@@ -12,18 +12,21 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { ApiUserOrganizationMembership } from '@/lib/types';
 import Layout from '@/layout/Layout';
-import { useUserProfile } from '@/hooks/use-user';
 import { SignInCard } from '@/components/SignInCard';
 import { sanitizeRedirectPath } from '@/lib/redirects';
+import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 
 /** Renders the organizations landing page for signed-in and anonymous users. */
 export default function Organizations() {
     const t = useTranslator();
-    const { user, organizations, isLoading, error } = useUserProfile();
+    const { user, isLoading: isProfileLoading, error: profileError } = useUserProfile();
+    const { organizations, isLoading: areOrganizationsLoading, error: organizationsError } = useUserOrganizations();
     const location = useLocation();
     const nextPath = new URLSearchParams(location.search).get('next');
     const redirectTo = sanitizeRedirectPath(nextPath);
+    const isLoading = isProfileLoading || areOrganizationsLoading;
+    const error = profileError ?? organizationsError;
 
     // Show sign-in prompt for anonymous visitors.
     if (!user) {

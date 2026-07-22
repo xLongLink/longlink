@@ -1,4 +1,6 @@
 import { useQuery, useQueryClient, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
+import { userProfileQueryKey } from '@/lib/query-keys';
+import { clearSessionQueries } from '@/lib/react-query';
 import { ApiError, apiQueryKey, fetchApiJson } from '@/lib/api';
 
 type UseApiQueryOptions<TQueryFnData, TData = TQueryFnData> = Omit<
@@ -30,8 +32,10 @@ export function useApiQuery<TQueryFnData, TData = TQueryFnData>(
             } catch (error) {
                 // Clear the cached session immediately when any request reports auth loss.
                 if (error instanceof ApiError && error.status === 401) {
-                    queryClient.setQueryData(apiQueryKey('/api/me'), null);
-                    queryClient.setQueryData(apiQueryKey('/api/me/organizations'), []);
+                    const profileKey = userProfileQueryKey();
+
+                    await clearSessionQueries(queryClient, [profileKey]);
+                    queryClient.setQueryData(profileKey, null);
                 }
 
                 throw error;

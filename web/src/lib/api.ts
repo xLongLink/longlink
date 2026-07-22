@@ -3,16 +3,28 @@ import { hasProtocol } from 'ufo';
 const DEFAULT_API_URL = '';
 
 type ApiErrorPayload = {
-    detail?: string;
+    detail?:
+        | string
+        | {
+              code?: string;
+              reason?: string;
+          };
 } | null;
+
+type ApiErrorResponse = {
+    code?: string;
+    message: string;
+};
 
 /** Error thrown for failed API responses. */
 export class ApiError extends Error {
+    code?: string;
     status: number;
 
-    constructor(message: string, status: number) {
+    constructor(message: string, status: number, code?: string) {
         super(message);
         this.name = 'ApiError';
+        this.code = code;
         this.status = status;
     }
 }
@@ -57,10 +69,26 @@ export function apiUrl(path: string): string {
 }
 
 /** Reads the API error detail from a failed response. */
-async function readApiError(response: Response): Promise<string> {
+async function readApiError(response: Response): Promise<ApiErrorResponse> {
     const payload = (await response.json().catch(() => null)) as ApiErrorPayload;
+    const fallback = `API request failed (${response.status})`;
 
-    return payload?.detail ?? `API request failed (${response.status})`;
+    // Preserve simple API error codes as both the message and machine-readable code.
+    if (typeof payload?.detail === 'string') {
+        return { code: payload.detail, message: payload.detail };
+    }
+
+    // Prefer a validation reason while retaining its stable API error code.
+    if (payload?.detail && typeof payload.detail === 'object') {
+        const { code, reason } = payload.detail;
+
+        return {
+            code: typeof code === 'string' ? code : undefined,
+            message: typeof reason === 'string' ? reason : typeof code === 'string' ? code : fallback,
+        };
+    }
+
+    return { message: fallback };
 }
 
 /** Builds request headers shared by API and SDK XML action requests. */
@@ -94,7 +122,9 @@ async function requestApi(path: string, init?: RequestInit): Promise<Response> {
 
     // Convert failed responses into typed API errors.
     if (!response.ok) {
-        throw new ApiError(await readApiError(response), response.status);
+        const error = await readApiError(response);
+
+        throw new ApiError(error.message, response.status, error.code);
     }
 
     return response;

@@ -24,6 +24,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
         people,
         invitations,
         applications,
+        role: organizationRole,
         isLoading,
         error,
     } = useOrganization(organization);
@@ -87,6 +88,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
                             applications={applications}
                             people={people}
                             invitations={invitations}
+                            organizationRole={organizationRole}
                             routeSection={settingsSection ?? 'organization'}
                             isLoading={isLoading}
                             error={error}

@@ -6,6 +6,7 @@ from src.utils import names
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from fastapi.testclient import TestClient
+from longlink.utils.time import utcnow
 from src.database.session import get_session
 from src.database.services import compute, operations, invitations, applications, organizations
 from src.models.operations import OperationStatus
@@ -596,6 +597,45 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
     assert payload["database_id"] == str(infrastructure.database.id)
     assert payload["storage_id"] == str(infrastructure.storage.id)
     assert payload["deleted_by"] is None
+
+
+async def test_organization_access_rejects_soft_deleted_membership(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject organization access when only a soft-deleted membership remains."""
+
+    # Arrange
+    owner, user = users[0], users[1]
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
+    await mark_organization_running(organization)
+    await applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        user=owner,
+    )
+
+    Session = await get_session()
+    async with Session() as session:
+        session.add(
+            UserOrganization(
+                user_id=user.id,
+                organization_id=organization.id,
+                role=OrganizationRoles.read,
+                deleted_at=utcnow(),
+            )
+        )
+        await session.commit()
+
+    # Act
+    response = clients[1].get(f"/api/organizations/{organization.id}/applications")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
 
 
 async def test_get_organization_returns_404_for_non_member(

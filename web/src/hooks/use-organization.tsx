@@ -1,15 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { Role } from '@/lib/roles';
 import type {
-    ApiApplicationResponse,
     ApiInvitation,
     ApiOrganizationApplication,
     ApiOrganizationDetails,
     ApiOrganizationMemberSummary,
-    ApiUserOrganizationMembership,
 } from '@/lib/types';
 import { useApiQuery } from '@/hooks/use-api';
-import { useUserProfile } from '@/hooks/use-user';
-import { hasMinimumRole, type Role } from '@/lib/roles';
+import { useUserOrganizations } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiJson, fetchApiVoid } from '@/lib/api';
 import { applicationsQueryKey, organizationsQueryKey, userOrganizationsQueryKey } from '@/lib/query-keys';
 import {
@@ -24,42 +22,16 @@ type UseOrganizationResult = {
     people: ApiOrganizationMemberSummary[];
     invitations: ApiInvitation[];
     applications: ApiOrganizationApplication[];
+    role: Role | null;
     isLoading: boolean;
     error: (Error & { status?: number }) | null;
 };
 
-type UseOrganizationActionsResult = {
-    inviteMember: (payload: { email: string; role: Role }) => Promise<void>;
-    isInviting: boolean;
-    canInviteMembers: boolean;
-    changeMemberRole: (payload: { memberId: string; role: Role }) => Promise<void>;
-    isChangingMemberRole: boolean;
-    canManageMembers: boolean;
-    createApplication: (payload: {
-        name: string;
-        image: string;
-        description?: string | null;
-        icon?: string | null;
-        envs: Record<string, string>;
-    }) => Promise<ApiApplicationResponse>;
-    isCreatingApplication: boolean;
-    deleteApplication: (applicationId: string) => Promise<void>;
-    isDeletingApplication: boolean;
-};
-
-/** Resolves one route organization slug to its canonical UUID. */
-export function resolveOrganizationId(
-    organizationSlug: string,
-    organizations: ApiUserOrganizationMembership[]
-): string {
-    const organization = organizations.find((item) => item.slug === organizationSlug);
-    return organization?.id ?? '';
-}
-
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string): UseOrganizationResult {
-    const { organizations, isLoading: isUserLoading } = useUserProfile();
-    const organizationId = resolveOrganizationId(organizationSlug, organizations);
+    const { organizations, isLoading: isUserLoading } = useUserOrganizations();
+    const membership = organizations.find((item) => item.slug === organizationSlug);
+    const organizationId = membership?.id ?? '';
     const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
 
     const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
@@ -81,22 +53,18 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
         people: organizationQuery.data?.users ?? [],
         invitations: organizationQuery.data?.invitations ?? [],
         applications: organizationQuery.data?.applications ?? [],
+        role: membership?.role ?? null,
         isLoading: isUserLoading || organizationQuery.isLoading,
         error,
     };
 }
 
-/** Returns organization-scoped mutation helpers. */
-export function useOrganizationActions(organizationSlug: string): UseOrganizationActionsResult {
+/** Invites one organization member and refreshes organization data. */
+export function useInviteOrganizationMember(organizationId: string, canInviteMembers: boolean) {
     const queryClient = useQueryClient();
-    const { organizations } = useUserProfile();
-    const organizationId = resolveOrganizationId(organizationSlug, organizations);
     const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
-    const organizationMembership = organizations.find((item) => item.slug === organizationSlug);
-    const canInviteMembers = hasMinimumRole(organizationMembership?.role, 'maintain');
-    const canManageMembers = hasMinimumRole(organizationMembership?.role, 'admin');
 
-    const inviteMemberMutation = useMutation({
+    return useMutation({
         mutationFn: async ({ email, role }: { email: string; role: Role }) => {
             // Require a resolved organization before mutating.
             if (organizationPath === null) {
@@ -124,8 +92,14 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
             await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
         },
     });
+}
 
-    const createApplicationMutation = useMutation({
+/** Creates one application and refreshes organization application data. */
+export function useCreateOrganizationApplication(organizationId: string) {
+    const queryClient = useQueryClient();
+    const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
+
+    return useMutation({
         mutationFn: async ({
             name,
             image,
@@ -164,8 +138,14 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
             await queryClient.invalidateQueries({ queryKey: applicationsQueryKey() });
         },
     });
+}
 
-    const changeMemberRoleMutation = useMutation({
+/** Changes one organization member role and refreshes membership data. */
+export function useChangeOrganizationMemberRole(organizationId: string, canManageMembers: boolean) {
+    const queryClient = useQueryClient();
+    const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
+
+    return useMutation({
         mutationFn: async ({ memberId, role }: { memberId: string; role: Role }) => {
             // Require a resolved organization before mutating.
             if (organizationPath === null) {
@@ -194,8 +174,14 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
             await queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) });
         },
     });
+}
 
-    const deleteApplicationMutation = useMutation({
+/** Deletes one application and refreshes organization application data. */
+export function useDeleteOrganizationApplication(organizationId: string) {
+    const queryClient = useQueryClient();
+    const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
+
+    return useMutation({
         mutationFn: async (applicationId: string) => {
             // Require a resolved organization before deleting apps.
             if (organizationPath === null) {
@@ -214,19 +200,6 @@ export function useOrganizationActions(organizationSlug: string): UseOrganizatio
             await queryClient.invalidateQueries({ queryKey: applicationsQueryKey() });
         },
     });
-
-    return {
-        inviteMember: inviteMemberMutation.mutateAsync,
-        isInviting: inviteMemberMutation.isPending,
-        canInviteMembers,
-        changeMemberRole: changeMemberRoleMutation.mutateAsync,
-        isChangingMemberRole: changeMemberRoleMutation.isPending,
-        canManageMembers,
-        createApplication: createApplicationMutation.mutateAsync,
-        isCreatingApplication: createApplicationMutation.isPending,
-        deleteApplication: deleteApplicationMutation.mutateAsync,
-        isDeletingApplication: deleteApplicationMutation.isPending,
-    };
 }
 
 /** Creates a new organization and refreshes the authenticated user cache. */

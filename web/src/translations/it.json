@@ -339,7 +339,7 @@
         "defaultMessage": "Nascondi password"
     },
     "auth.invalidResetLink": {
-        "defaultMessage": "Il link per reimpostare la password non contiene il token. Richiedi un nuovo link per continuare."
+        "defaultMessage": "Il link per reimpostare la password non e valido o e scaduto. Richiedi un nuovo link per continuare."
     },
     "auth.loginFailed": {
         "defaultMessage": "Accesso non riuscito"

@@ -5,21 +5,9 @@
 @import '@astryxdesign/core/reset.css';
 @import '@astryxdesign/core/astryx.css';
 @import './lib/generated/longlink-neutral-default.css';
+@import '@astryxdesign/core/tailwind-theme.css';
 @import '@fontsource-variable/inter';
 @import 'tailwindcss/utilities.css' layer(utilities);
-
-@theme inline {
-    --color-primary: var(--color-text-primary);
-    --color-secondary: var(--color-text-secondary);
-    --color-accent: var(--color-text-accent);
-    --color-body: var(--color-background-body);
-    --color-card: var(--color-background-card);
-    --color-accent-bg: var(--color-accent);
-    --color-on-accent: var(--color-on-accent);
-    --color-border: var(--color-border);
-    --radius-element: var(--radius-element);
-    --radius-container: var(--radius-container);
-}
 
 @layer base {
     body {

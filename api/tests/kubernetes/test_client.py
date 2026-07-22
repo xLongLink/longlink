@@ -8,7 +8,7 @@ from uuid import UUID
 from containers import DockerRuntimeContainer, require_docker_daemon, wait_for_container_log
 from collections.abc import Iterator
 from src.environments import env
-from kr8s.asyncio.objects import Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
+from kr8s.asyncio.objects import Pod, Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayTLSMaterial
 from src.kubernetes.reconcile import DesiredCompute, DesiredApplication, DesiredOrganization
@@ -83,6 +83,81 @@ def kubernetes_compute() -> Iterator[tuple[Kubernetes, int]]:
         yield Kubernetes(container.config_yaml()), container.port(K3S_GATEWAY_PORT)
     finally:
         container.stop()
+
+
+async def test_kubernetes_namespaces_filters_system_namespaces() -> None:
+    """Return only non-system namespaces from the resource boundary."""
+
+    # Arrange
+    class NamespaceResource:
+        """Minimal namespace resource for client delegation tests."""
+
+        def __init__(self, name: str) -> None:
+            """Store the namespace name."""
+
+            self.name = name
+
+    class Resources:
+        """Record Kubernetes resource listing calls."""
+
+        calls: list[tuple[object, str | None, dict[str, str] | None]]
+
+        def __init__(self) -> None:
+            """Initialize the call log."""
+
+            self.calls = []
+
+        async def list(self, resource_class: object, namespace: str | None = None, label_selector: dict[str, str] | None = None) -> list[NamespaceResource]:
+            """Return fake namespaces for the requested resource class."""
+
+            self.calls.append((resource_class, namespace, label_selector))
+            assert resource_class is Namespace
+            return [NamespaceResource("acme"), NamespaceResource("kube-system"), NamespaceResource("longlink-system"), NamespaceResource("globex")]
+
+    resources = Resources()
+    client = Kubernetes("unused")
+    client._resources = resources
+
+    # Act
+    namespaces = await client.namespaces()
+
+    # Assert
+    assert namespaces == ["acme", "globex"]
+    assert resources.calls == [(Namespace, None, None)]
+
+
+async def test_kubernetes_pods_delegates_to_namespace_listing() -> None:
+    """List pods through the shared resource boundary for one namespace."""
+
+    # Arrange
+    class Resources:
+        """Return fake pods from the requested namespace."""
+
+        calls: list[tuple[object, str | None, dict[str, str] | None]]
+
+        def __init__(self) -> None:
+            """Initialize fake pod data."""
+
+            self.calls = []
+            self.pods = [object(), object()]
+
+        async def list(self, resource_class: object, namespace: str | None = None, label_selector: dict[str, str] | None = None) -> list[object]:
+            """Return fake pod resources."""
+
+            self.calls.append((resource_class, namespace, label_selector))
+            assert resource_class is Pod
+            return self.pods
+
+    resources = Resources()
+    client = Kubernetes("unused")
+    client._resources = resources
+
+    # Act
+    pods = await client.pods("acme")
+
+    # Assert
+    assert pods == resources.pods
+    assert resources.calls == [(Pod, "acme", None)]
 
 
 @pytest.mark.integration

@@ -1,5 +1,7 @@
 from factories import create_organization
 from factories import create_ready_infrastructure
+from src.database import session
+from src.models.roles import PlatformRoles
 from fastapi.testclient import TestClient
 from src.database.models.users import User
 
@@ -83,6 +85,75 @@ async def test_database_registry_delete_rejects_assigned_registry(
     # Assert
     assert response.status_code == 409
     assert response.json() == {"detail": "Database registry is used by organizations"}
+
+
+async def test_database_registry_routes_enforce_support_and_admin_roles(
+    clients: tuple[TestClient, TestClient, TestClient],
+    monkeypatch,
+    users: tuple[User, User, User],
+) -> None:
+    """Allow support database reads and diagnostics while keeping writes admin-only."""
+
+    # Arrange
+    owner = users[0]
+    support = users[2]
+    infrastructure = await create_ready_infrastructure(owner)
+    registry = infrastructure.database
+    Session = await session.get_session()
+    async with Session() as db_session:
+        persisted_support = await db_session.get(User, support.id)
+        assert persisted_support is not None
+        persisted_support.role = PlatformRoles.support
+        await db_session.commit()
+
+    class FakePostgres:
+        """Return deterministic database usage for support diagnostics."""
+
+        def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
+            """Validate the inspected registry connection fields."""
+
+            assert (host, port, username, password, sslmode) == (
+                registry.host,
+                registry.port,
+                registry.username,
+                registry.password,
+                registry.sslmode,
+            )
+
+        async def usage(self) -> dict[str, int]:
+            """Return fake backend capacity counters."""
+
+            return {"space_used": 123}
+
+    monkeypatch.setattr("src.routes.databases.adapters.Postgres", FakePostgres)
+    support_client = clients[2]
+    ordinary_client = clients[1]
+
+    # Act
+    support_read_response = support_client.get("/api/databases")
+    support_usage_response = support_client.get(f"/api/databases/{registry.id}/usage")
+    support_write_response = support_client.post(
+        "/api/databases",
+        json={
+            "name": "Support Database",
+            "host": "database.example",
+            "port": 5432,
+            "username": "admin",
+            "password": "secret",
+            "sslmode": "disable",
+        },
+    )
+    ordinary_read_response = ordinary_client.get("/api/databases")
+
+    # Assert
+    assert support_read_response.status_code == 200
+    assert [item["id"] for item in support_read_response.json()] == [str(registry.id)]
+    assert support_usage_response.status_code == 200
+    assert support_usage_response.json() == 123
+    assert support_write_response.status_code == 403
+    assert support_write_response.json() == {"detail": "Permission required"}
+    assert ordinary_read_response.status_code == 403
+    assert ordinary_read_response.json() == {"detail": "Permission required"}
 
 
 async def test_database_usage_endpoint_returns_backend_capacity(

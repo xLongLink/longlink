@@ -12,12 +12,13 @@ import { useTranslator } from '@astryxdesign/core/i18n';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { BookOpen, Building2, Database, HardDrive, Settings2, Users } from 'lucide-react';
-import { useUser } from '@/hooks/use-user';
+import { useUserProfile, useUserSessionActions } from '@/hooks/use-user';
 
 /** Renders a user profile popover with authentication and navigation actions. */
 export function UserProfile() {
     const t = useTranslator();
-    const { user, signOut, switchAccount } = useUser();
+    const { user } = useUserProfile();
+    const { signOut, switchAccount } = useUserSessionActions();
     const showToast = useToast();
     const [isOpen, setIsOpen] = useState(false);
 
