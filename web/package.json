@@ -29,7 +29,7 @@
         "lodash": "^4.18.1",
         "lucide-react": "^0.563.0",
         "react": "^19.2.7",
-        "react-dom": "^19.2.7",
+        "react-dom": "^19.2.8",
         "react-hook-form": "^7.81.0",
         "react-router": "^8.2.0",
         "tailwindcss": "^4.3.2",
