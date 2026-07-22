@@ -19,7 +19,6 @@ export type DeleteConfirmationProps = {
     open: boolean;
     title: string;
     description: ReactNode;
-    error?: string | null;
     isPending: boolean;
     onConfirm: () => void;
     onOpenChange: (open: boolean) => void;
@@ -38,6 +37,7 @@ type UseDeleteDialogOptions<TItem> = {
     description: (item: TItem) => ReactNode;
     errorMessage: string;
     fallbackDescription: ReactNode;
+    onError: (message: string) => void;
 };
 
 /** Formats a date-like value with the shared LongLink date style. */
@@ -114,28 +114,25 @@ export function useDeleteDialog<TItem>({
     description,
     errorMessage,
     fallbackDescription,
+    onError,
 }: UseDeleteDialogOptions<TItem>) {
     const [targetId, setTargetId] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
     const target = targetId === null ? null : (items.find((item) => getId(item) === targetId) ?? null);
 
-    /** Clears the selected delete target and any previous error. */
+    /** Clears the selected delete target. */
     function close() {
         setTargetId(null);
-        setError(null);
     }
 
     return {
         target,
         openFor: (item: TItem) => {
             setTargetId(getId(item));
-            setError(null);
         },
         dialogProps: {
             open: targetId !== null,
             title,
             description: target ? description(target) : fallbackDescription,
-            error,
             isPending: mutation.isPending,
             onOpenChange: (open: boolean) => {
                 // Closing the dialog clears its selected item.
@@ -149,12 +146,12 @@ export function useDeleteDialog<TItem>({
                     return;
                 }
 
-                // Run the delete mutation and capture any failure.
+                // Run the delete mutation and surface any failure.
                 try {
                     await mutation.mutateAsync(targetId);
                     close();
                 } catch (mutationError) {
-                    setError(mutationError instanceof Error ? mutationError.message : errorMessage);
+                    onError(mutationError instanceof Error ? mutationError.message : errorMessage);
                 }
             },
         } satisfies DeleteConfirmationProps,

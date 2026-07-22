@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { useId, useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { useToast } from '@astryxdesign/core/Toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Selector } from '@astryxdesign/core/Selector';
 import { useTranslator } from '@astryxdesign/core/i18n';
@@ -12,10 +13,10 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { ApiImageMetadata } from '@/lib/types';
-import { fetchApiJson } from '@/lib/api';
 import { hasMinimumRole } from '@/lib/roles';
 import { useApiQuery } from '@/hooks/use-api';
 import { useUserProfile } from '@/hooks/use-user';
+import { ApiError, fetchApiJson } from '@/lib/api';
 import { useOrganizationActions } from '@/hooks/use-organization';
 import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
 import { apiIconsSchema, apiImageMetadataSchema, parseApiResponse } from '@/lib/api-schemas';
@@ -46,6 +47,7 @@ const defaultCreateApplicationValues = {
 /** Renders the create-application dialog for an organization. */
 export default function CreateApplication({ organization }: { organization: string }) {
     const t = useTranslator();
+    const toast = useToast();
     const { organizations } = useUserProfile();
     const { createApplication, isCreatingApplication } = useOrganizationActions(organization);
     const imageFormId = useId();
@@ -104,7 +106,15 @@ export default function CreateApplication({ organization }: { organization: stri
             form.setValue('envs', {}, { shouldValidate: true });
             setStep('metadata');
         } catch (inspectError) {
-            setError(inspectError instanceof Error ? inspectError.message : t('dialogs.inspectImageFailed'));
+            // Keep image input and domain failures with the field; surface operational failures globally.
+            if (inspectError instanceof ApiError && inspectError.status >= 400 && inspectError.status < 500) {
+                setError(inspectError.message);
+            } else {
+                toast({
+                    body: inspectError instanceof Error ? inspectError.message : t('dialogs.inspectImageFailed'),
+                    type: 'error',
+                });
+            }
         } finally {
             setIsInspecting(false);
         }
@@ -144,7 +154,10 @@ export default function CreateApplication({ organization }: { organization: stri
             setOpen(false);
             resetDialogState();
         } catch (mutationError) {
-            setError(mutationError instanceof Error ? mutationError.message : t('dialogs.createApplicationFailed'));
+            toast({
+                body: mutationError instanceof Error ? mutationError.message : t('dialogs.createApplicationFailed'),
+                type: 'error',
+            });
         }
     }
 

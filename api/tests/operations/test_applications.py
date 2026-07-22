@@ -6,12 +6,12 @@ from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.environments import env
 from src.models.types import StorageKind, DatabaseSSLMode
-from src.models.operations import OperationStatus
 from longlink.utils.time import utcnow
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.database.services import compute, operations, applications, organizations
+from src.models.operations import OperationStatus
 from src.kubernetes.gateway import GatewayTLSMaterial
 from src.kubernetes.reconcile import DesiredCompute, ReconcileResult
 from src.database.models.computes import ComputeRegistry
@@ -151,6 +151,11 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
 
             events.append(("create-bucket", bucket))
             return bucket
+
+        async def create_prefix(self, bucket: str, prefix: str) -> None:
+            """Record one desired storage prefix marker."""
+
+            events.append(("create-prefix", bucket, prefix))
 
         async def credentials(
             self,
@@ -294,6 +299,16 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
     }
     assert proxy_secret == "proxy-secret"
     assert existing_tls is None
+    assert (
+        "create-prefix",
+        names.organization_bucket(active_organization.id),
+        names.shared_storage_prefix(),
+    ) in events
+    assert (
+        "create-prefix",
+        names.organization_bucket(active_organization.id),
+        names.application_storage_prefix(active_application.id),
+    ) in events
     assert ("delete-schema", deleted_organization.id, deleted_application.id) in events
     assert ("revoke-credentials", deleted_application.id.hex) in events
     assert (

@@ -22,6 +22,43 @@ def test_auth_config_reports_local_development_capabilities() -> None:
     }
 
 
+async def test_request_verify_token_does_not_enumerate_missing_accounts(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Return accepted without sending mail for an unknown verification email."""
+
+    # Arrange
+    messages: list[tuple[str, str, str, str | None]] = []
+
+    async def capture_mail(recipient: str, subject: str, text: str, html: str | None = None) -> None:
+        """Capture unexpected authentication email delivery."""
+
+        messages.append((recipient, subject, text, html))
+
+    monkeypatch.setattr(mail_module, "send_mail", capture_mail)
+    client = TestClient(app)
+
+    # Act
+    response = client.post("/api/auth/request-verify-token", json={"email": "missing@example.com"})
+
+    # Assert
+    assert response.status_code == 202
+    assert messages == []
+
+
+def test_verify_email_rejects_invalid_token_without_cookie() -> None:
+    """Reject an invalid verification token without creating a browser session."""
+
+    # Arrange
+    client = TestClient(app)
+
+    # Act
+    response = client.post("/api/auth/verify", json={"token": "not-a-valid-token"})
+
+    # Assert
+    assert response.status_code == 400
+    assert response.json() == {"detail": "VERIFY_USER_BAD_TOKEN"}
+    assert client.cookies.get(AUTH_COOKIE) is None
+
+
 async def test_register_verify_and_password_login(monkeypatch: pytest.MonkeyPatch) -> None:
     """Register and verify a local user before creating a password session."""
 

@@ -137,6 +137,7 @@ export default function AdminOrganizations() {
         description: (organization) => t('admin.deleteOrganizationDescription', { name: organization.name }),
         errorMessage: t('deleteDialog.failedDeleteOrganization'),
         fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
+        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns = createOrganizationColumns(t);
     const organizationColumns: TableColumn<ApiOrganizationSummary>[] = canManage
@@ -155,9 +156,13 @@ export default function AdminOrganizations() {
                               {
                                   label: `${t('actions.copy')} ${t('admin.organizationName').toLowerCase()}`,
                                   icon: <Icon icon="copy" size="sm" />,
-                                  onClick: () => {
-                                      void navigator.clipboard.writeText(organization.name);
-                                      toast({ body: `${t('admin.organizationName')}: ${t('actions.copied')}` });
+                                  onClick: async () => {
+                                      try {
+                                          await navigator.clipboard.writeText(organization.name);
+                                          toast({ body: `${t('admin.organizationName')}: ${t('actions.copied')}` });
+                                      } catch {
+                                          toast({ body: t('toasts.copyFailed'), type: 'error' });
+                                      }
                                   },
                               },
                               { label: t('actions.delete'), onClick: () => deleteDialog.openFor(organization) },

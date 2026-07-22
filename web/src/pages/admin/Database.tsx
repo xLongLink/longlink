@@ -102,6 +102,7 @@ export default function AdminDatabase() {
         description: (database) => t('admin.deleteDatabaseDescription', { slug: database.slug }),
         errorMessage: t('admin.failedDeleteDatabase'),
         fallbackDescription: t('admin.deleteDatabaseFallback'),
+        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns = createDatabaseColumns(t);
     const databaseColumns: TableColumn<ApiDatabaseRegistry>[] = canManage
@@ -120,9 +121,13 @@ export default function AdminDatabase() {
                               {
                                   label: `${t('actions.copy')} ${t('admin.copyDatabaseSlug').toLowerCase()}`,
                                   icon: <Icon icon="copy" size="sm" />,
-                                  onClick: () => {
-                                      void navigator.clipboard.writeText(database.slug);
-                                      toast({ body: `${t('admin.copyDatabaseSlug')}: ${t('actions.copied')}` });
+                                  onClick: async () => {
+                                      try {
+                                          await navigator.clipboard.writeText(database.slug);
+                                          toast({ body: `${t('admin.copyDatabaseSlug')}: ${t('actions.copied')}` });
+                                      } catch {
+                                          toast({ body: t('toasts.copyFailed'), type: 'error' });
+                                      }
                                   },
                               },
                               { label: t('actions.delete'), onClick: () => deleteDialog.openFor(database) },

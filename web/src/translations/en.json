@@ -1093,5 +1093,8 @@
     },
     "toasts.copiedToClipboard": {
         "defaultMessage": "Copied to clipboard"
+    },
+    "toasts.copyFailed": {
+        "defaultMessage": "Failed to copy to clipboard"
     }
 }

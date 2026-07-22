@@ -95,6 +95,7 @@ export default function AdminStorage() {
         description: (storage) => t('admin.deleteStorageDescription', { slug: storage.slug }),
         errorMessage: t('admin.failedDeleteStorage'),
         fallbackDescription: t('admin.deleteStorageFallback'),
+        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns = createStorageColumns(t);
     const storageColumns: TableColumn<ApiStorageRegistry>[] = canManage
@@ -113,9 +114,13 @@ export default function AdminStorage() {
                               {
                                   label: `${t('actions.copy')} ${t('admin.copyStorageSlug').toLowerCase()}`,
                                   icon: <Icon icon="copy" size="sm" />,
-                                  onClick: () => {
-                                      void navigator.clipboard.writeText(storage.slug);
-                                      toast({ body: `${t('admin.copyStorageSlug')}: ${t('actions.copied')}` });
+                                  onClick: async () => {
+                                      try {
+                                          await navigator.clipboard.writeText(storage.slug);
+                                          toast({ body: `${t('admin.copyStorageSlug')}: ${t('actions.copied')}` });
+                                      } catch {
+                                          toast({ body: t('toasts.copyFailed'), type: 'error' });
+                                      }
                                   },
                               },
                               { label: t('actions.delete'), onClick: () => deleteDialog.openFor(storage) },

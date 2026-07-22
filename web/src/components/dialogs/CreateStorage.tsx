@@ -2,12 +2,12 @@ import { z } from 'zod';
 import { useId, useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { useToast } from '@astryxdesign/core/Toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
@@ -27,11 +27,11 @@ type Values = z.infer<typeof schema>;
 /** Registers one Exoscale SOS backend. */
 export default function CreateStorage() {
     const t = useTranslator();
+    const toast = useToast();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const formId = useId();
     const [open, setOpen] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const form = useForm<Values>({
         defaultValues: {
             name: '',
@@ -71,10 +71,9 @@ export default function CreateStorage() {
         return null;
     }
 
-    /** Clears form state and errors when the dialog closes. */
+    /** Clears form state when the dialog closes. */
     function resetDialogState() {
         form.reset();
-        setError(null);
     }
 
     /** Updates dialog state while protecting an in-flight registration. */
@@ -111,15 +110,16 @@ export default function CreateStorage() {
                             <form
                                 id={formId}
                                 onSubmit={form.handleSubmit(async (payload) => {
-                                    setError(null);
                                     try {
                                         await mutation.mutateAsync(payload);
                                     } catch (mutationError) {
-                                        setError(
-                                            mutationError instanceof Error
-                                                ? mutationError.message
-                                                : t('dialogs.failedConnectStorage')
-                                        );
+                                        toast({
+                                            body:
+                                                mutationError instanceof Error
+                                                    ? mutationError.message
+                                                    : t('dialogs.failedConnectStorage'),
+                                            type: 'error',
+                                        });
                                     }
                                 })}
                             >
@@ -170,7 +170,6 @@ export default function CreateStorage() {
                                             />
                                         )}
                                     />
-                                    {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
                                 </FormLayout>
                             </form>
                         </LayoutContent>

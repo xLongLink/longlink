@@ -1094,6 +1094,9 @@
     "toasts.copiedToClipboard": {
         "defaultMessage": "Copiato negli appunti"
     },
+    "toasts.copyFailed": {
+        "defaultMessage": "Impossibile copiare negli appunti"
+    },
     "@astryx.alertDialog.cancel": {
         "defaultMessage": "Annulla"
     },

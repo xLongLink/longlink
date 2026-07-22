@@ -47,6 +47,19 @@ class S3:
             ),
         )
 
+    async def create_prefix(self, bucket: str, prefix: str) -> None:
+        """Create one S3-compatible prefix marker without replacing an existing object."""
+
+        # Conditional creation preserves existing data and avoids new versions during reconciliation.
+        async with self._client() as client:
+            try:
+                await client.put_object(Bucket=bucket, Key=prefix, Body=b"", IfNoneMatch="*")
+            except ClientError as exc:
+                error = exc.response.get("Error", {})
+                status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+                if error.get("Code") not in {"PreconditionFailed", "412"} and status != 412:
+                    raise
+
     async def delete(self, bucket: str) -> None:
         """Delete one S3-compatible bucket and all listed objects."""
 

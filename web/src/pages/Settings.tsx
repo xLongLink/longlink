@@ -90,7 +90,10 @@ export default function Settings() {
             setEditedName(accountName);
             toast({ body: t('settings.usernameSaved') });
         } catch (error) {
-            setAccountError(error instanceof Error ? error.message : t('settings.failedUpdateUsername'));
+            toast({
+                body: error instanceof Error ? error.message : t('settings.failedUpdateUsername'),
+                type: 'error',
+            });
         }
     };
 
@@ -102,6 +105,7 @@ export default function Settings() {
         description: (organization) => t('deleteDialog.deleteOrganizationDescription', { name: organization.name }),
         errorMessage: t('deleteDialog.failedDeleteOrganization'),
         fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
+        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const organizationColumns: TableColumn<(typeof organizations)[number]>[] = [
         {
@@ -200,7 +204,10 @@ export default function Settings() {
                                         isRequired
                                         isDisabled={isLoading || !user}
                                         status={accountError ? { type: 'error', message: accountError } : undefined}
-                                        onChange={setEditedName}
+                                        onChange={(value) => {
+                                            setEditedName(value);
+                                            setAccountError(null);
+                                        }}
                                         onBlur={() => {
                                             void saveAccountName();
                                         }}
@@ -223,7 +230,15 @@ export default function Settings() {
                                         isDisabled={isLoading || isPending || !user}
                                         placeholder={t('settings.placeholders.language')}
                                         onChange={(value) => {
-                                            void updateUser({ language: value as Language });
+                                            void updateUser({ language: value as Language }).catch((error: unknown) => {
+                                                toast({
+                                                    body:
+                                                        error instanceof Error
+                                                            ? error.message
+                                                            : t('errors.updateAccount'),
+                                                    type: 'error',
+                                                });
+                                            });
                                         }}
                                     />
                                 </HStack>
@@ -245,7 +260,15 @@ export default function Settings() {
                                         isDisabled={isPending}
                                         placeholder={t('settings.placeholders.theme')}
                                         onChange={(value) => {
-                                            void updateUser({ theme: value as Theme });
+                                            void updateUser({ theme: value as Theme }).catch((error: unknown) => {
+                                                toast({
+                                                    body:
+                                                        error instanceof Error
+                                                            ? error.message
+                                                            : t('errors.updateAccount'),
+                                                    type: 'error',
+                                                });
+                                            });
                                         }}
                                     />
                                     <Selector
@@ -271,7 +294,15 @@ export default function Settings() {
                                         isDisabled={isPending}
                                         placeholder={t('settings.placeholders.color')}
                                         onChange={(value) => {
-                                            void updateUser({ accent: value as Accent });
+                                            void updateUser({ accent: value as Accent }).catch((error: unknown) => {
+                                                toast({
+                                                    body:
+                                                        error instanceof Error
+                                                            ? error.message
+                                                            : t('errors.updateAccount'),
+                                                    type: 'error',
+                                                });
+                                            });
                                         }}
                                     />
                                     <Slider
@@ -288,9 +319,19 @@ export default function Settings() {
                                             setEditedRadius(value);
                                         }}
                                         onChangeEnd={(value: number) => {
-                                            void updateUser({ radius: value }).finally(() => {
-                                                setEditedRadius(null);
-                                            });
+                                            void updateUser({ radius: value })
+                                                .catch((error: unknown) => {
+                                                    toast({
+                                                        body:
+                                                            error instanceof Error
+                                                                ? error.message
+                                                                : t('errors.updateAccount'),
+                                                        type: 'error',
+                                                    });
+                                                })
+                                                .finally(() => {
+                                                    setEditedRadius(null);
+                                                });
                                         }}
                                     />
                                 </HStack>

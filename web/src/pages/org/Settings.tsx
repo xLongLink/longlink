@@ -7,6 +7,7 @@ import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
+import { useToast } from '@astryxdesign/core/Toast';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -68,6 +69,7 @@ export default function Settings({
     error,
 }: SettingsProps) {
     const t = useTranslator();
+    const toast = useToast();
     const navigate = useNavigate();
     const location = useLocation();
     const { settingsApplication = '' } = useParams();
@@ -87,9 +89,7 @@ export default function Settings({
         isLoading: storageResourcesIsLoading,
     } = useOrganizationStorageResources(organizationDetails?.id ?? '');
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-    const [deleteError, setDeleteError] = useState<string | null>(null);
     const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication | null>(null);
-    const [applicationRoleError, setApplicationRoleError] = useState<string | null>(null);
 
     const organizationMembership = userOrganizations.find((item) => item.slug === organization);
     const organizationRole = organizationMembership?.role ?? null;
@@ -150,7 +150,6 @@ export default function Settings({
                         <Link
                             href={`/orgs/${organization}/settings/applications/${application.slug}`}
                             weight="semibold"
-                            onClick={() => setApplicationRoleError(null)}
                         >
                             {application.name}
                         </Link>
@@ -188,7 +187,6 @@ export default function Settings({
                                           label: t('actions.delete'),
                                           onClick: () => {
                                               setDeleteTargetId(application.id);
-                                              setDeleteError(null);
                                           },
                                       },
                                   ]
@@ -251,8 +249,6 @@ export default function Settings({
                                 return;
                             }
 
-                            setApplicationRoleError(null);
-
                             // Persist the selected application role.
                             try {
                                 await changeApplicationMemberRole.mutateAsync({
@@ -261,11 +257,13 @@ export default function Settings({
                                     role: nextRole,
                                 });
                             } catch (mutationError) {
-                                setApplicationRoleError(
-                                    mutationError instanceof Error
-                                        ? mutationError.message
-                                        : t('organizationSettings.failedChangeApplicationPermission')
-                                );
+                                toast({
+                                    body:
+                                        mutationError instanceof Error
+                                            ? mutationError.message
+                                            : t('organizationSettings.failedChangeApplicationPermission'),
+                                    type: 'error',
+                                });
                             }
                         }}
                     />
@@ -427,7 +425,6 @@ export default function Settings({
                             icon={Boxes}
                             isSelected={section === 'applications'}
                             label={t('navigation.applications')}
-                            onClick={() => setApplicationRoleError(null)}
                         />
                         <SideNavItem
                             href={`/orgs/${organization}/settings/database`}
@@ -477,10 +474,7 @@ export default function Settings({
                             <HStack gap={4} justify="between" align="end" wrap="wrap">
                                 <VStack gap={1}>
                                     {selectedApplication ? (
-                                        <Link
-                                            href={`/orgs/${organization}/settings/applications`}
-                                            onClick={() => setApplicationRoleError(null)}
-                                        >
+                                        <Link href={`/orgs/${organization}/settings/applications`}>
                                             {t('organizationSettings.back')}
                                         </Link>
                                     ) : null}
@@ -502,7 +496,6 @@ export default function Settings({
                                 {!selectedApplication ? <CreateApplication organization={organization} /> : null}
                             </HStack>
 
-                            {applicationRoleError ? <Banner status="error" title={applicationRoleError} /> : null}
                             {selectedApplication ? (
                                 applicationMembersQuery.isLoading &&
                                 applicationMembers.length === 0 ? null : applicationMembersQuery.error &&
@@ -605,15 +598,14 @@ export default function Settings({
                     // Reset delete dialog state when closing.
                     if (!open) {
                         setDeleteTargetId(null);
-                        setDeleteError(null);
                     }
                 }}
                 title={t('organizationSettings.deleteApplicationTitle')}
-                description={`${
+                description={
                     deleteTarget
                         ? t('organizationSettings.deleteApplicationDescription', { name: deleteTarget.name })
                         : t('organizationSettings.deleteApplicationFallback')
-                }${deleteError ? ` ${deleteError}` : ''}`}
+                }
                 cancelLabel={t('actions.cancel')}
                 actionLabel={t('actions.delete')}
                 isActionLoading={isDeletingApplication}
@@ -631,17 +623,17 @@ export default function Settings({
 
                         // Leave the detail view if it was deleted.
                         if (selectedApplication?.id === id) {
-                            setApplicationRoleError(null);
                             navigate(`/orgs/${organization}/settings/applications`);
                         }
                         setDeleteTargetId(null);
-                        setDeleteError(null);
                     } catch (mutationError) {
-                        setDeleteError(
-                            mutationError instanceof Error
-                                ? mutationError.message
-                                : t('organizationSettings.failedDeleteApplication')
-                        );
+                        toast({
+                            body:
+                                mutationError instanceof Error
+                                    ? mutationError.message
+                                    : t('organizationSettings.failedDeleteApplication'),
+                            type: 'error',
+                        });
                     }
                 }}
             />

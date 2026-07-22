@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { useToast } from '@astryxdesign/core/Toast';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocation, useNavigate } from 'react-router';
@@ -31,6 +32,7 @@ const verificationSchema = z.object({
 /** Verifies an emailed link and supports requesting a replacement verification email. */
 export default function VerifyEmail() {
     const t = useTranslator();
+    const showToast = useToast();
     const location = useLocation();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -74,6 +76,18 @@ export default function VerifyEmail() {
     });
     const verifyEmail = verification.mutate;
 
+    /** Requests a replacement verification link and reports transient failures. */
+    async function handleRequestVerification(payload: RequestVerificationValues) {
+        try {
+            await requestVerification.mutateAsync(payload);
+        } catch (error) {
+            showToast({
+                body: error instanceof Error ? error.message : t('appView.retryLater'),
+                type: 'error',
+            });
+        }
+    }
+
     useEffect(() => {
         const payload = { token };
 
@@ -107,7 +121,7 @@ export default function VerifyEmail() {
             {verification.isSuccess ? (
                 <Button href={`/organizations?${nextQuery}`} label={t('auth.backToSignIn')} variant="primary" />
             ) : (
-                <Stack as="form" gap={4} onSubmit={form.handleSubmit((payload) => requestVerification.mutate(payload))}>
+                <Stack as="form" gap={4} onSubmit={form.handleSubmit(handleRequestVerification)}>
                     <Controller
                         control={form.control}
                         name="email"
@@ -131,9 +145,6 @@ export default function VerifyEmail() {
                     />
                     {requestVerification.isSuccess ? (
                         <Banner status="success" title={t('auth.verificationEmailSent')} />
-                    ) : null}
-                    {requestVerification.error ? (
-                        <Banner status="error" title={requestVerification.error.message} />
                     ) : null}
                     <Button
                         isDisabled={requestVerification.isPending}

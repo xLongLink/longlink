@@ -56,12 +56,10 @@ export default function People({
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] = useState<Role>('write');
-    const [inviteError, setInviteError] = useState<string | null>(null);
     const [roleChangeTarget, setRoleChangeTarget] = useState<{
         user: ApiOrganizationMemberSummary;
         role: Role;
     } | null>(null);
-    const [roleChangeError, setRoleChangeError] = useState<string | null>(null);
     const { inviteMember, isInviting, canInviteMembers, changeMemberRole, isChangingMemberRole, canManageMembers } =
         useOrganizationActions(organization);
     const roleChangeTargetLabel = roleChangeTarget ? ORGANIZATION_ROLE_LABELS[roleChangeTarget.role] : '';
@@ -101,7 +99,6 @@ export default function People({
                         label: t('people.grantPermission', { role: ORGANIZATION_ROLE_LABELS[role] }),
                         onClick: () => {
                             setRoleChangeTarget({ user, role });
-                            setRoleChangeError(null);
                         },
                     }))}
                 />
@@ -194,18 +191,17 @@ export default function People({
                     // Reset pending role changes when the dialog closes.
                     if (!nextOpen) {
                         setRoleChangeTarget(null);
-                        setRoleChangeError(null);
                     }
                 }}
                 title={t('people.changeRoleTitle')}
-                description={`${
+                description={
                     roleChangeTarget
                         ? t('people.changeRoleDescription', {
                               name: roleChangeTarget.user.name,
                               role: roleChangeTargetLabel,
                           })
                         : t('people.changeRoleFallback')
-                }${roleChangeError ? ` ${roleChangeError}` : ''}`}
+                }
                 cancelLabel={t('actions.cancel')}
                 actionLabel={t('actions.changeRole')}
                 actionVariant="primary"
@@ -229,27 +225,19 @@ export default function People({
                             }),
                         });
                         setRoleChangeTarget(null);
-                        setRoleChangeError(null);
                     } catch (mutationError) {
-                        setRoleChangeError(
-                            mutationError instanceof Error ? mutationError.message : t('people.failedChangeMemberRole')
-                        );
+                        toast({
+                            body:
+                                mutationError instanceof Error
+                                    ? mutationError.message
+                                    : t('people.failedChangeMemberRole'),
+                            type: 'error',
+                        });
                     }
                 }}
             />
 
-            <Dialog
-                isOpen={inviteOpen}
-                purpose="form"
-                onOpenChange={(nextOpen) => {
-                    setInviteOpen(nextOpen);
-
-                    // Clear invitation errors when the dialog closes.
-                    if (!nextOpen) {
-                        setInviteError(null);
-                    }
-                }}
-            >
+            <Dialog isOpen={inviteOpen} purpose="form" onOpenChange={setInviteOpen}>
                 <DialogLayout
                     height="auto"
                     header={
@@ -265,7 +253,6 @@ export default function People({
                                 id="invite-member-form"
                                 onSubmit={async (event) => {
                                     event.preventDefault();
-                                    setInviteError(null);
 
                                     // Submit the invitation and surface any failure.
                                     try {
@@ -274,11 +261,13 @@ export default function People({
                                         setInviteEmail('');
                                         setInviteRole('write');
                                     } catch (mutationError) {
-                                        setInviteError(
-                                            mutationError instanceof Error
-                                                ? mutationError.message
-                                                : t('people.failedInviteUser')
-                                        );
+                                        toast({
+                                            body:
+                                                mutationError instanceof Error
+                                                    ? mutationError.message
+                                                    : t('people.failedInviteUser'),
+                                            type: 'error',
+                                        });
                                     }
                                 }}
                             >
@@ -302,15 +291,8 @@ export default function People({
                                             onChange={(value) => setInviteRole(value as Role)}
                                         />
                                     </FormLayout>
-                                    {inviteError ? <Banner status="error" title={inviteError} /> : null}
                                     <HStack gap={2} justify="end" wrap="wrap">
-                                        <Button
-                                            label={t('actions.cancel')}
-                                            onClick={() => {
-                                                setInviteOpen(false);
-                                                setInviteError(null);
-                                            }}
-                                        />
+                                        <Button label={t('actions.cancel')} onClick={() => setInviteOpen(false)} />
                                         <Button
                                             label={isInviting ? t('actions.inviting') : t('actions.invite')}
                                             type="submit"

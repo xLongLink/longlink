@@ -3,12 +3,13 @@ import { useLocation } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { useToast } from '@astryxdesign/core/Toast';
 import { useMutation } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslator } from '@astryxdesign/core/i18n';
-import { fetchApiVoid } from '@/lib/api';
 import { AuthPage } from '@/components/AuthPage';
+import { ApiError, fetchApiVoid } from '@/lib/api';
 import { sanitizeRedirectPath } from '@/lib/redirects';
 import { PasswordInput } from '@/components/PasswordInput';
 
@@ -19,6 +20,7 @@ type ResetPasswordValues = {
 /** Accepts a password reset token and saves a new password. */
 export default function ResetPassword() {
     const t = useTranslator();
+    const showToast = useToast();
     const location = useLocation();
     const search = new URLSearchParams(location.search);
     const token = search.get('token');
@@ -40,6 +42,29 @@ export default function ResetPassword() {
             });
         },
     });
+    const tokenError =
+        resetPassword.error instanceof ApiError &&
+        resetPassword.error.status === 400 &&
+        resetPassword.error.message === 'RESET_PASSWORD_BAD_TOKEN'
+            ? resetPassword.error
+            : null;
+
+    /** Saves the new password while keeping invalid-token failures inline. */
+    async function handleResetPassword(payload: ResetPasswordValues) {
+        try {
+            await resetPassword.mutateAsync(payload);
+        } catch (error) {
+            // The bad-token response blocks this workflow and is rendered below.
+            if (error instanceof ApiError && error.status === 400 && error.message === 'RESET_PASSWORD_BAD_TOKEN') {
+                return;
+            }
+
+            showToast({
+                body: error instanceof Error ? error.message : t('appView.retryLater'),
+                type: 'error',
+            });
+        }
+    }
 
     // A reset request cannot proceed without the emailed token.
     if (!token) {
@@ -62,7 +87,7 @@ export default function ResetPassword() {
                     <Button href={`/organizations?${nextQuery}`} label={t('auth.backToSignIn')} variant="primary" />
                 </Stack>
             ) : (
-                <Stack as="form" gap={4} onSubmit={form.handleSubmit((payload) => resetPassword.mutate(payload))}>
+                <Stack as="form" gap={4} onSubmit={form.handleSubmit(handleResetPassword)}>
                     <Controller
                         control={form.control}
                         name="password"
@@ -83,7 +108,7 @@ export default function ResetPassword() {
                             />
                         )}
                     />
-                    {resetPassword.error ? <Banner status="error" title={resetPassword.error.message} /> : null}
+                    {tokenError ? <Banner status="error" title={tokenError.message} /> : null}
                     <Button
                         isDisabled={resetPassword.isPending}
                         isLoading={resetPassword.isPending}

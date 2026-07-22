@@ -6,7 +6,6 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Avatar } from '@astryxdesign/core/Avatar';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Divider } from '@astryxdesign/core/Divider';
@@ -42,7 +41,6 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
     const { accounts, activateAccount } = useUser();
     const { data: authConfig } = useAuthConfig();
     const showToast = useToast();
-    const [error, setError] = useState<string | null>(null);
     const [pendingProvider, setPendingProvider] = useState<AuthProvider | null>(null);
     const safeRedirectTo = sanitizeRedirectPath(redirectTo);
     const nextQuery = new URLSearchParams({ next: safeRedirectTo }).toString();
@@ -82,8 +80,6 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
 
     /** Signs in with an email and password, then refreshes the current profile. */
     async function handlePasswordSignIn(payload: LoginValues) {
-        setError(null);
-
         try {
             await login.mutateAsync(payload);
             await Promise.all([
@@ -92,13 +88,15 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
             ]);
             navigate(safeRedirectTo, { replace: true });
         } catch (loginError) {
-            setError(loginError instanceof Error ? loginError.message : t('auth.loginFailed'));
+            showToast({
+                body: loginError instanceof Error ? loginError.message : t('auth.loginFailed'),
+                type: 'error',
+            });
         }
     }
 
     /** Requests an external authorization URL and preserves the safe return path. */
     async function handleProviderSignIn(provider: AuthProvider) {
-        setError(null);
         setPendingProvider(provider);
 
         try {
@@ -109,7 +107,7 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
             sessionStorage.setItem(AUTH_RETURN_PATH_KEY, safeRedirectTo);
             window.location.assign(authorization.authorization_url);
         } catch {
-            setError(t('auth.providerSignInFailed'));
+            showToast({ body: t('auth.providerSignInFailed'), type: 'error' });
             setPendingProvider(null);
         }
     }
@@ -200,7 +198,6 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
                         )}
                     />
                 </Stack>
-                {error ? <Banner status="error" title={error} /> : null}
                 <Button
                     isDisabled={isPending}
                     isLoading={login.isPending}

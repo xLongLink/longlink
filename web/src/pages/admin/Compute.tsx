@@ -99,6 +99,7 @@ export default function AdminCompute() {
         description: (compute) => t('admin.deleteComputeDescription', { slug: compute.slug }),
         errorMessage: t('admin.failedDeleteCompute'),
         fallbackDescription: t('admin.deleteComputeFallback'),
+        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns = createComputeColumns(t);
     const computeColumns: TableColumn<ApiComputeRegistry>[] = canManage
@@ -117,9 +118,13 @@ export default function AdminCompute() {
                               {
                                   label: `${t('actions.copy')} ${t('admin.copyComputeSlug').toLowerCase()}`,
                                   icon: <Icon icon="copy" size="sm" />,
-                                  onClick: () => {
-                                      void navigator.clipboard.writeText(compute.slug);
-                                      toast({ body: `${t('admin.copyComputeSlug')}: ${t('actions.copied')}` });
+                                  onClick: async () => {
+                                      try {
+                                          await navigator.clipboard.writeText(compute.slug);
+                                          toast({ body: `${t('admin.copyComputeSlug')}: ${t('actions.copied')}` });
+                                      } catch {
+                                          toast({ body: t('toasts.copyFailed'), type: 'error' });
+                                      }
                                   },
                               },
                               { label: t('actions.delete'), onClick: () => deleteDialog.openFor(compute) },

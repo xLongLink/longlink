@@ -77,9 +77,13 @@ export default function AdminUsers() {
                     items={[
                         {
                             label: t('admin.copyEmail'),
-                            onClick: () => {
-                                void navigator.clipboard.writeText(user.email);
-                                toast({ body: t('admin.emailCopied') });
+                            onClick: async () => {
+                                try {
+                                    await navigator.clipboard.writeText(user.email);
+                                    toast({ body: t('admin.emailCopied') });
+                                } catch {
+                                    toast({ body: t('toasts.copyFailed'), type: 'error' });
+                                }
                             },
                         },
                     ]}

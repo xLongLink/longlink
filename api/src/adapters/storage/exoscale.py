@@ -37,6 +37,12 @@ class Exoscale(Storage):
         # Delegate provider-neutral bucket creation to the S3 transport.
         return await self._s3.create(bucket)
 
+    async def create_prefix(self, bucket: str, prefix: str) -> None:
+        """Create one Exoscale SOS prefix marker without replacing an existing object."""
+
+        # Delegate provider-neutral prefix creation to the S3 transport.
+        await self._s3.create_prefix(bucket, prefix)
+
     async def delete(self, bucket: str) -> None:
         """Delete one Exoscale SOS bucket and its objects."""
 

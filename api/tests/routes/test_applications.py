@@ -11,6 +11,7 @@ from src.database.session import get_session
 from src.database.services import operations, applications, organizations
 from src.models.operations import OperationStatus
 from src.database.models.users import User
+from src.database.models.computes import ComputeRegistry
 from src.database.models.association import UserApplication, UserOrganization
 
 
@@ -289,6 +290,161 @@ async def test_get_app_logs_returns_pod_logs(
     }
 
 
+async def test_app_logs_require_maintainer_access(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject log access for regular organization members."""
+
+    # Arrange
+    owner, member = users[0], users[1]
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
+    await mark_organization_running(organization)
+    app = await applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        user=owner,
+    )
+    Session = await get_session()
+    async with Session() as session:
+        session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.write))
+        await session.commit()
+    client = clients[1]
+
+    # Act
+    response = client.get(f"/api/applications/{app.id}/logs")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+
+
+async def test_app_logs_return_unavailable_when_backend_fails(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+    monkeypatch,
+) -> None:
+    """Return a stable error when pod logs cannot be loaded."""
+
+    # Arrange
+    owner = users[0]
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
+    await mark_organization_running(organization)
+    app = await applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        user=owner,
+    )
+
+    class FailingCompute:
+        """Fail the log request through the Kubernetes adapter boundary."""
+
+        def __init__(self, kubeconfig: str) -> None:
+            """Accept the selected compute registry."""
+
+            assert kubeconfig == infrastructure.compute.kubeconfig
+            self.applications = self
+
+        async def logs(self, application_id: str, lines: int = 200) -> list[str]:
+            """Raise the backend error expected by the test."""
+
+            assert application_id == str(app.id)
+            assert lines == 200
+            raise RuntimeError("logs unavailable")
+
+    monkeypatch.setattr("src.routes.applications.Kubernetes", FailingCompute)
+    client = clients[0]
+
+    # Act
+    response = client.get(f"/api/applications/{app.id}/logs")
+
+    # Assert
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Application logs unavailable"}
+
+
+async def test_application_member_routes_list_update_remove_and_reject_missing_members(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Manage simple application roles through the route layer."""
+
+    # Arrange
+    owner, member, non_member = users
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
+    await mark_organization_running(organization)
+    app = await applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        user=owner,
+    )
+    Session = await get_session()
+    async with Session() as session:
+        session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
+        await session.commit()
+    client = clients[0]
+
+    # Act
+    list_response = client.get(f"/api/applications/{app.id}/members")
+    create_response = client.patch(f"/api/applications/{app.id}/members/{member.id}", json={"role": "read"})
+    created_role = await applications.membership_role(app.id, member.id)
+    remove_response = client.patch(f"/api/applications/{app.id}/members/{member.id}", json={"role": None})
+    removed_role = await applications.membership_role(app.id, member.id)
+    missing_response = client.patch(f"/api/applications/{app.id}/members/{non_member.id}", json={"role": "read"})
+
+    # Assert
+    assert list_response.status_code == 200
+    assert {item["id"] for item in list_response.json()} == {str(owner.id), str(member.id)}
+    assert create_response.status_code == 204
+    assert created_role == ApplicationRoles.read
+    assert remove_response.status_code == 204
+    assert removed_role is None
+    assert missing_response.status_code == 404
+    assert missing_response.json() == {"detail": "Organization member not found"}
+
+
+async def test_application_member_update_rejects_regular_member(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject application role changes from users without management access."""
+
+    # Arrange
+    owner, member = users[0], users[1]
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
+    await mark_organization_running(organization)
+    app = await applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        user=owner,
+    )
+    Session = await get_session()
+    async with Session() as session:
+        session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
+        session.add(UserApplication(user_id=member.id, organization_id=organization.id, application_id=app.id, role=ApplicationRoles.read))
+        await session.commit()
+    client = clients[1]
+
+    # Act
+    response = client.patch(f"/api/applications/{app.id}/members/{owner.id}", json={"role": "read"})
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Permission required"}
+
+
 async def test_delete_application_soft_deletes_and_returns_reconciliation_operation(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
@@ -351,6 +507,12 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     )
     await applications.set_status(app.id, ApplicationStatus.running)
     registry = remote_infrastructure.compute
+    Session = await get_session()
+    async with Session() as session:
+        persisted = await session.get(ComputeRegistry, registry.id)
+        assert persisted is not None
+        persisted.gateway_previous_ca_certificate = "previous-ca"
+        await session.commit()
     captured: dict[str, object] = {}
     tls = object()
 
@@ -438,7 +600,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
         "sandbox; default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
     )
     assert "set-cookie" not in response.headers
-    assert captured["cadata"] == registry.gateway_ca_certificate
+    assert captured["cadata"] == f"{registry.gateway_ca_certificate}\nprevious-ca"
     assert captured["client_kwargs"] == {"follow_redirects": False, "timeout": 300.0, "verify": tls}
     forwarded = captured["request"]
     assert isinstance(forwarded, dict)
@@ -459,10 +621,106 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     assert "x-forwarded-for" not in headers
 
     # Active documents must not cross the authenticated proxy boundary.
-    captured["response_content_type"] = "text/html; charset=utf-8"
+    captured["response_content_type"] = "image/svg+xml; charset=utf-8"
     root_response = client.get(f"/api/applications/{app.id}/proxy")
     assert root_response.status_code == 502
     assert root_response.json() == {"detail": "Application proxy returned an unsupported content type"}
+
+
+async def test_application_proxy_rejects_oversized_request_body(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+    monkeypatch,
+) -> None:
+    """Reject request bodies larger than the current proxy limit."""
+
+    # Arrange
+    owner = users[0]
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
+    await mark_organization_running(organization)
+    app = await applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/xlonglink/sample:latest",
+        user=owner,
+    )
+    await applications.set_status(app.id, ApplicationStatus.running)
+    tls = object()
+
+    def fake_ssl_context(*, cadata: str) -> object:
+        """Return a test TLS context."""
+
+        assert cadata == infrastructure.compute.gateway_ca_certificate
+        return tls
+
+    class FakeProxyClient:
+        """Consume the request body through the proxy size guard."""
+
+        def __init__(self, **kwargs) -> None:
+            """Accept client options."""
+
+        def build_request(self, method: str, url: str, content, headers: dict[str, str]) -> SimpleNamespace:
+            """Build one fake streaming request."""
+
+            return SimpleNamespace(method=method, url=url, content=content, headers=headers)
+
+        async def send(self, request: SimpleNamespace, stream: bool) -> SimpleNamespace:
+            """Consume the content so the route enforces the body limit."""
+
+            async for _chunk in request.content:
+                pass
+            raise AssertionError("oversized request should fail before upstream send completes")
+
+        async def aclose(self) -> None:
+            """Close the fake client."""
+
+    monkeypatch.setattr("src.routes.applications.ssl.create_default_context", fake_ssl_context)
+    monkeypatch.setattr("src.routes.applications.httpx2.AsyncClient", FakeProxyClient)
+    client = clients[0]
+
+    # Act
+    response = client.post(f"/api/applications/{app.id}/proxy/upload", content=b"x" * (16 * 1024 * 1024 + 1))
+
+    # Assert
+    assert response.status_code == 413
+    assert response.json() == {"detail": "Application proxy request body is too large"}
+
+
+async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Return unavailable when the compute gateway configuration is incomplete."""
+
+    # Arrange
+    owner = users[0]
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
+    await mark_organization_running(organization)
+    app = await applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/xlonglink/sample:latest",
+        user=owner,
+    )
+    await applications.set_status(app.id, ApplicationStatus.running)
+    Session = await get_session()
+    async with Session() as session:
+        registry = await session.get(ComputeRegistry, infrastructure.compute.id)
+        assert registry is not None
+        registry.gateway_ca_certificate = None
+        await session.commit()
+    client = clients[0]
+
+    # Act
+    response = client.get(f"/api/applications/{app.id}/proxy/pages.json")
+
+    # Assert
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Application gateway is not ready"}
 
 
 async def test_application_proxy_requires_application_role_for_regular_member(
