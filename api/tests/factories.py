@@ -50,17 +50,16 @@ async def create_ready_infrastructure(
             port=5432,
             username="admin",
             password="secret",
+            sslmode="disable",
             created_id=owner.id,
             updated_id=owner.id,
         )
         storage = StorageRegistry(
-            kind=StorageKind.minio,
+            kind=StorageKind.exoscale,
             name=f"{name} storage {suffix}",
             slug=f"{slug}-{suffix}-storage",
-            endpoint_url="http://storage.example",
-            runtime_endpoint_url="http://storage.internal",
-            access_key_id="access-key",
-            secret_access_key="secret-key",
+            endpoint_url="https://sos-ch-gva-2.exo.io",
+            runtime_endpoint_url="https://sos-ch-gva-2.exo.io",
             created_id=owner.id,
             updated_id=owner.id,
         )

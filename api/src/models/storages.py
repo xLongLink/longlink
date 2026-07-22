@@ -40,10 +40,7 @@ class OrganizationStorageResourceResponse(BaseModel):
 
 
 class StorageRegistryResponse(BaseModel):
-    """Describe one object-storage backend while filtering its secret access key.
-
-    Local MinIO key identifiers remain visible, while Exoscale provisioning credentials stay in Platform settings.
-    """
+    """Describe one Exoscale SOS backend without exposing Platform credentials."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -57,7 +54,6 @@ class StorageRegistryResponse(BaseModel):
 
     # Connection
     endpoint_url: str
-    access_key_id: str | None
     runtime_endpoint_url: str
 
     # Audit

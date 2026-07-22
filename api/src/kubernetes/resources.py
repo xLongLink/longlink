@@ -2,6 +2,7 @@ import json
 import kr8s
 import yaml
 import base64
+import builtins
 from copy import deepcopy
 from typing import Any, TypeVar
 from kr8s.asyncio import Api
@@ -296,7 +297,7 @@ class KubernetesResources:
         resource_class: type[KubernetesResource],
         compute_id: str,
         namespace: str | None = None,
-    ) -> list[KubernetesResource]:
+    ) -> builtins.list[KubernetesResource]:
         """List resources only when both LongLink manager and compute labels match.
 
         This selector is the first ownership boundary; callers still validate kind-specific identity before mutation.

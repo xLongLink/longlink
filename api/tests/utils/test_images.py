@@ -92,7 +92,7 @@ async def test_metadata_fetches_tagged_and_digest_image_references(
         def __init__(self, *_args: object, **_kwargs: object) -> None:
             """Accept the real async client constructor shape."""
 
-        async def __aenter__(self) -> FakeAsyncClient:
+        async def __aenter__(self) -> "FakeAsyncClient":
             """Return the fake registry client."""
 
             return self

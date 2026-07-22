@@ -114,7 +114,7 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
                         return None
 
                     result.environments = [EnvironmentMetadata.model_validate(item) for item in parsed_environments]
-                except json.JSONDecodeError, TypeError, ValueError:
+                except (json.JSONDecodeError, TypeError, ValueError):
                     return None
 
             # Validate deployment values against required image metadata when they are available.

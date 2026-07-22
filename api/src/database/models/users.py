@@ -98,12 +98,12 @@ class OAuthAccount(SQLModel, table=True):
 
 
 class AccessToken(SQLModel, table=True):
-    """Store one revocable FastAPI Users browser access token."""
+    """Store one revocable FastAPI Users browser access-token digest."""
 
     __tablename__: ClassVar[str] = "access_tokens"
 
     # Token identity
-    token: str = Field(primary_key=True, max_length=43)
+    token: str = Field(primary_key=True, max_length=64)
     user_id: UUID = Field(foreign_key="users.id", nullable=False, index=True, ondelete="CASCADE")
 
     # Audit

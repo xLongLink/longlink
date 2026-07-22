@@ -1,12 +1,17 @@
 import asyncio
+import argparse
 import subprocess
+from src import adapters
+from uuid import UUID
 from pathlib import Path
 from sqlmodel import col
 from src.utils import jobs, names
-from sqlalchemy import select
+from sqlalchemy import text, select, inspect
 from src.operations import computes as operation_computes
+from src.environments import env
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.types import Image, StorageKind
+from src.models.types import Image, StorageKind, DatabaseSSLMode
+from sqlalchemy.engine import make_url
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus
 from src.database.session import session_scope
@@ -27,7 +32,7 @@ LOCAL_ADMIN_NAME = "Example LongLink"
 LOCAL_ADMIN_EMAIL = "example@longlink.dev"
 LOCAL_ADMIN_PASSWORD = "longlink-admin"
 LOCAL_DATABASE_PORT = 15432
-LOCAL_DOCKER_NETWORK = "k3d-compute"
+LOCAL_DOCKER_NETWORK = "longlink-dev"
 LOCAL_APPLICATION_IMAGE = "localhost:15000/longlink-app:dev"
 LOCAL_APP_NAME = "sample"
 KUBECONFIG = Path(__file__).with_name("kubeconfig.yaml")
@@ -131,6 +136,10 @@ async def reconcile_until_complete(compute_id) -> None:
 async def seed_local_development() -> None:
     """Create or repair local infrastructure, Organization, and sample Application desired state."""
 
+    # Validate the complete Exoscale development target before creating any local desired state.
+    env.exoscale()
+    storage_endpoint_url = env.exoscale_storage_endpoint()
+
     admin = await seed_local_administrator()
     compute_registry = next((item for item in await compute_service.fetch() if item.slug == "local-compute"), None)
     compute_ready = compute_registry is not None and compute_registry.status == ComputeStatus.ready
@@ -156,6 +165,7 @@ async def seed_local_development() -> None:
             LOCAL_DATABASE_PORT,
             "admin",
             "admin",
+            DatabaseSSLMode.disable,
             admin,
         )
     storage_registry = next((item for item in await storage_service.fetch() if item.slug == "local-storage"), None)
@@ -163,13 +173,13 @@ async def seed_local_development() -> None:
         storage_registry = await storage_service.create(
             "local storage",
             "local-storage",
-            StorageKind.minio,
-            "http://localhost:19000",
-            "http://host.k3d.internal:19000",
-            "admin",
-            "adminadmin",
+            StorageKind.exoscale,
+            storage_endpoint_url,
+            None,
             admin,
         )
+    elif storage_registry.endpoint_url != storage_endpoint_url:
+        raise ValueError("Local storage registry uses a different Exoscale endpoint; run make down before changing zones")
 
     organization = next((item for item in await organization_service.fetch() if item.slug == LOCAL_ORG), None)
     if organization is None:
@@ -231,11 +241,73 @@ async def seed_local_development() -> None:
     await reconcile_until_complete(compute_registry.id)
 
 
-def main() -> None:
-    """Seed local development resources from a synchronous entrypoint."""
+async def cleanup_local_development() -> None:
+    """Delete Exoscale resources tracked by local Platform state."""
 
-    asyncio.run(seed_local_development())
-    print(f"Local administrator: {LOCAL_ADMIN_EMAIL} / {LOCAL_ADMIN_PASSWORD}")
+    # Avoid creating a new SQLite database when local development has no persisted state.
+    database_url = make_url(env.DATABASE_URL)
+    database_name = database_url.database
+    if database_url.get_backend_name() == "sqlite" and database_name is not None and database_name not in {"", ":memory:"}:
+        database_path = Path(database_name)
+        if not database_path.is_absolute():
+            database_path = Path.cwd() / database_path
+        if not database_path.is_file():
+            print("No local Platform state requires cleanup.")
+            return
+
+    # Inventory every Exoscale resource before make removes the local database.
+    async with session_scope() as session:
+        connection = await session.connection()
+        tables = await connection.run_sync(lambda sync_connection: inspect(sync_connection).get_table_names())
+        if not {"applications", "organizations", "storage_registries"}.issubset(tables):
+            print("No Exoscale development resources require cleanup.")
+            return
+        result = await session.execute(
+            text(
+                """
+                SELECT storage_registries.endpoint_url, organizations.id, applications.id
+                FROM organizations
+                JOIN storage_registries ON storage_registries.id = organizations.storage_id
+                LEFT JOIN applications ON applications.organization_id = organizations.id
+                WHERE storage_registries.kind = :kind
+                """
+            ),
+            {"kind": StorageKind.exoscale.value},
+        )
+        resources: dict[tuple[str, UUID], set[UUID]] = {}
+        for endpoint_url, organization_id, application_id in result:
+            key = (str(endpoint_url), UUID(str(organization_id)))
+            applications = resources.setdefault(key, set())
+            if application_id is not None:
+                applications.add(UUID(str(application_id)))
+
+    if not resources:
+        print("No Exoscale development resources require cleanup.")
+        return
+
+    # Remove scoped credentials before emptying and deleting each Organization bucket.
+    access_key_id, secret_access_key, exoscale_organization_id = env.exoscale()
+    for (endpoint_url, organization_id), application_ids in resources.items():
+        storage = adapters.Exoscale(endpoint_url, access_key_id, secret_access_key, exoscale_organization_id)
+        for application_id in application_ids:
+            await storage.revoke(application_id.hex)
+        await storage.delete(names.organization_bucket(organization_id))
+
+    print(f"Removed Exoscale resources for {len(resources)} development Organizations.")
+
+
+def main() -> None:
+    """Seed or clean local development resources from a synchronous entrypoint."""
+
+    # Cleanup removes remote resources before make deletes their local inventory.
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cleanup", action="store_true")
+    arguments = parser.parse_args()
+    if arguments.cleanup:
+        asyncio.run(cleanup_local_development())
+    else:
+        asyncio.run(seed_local_development())
+        print(f"Local administrator: {LOCAL_ADMIN_EMAIL} / {LOCAL_ADMIN_PASSWORD}")
 
 
 if __name__ == "__main__":

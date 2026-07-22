@@ -120,9 +120,9 @@ export const content = (
             <p>Depending on how you use the Service, we may process the following categories of personal data:</p>
             <Ul>
                 <Li>
-                    Account and identity data: internal account ID, OAuth provider ID, name, email address,
-                    optional avatar URL, platform role, account status, selected theme, accent, radius, language,
-                    account creation, update, deletion, and sign-in session information.
+                    Account and identity data: internal account ID, OAuth provider ID, name, email address, optional
+                    avatar URL, platform role, account status, selected theme, accent, radius, language, account
+                    creation, update, deletion, and sign-in session information.
                 </Li>
                 <Li>
                     Authentication data: password hashes, email verification and password reset data, revocable session
@@ -215,9 +215,9 @@ export const content = (
             <p>We disclose only the data reasonably needed for the recipient's role:</p>
             <Ul>
                 <Li>
-                    OAuth providers: optional authentication when you sign in. They receive the information
-                    required for sign-in and return your provider ID, name, email, and, where available, avatar and
-                    profile claims. GitHub may be configured.
+                    OAuth providers: optional authentication when you sign in. They receive the information required for
+                    sign-in and return your provider ID, name, email, and, where available, avatar and profile claims.
+                    GitHub may be configured.
                 </Li>
                 <Li>
                     Infrastructure providers and connected registries: Kubernetes, database, object-storage, container
@@ -369,11 +369,11 @@ export const content = (
             </Heading>
             <p>
                 We use technical and organizational measures appropriate to the nature and risk of the processing,
-                including access controls, password hashing, optional OAuth authentication, revocable session
-                tokens, signed session cookies, transport encryption, namespace, database-schema, and storage-bucket
-                isolation, credential hashing or encryption where appropriate, secret management, logging, and
-                restricted administrative access. No system is completely secure, and you are responsible for securing
-                your accounts, applications, credentials, infrastructure, and Customer Content.
+                including access controls, password hashing, optional OAuth authentication, revocable session tokens,
+                signed session cookies, transport encryption, namespace, database-schema, and storage-bucket isolation,
+                credential hashing or encryption where appropriate, secret management, logging, and restricted
+                administrative access. No system is completely secure, and you are responsible for securing your
+                accounts, applications, credentials, infrastructure, and Customer Content.
             </p>
             <p>
                 We assess personal-data breaches and notify the Federal Data Protection and Information Commissioner

@@ -4,6 +4,7 @@
 @import 'tailwindcss/preflight.css' layer(base);
 @import '@astryxdesign/core/reset.css';
 @import '@astryxdesign/core/astryx.css';
+@import './lib/generated/longlink-neutral-default.css';
 @import '@fontsource-variable/inter';
 @import 'tailwindcss/utilities.css' layer(utilities);
 

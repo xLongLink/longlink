@@ -27,6 +27,7 @@ async def test_database_registry_endpoints_return_backend(
     assert payload["id"] == str(registry.id)
     assert payload["name"] == registry.name
     assert payload["host"] == "database.example"
+    assert payload["sslmode"] == "disable"
     assert "password" not in payload
 
 
@@ -46,10 +47,11 @@ async def test_database_usage_endpoint_returns_backend_capacity(
     class FakePostgres:
         """Return deterministic database usage without contacting PostgreSQL."""
 
-        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+        def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
             """Validate the database registry connection fields."""
 
             assert (host, port, username, password) == (registry.host, registry.port, registry.username, registry.password)
+            assert sslmode == registry.sslmode
 
         async def usage(self) -> dict[str, int]:
             """Return fake backend capacity counters."""

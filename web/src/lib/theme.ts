@@ -34,6 +34,7 @@ export const ACCENT_VALUES = [
 export const MIN_RADIUS = 0;
 export const MAX_RADIUS = 1.5;
 export const DEFAULT_RADIUS = 1;
+export const THEME_PREFERENCES_KEY = 'longlink-theme';
 
 export type Theme = (typeof THEME_VALUES)[number];
 
@@ -90,7 +91,7 @@ export const ACCENT_OPTIONS = ACCENT_VALUES.map((value) => ({
 
 /** Returns the Astryx theme for one persisted accent and radius selection. */
 export function getAstryxTheme(accentValue: Accent, radius: number): DefinedTheme {
-    const key = `${accentValue}-${radius}`;
+    const key = accentValue === 'neutral' && radius === DEFAULT_RADIUS ? 'neutral-default' : `${accentValue}-${radius}`;
 
     // Reuse theme objects so Astryx does not reinject equivalent CSS.
     const existing = themes.get(key);

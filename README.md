@@ -27,7 +27,7 @@ Specific workflows can be customized through code, built quickly with modern AI-
 
 ## Getting Started
 
-Requirements: `Python 3.14` or newer.
+Requirements: `Python 3.12` or newer.
 
 ```bash
 uvx longlink init --folder <folder>
@@ -80,6 +80,9 @@ Cleanup
 ```bash
 make down
 ```
+
+`make down` removes all Exoscale buckets and Application IAM credentials tracked by local Platform state before deleting it.
+Local PostgreSQL, registry, Kubernetes, API, and Web frontend ports bind to loopback by default.
 
 <br />
 <br />

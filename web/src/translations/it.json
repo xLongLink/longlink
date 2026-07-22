@@ -201,7 +201,7 @@
         "defaultMessage": "Archiviazione eliminata"
     },
     "admin.storageDescription": {
-        "defaultMessage": "Controlla integrazioni file storage e configurazione object storage."
+        "defaultMessage": "Controlla integrazioni Exoscale SOS e configurazione object storage."
     },
     "admin.operationsDescription": {
         "defaultMessage": "Traccia attivita di piattaforma lunghe, ora di avvio e completamento."
@@ -458,9 +458,6 @@
     "columns.actions": {
         "defaultMessage": "Azioni"
     },
-    "columns.accessKey": {
-        "defaultMessage": "Chiave accesso"
-    },
     "columns.application": {
         "defaultMessage": "Applicazione"
     },
@@ -662,9 +659,6 @@
     "labels.accentColor": {
         "defaultMessage": "Colore accento"
     },
-    "labels.accessKeyId": {
-        "defaultMessage": "ID chiave accesso"
-    },
     "labels.country": {
         "defaultMessage": "Paese"
     },
@@ -689,9 +683,6 @@
     "labels.gatewayUrl": {
         "defaultMessage": "URL gateway"
     },
-    "labels.kind": {
-        "defaultMessage": "Tipo"
-    },
     "labels.kubeconfig": {
         "defaultMessage": "Kubeconfig"
     },
@@ -707,14 +698,14 @@
     "labels.port": {
         "defaultMessage": "Porta"
     },
+    "labels.sslMode": {
+        "defaultMessage": "Modalità SSL"
+    },
     "labels.radius": {
         "defaultMessage": "Raggio"
     },
     "labels.runtimeEndpointUrl": {
         "defaultMessage": "URL endpoint runtime"
-    },
-    "labels.secretAccessKey": {
-        "defaultMessage": "Chiave accesso segreta"
     },
     "labels.theme": {
         "defaultMessage": "Tema"
@@ -933,7 +924,7 @@
         "defaultMessage": "Connetti database"
     },
     "dialogs.connectStorageDescription": {
-        "defaultMessage": "Registra un backend object storage."
+        "defaultMessage": "Registra un backend Exoscale SOS."
     },
     "dialogs.connectStorageTitle": {
         "defaultMessage": "Connetti archiviazione"

@@ -48,7 +48,7 @@ class Element:
         self._content: str | None = None
 
     @classmethod
-    def from_content(cls, content: str, schema: str | Path | None = None) -> Element:
+    def from_content(cls, content: str, schema: str | Path | None = None) -> "Element":
         """Create an element instance from in-memory XML content."""
 
         instance = cls.__new__(cls)

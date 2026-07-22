@@ -51,7 +51,7 @@ def test_migrations_execute_against_postgresql_and_match_current_metadata(monkey
         wait_for_postgres(container, "longlink", "secret", "longlink", POSTGRES_PORT)
 
         # Run the real Alembic environment against the isolated PostgreSQL database.
-        database_url = f"postgresql+psycopg://longlink:secret@{container.host()}:{container.port(POSTGRES_PORT)}/longlink"
+        database_url = f"postgresql+psycopg://longlink:secret@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?sslmode=disable"
         monkeypatch.setattr(env, "DATABASE_URL", database_url)
         config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
         command.upgrade(config, "head")

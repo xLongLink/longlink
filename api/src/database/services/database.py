@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
+from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.models.users import User
@@ -59,6 +60,7 @@ async def create(
     port: int,
     username: str,
     password: str,
+    sslmode: DatabaseSSLMode,
     user: User,
 ) -> DatabaseRegistry:
     """Register one database backend."""
@@ -71,6 +73,7 @@ async def create(
             host=host,
             port=port,
             password=password,
+            sslmode=sslmode,
             username=username,
             created_id=user.id,
             updated_id=user.id,

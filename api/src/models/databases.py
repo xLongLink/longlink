@@ -1,6 +1,7 @@
 from uuid import UUID
 from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
+from src.models.types import DatabaseSSLMode
 from src.models.users import UserSummary
 from src.models.resources import OrganizationResourceApplicationResponse
 from src.models.infrastructure import DatabaseConfiguration
@@ -51,6 +52,7 @@ class DatabaseRegistryResponse(BaseModel):
     # Connection
     host: str
     port: int
+    sslmode: DatabaseSSLMode
     username: str
 
     # Audit

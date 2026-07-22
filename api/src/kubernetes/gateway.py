@@ -93,7 +93,7 @@ class Gateway:
 
         return hashlib.sha256(TEMPLATES.joinpath("gateway_service.yml").read_bytes()).hexdigest()
 
-    def config(self, applications: tuple[DesiredApplication, ...]) -> str:
+    def config(self, applications: "tuple[DesiredApplication, ...]") -> str:
         """Render deterministic authenticated Envoy routes from the authoritative application snapshot.
 
         Omitted applications receive no route even if stale Services still exist.
@@ -340,7 +340,7 @@ class Gateway:
             subject_names = server_certificate.extensions.get_extension_for_class(x509.SubjectAlternativeName).value
             ca_certificate.verify_directly_issued_by(ca_certificate)
             server_certificate.verify_directly_issued_by(ca_certificate)
-        except TypeError, ValueError, UnsupportedAlgorithm, x509.ExtensionNotFound, UnicodeEncodeError:
+        except (TypeError, ValueError, UnsupportedAlgorithm, x509.ExtensionNotFound, UnicodeEncodeError):
             return False
 
         # Certificates near expiry rotate while there is still time to persist and deploy replacements.

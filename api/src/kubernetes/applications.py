@@ -47,7 +47,7 @@ class Applications:
 
     def organization_manifests(
         self,
-        organization: DesiredOrganization,
+        organization: "DesiredOrganization",
         compute_id: str,
         platform_version: str,
     ) -> OrganizationManifests:
@@ -81,7 +81,7 @@ class Applications:
 
     def manifests(
         self,
-        application: DesiredApplication,
+        application: "DesiredApplication",
         compute_id: str,
         revision_key: str,
         platform_version: str,

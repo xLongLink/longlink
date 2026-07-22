@@ -46,7 +46,7 @@ make web            # Run the Vite web app
 make seed           # Prepare local services and seed data without starting the API server
 make api            # Run the LongLink Platform API after seeding
 
-make down           # Stop services, remove local volumes, and remove the cluster
+make down           # Remove remote development resources, local services, volumes, and the cluster
 ```
 
 ## Test the SDK in development

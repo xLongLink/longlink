@@ -3,7 +3,7 @@ import urllib.parse
 from uuid import UUID
 from typing import Self
 from pydantic import Field, BaseModel, field_validator, model_validator
-from src.models.types import StorageKind
+from src.models.types import StorageKind, DatabaseSSLMode
 
 
 def exoscale_zone(endpoint_url: str) -> str:
@@ -48,6 +48,7 @@ class DatabaseConfiguration(BaseModel):
     host: str = Field(min_length=1, max_length=255)
     port: int = Field(ge=1, le=65535)
     password: str = Field(min_length=1, max_length=255)
+    sslmode: DatabaseSSLMode = DatabaseSSLMode.require
     username: str = Field(min_length=1, max_length=255)
 
     @field_validator("host")
@@ -88,26 +89,17 @@ class StorageConfiguration(BaseModel):
 
     # Connection
     endpoint_url: str = Field(min_length=1, max_length=255)
-    access_key_id: str | None = Field(default=None, min_length=1, max_length=255)
-    secret_access_key: str | None = Field(default=None, min_length=1, max_length=255)
     runtime_endpoint_url: str | None = Field(default=None, max_length=255)
 
     @model_validator(mode="after")
     def validate_provider(self) -> Self:
-        """Validate provider-specific credentials and endpoints."""
-
-        # MinIO uses registry credentials, while Exoscale credentials come from Platform environment settings.
-        if self.kind == StorageKind.minio and (self.access_key_id is None or self.secret_access_key is None):
-            raise ValueError("MinIO storage requires access_key_id and secret_access_key")
-        if self.kind == StorageKind.exoscale and (self.access_key_id is not None or self.secret_access_key is not None):
-            raise ValueError("Exoscale provisioning credentials must be configured through Platform environment variables")
+        """Validate Exoscale storage endpoints."""
 
         # Keep Exoscale control and runtime traffic on the same zone-specific HTTPS endpoint.
-        if self.kind == StorageKind.exoscale:
-            zone = exoscale_zone(self.endpoint_url)
-            runtime_zone = exoscale_zone(self.runtime_endpoint_url or self.endpoint_url)
-            if runtime_zone != zone:
-                raise ValueError("Exoscale control and runtime storage endpoints must use the same zone")
+        zone = exoscale_zone(self.endpoint_url)
+        runtime_zone = exoscale_zone(self.runtime_endpoint_url or self.endpoint_url)
+        if runtime_zone != zone:
+            raise ValueError("Exoscale control and runtime storage endpoints must use the same zone")
 
         return self
 

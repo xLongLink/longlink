@@ -2,6 +2,7 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
+from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
 
@@ -43,6 +44,7 @@ class DatabaseRegistry(SQLModel, table=True):
     host: str = Field(max_length=255)
     port: int
     password: str = Field(max_length=255)
+    sslmode: DatabaseSSLMode = Field(default=DatabaseSSLMode.require, max_length=16)
     username: str = Field(max_length=255)
 
     # User

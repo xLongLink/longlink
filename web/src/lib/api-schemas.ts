@@ -13,6 +13,7 @@ const accentSchema = z.enum(ACCENT_VALUES);
 const radiusSchema = z.number().min(MIN_RADIUS).max(MAX_RADIUS);
 const iconNameSchema = z.enum(ICON_NAMES).nullable();
 const languageSchema = z.enum(LANGUAGE_VALUES);
+const databaseSslModeSchema = z.enum(['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full']);
 
 export const apiAuthConfigSchema = z.object({
     github_enabled: z.boolean(),
@@ -169,6 +170,7 @@ export const apiDatabaseRegistrySchema = z.object({
     slug: z.string(),
     host: z.string(),
     port: z.number(),
+    sslmode: databaseSslModeSchema,
     username: z.string(),
     created_at: z.string(),
     created_by: nullableUserSummarySchema,
@@ -180,11 +182,10 @@ export const apiDatabaseRegistrySchema = z.object({
 
 export const apiStorageRegistrySchema = z.object({
     id: z.string(),
-    kind: z.string(),
+    kind: z.literal('exoscale'),
     name: z.string(),
     slug: z.string(),
     endpoint_url: z.string(),
-    access_key_id: z.string().nullable(),
     runtime_endpoint_url: z.string(),
     created_at: z.string(),
     created_by: nullableUserSummarySchema,

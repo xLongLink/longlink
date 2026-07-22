@@ -4,7 +4,6 @@ from typing import TypedDict
 from sqlalchemy import String, text
 from collections.abc import AsyncIterator
 from longlink.shared import migrations as shared_migrations
-from src.environments import env
 from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import URL
 from sqlalchemy.schema import CreateSchema
@@ -38,7 +37,7 @@ class Postgres:
     Runtime roles can write their application schema and read the organization's shared schema.
     """
 
-    def __init__(self, host: str, port: int, username: str, password: str) -> None:
+    def __init__(self, host: str, port: int, username: str, password: str, sslmode: DatabaseSSLMode | str) -> None:
         """Initialize the PostgreSQL database adapter.
 
         Args:
@@ -46,6 +45,7 @@ class Postgres:
             port: PostgreSQL port.
             username: PostgreSQL username.
             password: PostgreSQL password.
+            sslmode: PostgreSQL SSL mode.
         """
 
         # Store registry connection settings.
@@ -53,7 +53,7 @@ class Postgres:
         self._port = port
         self._username = username
         self._password = password
-        self._sslmode: DatabaseSSLMode = env.DATABASE_SSLMODE
+        self._sslmode = DatabaseSSLMode(sslmode)
         self._maintenance_database = "postgres"
 
     def url(self, database: str, search_path: str | None = None) -> URL:
@@ -70,7 +70,7 @@ class Postgres:
         )
 
         # Attach PostgreSQL driver options after URL creation so credentials stay structured.
-        query = {"sslmode": self._sslmode}
+        query: dict[str, str] = {"sslmode": self._sslmode.value}
 
         # Forward an explicit schema search path when callers request one.
         if search_path is not None:

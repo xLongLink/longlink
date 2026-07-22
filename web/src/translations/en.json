@@ -201,7 +201,7 @@
         "defaultMessage": "Storage deleted"
     },
     "admin.storageDescription": {
-        "defaultMessage": "Review file storage integrations and object storage configuration."
+        "defaultMessage": "Review Exoscale SOS integrations and object storage configuration."
     },
     "admin.operationsDescription": {
         "defaultMessage": "Track long-running platform tasks, their start time, and when they stopped."
@@ -458,9 +458,6 @@
     "columns.actions": {
         "defaultMessage": "Actions"
     },
-    "columns.accessKey": {
-        "defaultMessage": "Access key"
-    },
     "columns.application": {
         "defaultMessage": "Application"
     },
@@ -662,9 +659,6 @@
     "labels.accentColor": {
         "defaultMessage": "Accent color"
     },
-    "labels.accessKeyId": {
-        "defaultMessage": "Access key ID"
-    },
     "labels.country": {
         "defaultMessage": "Country"
     },
@@ -689,9 +683,6 @@
     "labels.gatewayUrl": {
         "defaultMessage": "Gateway URL"
     },
-    "labels.kind": {
-        "defaultMessage": "Kind"
-    },
     "labels.kubeconfig": {
         "defaultMessage": "Kubeconfig"
     },
@@ -707,14 +698,14 @@
     "labels.port": {
         "defaultMessage": "Port"
     },
+    "labels.sslMode": {
+        "defaultMessage": "SSL mode"
+    },
     "labels.radius": {
         "defaultMessage": "Radius"
     },
     "labels.runtimeEndpointUrl": {
         "defaultMessage": "Runtime endpoint URL"
-    },
-    "labels.secretAccessKey": {
-        "defaultMessage": "Secret access key"
     },
     "labels.theme": {
         "defaultMessage": "Theme"
@@ -933,7 +924,7 @@
         "defaultMessage": "Connect database"
     },
     "dialogs.connectStorageDescription": {
-        "defaultMessage": "Register an object storage backend."
+        "defaultMessage": "Register an Exoscale SOS backend."
     },
     "dialogs.connectStorageTitle": {
         "defaultMessage": "Connect storage"

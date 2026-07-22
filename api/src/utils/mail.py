@@ -8,9 +8,11 @@ from pathlib import Path
 from urllib.parse import urlencode
 from email.message import EmailMessage
 from src.environments import env
+from src.models.roles import OrganizationRoles
 
 logger = logging.getLogger("longlink.mail")
 TEMPLATES = Path(__file__).with_name("templates")
+ORGANIZATION_INVITATION_TEMPLATE = "organization_invitation.mjml"
 SIGNUP_VERIFICATION_TEMPLATE = "signup_verification.mjml"
 
 
@@ -88,6 +90,34 @@ async def send_authentication_email(recipient: str, subject: str, body: str) -> 
 
     # Password reset emails still use the generic plain-text delivery path.
     await send_mail(recipient, subject, body)
+
+
+async def send_organization_invitation_email(recipient: str, organization_name: str, role: OrganizationRoles) -> None:
+    """Deliver one organization invitation email."""
+
+    # Link invitees to the authenticated organizations page so LongLink can handle sign-in or registration.
+    subject = f"Invitation to join {organization_name} on LongLink"
+    invitation_url = f"{env.PUBLIC_URL.rstrip('/')}/organizations"
+    role_label = role.value
+
+    # Keep a plain-text fallback for clients that do not render HTML.
+    text = (
+        f"You have been invited to join {organization_name} on LongLink.\n\n"
+        f"Role: {role_label}\n\n"
+        f"Sign in or create an account with this email address to continue: {invitation_url}\n\n"
+        "If you were not expecting this invitation, you can ignore this email.\n\n"
+        "GitHub: https://github.com/xLongLink/longlink\n"
+        "LinkedIn: https://www.linkedin.com/company/longlink\n"
+        "Contact: info@longlink.dev\n"
+    )
+    html = render_mjml_template(
+        ORGANIZATION_INVITATION_TEMPLATE,
+        invitation_url=invitation_url,
+        organization_name=organization_name,
+        role_label=role_label,
+    )
+
+    await send_mail(recipient, subject, text, html)
 
 
 async def send_signup_verification_email(recipient: str, token: str) -> None:

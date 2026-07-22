@@ -7,7 +7,7 @@ name = 'longlink-api'
 dynamic = ['version']
 description = 'LongLink backend API'
 readme = 'README.md'
-requires-python = '>=3.14'
+requires-python = '>=3.12'
 dependencies = [
     'aioboto3>=15.5.0',
     'aiosqlite>=0.22.1',
@@ -69,7 +69,7 @@ include = ['src*']
 
 [tool.ruff]
 line-length = 140
-target-version = "py314"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["UP", "D300"]
@@ -87,7 +87,7 @@ length_sort = true
 
 [tool.pyright]
 typeCheckingMode = "basic"
-pythonVersion = "3.14"
+pythonVersion = "3.12"
 venvPath = "."
 venv = ".venv"
 include = ["main.py", "seed.py", "src", "alembic"]

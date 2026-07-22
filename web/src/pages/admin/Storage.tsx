@@ -51,17 +51,6 @@ function createStorageColumns(t: TranslatorFn): TableColumn<ApiStorageRegistry>[
                 </HStack>
             ),
         },
-        {
-            key: 'access_key',
-            header: t('columns.accessKey'),
-            width: proportional(1),
-            renderCell: (storage) => (
-                <VStack gap={1}>
-                    <Text weight="semibold">{storage.access_key_id ?? t('dialogs.none')}</Text>
-                    <Text type="supporting">{storage.kind.toUpperCase()}</Text>
-                </VStack>
-            ),
-        },
     ];
 }
 

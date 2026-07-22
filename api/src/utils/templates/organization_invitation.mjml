@@ -1,0 +1,23 @@
+<mjml>
+  <mj-body background-color="#f3f4f6">
+    <mj-section padding="32px 16px">
+      <mj-column>
+        <mj-text align="center" background-color="#ffffff" border-radius="16px 16px 0 0" color="#111827" font-size="24px" font-weight="700" line-height="32px" padding="32px 24px 8px">
+          You are invited to <span style="letter-spacing:-1px;"><span style="color:#6b7280;">LONG</span><span style="color:#111827;">LINK</span></span>
+        </mj-text>
+        <mj-text align="center" background-color="#ffffff" color="#374151" font-size="16px" line-height="24px" padding="8px 24px 12px">Join $organization_name with $role_label access.</mj-text>
+        <mj-text align="center" background-color="#ffffff" padding="0 24px 18px">
+          <a href="$invitation_url" style="background-color:#111827;border-radius:8px;color:#ffffff;display:inline-block;font-size:16px;font-weight:700;padding:14px 24px;text-decoration:none;">Open invitation</a>
+        </mj-text>
+        <mj-text align="center" background-color="#ffffff" color="#4b5563" font-size="14px" line-height="22px" padding="0 24px 22px">Sign in or create an account with this email address to continue. If you were not expecting this invitation, you can ignore this email.</mj-text>
+        <mj-text align="center" background-color="#ffffff" border-radius="0 0 16px 16px" color="#6b7280" font-size="13px" line-height="20px" padding="0 24px 32px">
+          <a href="https://github.com/xLongLink/longlink" style="color:#374151;text-decoration:underline;">GitHub</a>
+          &nbsp;&middot;&nbsp;
+          <a href="https://www.linkedin.com/company/longlink" style="color:#374151;text-decoration:underline;">LinkedIn</a>
+          &nbsp;&middot;&nbsp;
+          <a href="mailto:info@longlink.dev" style="color:#374151;text-decoration:underline;">Contact</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

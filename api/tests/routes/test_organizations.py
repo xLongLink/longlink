@@ -2,6 +2,7 @@ import pytest
 from uuid import UUID
 from types import SimpleNamespace
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
+from src.utils import mail as mail_module
 from src.utils import names
 from src.environments import env
 from src.models.roles import OrganizationRoles
@@ -246,13 +247,14 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     dashboard_schema = dashboard.id.hex
 
     class FakePostgres:
-        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+        def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
             """Store database registry configuration for assertions."""
 
             self.host = host
             self.port = port
             self.username = username
             self.password = password
+            assert sslmode == registry.sslmode
 
         async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
             """Return fake schema usage rows for the organization database."""
@@ -318,13 +320,14 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     )
 
     class FakePostgres:
-        def __init__(self, host: str, port: int, username: str, password: str) -> None:
+        def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
             """Store database registry configuration for assertions."""
 
             self.host = host
             self.port = port
             self.username = username
             self.password = password
+            assert sslmode == infrastructure.database.sslmode
 
         async def schema_usage(self, database_name: str) -> list[dict[str, int | str]]:
             """Raise the backend error expected by the test."""
@@ -587,6 +590,7 @@ async def test_get_organization_returns_404_for_non_member(
 async def test_create_organization_invitation_returns_204(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
+    monkeypatch: pytest.MonkeyPatch,
     caller_index: int,
     invitee_index: int,
     caller_role: OrganizationRoles | None,
@@ -594,6 +598,14 @@ async def test_create_organization_invitation_returns_204(
     """Allow owners and maintainers to create pending invitations."""
 
     # Arrange
+    messages: list[tuple[str, str, str, str | None]] = []
+
+    async def capture_mail(recipient: str, subject: str, text: str, html: str | None = None) -> None:
+        """Capture an invitation email without using SMTP."""
+
+        messages.append((recipient, subject, text, html))
+
+    monkeypatch.setattr(mail_module, "send_mail", capture_mail)
     owner = users[0]
     invitee = users[invitee_index]
     infrastructure = await create_ready_infrastructure(owner)
@@ -622,6 +634,13 @@ async def test_create_organization_invitation_returns_204(
     assert response.status_code == 204
     invitations_list = await db.organizations.invitations(organization.id)
     assert [item.email for item in invitations_list] == [invitee.email]
+    assert messages[0][:2] == (invitee.email, "Invitation to join acme on LongLink")
+    assert "You have been invited to join acme on LongLink." in messages[0][2]
+    assert "Role: write" in messages[0][2]
+    assert "http://localhost:5173/organizations" in messages[0][2]
+    assert messages[0][3] is not None
+    assert "Join acme with write access." in messages[0][3]
+    assert "Open invitation" in messages[0][3]
 
 
 async def test_update_organization_member_changes_role(

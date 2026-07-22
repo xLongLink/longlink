@@ -9,7 +9,7 @@ db = SimpleNamespace(storage=storage)
 
 
 async def test_get_and_fetch_return_storage_registry(users: tuple[User, User, User]) -> None:
-    """Return one independently registered object-storage backend."""
+    """Return one independently registered Exoscale SOS backend."""
 
     # Arrange
     owner = users[0]
@@ -22,13 +22,11 @@ async def test_get_and_fetch_return_storage_registry(users: tuple[User, User, Us
     missing = await db.storage.get(uuid4())
 
     # Assert
-    assert registry.kind == StorageKind.minio
+    assert registry.kind == StorageKind.exoscale
     assert registry.name.startswith("Primary storage")
     assert registry.slug.endswith("-storage")
-    assert registry.endpoint_url == "http://storage.example"
-    assert registry.access_key_id == "access-key"
-    assert registry.secret_access_key == "secret-key"
-    assert registry.runtime_endpoint_url == "http://storage.internal"
+    assert registry.endpoint_url == "https://sos-ch-gva-2.exo.io"
+    assert registry.runtime_endpoint_url == "https://sos-ch-gva-2.exo.io"
     assert [item.id for item in fetched] == [registry.id]
     assert reloaded is not None
     assert reloaded.created_by is not None

@@ -2,6 +2,8 @@
 
 LOCAL_SDK_IMAGE := localhost:15000/longlink-app:dev
 LOCAL_SDK_IMAGE_LABEL := longlink.name=longlink-app
+DEV_DOCKER_NETWORK := longlink-dev
+DEV_CLUSTER := compute
 API_PYTEST_MARK ?=
 SDK_PYTEST_MARK ?=
 
@@ -143,15 +145,26 @@ web\:clean:
 	rm -rf web/dist web/dist-ssr web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite
 
 
-# Start local services and the cluster, then wait for the local registry.
+# Start isolated local services and the cluster, then wait for the local registry.
 up:
-	docker compose -f dev/compose.yml up -d
-	@if k3d cluster list compute >/dev/null 2>&1; then \
-		printf "k3d cluster compute already exists.\n"; \
+	@docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1 || docker network create "$(DEV_DOCKER_NETWORK)"
+	@if k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then \
+		network_ip="$$(docker inspect "k3d-$(DEV_CLUSTER)-server-0" --format '{{with index .NetworkSettings.Networks "$(DEV_DOCKER_NETWORK)"}}{{.IPAddress}}{{end}}')"; \
+		if [ -z "$$network_ip" ]; then \
+			printf "Existing k3d cluster is not attached to $(DEV_DOCKER_NETWORK). Run make down before make up.\n"; \
+			exit 1; \
+		fi; \
+		printf "k3d cluster $(DEV_CLUSTER) already exists.\n"; \
 	else \
-		k3d cluster create compute --api-port 0.0.0.0:8001 -p "8080:80@loadbalancer" -p "8443:443@loadbalancer" --registry-config dev/registries.yml --k3s-arg "--disable=traefik@server:0"; \
+		printf "Creating k3d cluster $(DEV_CLUSTER).\n"; \
 	fi
-	k3d kubeconfig get compute > api/kubeconfig.yaml
+	@gateway="$$(docker network inspect "$(DEV_DOCKER_NETWORK)" --format '{{(index .IPAM.Config 0).Gateway}}')"; \
+		if [ -z "$$gateway" ]; then printf "Development Docker network has no gateway.\n"; exit 1; fi; \
+		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml up --detach --wait
+	@if ! k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then \
+		k3d cluster create "$(DEV_CLUSTER)" --network "$(DEV_DOCKER_NETWORK)" --api-port 127.0.0.1:8001 -p "127.0.0.1:8443:443@loadbalancer" --registry-config dev/registries.yml --k3s-arg "--disable=traefik@server:0"; \
+	fi
+	@umask 077; k3d kubeconfig get "$(DEV_CLUSTER)" > api/kubeconfig.yaml
 	@printf "Waiting for local registry...\n"
 	@attempt=1; \
 	while ! curl --fail --silent --output /dev/null http://localhost:15000/v2/; do \
@@ -165,11 +178,15 @@ up:
 	@printf "Local registry is ready.\n"
 
 
-# Stop local services, remove the cluster, and clean Python caches.
+# Remove remote development resources, stop local services, and clean local state.
 down:
+	cd api && DEVELOPMENT=true uv run --locked python seed.py --cleanup
+	@if k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then k3d cluster delete "$(DEV_CLUSTER)"; fi
+	@gateway="$$(docker network inspect "$(DEV_DOCKER_NETWORK)" --format '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || true)"; \
+		if [ -z "$$gateway" ]; then gateway="127.0.0.2"; fi; \
+		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --volumes --remove-orphans
+	@if docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1; then docker network rm "$(DEV_DOCKER_NETWORK)"; fi
 	rm -f api/dev.db api/kubeconfig.yaml
-	-docker compose -f dev/compose.yml down --volumes --remove-orphans
-	-k3d cluster delete compute
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
 	find . -type d -name .mypy_cache -prune -exec rm -rf {} +
 	find . -type f -name '*.py[co]' -delete
@@ -179,7 +196,7 @@ down:
 api:
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
-	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
 # Start local services, build and push the SDK app image, then run migrations and seed data.
@@ -196,7 +213,7 @@ seed: up
 # Run the Vite web app.
 web: 
 	bun i --cwd web
-	bun run --cwd web dev --host 0.0.0.0 --port 5173
+	bun run --cwd web dev --host 127.0.0.1 --port 5173
 
 
 # Build the SDK web bundle, then recreate and run the generated SDK development app.

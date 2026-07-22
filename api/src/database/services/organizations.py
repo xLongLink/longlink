@@ -298,6 +298,7 @@ async def create(
             database_registry.port,
             database_registry.username,
             database_registry.password,
+            database_registry.sslmode,
         )
         shared_schema_url = db.shared_schema_url(organization_id)
 

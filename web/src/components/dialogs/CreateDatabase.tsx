@@ -7,6 +7,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { Selector } from '@astryxdesign/core/Selector';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
@@ -22,9 +23,19 @@ const schema = z.object({
     name: z.string().trim().min(1),
     host: z.string().trim().min(1),
     port: z.number().int().min(1).max(65535),
+    sslmode: z.enum(['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full']),
     username: z.string().trim().min(1),
     password: z.string().min(1),
 });
+
+const SSL_MODE_OPTIONS = [
+    { value: 'disable', label: 'disable' },
+    { value: 'allow', label: 'allow' },
+    { value: 'prefer', label: 'prefer' },
+    { value: 'require', label: 'require' },
+    { value: 'verify-ca', label: 'verify-ca' },
+    { value: 'verify-full', label: 'verify-full' },
+];
 
 type Values = z.infer<typeof schema>;
 
@@ -38,7 +49,7 @@ export default function CreateDatabase() {
     const [error, setError] = useState<string | null>(null);
     const [passwordVisible, setPasswordVisible] = useState(false);
     const form = useForm<Values>({
-        defaultValues: { name: '', host: '', port: 5432, username: '', password: '' },
+        defaultValues: { name: '', host: '', port: 5432, sslmode: 'require', username: '', password: '' },
         mode: 'onChange',
         resolver: zodResolver(schema),
     });
@@ -172,6 +183,24 @@ export default function CreateDatabase() {
                                             )}
                                         />
                                     </Grid>
+                                    <Controller
+                                        control={form.control}
+                                        name="sslmode"
+                                        render={({ field }) => (
+                                            <Selector
+                                                label={t('labels.sslMode')}
+                                                options={SSL_MODE_OPTIONS}
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isRequired
+                                                onChange={(value) => {
+                                                    if (value !== null) {
+                                                        field.onChange(value);
+                                                    }
+                                                }}
+                                            />
+                                        )}
+                                    />
                                     <Controller
                                         control={form.control}
                                         name="username"

@@ -26,6 +26,6 @@ async def test_storage_registry_endpoints_return_backend(
     payload = get_response.json()
     assert payload["id"] == str(registry.id)
     assert payload["name"] == registry.name
-    assert payload["endpoint_url"] == "http://storage.example"
-    assert payload["runtime_endpoint_url"] == "http://storage.internal"
-    assert "secret_access_key" not in payload
+    assert payload["endpoint_url"] == "https://sos-ch-gva-2.exo.io"
+    assert payload["runtime_endpoint_url"] == "https://sos-ch-gva-2.exo.io"
+    assert "access_key_id" not in payload

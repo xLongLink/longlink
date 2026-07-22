@@ -22,6 +22,7 @@ async def create_database_registry(payload: DatabaseRegistryCreate, user: User =
         payload.port,
         payload.username,
         payload.password,
+        payload.sslmode,
         user,
     )
 
@@ -67,7 +68,7 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
         raise HTTPException(status_code=404, detail="Database registry not found")
 
     # Inspect backend usage through the adapter.
-    db = adapters.Postgres(registry.host, registry.port, registry.username, registry.password)
+    db = adapters.Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode)
     try:
         data = await db.usage()
     except Exception as exc:

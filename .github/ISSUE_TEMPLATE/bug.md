@@ -17,6 +17,8 @@ A clear and concise description of what the bug is.
 3. Scroll down to '....'
 4. See error
 
+If applicable, add screenshots or logs to help explain your problem.
+
 ## Expected behavior
 
 A clear and concise description of what you expected to happen.
@@ -24,10 +26,6 @@ A clear and concise description of what you expected to happen.
 ## Actual behavior
 
 What actually happened.
-
-## Screenshots / logs
-
-If applicable, add screenshots or logs to help explain your problem.
 
 ## Environment
 

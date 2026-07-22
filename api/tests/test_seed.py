@@ -102,6 +102,10 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
         return completed
 
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
+    monkeypatch.setattr(env, "EXOSCALE_API_KEY", "access-key")
+    monkeypatch.setattr(env, "EXOSCALE_API_SECRET", "secret-key")
+    monkeypatch.setattr(env, "EXOSCALE_ORGANIZATION_ID", UUID("77777777-7777-7777-7777-777777777777"))
+    monkeypatch.setattr(env, "EXOSCALE_STORAGE_ENDPOINT_URL", "https://sos-ch-gva-2.exo.io")
     monkeypatch.setattr(seed, "local_database_host", local_database_host)
     monkeypatch.setattr(seed, "seed_local_administrator", seed_administrator)
     monkeypatch.setattr(seed.compute_service, "fetch", fetch_no_resources)
@@ -130,16 +134,15 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
         seed.LOCAL_DATABASE_PORT,
         "admin",
         "admin",
+        seed.DatabaseSSLMode.disable,
         user,
     )
     assert calls["storage"] == (
         "local storage",
         "local-storage",
-        seed.StorageKind.minio,
-        "http://localhost:19000",
-        "http://host.k3d.internal:19000",
-        "admin",
-        "adminadmin",
+        seed.StorageKind.exoscale,
+        "https://sos-ch-gva-2.exo.io",
+        None,
         user,
     )
     assert calls["organization"] == (
@@ -171,13 +174,22 @@ async def test_seed_local_development_refreshes_existing_sample_application(monk
         version=env.VERSION,
     )
     database = fake_resource(id=UUID("55555555-5555-5555-5555-555555555555"), slug="local-database")
-    storage = fake_resource(id=UUID("66666666-6666-6666-6666-666666666666"), slug="local-storage")
+    storage = fake_resource(
+        id=UUID("66666666-6666-6666-6666-666666666666"),
+        slug="local-storage",
+        endpoint_url="https://sos-ch-gva-2.exo.io",
+    )
     organization = fake_resource(id=UUID("33333333-3333-3333-3333-333333333333"), slug=seed.LOCAL_ORG)
     application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
     operation = fake_resource(compute_id=compute.id, platform_version=env.VERSION)
     completed = fake_resource(compute_id=compute.id, platform_version=env.VERSION, stopped_at=object(), error=None)
     calls: dict[str, object] = {}
     executed: list[object] = []
+
+    monkeypatch.setattr(env, "EXOSCALE_API_KEY", "access-key")
+    monkeypatch.setattr(env, "EXOSCALE_API_SECRET", "secret-key")
+    monkeypatch.setattr(env, "EXOSCALE_ORGANIZATION_ID", UUID("77777777-7777-7777-7777-777777777777"))
+    monkeypatch.setattr(env, "EXOSCALE_STORAGE_ENDPOINT_URL", "https://sos-ch-gva-2.exo.io")
 
     async def seed_administrator() -> SimpleNamespace:
         """Return the fixed local administrator."""

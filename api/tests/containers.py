@@ -54,11 +54,11 @@ class DockerRuntimeContainer:
         self._client: Any | None = None
         self._container: Any | None = None
 
-    def start(self) -> DockerRuntimeContainer:
+    def start(self) -> "DockerRuntimeContainer":
         """Create and start the configured Docker container."""
 
         self._client = docker.from_env()
-        port_bindings = {f"{port}/tcp": None for port in self._ports}
+        port_bindings = {f"{port}/tcp": ("127.0.0.1", None) for port in self._ports}
         volume_bindings = {
             source: {"bind": target, "mode": mode}
             for source, target, mode in self._volumes
