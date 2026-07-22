@@ -1,11 +1,8 @@
 from uuid import uuid4
-from types import SimpleNamespace
 from factories import create_ready_infrastructure
 from src.models.types import StorageKind
 from src.database.services import storage
 from src.database.models.users import User
-
-db = SimpleNamespace(storage=storage)
 
 
 async def test_get_and_fetch_return_storage_registry(users: tuple[User, User, User]) -> None:
@@ -17,9 +14,9 @@ async def test_get_and_fetch_return_storage_registry(users: tuple[User, User, Us
     registry = infrastructure.storage
 
     # Act
-    fetched = await db.storage.fetch()
-    reloaded = await db.storage.get(registry.id)
-    missing = await db.storage.get(uuid4())
+    fetched = await storage.fetch()
+    reloaded = await storage.get(registry.id)
+    missing = await storage.get(uuid4())
 
     # Assert
     assert registry.kind == StorageKind.exoscale

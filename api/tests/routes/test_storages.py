@@ -1,6 +1,5 @@
 from factories import create_ready_infrastructure
 from fastapi.testclient import TestClient
-from src.database.services import storage
 
 
 async def test_storage_registry_endpoints_return_backend(

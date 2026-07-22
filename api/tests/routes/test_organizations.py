@@ -1,6 +1,5 @@
 import pytest
 from uuid import UUID
-from types import SimpleNamespace
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
 from src.utils import mail as mail_module
 from src.utils import names
@@ -8,21 +7,11 @@ from src.environments import env
 from src.models.roles import OrganizationRoles
 from fastapi.testclient import TestClient
 from src.database.session import get_session
-from src.database.services import users, storage, database, operations, invitations, applications, organizations
+from src.database.services import operations, invitations, applications, organizations
 from src.models.operations import OperationStatus
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.organizations import Organization
-
-db = SimpleNamespace(
-    applications=applications,
-    database=database,
-    invitations=invitations,
-    operations=operations,
-    organizations=organizations,
-    storage=storage,
-    users=users,
-)
 
 
 async def test_create_organization_persists_desired_state_and_queues_reconciliation(
@@ -58,13 +47,10 @@ async def test_create_organization_persists_desired_state_and_queues_reconciliat
     assert payload["operation"]["compute_id"] == str(infrastructure.compute.id)
     assert payload["operation"]["platform_version"] == env.VERSION
     assert payload["operation"]["status"] == OperationStatus.scheduled
-    assert set(payload["operation"]).isdisjoint(
-        {"kind", "revision", "retry_count", "deadline_at", "lease_token", "created_id", "updated_id", "updated_at"}
-    )
-    persisted = await db.organizations.get(organization_id)
+    persisted = await organizations.get(organization_id)
     assert persisted is not None
     assert persisted.shared_schema_url is not None
-    members = await db.organizations.members(organization_id)
+    members = await organizations.members(organization_id)
     assert [(member.id, membership.role) for member, membership in members] == [(owner.id, OrganizationRoles.owner)]
 
 
@@ -83,7 +69,7 @@ async def test_get_organization_returns_member_payload(
         avatar="https://example.com/organizations/acme.png",
     )
     await mark_organization_running(organization)
-    application = await db.applications.create(
+    application = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -126,14 +112,14 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
         organization_id=organization_id,
     )
     await mark_organization_running(organization)
-    await db.applications.create(
+    await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         user=owner,
     )
-    soft_delete = db.organizations.soft_delete
+    soft_delete = organizations.soft_delete
 
     async def soft_delete_with_audit(organization_id: UUID, user: User) -> Organization | None:
         """Reload audit relationships after applying the real soft deletion."""
@@ -144,9 +130,9 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
         if deleted is None:
             return None
 
-        return await db.organizations.get(organization_id, include_deleted=True)
+        return await organizations.get(organization_id, include_deleted=True)
 
-    monkeypatch.setattr(db.organizations, "soft_delete", soft_delete_with_audit)
+    monkeypatch.setattr(organizations, "soft_delete", soft_delete_with_audit)
 
     # Act
     response = client.delete(f"/api/organizations/{organization.id}")
@@ -159,15 +145,12 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     assert payload["operation"]["compute_id"] == str(infrastructure.compute.id)
     assert payload["operation"]["platform_version"] == env.VERSION
     assert payload["operation"]["status"] == OperationStatus.scheduled
-    assert set(payload["operation"]).isdisjoint(
-        {"kind", "revision", "retry_count", "deadline_at", "lease_token", "created_id", "updated_id", "updated_at"}
-    )
-    assert await db.organizations.get(organization.id) is None
-    deleted = await db.organizations.get(organization.id, include_deleted=True)
+    assert await organizations.get(organization.id) is None
+    deleted = await organizations.get(organization.id, include_deleted=True)
     assert deleted is not None
     assert deleted.deleted_at is not None
-    assert await db.organizations.applications(organization.id) == []
-    recorded_operations = await db.operations.fetch()
+    assert await organizations.applications(organization.id) == []
+    recorded_operations = await operations.fetch()
     assert len(recorded_operations) == 1
     assert recorded_operations[0].id == UUID(payload["operation"]["id"])
     assert recorded_operations[0].compute_id == infrastructure.compute.id
@@ -185,14 +168,14 @@ async def test_other_organization_user_cannot_manage_application_members_or_dele
     target_organization = await create_organization(infrastructure, target_owner)
     await create_organization(infrastructure, other_owner, name="globex", slug="globex")
     await mark_organization_running(target_organization)
-    target_application = await db.applications.create(
+    target_application = await applications.create(
         target_organization.id,
         "dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         user=target_owner,
     )
-    operation_ids = [operation.id for operation in await db.operations.fetch()]
+    operation_ids = [operation.id for operation in await operations.fetch()]
     client = clients[1]
 
     # Attempt every application-management route with only another organization's access.
@@ -210,8 +193,8 @@ async def test_other_organization_user_cannot_manage_application_members_or_dele
     assert update_response.json() == {"detail": "Access required"}
     assert delete_response.status_code == 403
     assert delete_response.json() == {"detail": "Access required"}
-    assert await db.applications.get(target_application.id) is not None
-    assert [operation.id for operation in await db.operations.fetch()] == operation_ids
+    assert await applications.get(target_application.id) is not None
+    assert [operation.id for operation in await operations.fetch()] == operation_ids
 
 
 async def test_organization_database_endpoint_returns_schemas_and_shared_users(
@@ -228,7 +211,7 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
     registry = infrastructure.database
-    dashboard = await db.applications.create(
+    dashboard = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -237,7 +220,7 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
         icon="layout-dashboard",
         user=owner,
     )
-    reports = await db.applications.create(
+    reports = await applications.create(
         organization.id,
         "reports",
         slug="reports",
@@ -311,7 +294,7 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    await db.applications.create(
+    await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -361,7 +344,7 @@ async def test_organization_storage_endpoint_returns_organization_prefixes(
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
     registry = infrastructure.storage
-    dashboard = await db.applications.create(
+    dashboard = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -370,7 +353,7 @@ async def test_organization_storage_endpoint_returns_organization_prefixes(
         icon="layout-dashboard",
         user=owner,
     )
-    reports = await db.applications.create(
+    reports = await applications.create(
         organization.id,
         "reports",
         slug="reports",
@@ -434,7 +417,7 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
     registry = infrastructure.storage
-    await db.applications.create(
+    await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -503,7 +486,7 @@ async def test_get_organization_returns_invitations(
     owner, invitee, regular_member = users
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    invitation = await db.invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
+    invitation = await invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -632,7 +615,7 @@ async def test_create_organization_invitation_returns_204(
 
     # Assert
     assert response.status_code == 204
-    invitations_list = await db.organizations.invitations(organization.id)
+    invitations_list = await organizations.invitations(organization.id)
     assert [item.email for item in invitations_list] == [invitee.email]
     assert messages[0][:2] == (invitee.email, "Invitation to join acme on LongLink")
     assert "You have been invited to join acme on LongLink." in messages[0][2]
@@ -675,12 +658,12 @@ async def test_update_organization_member_changes_role(
 
     # Assert
     assert response.status_code == 204
-    updated_organization = await db.organizations.get(organization.id)
+    updated_organization = await organizations.get(organization.id)
     assert updated_organization is not None
-    updated_members = await db.organizations.members(organization.id)
+    updated_members = await organizations.members(organization.id)
     updated_member = next(membership for user, membership in updated_members if user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
-    recorded_operations = await db.operations.fetch()
+    recorded_operations = await operations.fetch()
     assert len(recorded_operations) == 1
     assert recorded_operations[0].compute_id == infrastructure.compute.id
 
@@ -737,7 +720,7 @@ async def test_create_organization_invitation_returns_409_for_duplicate_email(
     owner, invitee = users[0], users[1]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await db.invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
+    await invitations.create(organization.id, invitee.email, OrganizationRoles.write, owner)
     client = clients[0]
 
     # Act

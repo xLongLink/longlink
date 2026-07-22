@@ -24,6 +24,7 @@ type ArticleLayoutProps = {
 type ArticleContentProps = Pick<ArticlePage, 'content' | 'metadata'>;
 
 const DOCS_SIDEBAR_WIDTH = 260;
+const FALLBACK_UPDATED_AT = Date.now();
 
 /** Renders an article page using the shared article shell. */
 export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutProps) {
@@ -152,8 +153,8 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
 /** Renders article body content and source metadata. */
 function ArticleContent({ content, metadata }: ArticleContentProps) {
     const t = useTranslator();
-    const lastUpdatedDate = new Date(metadata.lastUpdated ?? Date.now());
-    const lastUpdated = formatDate(Number.isNaN(lastUpdatedDate.getTime()) ? Date.now() : lastUpdatedDate);
+    const lastUpdatedDate = new Date(metadata.lastUpdated ?? FALLBACK_UPDATED_AT);
+    const lastUpdated = formatDate(Number.isNaN(lastUpdatedDate.getTime()) ? FALLBACK_UPDATED_AT : lastUpdatedDate);
 
     return (
         <article className="docs-article space-y-7 text-[1.0625rem] leading-8 text-secondary [&_a]:font-medium [&_h1]:border-b [&_h1]:border-border [&_h1]:pb-3 [&_h1]:text-[1.75rem] [&_h1]:leading-tight [&_h1]:tracking-normal [&_h2]:mt-10 [&_h2]:border-b [&_h2]:border-border [&_h2]:pb-3 [&_h2]:text-[1.75rem] [&_h2]:leading-tight [&_h2]:tracking-normal [&_h3]:mt-7 [&_h3]:border-b [&_h3]:border-border [&_h3]:pb-2 [&_h3]:text-[1.35rem] [&_h3]:leading-snug [&_h3]:tracking-normal [&_h4]:mt-5 [&_h4]:border-b [&_h4]:border-border [&_h4]:pb-2 [&_h4]:text-xl [&_h4]:tracking-normal [&_li]:leading-7 [&_p]:leading-7">

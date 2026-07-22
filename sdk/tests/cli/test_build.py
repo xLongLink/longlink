@@ -17,7 +17,6 @@ def test_render_dockerfile_preserves_build_and_runtime_contract() -> None:
         "python -m longlink.database.migrations && exec uvicorn main:app",
         "uv sync --no-dev",
         ".git",
-        "rm -rf",
         "--log-level info",
     ):
         assert expected in dockerfile

@@ -5,7 +5,8 @@ from src.utils import names
 from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.environments import env
-from src.models.types import StorageKind
+from src.models.types import StorageKind, DatabaseSSLMode
+from src.models.operations import OperationStatus
 from longlink.utils.time import utcnow
 from src.models.metadata import LongLinkMetadata
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
@@ -39,7 +40,7 @@ async def create_compute_infrastructure(
             host="postgres.example",
             port=5432,
             password="control-password",
-            sslmode="disable",
+            sslmode=DatabaseSSLMode.disable,
             username="longlink",
         )
         storage_registry = StorageRegistry(
@@ -260,7 +261,7 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
     completed = await execute(claimed, compute_operations.reconcile)
 
     # Assert
-    assert completed.status == "completed"
+    assert completed.status == OperationStatus.completed
     assert completed.stopped_at is not None
     assert len(reconciliations) == 1
     desired, proxy_secret, existing_tls = reconciliations[0]
@@ -370,7 +371,7 @@ async def test_execute_compute_reconcile_operation_retries_transient_failure(mon
 
     # Assert
     expected_error = "https://<redacted>:<redacted>@db.example?token=<redacted>"
-    assert deferred.status == "scheduled"
+    assert deferred.status == OperationStatus.scheduled
     assert deferred.started_at is None
     assert deferred.stopped_at is None
     assert deferred.attempt_count == 1

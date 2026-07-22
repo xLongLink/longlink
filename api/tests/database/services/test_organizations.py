@@ -1,27 +1,16 @@
 import pytest
 from uuid import uuid4
-from types import SimpleNamespace
 from fastapi import HTTPException
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
-from sqlalchemy import select
 from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, OrganizationStatus
 from src.database.session import get_session
-from src.database.services import users, compute, operations, invitations, applications, organizations
+from src.database.services import compute, operations, invitations, applications, organizations
 from src.models.operations import OperationStatus
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
-
-db = SimpleNamespace(
-    applications=applications,
-    invitations=invitations,
-    compute=compute,
-    operations=operations,
-    organizations=organizations,
-    users=users,
-)
 
 
 async def test_create_persists_org_and_owner_membership(users: tuple[User, User, User]) -> None:
@@ -33,8 +22,8 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     # Act
     organization = await create_organization(infrastructure, owner, country="DE")
-    reloaded_compute = await db.compute.get(infrastructure.compute.id)
-    open_operations = [item for item in await db.operations.fetch() if item.stopped_at is None]
+    reloaded_compute = await compute.get(infrastructure.compute.id)
+    open_operations = [item for item in await operations.fetch() if item.stopped_at is None]
 
     # Assert
     assert organization.name == "acme"
@@ -52,9 +41,9 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     assert open_operations[0].platform_version == env.VERSION
     assert open_operations[0].status == OperationStatus.scheduled
 
-    reloaded = await db.organizations.get(organization.id)
+    reloaded = await organizations.get(organization.id)
     assert reloaded is not None
-    memberships = await db.organizations.members(organization.id)
+    memberships = await organizations.members(organization.id)
     assert reloaded.name == "acme"
     assert reloaded.slug == "acme"
     assert reloaded.country == "DE"
@@ -62,13 +51,10 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     Session = await get_session()
     async with Session() as session:
-        statement = select(UserOrganization.role).where(
-            UserOrganization.user_id == owner.id,
-            UserOrganization.organization_id == organization.id,
-        )
-        result = await session.execute(statement)
+        membership = await session.get(UserOrganization, (owner.id, organization.id))
 
-        assert result.scalar_one() == OrganizationRoles.owner
+        assert membership is not None
+        assert membership.role == OrganizationRoles.owner
 
 
 async def test_get_returns_users_from_membership_table(users: tuple[User, User, User]) -> None:
@@ -91,8 +77,8 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
         await session.commit()
 
     # Act
-    reloaded = await db.organizations.get(organization.id)
-    memberships = await db.organizations.members(organization.id)
+    reloaded = await organizations.get(organization.id)
+    memberships = await organizations.members(organization.id)
 
     # Assert
     assert reloaded is not None
@@ -107,10 +93,10 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
     infrastructure = await create_ready_infrastructure(owner)
     active_organization = await create_organization(infrastructure, owner)
     deleted_organization = await create_organization(infrastructure, owner, name="deleted", slug="deleted")
-    await db.organizations.soft_delete(deleted_organization.id, owner)
+    await organizations.soft_delete(deleted_organization.id, owner)
 
     # Act
-    fetched = await db.organizations.fetch()
+    fetched = await organizations.fetch()
 
     # Assert
     assert [organization.id for organization in fetched] == [active_organization.id]
@@ -125,9 +111,9 @@ async def test_membership_role_requires_active_membership(users: tuple[User, Use
     organization = await create_organization(infrastructure, owner)
 
     # Act
-    owner_role = await db.organizations.membership_role(organization.id, owner.id)
-    non_member_role = await db.organizations.membership_role(organization.id, non_member.id)
-    missing_role = await db.organizations.membership_role(uuid4(), owner.id)
+    owner_role = await organizations.membership_role(organization.id, owner.id)
+    non_member_role = await organizations.membership_role(organization.id, non_member.id)
+    missing_role = await organizations.membership_role(uuid4(), owner.id)
 
     # Assert
     assert owner_role == OrganizationRoles.owner
@@ -155,21 +141,21 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
         await session.commit()
 
     # Act
-    updated = await db.organizations.update_member_role(
+    updated = await organizations.update_member_role(
         organization.id,
         member.id,
         OrganizationRoles.maintain,
         owner,
     )
-    missing = await db.organizations.update_member_role(
+    missing = await organizations.update_member_role(
         organization.id,
         non_member.id,
         OrganizationRoles.read,
         owner,
     )
-    role = await db.organizations.membership_role(organization.id, member.id)
-    reloaded_compute = await db.compute.get(infrastructure.compute.id)
-    open_operations = [item for item in await db.operations.fetch() if item.stopped_at is None]
+    role = await organizations.membership_role(organization.id, member.id)
+    reloaded_compute = await compute.get(infrastructure.compute.id)
+    open_operations = [item for item in await operations.fetch() if item.stopped_at is None]
 
     # Assert
     assert updated is True
@@ -194,12 +180,12 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
 
     # Act
     with pytest.raises(HTTPException) as exc:
-        await db.organizations.update_member_role(organization.id, owner.id, OrganizationRoles.admin, owner)
+        await organizations.update_member_role(organization.id, owner.id, OrganizationRoles.admin, owner)
 
     # Assert
     assert exc.value.status_code == 409
     assert exc.value.detail == "Organization must have at least one owner"
-    assert await db.organizations.membership_role(organization.id, owner.id) == OrganizationRoles.owner
+    assert await organizations.membership_role(organization.id, owner.id) == OrganizationRoles.owner
 
 
 async def test_members_can_include_deleted_memberships(users: tuple[User, User, User]) -> None:
@@ -231,7 +217,7 @@ async def test_members_can_include_deleted_memberships(users: tuple[User, User, 
         await session.commit()
 
     # Act
-    members = await db.organizations.members(organization.id, include_deleted=True)
+    members = await organizations.members(organization.id, include_deleted=True)
 
     # Assert
     memberships = {user.email: membership for user, membership in members}
@@ -250,7 +236,7 @@ async def test_create_rejects_organization_on_non_ready_compute(users: tuple[Use
     # Arrange
     owner = users[0]
     infrastructure = await create_ready_infrastructure(owner)
-    await db.compute.record_failure(infrastructure.compute.id)
+    await compute.record_failure(infrastructure.compute.id)
 
     # Act
     with pytest.raises(HTTPException) as exc:
@@ -259,12 +245,12 @@ async def test_create_rejects_organization_on_non_ready_compute(users: tuple[Use
     # Assert
     assert exc.value.status_code == 409
     assert exc.value.detail == "Compute registry is not ready"
-    assert await db.organizations.fetch() == []
-    reloaded_compute = await db.compute.get(infrastructure.compute.id)
+    assert await organizations.fetch() == []
+    reloaded_compute = await compute.get(infrastructure.compute.id)
     assert reloaded_compute is not None
     assert reloaded_compute.status == ComputeStatus.failed
     assert reloaded_compute.version == env.VERSION
-    assert await db.operations.fetch() == []
+    assert await operations.fetch() == []
 
 
 async def test_create_rejects_organization_with_overlong_runtime_name(users: tuple[User, User, User]) -> None:
@@ -279,12 +265,12 @@ async def test_create_rejects_organization_with_overlong_runtime_name(users: tup
         await create_organization(infrastructure, owner, name="a" * 64, slug="a" * 64)
 
     # Assert
-    assert await db.organizations.fetch() == []
-    reloaded_compute = await db.compute.get(infrastructure.compute.id)
+    assert await organizations.fetch() == []
+    reloaded_compute = await compute.get(infrastructure.compute.id)
     assert reloaded_compute is not None
     assert reloaded_compute.status == ComputeStatus.ready
     assert reloaded_compute.version == env.VERSION
-    assert await db.operations.fetch() == []
+    assert await operations.fetch() == []
 
 
 async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, User, User]) -> None:
@@ -295,14 +281,14 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    application = await db.applications.create(
+    application = await applications.create(
         organization.id,
         "Dashboard",
         "dashboard",
         "ghcr.io/longlink/dashboard:latest",
         owner,
     )
-    await db.invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
+    await invitations.create(organization.id, "invited@example.com", OrganizationRoles.write, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -324,15 +310,15 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
         await session.commit()
 
     # Act
-    deleted = await db.organizations.soft_delete(organization.id, owner)
-    active_organization = await db.organizations.get(organization.id)
-    deleted_organization = await db.organizations.get(organization.id, include_deleted=True)
-    active_application = await db.applications.get(application.id)
-    deleted_application = await db.applications.get(application.id, include_deleted=True)
-    second_delete = await db.organizations.soft_delete(organization.id, owner)
-    missing_delete = await db.organizations.soft_delete(uuid4(), owner)
-    reloaded_compute = await db.compute.get(infrastructure.compute.id)
-    open_operations = [item for item in await db.operations.fetch() if item.stopped_at is None]
+    deleted = await organizations.soft_delete(organization.id, owner)
+    active_organization = await organizations.get(organization.id)
+    deleted_organization = await organizations.get(organization.id, include_deleted=True)
+    active_application = await applications.get(application.id)
+    deleted_application = await applications.get(application.id, include_deleted=True)
+    second_delete = await organizations.soft_delete(organization.id, owner)
+    missing_delete = await organizations.soft_delete(uuid4(), owner)
+    reloaded_compute = await compute.get(infrastructure.compute.id)
+    open_operations = [item for item in await operations.fetch() if item.stopped_at is None]
 
     # Assert
     assert deleted is not None
@@ -341,19 +327,19 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert deleted_organization is not None
     assert deleted_organization.deleted_by is not None
     assert deleted_organization.deleted_by.id == owner.id
-    assert await db.organizations.members(organization.id) == []
-    assert await db.organizations.invitations(organization.id) == []
-    assert await db.organizations.applications(organization.id) == []
+    assert await organizations.members(organization.id) == []
+    assert await organizations.invitations(organization.id) == []
+    assert await organizations.applications(organization.id) == []
     assert active_application is None
     assert deleted_application is not None
     assert deleted_application.deleted_id == owner.id
     assert second_delete is None
     assert missing_delete is None
-    assert await db.organizations.membership_role(organization.id, owner.id) is None
-    assert await db.organizations.membership_role(organization.id, member.id) is None
-    assert await db.applications.membership_role(application.id, owner.id) is None
-    assert await db.applications.membership_role(application.id, member.id) is None
-    assert await db.organizations.invitations(organization.id) == []
+    assert await organizations.membership_role(organization.id, owner.id) is None
+    assert await organizations.membership_role(organization.id, member.id) is None
+    assert await applications.membership_role(application.id, owner.id) is None
+    assert await applications.membership_role(application.id, member.id) is None
+    assert await organizations.invitations(organization.id) == []
     assert reloaded_compute is not None
     assert reloaded_compute.status == ComputeStatus.ready
     assert reloaded_compute.version == env.VERSION

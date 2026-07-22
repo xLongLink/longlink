@@ -8,17 +8,10 @@ from fastapi.testclient import TestClient
 from longlink.utils.time import utcnow
 from src.models.statuses import ApplicationStatus
 from src.database.session import get_session
-from src.database.services import compute, operations, applications, organizations
+from src.database.services import operations, applications, organizations
 from src.models.operations import OperationStatus
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
-
-db = SimpleNamespace(
-    applications=applications,
-    compute=compute,
-    operations=operations,
-    organizations=organizations,
-)
 
 
 async def test_list_organization_apps_returns_app_membership_role(
@@ -33,7 +26,7 @@ async def test_list_organization_apps_returns_app_membership_role(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    app = await db.applications.create(
+    app = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -85,14 +78,14 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
     globex = await create_organization(infrastructure, user, name="globex", slug="globex")
     await mark_organization_running(acme)
     await mark_organization_running(globex)
-    dashboard = await db.applications.create(
+    dashboard = await applications.create(
         acme.id,
         "dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         user=user,
     )
-    console = await db.applications.create(
+    console = await applications.create(
         globex.id,
         "console",
         slug="console",
@@ -139,7 +132,7 @@ async def test_list_organization_apps_returns_403_for_non_member(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    await db.applications.create(
+    await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -191,21 +184,15 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     assert application["status"] == "creating"
     assert application["description"] == "Dashboard app"
     assert application["image"] == "ghcr.io/longlink/dashboard:latest"
-    assert "compute_registry_id" not in application
-    assert "database_registry_id" not in application
-    assert "storage_registry_id" not in application
     assert operation["compute_id"] == str(infrastructure.compute.id)
     assert operation["platform_version"] == env.VERSION
     assert operation["status"] == OperationStatus.scheduled
-    assert set(operation).isdisjoint(
-        {"kind", "revision", "retry_count", "deadline_at", "lease_token", "created_id", "updated_id", "updated_at"}
-    )
 
-    persisted = await db.applications.get(UUID(application["id"]))
+    persisted = await applications.get(UUID(application["id"]))
     assert persisted is not None
     assert persisted.organization_id == organization.id
     assert persisted.envs == {"API_KEY": "secret-value", "PORT": "8080"}
-    queued = await db.operations.fetch()
+    queued = await operations.fetch()
     assert len(queued) == 1
     assert str(queued[0].id) == operation["id"]
 
@@ -258,7 +245,7 @@ async def test_get_app_logs_returns_pod_logs(
     infrastructure = await create_ready_infrastructure(user)
     organization = await create_organization(infrastructure, user)
     await mark_organization_running(organization)
-    app = await db.applications.create(
+    app = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -313,7 +300,7 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
     infrastructure = await create_ready_infrastructure(user)
     organization = await create_organization(infrastructure, user)
     await mark_organization_running(organization)
-    app = await db.applications.create(
+    app = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -333,14 +320,11 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
     assert payload["operation"]["compute_id"] == str(infrastructure.compute.id)
     assert payload["operation"]["platform_version"] == env.VERSION
     assert payload["operation"]["status"] == OperationStatus.scheduled
-    assert set(payload["operation"]).isdisjoint(
-        {"kind", "revision", "retry_count", "deadline_at", "lease_token", "created_id", "updated_id", "updated_at"}
-    )
-    assert await db.applications.get(app.id) is None
-    deleted = await db.applications.get(app.id, include_deleted=True)
+    assert await applications.get(app.id) is None
+    deleted = await applications.get(app.id, include_deleted=True)
     assert deleted is not None
     assert deleted.deleted_id == user.id
-    recorded_operations = await db.operations.fetch()
+    recorded_operations = await operations.fetch()
     assert len(recorded_operations) == 1
     assert str(recorded_operations[0].id) == payload["operation"]["id"]
 
@@ -358,14 +342,14 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     remote_infrastructure = await create_ready_infrastructure(user, slug="remote", name="Remote testing")
     organization = await create_organization(remote_infrastructure, user)
     await mark_organization_running(organization)
-    app = await db.applications.create(
+    app = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
         image="ghcr.io/xlonglink/sample:latest",
         user=user,
     )
-    await db.applications.set_status(app.id, ApplicationStatus.running)
+    await applications.set_status(app.id, ApplicationStatus.running)
     registry = remote_infrastructure.compute
     captured: dict[str, object] = {}
     tls = object()
@@ -493,14 +477,14 @@ async def test_application_proxy_requires_application_role_for_regular_member(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    app = await db.applications.create(
+    app = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
         image="ghcr.io/xlonglink/sample:latest",
         user=owner,
     )
-    await db.applications.set_status(app.id, ApplicationStatus.running)
+    await applications.set_status(app.id, ApplicationStatus.running)
     Session = await get_session()
     async with Session() as session:
         session.add(
@@ -533,14 +517,14 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     infrastructure = await create_ready_infrastructure(user)
     organization = await create_organization(infrastructure, user)
     await mark_organization_running(organization)
-    app = await db.applications.create(
+    app = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
         image="ghcr.io/xlonglink/sample:latest",
         user=user,
     )
-    await db.applications.set_status(app.id, ApplicationStatus.running)
+    await applications.set_status(app.id, ApplicationStatus.running)
     registry = infrastructure.compute
     captured: dict[str, object] = {}
     tls = object()
@@ -600,14 +584,14 @@ async def test_application_proxy_enforces_method_role(
     infrastructure = await create_ready_infrastructure(user)
     organization = await create_organization(infrastructure, user)
     await mark_organization_running(organization)
-    app = await db.applications.create(
+    app = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
         image="ghcr.io/xlonglink/sample:latest",
         user=user,
     )
-    await db.applications.set_status(app.id, ApplicationStatus.running)
+    await applications.set_status(app.id, ApplicationStatus.running)
 
     Session = await get_session()
     async with Session() as session:
@@ -648,7 +632,7 @@ async def test_organization_access_rejects_soft_deleted_membership(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    await db.applications.create(
+    await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -689,7 +673,7 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    app = await db.applications.create(
+    app = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",

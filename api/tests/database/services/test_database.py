@@ -1,10 +1,7 @@
 from uuid import uuid4
-from types import SimpleNamespace
 from factories import create_ready_infrastructure
 from src.database.services import database
 from src.database.models.users import User
-
-db = SimpleNamespace(database=database)
 
 
 async def test_get_and_fetch_return_database_registry(users: tuple[User, User, User]) -> None:
@@ -16,9 +13,9 @@ async def test_get_and_fetch_return_database_registry(users: tuple[User, User, U
     registry = infrastructure.database
 
     # Act
-    fetched = await db.database.fetch()
-    reloaded = await db.database.get(registry.id)
-    missing = await db.database.get(uuid4())
+    fetched = await database.fetch()
+    reloaded = await database.get(registry.id)
+    missing = await database.get(uuid4())
 
     # Assert
     assert registry.name.startswith("Primary database")

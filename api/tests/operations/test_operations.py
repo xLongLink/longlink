@@ -4,6 +4,7 @@ from uuid import UUID
 from datetime import datetime, timedelta
 from src.utils import jobs as operation_worker
 from longlink.utils.time import utcnow
+from src.models.operations import OperationStatus
 from src.database.models.operations import Operation
 
 pytestmark = pytest.mark.no_db
@@ -112,7 +113,7 @@ async def test_execute_retries_location_work_with_exponential_backoff(monkeypatc
     result = await operation_worker.execute(operation, retry_handler)
 
     # Assert
-    assert result.status == "scheduled"
+    assert result.status == OperationStatus.scheduled
     assert transitions == [(operation.id, operation.attempt_count, 20, "workloads are starting")]
 
 
@@ -174,6 +175,6 @@ async def test_execute_fails_retry_at_attempt_limit(monkeypatch: pytest.MonkeyPa
     result = await operation_worker.execute(operation, retry_handler)
 
     # Assert
-    assert result.status == "failed"
+    assert result.status == OperationStatus.failed
     assert operation_worker.OPERATION_ATTEMPT_LIMIT == 6
     assert transitions == [(operation.id, "workloads are still starting", 6)]
