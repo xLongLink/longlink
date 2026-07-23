@@ -1,6 +1,5 @@
 from uuid import uuid4
-from factories import create_organization
-from factories import create_ready_infrastructure
+from factories import create_organization, create_ready_infrastructure
 from src.database import session
 from src.environments import env
 from src.models.roles import PlatformRoles
@@ -57,13 +56,14 @@ async def test_storage_registry_create_duplicate_and_delete(
     # Act
     create_response = client.post("/api/storages", json=payload)
     duplicate_response = client.post("/api/storages", json=payload)
-    registry_id = create_response.json()["id"]
+    created = create_response.json()
+    registry_id = created["id"]
     delete_response = client.delete(f"/api/storages/{registry_id}")
     get_response = client.get(f"/api/storages/{registry_id}")
 
     # Assert
     assert create_response.status_code == 201
-    assert create_response.json()["name"] == "Ephemeral Storage"
+    assert created["name"] == "Ephemeral Storage"
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": "Storage registry already exists"}
     assert delete_response.status_code == 200

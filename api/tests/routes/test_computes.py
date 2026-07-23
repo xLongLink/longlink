@@ -1,6 +1,7 @@
 from uuid import UUID
-from factories import create_ready_infrastructure
-from factories import create_organization
+from factories import create_organization, create_ready_infrastructure
+from src.database import session
+from src.models.roles import PlatformRoles
 from fastapi.testclient import TestClient
 from src.models.operations import OperationStatus
 from src.database.services import compute
@@ -54,17 +55,17 @@ async def test_compute_registry_create_duplicate_and_delete(
         "/api/computes",
         json={"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
-    registry_id = create_response.json()["compute"]["id"]
+    created = create_response.json()
+    registry_id = created["compute"]["id"]
     delete_response = client.delete(f"/api/computes/{registry_id}")
     get_response = client.get(f"/api/computes/{registry_id}")
 
     # Assert
     assert create_response.status_code == 202
-    payload = create_response.json()
-    assert payload["compute"]["name"] == "Ephemeral Compute"
-    assert payload["operation"]["status"] == OperationStatus.scheduled
-    assert "kubeconfig" not in payload["compute"]
-    assert "proxy_secret" not in payload["compute"]
+    assert created["compute"]["name"] == "Ephemeral Compute"
+    assert created["operation"]["status"] == OperationStatus.scheduled
+    assert "kubeconfig" not in created["compute"]
+    assert "proxy_secret" not in created["compute"]
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": "Compute registry already exists"}
     assert delete_response.status_code == 202
@@ -92,6 +93,65 @@ async def test_compute_registry_delete_rejects_assigned_registry(
     # Assert
     assert response.status_code == 409
     assert response.json() == {"detail": "Compute registry is used by organizations"}
+
+
+async def test_compute_registry_routes_enforce_support_and_admin_roles(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+    monkeypatch,
+) -> None:
+    """Allow support compute reads and diagnostics while keeping writes admin-only."""
+
+    # Arrange
+    owner = users[0]
+    support = users[2]
+    infrastructure = await create_ready_infrastructure(owner)
+    registry = infrastructure.compute
+    Session = await session.get_session()
+    async with Session() as db_session:
+        persisted_support = await db_session.get(User, support.id)
+        assert persisted_support is not None
+        persisted_support.role = PlatformRoles.support
+        await db_session.commit()
+
+    class FakeKubernetes:
+        """Return deterministic compute diagnostics."""
+
+        def __init__(self, kubeconfig: str) -> None:
+            """Validate the selected compute registry."""
+
+            assert kubeconfig == registry.kubeconfig
+
+        async def namespaces(self) -> list[str]:
+            """Return visible namespaces."""
+
+            return ["acme"]
+
+    monkeypatch.setattr("src.routes.computes.Kubernetes", FakeKubernetes)
+    support_client = clients[2]
+    ordinary_client = clients[1]
+
+    # Act
+    support_read_response = support_client.get("/api/computes")
+    support_get_response = support_client.get(f"/api/computes/{registry.id}")
+    support_diagnostics_response = support_client.get(f"/api/computes/{registry.id}/namespaces")
+    support_write_response = support_client.post(
+        "/api/computes",
+        json={"name": "Support Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
+    )
+    ordinary_read_response = ordinary_client.get("/api/computes")
+
+    # Assert
+    assert support_read_response.status_code == 200
+    assert [item["id"] for item in support_read_response.json()] == [str(registry.id)]
+    assert support_get_response.status_code == 200
+    assert support_get_response.json()["id"] == str(registry.id)
+    assert support_diagnostics_response.status_code == 200
+    assert support_diagnostics_response.json() == ["acme"]
+    assert support_write_response.status_code == 403
+    assert support_write_response.json() == {"detail": "Permission required"}
+    assert ordinary_read_response.status_code == 403
+    assert ordinary_read_response.json() == {"detail": "Permission required"}
 
 
 async def test_compute_diagnostics_return_namespaces_and_pods(

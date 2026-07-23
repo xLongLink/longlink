@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Icon } from '@astryxdesign/core/Icon';
+import { Copy } from 'lucide-react';
 import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -38,7 +38,7 @@ function createStorageColumns(t: TranslatorFn): TableColumn<ApiStorageRegistry>[
             width: proportional(2),
             renderCell: (storage) => (
                 <HStack gap={3} align="center">
-                    <Icon icon={S3} size="lg" />
+                    <S3 height={24} width={24} />
                     <VStack gap={1}>
                         <Text weight="semibold">{storage.name}</Text>
                         <Text type="supporting">{storage.endpoint_url}</Text>
@@ -113,7 +113,7 @@ export default function AdminStorage() {
                           items={[
                               {
                                   label: `${t('actions.copy')} ${t('admin.copyStorageSlug').toLowerCase()}`,
-                                  icon: <Icon icon="copy" size="sm" />,
+                                  icon: <Copy size={16} />,
                                   onClick: async () => {
                                       try {
                                           await navigator.clipboard.writeText(storage.slug);

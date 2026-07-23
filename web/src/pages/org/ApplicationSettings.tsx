@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Icon } from '@astryxdesign/core/Icon';
+import { Wrench } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
@@ -101,8 +101,8 @@ export default function ApplicationSettings({
             header: t('columns.application'),
             width: proportional(1),
             renderCell: (application) => (
-                <HStack gap={3} align="start">
-                    <Icon icon="wrench" color="accent" />
+                <HStack gap={3} align="center">
+                    <Wrench aria-hidden="true" className="shrink-0 text-accent" size={20} />
                     <VStack gap={1}>
                         <Link
                             href={`/orgs/${organization}/settings/applications/${application.slug}`}

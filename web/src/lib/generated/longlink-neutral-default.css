@@ -533,8 +533,26 @@
             text-decoration: underline;
         }
 
+        .astryx-side-nav-item {
+            color: var(--color-text-secondary);
+        }
+
+        .astryx-side-nav-item.selected {
+            background-color: var(--color-accent-muted);
+            color: var(--color-text-primary);
+        }
+
+        .astryx-side-nav-section {
+            margin-inline: calc(-1 * var(--spacing-2));
+        }
+
         .astryx-table {
+            border-width: 0;
+        }
+
+        .astryx-table-scroll-wrapper {
             border-color: var(--color-border-emphasized);
+            border-radius: var(--radius-container);
             border-style: solid;
             border-width: var(--border-width);
         }

@@ -14,6 +14,7 @@ import type { ApiUserOrganizationMembership } from '@/lib/types';
 import Layout from '@/layout/Layout';
 import { SignInCard } from '@/components/SignInCard';
 import { sanitizeRedirectPath } from '@/lib/redirects';
+import { PageContainer } from '@/components/PageContainer';
 import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 
@@ -23,8 +24,10 @@ export default function Organizations() {
     const { user, isLoading: isProfileLoading, error: profileError } = useUserProfile();
     const { organizations, isLoading: areOrganizationsLoading, error: organizationsError } = useUserOrganizations();
     const location = useLocation();
-    const nextPath = new URLSearchParams(location.search).get('next');
+    const search = new URLSearchParams(location.search);
+    const nextPath = search.get('next');
     const redirectTo = sanitizeRedirectPath(nextPath);
+    const initialEmail = search.get('email') ?? '';
     const isLoading = isProfileLoading || areOrganizationsLoading;
     const error = profileError ?? organizationsError;
 
@@ -33,7 +36,7 @@ export default function Organizations() {
         return (
             <Layout brandOnly brandHref="/" fillViewport reserveTabSpace>
                 <VStack height="100%" justify="center" align="center" width="100%">
-                    <SignInCard redirectTo={redirectTo} />
+                    <SignInCard redirectTo={redirectTo} initialEmail={initialEmail} />
                 </VStack>
             </Layout>
         );
@@ -68,12 +71,7 @@ export default function Organizations() {
                 [t('navigation.settings')]: { href: '/settings', icon: Settings2 },
             }}
         >
-            <VStack
-                className="mx-auto [--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
-                gap={8}
-                width="100%"
-                maxWidth={1000}
-            >
+            <PageContainer gap={8}>
                 <HStack gap={4} justify="between" align="end" wrap="wrap">
                     <VStack gap={1}>
                         <Heading level={1}>{t('organizations.title')}</Heading>
@@ -93,7 +91,7 @@ export default function Organizations() {
                         idKey="id"
                     />
                 )}
-            </VStack>
+            </PageContainer>
         </Layout>
     );
 }

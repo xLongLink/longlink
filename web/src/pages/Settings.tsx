@@ -19,6 +19,7 @@ import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import Layout from '@/layout/Layout';
 import { useDeleteDialog } from '@/lib/utils';
+import { PageContainer } from '@/components/PageContainer';
 import { useDeleteOrganization } from '@/hooks/use-organization';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
@@ -156,35 +157,30 @@ export default function Settings() {
                 [t('navigation.settings')]: { href: '/settings', icon: Settings2 },
             }}
         >
-            <VStack
-                className="mx-auto [--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
-                gap={8}
-                width="100%"
-                maxWidth={1000}
-            >
+            <PageContainer gap={8}>
                 <VStack gap={1}>
                     <Heading level={1}>{t('settings.title')}</Heading>
                     <Text type="supporting">{t('settings.description')}</Text>
                 </VStack>
 
                 <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
-                    <SideNav style={{ height: 'auto', width: '100%' }}>
+                    <SideNav className="h-auto w-full">
                         <SideNavSection title={t('navigation.settings')} isHeaderHidden>
                             <SideNavItem
                                 href={`${location.pathname}${location.search}#account`}
-                                icon={UserRound}
+                                icon={<UserRound aria-hidden="true" size={16} />}
                                 isSelected={section === 'account'}
                                 label={t('settings.accountTitle')}
                             />
                             <SideNavItem
                                 href={`${location.pathname}${location.search}#appearance`}
-                                icon={Paintbrush}
+                                icon={<Paintbrush aria-hidden="true" size={16} />}
                                 isSelected={section === 'appearance'}
                                 label={t('settings.appearanceTitle')}
                             />
                             <SideNavItem
                                 href={`${location.pathname}${location.search}#organizations`}
-                                icon={Building2}
+                                icon={<Building2 aria-hidden="true" size={16} />}
                                 isSelected={section === 'organizations'}
                                 label={t('settings.organizationsTitle')}
                             />
@@ -365,7 +361,7 @@ export default function Settings() {
                 </div>
 
                 <DeleteConfirmation {...deleteDialog.dialogProps} />
-            </VStack>
+            </PageContainer>
         </Layout>
     );
 }

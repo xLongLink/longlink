@@ -2,6 +2,7 @@
 
 LOCAL_SDK_IMAGE := localhost:15000/longlink-app:dev
 LOCAL_SDK_IMAGE_LABEL := longlink.name=longlink-app
+DEV_DOCKER_BUILDER := longlink-dev
 DEV_DOCKER_NETWORK := longlink-dev
 DEV_CLUSTER := compute
 API_PYTEST_MARK ?=
@@ -180,12 +181,15 @@ up:
 
 # Remove remote development resources, stop local services, and clean local state.
 down:
-	cd api && DEVELOPMENT=true uv run --locked python seed.py --cleanup
+	-cd api && DEVELOPMENT=true uv run --locked python seed.py --cleanup
 	@if k3d cluster list "$(DEV_CLUSTER)" >/dev/null 2>&1; then k3d cluster delete "$(DEV_CLUSTER)"; fi
+	@if docker buildx inspect "$(DEV_DOCKER_BUILDER)" >/dev/null 2>&1; then docker buildx rm --force "$(DEV_DOCKER_BUILDER)"; fi
 	@gateway="$$(docker network inspect "$(DEV_DOCKER_NETWORK)" --format '{{(index .IPAM.Config 0).Gateway}}' 2>/dev/null || true)"; \
 		if [ -z "$$gateway" ]; then gateway="127.0.0.2"; fi; \
 		LONGLINK_DEV_GATEWAY="$$gateway" docker compose -f dev/compose.yml down --volumes --remove-orphans
 	@if docker network inspect "$(DEV_DOCKER_NETWORK)" >/dev/null 2>&1; then docker network rm "$(DEV_DOCKER_NETWORK)"; fi
+	@$(MAKE) --no-print-directory sdk\:image\:clean
+	rm -rf sdk/dev
 	rm -f api/dev.db api/kubeconfig.yaml
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
 	find . -type d -name .mypy_cache -prune -exec rm -rf {} +
@@ -205,7 +209,9 @@ seed: up
 	rm -rf sdk/dev
 	cd sdk && uv run --locked longlink init --folder dev
 	cd sdk && sh -c 'file=dev/pyproject.toml; if ! grep -q "^\[tool\.uv\.sources\]$$" "$$file"; then printf "\n\n[tool.uv.sources]\nlonglink = { path = \"..\", editable = true }\n" >> "$$file"; fi'
-	cd sdk/dev && uv run longlink build --registry localhost:15000 --push --tag dev
+	@docker buildx inspect "$(DEV_DOCKER_BUILDER)" >/dev/null 2>&1 || docker buildx create --name "$(DEV_DOCKER_BUILDER)" --driver docker-container >/dev/null
+	@docker buildx inspect "$(DEV_DOCKER_BUILDER)" --bootstrap >/dev/null
+	cd sdk/dev && uv run longlink build --builder "$(DEV_DOCKER_BUILDER)" --registry localhost:15000 --push --tag dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
 	cd api && DEVELOPMENT=true uv run --locked python seed.py
 

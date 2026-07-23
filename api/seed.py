@@ -68,17 +68,13 @@ async def seed_local_administrator() -> User:
                 name=LOCAL_ADMIN_NAME,
                 email=LOCAL_ADMIN_EMAIL,
                 hashed_password=password,
-                is_active=True,
                 is_superuser=True,
-                is_verified=True,
                 role=PlatformRoles.administrator,
             )
             session.add(user)
         else:
             user.name = LOCAL_ADMIN_NAME
             user.hashed_password = password
-            user.is_verified = True
-            user.is_active = True
             user.is_superuser = True
             user.role = PlatformRoles.administrator
             user.deleted_at = None

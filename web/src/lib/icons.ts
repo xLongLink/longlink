@@ -1,3 +1,63 @@
+import { createElement, type ReactElement } from 'react';
+import {
+    Activity,
+    ArrowDown,
+    ArrowRight,
+    ArrowUp,
+    ArrowUpDown,
+    Banknote,
+    Bell,
+    Box,
+    Boxes,
+    Building2,
+    Calendar,
+    Check,
+    CheckCheck,
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+    CircleCheck,
+    CircleX,
+    ClipboardList,
+    Clock,
+    Columns3,
+    Container,
+    Copy,
+    Cpu,
+    Database,
+    Download,
+    Ellipsis,
+    ExternalLink,
+    EyeOff,
+    Funnel,
+    HardDrive,
+    Info,
+    Layers,
+    LayoutDashboard,
+    LayoutGrid,
+    Link as LinkIcon,
+    List as ListIcon,
+    ListChecks,
+    MapPin,
+    Menu,
+    Mic,
+    Plus,
+    Rocket,
+    RotateCcw,
+    Search,
+    Settings2,
+    ShieldCheck,
+    SlidersHorizontal,
+    Square,
+    Timer,
+    TriangleAlert,
+    Users,
+    Wrench,
+    X,
+    type LucideIcon,
+    type LucideProps,
+} from 'lucide-react';
+
 export const ICON_NAMES = [
     'activity',
     'arrow-right',
@@ -35,7 +95,83 @@ export type IconName = (typeof ICON_NAMES)[number];
 
 export const ICON_NAME_SET = new Set<string>(ICON_NAMES);
 
+export const ICON_COMPONENTS: Record<IconName, LucideIcon> = {
+    activity: Activity,
+    'arrow-right': ArrowRight,
+    banknote: Banknote,
+    bell: Bell,
+    box: Box,
+    boxes: Boxes,
+    'building-2': Building2,
+    check: Check,
+    'clipboard-list': ClipboardList,
+    container: Container,
+    cpu: Cpu,
+    database: Database,
+    download: Download,
+    'hard-drive': HardDrive,
+    layers: Layers,
+    'layout-dashboard': LayoutDashboard,
+    'layout-grid': LayoutGrid,
+    link: LinkIcon,
+    list: ListIcon,
+    'list-check': ListChecks,
+    'map-pin': MapPin,
+    plus: Plus,
+    rocket: Rocket,
+    'rotate-ccw': RotateCcw,
+    'settings-2': Settings2,
+    'shield-check': ShieldCheck,
+    'sliders-horizontal': SlidersHorizontal,
+    timer: Timer,
+    users: Users,
+    x: X,
+};
+
+const LEGACY_ICON_COMPONENTS: Record<string, LucideIcon> = {
+    arrowDown: ArrowDown,
+    arrowsUpDown: ArrowUpDown,
+    arrowUp: ArrowUp,
+    calendar: Calendar,
+    checkDouble: CheckCheck,
+    chevronDown: ChevronDown,
+    chevronLeft: ChevronLeft,
+    chevronRight: ChevronRight,
+    'circle-check': CircleCheck,
+    'circle-x': CircleX,
+    clock: Clock,
+    close: X,
+    copy: Copy,
+    error: CircleX,
+    externalLink: ExternalLink,
+    eyeSlash: EyeOff,
+    funnel: Funnel,
+    info: Info,
+    menu: Menu,
+    microphone: Mic,
+    moreHorizontal: Ellipsis,
+    search: Search,
+    stop: Square,
+    success: CircleCheck,
+    'triangle-alert': TriangleAlert,
+    viewColumns: Columns3,
+    warning: TriangleAlert,
+    wrench: Wrench,
+};
+
 /** Returns whether a string is a supported icon slug. */
 export function isIconName(name: string): name is IconName {
     return ICON_NAME_SET.has(name);
+}
+
+/** Resolves supported and legacy icon names to Lucide components. */
+export function getIconComponent(name: string): LucideIcon | undefined {
+    return ICON_COMPONENTS[name as IconName] ?? LEGACY_ICON_COMPONENTS[name];
+}
+
+/** Renders a supported icon name with Lucide SVG properties. */
+export function renderIcon(name: string, props: LucideProps): ReactElement | null {
+    const IconComponent = getIconComponent(name);
+
+    return IconComponent ? createElement(IconComponent, props) : null;
 }

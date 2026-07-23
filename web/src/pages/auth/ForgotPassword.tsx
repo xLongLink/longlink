@@ -40,7 +40,7 @@ export default function ForgotPassword() {
             await fetchApiVoid('/api/auth/forgot-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
+                body: JSON.stringify({ ...payload, next: nextPath }),
             });
         },
     });

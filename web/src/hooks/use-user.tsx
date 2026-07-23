@@ -140,46 +140,19 @@ export function useUserOrganizations(): UserOrganizationsState {
     };
 }
 
-/** Reads saved browser accounts and provides account activation. */
-export function useSavedAccounts() {
-    const queryClient = useQueryClient();
+/** Reads accounts previously authenticated in this browser session. */
+export function useSavedAccounts(): AccountsState {
     const accountsQuery = useCollectionQuery<ApiUserListItem>('/api/auth/accounts', {
         parse: (value) => parseApiCollection(apiUserListItemSchema, value),
         refetchOnMount: 'always',
         retry: false,
     });
-    const accounts: AccountsState = {
+
+    return {
         items: accountsQuery.items,
         isLoading: accountsQuery.isLoading || accountsQuery.isFetching,
         error: accountsQuery.error ?? null,
     };
-
-    /** Activates one saved account and refreshes the current user session. */
-    const activateAccount = async (id: string) => {
-        await fetchApiVoid(`/api/auth/accounts/${encodeURIComponent(id)}/activate`, {
-            method: 'POST',
-        });
-
-        const profileKey = userProfileQueryKey();
-        const accountsKey = accountsQueryKey();
-
-        // Clear the previous identity while preserving observers that will receive fresh data.
-        await clearSessionQueries(queryClient, [profileKey, accountsKey]);
-        queryClient.setQueryData(profileKey, null);
-        queryClient.setQueryData(accountsKey, []);
-
-        // Seed identity state before the account route renders.
-        const [user, savedAccounts] = await Promise.all([
-            fetchApiJson('/api/me', undefined, (value) =>
-                value === null ? null : parseApiResponse(apiUserProfileSchema, value)
-            ),
-            fetchApiJson('/api/auth/accounts', undefined, (value) => parseApiCollection(apiUserListItemSchema, value)),
-        ]);
-        queryClient.setQueryData(profileKey, user);
-        queryClient.setQueryData(accountsKey, savedAccounts);
-    };
-
-    return { accounts, activateAccount };
 }
 
 /** Provides actions that end or deactivate the current user session. */

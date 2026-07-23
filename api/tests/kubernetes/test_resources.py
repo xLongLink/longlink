@@ -1,4 +1,6 @@
 import pytest
+from typing import cast
+from kr8s.asyncio import Api
 from src.kubernetes import resources
 
 pytestmark = pytest.mark.no_db
@@ -50,7 +52,7 @@ def test_resource_from_body_rejects_incomplete_manifest_identity(body: dict[str,
 
     # Act and assert
     with pytest.raises(ValueError, match=message):
-        resources._resource_from_body(body, api=None)  # type: ignore[arg-type]
+        resources._resource_from_body(body, cast(Api, object()))
 
 
 def test_comparable_secret_rejects_invalid_string_data() -> None:

@@ -1,12 +1,16 @@
 import pytest
 from uuid import UUID
+from src.kubernetes.resources import KubernetesResources
 from src.kubernetes.reconcile import Reconciler, DesiredCompute, DesiredApplication, DesiredOrganization
 
 pytestmark = pytest.mark.no_db
 
 
-class FailingResources:
+class FailingResources(KubernetesResources):
     """Fail if validation allows reconciliation to touch the cluster boundary."""
+
+    def __init__(self) -> None:
+        """Initialize without a real kubeconfig because validation should stop first."""
 
     async def read(self, *args: object, **kwargs: object) -> None:
         """Fail any attempted cluster read."""
@@ -85,4 +89,4 @@ async def test_reconcile_rejects_invalid_desired_state_before_cluster_access(
 
     # Act and assert
     with pytest.raises(ValueError, match=message):
-        await Reconciler(FailingResources()).reconcile(desired, proxy_secret)  # type: ignore[arg-type]
+        await Reconciler(FailingResources()).reconcile(desired, proxy_secret)

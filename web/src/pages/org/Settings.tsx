@@ -1,5 +1,4 @@
 import { useLocation } from 'react-router';
-import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@astryxdesign/core/Avatar';
@@ -9,9 +8,9 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Boxes, Building2, Database, HardDrive, Users } from 'lucide-react';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { Boxes, Building2, Database, HardDrive, Users, Wrench } from 'lucide-react';
 import type {
     ApiInvitation,
     ApiOrganizationApplication,
@@ -145,7 +144,7 @@ export default function Settings({
             width: proportional(1),
             renderCell: (resource) => (
                 <HStack gap={3} align="center">
-                    <Icon icon={PostgreSQL} size="lg" />
+                    <PostgreSQL aria-hidden="true" className="size-6 shrink-0" />
                     <VStack gap={1}>
                         <Text weight="semibold">{resource.name}</Text>
                         <Text type="supporting">
@@ -182,8 +181,8 @@ export default function Settings({
                 }
 
                 return (
-                    <HStack gap={3} align="start">
-                        <Icon icon="wrench" color="accent" />
+                    <HStack gap={3} align="center">
+                        <Wrench aria-hidden="true" className="shrink-0 text-accent" size={20} />
                         <VStack gap={1}>
                             <Link href={`/orgs/${organization}/apps/${resource.application.slug}`} weight="semibold">
                                 {resource.application.name}
@@ -204,7 +203,7 @@ export default function Settings({
             width: proportional(1),
             renderCell: (resource) => (
                 <HStack gap={3} align="center">
-                    <Icon icon={S3} size="lg" />
+                    <S3 aria-hidden="true" className="shrink-0" />
                     <VStack gap={1}>
                         <Text weight="semibold">
                             {resource.kind === 'shared_prefix' ? t('resources.shared') : resource.name}
@@ -243,8 +242,8 @@ export default function Settings({
                 }
 
                 return (
-                    <HStack gap={3} align="start">
-                        <Icon icon="wrench" color="accent" />
+                    <HStack gap={3} align="center">
+                        <Wrench aria-hidden="true" className="shrink-0 text-accent" size={20} />
                         <VStack gap={1}>
                             <Link href={`/orgs/${organization}/apps/${resource.application.slug}`} weight="semibold">
                                 {resource.application.name}
@@ -261,17 +260,17 @@ export default function Settings({
 
     return (
         <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
-            <SideNav style={{ height: 'auto', width: '100%' }}>
+            <SideNav className="h-auto w-full">
                 <SideNavSection title={t('navigation.settings')} isHeaderHidden>
                     <SideNavItem
                         href={`/orgs/${organization}/settings`}
-                        icon={Building2}
+                        icon={<Building2 aria-hidden="true" size={16} />}
                         isSelected={section === 'organization'}
                         label={t('columns.organization')}
                     />
                     <SideNavItem
                         collapsible
-                        icon={Users}
+                        icon={<Users aria-hidden="true" size={16} />}
                         isSelected={section === 'members' || section === 'invitations'}
                         label={t('navigation.people')}
                     >
@@ -288,19 +287,19 @@ export default function Settings({
                     </SideNavItem>
                     <SideNavItem
                         href={`/orgs/${organization}/settings/applications`}
-                        icon={Boxes}
+                        icon={<Boxes aria-hidden="true" size={16} />}
                         isSelected={section === 'applications'}
                         label={t('navigation.applications')}
                     />
                     <SideNavItem
                         href={`/orgs/${organization}/settings/database`}
-                        icon={Database}
+                        icon={<Database aria-hidden="true" size={16} />}
                         isSelected={section === 'database'}
                         label={t('navigation.database')}
                     />
                     <SideNavItem
                         href={`/orgs/${organization}/settings/storage`}
-                        icon={HardDrive}
+                        icon={<HardDrive aria-hidden="true" size={16} />}
                         isSelected={section === 'storage'}
                         label={t('navigation.storage')}
                     />

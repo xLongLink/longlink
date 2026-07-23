@@ -1,5 +1,5 @@
 from uuid import UUID, uuid4
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
@@ -26,9 +26,6 @@ class User(SQLModel, table=True):
 
     # Authentication
     hashed_password: str = Field(max_length=1024)
-    is_verified: bool = Field(default=False, nullable=False)
-    verification_code_hash: str | None = Field(default=None, max_length=64)
-    verification_code_expires_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
 
     # Audit
     created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
@@ -41,7 +38,6 @@ class User(SQLModel, table=True):
     deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
 
     # State
-    is_active: bool = Field(default=True, nullable=False)
     is_superuser: bool = Field(default=False, nullable=False)
     role: PlatformRoles = Field(
         default=PlatformRoles.user,
@@ -51,6 +47,25 @@ class User(SQLModel, table=True):
     accent: Accent = Field(default=Accent.neutral, max_length=7)
     radius: float = Field(default=1.0, nullable=False)
     language: Language = Field(default=Language.en, max_length=2)
+
+    if TYPE_CHECKING:
+        is_active: bool = True
+        is_verified: bool = True
+    else:
+
+        @property
+        def is_active(self) -> bool:
+            """Return whether FastAPI Users may authenticate this persisted account."""
+
+            # Soft deletion is the only account state that prevents authentication.
+            return self.deleted_at is None
+
+        @property
+        def is_verified(self) -> bool:
+            """Return the invariant verification state for persisted accounts."""
+
+            # User rows are created only after email or provider authentication.
+            return True
 
     # Relationships
     organization_memberships: list["UserOrganization"] = Relationship(

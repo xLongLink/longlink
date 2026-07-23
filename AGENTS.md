@@ -8,6 +8,8 @@ When working in this repo, keep changes practical, small, and aligned with the e
 
 When listing improvement suggestions, use numbered lists.
 
+Project is in MVP mode - No need for backwards compatibility
+
 ## Product Language
 
 Use LongLink terminology consistently.
@@ -134,6 +136,7 @@ longlink/
 - Declare route response schemas and return raw domain objects or primitive values without reconstructing response models solely for validation.
 - Do not add tests unless explicitly requested. Test the real implementation, avoid mocks where practical, and never duplicate production logic in tests.
 - Run formatting, linting, type checking, and relevant existing tests, then review the implementation for further simplification.
+- Use only `lucide-react` icons, do not use `Astryx` icons
 
 ## Astryx Guidelines
 

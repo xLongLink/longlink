@@ -1,38 +1,44 @@
 import pytest
 from pydantic import ValidationError
-from src.models.auth import AuthUserCreate
+from src.models.auth import RegistrationRequest, RegistrationComplete, RegistrationTokenConfirm
 
 pytestmark = pytest.mark.no_db
 
 
-def test_auth_user_create_accepts_registration_payload() -> None:
-    """Accept the local registration payload used by generated auth routes."""
+def test_registration_models_accept_complete_account_flow() -> None:
+    """Accept email proof followed by profile and password setup."""
 
-    # Validate the browser registration payload at the API model boundary.
-    payload = AuthUserCreate.model_validate(
+    # Validate each browser payload at its API boundary.
+    request = RegistrationRequest.model_validate({"email": "registered@example.com"})
+    confirmation = RegistrationTokenConfirm.model_validate({"token": "signed-token"})
+    completion = RegistrationComplete.model_validate(
         {
-            "name": "Registered User",
+            "name": "Registered",
             "email": "registered@example.com",
+            "surname": "User",
             "password": "longlink-test-password",
         }
     )
 
-    assert payload.name == "Registered User"
-    assert payload.email == "registered@example.com"
-    assert payload.password == "longlink-test-password"
+    assert request.email == "registered@example.com"
+    assert confirmation.token == "signed-token"
+    assert completion.name == "Registered"
+    assert completion.surname == "User"
+    assert completion.password == "longlink-test-password"
 
 
 @pytest.mark.parametrize(
     "payload",
     [
-        {"name": "", "email": "registered@example.com", "password": "longlink-test-password"},
-        {"name": "Registered User", "email": "not-email", "password": "longlink-test-password"},
-        {"name": "Registered User", "email": "registered@example.com", "password": "short"},
+        {"name": "", "email": "registered@example.com", "surname": "User", "password": "longlink-test-password"},
+        {"name": "Registered", "email": "not-email", "surname": "User", "password": "longlink-test-password"},
+        {"name": "Registered", "email": "registered@example.com", "surname": "", "password": "longlink-test-password"},
+        {"name": "Registered", "email": "registered@example.com", "surname": "User", "password": "short"},
     ],
 )
-def test_auth_user_create_rejects_invalid_registration_values(payload: dict[str, str]) -> None:
-    """Reject registration values outside LongLink's local account policy."""
+def test_registration_complete_rejects_invalid_account_values(payload: dict[str, str]) -> None:
+    """Reject profile and password values outside local account policy."""
 
-    # Invalid account data fails before reaching FastAPI Users persistence.
+    # Invalid account data fails before persistence begins.
     with pytest.raises(ValidationError):
-        AuthUserCreate.model_validate(payload)
+        RegistrationComplete.model_validate(payload)

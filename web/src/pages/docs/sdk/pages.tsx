@@ -1,7 +1,7 @@
+import { Info } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
-import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -430,7 +430,7 @@ function renderComponentPreview(name: string) {
         case 'Heading':
             return <Heading level={3}>Orders</Heading>;
         case 'Icon':
-            return <Icon icon="info" color="accent" />;
+            return <Info aria-hidden="true" className="text-accent" size={20} />;
         case 'Text':
             return <Text type="supporting">Readable text</Text>;
         case 'CheckboxInput':

@@ -1,16 +1,19 @@
-import type { CSSProperties } from 'react';
+type WordmarkProps = {
+    className?: string;
+    size?: 'default' | 'heading';
+};
 
 /** Renders the LongLink wordmark. */
-export function Wordmark({ className, style }: { className?: string; style?: CSSProperties }) {
+export function Wordmark({ className, size = 'default' }: WordmarkProps) {
     return (
         <span
             className={[
-                'inline-flex text-[length:var(--text-label-size)] leading-none font-[var(--font-weight-semibold)] tracking-[-0.04em] uppercase',
+                'inline-flex leading-none font-semibold tracking-[-0.04em] uppercase',
+                size === 'heading' ? 'text-2xl' : 'text-base',
                 className,
             ]
                 .filter(Boolean)
                 .join(' ')}
-            style={style}
         >
             <span className="text-secondary">LONG</span>
             <span className="text-primary">LINK</span>

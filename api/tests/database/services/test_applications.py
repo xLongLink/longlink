@@ -1,12 +1,12 @@
 import pytest
 from uuid import uuid4
-from datetime import timedelta
 from fastapi import HTTPException
+from datetime import timedelta
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
-from src.models.statuses import ComputeStatus, ApplicationStatus
 from longlink.utils.time import utcnow
+from src.models.statuses import ComputeStatus, ApplicationStatus
 from src.database.session import get_session
 from src.database.services import compute, operations, applications, organizations
 from src.models.operations import OperationStatus
@@ -50,7 +50,6 @@ async def create_user(prefix: str) -> User:
             name=f"{prefix} User",
             email=f"{prefix}@longlink.dev",
             hashed_password="test-password-hash",
-            is_verified=True,
         )
         session.add(user)
         await session.commit()

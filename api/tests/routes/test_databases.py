@@ -1,5 +1,4 @@
-from factories import create_organization
-from factories import create_ready_infrastructure
+from factories import create_organization, create_ready_infrastructure
 from src.database import session
 from src.models.roles import PlatformRoles
 from fastapi.testclient import TestClient
@@ -53,14 +52,15 @@ async def test_database_registry_create_duplicate_and_delete(
     # Act
     create_response = client.post("/api/databases", json=payload)
     duplicate_response = client.post("/api/databases", json=payload)
-    registry_id = create_response.json()["id"]
+    created = create_response.json()
+    registry_id = created["id"]
     delete_response = client.delete(f"/api/databases/{registry_id}")
     get_response = client.get(f"/api/databases/{registry_id}")
 
     # Assert
     assert create_response.status_code == 201
-    assert create_response.json()["name"] == "Ephemeral Database"
-    assert "password" not in create_response.json()
+    assert created["name"] == "Ephemeral Database"
+    assert "password" not in created
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": "Database registry already exists"}
     assert delete_response.status_code == 200
@@ -159,7 +159,7 @@ async def test_database_registry_routes_enforce_support_and_admin_roles(
 async def test_database_usage_endpoint_returns_backend_capacity(
     clients: tuple[TestClient, TestClient, TestClient],
     monkeypatch,
-    users,
+    users: tuple[User, User, User],
 ) -> None:
     """Return backend storage usage for one database registry."""
 

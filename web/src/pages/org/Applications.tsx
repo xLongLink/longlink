@@ -1,4 +1,4 @@
-import { Icon } from '@astryxdesign/core/Icon';
+import { Wrench } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -30,7 +30,7 @@ export default function Applications({
             width: proportional(1),
             renderCell: (application) => (
                 <HStack gap={3} align="center">
-                    <Icon icon="wrench" color="accent" />
+                    <Wrench aria-hidden="true" className="shrink-0 text-accent" size={20} />
                     <VStack gap={1}>
                         <Link href={`/orgs/${organization}/apps/${application.slug}`} weight="semibold">
                             {application.name}

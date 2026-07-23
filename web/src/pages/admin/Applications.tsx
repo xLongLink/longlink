@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Icon } from '@astryxdesign/core/Icon';
+import { Wrench } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
@@ -31,7 +31,7 @@ function createAppColumns(t: TranslatorFn): TableColumn<ApiApplicationResponse>[
             width: proportional(2),
             renderCell: (app) => (
                 <HStack gap={3} align="start">
-                    <Icon icon="wrench" color="accent" />
+                    <Wrench className="text-accent" size={20} />
                     <VStack gap={1}>
                         <Link href={`/orgs/${app.organization.slug}/apps/${app.slug}`} weight="semibold">
                             {app.name}

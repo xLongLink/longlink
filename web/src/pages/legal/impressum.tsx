@@ -1,4 +1,5 @@
 import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 
@@ -21,21 +22,21 @@ export const content = (
             <Heading id="company" level={2}>
                 Company
             </Heading>
-            <p>LongLink SAGL</p>
-            <p>Company registration number (UID): CHE-150.642.313</p>
-            <p>Legal form: Limited liability company (Sagl)</p>
+            <Text as="p">LongLink SAGL</Text>
+            <Text as="p">Company registration number (UID): CHE-150.642.313</Text>
+            <Text as="p">Legal form: Limited liability company (Sagl)</Text>
         </Stack>
 
         <Stack as="section" gap={3}>
             <Heading id="contact" level={2}>
                 Contact
             </Heading>
-            <p>
+            <Text as="p">
                 Email:{' '}
-                <Link href="mailto:info@longlink.ch" type="inherit">
+                <Link href="mailto:info@longlink.ch" hasUnderline type="inherit">
                     info@longlink.ch
                 </Link>
-            </p>
+            </Text>
         </Stack>
     </Stack>
 );

@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -10,11 +9,11 @@ import { Button } from '@astryxdesign/core/Button';
 import { useToast } from '@astryxdesign/core/Toast';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
-import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { GitHub } from '@/svg/GitHub';
 import { useAuthConfig } from '@/hooks/use-auth';
@@ -33,25 +32,27 @@ type LoginValues = {
 
 type AuthProvider = 'github';
 
-/** Renders the shared LongLink sign-in form and saved account switcher. */
-export function SignInCard({ redirectTo }: { redirectTo: string }) {
+/** Renders the shared LongLink sign-in form and saved account selector. */
+export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: string; initialEmail?: string }) {
     const t = useTranslator();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const { accounts, activateAccount } = useSavedAccounts();
+    const accounts = useSavedAccounts();
     const { data: authConfig } = useAuthConfig();
     const showToast = useToast();
     const [pendingProvider, setPendingProvider] = useState<AuthProvider | null>(null);
     const safeRedirectTo = sanitizeRedirectPath(redirectTo);
-    const nextQuery = new URLSearchParams({ next: safeRedirectTo }).toString();
     const loginSchema = z.object({
         email: z.string().trim().min(1, t('auth.emailRequired')).email(t('auth.emailInvalid')),
         password: z.string().min(1, t('auth.passwordRequired')),
     });
     const form = useForm<LoginValues>({
-        defaultValues: { email: '', password: '' },
+        defaultValues: { email: initialEmail, password: '' },
         resolver: zodResolver(loginSchema),
     });
+    const email = useWatch({ control: form.control, name: 'email' }).trim();
+    const nextQuery = new URLSearchParams({ next: safeRedirectTo }).toString();
+    const registerQuery = new URLSearchParams({ next: safeRedirectTo, ...(email ? { email } : {}) }).toString();
     const login = useMutation({
         mutationFn: async (payload: LoginValues) => {
             const body = new URLSearchParams({ username: payload.email, password: payload.password });
@@ -64,18 +65,10 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
         },
     });
 
-    /** Activates one saved account and returns to the requested page. */
-    async function handleAccountSelect(id: string) {
-        // Activate the saved account before redirecting.
-        try {
-            await activateAccount(id);
-            navigate(safeRedirectTo, { replace: true });
-        } catch (accountError) {
-            showToast({
-                body: accountError instanceof Error ? accountError.message : t('auth.accountOpenFailed'),
-                type: 'error',
-            });
-        }
+    /** Prefills a saved account while requiring normal password authentication. */
+    function handleAccountSelect(email: string) {
+        form.reset({ email, password: '' });
+        form.setFocus('password');
     }
 
     /** Signs in with an email and password, then refreshes the current profile. */
@@ -122,7 +115,7 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
                 <Heading level={1} justify="center">
                     <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
                         <span>{t('auth.welcomeTo')}</span>
-                        <Wordmark style={{ fontSize: 'var(--text-heading-1-size)' }} />
+                        <Wordmark size="heading" />
                     </span>
                 </Heading>
                 <Divider label={t('auth.signInDescription')} />
@@ -144,7 +137,7 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
                                 description={account.email}
                                 isDisabled={isPending}
                                 label={account.name}
-                                onClick={() => void handleAccountSelect(account.id)}
+                                onClick={() => handleAccountSelect(account.email)}
                                 startContent={<Avatar src={account.avatar} name={account.name} size="small" />}
                             />
                         ))}
@@ -214,7 +207,7 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
                     <Stack direction="horizontal" gap={2} wrap="wrap">
                         {authConfig.github_enabled ? (
                             <Button
-                                icon={<Icon icon={GitHub} size="sm" />}
+                                icon={<GitHub aria-hidden="true" className="size-4" />}
                                 isDisabled={isPending}
                                 label={t('auth.github')}
                                 onClick={() => void handleProviderSignIn('github')}
@@ -229,7 +222,7 @@ export function SignInCard({ redirectTo }: { redirectTo: string }) {
                 label={
                     <>
                         {t('auth.noAccount')}{' '}
-                        <Link href={`/auth/register?${nextQuery}`} type="inherit" weight="medium">
+                        <Link href={`/auth/register?${registerQuery}`} type="inherit" weight="medium">
                             {t('auth.createAccount')}
                         </Link>
                     </>

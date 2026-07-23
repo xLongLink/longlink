@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Icon } from '@astryxdesign/core/Icon';
+import { Copy } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -155,7 +155,7 @@ export default function AdminOrganizations() {
                           items={[
                               {
                                   label: `${t('actions.copy')} ${t('admin.organizationName').toLowerCase()}`,
-                                  icon: <Icon icon="copy" size="sm" />,
+                                  icon: <Copy size={16} />,
                                   onClick: async () => {
                                       try {
                                           await navigator.clipboard.writeText(organization.name);
