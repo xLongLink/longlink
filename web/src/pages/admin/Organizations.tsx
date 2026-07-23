@@ -37,7 +37,7 @@ function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganization
             width: proportional(1),
             renderCell: (organization) => (
                 <HStack gap={3} align="center">
-                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="small" />
+                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="md" />
                     <Link href={`/orgs/${organization.slug}`} weight="semibold">
                         {organization.name}
                     </Link>
@@ -51,7 +51,7 @@ function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganization
             renderCell: (organization) =>
                 organization.created_by ? (
                     <HStack gap={3} align="center">
-                        <Avatar src={organization.created_by.avatar} name={organization.created_by.name} size="small" />
+                        <Avatar src={organization.created_by.avatar} name={organization.created_by.name} size="md" />
                         <VStack gap={1}>
                             <Text weight="semibold">{organization.created_by.name}</Text>
                             <Text type="supporting">{formatDateTime(organization.created_at)}</Text>
@@ -68,7 +68,7 @@ function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganization
             renderCell: (organization) =>
                 organization.updated_by ? (
                     <HStack gap={3} align="center">
-                        <Avatar src={organization.updated_by.avatar} name={organization.updated_by.name} size="small" />
+                        <Avatar src={organization.updated_by.avatar} name={organization.updated_by.name} size="md" />
                         <VStack gap={1}>
                             <Text weight="semibold">{organization.updated_by.name}</Text>
                             <Text type="supporting">{formatDateTime(organization.updated_at)}</Text>
@@ -85,7 +85,7 @@ function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganization
             renderCell: (organization) =>
                 organization.deleted_by ? (
                     <HStack gap={3} align="center">
-                        <Avatar src={organization.deleted_by.avatar} name={organization.deleted_by.name} size="small" />
+                        <Avatar src={organization.deleted_by.avatar} name={organization.deleted_by.name} size="md" />
                         <VStack gap={1}>
                             <Text weight="semibold">{organization.deleted_by.name}</Text>
                             <Text type="supporting">

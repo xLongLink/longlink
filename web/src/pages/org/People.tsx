@@ -75,7 +75,7 @@ export default function People({
             width: proportional(1),
             renderCell: (user) => (
                 <HStack gap={3} align="center">
-                    <Avatar src={user.avatar} name={user.name} size="small" />
+                    <Avatar src={user.avatar} name={user.name} size="md" />
                     <VStack gap={1}>
                         <Text weight="semibold">{user.name}</Text>
                         <Text type="supporting">{user.email}</Text>

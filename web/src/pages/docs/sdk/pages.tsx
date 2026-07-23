@@ -424,7 +424,7 @@ function renderComponentPreview(name: string) {
                 </Stack>
             );
         case 'Avatar':
-            return <Avatar name="Ada Lovelace" size="medium" />;
+            return <Avatar name="Ada Lovelace" size="lg" />;
         case 'Code':
             return <Code>order.status</Code>;
         case 'Heading':

@@ -47,7 +47,7 @@ function createAppColumns(t: TranslatorFn): TableColumn<ApiApplicationResponse>[
             width: proportional(1),
             renderCell: (app) => (
                 <HStack gap={3} align="center">
-                    <Avatar src={app.organization.avatar ?? undefined} name={app.organization.name} size="small" />
+                    <Avatar src={app.organization.avatar ?? undefined} name={app.organization.name} size="md" />
                     <VStack gap={1}>
                         <Link href={`/orgs/${app.organization.slug}`} weight="semibold">
                             {app.organization.name}

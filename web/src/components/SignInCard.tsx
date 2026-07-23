@@ -138,7 +138,7 @@ export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: stri
                                 isDisabled={isPending}
                                 label={account.name}
                                 onClick={() => handleAccountSelect(account.email)}
-                                startContent={<Avatar src={account.avatar} name={account.name} size="small" />}
+                                startContent={<Avatar src={account.avatar} name={account.name} size="md" />}
                             />
                         ))}
                     </List>

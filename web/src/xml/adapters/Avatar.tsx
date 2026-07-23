@@ -11,7 +11,7 @@ export function Avatar({ props }: Props) {
     const fallbackSrc = useAnchorUrl(resolveXmlString(props, 'fallbackSrc', ctx));
     const name = resolveXmlString(props, 'name', ctx);
     const alt = resolveXmlString(props, 'alt', ctx);
-    const size = resolveXmlEnum(props, 'size', ctx, ['tiny', 'xsmall', 'small', 'medium', 'large'], 'small', 'Avatar');
+    const size = resolveXmlEnum(props, 'size', ctx, ['xsm', 'sm', 'md', 'lg', 'xl'], 'md', 'Avatar');
 
     return (
         <AstryxAvatar

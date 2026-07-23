@@ -142,7 +142,7 @@ longlink/
 
 <!-- ASTRYX:START -->
 
-Astryx v0.1.7 · 150 components
+Astryx v0.1.8 · 150 components
 CLI: run every command as `bunx astryx <cmd>` (shown below as `astryx ...`).
 
 SETUP (once, in your app entry e.g. main.tsx) — without these, components render unstyled:

@@ -22,7 +22,7 @@ VALID_FRAGMENTS = [
         _adapter_schema("Action.xsd"),
         '<Action action="/profile" method="PATCH" json="${profile}"><Button label="Save" /></Action>',
     ),
-    ("avatar", _adapter_schema("Avatar.xsd"), '<Avatar size="small" src="/ada.png" name="Ada Lovelace" />'),
+    ("avatar", _adapter_schema("Avatar.xsd"), '<Avatar size="md" src="/ada.png" name="Ada Lovelace" />'),
     ("badge", _adapter_schema("Badge.xsd"), '<Badge label="$item.status" variant="success" />'),
     ("banner", _adapter_schema("Banner.xsd"), '<Banner status="warning" title="Review required"><Text value="Details" /></Banner>'),
     (

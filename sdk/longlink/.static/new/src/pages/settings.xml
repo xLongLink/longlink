@@ -21,7 +21,7 @@
                 <Text as="p" i18n="settings.application.description" />
                 <Card variant="muted">
                     <Stack direction="horizontal" align="center" gap="3">
-                        <Avatar src="$reviewer.avatarUrl" name="$reviewer.name" alt="$reviewer.name" size="medium" />
+                        <Avatar src="$reviewer.avatarUrl" name="$reviewer.name" alt="$reviewer.name" size="lg" />
                         <Stack gap="1">
                             <Text weight="semibold" i18n="settings.application.reviewer" />
                             <Text color="secondary" i18n="settings.application.initials" values="${{ initials: reviewer.initials }}" />

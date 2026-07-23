@@ -1250,6 +1250,21 @@
     "@astryx.table.sort.descending": {
         "defaultMessage": "Ordina in modo decrescente"
     },
+    "@astryx.table.sort.direction.ascending": {
+        "defaultMessage": "crescente"
+    },
+    "@astryx.table.sort.direction.descending": {
+        "defaultMessage": "decrescente"
+    },
+    "@astryx.table.sort.sortBy": {
+        "defaultMessage": "Ordina per {label}"
+    },
+    "@astryx.table.sort.sortedBy": {
+        "defaultMessage": "Ordina per {label}, ordinamento {direction}"
+    },
+    "@astryx.table.sort.sortedByWithPriority": {
+        "defaultMessage": "Ordina per {label}, ordinamento {direction}, priorità {rank, number} di {total, number}"
+    },
     "@astryx.tableFiltering.filterByColumn": {
         "defaultMessage": "Filtra {header}"
     },
@@ -1269,6 +1284,12 @@
         "defaultMessage": "Espandi tutte le righe"
     },
     "@astryx.tableRowExpansion.expandRow": {
+        "defaultMessage": "Espandi riga"
+    },
+    "@astryx.tableTree.collapseRow": {
+        "defaultMessage": "Comprimi riga"
+    },
+    "@astryx.tableTree.expandRow": {
         "defaultMessage": "Espandi riga"
     },
     "@astryx.textInput.clearLabel": {

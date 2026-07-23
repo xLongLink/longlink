@@ -160,7 +160,7 @@ export default function ApplicationSettings({
             width: proportional(1),
             renderCell: (member) => (
                 <HStack gap={3} align="center">
-                    <Avatar src={member.avatar} name={member.name} size="small" />
+                    <Avatar src={member.avatar} name={member.name} size="md" />
                     <VStack gap={1}>
                         <Text weight="semibold">{member.name}</Text>
                         <Text type="supporting">{member.email}</Text>

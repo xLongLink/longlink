@@ -6,7 +6,7 @@
     <xsd:attribute name="fallbackSrc" type="xsd:string" use="optional" />
     <xsd:attribute name="name" type="xsd:string" use="optional" />
     <xsd:attribute name="alt" type="xsd:string" use="optional" />
-    <xsd:attribute name="size" type="AvatarSizeType" use="optional" default="small" />
+    <xsd:attribute name="size" type="AvatarSizeType" use="optional" default="md" />
     <xsd:attribute name="if" type="xsd:string" use="optional" />
   </xsd:complexType>
   <xsd:element name="Avatar" type="AvatarType">

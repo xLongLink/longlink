@@ -166,7 +166,7 @@ export default function Settings({
                 if (resource.name === 'shared') {
                     return (
                         <HStack gap={3} align="center">
-                            <Avatar src={organizationAvatar} name={organizationName} size="small" />
+                            <Avatar src={organizationAvatar} name={organizationName} size="md" />
                             <VStack gap={1}>
                                 <Text weight="semibold">{organizationName}</Text>
                                 <Text type="supporting">{t('columns.organization')}</Text>
@@ -227,7 +227,7 @@ export default function Settings({
                 if (resource.kind === 'shared_prefix') {
                     return (
                         <HStack gap={3} align="center">
-                            <Avatar src={organizationAvatar} name={organizationName} size="small" />
+                            <Avatar src={organizationAvatar} name={organizationName} size="md" />
                             <VStack gap={1}>
                                 <Text weight="semibold">{organizationName}</Text>
                                 <Text type="supporting">{t('columns.organization')}</Text>
@@ -314,7 +314,7 @@ export default function Settings({
                             <Text type="supporting">{t('organizationSettings.organizationDescription')}</Text>
                         </VStack>
                         <HStack gap={3} align="center">
-                            <Avatar src={organizationAvatar} name={organizationName} size="small" />
+                            <Avatar src={organizationAvatar} name={organizationName} size="md" />
                             <VStack gap={1}>
                                 <Text weight="semibold">{organizationName}</Text>
                                 <Text type="supporting">{organizationDetails?.country}</Text>

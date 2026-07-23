@@ -390,9 +390,9 @@ const elementDocs: ElementDoc[] = [
             { name: 'fallbackSrc', description: 'Fallback image URL.' },
             { name: 'name', description: 'Name used for initials and default alt text.' },
             { name: 'alt', description: 'Explicit alternative text.' },
-            { name: 'size', description: 'tiny, xsmall, small, medium, or large.' },
+            { name: 'size', description: 'xsm, sm, md, lg, or xl.' },
         ],
-        example: `<Avatar src="$user.avatarUrl" name="$user.name" alt="$user.name" size="medium" />`,
+        example: `<Avatar src="$user.avatarUrl" name="$user.name" alt="$user.name" size="lg" />`,
     },
     {
         name: 'Code',

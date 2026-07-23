@@ -63,7 +63,7 @@ export function UserProfile() {
                                 showToast({ body: t('auth.switchAccountFailed'), type: 'error' });
                             });
                         }}
-                        startContent={<Avatar src={user.avatar} name={user.name} size="small" />}
+                        startContent={<Avatar src={user.avatar} name={user.name} size="md" />}
                     />
                     <Divider />
                     <List
@@ -192,7 +192,7 @@ export function UserProfile() {
             }
         >
             <IconButton
-                icon={<Avatar src={user.avatar} name={user.name} size="small" />}
+                icon={<Avatar src={user.avatar} name={user.name} size="md" />}
                 label={user.name}
                 size="md"
                 variant="ghost"

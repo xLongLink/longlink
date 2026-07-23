@@ -49,7 +49,7 @@ export default function Organizations() {
             width: proportional(1),
             renderCell: (organization) => (
                 <HStack gap={3} align="center">
-                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="small" />
+                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="md" />
                     <VStack gap={1}>
                         <Link href={`/orgs/${organization.slug}`} weight="semibold">
                             {organization.name}
