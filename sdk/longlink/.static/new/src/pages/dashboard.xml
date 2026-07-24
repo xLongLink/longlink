@@ -7,7 +7,7 @@
         <Heading level="1" i18n="dashboard.title" />
         <Text as="p" color="secondary" i18n="dashboard.description" />
         <Stack direction="horizontal" align="center" gap="3">
-            <Avatar src="/api/assets/logo" name="LongLink" alt="Organization logo" size="large" />
+            <Avatar src="/api/assets/logo" name="LongLink" alt="Organization logo" size="xl" />
             <Link to="/requests" i18n="dashboard.openRequests" hasUnderline="true" />
         </Stack>
     </Stack>

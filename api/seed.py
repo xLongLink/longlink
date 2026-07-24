@@ -68,17 +68,13 @@ async def seed_local_administrator() -> User:
                 name=LOCAL_ADMIN_NAME,
                 email=LOCAL_ADMIN_EMAIL,
                 hashed_password=password,
-                is_active=True,
                 is_superuser=True,
-                is_verified=True,
                 role=PlatformRoles.administrator,
             )
             session.add(user)
         else:
             user.name = LOCAL_ADMIN_NAME
             user.hashed_password = password
-            user.is_verified = True
-            user.is_active = True
             user.is_superuser = True
             user.role = PlatformRoles.administrator
             user.deleted_at = None
@@ -88,7 +84,7 @@ async def seed_local_administrator() -> User:
         return user
 
 
-async def ensure_local_organization_owner(organization_id, user_id) -> None:
+async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) -> None:
     """Grant the local administrator owner access to a reused organization."""
 
     # Local reseeding repairs only Platform membership metadata.
@@ -114,7 +110,7 @@ async def ensure_local_organization_owner(organization_id, user_id) -> None:
         await session.commit()
 
 
-async def reconcile_until_complete(compute_id) -> None:
+async def reconcile_until_complete(compute_id: UUID) -> None:
     """Drain the durable queue until the target compute reconciliation succeeds or fails."""
 
     # The seed process has no lifespan worker, so it drains the same durable queue explicitly.

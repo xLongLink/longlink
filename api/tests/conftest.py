@@ -111,11 +111,10 @@ async def users() -> tuple[User, User, User]:
             email="user1@example.com",
             hashed_password=password,
             is_superuser=True,
-            is_verified=True,
             role=PlatformRoles.administrator,
         )
-        user2 = User(name="user2", email="user2@example.com", hashed_password=password, is_verified=True)
-        user3 = User(name="user3", email="user3@example.com", hashed_password=password, is_verified=True)
+        user2 = User(name="user2", email="user2@example.com", hashed_password=password)
+        user3 = User(name="user3", email="user3@example.com", hashed_password=password)
 
         # Persist one matching database token for every authenticated fixture client.
         db_session.add_all([user1, user2, user3])

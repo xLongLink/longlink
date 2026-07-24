@@ -74,6 +74,9 @@
     "actions.readDocs": {
         "defaultMessage": "Leggi la documentazione"
     },
+    "actions.retry": {
+        "defaultMessage": "Riprova"
+    },
     "actions.saveChanges": {
         "defaultMessage": "Salva modifiche"
     },
@@ -278,20 +281,20 @@
     "appView.unexpectedApplicationResponse": {
         "defaultMessage": "Risposta dell'applicazione inattesa"
     },
-    "auth.accountOpenFailed": {
-        "defaultMessage": "Impossibile aprire l'account"
-    },
     "auth.agreementLead": {
         "defaultMessage": "Continuando accetti i nostri"
     },
     "auth.agreementMiddle": {
         "defaultMessage": "e la"
     },
-    "auth.back": {
-        "defaultMessage": "Indietro"
-    },
     "auth.backToSignIn": {
         "defaultMessage": "Torna all'accesso"
+    },
+    "auth.completeRegistrationDescription": {
+        "defaultMessage": "Email verificata per {email}. Aggiungi profilo e password per creare il tuo account."
+    },
+    "auth.completeRegistrationTitle": {
+        "defaultMessage": "Completa il tuo account"
     },
     "auth.completingSignIn": {
         "defaultMessage": "Completamento accesso"
@@ -317,9 +320,6 @@
     "auth.emailRequired": {
         "defaultMessage": "L'email e obbligatoria"
     },
-    "auth.emailVerified": {
-        "defaultMessage": "La tua email e verificata. Apertura di LongLink..."
-    },
     "auth.forgotPassword": {
         "defaultMessage": "Password dimenticata?"
     },
@@ -339,13 +339,19 @@
         "defaultMessage": "Nascondi password"
     },
     "auth.invalidResetLink": {
-        "defaultMessage": "Il link per reimpostare la password non contiene il token. Richiedi un nuovo link per continuare."
+        "defaultMessage": "Il link per reimpostare la password non e valido o e scaduto. Richiedi un nuovo link per continuare."
+    },
+    "auth.invalidVerificationLink": {
+        "defaultMessage": "Il link di registrazione non e valido o e scaduto. Richiedi un nuovo link per continuare."
     },
     "auth.loginFailed": {
         "defaultMessage": "Accesso non riuscito"
     },
     "auth.nameRequired": {
         "defaultMessage": "Il nome e obbligatorio"
+    },
+    "auth.nameTooLong": {
+        "defaultMessage": "Il nome non puo superare 127 caratteri"
     },
     "auth.newPassword": {
         "defaultMessage": "Nuova password"
@@ -365,6 +371,9 @@
     "auth.passwordTooShort": {
         "defaultMessage": "La password deve contenere almeno 12 caratteri"
     },
+    "auth.passwordTooLong": {
+        "defaultMessage": "La password non puo superare 1024 caratteri"
+    },
     "auth.passwordReset": {
         "defaultMessage": "La password e stata reimpostata. Ora puoi accedere."
     },
@@ -378,13 +387,19 @@
         "defaultMessage": "Accesso con provider non riuscito"
     },
     "auth.registerDescription": {
-        "defaultMessage": "Registrati con email e password."
+        "defaultMessage": "Inserisci la tua email per iniziare la configurazione sicura dell'account."
+    },
+    "auth.registrationRequestFailed": {
+        "defaultMessage": "Impossibile inviare il link di registrazione. Riprova tra poco."
+    },
+    "auth.registrationSetupMismatch": {
+        "defaultMessage": "Un'altra registrazione e stata verificata in questo browser. Riapri il link per questa email per continuare in sicurezza."
     },
     "auth.requestAnotherReset": {
         "defaultMessage": "Richiedi un altro link"
     },
-    "auth.resendVerificationEmail": {
-        "defaultMessage": "Invia di nuovo il link"
+    "auth.requestVerificationLink": {
+        "defaultMessage": "Richiedi un nuovo link di registrazione"
     },
     "auth.resetEmailSent": {
         "defaultMessage": "Se esiste un account per questa email, le istruzioni per reimpostare la password sono in arrivo."
@@ -402,16 +417,19 @@
         "defaultMessage": "Reimpostazione password..."
     },
     "auth.savedAccounts": {
-        "defaultMessage": "Account salvati"
+        "defaultMessage": "Scegli un account per accedere"
     },
     "auth.sendResetEmail": {
         "defaultMessage": "Invia email di ripristino"
+    },
+    "auth.sendVerificationEmail": {
+        "defaultMessage": "Invia link di registrazione"
     },
     "auth.sendingResetEmail": {
         "defaultMessage": "Invio email di ripristino..."
     },
     "auth.sendingVerificationEmail": {
-        "defaultMessage": "Invio link di verifica..."
+        "defaultMessage": "Invio link di registrazione..."
     },
     "auth.signInDescription": {
         "defaultMessage": "Accedi con email e password."
@@ -425,23 +443,20 @@
     "auth.switchAccountFailed": {
         "defaultMessage": "Impossibile cambiare account"
     },
+    "auth.surnameRequired": {
+        "defaultMessage": "Il cognome e obbligatorio"
+    },
+    "auth.surnameTooLong": {
+        "defaultMessage": "Il cognome non puo superare 127 caratteri"
+    },
     "auth.termsOfService": {
         "defaultMessage": "Termini di servizio"
     },
     "auth.verificationEmailSent": {
-        "defaultMessage": "Controlla la posta per il link di verifica."
+        "defaultMessage": "Se questa email puo essere registrata, il link di registrazione e in arrivo."
     },
-    "auth.verificationCode": {
-        "defaultMessage": "Codice di verifica"
-    },
-    "auth.verificationCodeInvalid": {
-        "defaultMessage": "Inserisci il codice di verifica a 8 cifre"
-    },
-    "auth.verifyEmail": {
-        "defaultMessage": "Verifica email"
-    },
-    "auth.verifyEmailDescription": {
-        "defaultMessage": "Usa il link che LongLink ha inviato al tuo indirizzo email."
+    "auth.verificationFailed": {
+        "defaultMessage": "LongLink non ha potuto verificare questo link di registrazione."
     },
     "auth.verifyEmailTitle": {
         "defaultMessage": "Verifica la tua email"
@@ -694,6 +709,9 @@
     },
     "labels.password": {
         "defaultMessage": "Password"
+    },
+    "labels.surname": {
+        "defaultMessage": "Cognome"
     },
     "labels.port": {
         "defaultMessage": "Porta"
@@ -1094,6 +1112,9 @@
     "toasts.copiedToClipboard": {
         "defaultMessage": "Copiato negli appunti"
     },
+    "toasts.copyFailed": {
+        "defaultMessage": "Impossibile copiare negli appunti"
+    },
     "@astryx.alertDialog.cancel": {
         "defaultMessage": "Annulla"
     },
@@ -1229,6 +1250,21 @@
     "@astryx.table.sort.descending": {
         "defaultMessage": "Ordina in modo decrescente"
     },
+    "@astryx.table.sort.direction.ascending": {
+        "defaultMessage": "crescente"
+    },
+    "@astryx.table.sort.direction.descending": {
+        "defaultMessage": "decrescente"
+    },
+    "@astryx.table.sort.sortBy": {
+        "defaultMessage": "Ordina per {label}"
+    },
+    "@astryx.table.sort.sortedBy": {
+        "defaultMessage": "Ordina per {label}, ordinamento {direction}"
+    },
+    "@astryx.table.sort.sortedByWithPriority": {
+        "defaultMessage": "Ordina per {label}, ordinamento {direction}, priorità {rank, number} di {total, number}"
+    },
     "@astryx.tableFiltering.filterByColumn": {
         "defaultMessage": "Filtra {header}"
     },
@@ -1248,6 +1284,12 @@
         "defaultMessage": "Espandi tutte le righe"
     },
     "@astryx.tableRowExpansion.expandRow": {
+        "defaultMessage": "Espandi riga"
+    },
+    "@astryx.tableTree.collapseRow": {
+        "defaultMessage": "Comprimi riga"
+    },
+    "@astryx.tableTree.expandRow": {
         "defaultMessage": "Espandi riga"
     },
     "@astryx.textInput.clearLabel": {

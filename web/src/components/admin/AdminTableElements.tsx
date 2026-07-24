@@ -1,4 +1,4 @@
-import { Icon } from '@astryxdesign/core/Icon';
+import { Copy } from 'lucide-react';
 import { useToast } from '@astryxdesign/core/Toast';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 
@@ -22,7 +22,7 @@ export function AdminActionMenu({
             items={[
                 {
                     label: `Copy ${copyLabel.toLowerCase()}`,
-                    icon: <Icon icon="copy" size="sm" />,
+                    icon: <Copy size={16} />,
                     onClick: () => {
                         void navigator.clipboard.writeText(copyValue);
                         toast({ body: `${copyLabel} copied` });

@@ -45,7 +45,7 @@ export default function AdminUsers() {
             width: proportional(1),
             renderCell: (user) => (
                 <HStack gap={3} align="center">
-                    <Avatar src={user.avatar} name={user.name} size="small" />
+                    <Avatar src={user.avatar} name={user.name} size="md" />
                     <VStack gap={1}>
                         <Text weight="semibold">{user.name}</Text>
                         <Text type="supporting">{user.email}</Text>
@@ -77,9 +77,13 @@ export default function AdminUsers() {
                     items={[
                         {
                             label: t('admin.copyEmail'),
-                            onClick: () => {
-                                void navigator.clipboard.writeText(user.email);
-                                toast({ body: t('admin.emailCopied') });
+                            onClick: async () => {
+                                try {
+                                    await navigator.clipboard.writeText(user.email);
+                                    toast({ body: t('admin.emailCopied') });
+                                } catch {
+                                    toast({ body: t('toasts.copyFailed'), type: 'error' });
+                                }
                             },
                         },
                     ]}

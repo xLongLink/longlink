@@ -1,7 +1,7 @@
+import { Info } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
-import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -357,7 +357,7 @@ function ComponentSummaryCard({ component }: { component: ComponentSummary }) {
             </Text>
             <RouterLink
                 aria-label={`Open ${component.name} documentation`}
-                className="absolute inset-0 z-10 rounded-container focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                className="absolute inset-0 z-10 rounded-lg focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 to={href}
             />
         </Stack>
@@ -424,13 +424,13 @@ function renderComponentPreview(name: string) {
                 </Stack>
             );
         case 'Avatar':
-            return <Avatar name="Ada Lovelace" size="medium" />;
+            return <Avatar name="Ada Lovelace" size="lg" />;
         case 'Code':
             return <Code>order.status</Code>;
         case 'Heading':
             return <Heading level={3}>Orders</Heading>;
         case 'Icon':
-            return <Icon icon="info" color="accent" />;
+            return <Info aria-hidden="true" className="text-accent" size={20} />;
         case 'Text':
             return <Text type="supporting">Readable text</Text>;
         case 'CheckboxInput':

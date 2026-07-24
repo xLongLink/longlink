@@ -19,10 +19,11 @@ import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import Layout from '@/layout/Layout';
 import { useDeleteDialog } from '@/lib/utils';
+import { PageContainer } from '@/components/PageContainer';
 import { useDeleteOrganization } from '@/hooks/use-organization';
-import { useUpdateUser, useUserProfile } from '@/hooks/use-user';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { useUpdateUser, useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 import { LANGUAGE_OPTIONS, resolveSupportedLanguage, type Language } from '@/lib/languages';
 import {
     ACCENT_OPTIONS,
@@ -51,7 +52,8 @@ export default function Settings() {
     const t = useTranslator();
     const toast = useToast();
     const location = useLocation();
-    const { user, organizations, theme, accent, radius, language, isLoading } = useUserProfile();
+    const { user, theme, accent, radius, language, isLoading: isProfileLoading } = useUserProfile();
+    const { organizations, isLoading: areOrganizationsLoading } = useUserOrganizations();
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
     const deleteOrganization = useDeleteOrganization();
     const [editedName, setEditedName] = useState<string | null>(null);
@@ -63,6 +65,7 @@ export default function Settings() {
     const name = editedName ?? user?.name ?? '';
     const accountName = name.trim();
     const selectedLanguage = resolveSupportedLanguage(language);
+    const isLoading = isProfileLoading || areOrganizationsLoading;
 
     /** Saves the edited account name when focus leaves its input. */
     const saveAccountName = async () => {
@@ -90,7 +93,10 @@ export default function Settings() {
             setEditedName(accountName);
             toast({ body: t('settings.usernameSaved') });
         } catch (error) {
-            setAccountError(error instanceof Error ? error.message : t('settings.failedUpdateUsername'));
+            toast({
+                body: error instanceof Error ? error.message : t('settings.failedUpdateUsername'),
+                type: 'error',
+            });
         }
     };
 
@@ -102,6 +108,7 @@ export default function Settings() {
         description: (organization) => t('deleteDialog.deleteOrganizationDescription', { name: organization.name }),
         errorMessage: t('deleteDialog.failedDeleteOrganization'),
         fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
+        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const organizationColumns: TableColumn<(typeof organizations)[number]>[] = [
         {
@@ -110,7 +117,7 @@ export default function Settings() {
             width: proportional(1),
             renderCell: (organization) => (
                 <HStack gap={3} align="center">
-                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="small" />
+                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="md" />
                     <VStack gap={1}>
                         <Link href={`/orgs/${organization.slug}`} weight="semibold">
                             {organization.name}
@@ -150,35 +157,30 @@ export default function Settings() {
                 [t('navigation.settings')]: { href: '/settings', icon: Settings2 },
             }}
         >
-            <VStack
-                className="mx-auto [--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
-                gap={8}
-                width="100%"
-                maxWidth={1000}
-            >
+            <PageContainer gap={8}>
                 <VStack gap={1}>
                     <Heading level={1}>{t('settings.title')}</Heading>
                     <Text type="supporting">{t('settings.description')}</Text>
                 </VStack>
 
                 <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
-                    <SideNav style={{ height: 'auto', width: '100%' }}>
+                    <SideNav className="h-auto w-full">
                         <SideNavSection title={t('navigation.settings')} isHeaderHidden>
                             <SideNavItem
                                 href={`${location.pathname}${location.search}#account`}
-                                icon={UserRound}
+                                icon={<UserRound aria-hidden="true" size={16} />}
                                 isSelected={section === 'account'}
                                 label={t('settings.accountTitle')}
                             />
                             <SideNavItem
                                 href={`${location.pathname}${location.search}#appearance`}
-                                icon={Paintbrush}
+                                icon={<Paintbrush aria-hidden="true" size={16} />}
                                 isSelected={section === 'appearance'}
                                 label={t('settings.appearanceTitle')}
                             />
                             <SideNavItem
                                 href={`${location.pathname}${location.search}#organizations`}
-                                icon={Building2}
+                                icon={<Building2 aria-hidden="true" size={16} />}
                                 isSelected={section === 'organizations'}
                                 label={t('settings.organizationsTitle')}
                             />
@@ -200,7 +202,10 @@ export default function Settings() {
                                         isRequired
                                         isDisabled={isLoading || !user}
                                         status={accountError ? { type: 'error', message: accountError } : undefined}
-                                        onChange={setEditedName}
+                                        onChange={(value) => {
+                                            setEditedName(value);
+                                            setAccountError(null);
+                                        }}
                                         onBlur={() => {
                                             void saveAccountName();
                                         }}
@@ -223,7 +228,15 @@ export default function Settings() {
                                         isDisabled={isLoading || isPending || !user}
                                         placeholder={t('settings.placeholders.language')}
                                         onChange={(value) => {
-                                            void updateUser({ language: value as Language });
+                                            void updateUser({ language: value as Language }).catch((error: unknown) => {
+                                                toast({
+                                                    body:
+                                                        error instanceof Error
+                                                            ? error.message
+                                                            : t('errors.updateAccount'),
+                                                    type: 'error',
+                                                });
+                                            });
                                         }}
                                     />
                                 </HStack>
@@ -245,7 +258,15 @@ export default function Settings() {
                                         isDisabled={isPending}
                                         placeholder={t('settings.placeholders.theme')}
                                         onChange={(value) => {
-                                            void updateUser({ theme: value as Theme });
+                                            void updateUser({ theme: value as Theme }).catch((error: unknown) => {
+                                                toast({
+                                                    body:
+                                                        error instanceof Error
+                                                            ? error.message
+                                                            : t('errors.updateAccount'),
+                                                    type: 'error',
+                                                });
+                                            });
                                         }}
                                     />
                                     <Selector
@@ -271,7 +292,15 @@ export default function Settings() {
                                         isDisabled={isPending}
                                         placeholder={t('settings.placeholders.color')}
                                         onChange={(value) => {
-                                            void updateUser({ accent: value as Accent });
+                                            void updateUser({ accent: value as Accent }).catch((error: unknown) => {
+                                                toast({
+                                                    body:
+                                                        error instanceof Error
+                                                            ? error.message
+                                                            : t('errors.updateAccount'),
+                                                    type: 'error',
+                                                });
+                                            });
                                         }}
                                     />
                                     <Slider
@@ -288,9 +317,19 @@ export default function Settings() {
                                             setEditedRadius(value);
                                         }}
                                         onChangeEnd={(value: number) => {
-                                            void updateUser({ radius: value }).finally(() => {
-                                                setEditedRadius(null);
-                                            });
+                                            void updateUser({ radius: value })
+                                                .catch((error: unknown) => {
+                                                    toast({
+                                                        body:
+                                                            error instanceof Error
+                                                                ? error.message
+                                                                : t('errors.updateAccount'),
+                                                        type: 'error',
+                                                    });
+                                                })
+                                                .finally(() => {
+                                                    setEditedRadius(null);
+                                                });
                                         }}
                                     />
                                 </HStack>
@@ -322,7 +361,7 @@ export default function Settings() {
                 </div>
 
                 <DeleteConfirmation {...deleteDialog.dialogProps} />
-            </VStack>
+            </PageContainer>
         </Layout>
     );
 }

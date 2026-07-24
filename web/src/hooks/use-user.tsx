@@ -3,9 +3,10 @@ import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/reac
 import type { ApiUserListItem, ApiUserOrganizationMembership, ApiUserProfile } from '@/lib/types';
 import { useApiQuery } from '@/hooks/use-api';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { clearSessionQueries } from '@/lib/react-query';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
+import { accountsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
-import { accountsQueryKey, userOrganizationsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 import {
     apiUserListItemSchema,
     apiUserOrganizationMembershipSchema,
@@ -32,12 +33,17 @@ type AccountsState = {
 
 type UserProfileState = {
     user: User | null;
-    organizations: ApiUserOrganizationMembership[];
     role: User['role'];
     theme: User['theme'];
     accent: User['accent'];
     radius: User['radius'];
     language: User['language'];
+    isLoading: boolean;
+    error: Error | null;
+};
+
+type UserOrganizationsState = {
+    organizations: ApiUserOrganizationMembership[];
     isLoading: boolean;
     error: Error | null;
 };
@@ -67,14 +73,6 @@ function useUserQuery() {
     });
 }
 
-/** Hook that fetches the current user's organization memberships. */
-function useUserOrganizationsQuery(user: User | null | undefined) {
-    return useApiQuery<ApiUserOrganizationMembership[]>(user ? '/api/me/organizations' : null, {
-        parse: (value) => parseApiCollection(apiUserOrganizationMembershipSchema, value),
-        retry: false,
-    });
-}
-
 /** Provides the authenticated user query to the app tree. */
 export function UserProvider({ children }: { children: React.ReactNode }) {
     const user = useUserQuery();
@@ -91,7 +89,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return <UserContext.Provider value={user}>{children}</UserContext.Provider>;
 }
 
-/** Reads the current user profile without loading saved account switcher state. */
+/** Reads the current user profile without loading memberships or saved accounts. */
 export function useUserProfile(): UserProfileState {
     // Fail fast when the provider is missing.
     const context = useContext(UserContext);
@@ -100,13 +98,11 @@ export function useUserProfile(): UserProfileState {
     }
 
     const { data: user, error, isLoading } = context;
-    const organizationsQuery = useUserOrganizationsQuery(user);
 
     // Return anonymous defaults when no authenticated user is loaded.
     if (!user) {
         return {
             user: null,
-            organizations: [],
             role: 'user',
             theme: DEFAULT_USER_PREFERENCES.theme,
             accent: DEFAULT_USER_PREFERENCES.accent,
@@ -119,31 +115,49 @@ export function useUserProfile(): UserProfileState {
 
     return {
         user,
-        organizations: organizationsQuery.data ?? [],
         role: user.role,
         theme: user.theme,
         accent: user.accent,
         radius: user.radius,
         language: user.language,
-        isLoading: isLoading || organizationsQuery.isLoading,
-        error: error ?? organizationsQuery.error ?? null,
+        isLoading,
+        error: error ?? null,
     };
 }
 
-/** Reads the normalized authenticated user state with saved account switcher state. */
-export function useUser() {
+/** Reads organization memberships only when a user is authenticated. */
+export function useUserOrganizations(): UserOrganizationsState {
     const profile = useUserProfile();
-    const queryClient = useQueryClient();
+    const query = useCollectionQuery<ApiUserOrganizationMembership>(profile.user ? '/api/me/organizations' : null, {
+        parse: (value) => parseApiCollection(apiUserOrganizationMembershipSchema, value),
+        retry: false,
+    });
+
+    return {
+        organizations: query.items,
+        isLoading: profile.isLoading || (profile.user !== null && query.isLoading),
+        error: profile.error ?? query.error ?? null,
+    };
+}
+
+/** Reads accounts previously authenticated in this browser session. */
+export function useSavedAccounts(): AccountsState {
     const accountsQuery = useCollectionQuery<ApiUserListItem>('/api/auth/accounts', {
         parse: (value) => parseApiCollection(apiUserListItemSchema, value),
         refetchOnMount: 'always',
         retry: false,
     });
-    const accounts: AccountsState = {
+
+    return {
         items: accountsQuery.items,
         isLoading: accountsQuery.isLoading || accountsQuery.isFetching,
         error: accountsQuery.error ?? null,
     };
+}
+
+/** Provides actions that end or deactivate the current user session. */
+export function useUserSessionActions() {
+    const queryClient = useQueryClient();
 
     /** Signs the current user out and clears cached session state. */
     const signOut = async () => {
@@ -151,18 +165,6 @@ export function useUser() {
         queryClient.clear();
         localStorage.removeItem(THEME_PREFERENCES_KEY);
         window.location.assign('/organizations');
-    };
-
-    /** Activates one saved account and refreshes the current user session. */
-    const activateAccount = async (id: string) => {
-        await fetchApiVoid(`/api/auth/accounts/${encodeURIComponent(id)}/activate`, {
-            method: 'POST',
-        });
-
-        queryClient.setQueryData(userOrganizationsQueryKey(), []);
-        await queryClient.invalidateQueries({ queryKey: userProfileQueryKey() });
-        await queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() });
-        await queryClient.invalidateQueries({ queryKey: accountsQueryKey() });
     };
 
     /** Clears the active user on the server so another account can be selected. */
@@ -175,18 +177,18 @@ export function useUser() {
             (value) => parseApiCollection(apiUserListItemSchema, value)
         );
 
-        await queryClient.cancelQueries({ queryKey: accountsQueryKey() });
-        queryClient.setQueryData(accountsQueryKey(), savedAccounts);
-        queryClient.setQueryData(userProfileQueryKey(), null);
-        queryClient.setQueryData(userOrganizationsQueryKey(), []);
+        const profileKey = userProfileQueryKey();
+        const accountsKey = accountsQueryKey();
+
+        // Remove every query owned by the deactivated account before showing account selection.
+        await clearSessionQueries(queryClient, [profileKey, accountsKey]);
+        queryClient.setQueryData(accountsKey, savedAccounts);
+        queryClient.setQueryData(profileKey, null);
         localStorage.removeItem(THEME_PREFERENCES_KEY);
     };
 
     return {
-        ...profile,
-        accounts,
         signOut,
-        activateAccount,
         switchAccount,
     };
 }

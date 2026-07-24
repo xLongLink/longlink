@@ -23,13 +23,15 @@ import type { Role } from '@/lib/roles';
 import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
 import { ROLE_NAMES } from '@/lib/roles';
 import { formatDate } from '@/lib/utils';
-import { useOrganizationActions } from '@/hooks/use-organization';
+import { useChangeOrganizationMemberRole, useInviteOrganizationMember } from '@/hooks/use-organization';
 
 type PeopleProps = {
-    organization: string;
+    organizationId: string;
     people: ApiOrganizationMemberSummary[];
     invitations: ApiInvitation[];
     activeSection?: 'members' | 'invitations';
+    canInviteMembers: boolean;
+    canManageMembers: boolean;
     isLoading: boolean;
     error: Error | null;
 };
@@ -44,10 +46,12 @@ const ORGANIZATION_ROLE_LABELS: Record<Role, string> = {
 
 /** Renders the organization people lists for settings sections. */
 export default function People({
-    organization,
+    organizationId,
     people,
     invitations,
     activeSection = 'members',
+    canInviteMembers,
+    canManageMembers,
     isLoading,
     error,
 }: PeopleProps) {
@@ -56,14 +60,12 @@ export default function People({
     const [inviteOpen, setInviteOpen] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] = useState<Role>('write');
-    const [inviteError, setInviteError] = useState<string | null>(null);
     const [roleChangeTarget, setRoleChangeTarget] = useState<{
         user: ApiOrganizationMemberSummary;
         role: Role;
     } | null>(null);
-    const [roleChangeError, setRoleChangeError] = useState<string | null>(null);
-    const { inviteMember, isInviting, canInviteMembers, changeMemberRole, isChangingMemberRole, canManageMembers } =
-        useOrganizationActions(organization);
+    const inviteMember = useInviteOrganizationMember(organizationId, canInviteMembers);
+    const changeMemberRole = useChangeOrganizationMemberRole(organizationId, canManageMembers);
     const roleChangeTargetLabel = roleChangeTarget ? ORGANIZATION_ROLE_LABELS[roleChangeTarget.role] : '';
 
     const peopleColumns: TableColumn<ApiOrganizationMemberSummary>[] = [
@@ -73,7 +75,7 @@ export default function People({
             width: proportional(1),
             renderCell: (user) => (
                 <HStack gap={3} align="center">
-                    <Avatar src={user.avatar} name={user.name} size="small" />
+                    <Avatar src={user.avatar} name={user.name} size="md" />
                     <VStack gap={1}>
                         <Text weight="semibold">{user.name}</Text>
                         <Text type="supporting">{user.email}</Text>
@@ -101,7 +103,6 @@ export default function People({
                         label: t('people.grantPermission', { role: ORGANIZATION_ROLE_LABELS[role] }),
                         onClick: () => {
                             setRoleChangeTarget({ user, role });
-                            setRoleChangeError(null);
                         },
                     }))}
                 />
@@ -168,7 +169,7 @@ export default function People({
                         <Button
                             label={t('actions.invite')}
                             variant="primary"
-                            isDisabled={organization.length === 0}
+                            isDisabled={organizationId.length === 0}
                             onClick={() => setInviteOpen(true)}
                         />
                     </HStack>
@@ -194,22 +195,21 @@ export default function People({
                     // Reset pending role changes when the dialog closes.
                     if (!nextOpen) {
                         setRoleChangeTarget(null);
-                        setRoleChangeError(null);
                     }
                 }}
                 title={t('people.changeRoleTitle')}
-                description={`${
+                description={
                     roleChangeTarget
                         ? t('people.changeRoleDescription', {
                               name: roleChangeTarget.user.name,
                               role: roleChangeTargetLabel,
                           })
                         : t('people.changeRoleFallback')
-                }${roleChangeError ? ` ${roleChangeError}` : ''}`}
+                }
                 cancelLabel={t('actions.cancel')}
                 actionLabel={t('actions.changeRole')}
                 actionVariant="primary"
-                isActionLoading={isChangingMemberRole}
+                isActionLoading={changeMemberRole.isPending}
                 onAction={async () => {
                     // Ignore submissions without a selected role change.
                     if (roleChangeTarget === null) {
@@ -218,7 +218,7 @@ export default function People({
 
                     // Persist the selected organization role.
                     try {
-                        await changeMemberRole({
+                        await changeMemberRole.mutateAsync({
                             memberId: roleChangeTarget.user.id,
                             role: roleChangeTarget.role,
                         });
@@ -229,27 +229,19 @@ export default function People({
                             }),
                         });
                         setRoleChangeTarget(null);
-                        setRoleChangeError(null);
                     } catch (mutationError) {
-                        setRoleChangeError(
-                            mutationError instanceof Error ? mutationError.message : t('people.failedChangeMemberRole')
-                        );
+                        toast({
+                            body:
+                                mutationError instanceof Error
+                                    ? mutationError.message
+                                    : t('people.failedChangeMemberRole'),
+                            type: 'error',
+                        });
                     }
                 }}
             />
 
-            <Dialog
-                isOpen={inviteOpen}
-                purpose="form"
-                onOpenChange={(nextOpen) => {
-                    setInviteOpen(nextOpen);
-
-                    // Clear invitation errors when the dialog closes.
-                    if (!nextOpen) {
-                        setInviteError(null);
-                    }
-                }}
-            >
+            <Dialog isOpen={inviteOpen} purpose="form" onOpenChange={setInviteOpen}>
                 <DialogLayout
                     height="auto"
                     header={
@@ -265,20 +257,21 @@ export default function People({
                                 id="invite-member-form"
                                 onSubmit={async (event) => {
                                     event.preventDefault();
-                                    setInviteError(null);
 
                                     // Submit the invitation and surface any failure.
                                     try {
-                                        await inviteMember({ email: inviteEmail.trim(), role: inviteRole });
+                                        await inviteMember.mutateAsync({ email: inviteEmail.trim(), role: inviteRole });
                                         setInviteOpen(false);
                                         setInviteEmail('');
                                         setInviteRole('write');
                                     } catch (mutationError) {
-                                        setInviteError(
-                                            mutationError instanceof Error
-                                                ? mutationError.message
-                                                : t('people.failedInviteUser')
-                                        );
+                                        toast({
+                                            body:
+                                                mutationError instanceof Error
+                                                    ? mutationError.message
+                                                    : t('people.failedInviteUser'),
+                                            type: 'error',
+                                        });
                                     }
                                 }}
                             >
@@ -302,20 +295,13 @@ export default function People({
                                             onChange={(value) => setInviteRole(value as Role)}
                                         />
                                     </FormLayout>
-                                    {inviteError ? <Banner status="error" title={inviteError} /> : null}
                                     <HStack gap={2} justify="end" wrap="wrap">
+                                        <Button label={t('actions.cancel')} onClick={() => setInviteOpen(false)} />
                                         <Button
-                                            label={t('actions.cancel')}
-                                            onClick={() => {
-                                                setInviteOpen(false);
-                                                setInviteError(null);
-                                            }}
-                                        />
-                                        <Button
-                                            label={isInviting ? t('actions.inviting') : t('actions.invite')}
+                                            label={inviteMember.isPending ? t('actions.inviting') : t('actions.invite')}
                                             type="submit"
                                             variant="primary"
-                                            isLoading={isInviting}
+                                            isLoading={inviteMember.isPending}
                                             isDisabled={inviteEmail.trim().length === 0 || !canInviteMembers}
                                         />
                                     </HStack>

@@ -1,7 +1,5 @@
-import { Link } from '@astryxdesign/core/Link';
 import { SideNav as AstryxSideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import type { ArticleNavigationGroup, ArticleNavigationItem } from '@/pages/catalog';
-import { Wordmark } from '@/components/Wordmark';
 
 export type SidebarProps = {
     currentPath: string;
@@ -36,7 +34,6 @@ function renderArticleNavigationItem(item: ArticleNavigationItem, currentPath: s
             icon={item.icon}
             isSelected={isSelected}
             label={item.title}
-            size="sm"
         >
             {item.children?.map((child) => renderArticleNavigationItem(child, currentPath))}
         </SideNavItem>
@@ -46,23 +43,9 @@ function renderArticleNavigationItem(item: ArticleNavigationItem, currentPath: s
 /** Renders the left navigation for article pages. */
 export function Sidebar({ currentPath, groups }: SidebarProps) {
     return (
-        <AstryxSideNav
-            className="docs-sidebar"
-            style={{ width: '100%' }}
-            header={
-                <div className="flex h-16 w-full shrink-0 items-center justify-center border-b border-border">
-                    <Link href="/" label="LongLink home" color="inherit">
-                        <Wordmark className="tracking-normal" style={{ fontSize: '1.375rem' }} />
-                    </Link>
-                </div>
-            }
-        >
+        <AstryxSideNav>
             {groups.map((group) => (
-                <SideNavSection
-                    key={group.title}
-                    className="py-2 [&>div:first-child]:py-0.5 [&>div:last-child]:gap-0"
-                    title={group.title}
-                >
+                <SideNavSection key={group.title} title={group.title}>
                     {group.items.map((item) => renderArticleNavigationItem(item, currentPath))}
                 </SideNavSection>
             ))}

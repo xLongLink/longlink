@@ -1,17 +1,17 @@
-import type { IconName } from '@astryxdesign/core/Icon';
+import type { LucideIcon } from 'lucide-react';
 import { Code } from '@astryxdesign/core/Code';
-import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
+import { CheckCheck, CheckCircle, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 import { CodeBlock } from '@/components/CodeBlock';
 
-const environments: { backend: React.ReactNode; icon: IconName; name: string }[] = [
+const environments: { backend: React.ReactNode; icon: LucideIcon; name: string }[] = [
     {
         name: 'Testing',
-        icon: 'checkDouble',
+        icon: CheckCheck,
         backend: (
             <>
                 <Code>memory</Code> backend for isolated in-memory test files.
@@ -20,7 +20,7 @@ const environments: { backend: React.ReactNode; icon: IconName; name: string }[]
     },
     {
         name: 'Development',
-        icon: 'wrench',
+        icon: Wrench,
         backend: (
             <>
                 <Code>file</Code> backend for inspectable local files.
@@ -29,7 +29,7 @@ const environments: { backend: React.ReactNode; icon: IconName; name: string }[]
     },
     {
         name: 'Production',
-        icon: 'success',
+        icon: CheckCircle,
         backend: (
             <>
                 <Code>s3</Code> backend using application and shared prefixes in one Organization bucket.
@@ -59,22 +59,22 @@ export const content = (
             </Link>
             . Application code uses the same filesystem interface in local development, tests, and production.
         </Text>
-        <Table<Record<string, unknown>>>
+        <Table<Record<string, unknown>> density="compact">
             <TableHeader>
                 <TableRow>
                     <TableHeaderCell>Environment</TableHeaderCell>
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {environments.map((environment) => (
-                    <TableRow key={environment.name}>
+                {environments.map(({ backend, icon: EnvironmentIcon, name }) => (
+                    <TableRow key={name}>
                         <TableCell>
                             <Stack gap={1}>
                                 <Stack direction="horizontal" gap={2} align="center">
-                                    <Icon icon={environment.icon} size="sm" color="accent" />
-                                    <Text weight="semibold">{environment.name}</Text>
+                                    <EnvironmentIcon aria-hidden="true" className="text-accent" size={16} />
+                                    <Text weight="semibold">{name}</Text>
                                 </Stack>
-                                <Text type="supporting">{environment.backend}</Text>
+                                <Text type="supporting">{backend}</Text>
                             </Stack>
                         </TableCell>
                     </TableRow>

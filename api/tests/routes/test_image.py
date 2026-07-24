@@ -1,14 +1,19 @@
+import pytest
 from src.models.types import Image
+from fastapi.testclient import TestClient
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
+IMAGE_REFERENCE = "ghcr.io/longlink/dashboard:latest"
 
-def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
+
+def test_inspect_image_returns_longlink_metadata(clients: tuple[TestClient, TestClient, TestClient], monkeypatch: pytest.MonkeyPatch) -> None:
     """Return name, description, and environment metadata for an image."""
 
     # Arrange
     async def fake_metadata(image: Image) -> LongLinkMetadata:
         """Return inspected LongLink metadata for the requested image."""
 
+        assert image.value == IMAGE_REFERENCE
         return LongLinkMetadata(
             title="dashboard",
             description="Demo app",
@@ -35,7 +40,7 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
     client = clients[0]
 
     # Act
-    response = client.get("/api/image?image=ghcr.io/longlink/dashboard:latest")
+    response = client.get(f"/api/image?image={IMAGE_REFERENCE}")
 
     # Assert
     assert response.status_code == 200
@@ -47,21 +52,34 @@ def test_inspect_image_returns_longlink_metadata(clients, monkeypatch) -> None:
     assert payload["environments"][0]["required"] is True
 
 
-def test_inspect_image_returns_404_when_metadata_missing(clients, monkeypatch) -> None:
+def test_inspect_image_returns_404_when_metadata_missing(
+    clients: tuple[TestClient, TestClient, TestClient], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Return a not-found error when the image has no LongLink metadata."""
 
     # Arrange
     async def fake_metadata(image: Image) -> None:
         """Pretend image inspection found no LongLink metadata."""
 
+        assert image.value == IMAGE_REFERENCE
         return None
 
     monkeypatch.setattr("src.routes.image.images.metadata", fake_metadata)
     client = clients[0]
 
     # Act
-    response = client.get("/api/image?image=ghcr.io/longlink/dashboard:latest")
+    response = client.get(f"/api/image?image={IMAGE_REFERENCE}")
 
     # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": "Image metadata not found"}
+
+
+def test_inspect_image_rejects_invalid_image_reference(clients: tuple[TestClient, TestClient, TestClient]) -> None:
+    """Reject malformed image references before image inspection runs."""
+
+    # Act
+    response = clients[0].get("/api/image?image=longlink/dashboard")
+
+    # Assert
+    assert response.status_code == 422

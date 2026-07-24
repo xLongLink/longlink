@@ -2,13 +2,13 @@ import { z } from 'zod';
 import { useId, useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { useToast } from '@astryxdesign/core/Toast';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TextArea } from '@astryxdesign/core/TextArea';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
@@ -27,11 +27,11 @@ type Values = z.infer<typeof schema>;
 /** Registers one compute target. */
 export default function CreateCompute() {
     const t = useTranslator();
+    const toast = useToast();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const formId = useId();
     const [open, setOpen] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const form = useForm<Values>({
         defaultValues: { name: '', kubeconfig: '' },
         mode: 'onChange',
@@ -63,10 +63,9 @@ export default function CreateCompute() {
         return null;
     }
 
-    /** Clears connection secrets and errors when the dialog closes. */
+    /** Clears connection secrets when the dialog closes. */
     function resetDialogState() {
         form.reset();
-        setError(null);
     }
 
     /** Updates dialog state while protecting an in-flight registration. */
@@ -103,15 +102,16 @@ export default function CreateCompute() {
                             <form
                                 id={formId}
                                 onSubmit={form.handleSubmit(async (payload) => {
-                                    setError(null);
                                     try {
                                         await mutation.mutateAsync(payload);
                                     } catch (mutationError) {
-                                        setError(
-                                            mutationError instanceof Error
-                                                ? mutationError.message
-                                                : t('dialogs.failedConnectCompute')
-                                        );
+                                        toast({
+                                            body:
+                                                mutationError instanceof Error
+                                                    ? mutationError.message
+                                                    : t('dialogs.failedConnectCompute'),
+                                            type: 'error',
+                                        });
                                     }
                                 })}
                             >
@@ -147,7 +147,6 @@ export default function CreateCompute() {
                                             />
                                         )}
                                     />
-                                    {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
                                 </FormLayout>
                             </form>
                         </LayoutContent>

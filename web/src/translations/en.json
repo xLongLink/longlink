@@ -74,6 +74,9 @@
     "actions.readDocs": {
         "defaultMessage": "Read docs"
     },
+    "actions.retry": {
+        "defaultMessage": "Retry"
+    },
     "actions.saveChanges": {
         "defaultMessage": "Save changes"
     },
@@ -278,20 +281,20 @@
     "appView.unexpectedApplicationResponse": {
         "defaultMessage": "Unexpected application response"
     },
-    "auth.accountOpenFailed": {
-        "defaultMessage": "Failed to open account"
-    },
     "auth.agreementLead": {
         "defaultMessage": "By continuing, you agree to our"
     },
     "auth.agreementMiddle": {
         "defaultMessage": "and"
     },
-    "auth.back": {
-        "defaultMessage": "Back"
-    },
     "auth.backToSignIn": {
         "defaultMessage": "Back to sign in"
+    },
+    "auth.completeRegistrationDescription": {
+        "defaultMessage": "Email verified for {email}. Add your profile and password to create your account."
+    },
+    "auth.completeRegistrationTitle": {
+        "defaultMessage": "Complete your account"
     },
     "auth.completingSignIn": {
         "defaultMessage": "Completing sign in"
@@ -317,9 +320,6 @@
     "auth.emailRequired": {
         "defaultMessage": "Email is required"
     },
-    "auth.emailVerified": {
-        "defaultMessage": "Your email is verified. Opening LongLink..."
-    },
     "auth.forgotPassword": {
         "defaultMessage": "Forgot password?"
     },
@@ -339,13 +339,19 @@
         "defaultMessage": "Hide password"
     },
     "auth.invalidResetLink": {
-        "defaultMessage": "This password reset link is missing its token. Request a new link to continue."
+        "defaultMessage": "This password reset link is invalid or expired. Request a new link to continue."
+    },
+    "auth.invalidVerificationLink": {
+        "defaultMessage": "This registration link is invalid or expired. Request a new link to continue."
     },
     "auth.loginFailed": {
         "defaultMessage": "Sign in failed"
     },
     "auth.nameRequired": {
         "defaultMessage": "Name is required"
+    },
+    "auth.nameTooLong": {
+        "defaultMessage": "Name cannot exceed 127 characters"
     },
     "auth.newPassword": {
         "defaultMessage": "New password"
@@ -365,6 +371,9 @@
     "auth.passwordTooShort": {
         "defaultMessage": "Password must contain at least 12 characters"
     },
+    "auth.passwordTooLong": {
+        "defaultMessage": "Password cannot exceed 1024 characters"
+    },
     "auth.passwordReset": {
         "defaultMessage": "Your password has been reset. You can now sign in."
     },
@@ -378,13 +387,19 @@
         "defaultMessage": "Provider sign in failed"
     },
     "auth.registerDescription": {
-        "defaultMessage": "Sign up with email and password."
+        "defaultMessage": "Enter your email to begin secure account setup."
+    },
+    "auth.registrationRequestFailed": {
+        "defaultMessage": "Could not send the registration link. Try again shortly."
+    },
+    "auth.registrationSetupMismatch": {
+        "defaultMessage": "Another registration was verified in this browser. Reopen the link for this email to continue safely."
     },
     "auth.requestAnotherReset": {
         "defaultMessage": "Request another reset link"
     },
-    "auth.resendVerificationEmail": {
-        "defaultMessage": "Resend verification link"
+    "auth.requestVerificationLink": {
+        "defaultMessage": "Request a new registration link"
     },
     "auth.resetEmailSent": {
         "defaultMessage": "If an account exists for that email, password reset instructions are on the way."
@@ -402,16 +417,19 @@
         "defaultMessage": "Resetting password..."
     },
     "auth.savedAccounts": {
-        "defaultMessage": "Saved accounts"
+        "defaultMessage": "Choose an account to sign in"
     },
     "auth.sendResetEmail": {
         "defaultMessage": "Send reset email"
+    },
+    "auth.sendVerificationEmail": {
+        "defaultMessage": "Send registration link"
     },
     "auth.sendingResetEmail": {
         "defaultMessage": "Sending reset email..."
     },
     "auth.sendingVerificationEmail": {
-        "defaultMessage": "Sending verification link..."
+        "defaultMessage": "Sending registration link..."
     },
     "auth.signInDescription": {
         "defaultMessage": "Sign in with your email and password."
@@ -425,23 +443,20 @@
     "auth.switchAccountFailed": {
         "defaultMessage": "Failed to switch account"
     },
+    "auth.surnameRequired": {
+        "defaultMessage": "Surname is required"
+    },
+    "auth.surnameTooLong": {
+        "defaultMessage": "Surname cannot exceed 127 characters"
+    },
     "auth.termsOfService": {
         "defaultMessage": "Terms of Service"
     },
     "auth.verificationEmailSent": {
-        "defaultMessage": "Check your inbox for a verification link."
+        "defaultMessage": "If this email can be registered, a registration link is on the way."
     },
-    "auth.verificationCode": {
-        "defaultMessage": "Verification code"
-    },
-    "auth.verificationCodeInvalid": {
-        "defaultMessage": "Enter the 8-digit verification code"
-    },
-    "auth.verifyEmail": {
-        "defaultMessage": "Verify email"
-    },
-    "auth.verifyEmailDescription": {
-        "defaultMessage": "Use the link LongLink sent to your email address."
+    "auth.verificationFailed": {
+        "defaultMessage": "LongLink could not verify this registration link."
     },
     "auth.verifyEmailTitle": {
         "defaultMessage": "Verify your email"
@@ -694,6 +709,9 @@
     },
     "labels.password": {
         "defaultMessage": "Password"
+    },
+    "labels.surname": {
+        "defaultMessage": "Surname"
     },
     "labels.port": {
         "defaultMessage": "Port"
@@ -1093,5 +1111,8 @@
     },
     "toasts.copiedToClipboard": {
         "defaultMessage": "Copied to clipboard"
+    },
+    "toasts.copyFailed": {
+        "defaultMessage": "Failed to copy to clipboard"
     }
 }

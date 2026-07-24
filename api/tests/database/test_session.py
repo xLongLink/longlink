@@ -1,4 +1,5 @@
 import pytest
+from typing import cast
 from src.database import session
 from collections.abc import Callable
 from src.environments import env
@@ -48,7 +49,7 @@ class _FakeEngine:
         return _FakeConnection(self.log)
 
 
-async def test_get_session_normalizes_mysql_urls_to_aiomysql(monkeypatch) -> None:
+async def test_get_session_normalizes_mysql_urls_to_aiomysql(monkeypatch: pytest.MonkeyPatch) -> None:
     """Normalize MySQL database URLs to the aiomysql driver."""
 
     # Arrange
@@ -67,11 +68,12 @@ async def test_get_session_normalizes_mysql_urls_to_aiomysql(monkeypatch) -> Non
     monkeypatch.setattr(session, "async_sessionmaker", lambda engine, **kwargs: (engine, kwargs))
 
     # Act
-    session_value = await session.get_session()
+    session_value = cast(tuple[object, dict[str, object]], await session.get_session())
+    engine_call = cast(tuple[str, dict[str, object]], log[0][1])
 
     # Assert
     assert session_value[1] == {"expire_on_commit": False}
     assert log[0][0] == "engine"
-    assert log[0][1][0] == str(make_url("mysql+aiomysql://longlink:secret@db.longlink.internal:3306/longlink"))
-    assert log[0][1][1] == {"pool_pre_ping": True, "pool_recycle": 20, "pool_use_lifo": True}
+    assert engine_call[0] == str(make_url("mysql+aiomysql://longlink:secret@db.longlink.internal:3306/longlink"))
+    assert engine_call[1] == {"pool_pre_ping": True, "pool_recycle": 20, "pool_use_lifo": True}
     assert log[1:] == [("connect", None), ("run_sync", None)]

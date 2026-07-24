@@ -1,3 +1,4 @@
+import type { LucideIcon } from 'lucide-react';
 import startCase from 'lodash/startCase';
 import { Card } from '@astryxdesign/core/Card';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -5,11 +6,11 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { getIconRegistry, type IconName } from '@astryxdesign/core/Icon';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import type { ApiOrganizationApplication } from '@/lib/types';
 import XML from '@/layout/XmlLayout';
+import { getIconComponent } from '@/lib/icons';
 import { ApiError, fetchApiText } from '@/lib/api';
 import { usePages, type RuntimePage } from '@/hooks/use-pages';
 import {
@@ -70,47 +71,9 @@ type RuntimeRoute = RouteObject & {
 };
 
 const emptyRouteParams: Record<string, string> = {};
-const astryxIconRegistry = getIconRegistry();
-const legacyRuntimeIcons: Record<string, IconName> = {
-    activity: 'arrowsUpDown',
-    'arrow-right': 'chevronRight',
-    banknote: 'info',
-    bell: 'info',
-    box: 'viewColumns',
-    boxes: 'viewColumns',
-    'building-2': 'viewColumns',
-    check: 'check',
-    'clipboard-list': 'checkDouble',
-    container: 'viewColumns',
-    cpu: 'wrench',
-    database: 'viewColumns',
-    download: 'arrowDown',
-    'hard-drive': 'copy',
-    layers: 'viewColumns',
-    'layout-dashboard': 'viewColumns',
-    'layout-grid': 'viewColumns',
-    link: 'externalLink',
-    list: 'viewColumns',
-    'list-check': 'checkDouble',
-    'map-pin': 'info',
-    plus: 'arrowUp',
-    rocket: 'arrowUp',
-    'rotate-ccw': 'arrowsUpDown',
-    'settings-2': 'wrench',
-    'shield-check': 'success',
-    'sliders-horizontal': 'wrench',
-    timer: 'clock',
-    users: 'info',
-    x: 'close',
-};
 
-/** Returns whether a runtime icon name is supported by the Astryx registry. */
-function isAstryxIconName(name: string): name is IconName {
-    return Object.hasOwn(astryxIconRegistry, name);
-}
-
-/** Resolves current Astryx names and persisted legacy icon slugs for runtime tabs. */
-function resolveRuntimeIcon(name: string | undefined): IconName | undefined {
+/** Resolves persisted icon slugs for runtime tabs. */
+function resolveRuntimeIcon(name: string | undefined): LucideIcon | undefined {
     const iconName = name?.trim();
 
     // Ignore empty and unsupported icon names.
@@ -118,7 +81,7 @@ function resolveRuntimeIcon(name: string | undefined): IconName | undefined {
         return undefined;
     }
 
-    return isAstryxIconName(iconName) ? iconName : legacyRuntimeIcons[iconName];
+    return getIconComponent(iconName);
 }
 
 /**
@@ -322,7 +285,7 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
             {
                 active: boolean;
                 href: string;
-                icon?: IconName;
+                icon?: LucideIcon;
                 label: string;
             }
         >();

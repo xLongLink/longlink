@@ -127,6 +127,13 @@ spec:
               containerPort: 8443
             - name: admin
               containerPort: 9901
+          startupProbe:
+            httpGet:
+              path: /ready
+              port: gateway
+              scheme: HTTPS
+            periodSeconds: 2
+            failureThreshold: 60
           readinessProbe:
             httpGet:
               path: /ready

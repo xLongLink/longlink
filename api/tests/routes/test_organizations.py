@@ -1,13 +1,15 @@
 import pytest
 from uuid import UUID
+from urllib.parse import urlencode
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
 from src.utils import mail as mail_module
 from src.utils import names
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from fastapi.testclient import TestClient
+from longlink.utils.time import utcnow
 from src.database.session import get_session
-from src.database.services import operations, invitations, applications, organizations
+from src.database.services import compute, operations, invitations, applications, organizations
 from src.models.operations import OperationStatus
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -52,6 +54,33 @@ async def test_create_organization_persists_desired_state_and_queues_reconciliat
     assert persisted.shared_schema_url is not None
     members = await organizations.members(organization_id)
     assert [(member.id, membership.role) for member, membership in members] == [(owner.id, OrganizationRoles.owner)]
+
+
+async def test_infrastructure_options_return_assignable_sanitized_registries(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Return ready compute targets and registry identities without connection secrets."""
+
+    # Arrange
+    owner = users[0]
+    ready = await create_ready_infrastructure(owner, slug="ready", name="Ready")
+    failed = await create_ready_infrastructure(owner, slug="failed", name="Failed")
+    await compute.record_failure(failed.compute.id)
+    client = clients[0]
+
+    # Act
+    response = client.get("/api/infrastructure/options")
+
+    # Assert
+    assert response.status_code == 200
+    payload = response.json()
+    assert [item["id"] for item in payload["computes"]] == [str(ready.compute.id)]
+    assert {item["id"] for item in payload["databases"]} == {str(ready.database.id), str(failed.database.id)}
+    assert {item["id"] for item in payload["storages"]} == {str(ready.storage.id), str(failed.storage.id)}
+    assert set(payload["computes"][0]) == {"id", "name", "slug"}
+    assert set(payload["databases"][0]) == {"id", "name", "slug"}
+    assert set(payload["storages"][0]) == {"id", "name", "slug"}
 
 
 async def test_get_organization_returns_member_payload(
@@ -154,6 +183,34 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     assert len(recorded_operations) == 1
     assert recorded_operations[0].id == UUID(payload["operation"]["id"])
     assert recorded_operations[0].compute_id == infrastructure.compute.id
+
+
+async def test_delete_organization_requires_owner_or_platform_admin(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject non-owner deletes while allowing a platform administrator without membership."""
+
+    # Arrange
+    platform_admin, org_admin = users[0], users[1]
+    owned_infrastructure = await create_ready_infrastructure(platform_admin, slug="owned")
+    owned_organization = await create_organization(owned_infrastructure, platform_admin)
+    admin_infrastructure = await create_ready_infrastructure(org_admin, slug="admin-owned")
+    admin_owned_organization = await create_organization(admin_infrastructure, org_admin, name="globex", slug="globex")
+    Session = await get_session()
+    async with Session() as session:
+        session.add(UserOrganization(user_id=org_admin.id, organization_id=owned_organization.id, role=OrganizationRoles.admin))
+        await session.commit()
+
+    # Act
+    non_owner_response = clients[1].delete(f"/api/organizations/{owned_organization.id}")
+    platform_admin_response = clients[0].delete(f"/api/organizations/{admin_owned_organization.id}")
+
+    # Assert
+    assert non_owner_response.status_code == 403
+    assert non_owner_response.json() == {"detail": "Permission required"}
+    assert platform_admin_response.status_code == 202
+    assert await organizations.get(admin_owned_organization.id) is None
 
 
 async def test_other_organization_user_cannot_manage_application_members_or_delete_application(
@@ -543,6 +600,45 @@ async def test_list_organizations_returns_null_deleted_by_for_active_org(
     assert payload["deleted_by"] is None
 
 
+async def test_organization_access_rejects_soft_deleted_membership(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject organization access when only a soft-deleted membership remains."""
+
+    # Arrange
+    owner, user = users[0], users[1]
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
+    await mark_organization_running(organization)
+    await applications.create(
+        organization.id,
+        "dashboard",
+        slug="dashboard",
+        image="ghcr.io/longlink/dashboard:latest",
+        user=owner,
+    )
+
+    Session = await get_session()
+    async with Session() as session:
+        session.add(
+            UserOrganization(
+                user_id=user.id,
+                organization_id=organization.id,
+                role=OrganizationRoles.read,
+                deleted_at=utcnow(),
+            )
+        )
+        await session.commit()
+
+    # Act
+    response = clients[1].get(f"/api/organizations/{organization.id}/applications")
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Access required"}
+
+
 async def test_get_organization_returns_404_for_non_member(
     clients: tuple[TestClient, TestClient, TestClient],
     users: tuple[User, User, User],
@@ -620,10 +716,38 @@ async def test_create_organization_invitation_returns_204(
     assert messages[0][:2] == (invitee.email, "Invitation to join acme on LongLink")
     assert "You have been invited to join acme on LongLink." in messages[0][2]
     assert "Role: write" in messages[0][2]
-    assert "http://localhost:5173/organizations" in messages[0][2]
+    assert f"http://localhost:5173/auth/register?{urlencode({'email': invitee.email, 'next': '/organizations'})}" in messages[0][2]
     assert messages[0][3] is not None
     assert "Join acme with write access." in messages[0][3]
     assert "Open invitation" in messages[0][3]
+
+
+async def test_create_organization_invitation_rejects_role_above_caller(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject invitations that grant more access than the caller has."""
+
+    # Arrange
+    owner, maintainer, invitee = users
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
+    Session = await get_session()
+    async with Session() as session:
+        session.add(UserOrganization(user_id=maintainer.id, organization_id=organization.id, role=OrganizationRoles.maintain))
+        await session.commit()
+    client = clients[1]
+
+    # Act
+    response = client.post(
+        f"/api/organizations/{organization.id}/invitations",
+        json={"email": invitee.email, "role": "admin"},
+    )
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Invitation role permissions required"}
+    assert await organizations.invitations(organization.id) == []
 
 
 async def test_update_organization_member_changes_role(
@@ -666,6 +790,53 @@ async def test_update_organization_member_changes_role(
     recorded_operations = await operations.fetch()
     assert len(recorded_operations) == 1
     assert recorded_operations[0].compute_id == infrastructure.compute.id
+
+
+async def test_update_organization_member_rejects_owner_escalation_from_admin(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Reject owner grants from organization admins."""
+
+    # Arrange
+    owner, admin, member = users
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
+    Session = await get_session()
+    async with Session() as session:
+        session.add(UserOrganization(user_id=admin.id, organization_id=organization.id, role=OrganizationRoles.admin))
+        session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
+        await session.commit()
+    client = clients[1]
+
+    # Act
+    response = client.patch(f"/api/organizations/{organization.id}/members/{member.id}", json={"role": "owner"})
+
+    # Assert
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Owner management permissions required"}
+    assert await organizations.membership_role(organization.id, member.id) == OrganizationRoles.read
+
+
+async def test_update_organization_member_rejects_demoting_last_owner(
+    clients: tuple[TestClient, TestClient, TestClient],
+    users: tuple[User, User, User],
+) -> None:
+    """Return the service conflict when a request would remove the final owner."""
+
+    # Arrange
+    owner = users[0]
+    infrastructure = await create_ready_infrastructure(owner)
+    organization = await create_organization(infrastructure, owner)
+    client = clients[0]
+
+    # Act
+    response = client.patch(f"/api/organizations/{organization.id}/members/{owner.id}", json={"role": "admin"})
+
+    # Assert
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Organization must have at least one owner"}
+    assert await organizations.membership_role(organization.id, owner.id) == OrganizationRoles.owner
 
 
 async def test_update_organization_member_returns_403_for_regular_member(

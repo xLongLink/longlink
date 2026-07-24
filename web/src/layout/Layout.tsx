@@ -5,7 +5,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { Icon, type IconName, type IconType } from '@astryxdesign/core/Icon';
+import { ExternalLink, type LucideIcon } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
 import { UserProfile } from '@/components/Profile';
@@ -14,7 +14,7 @@ import TopLayout from './TopLayout';
 
 type LayoutTab = {
     href: string;
-    icon?: IconName | IconType;
+    icon?: LucideIcon;
 };
 
 type LayoutProps = {
@@ -27,7 +27,7 @@ type LayoutProps = {
 };
 
 type LayoutTabEntry = {
-    icon?: IconName | IconType;
+    icon?: LucideIcon;
     label: string;
     href: string;
     pathname: string;
@@ -94,8 +94,8 @@ export default function Layout({
     const header = (
         <Stack gap={0}>
             <TopNav
+                className="min-h-11 px-7"
                 label={t('common.mainNavigation')}
-                style={{ minHeight: 'var(--spacing-11)', paddingInline: 'var(--spacing-7)' }}
                 heading={
                     brandOnly ? (
                         <Link href={brandHref} label={t('common.longlinkHome')} color="inherit">
@@ -110,7 +110,10 @@ export default function Layout({
                         <UserProfile />
                     ) : (
                         <Link href="/docs" color="secondary" isStandalone rel="noopener noreferrer" target="_blank">
-                            {t('common.documentation')} <Icon icon="externalLink" size="xsm" />
+                            <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                                {t('common.documentation')}
+                                <ExternalLink aria-hidden="true" className="size-3 shrink-0" />
+                            </span>
                         </Link>
                     )
                 }
@@ -118,33 +121,36 @@ export default function Layout({
 
             {!tabEntries.length && !reserveTabSpace ? null : (
                 <Stack direction="horizontal" isScrollable paddingInline={4} width="100%">
-                    <TabList
-                        aria-label="Section navigation"
-                        hasDivider
-                        onChange={() => undefined}
-                        size="sm"
-                        value={activeTabPathname ?? ''}
-                    >
-                        {tabEntries.length ? (
-                            tabEntries.map((tab) => (
-                                <Tab
-                                    key={tab.label}
-                                    href={tab.href}
-                                    icon={tab.icon ? <Icon icon={tab.icon} size="sm" /> : undefined}
-                                    label={tab.label}
-                                    value={tab.pathname}
-                                />
-                            ))
-                        ) : (
-                            <Tab
-                                aria-disabled="true"
-                                aria-hidden="true"
-                                className="invisible pointer-events-none"
-                                label=""
-                                value="reserved-tab-space"
-                            />
-                        )}
-                    </TabList>
+                    {tabEntries.length ? (
+                        <TabList
+                            aria-label="Section navigation"
+                            hasDivider
+                            onChange={() => undefined}
+                            size="sm"
+                            value={activeTabPathname ?? ''}
+                        >
+                            {tabEntries.map((tab) => {
+                                const TabIcon = tab.icon;
+
+                                return (
+                                    <Tab
+                                        key={tab.label}
+                                        href={tab.href}
+                                        icon={TabIcon ? <TabIcon aria-hidden="true" size={16} /> : undefined}
+                                        label={tab.label}
+                                        value={tab.pathname}
+                                    />
+                                );
+                            })}
+                        </TabList>
+                    ) : (
+                        <Stack
+                            aria-hidden="true"
+                            className="border-b border-border"
+                            height="var(--size-element-sm)"
+                            width="100%"
+                        />
+                    )}
                 </Stack>
             )}
         </Stack>

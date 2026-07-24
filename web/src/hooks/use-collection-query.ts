@@ -14,6 +14,9 @@ type UseCollectionQueryResult<TData> = UseQueryResult<Array<TData>, Error> & {
     items: Array<TData>;
 };
 
+const EMPTY_COLLECTION: never[] = [];
+Object.freeze(EMPTY_COLLECTION);
+
 /** Fetches a collection resource and exposes a stable empty array fallback. */
 export function useCollectionQuery<TData>(
     path: string | null,
@@ -30,6 +33,6 @@ export function useCollectionQuery<TData>(
 
     return {
         ...query,
-        items: query.data ?? [],
+        items: query.data ?? EMPTY_COLLECTION,
     };
 }

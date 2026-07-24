@@ -31,8 +31,8 @@ async def test_missing_user_get_returns_none() -> None:
     assert result is None
 
 
-async def test_update_applies_profile_settings_and_preserves_authentication(users: tuple[User, User, User]) -> None:
-    """Update mutable profile fields without changing authentication state."""
+async def test_update_applies_profile_settings_and_preserves_password(users: tuple[User, User, User]) -> None:
+    """Update mutable profile fields without changing the password hash."""
 
     user = users[1]
 
@@ -55,8 +55,6 @@ async def test_update_applies_profile_settings_and_preserves_authentication(user
     assert updated.radius == 1.5
     assert updated.language == Language.it
     assert updated.hashed_password == user.hashed_password
-    assert updated.is_active is True
-    assert updated.is_verified is True
 
 
 async def test_update_preserves_omitted_profile_fields(users: tuple[User, User, User]) -> None:

@@ -63,7 +63,11 @@ async def usage(registry: StorageRegistry, bucket_name: str, prefix: str) -> Sto
     async with client(registry) as s3:
         paginator = s3.get_paginator("list_objects_v2")
         async for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
-            contents = page.get("Contents", [])
+            contents = [
+                item
+                for item in page.get("Contents", [])
+                if item.get("Key") != prefix or int(item.get("Size", 0)) != 0
+            ]
             object_count += len(contents)
             space_used += sum(int(item.get("Size", 0)) for item in contents)
 

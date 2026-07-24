@@ -5,6 +5,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { useToast } from '@astryxdesign/core/Toast';
 import { useMutation } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,6 +24,7 @@ const emailInputAttributes = { autoComplete: 'email' };
 /** Requests a password reset email without disclosing whether an account exists. */
 export default function ForgotPassword() {
     const t = useTranslator();
+    const showToast = useToast();
     const location = useLocation();
     const nextPath = sanitizeRedirectPath(new URLSearchParams(location.search).get('next'));
     const nextQuery = new URLSearchParams({ next: nextPath }).toString();
@@ -38,10 +40,22 @@ export default function ForgotPassword() {
             await fetchApiVoid('/api/auth/forgot-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
+                body: JSON.stringify({ ...payload, next: nextPath }),
             });
         },
     });
+
+    /** Requests password reset instructions and reports transient failures. */
+    async function handleRequestReset(payload: ForgotPasswordValues) {
+        try {
+            await requestReset.mutateAsync(payload);
+        } catch (error) {
+            showToast({
+                body: error instanceof Error ? error.message : t('appView.retryLater'),
+                type: 'error',
+            });
+        }
+    }
 
     return (
         <AuthPage title={t('auth.forgotPasswordTitle')} description={t('auth.forgotPasswordDescription')}>
@@ -51,7 +65,7 @@ export default function ForgotPassword() {
                     <Button href={`/organizations?${nextQuery}`} label={t('auth.backToSignIn')} variant="primary" />
                 </Stack>
             ) : (
-                <Stack as="form" gap={4} onSubmit={form.handleSubmit((payload) => requestReset.mutate(payload))}>
+                <Stack as="form" gap={4} onSubmit={form.handleSubmit(handleRequestReset)}>
                     <Controller
                         control={form.control}
                         name="email"
@@ -73,7 +87,6 @@ export default function ForgotPassword() {
                             />
                         )}
                     />
-                    {requestReset.error ? <Banner status="error" title={requestReset.error.message} /> : null}
                     <Button
                         isDisabled={requestReset.isPending}
                         isLoading={requestReset.isPending}

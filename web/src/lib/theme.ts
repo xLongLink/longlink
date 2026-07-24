@@ -124,12 +124,25 @@ export function getAstryxTheme(accentValue: Accent, radius: number): DefinedThem
                     marginInlineStart: 'var(--spacing-1)',
                 },
             },
-            link: {
-                base: { textDecoration: 'underline' },
+            'side-nav-item': {
+                base: { color: 'var(--color-text-secondary)' },
+                'selected:selected': {
+                    backgroundColor: 'var(--color-accent-muted)',
+                    color: 'var(--color-text-primary)',
+                },
+            },
+            'side-nav-section': {
+                base: { marginInline: 'calc(-1 * var(--spacing-2))' },
             },
             table: {
                 base: {
+                    borderWidth: '0',
+                },
+            },
+            'table-scroll-wrapper': {
+                base: {
                     borderColor: 'var(--color-border-emphasized)',
+                    borderRadius: 'var(--radius-container)',
                     borderStyle: 'solid',
                     borderWidth: 'var(--border-width)',
                 },

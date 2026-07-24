@@ -44,11 +44,11 @@
   </xsd:simpleType>
   <xsd:simpleType name="AvatarSizeType">
     <xsd:restriction base="xsd:string">
-      <xsd:enumeration value="tiny" />
-      <xsd:enumeration value="xsmall" />
-      <xsd:enumeration value="small" />
-      <xsd:enumeration value="medium" />
-      <xsd:enumeration value="large" />
+      <xsd:enumeration value="xsm" />
+      <xsd:enumeration value="sm" />
+      <xsd:enumeration value="md" />
+      <xsd:enumeration value="lg" />
+      <xsd:enumeration value="xl" />
     </xsd:restriction>
   </xsd:simpleType>
   <xsd:simpleType name="IconSizeType">
