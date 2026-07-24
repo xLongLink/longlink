@@ -1,38 +1,18 @@
 # LongLink Agent Guide
 
-LongLink is an open-source platform for building and running dedicated business-process applications.
-
-It provides the shared foundation for auth, organizations, permissions, deployment, databases, storage, routing, logs, status, and the application shell. Each application remains normal Python software and owns its models, validation, workflow, APIs, pages, integrations, and business logic.
-
-When working in this repo, keep changes practical, small, and aligned with the existing API, SDK, and web boundaries. Preserve the core product goal: process-specific applications should be easy to understand, test, review, deploy, and maintain without proprietary platform lock-in.
-
-When listing improvement suggestions, use numbered lists.
-
-Project is in MVP mode - No need for backwards compatibility
+- When listing improvement suggestions, use numbered lists.
+- Project is in MVP mode - No need for backwards compatibility
 
 ## Product Language
 
 Use LongLink terminology consistently.
 
-| Term                  | Use                                                                                                                                             |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| LongLink              | The product as a whole.                                                                                                                         |
-| LongLink Platform     | The shared platform layer that owns authentication, organizations, infrastructure registries, operations, deployments, and application routing. |
-| LongLink Applications | Process-specific Python applications running on LongLink.                                                                                       |
-| LongLink SDK          | The Python package that provides the application runtime, CLI, database helpers, storage helpers, XML page discovery, and packaged assets.      |
-| Web frontend          | The Vite/React frontend for public pages, docs, the platform UI, and XML rendering.                                                             |
-| Organization          | A tenant boundary for users, shared data, applications, and managed runtime resources.                                                          |
-| XML pages             | Declarative page definitions rendered by the LongLink web runtime.                                                                              |
+| Term                  | Use                                                                                    |
+| --------------------- | -------------------------------------------------------------------------------------- |
+| LongLink              | The product as a whole.                                                                |
+| LongLink Platform     | The shared platform layer that owns authentication, organizations, infrastructure .... |
+| LongLink Applications | Process-specific Python applications running on LongLink.                              |
 
-## Audience and Tone
-
-- Write for developers and technical operators who may not know LongLink internals.
-- Be direct, practical, and mature.
-- Start with the outcome, requirements, and shortest working path before adding deeper detail.
-- Prefer active voice and short sentences.
-- Use `you` for the reader and `LongLink` for the product.
-- Avoid ambiguous `we`; name the actor instead, such as `contributors`, `the LongLink Platform`, or `the LongLink SDK`.
-- Avoid jokes, cultural references, and in-jokes that age poorly or exclude readers.
 
 ## Architecture
 
@@ -84,7 +64,6 @@ longlink/
 
 ## Python Guidelines
 
-- Use safe, practical defaults that minimize required configuration.
 - Validate inputs as early as possible, preferably at system boundaries.
 - Use exceptions for genuine error conditions while avoiding unnecessary `try` and `except` blocks.
 - Represent application state explicitly with typed models, enums, or structured objects.
@@ -142,7 +121,6 @@ longlink/
 
 <!-- ASTRYX:START -->
 
-Astryx v0.1.8 · 150 components
 CLI: run every command as `bunx astryx <cmd>` (shown below as `astryx ...`).
 
 SETUP (once, in your app entry e.g. main.tsx) — without these, components render unstyled:

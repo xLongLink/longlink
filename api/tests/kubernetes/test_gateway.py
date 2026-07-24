@@ -62,6 +62,12 @@ def test_gateway_manifests_include_exact_auth_tls_and_config_resources() -> None
     assert manifests.config_map["data"] == {"envoy.yaml": "envoy-config"}
     assert manifests.deployment["metadata"]["annotations"]["longlink.io/runtime-revision"] == manifests.runtime_revision
     assert manifests.service["metadata"]["annotations"]["longlink.io/runtime-revision"] == manifests.runtime_revision
+    container = manifests.deployment["spec"]["template"]["spec"]["containers"][0]
+    assert container["startupProbe"] == {
+        "httpGet": {"path": "/ready", "port": "gateway", "scheme": "HTTPS"},
+        "periodSeconds": 2,
+        "failureThreshold": 60,
+    }
 
 
 def test_gateway_tls_reuses_valid_material_for_same_endpoint() -> None:
