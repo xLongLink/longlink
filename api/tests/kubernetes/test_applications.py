@@ -1,8 +1,8 @@
 import pytest
 from uuid import UUID
+from src.kubernetes.reconcile import DesiredApplication, DesiredOrganization
 from src.kubernetes.resources import KubernetesResources
 from src.kubernetes.applications import Applications
-from src.kubernetes.reconcile import DesiredApplication, DesiredOrganization
 
 pytestmark = pytest.mark.no_db
 

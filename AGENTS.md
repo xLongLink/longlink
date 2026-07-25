@@ -12,7 +12,6 @@ Use LongLink terminology consistently.
 - `Platform`: The shared platform layer that owns authentication, infrastructure, ...
 - `Applications`: Process-specific Python applications running on LongLink.
 
-
 ## Architecture
 
 ```bash
