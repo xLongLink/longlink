@@ -7,11 +7,11 @@ export default [
     route('privacy', './routes/legal.tsx', { id: 'privacy' }),
     route('impressum', './routes/legal.tsx', { id: 'impressum' }),
     route('pricing', './routes/pricing.tsx'),
+    route('marketplace', './routes/marketplace.tsx'),
     route('auth/register', './auth/Register.tsx'),
     route('auth/verify-email', './auth/VerifyEmail.tsx'),
     route('auth/forgot-password', './auth/ForgotPassword.tsx'),
     route('auth/reset-password', './auth/ResetPassword.tsx'),
-    route('auth/complete', './auth/Complete.tsx'),
     route('organizations', './Organizations.tsx'),
     route('settings', './routes/settings.tsx'),
     layout('./Admin.tsx', [

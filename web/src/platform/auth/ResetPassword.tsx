@@ -34,7 +34,7 @@ export default function ResetPassword() {
     const nextPath = sanitizeRedirectPath(search.get('next'));
     const nextQuery = new URLSearchParams({ next: nextPath }).toString();
     const schema = z.object({
-        password: z.string().min(1, t('auth.passwordRequired')),
+        password: z.string().min(1, t('auth.passwordRequired')).max(1024, t('auth.passwordTooLong')),
     });
     const form = useForm<ResetPasswordValues>({
         defaultValues: { password: '' },
@@ -88,12 +88,6 @@ export default function ResetPassword() {
         } catch (error) {
             // The bad-token response blocks this workflow and is rendered below.
             if (error instanceof ApiError && error.status === 400 && error.code === 'RESET_PASSWORD_BAD_TOKEN') {
-                return;
-            }
-
-            // Keep server-side password policy failures with the password field.
-            if (error instanceof ApiError && error.code === 'RESET_PASSWORD_INVALID_PASSWORD') {
-                form.setError('password', { message: error.message, type: 'server' });
                 return;
             }
 

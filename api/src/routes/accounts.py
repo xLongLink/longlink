@@ -1,10 +1,9 @@
-from uuid import UUID
 from fastapi import Depends, Request, Response, APIRouter
-from src.auth import SessionAccountsService, cookie_backend, cookie_transport, get_database_strategy, current_optional_user_token
+from src.auth import SessionAccountsService, get_auth_session, clear_auth_cookie, revoke_access_token, current_optional_user_token
 from src.models.users import UserListItem
 from src.database.services import users
-from src.database.models.users import User, AccessToken
-from fastapi_users.authentication.strategy.db import DatabaseStrategy
+from sqlalchemy.ext.asyncio import AsyncSession
+from src.database.models.users import User
 
 router = APIRouter()
 
@@ -14,7 +13,7 @@ async def deactivate_account(
     request: Request,
     response: Response,
     authentication: tuple[User | None, str | None] = Depends(current_optional_user_token),
-    strategy: DatabaseStrategy[User, UUID, AccessToken] = Depends(get_database_strategy),
+    session: AsyncSession = Depends(get_auth_session),
 ):
     """Clear the active account while retaining saved browser accounts."""
 
@@ -22,7 +21,8 @@ async def deactivate_account(
 
     # Revoke the active database token when one is present.
     if current_user is not None and current_token is not None:
-        await strategy.destroy_token(current_token, current_user)
+        await revoke_access_token(session, current_token)
+        await session.commit()
 
     accounts: list[User] = []
 
@@ -32,7 +32,7 @@ async def deactivate_account(
         if user is not None:
             accounts.append(user)
 
-    cookie_transport._set_logout_cookie(response)
+    clear_auth_cookie(response)
     return accounts
 
 
@@ -54,7 +54,7 @@ async def list_accounts(request: Request):
 async def logout(
     request: Request,
     authentication: tuple[User | None, str | None] = Depends(current_optional_user_token),
-    strategy: DatabaseStrategy[User, UUID, AccessToken] = Depends(get_database_strategy),
+    session: AsyncSession = Depends(get_auth_session),
 ) -> Response:
     """Revoke the active token and remove that account from the switcher."""
 
@@ -63,6 +63,10 @@ async def logout(
     # Remove only the active account while preserving other saved accounts.
     if user is not None:
         SessionAccountsService(request).remove(user.id)
-    if user is not None and token is not None:
-        return await cookie_backend.logout(strategy, user, token)
-    return await cookie_transport.get_logout_response()
+    if token is not None:
+        await revoke_access_token(session, token)
+        await session.commit()
+
+    response = Response(status_code=204)
+    clear_auth_cookie(response)
+    return response

@@ -3,7 +3,6 @@ from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authsupport, current_authenticated_user
 from src.utils import mail, names, roles
-from src.utils import storage as storage_utils
 from src.logger import logger
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.statuses import ComputeStatus
@@ -351,7 +350,8 @@ async def _storage_usage_rows(
 
     # Return no logical resources until the Organization bucket exists.
     try:
-        buckets = set(await storage_utils.buckets(registry))
+        object_storage = adapters.storage(registry)
+        buckets = set(await object_storage.buckets())
     except Exception as exc:
         logger.warning(
             "Storage resources unavailable for organization '%s' through registry '%s': %s",
@@ -379,7 +379,7 @@ async def _storage_usage_rows(
     rows: list[dict[str, object]] = []
     try:
         for kind, name, prefix, app in resources:
-            usage = await storage_utils.usage(registry, bucket, prefix)
+            usage = await object_storage.usage(bucket, prefix)
             rows.append(
                 {
                     "kind": kind,

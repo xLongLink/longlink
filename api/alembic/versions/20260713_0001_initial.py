@@ -29,7 +29,6 @@ def upgrade() -> None:
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column("is_superuser", sa.Boolean(), nullable=False),
         sa.Column("role", sa.Enum("user", "support", "administrator", name="platform_role_enum", native_enum=False), nullable=False),
         sa.Column("theme", sa.Enum("system", "light", "dark", name="theme"), nullable=False),
         sa.Column(
@@ -66,26 +65,7 @@ def upgrade() -> None:
     )
     op.create_index("ix_users_email", "users", ["email"], unique=True)
 
-    # Store external provider identities separately from stable local users.
-    op.create_table(
-        "oauth_accounts",
-        sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("user_id", sa.Uuid(), nullable=False),
-        sa.Column("oauth_name", sa.String(length=100), nullable=False),
-        sa.Column("account_id", sa.String(length=320), nullable=False),
-        sa.Column("account_email", sa.String(length=320), nullable=False),
-        sa.Column("access_token", sa.String(length=1024), nullable=False),
-        sa.Column("expires_at", sa.Integer(), nullable=True),
-        sa.Column("refresh_token", sa.String(length=1024), nullable=True),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("oauth_name", "account_id", name="uq_oauth_accounts_provider_subject"),
-    )
-    op.create_index("ix_oauth_accounts_account_id", "oauth_accounts", ["account_id"])
-    op.create_index("ix_oauth_accounts_oauth_name", "oauth_accounts", ["oauth_name"])
-    op.create_index("ix_oauth_accounts_user_id", "oauth_accounts", ["user_id"])
-
-    # Store revocable browser-session digests using FastAPI Users' database strategy.
+    # Store revocable browser-session digests without retaining bearer credentials.
     op.create_table(
         "access_tokens",
         sa.Column("token", sa.String(length=64), nullable=False),
@@ -446,10 +426,6 @@ def downgrade() -> None:
     op.drop_index("ix_access_tokens_user_id", table_name="access_tokens")
     op.drop_index("ix_access_tokens_created_at", table_name="access_tokens")
     op.drop_table("access_tokens")
-    op.drop_index("ix_oauth_accounts_user_id", table_name="oauth_accounts")
-    op.drop_index("ix_oauth_accounts_oauth_name", table_name="oauth_accounts")
-    op.drop_index("ix_oauth_accounts_account_id", table_name="oauth_accounts")
-    op.drop_table("oauth_accounts")
     op.drop_index("ix_users_email", table_name="users")
     op.drop_table("users")
 

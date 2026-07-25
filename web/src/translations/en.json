@@ -296,12 +296,6 @@
     "auth.completeRegistrationTitle": {
         "defaultMessage": "Complete your account"
     },
-    "auth.completingSignIn": {
-        "defaultMessage": "Completing sign in"
-    },
-    "auth.completingSignInDescription": {
-        "defaultMessage": "LongLink is restoring your session and return path."
-    },
     "auth.createAccount": {
         "defaultMessage": "Create account"
     },
@@ -328,9 +322,6 @@
     },
     "auth.forgotPasswordTitle": {
         "defaultMessage": "Reset your password"
-    },
-    "auth.github": {
-        "defaultMessage": "GitHub"
     },
     "auth.haveAccount": {
         "defaultMessage": "Already have an account?"
@@ -359,9 +350,6 @@
     "auth.noAccount": {
         "defaultMessage": "New to LongLink?"
     },
-    "auth.orContinueWith": {
-        "defaultMessage": "or continue with"
-    },
     "auth.orUseAnotherAccount": {
         "defaultMessage": "or use another account"
     },
@@ -374,14 +362,8 @@
     "auth.passwordReset": {
         "defaultMessage": "Your password has been reset. You can now sign in."
     },
-    "auth.pleaseWait": {
-        "defaultMessage": "Please wait..."
-    },
     "auth.privacyPolicy": {
         "defaultMessage": "Privacy Policy"
-    },
-    "auth.providerSignInFailed": {
-        "defaultMessage": "Provider sign in failed"
     },
     "auth.registerDescription": {
         "defaultMessage": "Please enter your email"

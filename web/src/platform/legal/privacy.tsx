@@ -89,9 +89,9 @@ export const content = (
                 <ListItem
                     label={
                         <Text>
-                            Account and identity data: internal account ID, OAuth provider ID, name, email address,
-                            optional avatar URL, platform role, selected theme, accent, radius, account creation,
-                            update, deletion, and sign-in session information.
+                            Account and identity data: internal account ID, name, email address, optional avatar URL,
+                            platform role, selected theme, accent, radius, account creation, update, deletion, and
+                            sign-in session information.
                         </Text>
                     }
                 />
@@ -99,10 +99,8 @@ export const content = (
                     label={
                         <Text>
                             Authentication data: password hashes, signed email-registration and password-reset tokens,
-                            revocable session tokens, saved account identifiers, safe post-login redirect paths, and
-                            profile claims returned by an optional identity provider. The LongLink Platform does not
-                            store plaintext passwords, pending user accounts, or OAuth access and refresh tokens after
-                            resolving the provider identity.
+                            revocable session tokens, saved account identifiers, and safe post-login redirect paths. The
+                            LongLink Platform does not store plaintext passwords or pending user accounts.
                         </Text>
                     }
                 />
@@ -257,15 +255,6 @@ export const content = (
                 <ListItem
                     label={
                         <Text>
-                            OAuth providers: optional authentication when you sign in. They receive the information
-                            required for sign-in and return your provider ID, name, email, and, where available, avatar
-                            and profile claims. GitHub may be configured.
-                        </Text>
-                    }
-                />
-                <ListItem
-                    label={
-                        <Text>
                             Infrastructure providers and connected registries: Kubernetes, database, object-storage,
                             container registry, routing, DNS, and hosting providers receive the organization,
                             application, runtime, secret, request, and configuration data needed to provision, run,
@@ -320,9 +309,9 @@ export const content = (
                 />
             </List>
             <Text as="p">
-                Some recipients, particularly identity, infrastructure, payment, and communications providers, may also
-                act as independent controllers for their own security, fraud-prevention, service, and legal obligations.
-                Their privacy policies govern those activities.
+                Some recipients, particularly infrastructure, payment, and communications providers, may also act as
+                independent controllers for their own security, fraud-prevention, service, and legal obligations. Their
+                privacy policies govern those activities.
             </Text>
         </Stack>
 
@@ -352,7 +341,7 @@ export const content = (
                 contains an opaque revocable session token. A short-lived HTTP-only cookie named{' '}
                 <Code>longlink_registration</Code> carries signed email proof while you complete account setup. A signed
                 cookie named <Code>longlink_session</Code> may contain saved account identifiers used by the account
-                switcher. OAuth, identity, and payment providers may set their own cookies when you visit them.
+                switcher. Payment providers may set their own cookies when you visit them.
             </Text>
             <Text as="p">
                 In SDK mode and local development, the embedded web runtime may use local storage to remember the
@@ -474,11 +463,11 @@ export const content = (
             </Heading>
             <Text as="p">
                 We use technical and organizational measures appropriate to the nature and risk of the processing,
-                including access controls, password hashing, optional OAuth authentication, revocable session tokens,
-                signed session cookies, transport encryption, namespace, database-schema, and storage-bucket isolation,
-                credential hashing or encryption where appropriate, secret management, logging, and restricted
-                administrative access. No system is completely secure, and you are responsible for securing your
-                accounts, applications, credentials, infrastructure, and Customer Content.
+                including access controls, password hashing, revocable session tokens, signed session cookies, transport
+                encryption, namespace, database-schema, and storage-bucket isolation, credential hashing or encryption
+                where appropriate, secret management, logging, and restricted administrative access. No system is
+                completely secure, and you are responsible for securing your accounts, applications, credentials,
+                infrastructure, and Customer Content.
             </Text>
             <Text as="p">
                 We assess personal-data breaches and notify the Federal Data Protection and Information Commissioner

@@ -3,12 +3,18 @@ from pydantic import Field, EmailStr, BaseModel, StringConstraints
 
 TrimmedName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=127)]
 TrimmedToken = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=4096)]
+LocalPath = Annotated[
+    str,
+    StringConstraints(min_length=1, max_length=2048, pattern=r"^/(?:$|[^/\\\x00-\x1f\x7f][^\\\x00-\x1f\x7f]*)$"),
+]
 
 
-class AuthConfig(BaseModel):
-    """Describe authentication methods enabled for this installation."""
+class PasswordLogin(BaseModel):
+    """Validate one local password login request."""
 
-    github_enabled: bool
+    # Credentials
+    email: EmailStr = Field(max_length=254)
+    password: str = Field(min_length=1, max_length=1024)
 
 
 class RegistrationRequest(BaseModel):
@@ -18,7 +24,7 @@ class RegistrationRequest(BaseModel):
     email: EmailStr = Field(max_length=254)
 
     # Navigation
-    next: str = Field(default="/organizations", min_length=1, max_length=2048)
+    next: LocalPath = "/organizations"
 
 
 class RegistrationTokenConfirm(BaseModel):
@@ -35,7 +41,7 @@ class RegistrationVerified(BaseModel):
     email: EmailStr
 
     # Navigation
-    next: str
+    next: LocalPath
 
 
 class RegistrationComplete(BaseModel):
@@ -57,7 +63,7 @@ class PasswordResetRequest(BaseModel):
     email: EmailStr = Field(max_length=254)
 
     # Navigation
-    next: str = Field(default="/organizations", min_length=1, max_length=2048)
+    next: LocalPath = "/organizations"
 
 
 class PasswordResetTokenConfirm(BaseModel):

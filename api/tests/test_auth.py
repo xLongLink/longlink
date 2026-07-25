@@ -1,10 +1,7 @@
 import pytest
 from uuid import uuid4
-from typing import cast
 from fastapi import Request
-from src.auth import UserManager, LongLinkUserDatabase, SessionAccountsService, access_token_digest
-from fastapi_users import schemas
-from fastapi_users.exceptions import InvalidPasswordException
+from src.auth import SessionAccountsService, access_token_digest
 
 pytestmark = pytest.mark.no_db
 
@@ -60,20 +57,3 @@ def test_session_accounts_remember_and_remove_local_users() -> None:
 
     accounts.remove(account_ids[0])
     assert accounts.list() == account_ids[1:]
-
-
-async def test_user_manager_accepts_weak_passwords_within_bounds() -> None:
-    """Accept weak local passwords while rejecting empty and oversized values."""
-
-    manager = UserManager(cast(LongLinkUserDatabase, None))
-    user = schemas.BaseUserCreate(email="user@example.com", password="unused-password")
-
-    # Enforce only the required storage bounds before FastAPI Users persists credentials.
-    with pytest.raises(InvalidPasswordException) as empty_password:
-        await manager.validate_password("", user)
-    with pytest.raises(InvalidPasswordException) as long_password:
-        await manager.validate_password("x" * 1025, user)
-
-    assert empty_password.value.reason == "Password is required"
-    assert long_password.value.reason == "Password cannot exceed 1024 characters"
-    await manager.validate_password("x", user)

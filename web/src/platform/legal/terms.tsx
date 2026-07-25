@@ -126,9 +126,9 @@ export const content = (
                 and users whom you authorize.
             </Text>
             <Text as="p">
-                You must protect passwords, OAuth access, API credentials, deployment secrets, kubeconfigs, database
-                credentials, object-storage keys, application environment values, SSH keys, and other access materials.
-                You must use reasonable access controls and notify{' '}
+                You must protect passwords, API credentials, deployment secrets, kubeconfigs, database credentials,
+                object-storage keys, application environment values, SSH keys, and other access materials. You must use
+                reasonable access controls and notify{' '}
                 <Link href="mailto:info@longlink.dev" hasUnderline type="inherit">
                     info@longlink.dev
                 </Link>{' '}

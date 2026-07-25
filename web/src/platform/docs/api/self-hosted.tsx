@@ -102,7 +102,7 @@ export const content = (
                                 <Text type="supporting">Required</Text>
                             </Stack>
                             <Text type="supporting">
-                                Public web origin used for registration, password reset, and OAuth completion links.
+                                Public web origin used for registration and password reset links.
                             </Text>
                         </Stack>
                     </TableCell>
@@ -118,21 +118,6 @@ export const content = (
                                 Sends registration-link and password-reset emails. Registration requests create no user
                                 record until the recipient verifies the link and completes account setup. Messages are
                                 logged when running locally without SMTP.
-                            </Text>
-                        </Stack>
-                    </TableCell>
-                </TableRow>
-                <TableRow>
-                    <TableCell>
-                        <Stack gap={1}>
-                            <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-                                <Text>
-                                    <Code>GITHUB_CLIENT_ID</Code> and <Code>GITHUB_CLIENT_SECRET</Code>
-                                </Text>
-                                <Text type="supporting">Optional</Text>
-                            </Stack>
-                            <Text type="supporting">
-                                Enables GitHub OAuth login as an additional authentication method.
                             </Text>
                         </Stack>
                     </TableCell>

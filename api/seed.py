@@ -6,7 +6,7 @@ from uuid import UUID
 from pathlib import Path
 from pydantic import Field, field_validator
 from sqlmodel import col
-from src.utils import jobs, names
+from src.utils import jobs, names, passwords
 from sqlalchemy import text, select, inspect
 from src.operations import computes as operation_computes
 from src.environments import env
@@ -23,7 +23,6 @@ from src.database.services import database as database_service
 from src.database.services import operations
 from src.database.services import applications as application_service
 from src.database.services import organizations as organization_service
-from fastapi_users.password import PasswordHelper
 from src.models.applications import ApplicationCreate
 from src.database.models.users import User
 from src.models.infrastructure import exoscale_zone
@@ -87,7 +86,7 @@ async def seed_local_administrator() -> User:
     async with session_scope() as session:
         result = await session.execute(select(User).where(col(User.email) == LOCAL_ADMIN_EMAIL))
         user = result.scalar_one_or_none()
-        password = PasswordHelper().hash(LOCAL_ADMIN_PASSWORD)
+        password = passwords.hash(LOCAL_ADMIN_PASSWORD)
 
         # Create the local account or repair its development credentials and role.
         if user is None:
@@ -95,14 +94,12 @@ async def seed_local_administrator() -> User:
                 name=LOCAL_ADMIN_NAME,
                 email=LOCAL_ADMIN_EMAIL,
                 hashed_password=password,
-                is_superuser=True,
                 role=PlatformRoles.administrator,
             )
             session.add(user)
         else:
             user.name = LOCAL_ADMIN_NAME
             user.hashed_password = password
-            user.is_superuser = True
             user.role = PlatformRoles.administrator
             user.deleted_at = None
 

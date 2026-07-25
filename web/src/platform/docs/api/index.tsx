@@ -36,7 +36,7 @@ import { Wordmark } from '@/components/Wordmark';
 const sharedFoundationItems: { description: string; icon: LucideIcon; name: string }[] = [
     {
         name: 'Authentication',
-        description: 'Email, password, OAuth, sessions, and current-user context.',
+        description: 'Email, password, sessions, and current-user context.',
         icon: CheckCircle,
     },
     {

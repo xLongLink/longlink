@@ -401,26 +401,32 @@ async def test_organization_storage_endpoint_returns_organization_prefixes(
         user=owner,
     )
 
-    async def fake_buckets(registry_argument) -> list[str]:
-        """Return fake bucket names from the storage backend."""
+    class FakeStorage:
+        """Provide storage usage responses for the Organization resource endpoint."""
+
+        async def buckets(self) -> list[str]:
+            """Return fake bucket names from the storage backend."""
+
+            return [organization.id.hex, "other-organization"]
+
+        async def usage(self, bucket_name: str, prefix: str) -> dict[str, int]:
+            """Return fake usage counters for one Organization bucket prefix."""
+
+            assert bucket_name == organization.id.hex
+            assert prefix in {
+                names.shared_storage_prefix(),
+                names.application_storage_prefix(dashboard.id),
+                names.application_storage_prefix(reports.id),
+            }
+            return {"space_used": len(prefix), "object_count": 2}
+
+    def fake_storage(registry_argument) -> FakeStorage:
+        """Return the fake adapter for the selected registry."""
 
         assert registry_argument.id == registry.id
-        return [organization.id.hex, "other-organization"]
+        return FakeStorage()
 
-    async def fake_usage(registry_argument, bucket_name: str, prefix: str) -> dict[str, int]:
-        """Return fake usage counters for one Organization bucket prefix."""
-
-        assert registry_argument.id == registry.id
-        assert bucket_name == organization.id.hex
-        assert prefix in {
-            names.shared_storage_prefix(),
-            names.application_storage_prefix(dashboard.id),
-            names.application_storage_prefix(reports.id),
-        }
-        return {"space_used": len(prefix), "object_count": 2}
-
-    monkeypatch.setattr("src.routes.organizations.storage_utils.buckets", fake_buckets)
-    monkeypatch.setattr("src.routes.organizations.storage_utils.usage", fake_usage)
+    monkeypatch.setattr("src.routes.organizations.adapters.storage", fake_storage)
 
     # Act
     response = await client.get(f"/api/organizations/{organization.id}/storage")
@@ -465,13 +471,21 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
         user=owner,
     )
 
-    async def fake_buckets(registry_argument) -> list[str]:
-        """Raise the backend error expected by the test."""
+    class FakeStorage:
+        """Provide a failing storage adapter."""
+
+        async def buckets(self) -> list[str]:
+            """Raise the backend error expected by the test."""
+
+            raise RuntimeError("storage offline")
+
+    def fake_storage(registry_argument) -> FakeStorage:
+        """Return the fake adapter for the selected registry."""
 
         assert registry_argument.id == registry.id
-        raise RuntimeError("storage offline")
+        return FakeStorage()
 
-    monkeypatch.setattr("src.routes.organizations.storage_utils.buckets", fake_buckets)
+    monkeypatch.setattr("src.routes.organizations.adapters.storage", fake_storage)
 
     # Act
     response = await client.get(f"/api/organizations/{organization.id}/storage")

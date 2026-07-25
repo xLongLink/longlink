@@ -32,10 +32,6 @@ class Env(BaseSettings):
     SMTP_USE_TLS: bool = False
     SMTP_FROM: str | None = None
 
-    # Optional authentication providers
-    GITHUB_CLIENT_ID: str | None = None
-    GITHUB_CLIENT_SECRET: str | None = None
-
     # Control plane database URL
     DATABASE_URL: str
 
@@ -50,12 +46,7 @@ class Env(BaseSettings):
 
     @model_validator(mode="after")
     def validate_authentication(self) -> Self:
-        """Require complete provider and email-delivery configuration."""
-
-        # Reject partial GitHub configuration instead of hiding a broken provider.
-        github_values = (self.GITHUB_CLIENT_ID, self.GITHUB_CLIENT_SECRET)
-        if any(github_values) and not all(github_values):
-            raise ValueError("GitHub authentication requires GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET")
+        """Validate authentication email-delivery configuration."""
 
         # Implicit TLS and STARTTLS are mutually exclusive SMTP transports.
         if self.SMTP_USE_TLS and self.SMTP_START_TLS:

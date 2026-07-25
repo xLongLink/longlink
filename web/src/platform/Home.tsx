@@ -1,5 +1,11 @@
 import type { CSSProperties } from 'react';
+import { Text } from '@astryxdesign/core/Text';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { Section } from '@astryxdesign/core/Section';
+import { Heading } from '@astryxdesign/core/Heading';
+import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import {
     Activity,
     ArrowRight,
@@ -81,6 +87,30 @@ const homepageCards = [
         details: ['init', 'dev', 'migrate', 'build'],
         layoutClassName: 'md:col-span-2',
         variant: 'cli',
+    },
+] as const;
+
+const paths = [
+    {
+        title: 'Use',
+        description:
+            'Deploy an existing application as it is. Get a proven process running without rebuilding what already exists.',
+        action: 'Explore existing apps',
+        href: '/marketplace',
+    },
+    {
+        title: 'Adapt',
+        description:
+            'Fork an existing application and change its workflow, fields, rules, integrations, or interface around your requirements.',
+        action: 'Start from a foundation',
+        href: '/docs',
+    },
+    {
+        title: 'Create',
+        description:
+            'Build a dedicated application when the process is uniquely yours. LongLink handles the platform; you own the application.',
+        action: 'Build a new app',
+        href: '/docs',
     },
 ] as const;
 
@@ -545,6 +575,58 @@ export default function Home() {
                     })}
                 </div>
             </section>
+            <Section variant="transparent" padding={6} paddingBlock={10}>
+                <Stack className="mx-auto" width="100%" maxWidth={1000} gap={8}>
+                    <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }} gap={0} width="100%">
+                        {paths.map(({ title, description, action, href }) => (
+                            <ClickableCard
+                                key={title}
+                                className="group rounded-none bg-transparent"
+                                href={href}
+                                label={action}
+                                padding={6}
+                            >
+                                <Stack
+                                    aria-hidden="true"
+                                    className="absolute inset-0 origin-left scale-x-0 bg-muted transition-transform duration-500 ease-out group-hover:scale-x-100 group-focus-within:scale-x-100 motion-reduce:transition-none"
+                                />
+                                <Stack className="relative z-10" height="100%" gap={8} justify="between">
+                                    <Stack gap={4}>
+                                        <Heading
+                                            level={2}
+                                            type="display-1"
+                                            textWrap="nowrap"
+                                            className="text-6xl tracking-tighter sm:text-7xl"
+                                        >
+                                            {title}
+                                        </Heading>
+                                        <Text as="p" color="secondary" textWrap="pretty">
+                                            {description}
+                                        </Text>
+                                    </Stack>
+                                    <Stack
+                                        direction="horizontal"
+                                        hAlign="between"
+                                        vAlign="center"
+                                        width="100%"
+                                        className="whitespace-nowrap"
+                                    >
+                                        <Text weight="medium">{action}</Text>
+                                        <ArrowRight
+                                            aria-hidden="true"
+                                            className="size-4 transition-transform group-hover:translate-x-1 group-focus-within:translate-x-1 motion-reduce:transition-none"
+                                        />
+                                    </Stack>
+                                </Stack>
+                                <Stack
+                                    aria-hidden="true"
+                                    className="absolute inset-x-0 bottom-0 z-10 h-1 origin-left scale-x-0 bg-accent-bg transition-transform duration-500 ease-out group-hover:scale-x-100 group-focus-within:scale-x-100 motion-reduce:transition-none"
+                                />
+                            </ClickableCard>
+                        ))}
+                    </Grid>
+                </Stack>
+            </Section>
             <section className="relative z-10 bg-body px-6 py-24 text-center sm:py-28">
                 <div className="mx-auto flex max-w-2xl flex-col items-center gap-8">
                     <div className="space-y-3">
