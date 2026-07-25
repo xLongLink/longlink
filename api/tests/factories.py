@@ -1,5 +1,7 @@
 import secrets
 from uuid import UUID, uuid4
+from sqlmodel import col
+from sqlalchemy import update
 from dataclasses import dataclass
 from src.environments import env
 from src.models.types import StorageKind, DatabaseSSLMode
@@ -96,15 +98,12 @@ async def create_organization(
     return organization
 
 
-async def mark_organization_running(organization: Organization) -> Organization:
+async def mark_organization_running(organization: Organization) -> None:
     """Mark one service-created Organization ready for Application tests."""
 
     # Organization Application creation is valid only after runtime reconciliation succeeds.
     async with session_scope() as session:
-        persisted = await session.get(Organization, organization.id)
-        if persisted is None:
-            raise RuntimeError("Test Organization not found")
-        persisted.status = OrganizationStatus.running
+        await session.execute(
+            update(Organization).where(col(Organization.id) == organization.id).values(status=OrganizationStatus.running)
+        )
         await session.commit()
-        await session.refresh(persisted)
-        return persisted

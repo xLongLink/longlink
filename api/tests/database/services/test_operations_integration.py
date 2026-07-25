@@ -54,7 +54,6 @@ async def test_claim_next_leases_one_operation_to_one_concurrent_worker(monkeypa
             )
             session.add(compute)
             await session.commit()
-            await session.refresh(compute)
 
         # Race independent enqueue transactions against the partial unique index.
         enqueue_tasks = [asyncio.create_task(operations.enqueue(compute.id)) for _ in range(2)]

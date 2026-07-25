@@ -1,19 +1,17 @@
 import pytest
-from main import app
-from fastapi.testclient import TestClient
+from httpx2 import AsyncClient
 
 pytestmark = pytest.mark.no_db
 
 
-def test_logo_svg_uses_requested_theme_and_no_store_cache(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_logo_svg_uses_requested_theme_and_no_store_cache(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Return a public logo SVG with deterministic accent and cache headers."""
 
     # Arrange
     monkeypatch.setattr("src.routes.branding.random.choice", lambda values: "#3b82f6")
-    client = TestClient(app)
 
     # Act
-    response = client.get("/logo.svg?theme=dark")
+    response = await client.get("/logo.svg?theme=dark")
 
     # Assert
     assert response.status_code == 200

@@ -4,10 +4,10 @@ import base64
 import pytest
 import pytest_asyncio
 from uuid import UUID
+from httpx2 import Cookies, AsyncClient, ASGITransport
 from pathlib import Path
 from itsdangerous import TimestampSigner
 from collections.abc import AsyncIterator
-from fastapi.testclient import TestClient
 from fastapi_users.password import PasswordHelper
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 os.environ.setdefault("SESSION_KEY", "test-session-key-that-is-long-enough")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./dev.db")
 
-# Keep TestClient session cookies non-secure while letting adapters detect tests.
+# Keep test client session cookies non-secure while letting adapters detect tests.
 os.environ["DEVELOPMENT"] = "true"
 os.environ["ENVIRONMENT"] = "testing"
 
@@ -79,23 +79,27 @@ async def reset_db(
         await engine.dispose()
 
 
-def session_cookie(accounts: list[UUID]) -> dict[str, str]:
+def session_cookie(accounts: list[UUID]) -> Cookies:
     """Build a signed session cookie for saved local accounts."""
 
     # Encode the same account_ids payload consumed by Starlette's session middleware.
     payload = base64.b64encode(json.dumps({"account_ids": [str(account) for account in accounts]}).encode("utf-8"))
     signed = TimestampSigner(str(env.SESSION_KEY)).sign(payload).decode("utf-8")
-    return {SESSION_COOKIE: signed}
+    cookies = Cookies()
+    cookies.set(SESSION_COOKIE, signed, domain="testserver.local", path="/")
+    return cookies
 
 
-def authenticated_cookies(user_id: UUID, accounts: list[UUID] | None = None) -> dict[str, str]:
+def authenticated_cookies(user_id: UUID, accounts: list[UUID] | None = None) -> Cookies:
     """Build matching authentication and saved-account cookies for one user."""
 
     # Mirror the login hook by retaining the active account in the saved list.
     saved_accounts = accounts[:] if accounts is not None else [user_id]
     if user_id not in saved_accounts:
         saved_accounts.append(user_id)
-    return {AUTH_COOKIE: str(user_id), **session_cookie(saved_accounts)}
+    cookies = session_cookie(saved_accounts)
+    cookies.set(AUTH_COOKIE, str(user_id), domain="testserver.local", path="/")
+    return cookies
 
 
 @pytest.fixture(scope="session")
@@ -120,7 +124,7 @@ async def users(password_hash: str) -> tuple[User, User, User]:
             role=PlatformRoles.administrator,
         )
         user2 = User(name="user2", email="user2@example.com", hashed_password=password_hash)
-        user3 = User(name="user3", email="user3@example.com", hashed_password=password_hash)
+        user3 = User(name="user3", email="user3@example.com", hashed_password=password_hash, role=PlatformRoles.support)
 
         # Persist one matching database token for every authenticated fixture client.
         db_session.add_all([user1, user2, user3])
@@ -135,13 +139,38 @@ async def users(password_hash: str) -> tuple[User, User, User]:
         return user1, user2, user3
 
 
-@pytest.fixture
-def clients(users: tuple[User, User, User]) -> tuple[TestClient, TestClient, TestClient]:
+@pytest_asyncio.fixture
+async def client() -> AsyncIterator[AsyncClient]:
+    """Build one unauthenticated API test client."""
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver", follow_redirects=True) as test_client:
+        yield test_client
+
+
+@pytest_asyncio.fixture
+async def clients(users: tuple[User, User, User]) -> AsyncIterator[tuple[AsyncClient, AsyncClient, AsyncClient]]:
     """Build authenticated test clients for all seeded users."""
 
     # Pair each database token with its auth cookie and signed account list.
     user1, user2, user3 = users
-    client1 = TestClient(app, cookies=authenticated_cookies(user1.id))
-    client2 = TestClient(app, cookies=authenticated_cookies(user2.id))
-    client3 = TestClient(app, cookies=authenticated_cookies(user3.id))
-    return client1, client2, client3
+    async with (
+        AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://testserver",
+            cookies=authenticated_cookies(user1.id),
+            follow_redirects=True,
+        ) as client1,
+        AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://testserver",
+            cookies=authenticated_cookies(user2.id),
+            follow_redirects=True,
+        ) as client2,
+        AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://testserver",
+            cookies=authenticated_cookies(user3.id),
+            follow_redirects=True,
+        ) as client3,
+    ):
+        yield client1, client2, client3

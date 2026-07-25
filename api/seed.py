@@ -107,7 +107,6 @@ async def seed_local_administrator() -> User:
             user.deleted_at = None
 
         await session.commit()
-        await session.refresh(user)
         return user
 
 

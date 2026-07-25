@@ -1,14 +1,12 @@
-from factories import create_organization, create_ready_infrastructure
-from src.database import session
+from httpx2 import AsyncClient
+from factories import create_ready_infrastructure
 from src.environments import env
-from src.models.roles import PlatformRoles
-from fastapi.testclient import TestClient
 from src.database.services import operations
 from src.database.models.users import User
 
 
 async def test_operations_endpoint_returns_compute_scoped_operations(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Return compute-scoped reconciliation Operations for admin views."""
@@ -17,11 +15,10 @@ async def test_operations_endpoint_returns_compute_scoped_operations(
     client = clients[0]
     user = users[0]
     infrastructure = await create_ready_infrastructure(user)
-    await create_organization(infrastructure, user)
-    operation = (await operations.fetch())[0]
+    operation = await operations.enqueue(infrastructure.compute.id)
 
     # Act
-    response = client.get("/api/operations")
+    response = await client.get("/api/operations")
 
     # Assert
     assert response.status_code == 200
@@ -35,7 +32,7 @@ async def test_operations_endpoint_returns_compute_scoped_operations(
 
 
 async def test_operations_endpoint_enforces_support_access(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Allow support users to inspect operations while rejecting ordinary users."""
@@ -44,21 +41,14 @@ async def test_operations_endpoint_enforces_support_access(
     owner = users[0]
     support = users[2]
     infrastructure = await create_ready_infrastructure(owner)
-    await create_organization(infrastructure, owner)
-    operation = (await operations.fetch())[0]
-    Session = await session.get_session()
-    async with Session() as db_session:
-        persisted_support = await db_session.get(User, support.id)
-        assert persisted_support is not None
-        persisted_support.role = PlatformRoles.support
-        await db_session.commit()
+    operation = await operations.enqueue(infrastructure.compute.id)
 
     support_client = clients[2]
     ordinary_client = clients[1]
 
     # Act
-    support_response = support_client.get("/api/operations")
-    ordinary_response = ordinary_client.get("/api/operations")
+    support_response = await support_client.get("/api/operations")
+    ordinary_response = await ordinary_client.get("/api/operations")
 
     # Assert
     assert support_response.status_code == 200

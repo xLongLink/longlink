@@ -1,12 +1,10 @@
+from httpx2 import AsyncClient
 from factories import create_organization, create_ready_infrastructure
-from src.database import session
-from src.models.roles import PlatformRoles
-from fastapi.testclient import TestClient
 from src.database.models.users import User
 
 
 async def test_database_registry_endpoints_return_backend(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Return an independently registered database backend."""
@@ -18,8 +16,8 @@ async def test_database_registry_endpoints_return_backend(
     registry = infrastructure.database
 
     # Act
-    list_response = client.get("/api/databases")
-    get_response = client.get(f"/api/databases/{registry.id}")
+    list_response = await client.get("/api/databases")
+    get_response = await client.get(f"/api/databases/{registry.id}")
 
     # Assert
     assert list_response.status_code == 200
@@ -34,7 +32,7 @@ async def test_database_registry_endpoints_return_backend(
 
 
 async def test_database_registry_create_duplicate_and_delete(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
     """Create one database registry, reject a duplicate, and tombstone the unused registry."""
 
@@ -50,12 +48,12 @@ async def test_database_registry_create_duplicate_and_delete(
     }
 
     # Act
-    create_response = client.post("/api/databases", json=payload)
-    duplicate_response = client.post("/api/databases", json=payload)
+    create_response = await client.post("/api/databases", json=payload)
+    duplicate_response = await client.post("/api/databases", json=payload)
     created = create_response.json()
     registry_id = created["id"]
-    delete_response = client.delete(f"/api/databases/{registry_id}")
-    get_response = client.get(f"/api/databases/{registry_id}")
+    delete_response = await client.delete(f"/api/databases/{registry_id}")
+    get_response = await client.get(f"/api/databases/{registry_id}")
 
     # Assert
     assert create_response.status_code == 201
@@ -68,7 +66,7 @@ async def test_database_registry_create_duplicate_and_delete(
 
 
 async def test_database_registry_delete_rejects_assigned_registry(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Keep database registries while any Organization still references them."""
@@ -80,7 +78,7 @@ async def test_database_registry_delete_rejects_assigned_registry(
     client = clients[0]
 
     # Act
-    response = client.delete(f"/api/databases/{infrastructure.database.id}")
+    response = await client.delete(f"/api/databases/{infrastructure.database.id}")
 
     # Assert
     assert response.status_code == 409
@@ -88,7 +86,7 @@ async def test_database_registry_delete_rejects_assigned_registry(
 
 
 async def test_database_registry_routes_enforce_support_and_admin_roles(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
@@ -99,12 +97,6 @@ async def test_database_registry_routes_enforce_support_and_admin_roles(
     support = users[2]
     infrastructure = await create_ready_infrastructure(owner)
     registry = infrastructure.database
-    Session = await session.get_session()
-    async with Session() as db_session:
-        persisted_support = await db_session.get(User, support.id)
-        assert persisted_support is not None
-        persisted_support.role = PlatformRoles.support
-        await db_session.commit()
 
     class FakePostgres:
         """Return deterministic database usage for support diagnostics."""
@@ -130,9 +122,9 @@ async def test_database_registry_routes_enforce_support_and_admin_roles(
     ordinary_client = clients[1]
 
     # Act
-    support_read_response = support_client.get("/api/databases")
-    support_usage_response = support_client.get(f"/api/databases/{registry.id}/usage")
-    support_write_response = support_client.post(
+    support_read_response = await support_client.get("/api/databases")
+    support_usage_response = await support_client.get(f"/api/databases/{registry.id}/usage")
+    support_write_response = await support_client.post(
         "/api/databases",
         json={
             "name": "Support Database",
@@ -143,7 +135,7 @@ async def test_database_registry_routes_enforce_support_and_admin_roles(
             "sslmode": "disable",
         },
     )
-    ordinary_read_response = ordinary_client.get("/api/databases")
+    ordinary_read_response = await ordinary_client.get("/api/databases")
 
     # Assert
     assert support_read_response.status_code == 200
@@ -156,45 +148,8 @@ async def test_database_registry_routes_enforce_support_and_admin_roles(
     assert ordinary_read_response.json() == {"detail": "Permission required"}
 
 
-async def test_database_usage_endpoint_returns_backend_capacity(
-    clients: tuple[TestClient, TestClient, TestClient],
-    monkeypatch,
-    users: tuple[User, User, User],
-) -> None:
-    """Return backend storage usage for one database registry."""
-
-    # Arrange
-    client = clients[0]
-    user1, _, _ = users
-    infrastructure = await create_ready_infrastructure(user1)
-    registry = infrastructure.database
-
-    class FakePostgres:
-        """Return deterministic database usage without contacting PostgreSQL."""
-
-        def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
-            """Validate the database registry connection fields."""
-
-            assert (host, port, username, password) == (registry.host, registry.port, registry.username, registry.password)
-            assert sslmode == registry.sslmode
-
-        async def usage(self) -> dict[str, int]:
-            """Return fake backend capacity counters."""
-
-            return {"space_used": 987654321}
-
-    monkeypatch.setattr("src.routes.databases.adapters.Postgres", FakePostgres)
-
-    # Act
-    response = client.get(f"/api/databases/{registry.id}/usage")
-
-    # Assert
-    assert response.status_code == 200
-    assert response.json() == 987654321
-
-
 async def test_database_usage_endpoint_returns_unavailable_when_backend_fails(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     monkeypatch,
     users: tuple[User, User, User],
 ) -> None:
@@ -223,7 +178,7 @@ async def test_database_usage_endpoint_returns_unavailable_when_backend_fails(
     monkeypatch.setattr("src.routes.databases.adapters.Postgres", FakePostgres)
 
     # Act
-    response = client.get(f"/api/databases/{registry.id}/usage")
+    response = await client.get(f"/api/databases/{registry.id}/usage")
 
     # Assert
     assert response.status_code == 503

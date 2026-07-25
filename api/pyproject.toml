@@ -20,7 +20,6 @@ dependencies = [
     'fastapi-users[oauth,sqlalchemy]>=15.0.5,<16',
     'httpx2>=2.7.0',
     'itsdangerous>=2.2.0',
-    'aiomysql>=0.3.2',
     'pydantic>=2.13.4',
     'pydantic-settings>=2.14.2',
     'python-slugify>=8.0.4',
@@ -84,8 +83,7 @@ lines_between_types = 0
 length_sort = true
 
 [tool.ty.environment]
-python-version = "3.12"
-extra-paths = ["src", "../sdk", "tests"]
+extra-paths = ["../sdk"]
 
 [tool.ty.src]
 include = ["main.py", "seed.py", "src", "alembic"]
@@ -102,8 +100,3 @@ markers = [
 ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-
-[tool.coverage.run]
-omit = [
-    "src/models/divisions.py",
-]

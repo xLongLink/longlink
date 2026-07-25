@@ -1,15 +1,13 @@
 from uuid import UUID
+from httpx2 import AsyncClient
 from factories import create_organization, create_ready_infrastructure
-from src.database import session
-from src.models.roles import PlatformRoles
-from fastapi.testclient import TestClient
-from src.models.operations import OperationStatus
 from src.database.services import compute
+from src.models.operations import OperationStatus
 from src.database.models.users import User
 
 
 async def test_compute_registry_endpoints_return_backend(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Return an independently registered compute backend."""
@@ -21,8 +19,8 @@ async def test_compute_registry_endpoints_return_backend(
     registry = infrastructure.compute
 
     # Act
-    list_response = client.get("/api/computes")
-    get_response = client.get(f"/api/computes/{registry.id}")
+    list_response = await client.get("/api/computes")
+    get_response = await client.get(f"/api/computes/{registry.id}")
 
     # Assert
     assert list_response.status_code == 200
@@ -39,7 +37,7 @@ async def test_compute_registry_endpoints_return_backend(
 
 
 async def test_compute_registry_create_duplicate_and_delete(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
     """Create one compute registry, reject a duplicate, and tombstone the unused registry."""
 
@@ -47,18 +45,18 @@ async def test_compute_registry_create_duplicate_and_delete(
     client = clients[0]
 
     # Act
-    create_response = client.post(
+    create_response = await client.post(
         "/api/computes",
         json={"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
-    duplicate_response = client.post(
+    duplicate_response = await client.post(
         "/api/computes",
         json={"name": "Ephemeral Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
     created = create_response.json()
     registry_id = created["compute"]["id"]
-    delete_response = client.delete(f"/api/computes/{registry_id}")
-    get_response = client.get(f"/api/computes/{registry_id}")
+    delete_response = await client.delete(f"/api/computes/{registry_id}")
+    get_response = await client.get(f"/api/computes/{registry_id}")
 
     # Assert
     assert create_response.status_code == 202
@@ -76,7 +74,7 @@ async def test_compute_registry_create_duplicate_and_delete(
 
 
 async def test_compute_registry_delete_rejects_assigned_registry(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Keep compute registries while any Organization still references them."""
@@ -88,7 +86,7 @@ async def test_compute_registry_delete_rejects_assigned_registry(
     client = clients[0]
 
     # Act
-    response = client.delete(f"/api/computes/{infrastructure.compute.id}")
+    response = await client.delete(f"/api/computes/{infrastructure.compute.id}")
 
     # Assert
     assert response.status_code == 409
@@ -96,7 +94,7 @@ async def test_compute_registry_delete_rejects_assigned_registry(
 
 
 async def test_compute_registry_routes_enforce_support_and_admin_roles(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
@@ -107,12 +105,6 @@ async def test_compute_registry_routes_enforce_support_and_admin_roles(
     support = users[2]
     infrastructure = await create_ready_infrastructure(owner)
     registry = infrastructure.compute
-    Session = await session.get_session()
-    async with Session() as db_session:
-        persisted_support = await db_session.get(User, support.id)
-        assert persisted_support is not None
-        persisted_support.role = PlatformRoles.support
-        await db_session.commit()
 
     class FakeKubernetes:
         """Return deterministic compute diagnostics."""
@@ -132,14 +124,14 @@ async def test_compute_registry_routes_enforce_support_and_admin_roles(
     ordinary_client = clients[1]
 
     # Act
-    support_read_response = support_client.get("/api/computes")
-    support_get_response = support_client.get(f"/api/computes/{registry.id}")
-    support_diagnostics_response = support_client.get(f"/api/computes/{registry.id}/namespaces")
-    support_write_response = support_client.post(
+    support_read_response = await support_client.get("/api/computes")
+    support_get_response = await support_client.get(f"/api/computes/{registry.id}")
+    support_diagnostics_response = await support_client.get(f"/api/computes/{registry.id}/namespaces")
+    support_write_response = await support_client.post(
         "/api/computes",
         json={"name": "Support Compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
-    ordinary_read_response = ordinary_client.get("/api/computes")
+    ordinary_read_response = await ordinary_client.get("/api/computes")
 
     # Assert
     assert support_read_response.status_code == 200
@@ -155,7 +147,7 @@ async def test_compute_registry_routes_enforce_support_and_admin_roles(
 
 
 async def test_compute_diagnostics_return_namespaces_and_pods(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
@@ -194,9 +186,9 @@ async def test_compute_diagnostics_return_namespaces_and_pods(
     client = clients[0]
 
     # Act
-    namespaces_response = client.get(f"/api/computes/{infrastructure.compute.id}/namespaces")
-    pods_response = client.get(f"/api/computes/{infrastructure.compute.id}/namespaces/acme/pods")
-    missing_response = client.get(f"/api/computes/{infrastructure.compute.id}/namespaces/missing/pods")
+    namespaces_response = await client.get(f"/api/computes/{infrastructure.compute.id}/namespaces")
+    pods_response = await client.get(f"/api/computes/{infrastructure.compute.id}/namespaces/acme/pods")
+    missing_response = await client.get(f"/api/computes/{infrastructure.compute.id}/namespaces/missing/pods")
 
     # Assert
     assert namespaces_response.status_code == 200
@@ -208,7 +200,7 @@ async def test_compute_diagnostics_return_namespaces_and_pods(
 
 
 async def test_compute_diagnostics_return_unavailable_when_backend_fails(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
@@ -235,7 +227,7 @@ async def test_compute_diagnostics_return_unavailable_when_backend_fails(
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/computes/{infrastructure.compute.id}/namespaces")
+    response = await client.get(f"/api/computes/{infrastructure.compute.id}/namespaces")
 
     # Assert
     assert response.status_code == 503

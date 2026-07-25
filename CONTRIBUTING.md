@@ -37,6 +37,7 @@ make api:ty         # Run API type checks
 make sdk:ty         # Run SDK type checks
 
 make tests          # Run API, SDK, and web tests
+make coverage       # Report fast API and SDK test coverage
 make api:tests      # Run API tests
 make sdk:tests      # Run SDK tests
 make web:tests      # Run web tests, typecheck, and bundle builds

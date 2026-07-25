@@ -267,7 +267,6 @@ async def complete_registration(
     except IntegrityError as exc:
         await session.rollback()
         raise HTTPException(status_code=400, detail="REGISTER_USER_ALREADY_EXISTS") from exc
-    await session.refresh(user)
 
     # Publish browser authentication only after both persistent records commit.
     response.headers["Cache-Control"] = "no-store"

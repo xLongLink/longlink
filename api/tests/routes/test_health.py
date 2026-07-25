@@ -1,15 +1,14 @@
-import main
 import pytest
-from fastapi.testclient import TestClient
+from httpx2 import AsyncClient
 
 pytestmark = pytest.mark.no_db
 
 
-def test_healthz_returns_ok() -> None:
+async def test_healthz_returns_ok(client: AsyncClient) -> None:
     """Expose a liveness endpoint for the API."""
 
     # Act
-    response = TestClient(main.app).get("/api/healthz")
+    response = await client.get("/api/healthz")
 
     # Assert
     assert response.status_code == 200

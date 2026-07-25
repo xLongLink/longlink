@@ -81,7 +81,7 @@ def run_migrations_online() -> None:
     database_url = make_url(urls.database(configured_url))
 
     # Async drivers need Alembic's async engine path, while sync drivers can use the classic runner.
-    if database_url.drivername.endswith(("aiosqlite", "aiomysql", "asyncpg")):
+    if database_url.drivername.endswith(("aiosqlite", "asyncpg")):
 
         async def run_async_migrations() -> None:
             """Run Alembic migrations through an async SQLAlchemy engine."""
