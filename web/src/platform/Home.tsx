@@ -566,7 +566,7 @@ export default function Home() {
                     })}
                 </div>
             </section>
-            <section className="relative z-20 bg-body px-6 py-20 sm:py-28">
+            <section className="homepage-painting-section relative z-20 overflow-hidden px-6 py-24 sm:py-32">
                 <div className="mx-auto w-full max-w-[1000px]">
                     <div className="homepage-hands-hanging-frame">
                         <div aria-hidden="true" className="homepage-hands-nail" />
@@ -595,7 +595,12 @@ export default function Home() {
                     </div>
                 </div>
             </section>
-            <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
+            <Section
+                className="homepage-path-section relative z-20"
+                variant="transparent"
+                padding={6}
+                paddingBlock={10}
+            >
                 <Stack className="mx-auto" width="100%" maxWidth={1000} gap={8}>
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }} gap={0} width="100%">
                         {paths.map(({ title, description, action, href }) => (
