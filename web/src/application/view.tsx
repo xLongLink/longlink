@@ -1,4 +1,4 @@
-import View from '@/pages/View';
+import View from '@/application/runtime/View';
 
 /** Renders pages registered by the embedded LongLink Application. */
 export default function ApplicationView() {

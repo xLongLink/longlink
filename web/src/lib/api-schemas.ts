@@ -214,7 +214,6 @@ export const apiOperationSchema = z.object({
     id: z.string(),
     compute_id: z.string(),
     status: z.enum(['scheduled', 'active', 'completed', 'failed']),
-    error: z.string().nullable(),
     platform_version: z.string(),
     attempt_count: z.number().int().nonnegative(),
     created_at: z.string(),

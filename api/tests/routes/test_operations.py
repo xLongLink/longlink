@@ -31,6 +31,7 @@ async def test_operations_endpoint_returns_compute_scoped_operations(
     assert payload[0]["compute_id"] == str(infrastructure.compute.id)
     assert payload[0]["status"] == operation.status
     assert payload[0]["platform_version"] == env.VERSION
+    assert "error" not in payload[0]
 
 
 async def test_operations_endpoint_enforces_support_access(

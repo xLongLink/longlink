@@ -3,7 +3,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Heading } from '@astryxdesign/core/Heading';
-import PlatformLayout from '@/pages/layout';
+import PlatformLayout from '@/platform/layout';
 
 /** Renders the shared shell for standalone account authentication pages. */
 export function AuthPage({

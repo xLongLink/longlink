@@ -369,7 +369,7 @@ def upgrade() -> None:
         "operations",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("compute_id", sa.Uuid(), nullable=False),
-        sa.Column("error", sa.String(length=2000), nullable=True),
+        sa.Column("failed", sa.Boolean(), nullable=False),
         sa.Column("attempt_count", sa.Integer(), nullable=False),
         sa.Column("platform_version", sa.String(length=128), nullable=False),
         sa.Column("lease_expires_at", longlink.database.types.UTCDateTime(), nullable=True),

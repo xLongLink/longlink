@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
 import { useLocation } from 'react-router';
 import { Center } from '@astryxdesign/core/Center';
-import NotFound from '@/pages/NotFound';
-import PlatformLayout from '@/pages/layout';
+import NotFound from '@/platform/NotFound';
+import PlatformLayout from '@/platform/layout';
 import { useUserProfile } from '@/hooks/use-user';
 import { SignInCard } from '@/components/SignInCard';
 import { hasMinimumRole, type PlatformRole } from '@/lib/roles';

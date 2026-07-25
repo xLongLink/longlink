@@ -150,8 +150,8 @@ async def reconcile_until_complete(compute_id: UUID) -> None:
         if result.compute_id != compute_id:
             continue
         if result.stopped_at is not None:
-            if result.error is not None:
-                raise RuntimeError(result.error)
+            if result.failed:
+                raise RuntimeError(f"Compute reconciliation {result.id} failed; see the Platform logs")
             return
         await asyncio.sleep(1)
 

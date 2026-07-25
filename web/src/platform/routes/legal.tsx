@@ -1,6 +1,6 @@
 import type { MetaFunction } from 'react-router';
-import LegalRoutes from '@/pages/legal/routes';
-import { LEGAL_PAGES } from '@/pages/legal/catalog';
+import LegalRoutes from '@/platform/legal/routes';
+import { LEGAL_PAGES } from '@/platform/legal/catalog';
 import { articleSeoPage, publicSeoMeta } from '@/lib/seo';
 
 /** Returns metadata for the legal article matched by the current URL. */

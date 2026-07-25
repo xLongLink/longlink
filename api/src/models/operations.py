@@ -14,10 +14,7 @@ class OperationStatus(StrEnum):
 
 
 class OperationResponse(BaseModel):
-    """Expose asynchronous reconciliation for one compute target's desired state.
-
-    Only completion confirms convergence; failures include sanitized diagnostics without backend credentials.
-    """
+    """Expose asynchronous reconciliation for one compute target's desired state."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,7 +25,6 @@ class OperationResponse(BaseModel):
     compute_id: UUID
 
     # State
-    error: str | None = None
     status: OperationStatus
     attempt_count: int
     platform_version: str

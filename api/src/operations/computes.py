@@ -307,7 +307,7 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
     except jobs.OperationLeaseLost:
         raise
     except Exception:
-        # Compute status is a summary; detailed diagnostics remain on the Operation.
+        # Record the failed state while the worker logs detailed diagnostics.
         await fence()
         await compute.record_failure(
             compute_registry.id,

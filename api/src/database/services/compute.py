@@ -188,7 +188,7 @@ async def record_failure(
 ) -> None:
     """Mark a compute target failed when the caller still owns its reconciliation attempt."""
 
-    # Detailed diagnostics remain on the Operation row to avoid duplicated error state.
+    # Lock the compute before checking optional operation ownership and updating its state.
     async with session_scope() as session:
         registry = (
             await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())

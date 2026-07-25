@@ -1,7 +1,7 @@
 import pytest
 from uuid import uuid4
 from datetime import timedelta
-from src.utils import names
+from src.utils import jobs, names
 from src.operations import computes as compute_operations
 from src.utils.jobs import execute
 from src.environments import env
@@ -347,7 +347,7 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
 
 
 async def test_execute_compute_reconcile_operation_retries_transient_failure(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Record a compute failure and schedule retryable reconciliation work."""
+    """Record a compute failure, log its details, and schedule retryable reconciliation work."""
 
     # Arrange
     compute_registry, _, _ = await create_compute_infrastructure()
@@ -378,6 +378,14 @@ async def test_execute_compute_reconcile_operation_retries_transient_failure(mon
             raise RuntimeError("https://admin:password@db.example?token=secret")
 
     monkeypatch.setattr(compute_operations, "Kubernetes", FailingKubernetes)
+    errors: list[str] = []
+
+    def log_exception(message: str, *args: object) -> None:
+        """Capture the formatted reconciliation exception."""
+
+        errors.append(message % args)
+
+    monkeypatch.setattr(jobs.logger, "exception", log_exception)
     operation = await operations.enqueue(compute_registry.id)
     claimed = await operations.claim_next()
     assert claimed is not None
@@ -387,12 +395,13 @@ async def test_execute_compute_reconcile_operation_retries_transient_failure(mon
     deferred = await execute(claimed, compute_operations.reconcile)
 
     # Assert
-    expected_error = "https://<redacted>:<redacted>@db.example?token=<redacted>"
     assert deferred.status == OperationStatus.scheduled
     assert deferred.started_at is None
     assert deferred.stopped_at is None
     assert deferred.attempt_count == 1
-    assert deferred.error == expected_error
+    assert errors == [
+        f"Operation {operation.id} failed: RuntimeError('https://admin:password@db.example?token=secret')"
+    ]
     refreshed_compute = await compute.get(compute_registry.id)
     assert refreshed_compute is not None
     assert refreshed_compute.status == ComputeStatus.failed

@@ -1,0 +1,372 @@
+import { useState } from 'react';
+import { useLocation } from 'react-router';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Avatar } from '@astryxdesign/core/Avatar';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Slider } from '@astryxdesign/core/Slider';
+import { useToast } from '@astryxdesign/core/Toast';
+import { Heading } from '@astryxdesign/core/Heading';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { Selector } from '@astryxdesign/core/Selector';
+import { useTranslator } from '@astryxdesign/core/i18n';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Building2, Paintbrush, Settings2, UserRound } from 'lucide-react';
+import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
+import { useDeleteDialog } from '@/lib/utils';
+import PlatformLayout from '@/platform/layout';
+import { PageContainer } from '@/components/PageContainer';
+import { useDeleteOrganization } from '@/hooks/use-organization';
+import CreateOrganization from '@/components/dialogs/CreateOrganization';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { useUpdateUser, useUserOrganizations, useUserProfile } from '@/hooks/use-user';
+import { LANGUAGE_OPTIONS, resolveSupportedLanguage, type Language } from '@/lib/languages';
+import {
+    ACCENT_OPTIONS,
+    DEFAULT_RADIUS,
+    MAX_RADIUS,
+    MIN_RADIUS,
+    THEME_OPTIONS,
+    type Accent,
+    type Theme,
+} from '@/lib/theme';
+
+type SettingsSection = 'account' | 'appearance' | 'organizations';
+
+const RADIUS_STEP = 0.05;
+const RADIUS_MARKS = [MIN_RADIUS, 0.5, DEFAULT_RADIUS, MAX_RADIUS].map((value) => ({
+    value,
+    label: formatRadius(value),
+}));
+
+function formatRadius(value: number): string {
+    return value === 0 ? 'None' : `${value.toFixed(2)}x`;
+}
+
+/** Renders the authenticated settings page. */
+export default function Settings() {
+    const t = useTranslator();
+    const toast = useToast();
+    const location = useLocation();
+    const { user, theme, accent, radius, language, isLoading: isProfileLoading } = useUserProfile();
+    const { memberships, isLoading: areOrganizationsLoading } = useUserOrganizations();
+    const { mutateAsync: updateUser, isPending } = useUpdateUser();
+    const deleteOrganization = useDeleteOrganization();
+    const [editedName, setEditedName] = useState<string | null>(null);
+    const [editedRadius, setEditedRadius] = useState<number | null>(null);
+    const [accountError, setAccountError] = useState<string | null>(null);
+    const hash = location.hash.replace(/^#/, '');
+    const section: SettingsSection =
+        hash === 'appearance' || hash === 'organizations' || hash === 'account' ? hash : 'account';
+    const name = editedName ?? user?.name ?? '';
+    const accountName = name.trim();
+    const selectedLanguage = resolveSupportedLanguage(language);
+    const isLoading = isProfileLoading || areOrganizationsLoading;
+
+    /** Saves the edited account name when focus leaves its input. */
+    const saveAccountName = async () => {
+        setAccountError(null);
+
+        // Ignore saves when the user is not available.
+        if (!user) {
+            return;
+        }
+
+        // Require a non-empty account name.
+        if (!accountName) {
+            setAccountError(t('settings.usernameRequired'));
+            return;
+        }
+
+        // Skip unchanged account names.
+        if (accountName === user.name) {
+            return;
+        }
+
+        // Persist the account name and surface any failure.
+        try {
+            await updateUser({ name: accountName });
+            setEditedName(accountName);
+            toast({ body: t('settings.usernameSaved') });
+        } catch (error) {
+            toast({
+                body: error instanceof Error ? error.message : t('settings.failedUpdateUsername'),
+                type: 'error',
+            });
+        }
+    };
+
+    const deleteDialog = useDeleteDialog({
+        title: t('deleteDialog.deleteOrganizationTitle'),
+        mutation: deleteOrganization,
+        items: memberships,
+        getId: (membership) => membership.organization.id,
+        description: (membership) =>
+            t('deleteDialog.deleteOrganizationDescription', { name: membership.organization.name }),
+        errorMessage: t('deleteDialog.failedDeleteOrganization'),
+        fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
+        onError: (message) => toast({ body: message, type: 'error' }),
+    });
+    const organizationColumns: TableColumn<(typeof memberships)[number]>[] = [
+        {
+            key: 'name',
+            header: t('columns.name'),
+            width: proportional(1),
+            renderCell: (membership) => (
+                <HStack gap={3} align="center">
+                    <Avatar
+                        src={membership.organization.avatar || undefined}
+                        name={membership.organization.name}
+                        size="md"
+                    />
+                    <VStack gap={1}>
+                        <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
+                            {membership.organization.name}
+                        </Link>
+                        <Text type="supporting">{membership.organization.country}</Text>
+                    </VStack>
+                </HStack>
+            ),
+        },
+        {
+            key: 'role',
+            header: t('columns.role'),
+            width: pixel(128),
+            renderCell: (membership) => <Badge label={membership.role} />,
+        },
+        {
+            key: 'actions',
+            header: t('columns.actions'),
+            width: pixel(96),
+            align: 'end',
+            renderCell: (membership) =>
+                membership.role === 'owner' ? (
+                    <MoreMenu
+                        label={t('common.openActionsFor', { name: membership.organization.name })}
+                        size="sm"
+                        items={[{ label: t('actions.delete'), onClick: () => deleteDialog.openFor(membership) }]}
+                    />
+                ) : null,
+        },
+    ];
+
+    return (
+        <PlatformLayout
+            brandOnly
+            tabs={{
+                [t('navigation.organizations')]: { href: '/organizations', icon: Building2 },
+                [t('navigation.settings')]: { href: '/settings', icon: Settings2 },
+            }}
+        >
+            <PageContainer gap={8}>
+                <VStack gap={1}>
+                    <Heading level={1}>{t('settings.title')}</Heading>
+                    <Text type="supporting">{t('settings.description')}</Text>
+                </VStack>
+
+                <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
+                    <SideNav className="h-auto w-full">
+                        <SideNavSection title={t('navigation.settings')} isHeaderHidden>
+                            <SideNavItem
+                                href={`${location.pathname}${location.search}#account`}
+                                icon={<UserRound aria-hidden="true" size={16} />}
+                                isSelected={section === 'account'}
+                                label={t('settings.accountTitle')}
+                            />
+                            <SideNavItem
+                                href={`${location.pathname}${location.search}#appearance`}
+                                icon={<Paintbrush aria-hidden="true" size={16} />}
+                                isSelected={section === 'appearance'}
+                                label={t('settings.appearanceTitle')}
+                            />
+                            <SideNavItem
+                                href={`${location.pathname}${location.search}#organizations`}
+                                icon={<Building2 aria-hidden="true" size={16} />}
+                                isSelected={section === 'organizations'}
+                                label={t('settings.organizationsTitle')}
+                            />
+                        </SideNavSection>
+                    </SideNav>
+
+                    <div className="min-w-0">
+                        {section === 'account' ? (
+                            <VStack gap={4}>
+                                <VStack gap={1}>
+                                    <Heading level={2}>{t('settings.accountTitle')}</Heading>
+                                    <Text type="supporting">{t('settings.accountDescription')}</Text>
+                                </VStack>
+                                <HStack gap={4} align="start" wrap="wrap">
+                                    <TextInput
+                                        label={t('labels.username')}
+                                        value={name}
+                                        width="100%"
+                                        isRequired
+                                        isDisabled={isLoading || !user}
+                                        status={accountError ? { type: 'error', message: accountError } : undefined}
+                                        onChange={(value) => {
+                                            setEditedName(value);
+                                            setAccountError(null);
+                                        }}
+                                        onBlur={() => {
+                                            void saveAccountName();
+                                        }}
+                                    />
+                                    <TextInput
+                                        label={t('labels.email')}
+                                        type="email"
+                                        value={user?.email ?? ''}
+                                        width="100%"
+                                        isDisabled
+                                    />
+                                    <Selector
+                                        label={t('labels.language')}
+                                        options={LANGUAGE_OPTIONS.map((option) => ({
+                                            value: option.value,
+                                            label: option.nativeLabel,
+                                        }))}
+                                        value={selectedLanguage}
+                                        width="100%"
+                                        isDisabled={isLoading || isPending || !user}
+                                        placeholder={t('settings.placeholders.language')}
+                                        onChange={(value) => {
+                                            void updateUser({ language: value as Language }).catch((error: unknown) => {
+                                                toast({
+                                                    body:
+                                                        error instanceof Error
+                                                            ? error.message
+                                                            : t('errors.updateAccount'),
+                                                    type: 'error',
+                                                });
+                                            });
+                                        }}
+                                    />
+                                </HStack>
+                            </VStack>
+                        ) : null}
+
+                        {section === 'appearance' ? (
+                            <VStack gap={4}>
+                                <VStack gap={1}>
+                                    <Heading level={2}>{t('settings.appearanceTitle')}</Heading>
+                                    <Text type="supporting">{t('settings.appearanceDescription')}</Text>
+                                </VStack>
+                                <HStack gap={4} align="start" wrap="wrap">
+                                    <Selector
+                                        label={t('labels.theme')}
+                                        options={THEME_OPTIONS}
+                                        value={theme}
+                                        width={320}
+                                        isDisabled={isPending}
+                                        placeholder={t('settings.placeholders.theme')}
+                                        onChange={(value) => {
+                                            void updateUser({ theme: value as Theme }).catch((error: unknown) => {
+                                                toast({
+                                                    body:
+                                                        error instanceof Error
+                                                            ? error.message
+                                                            : t('errors.updateAccount'),
+                                                    type: 'error',
+                                                });
+                                            });
+                                        }}
+                                    />
+                                    <Selector
+                                        label={t('labels.accentColor')}
+                                        options={ACCENT_OPTIONS.map((option) => ({
+                                            value: option.value,
+                                            label: option.label,
+                                            icon: (
+                                                <span
+                                                    aria-hidden="true"
+                                                    style={{
+                                                        display: 'inline-block',
+                                                        width: 10,
+                                                        height: 10,
+                                                        borderRadius: 9999,
+                                                        backgroundColor: option.swatch,
+                                                    }}
+                                                />
+                                            ),
+                                        }))}
+                                        value={accent}
+                                        width={320}
+                                        isDisabled={isPending}
+                                        placeholder={t('settings.placeholders.color')}
+                                        onChange={(value) => {
+                                            void updateUser({ accent: value as Accent }).catch((error: unknown) => {
+                                                toast({
+                                                    body:
+                                                        error instanceof Error
+                                                            ? error.message
+                                                            : t('errors.updateAccount'),
+                                                    type: 'error',
+                                                });
+                                            });
+                                        }}
+                                    />
+                                    <Slider
+                                        label={t('labels.radius')}
+                                        value={editedRadius ?? radius}
+                                        width={320}
+                                        min={MIN_RADIUS}
+                                        max={MAX_RADIUS}
+                                        step={RADIUS_STEP}
+                                        marks={RADIUS_MARKS}
+                                        formatValue={formatRadius}
+                                        isDisabled={isPending}
+                                        onChange={(value: number) => {
+                                            setEditedRadius(value);
+                                        }}
+                                        onChangeEnd={(value: number) => {
+                                            void updateUser({ radius: value })
+                                                .catch((error: unknown) => {
+                                                    toast({
+                                                        body:
+                                                            error instanceof Error
+                                                                ? error.message
+                                                                : t('errors.updateAccount'),
+                                                        type: 'error',
+                                                    });
+                                                })
+                                                .finally(() => {
+                                                    setEditedRadius(null);
+                                                });
+                                        }}
+                                    />
+                                </HStack>
+                            </VStack>
+                        ) : null}
+
+                        {section === 'organizations' ? (
+                            <VStack gap={4}>
+                                <HStack gap={4} justify="between" align="end" wrap="wrap">
+                                    <VStack gap={1}>
+                                        <Heading level={2}>{t('settings.organizationsTitle')}</Heading>
+                                        <Text type="supporting">{t('settings.organizationDescription')}</Text>
+                                    </VStack>
+                                    <CreateOrganization />
+                                </HStack>
+                                {isLoading && memberships.length === 0 ? null : (
+                                    <Table
+                                        columns={organizationColumns}
+                                        data={memberships}
+                                        density="compact"
+                                        emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                                        hasHover
+                                        idKey={(membership) => membership.organization.id}
+                                    />
+                                )}
+                            </VStack>
+                        ) : null}
+                    </div>
+                </div>
+
+                <DeleteConfirmation {...deleteDialog.dialogProps} />
+            </PageContainer>
+        </PlatformLayout>
+    );
+}

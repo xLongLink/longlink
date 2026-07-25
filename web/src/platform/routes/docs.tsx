@@ -1,6 +1,6 @@
 import type { MetaFunction } from 'react-router';
-import { DOC_PAGES } from '@/pages/docs/catalog';
-import DocumentationRoutes from '@/pages/docs/routes';
+import { DOC_PAGES } from '@/platform/docs/catalog';
+import DocumentationRoutes from '@/platform/docs/routes';
 import { articleSeoPage, publicSeoMeta } from '@/lib/seo';
 
 /** Returns metadata for the documentation article matched by the current URL. */

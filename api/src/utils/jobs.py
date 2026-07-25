@@ -41,7 +41,7 @@ class OperationOutcome:
     """Represent the requested state transition after a handler attempt."""
 
     state: OperationOutcomeState
-    error: str | None = None
+    reason: str | None = None
 
 
 JobHandler = Callable[[Operation], Awaitable[OperationOutcome]]
@@ -54,18 +54,18 @@ def complete() -> OperationOutcome:
     return OperationOutcome(OperationOutcomeState.complete)
 
 
-def retry(error: str | None = None) -> OperationOutcome:
+def retry(reason: str | None = None) -> OperationOutcome:
     """Return a transient outcome that retries the operation with bounded backoff."""
 
     # The dispatcher derives the delay from the persisted attempt count.
-    return OperationOutcome(OperationOutcomeState.retry, error=error)
+    return OperationOutcome(OperationOutcomeState.retry, reason=reason)
 
 
-def fail(error: str) -> OperationOutcome:
-    """Return an outcome that fails the operation with a public error message."""
+def fail(reason: str) -> OperationOutcome:
+    """Return an outcome that fails the operation with a logged reason."""
 
-    # The dispatcher owns error sanitization and terminal persistence.
-    return OperationOutcome(OperationOutcomeState.fail, error=error)
+    # The dispatcher owns logging and the terminal database transition.
+    return OperationOutcome(OperationOutcomeState.fail, reason=reason)
 
 
 async def execute(operation: Operation, handler: JobHandler) -> Operation:
@@ -86,15 +86,13 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
         raise
     except TimeoutError as exc:
         detail = str(exc) or "Operation attempt timed out"
-        logger.warning("Operation %s timed out: %s", operation.id, detail)
         outcome = retry(detail)
     except HTTPException as exc:
         detail = str(exc.detail)
-        logger.warning("Operation %s failed: %s", operation.id, detail)
         outcome = fail(detail)
     except Exception as exc:
         logger.exception("Operation %s failed: %r", operation.id, exc)
-        outcome = retry(str(exc))
+        outcome = retry()
 
     # Persist exactly one transition while the claim's lease remains valid.
     match outcome.state:
@@ -102,21 +100,22 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
             updated = await operations.complete(operation.id, attempt_count)
         case OperationOutcomeState.retry:
             if attempt_count >= OPERATION_ATTEMPT_LIMIT:
-                updated = await operations.fail(
+                logger.error(
+                    "Operation %s failed after %s attempts: %s",
                     operation.id,
-                    outcome.error or "Operation retry limit exceeded",
                     attempt_count,
+                    outcome.reason or "retry limit exceeded",
                 )
+                updated = await operations.fail(operation.id, attempt_count)
             else:
+                if outcome.reason is not None:
+                    logger.warning("Operation %s will retry: %s", operation.id, outcome.reason)
                 exponent = min(attempt_count - 1, 30)
                 delay = min(OPERATION_RETRY_BASE_SECONDS * (2**exponent), OPERATION_RETRY_MAX_SECONDS)
-                updated = await operations.defer(operation.id, attempt_count, delay, outcome.error)
+                updated = await operations.defer(operation.id, attempt_count, delay)
         case OperationOutcomeState.fail:
-            updated = await operations.fail(
-                operation.id,
-                outcome.error or "Operation failed",
-                attempt_count,
-            )
+            logger.error("Operation %s failed: %s", operation.id, outcome.reason or "unknown reason")
+            updated = await operations.fail(operation.id, attempt_count)
         case _:
             raise ValueError(f"Unsupported operation outcome '{outcome.state}'")
 

@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router';
-import type { SettingsRouteSection } from '@/pages/org/Settings';
+import type { SettingsRouteSection } from '@/platform/org/Settings';
 import { Auth } from '@/components/Auth';
-import Organization from '@/pages/Organization';
+import Organization from '@/platform/Organization';
 
 const sections: Record<string, SettingsRouteSection> = {
     applications: 'applications',

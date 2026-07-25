@@ -8,7 +8,7 @@ import { useTranslator } from '@astryxdesign/core/i18n';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Layout, LayoutContent, LayoutHeader, LayoutPanel } from '@astryxdesign/core/Layout';
-import type { ArticlePage } from '@/pages/catalog';
+import type { ArticlePage } from '@/platform/catalog';
 import { formatDate } from '@/lib/utils';
 import { PageContainer } from '@/components/PageContainer';
 import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';

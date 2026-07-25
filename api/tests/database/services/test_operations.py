@@ -2,9 +2,9 @@ import pytest
 from datetime import timedelta
 from src.environments import env
 from longlink.utils.time import utcnow
-from src.models.operations import OperationStatus
 from src.database.session import session_scope
 from src.database.services import operations
+from src.models.operations import OperationStatus
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
@@ -198,7 +198,7 @@ async def test_operations_service_lease_updates_reject_stale_attempts() -> None:
     stale_renewal = await operations.renew_lease(operation.id, claimed.attempt_count)
     stale_defer = await operations.defer(operation.id, claimed.attempt_count, 0)
     stale_completion = await operations.complete(operation.id, claimed.attempt_count)
-    stale_failure = await operations.fail(operation.id, "boom", claimed.attempt_count)
+    stale_failure = await operations.fail(operation.id, claimed.attempt_count)
     current_lease = await operations.lease_is_current(operation.id, reclaimed.attempt_count)
     renewed = await operations.renew_lease(operation.id, reclaimed.attempt_count)
     assert renewed is not None
@@ -213,7 +213,7 @@ async def test_operations_service_lease_updates_reject_stale_attempts() -> None:
     expired_renewal = await operations.renew_lease(operation.id, reclaimed.attempt_count)
     expired_defer = await operations.defer(operation.id, reclaimed.attempt_count, 0)
     expired_completion = await operations.complete(operation.id, reclaimed.attempt_count)
-    expired_failure = await operations.fail(operation.id, "boom", reclaimed.attempt_count)
+    expired_failure = await operations.fail(operation.id, reclaimed.attempt_count)
 
     # Assert
     assert stale_lease is False
@@ -246,19 +246,19 @@ async def test_operations_service_tracks_successful_and_failed_lifecycles() -> N
     completed = await operations.complete(successful_claim.id, successful_claim.attempt_count)
     failed_claim = await operations.claim_next()
     assert failed_claim is not None
-    stopped = await operations.fail(failed_claim.id, "boom", failed_claim.attempt_count)
+    stopped = await operations.fail(failed_claim.id, failed_claim.attempt_count)
 
     # Assert
     assert successful.status == OperationStatus.scheduled
     assert completed is not None
     assert completed.status == OperationStatus.completed
     assert completed.stopped_at is not None
-    assert completed.error is None
+    assert completed.failed is False
     assert failed.status == OperationStatus.scheduled
     assert stopped is not None
     assert stopped.status == OperationStatus.failed
     assert stopped.stopped_at is not None
-    assert stopped.error == "boom"
+    assert stopped.failed is True
 
 
 async def test_operations_service_defers_and_retries_compute_work() -> None:
@@ -271,13 +271,12 @@ async def test_operations_service_defers_and_retries_compute_work() -> None:
     assert claimed is not None
 
     # Act
-    deferred = await operations.defer(operation.id, claimed.attempt_count, 0, "temporary failure")
+    deferred = await operations.defer(operation.id, claimed.attempt_count, 0)
     retried = await operations.claim_next()
 
     # Assert
     assert deferred is not None
     assert deferred.status == OperationStatus.scheduled
-    assert deferred.error == "temporary failure"
     assert deferred.attempt_count == 1
     assert deferred.started_at is None
     assert deferred.stopped_at is None

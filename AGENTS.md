@@ -51,11 +51,12 @@ longlink/
 │   └── tests/                    # SDK tests
 ├── web/                          # Vite/React frontend, docs, XML runtime, API and SDK bundle modes
 │   ├── src/
+│   │   ├── application/          # Embedded Application routes and runtime page rendering
 │   │   ├── components/           # Shared UI and dialogs
 │   │   ├── hooks/                # React hooks
 │   │   ├── layout/               # Layout shells
 │   │   ├── lib/                  # API clients, theme, shared types
-│   │   ├── pages/                # Platform pages and docs
+│   │   ├── platform/             # Platform routes, pages, docs, and legal content
 │   │   └── xml/                  # XML parser, adapters, renderer, translations
 │   └── tests/                    # Web and XML tests
 ```
