@@ -37,7 +37,7 @@ This builds the SDK web bundle, recreates `sdk/dev`, links that generated app to
 ## Testing
 
 ```bash
-uv sync --extra dev
+uv sync --group dev
 uv run pytest tests
 ```
 

@@ -1,15 +1,13 @@
+from httpx2 import AsyncClient
 from factories import create_organization, create_ready_infrastructure
-from src.database import session
-from src.models.roles import PlatformRoles
 from src.models.users import UserProfile, UserListItem
-from fastapi.testclient import TestClient
 from src.database.services import users as user_service
 from src.database.services import organizations as organization_service
 from src.database.models.users import User
 
 
 async def test_get_me_returns_authenticated_user_profile_and_separate_org_memberships(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Return profile and organization memberships from separate endpoints."""
@@ -25,8 +23,8 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
     client = clients[0]
 
     # Act
-    profile_response = client.get("/api/me")
-    organizations_response = client.get("/api/me/organizations")
+    profile_response = await client.get("/api/me")
+    organizations_response = await client.get("/api/me/organizations")
 
     # Assert
     assert profile_response.status_code == 200
@@ -47,7 +45,7 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
 
 
 async def test_get_my_organizations_excludes_soft_deleted_organizations(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Hide soft-deleted Organizations from the authenticated user's organization switcher."""
@@ -62,7 +60,7 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
     client = clients[0]
 
     # Act
-    response = client.get("/api/me/organizations")
+    response = await client.get("/api/me/organizations")
 
     # Assert
     assert response.status_code == 200
@@ -70,7 +68,7 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
 
 
 async def test_list_users_returns_admin_user_summaries(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Return all user summaries from the `/api/users` admin route."""
@@ -78,7 +76,7 @@ async def test_list_users_returns_admin_user_summaries(
     client = clients[0]
 
     # Act
-    response = client.get("/api/users")
+    response = await client.get("/api/users")
 
     # Assert
     assert response.status_code == 200
@@ -88,27 +86,19 @@ async def test_list_users_returns_admin_user_summaries(
 
 
 async def test_platform_roles_separate_support_reads_from_admin_mutations(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Allow support reads while denying support mutations and ordinary-user support access."""
 
-    # Promote the third local fixture account for this isolated database.
     support = users[2]
-    Session = await session.get_session()
-    async with Session() as db_session:
-        persisted_support = await db_session.get(User, support.id)
-        assert persisted_support is not None
-        persisted_support.role = PlatformRoles.support
-        await db_session.commit()
-
     support_client = clients[2]
     ordinary_client = clients[1]
 
     # Exercise representative support and administrator route dependencies.
-    support_read_response = support_client.get("/api/users")
-    ordinary_read_response = ordinary_client.get("/api/users")
-    support_mutation_response = support_client.post(
+    support_read_response = await support_client.get("/api/users")
+    ordinary_read_response = await ordinary_client.get("/api/users")
+    support_mutation_response = await support_client.post(
         "/api/computes",
         json={"name": "Support compute", "kubeconfig": "apiVersion: v1\nclusters: []\n"},
     )
@@ -123,7 +113,7 @@ async def test_platform_roles_separate_support_reads_from_admin_mutations(
 
 
 async def test_patch_me_updates_authenticated_user_profile(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Update the authenticated user's mutable profile fields."""
@@ -133,7 +123,7 @@ async def test_patch_me_updates_authenticated_user_profile(
     client = clients[0]
 
     # Act
-    response = client.patch("/api/me", json={"name": "Updated User"})
+    response = await client.patch("/api/me", json={"name": "Updated User"})
 
     # Assert
     assert response.status_code == 200

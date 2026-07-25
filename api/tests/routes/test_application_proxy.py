@@ -1,9 +1,9 @@
 import httpx2
 from types import SimpleNamespace
+from httpx2 import AsyncClient
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
 from src.routes import applications as application_routes
 from src.models.roles import ApplicationRoles, OrganizationRoles
-from fastapi.testclient import TestClient
 from src.models.statuses import ApplicationStatus
 from src.database.session import get_session
 from src.database.services import applications
@@ -13,7 +13,7 @@ from src.database.models.association import UserApplication, UserOrganization
 
 
 async def test_application_proxy_forwards_safe_content_and_rejects_active_content(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
@@ -103,7 +103,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     client = clients[0]
 
     # Act
-    response = client.post(
+    response = await client.post(
         f"/api/applications/{app.id}/proxy/anything?answer=42",
         content=b"payload",
         headers={
@@ -149,13 +149,13 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
 
     # Active documents must not cross the authenticated proxy boundary.
     captured["response_content_type"] = "image/svg+xml; charset=utf-8"
-    root_response = client.get(f"/api/applications/{app.id}/proxy")
+    root_response = await client.get(f"/api/applications/{app.id}/proxy")
     assert root_response.status_code == 502
     assert root_response.json() == {"detail": "Application proxy returned an unsupported content type"}
 
 
 async def test_application_proxy_rejects_oversized_request_body(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
@@ -210,7 +210,7 @@ async def test_application_proxy_rejects_oversized_request_body(
     client = clients[0]
 
     # Act
-    response = client.post(f"/api/applications/{app.id}/proxy/upload", content=b"x" * 1025)
+    response = await client.post(f"/api/applications/{app.id}/proxy/upload", content=b"x" * 1025)
 
     # Assert
     assert response.status_code == 413
@@ -218,7 +218,7 @@ async def test_application_proxy_rejects_oversized_request_body(
 
 
 async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Return unavailable when the compute gateway configuration is incomplete."""
@@ -245,7 +245,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/applications/{app.id}/proxy/pages.json")
+    response = await client.get(f"/api/applications/{app.id}/proxy/pages.json")
 
     # Assert
     assert response.status_code == 503
@@ -253,7 +253,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
 
 
 async def test_application_proxy_requires_application_role_for_regular_member(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Reject app proxy access for regular organization members without an app role."""
@@ -285,7 +285,7 @@ async def test_application_proxy_requires_application_role_for_regular_member(
     client = clients[1]
 
     # Act
-    response = client.get(f"/api/applications/{app.id}/proxy/pages.json")
+    response = await client.get(f"/api/applications/{app.id}/proxy/pages.json")
 
     # Assert
     assert response.status_code == 403
@@ -293,7 +293,7 @@ async def test_application_proxy_requires_application_role_for_regular_member(
 
 
 async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
@@ -349,7 +349,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/applications/{app.id}/proxy/i18n/en.json")
+    response = await client.get(f"/api/applications/{app.id}/proxy/i18n/en.json")
 
     # Assert
     assert response.status_code == 503
@@ -361,7 +361,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
 
 
 async def test_application_proxy_enforces_method_role(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Reject mutating proxy requests when the runtime role is read-only."""
@@ -400,7 +400,7 @@ async def test_application_proxy_enforces_method_role(
     client = clients[0]
 
     # Act
-    response = client.post(f"/api/applications/{app.id}/proxy/api/tasks")
+    response = await client.post(f"/api/applications/{app.id}/proxy/api/tasks")
 
     # Assert
     assert response.status_code == 403
@@ -408,7 +408,7 @@ async def test_application_proxy_enforces_method_role(
 
 
 async def test_application_proxy_shows_loading_when_app_is_not_ready(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Return a loading response while application reconciliation is pending."""
@@ -428,7 +428,7 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/applications/{app.id}/proxy/pages.json")
+    response = await client.get(f"/api/applications/{app.id}/proxy/pages.json")
 
     # Assert
     assert response.status_code == 503

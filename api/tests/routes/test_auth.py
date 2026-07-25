@@ -1,21 +1,20 @@
 import pytest
 from main import app
+from httpx2 import AsyncClient, ASGITransport
 from conftest import AUTH_COOKIE, TEST_PASSWORD, authenticated_cookies
 from sqlmodel import col, select
 from src.utils import mail as mail_module
 from urllib.parse import parse_qs, urlparse
-from fastapi.testclient import TestClient
 from src.database.session import get_session
 from src.database.models.users import User, AccessToken
 
 
-def test_auth_config_reports_local_development_capabilities() -> None:
+@pytest.mark.no_db
+async def test_auth_config_reports_local_development_capabilities(client: AsyncClient) -> None:
     """Expose local registration without unconfigured external providers."""
 
-    client = TestClient(app)
-
     # Read the public capabilities used to construct the sign-in interface.
-    response = client.get("/api/auth/config")
+    response = await client.get("/api/auth/config")
 
     assert response.status_code == 200
     assert response.json() == {
@@ -24,7 +23,7 @@ def test_auth_config_reports_local_development_capabilities() -> None:
 
 
 async def test_registration_request_does_not_enumerate_existing_accounts(
-    users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+    client: AsyncClient, users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Return accepted without sending registration mail for an existing account."""
 
@@ -37,24 +36,21 @@ async def test_registration_request_does_not_enumerate_existing_accounts(
         messages.append((recipient, subject, text, html))
 
     monkeypatch.setattr(mail_module, "send_mail", capture_mail)
-    client = TestClient(app)
 
     # Act
-    response = client.post("/api/auth/register", json={"email": users[0].email})
+    response = await client.post("/api/auth/register", json={"email": users[0].email})
 
     # Assert
     assert response.status_code == 202
     assert messages == []
 
 
-def test_verify_email_rejects_invalid_token_without_cookie() -> None:
+@pytest.mark.no_db
+async def test_verify_email_rejects_invalid_token_without_cookie(client: AsyncClient) -> None:
     """Reject an invalid verification token without creating a browser session."""
 
-    # Arrange
-    client = TestClient(app)
-
     # Act
-    response = client.post("/api/auth/verify", json={"token": "not-a-valid-token"})
+    response = await client.post("/api/auth/verify", json={"token": "not-a-valid-token"})
 
     # Assert
     assert response.status_code == 400
@@ -62,21 +58,19 @@ def test_verify_email_rejects_invalid_token_without_cookie() -> None:
     assert client.cookies.get(AUTH_COOKIE) is None
 
 
-def test_verify_email_rejects_blank_token_payload() -> None:
+@pytest.mark.no_db
+async def test_verify_email_rejects_blank_token_payload(client: AsyncClient) -> None:
     """Reject malformed verification payloads before token verification runs."""
 
-    # Arrange
-    client = TestClient(app)
-
     # Act
-    response = client.post("/api/auth/verify", json={"token": ""})
+    response = await client.post("/api/auth/verify", json={"token": ""})
 
     # Assert
     assert response.status_code == 422
     assert client.cookies.get(AUTH_COOKIE) is None
 
 
-async def test_register_verify_and_password_login(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_register_verify_and_password_login(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Create an authenticated account only after email and profile completion."""
 
     # Arrange
@@ -97,10 +91,9 @@ async def test_register_verify_and_password_login(monkeypatch: pytest.MonkeyPatc
         messages.append((recipient, subject, text, html))
 
     monkeypatch.setattr(mail_module, "send_mail", capture_mail)
-    client = TestClient(app)
 
     # Request a stateless email link without creating a pending user.
-    register_response = client.post("/api/auth/register", json=registration_payload)
+    register_response = await client.post("/api/auth/register", json=registration_payload)
     Session = await get_session()
     async with Session() as session:
         pending_user = (await session.execute(select(User).where(col(User.email) == email))).scalar_one_or_none()
@@ -129,7 +122,7 @@ async def test_register_verify_and_password_login(monkeypatch: pytest.MonkeyPatc
     assert "mailto:info@longlink.dev" in messages[0][3]
 
     # Verify email ownership without creating a user or browser session.
-    verify_response = client.post("/api/auth/verify", json={"token": verification_token})
+    verify_response = await client.post("/api/auth/verify", json={"token": verification_token})
     async with Session() as session:
         verified_pending_user = (await session.execute(select(User).where(col(User.email) == email))).scalar_one_or_none()
 
@@ -139,18 +132,18 @@ async def test_register_verify_and_password_login(monkeypatch: pytest.MonkeyPatc
     assert client.cookies.get(AUTH_COOKIE) is None
 
     # Complete profile and password setup in the same transaction as the first session.
-    unauthenticated_login = client.post("/api/auth/password/login", data=login_payload)
-    restored_setup = client.get("/api/auth/register/setup")
-    mismatched_setup = client.post(
+    unauthenticated_login = await client.post("/api/auth/password/login", data=login_payload)
+    restored_setup = await client.get("/api/auth/register/setup")
+    mismatched_setup = await client.post(
         "/api/auth/register/complete",
         json={**completion_payload, "email": "another@example.com"},
     )
-    complete_response = client.post(
+    complete_response = await client.post(
         "/api/auth/register/complete",
         json=completion_payload,
     )
-    accounts_response = client.get("/api/auth/accounts")
-    profile_response = client.get("/api/me")
+    accounts_response = await client.get("/api/auth/accounts")
+    profile_response = await client.get("/api/me")
 
     assert unauthenticated_login.status_code == 400
     assert unauthenticated_login.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
@@ -170,12 +163,12 @@ async def test_register_verify_and_password_login(monkeypatch: pytest.MonkeyPatc
     assert profile_response.json()["id"] == registered_user["id"]
 
     # Reusing a valid token cannot create or authenticate a duplicate account.
-    repeat_client = TestClient(app)
-    repeat_verify_response = repeat_client.post("/api/auth/verify", json={"token": verification_token})
-    repeat_response = repeat_client.post(
-        "/api/auth/register/complete",
-        json=completion_payload,
-    )
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as repeat_client:
+        repeat_verify_response = await repeat_client.post("/api/auth/verify", json={"token": verification_token})
+        repeat_response = await repeat_client.post(
+            "/api/auth/register/complete",
+            json=completion_payload,
+        )
 
     assert repeat_verify_response.status_code == 200
     assert repeat_response.status_code == 400
@@ -183,12 +176,14 @@ async def test_register_verify_and_password_login(monkeypatch: pytest.MonkeyPatc
     assert repeat_client.cookies.get(AUTH_COOKIE) is None
 
     # Password login still works after the verification-link login path.
-    login_response = client.post("/api/auth/password/login", data=login_payload)
+    login_response = await client.post("/api/auth/password/login", data=login_payload)
 
     assert login_response.status_code == 204
 
 
-async def test_forgot_and_reset_password(users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_forgot_and_reset_password(
+    client: AsyncClient, users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Reset a local password with the emailed one-time recovery token."""
 
     messages: list[tuple[str, str, str, str | None]] = []
@@ -200,11 +195,11 @@ async def test_forgot_and_reset_password(users: tuple[User, User, User], monkeyp
 
     monkeypatch.setattr(mail_module, "send_mail", capture_mail)
     user, _, _ = users
-    client = TestClient(app, cookies=authenticated_cookies(user.id))
+    client.cookies.update(authenticated_cookies(user.id))
 
     # Missing and existing accounts receive the same response, while only the account gets mail.
-    missing_response = client.post("/api/auth/forgot-password", json={"email": "missing@example.com"})
-    forgot_response = client.post(
+    missing_response = await client.post("/api/auth/forgot-password", json={"email": "missing@example.com"})
+    forgot_response = await client.post(
         "/api/auth/forgot-password",
         json={"email": user.email.upper(), "next": "/orgs/example"},
     )
@@ -219,13 +214,13 @@ async def test_forgot_and_reset_password(users: tuple[User, User, User], monkeyp
 
     # Exchange fragment proof for an HTTP-only cookie before replacing the credential.
     reset_token = parse_qs(parsed_reset_url.fragment)["token"][0]
-    verify_response = client.post("/api/auth/reset-password/verify", json={"token": reset_token})
-    setup_response = client.get("/api/auth/reset-password/setup")
-    reset_response = client.post(
+    verify_response = await client.post("/api/auth/reset-password/verify", json={"token": reset_token})
+    setup_response = await client.get("/api/auth/reset-password/setup")
+    reset_response = await client.post(
         "/api/auth/reset-password",
         json={"password": "replacement-password"},
     )
-    revoked_session = client.get("/api/me")
+    revoked_session = await client.get("/api/me")
     Session = await get_session()
     async with Session() as session:
         existing_tokens = (await session.execute(select(AccessToken).where(AccessToken.user_id == user.id))).scalars().all()
@@ -237,11 +232,11 @@ async def test_forgot_and_reset_password(users: tuple[User, User, User], monkeyp
     assert existing_tokens == []
 
     # Prove only the new password can create a fresh session.
-    old_login = client.post(
+    old_login = await client.post(
         "/api/auth/password/login",
         data={"username": user.email, "password": TEST_PASSWORD},
     )
-    new_login = client.post(
+    new_login = await client.post(
         "/api/auth/password/login",
         data={"username": user.email, "password": "replacement-password"},
     )

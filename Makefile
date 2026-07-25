@@ -1,4 +1,4 @@
-.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
+.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all coverage api\:coverage sdk\:coverage api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
 
 LOCAL_SDK_IMAGE := localhost:15000/longlink-app:dev
 LOCAL_SDK_IMAGE_LABEL := longlink.name=longlink-app
@@ -20,7 +20,7 @@ api\:install:
 
 # Install SDK Python development dependencies.
 sdk\:install:
-	cd sdk && uv sync --locked --extra dev
+	cd sdk && uv sync --locked --group dev
 
 
 # Install web JavaScript dependencies.
@@ -58,19 +58,33 @@ tests:
 tests\:all: api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests
 
 
-# Run all API tests with coverage, including container-backed integration tests.
+# Run API tests, including container-backed integration tests.
 api\:tests: api\:install api\:build
-	cd api && ENVIRONMENT=testing uv run --locked pytest $(API_PYTEST_MARK) --cov=src --cov-report=term-missing tests
+	cd api && ENVIRONMENT=testing uv run --locked pytest $(API_PYTEST_MARK) tests
 
 
 # Build the embedded web bundle, then run SDK tests.
 sdk\:tests: sdk\:install sdk\:build
-	cd sdk && uv run --locked pytest $(SDK_PYTEST_MARK) --cov=longlink --cov-report=term-missing tests
+	cd sdk && uv run --locked pytest $(SDK_PYTEST_MARK) tests
 
 
 # Generate an isolated application and run its shipped tests.
 sdk\:scaffold\:tests: sdk\:install sdk\:build
 	cd sdk && sh tests/scaffold-smoke.sh
+
+
+# Report coverage from the fast API and SDK suites.
+coverage: api\:coverage sdk\:coverage
+
+
+# Report API coverage without container-backed integration tests.
+api\:coverage: api\:install api\:build
+	cd api && ENVIRONMENT=testing uv run --locked pytest -m "not integration" --cov=src --cov-report=term-missing tests
+
+
+# Report SDK coverage without container-backed integration tests.
+sdk\:coverage: sdk\:install sdk\:build
+	cd sdk && uv run --locked pytest -m "not integration" --cov=longlink --cov-report=term-missing tests
 
 
 # Run web tests, typecheck, and bundle builds.
@@ -114,20 +128,20 @@ sdk\:build: web\:install
 
 # Remove generated build and test artifacts for every workspace.
 clean: api\:clean sdk\:clean sdk\:image\:clean web\:clean
-	rm -rf .coverage .coverage.* coverage.xml htmlcov .pytest_cache .ruff_cache .mypy_cache
+	rm -rf .coverage .coverage.* coverage.xml htmlcov .pytest_cache .ruff_cache
 
 
 # Remove generated API build and test artifacts.
 api\:clean:
 	rm -rf api/.coverage api/.coverage.* api/coverage.xml api/htmlcov api/build api/dist api/*.egg-info api/kubeconfig.yaml api/openapi.yml api/src/.static/web
-	find api -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache -o -name .mypy_cache \) -prune -exec rm -rf {} +
+	find api -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +
 	find api -type f -name '*.py[co]' -delete
 
 
 # Remove generated SDK build and test artifacts.
 sdk\:clean:
 	rm -rf sdk/.coverage sdk/.coverage.* sdk/coverage.xml sdk/htmlcov sdk/build sdk/dev sdk/dist sdk/*.egg-info sdk/longlink/.static/web
-	find sdk -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache -o -name .mypy_cache \) -prune -exec rm -rf {} +
+	find sdk -type d \( -name __pycache__ -o -name .pytest_cache -o -name .ruff_cache \) -prune -exec rm -rf {} +
 	find sdk -type f -name '*.py[co]' -delete
 
 
@@ -191,7 +205,6 @@ down:
 	rm -rf sdk/dev
 	rm -f api/dev.db api/kubeconfig.yaml
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
-	find . -type d -name .mypy_cache -prune -exec rm -rf {} +
 	find . -type f -name '*.py[co]' -delete
 
 

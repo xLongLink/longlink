@@ -54,9 +54,6 @@ async def create_compute_infrastructure(
         )
         session.add_all([compute_registry, database_registry, storage_registry])
         await session.commit()
-        await session.refresh(compute_registry)
-        await session.refresh(database_registry)
-        await session.refresh(storage_registry)
         return compute_registry, database_registry, storage_registry
 
 

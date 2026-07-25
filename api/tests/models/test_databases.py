@@ -1,6 +1,6 @@
+import pytest
 from uuid import uuid4
 from datetime import UTC, datetime
-import pytest
 from pydantic import ValidationError
 from src.models.types import DatabaseSSLMode
 from src.models.databases import DatabaseRegistryCreate, DatabaseRegistryResponse

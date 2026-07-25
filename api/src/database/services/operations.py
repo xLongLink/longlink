@@ -35,7 +35,7 @@ async def reject_platform_downgrade() -> None:
             .all()
         )
         operation_versions = (await session.execute(select(Operation.platform_version).distinct())).scalars().all()
-    versions = [version for version in (*compute_versions, *operation_versions) if version is not None]
+    versions = [*compute_versions, *operation_versions]
     if not versions:
         return
     latest_version = latest_platform_version(*versions)

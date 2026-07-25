@@ -23,7 +23,6 @@ async def create_compute(slug: str) -> ComputeRegistry:
         )
         session.add(compute)
         await session.commit()
-        await session.refresh(compute)
         return compute
 
 

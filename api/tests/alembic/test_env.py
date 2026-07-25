@@ -80,33 +80,12 @@ class _FakeEngine:
         """Dispose the fake engine."""
 
 
-@pytest.mark.parametrize(
-    ("database_url", "expected_configured_url", "expected_engine_url"),
-    [
-        pytest.param(
-            "mysql://longlink:secret@db.longlink.internal:3306/longlink",
-            "mysql://longlink:secret@db.longlink.internal:3306/longlink",
-            "mysql+aiomysql://longlink:secret@db.longlink.internal:3306/longlink",
-            id="mysql",
-        ),
-        pytest.param(
-            "postgresql+psycopg://longlink:sec%40ret@db.longlink.internal:5432/longlink?sslmode=require&application_name=longlink",
-            "postgresql+psycopg://longlink:sec%%40ret@db.longlink.internal:5432/longlink?sslmode=require&application_name=longlink",
-            "postgresql+asyncpg://longlink:sec%40ret@db.longlink.internal:5432/longlink?application_name=longlink&ssl=require",
-            id="postgresql",
-        ),
-    ],
-)
-def test_alembic_normalizes_database_urls(
-    monkeypatch: pytest.MonkeyPatch,
-    database_url: str,
-    expected_configured_url: str,
-    expected_engine_url: str,
-) -> None:
-    """Normalize supported database URLs to their asynchronous drivers."""
+def test_alembic_normalizes_postgresql_urls(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Normalize PostgreSQL database URLs to the asynchronous driver."""
 
     # Arrange
     captured: dict[str, object] = {}
+    database_url = "postgresql+psycopg://longlink:sec%40ret@db.longlink.internal:5432/longlink?sslmode=require&application_name=longlink"
 
     def fake_is_offline_mode() -> bool:
         """Select Alembic's online migration path."""
@@ -147,7 +126,11 @@ def test_alembic_normalizes_database_urls(
 
     # Assert
     assert captured == {
-        "configured_url": expected_configured_url,
-        "engine_url": str(make_url(expected_engine_url)),
+        "configured_url": "postgresql+psycopg://longlink:sec%%40ret@db.longlink.internal:5432/longlink?sslmode=require&application_name=longlink",
+        "engine_url": str(
+            make_url(
+                "postgresql+asyncpg://longlink:sec%40ret@db.longlink.internal:5432/longlink?application_name=longlink&ssl=require"
+            )
+        ),
         "engine_options": {"poolclass": module.pool.NullPool},
     }

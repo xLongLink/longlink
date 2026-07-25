@@ -1,8 +1,8 @@
 from uuid import UUID
+from httpx2 import AsyncClient
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
-from fastapi.testclient import TestClient
 from src.database.session import get_session
 from src.database.services import operations, applications, organizations
 from src.models.operations import OperationStatus
@@ -11,7 +11,7 @@ from src.database.models.association import UserApplication, UserOrganization
 
 
 async def test_list_organization_apps_returns_app_membership_role(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Return the application-specific role instead of the organization role."""
@@ -52,7 +52,7 @@ async def test_list_organization_apps_returns_app_membership_role(
     client = clients[1]
 
     # Act
-    response = client.get(f"/api/organizations/{organization.id}/applications")
+    response = await client.get(f"/api/organizations/{organization.id}/applications")
 
     # Assert
     assert response.status_code == 200
@@ -63,7 +63,7 @@ async def test_list_organization_apps_returns_app_membership_role(
 
 
 async def test_list_apps_without_organization_returns_all_apps_for_admin(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Return all applications when an admin does not filter by organization."""
@@ -92,7 +92,7 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
     client = clients[0]
 
     # Act
-    response = client.get("/api/applications")
+    response = await client.get("/api/applications")
 
     # Assert
     assert response.status_code == 200
@@ -103,7 +103,7 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
 
 async def test_list_apps_without_organization_requires_admin(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
     """Reject application listing for non-admin users."""
 
@@ -111,7 +111,7 @@ async def test_list_apps_without_organization_requires_admin(
     client = clients[1]
 
     # Act
-    response = client.get("/api/applications")
+    response = await client.get("/api/applications")
 
     # Assert
     assert response.status_code == 403
@@ -119,7 +119,7 @@ async def test_list_apps_without_organization_requires_admin(
 
 
 async def test_list_organization_apps_returns_403_for_non_member(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Reject application listing when the user does not belong to the organization."""
@@ -139,7 +139,7 @@ async def test_list_organization_apps_returns_403_for_non_member(
     client = clients[1]
 
     # Act
-    response = client.get(f"/api/organizations/{organization.id}/applications")
+    response = await client.get(f"/api/organizations/{organization.id}/applications")
 
     # Assert
     assert response.status_code == 403
@@ -147,7 +147,7 @@ async def test_list_organization_apps_returns_403_for_non_member(
 
 
 async def test_create_app_persists_desired_state_and_queues_reconciliation(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Persist Application desired state and return its compute Operation."""
@@ -160,7 +160,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     client = clients[0]
 
     # Act
-    response = client.post(
+    response = await client.post(
         f"/api/organizations/{organization.id}/applications",
         json={
             "name": "dashboard",
@@ -195,7 +195,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
 
 
 async def test_create_app_returns_403_for_regular_member(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Reject application creation when the organization member lacks deployment permissions."""
@@ -220,7 +220,7 @@ async def test_create_app_returns_403_for_regular_member(
     client = clients[1]
 
     # Act
-    response = client.post(
+    response = await client.post(
         f"/api/organizations/{organization.id}/applications",
         json={"name": "dashboard", "image": "ghcr.io/longlink/dashboard:latest"},
     )
@@ -231,7 +231,7 @@ async def test_create_app_returns_403_for_regular_member(
 
 
 async def test_get_app_logs_returns_pod_logs(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
@@ -274,7 +274,7 @@ async def test_get_app_logs_returns_pod_logs(
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/applications/{app.id}/logs")
+    response = await client.get(f"/api/applications/{app.id}/logs")
 
     # Assert
     assert response.status_code == 200
@@ -287,7 +287,7 @@ async def test_get_app_logs_returns_pod_logs(
 
 
 async def test_app_logs_require_maintainer_access(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Reject log access for regular organization members."""
@@ -311,7 +311,7 @@ async def test_app_logs_require_maintainer_access(
     client = clients[1]
 
     # Act
-    response = client.get(f"/api/applications/{app.id}/logs")
+    response = await client.get(f"/api/applications/{app.id}/logs")
 
     # Assert
     assert response.status_code == 403
@@ -319,7 +319,7 @@ async def test_app_logs_require_maintainer_access(
 
 
 async def test_app_logs_return_unavailable_when_backend_fails(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
@@ -358,7 +358,7 @@ async def test_app_logs_return_unavailable_when_backend_fails(
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/applications/{app.id}/logs")
+    response = await client.get(f"/api/applications/{app.id}/logs")
 
     # Assert
     assert response.status_code == 503
@@ -366,7 +366,7 @@ async def test_app_logs_return_unavailable_when_backend_fails(
 
 
 async def test_application_member_routes_list_update_remove_and_reject_missing_members(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Manage simple application roles through the route layer."""
@@ -390,12 +390,14 @@ async def test_application_member_routes_list_update_remove_and_reject_missing_m
     client = clients[0]
 
     # Act
-    list_response = client.get(f"/api/applications/{app.id}/members")
-    create_response = client.patch(f"/api/applications/{app.id}/members/{member.id}", json={"role": "read"})
+    list_response = await client.get(f"/api/applications/{app.id}/members")
+    create_response = await client.patch(f"/api/applications/{app.id}/members/{member.id}", json={"role": "read"})
     created_role = await applications.membership_role(app.id, member.id)
-    remove_response = client.patch(f"/api/applications/{app.id}/members/{member.id}", json={"role": None})
+    remove_response = await client.patch(f"/api/applications/{app.id}/members/{member.id}", json={"role": None})
     removed_role = await applications.membership_role(app.id, member.id)
-    missing_response = client.patch(f"/api/applications/{app.id}/members/{non_member.id}", json={"role": "read"})
+    missing_response = await client.patch(
+        f"/api/applications/{app.id}/members/{non_member.id}", json={"role": "read"}
+    )
 
     # Assert
     assert list_response.status_code == 200
@@ -409,7 +411,7 @@ async def test_application_member_routes_list_update_remove_and_reject_missing_m
 
 
 async def test_application_member_update_rejects_regular_member(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Reject application role changes from users without management access."""
@@ -434,7 +436,7 @@ async def test_application_member_update_rejects_regular_member(
     client = clients[1]
 
     # Act
-    response = client.patch(f"/api/applications/{app.id}/members/{owner.id}", json={"role": "read"})
+    response = await client.patch(f"/api/applications/{app.id}/members/{owner.id}", json={"role": "read"})
 
     # Assert
     assert response.status_code == 403
@@ -442,7 +444,7 @@ async def test_application_member_update_rejects_regular_member(
 
 
 async def test_delete_application_soft_deletes_and_returns_reconciliation_operation(
-    clients: tuple[TestClient, TestClient, TestClient],
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
     """Soft-delete an Application and return its compute Operation."""
@@ -462,7 +464,7 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
     client = clients[0]
 
     # Act
-    response = client.delete(f"/api/applications/{app.id}")
+    response = await client.delete(f"/api/applications/{app.id}")
 
     # Assert
     assert response.status_code == 202

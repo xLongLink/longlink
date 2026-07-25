@@ -40,7 +40,7 @@ async def update(
         if name is not None:
             user.name = name
         if avatar is not None:
-            user.avatar = avatar or ""
+            user.avatar = avatar
         if theme is not None:
             user.theme = theme
         if accent is not None:

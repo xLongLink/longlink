@@ -53,10 +53,6 @@ def database(database_url: str, default_sslmode: DatabaseSSLMode = DatabaseSSLMo
 
         return parsed_url.render_as_string(hide_password=False)
 
-    # MySQL needs an async DBAPI for SQLAlchemy's async engine.
-    if parsed_url.drivername == "mysql" or parsed_url.drivername.startswith("mysql+") and not parsed_url.drivername.endswith("aiomysql"):
-        return parsed_url.set(drivername="mysql+aiomysql").render_as_string(hide_password=False)
-
     return database_url
 
 

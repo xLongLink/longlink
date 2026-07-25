@@ -1,12 +1,14 @@
 import pytest
+from httpx2 import AsyncClient
 from src.models.types import Image
-from fastapi.testclient import TestClient
 from src.models.metadata import LongLinkMetadata, EnvironmentMetadata
 
 IMAGE_REFERENCE = "ghcr.io/longlink/dashboard:latest"
 
 
-def test_inspect_image_returns_longlink_metadata(clients: tuple[TestClient, TestClient, TestClient], monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_inspect_image_returns_longlink_metadata(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Return name, description, and environment metadata for an image."""
 
     # Arrange
@@ -40,7 +42,7 @@ def test_inspect_image_returns_longlink_metadata(clients: tuple[TestClient, Test
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/image?image={IMAGE_REFERENCE}")
+    response = await client.get(f"/api/image?image={IMAGE_REFERENCE}")
 
     # Assert
     assert response.status_code == 200
@@ -52,8 +54,8 @@ def test_inspect_image_returns_longlink_metadata(clients: tuple[TestClient, Test
     assert payload["environments"][0]["required"] is True
 
 
-def test_inspect_image_returns_404_when_metadata_missing(
-    clients: tuple[TestClient, TestClient, TestClient], monkeypatch: pytest.MonkeyPatch
+async def test_inspect_image_returns_404_when_metadata_missing(
+    clients: tuple[AsyncClient, AsyncClient, AsyncClient], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Return a not-found error when the image has no LongLink metadata."""
 
@@ -68,18 +70,18 @@ def test_inspect_image_returns_404_when_metadata_missing(
     client = clients[0]
 
     # Act
-    response = client.get(f"/api/image?image={IMAGE_REFERENCE}")
+    response = await client.get(f"/api/image?image={IMAGE_REFERENCE}")
 
     # Assert
     assert response.status_code == 404
     assert response.json() == {"detail": "Image metadata not found"}
 
 
-def test_inspect_image_rejects_invalid_image_reference(clients: tuple[TestClient, TestClient, TestClient]) -> None:
+async def test_inspect_image_rejects_invalid_image_reference(clients: tuple[AsyncClient, AsyncClient, AsyncClient]) -> None:
     """Reject malformed image references before image inspection runs."""
 
     # Act
-    response = clients[0].get("/api/image?image=longlink/dashboard")
+    response = await clients[0].get("/api/image?image=longlink/dashboard")
 
     # Assert
     assert response.status_code == 422
