@@ -13,6 +13,13 @@ class OperationStatus(StrEnum):
     scheduled = "scheduled"
 
 
+class ReconciliationScope(StrEnum):
+    """Select Platform-only work or Application work with its Platform dependencies."""
+
+    platform = "platform"
+    application = "application"
+
+
 class OperationResponse(BaseModel):
     """Expose asynchronous reconciliation for one compute target's desired state."""
 
@@ -25,6 +32,7 @@ class OperationResponse(BaseModel):
     compute_id: UUID
 
     # State
+    scope: ReconciliationScope
     status: OperationStatus
     attempt_count: int
     platform_version: str

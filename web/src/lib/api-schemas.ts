@@ -195,6 +195,7 @@ export const apiComputeRegistrySchema = z.object({
 export const apiOperationSchema = z.object({
     id: z.string(),
     compute_id: z.string(),
+    scope: z.enum(['platform', 'application']),
     status: z.enum(['scheduled', 'active', 'completed', 'failed']),
     platform_version: z.string(),
     attempt_count: z.number().int().nonnegative(),

@@ -8,8 +8,9 @@ from src.models.types import Image
 from src.models.statuses import ApplicationStatus, OrganizationStatus
 from src.database.services import compute, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
+from src.models.operations import ReconciliationScope
 from src.kubernetes.gateway import GatewayTLSMaterial
-from src.kubernetes.reconcile import DesiredCompute, DesiredApplication, DesiredOrganization
+from src.kubernetes.reconcile import DesiredCompute, DesiredApplication, DesiredGatewayRoute, DesiredOrganization
 from src.adapters.storage.base import Storage
 from src.models.infrastructure import exoscale_zone
 from src.database.models.operations import Operation
@@ -45,7 +46,7 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
         if not staged:
             raise jobs.OperationLeaseLost(operation.id)
 
-    # Load the compute reconciliation root and complete tenant snapshot.
+    # Load the compute reconciliation root and tenant rows needed by the requested scope.
     compute_registry = await compute.get(operation.compute_id, include_deleted=True)
     if compute_registry is None:
         return jobs.fail("Compute registry not found")
@@ -59,132 +60,158 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
     application_rows = await applications.for_compute(compute_registry.id)
 
     try:
-        # Resolve each Organization's immutable database and storage assignments before provider writes.
-        databases: dict[UUID, adapters.Postgres] = {}
-        object_storages: dict[UUID, Storage] = {}
-        for organization in organization_rows:
-            database_registry = organization.database
-            storage_registry = organization.storage
-            databases[organization.id] = adapters.Postgres(
-                database_registry.host,
-                database_registry.port,
-                database_registry.username,
-                database_registry.password,
-                database_registry.sslmode,
-            )
-            object_storages[organization.id] = adapters.storage(storage_registry)
-
-        # Prepare active Organization and Application provider resources before rendering Kubernetes state.
+        # Build the shared route snapshot without provisioning Application resources during Platform-only work.
+        application_scope = operation.scope == ReconciliationScope.application
+        active_organizations = {item.id: item for item in organization_rows if item.deleted_at is None}
         desired_organizations: list[DesiredOrganization] = []
         desired_applications: list[DesiredApplication] = []
-        active_organizations = {item.id: item for item in organization_rows if item.deleted_at is None}
+        desired_routes: list[DesiredGatewayRoute] = []
+        pending_applications: list[UUID] = []
 
-        for organization in sorted(active_organizations.values(), key=lambda item: item.slug):
-            db = databases[organization.id]
-            object_storage = object_storages[organization.id]
-            await fence()
-            await db.prepare_organization_database(organization.id, organization.shared_schema_url)
-            if organization.status != OrganizationStatus.running:
-                await fence()
-                await organizations.set_runtime(organization.id, OrganizationStatus.creating)
-            await fence()
-            await projections.sync_organization_users(organization)
-            await fence()
-            bucket = names.organization_bucket(organization.id)
-            await object_storage.create(bucket)
-            await fence()
-            await object_storage.create_prefix(bucket, names.shared_storage_prefix())
-            desired_organizations.append(DesiredOrganization(id=organization.id, slug=organization.slug))
-
-        pending_applications = []
-        for application in sorted(
-            (item for item in application_rows if item.deleted_at is None),
-            key=lambda item: (item.organization_id, item.slug),
-        ):
-            organization = active_organizations.get(application.organization_id)
-            if organization is None:
-                continue
-            db = databases[organization.id]
-            object_storage = object_storages[organization.id]
-            storage_registry = organization.storage
-
-            # Resolve and persist the immutable image before creating provider credentials.
-            if application.digest is None:
-                metadata = await images.metadata(Image(application.image), application.envs)
-                if metadata is None:
-                    await applications.set_status(application.id, ApplicationStatus.failed)
-                    continue
-                updated = await applications.update_runtime(
-                    application.id,
-                    image=cast(str, metadata.image),
-                    sdk=metadata.sdk,
-                    digest=metadata.digest,
-                    version=metadata.version,
-                    description=application.description,
-                    icon=application.icon,
-                    envs=application.envs,
-                    user=None,
+        # Application-scoped work resolves immutable provider assignments before provider writes.
+        databases: dict[UUID, adapters.Postgres] = {}
+        object_storages: dict[UUID, Storage] = {}
+        if application_scope:
+            desired_organizations.extend(
+                DesiredOrganization(id=organization.id, slug=organization.slug)
+                for organization in sorted(active_organizations.values(), key=lambda item: item.slug)
+            )
+            for organization in organization_rows:
+                database_registry = organization.database
+                storage_registry = organization.storage
+                databases[organization.id] = adapters.Postgres(
+                    database_registry.host,
+                    database_registry.port,
+                    database_registry.username,
+                    database_registry.password,
+                    database_registry.sslmode,
                 )
-                if updated is None:
-                    continue
-                application = updated
+                object_storages[organization.id] = adapters.storage(storage_registry)
 
-            # Ensure stable database and storage credentials before constructing the exact runtime Secret.
-            await fence()
-            connection = await db.schema(organization.id, application.id, application.database_password)
-            bucket = names.organization_bucket(organization.id)
-            prefix = names.application_storage_prefix(application.id)
-            shared_prefix = names.shared_storage_prefix()
-
-            # Keep the UUID-named Application folder visible even before it contains runtime data.
-            await fence()
-            await object_storage.create_prefix(bucket, prefix)
-            credentials = applications.storage_credentials(application)
-            if credentials is None:
+            # Prepare active Organization resources before rendering Application Kubernetes state.
+            for organization in sorted(active_organizations.values(), key=lambda item: item.slug):
+                db = databases[organization.id]
+                object_storage = object_storages[organization.id]
                 await fence()
-                provisioned = await applications.provision_storage_credentials(
-                    application.id,
-                    operation.id,
-                    attempt_count,
-                    operation.platform_version,
-                    lambda: object_storage.credentials(
-                        application.id.hex,
-                        bucket,
-                        (shared_prefix,),
-                        prefix,
-                    ),
-                    lambda generated: object_storage.discard(generated["access_key_id"]),
-                )
-                if provisioned is None:
-                    raise jobs.OperationLeaseLost(operation.id)
-                application, credentials = provisioned
+                await db.prepare_organization_database(organization.id, organization.shared_schema_url)
+                if organization.status != OrganizationStatus.running:
+                    await fence()
+                    await organizations.set_runtime(organization.id, OrganizationStatus.creating)
+                await fence()
+                await projections.sync_organization_users(organization)
+                await fence()
+                bucket = names.organization_bucket(organization.id)
+                await object_storage.create(bucket)
+                await fence()
+                await object_storage.create_prefix(bucket, names.shared_storage_prefix())
 
-            envs = {
-                **application.envs,
-                "LONGLINK_ENV": "production",
-                "LONGLINK_DATABASE_HOST": connection["host"],
-                "LONGLINK_DATABASE_NAME": connection["database_name"],
-                "LONGLINK_DATABASE_PASSWORD": connection["password"],
-                "LONGLINK_DATABASE_PORT": str(connection["port"]),
-                "LONGLINK_DATABASE_SCHEMA": application.id.hex,
-                "LONGLINK_DATABASE_SSLMODE": connection["sslmode"],
-                "LONGLINK_DATABASE_USERNAME": connection["username"],
-                "LONGLINK_STORAGE_BUCKET": bucket,
-                "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.runtime_endpoint_url,
-                "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
-                "LONGLINK_STORAGE_PREFIX": prefix,
-                "LONGLINK_STORAGE_REGION": exoscale_zone(storage_registry.runtime_endpoint_url),
-                "LONGLINK_STORAGE_SHARED_PREFIX": shared_prefix,
-                "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
-            }
-            desired_applications.append(
-                DesiredApplication(
+            # Prepare active Application provider resources and exact runtime inputs.
+            for application in sorted(
+                (item for item in application_rows if item.deleted_at is None),
+                key=lambda item: (item.organization_id, item.slug),
+            ):
+                organization = active_organizations.get(application.organization_id)
+                if organization is None:
+                    continue
+                db = databases[organization.id]
+                object_storage = object_storages[organization.id]
+                storage_registry = organization.storage
+
+                # Resolve and persist the immutable image before creating provider credentials.
+                if application.digest is None:
+                    metadata = await images.metadata(Image(application.image), application.envs)
+                    if metadata is None:
+                        await applications.set_status(application.id, ApplicationStatus.failed)
+                        continue
+                    updated = await applications.update_runtime(
+                        application.id,
+                        image=cast(str, metadata.image),
+                        sdk=metadata.sdk,
+                        digest=metadata.digest,
+                        version=metadata.version,
+                        description=application.description,
+                        icon=application.icon,
+                        envs=application.envs,
+                        user=None,
+                    )
+                    if updated is None:
+                        continue
+                    application = updated
+
+                # Ensure stable database and storage credentials before constructing the exact runtime Secret.
+                await fence()
+                connection = await db.schema(organization.id, application.id, application.database_password)
+                bucket = names.organization_bucket(organization.id)
+                prefix = names.application_storage_prefix(application.id)
+                shared_prefix = names.shared_storage_prefix()
+
+                # Keep the UUID-named Application folder visible even before it contains runtime data.
+                await fence()
+                await object_storage.create_prefix(bucket, prefix)
+                credentials = applications.storage_credentials(application)
+                if credentials is None:
+                    await fence()
+                    provisioned = await applications.provision_storage_credentials(
+                        application.id,
+                        operation.id,
+                        attempt_count,
+                        operation.platform_version,
+                        lambda: object_storage.credentials(
+                            application.id.hex,
+                            bucket,
+                            (shared_prefix,),
+                            prefix,
+                        ),
+                        lambda generated: object_storage.discard(generated["access_key_id"]),
+                    )
+                    if provisioned is None:
+                        raise jobs.OperationLeaseLost(operation.id)
+                    application, credentials = provisioned
+
+                envs = {
+                    **application.envs,
+                    "LONGLINK_ENV": "production",
+                    "LONGLINK_DATABASE_HOST": connection["host"],
+                    "LONGLINK_DATABASE_NAME": connection["database_name"],
+                    "LONGLINK_DATABASE_PASSWORD": connection["password"],
+                    "LONGLINK_DATABASE_PORT": str(connection["port"]),
+                    "LONGLINK_DATABASE_SCHEMA": application.id.hex,
+                    "LONGLINK_DATABASE_SSLMODE": connection["sslmode"],
+                    "LONGLINK_DATABASE_USERNAME": connection["username"],
+                    "LONGLINK_STORAGE_BUCKET": bucket,
+                    "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.runtime_endpoint_url,
+                    "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
+                    "LONGLINK_STORAGE_PREFIX": prefix,
+                    "LONGLINK_STORAGE_REGION": exoscale_zone(storage_registry.runtime_endpoint_url),
+                    "LONGLINK_STORAGE_SHARED_PREFIX": shared_prefix,
+                    "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
+                }
+                desired_applications.append(
+                    DesiredApplication(
+                        id=application.id,
+                        organization_id=organization.id,
+                        namespace=organization.slug,
+                        image=application.image,
+                        envs=envs,
+                    )
+                )
+
+            desired_routes.extend(
+                DesiredGatewayRoute(id=application.id, namespace=application.namespace)
+                for application in desired_applications
+            )
+
+        # Platform-only work carries only the identities needed to preserve gateway routes.
+        else:
+            desired_routes.extend(
+                DesiredGatewayRoute(
                     id=application.id,
-                    organization_id=organization.id,
-                    namespace=organization.slug,
-                    image=application.image,
-                    envs=envs,
+                    namespace=active_organizations[application.organization_id].slug,
                 )
+                for application in sorted(application_rows, key=lambda item: (item.organization_id, item.slug))
+                if application.deleted_at is None
+                and application.digest is not None
+                and application.organization_id in active_organizations
             )
 
         # Reuse persisted TLS identity so ordinary reconciliation remains idempotent.
@@ -201,52 +228,55 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
             )
         desired = DesiredCompute(
             id=compute_registry.id,
+            routes=tuple(desired_routes),
             organizations=tuple(desired_organizations),
             applications=tuple(desired_applications),
             deleting=compute_registry.deleted_at is not None,
+            scope=operation.scope,
         )
         cluster = Kubernetes(compute_registry.kubeconfig)
         result = await cluster.reconcile(desired, compute_registry.proxy_secret, existing_tls, fence, stage_tls)
 
-        # Workload readiness is observed only after the gateway accepts the exact desired route set.
-        for application in desired_applications:
-            await fence()
-            if await cluster.applications.ready(str(application.id)):
-                await applications.set_status(application.id, ApplicationStatus.running)
-            else:
-                pending_applications.append(application.id)
-        for organization in active_organizations.values():
-            await fence()
-            await organizations.set_runtime(organization.id, OrganizationStatus.running)
+        # Only Application-scoped work observes workloads or performs irreversible provider cleanup.
+        if application_scope:
+            for application in desired_applications:
+                await fence()
+                if await cluster.applications.ready(str(application.id)):
+                    await applications.set_status(application.id, ApplicationStatus.running)
+                else:
+                    pending_applications.append(application.id)
+            for organization in active_organizations.values():
+                await fence()
+                await organizations.set_runtime(organization.id, OrganizationStatus.running)
 
-        # Kubernetes pruning precedes irreversible provider cleanup for tombstoned resources.
-        for application in application_rows:
-            if application.deleted_at is None:
-                continue
-            organization = next((item for item in organization_rows if item.id == application.organization_id), None)
-            if organization is not None:
+            # Kubernetes pruning precedes irreversible provider cleanup for tombstoned resources.
+            for application in application_rows:
+                if application.deleted_at is None:
+                    continue
+                organization = next((item for item in organization_rows if item.id == application.organization_id), None)
+                if organization is not None:
+                    db = databases[organization.id]
+                    object_storage = object_storages[organization.id]
+                    await fence()
+                    await db.delete_schema(organization.id, application.id)
+                    bucket = names.organization_bucket(organization.id)
+                    await fence()
+                    await object_storage.revoke(application.id.hex)
+                    await fence()
+                    await object_storage.delete_prefix(bucket, names.application_storage_prefix(application.id))
+                await fence()
+                await applications.purge(application.id)
+            for organization in organization_rows:
+                if organization.deleted_at is None:
+                    continue
                 db = databases[organization.id]
                 object_storage = object_storages[organization.id]
                 await fence()
-                await db.delete_schema(organization.id, application.id)
-                bucket = names.organization_bucket(organization.id)
+                await db.delete_database(organization.id)
                 await fence()
-                await object_storage.revoke(application.id.hex)
+                await object_storage.delete(names.organization_bucket(organization.id))
                 await fence()
-                await object_storage.delete_prefix(bucket, names.application_storage_prefix(application.id))
-            await fence()
-            await applications.purge(application.id)
-        for organization in organization_rows:
-            if organization.deleted_at is None:
-                continue
-            db = databases[organization.id]
-            object_storage = object_storages[organization.id]
-            await fence()
-            await db.delete_database(organization.id)
-            await fence()
-            await object_storage.delete(names.organization_bucket(organization.id))
-            await fence()
-            await organizations.purge(organization.id)
+                await organizations.purge(organization.id)
 
         if pending_applications:
             if attempt_count >= jobs.OPERATION_ATTEMPT_LIMIT:

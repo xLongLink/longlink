@@ -1,10 +1,10 @@
+import { useEffect, useState } from 'react';
 import { Text } from '@astryxdesign/core/Text';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Section } from '@astryxdesign/core/Section';
 import { Heading } from '@astryxdesign/core/Heading';
-import { useEffect, useState, type CSSProperties } from 'react';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import {
     Activity,
@@ -43,6 +43,7 @@ import { Pydantic } from '@/svg/Pydantic';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { Wordmark } from '@/components/Wordmark';
+import { HeroGlobe } from '@/platform/HeroGlobe';
 import { CliWorkflowConnector } from '@/svg/CliWorkflowConnector';
 import { WorkNetworkConnections } from '@/svg/WorkNetworkConnections';
 
@@ -467,7 +468,7 @@ function IntegrationScale() {
     }, []);
 
     return (
-        <Section variant="transparent" padding={6} paddingBlock={10}>
+        <Section className="relative z-10 bg-transparent" variant="transparent" padding={6} paddingBlock={10}>
             <Stack
                 className="relative mx-auto pb-10 pt-6 text-center sm:pb-16 sm:pt-10"
                 width="100%"
@@ -520,57 +521,8 @@ export default function Home() {
         <div className="min-h-screen overflow-hidden">
             <Navbar />
             <main className="relative -mt-[84px] flex min-h-screen w-full items-center justify-center px-6 pb-10 pt-28">
-                <div
-                    aria-hidden="true"
-                    className="absolute inset-0 overflow-hidden"
-                    style={
-                        {
-                            '--horizon-accent': 'var(--color-accent)',
-                            '--horizon-background': 'var(--color-background-body)',
-                        } as CSSProperties
-                    }
-                >
-                    <div
-                        className="absolute inset-0"
-                        style={
-                            {
-                                background:
-                                    'radial-gradient(68% 18% at 50% 74%, color-mix(in oklch, var(--horizon-accent) 34%, var(--horizon-background) 66%) 0 4%, color-mix(in oklch, var(--horizon-accent) 20%, transparent) 24%, transparent 72%), radial-gradient(98% 30% at 50% 82%, color-mix(in oklch, var(--horizon-accent) 20%, var(--horizon-background) 80%) 0 8%, color-mix(in oklch, var(--horizon-accent) 16%, transparent) 34%, transparent 76%), linear-gradient(180deg, var(--horizon-background) 0 54%, color-mix(in oklch, var(--horizon-accent) 10%, var(--horizon-background)) 76%, var(--horizon-background) 100%)',
-                            } as CSSProperties
-                        }
-                    />
-                    <div
-                        className="absolute"
-                        style={
-                            {
-                                background: 'var(--horizon-background)',
-                                boxShadow:
-                                    '0 -1px 0 color-mix(in oklch, var(--horizon-accent) 50%, var(--horizon-background) 50%), 0 -18px 54px color-mix(in oklch, var(--horizon-accent) 36%, transparent), 0 -44px 130px color-mix(in oklch, var(--horizon-accent) 18%, transparent)',
-                                right: '-16%',
-                                bottom: '-17%',
-                                left: '-16%',
-                                height: '45%',
-                                borderRadius: '50% 50% 0 0',
-                                transform: 'perspective(900px) rotateX(12deg)',
-                                transformOrigin: 'center bottom',
-                            } as CSSProperties
-                        }
-                    />
-                    <div
-                        className="absolute"
-                        style={
-                            {
-                                right: '8%',
-                                bottom: '11%',
-                                left: '8%',
-                                height: '24%',
-                                background:
-                                    'radial-gradient(50% 54% at 50% 100%, color-mix(in oklch, var(--horizon-accent) 22%, var(--horizon-background) 78%) 0 2%, color-mix(in oklch, var(--horizon-accent) 26%, transparent) 18%, transparent 72%)',
-                                filter: 'blur(22px)',
-                                opacity: 0.9,
-                            } as CSSProperties
-                        }
-                    />
+                <div aria-hidden="true" className="homepage-hero-horizon absolute inset-0 overflow-visible">
+                    <HeroGlobe />
                 </div>
                 <section className="relative z-10 mx-auto flex w-full max-w-5xl -translate-y-16 flex-col items-center text-center sm:-translate-y-24">
                     <div className="space-y-5">
@@ -595,11 +547,9 @@ export default function Home() {
                         </p>
                     </div>
                 </section>
-
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-24 bg-gradient-to-t from-body to-transparent" />
             </main>
             <IntegrationScale />
-            <section className="relative z-10 bg-body px-6 py-10">
+            <section className="relative z-10 px-6 py-10">
                 <div className="mx-auto grid w-full max-w-[1000px] auto-rows-[minmax(190px,auto)] grid-cols-1 gap-3 md:grid-cols-6">
                     {homepageCards.map(({ title, description, details, layoutClassName, variant }) => {
                         const isXmlCard = variant === 'xml';
@@ -611,7 +561,7 @@ export default function Home() {
                         return (
                             <article
                                 key={title}
-                                className={`homepage-feature-card group relative overflow-hidden rounded-lg border border-border bg-card p-5 text-primary ${layoutClassName}`}
+                                className={`homepage-feature-card group relative overflow-hidden rounded-lg border border-border bg-card/65 p-5 text-primary ${layoutClassName}`}
                             >
                                 <div className="relative flex h-full flex-col justify-between gap-6">
                                     <div className="space-y-4">

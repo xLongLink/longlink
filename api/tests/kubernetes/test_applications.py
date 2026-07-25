@@ -31,7 +31,8 @@ def test_application_manifests_include_labels_annotations_and_secret_envs() -> N
     assert manifests.secret["stringData"] == {"API_KEY": "secret", "PORT": "8000"}
     assert labels["longlink.io/application-id"] == str(application.id)
     assert labels["longlink.io/organization-id"] == str(application.organization_id)
-    assert annotations["longlink.io/platform-version"] == "v1.2.3"
+    assert labels["longlink.io/resource-scope"] == "application"
+    assert set(annotations) == {"longlink.io/runtime-revision"}
     assert manifests.deployment["kind"] == "Deployment"
     assert manifests.service["kind"] == "Service"
 
@@ -50,5 +51,6 @@ def test_organization_manifests_include_namespace_and_network_policy() -> None:
     assert manifests.namespace["kind"] == "Namespace"
     assert manifests.namespace["metadata"]["name"] == "acme"
     assert manifests.namespace["metadata"]["labels"]["longlink.io/organization-id"] == str(organization.id)
+    assert manifests.namespace["metadata"]["labels"]["longlink.io/resource-scope"] == "application"
     assert manifests.network_policy["kind"] == "NetworkPolicy"
     assert manifests.network_policy["metadata"]["namespace"] == "acme"

@@ -2,7 +2,7 @@ import yaml
 import pytest
 from uuid import UUID
 from src.kubernetes.gateway import Gateway, GatewayTLSMaterial
-from src.kubernetes.reconcile import DesiredApplication
+from src.kubernetes.reconcile import DesiredGatewayRoute
 
 pytestmark = pytest.mark.no_db
 
@@ -11,25 +11,19 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
     """Render Envoy routes from desired Applications without cluster discovery."""
 
     # Arrange
-    applications = (
-        DesiredApplication(
+    routes = (
+        DesiredGatewayRoute(
             id=UUID("20000000-0000-4000-8000-000000000002"),
-            organization_id=UUID("10000000-0000-4000-8000-000000000002"),
             namespace="beta",
-            image="ghcr.io/longlink/beta@sha256:" + "b" * 64,
-            envs={},
         ),
-        DesiredApplication(
+        DesiredGatewayRoute(
             id=UUID("20000000-0000-4000-8000-000000000001"),
-            organization_id=UUID("10000000-0000-4000-8000-000000000001"),
             namespace="acme",
-            image="ghcr.io/longlink/acme@sha256:" + "a" * 64,
-            envs={},
         ),
     )
 
     # Act
-    config = yaml.safe_load(Gateway().config(applications))
+    config = yaml.safe_load(Gateway().config(routes))
 
     # Assert
     routes = config["static_resources"]["listeners"][0]["filter_chains"][0]["filters"][0]["typed_config"]["route_config"]["virtual_hosts"][0]["routes"]
@@ -60,6 +54,7 @@ def test_gateway_manifests_include_exact_auth_tls_and_config_resources() -> None
     assert manifests.auth_secret["stringData"] == {"gateway-secret": "proxy-secret"}
     assert manifests.tls_secret["stringData"] == {"ca.crt": "ca", "tls.crt": "certificate", "tls.key": "private-key"}
     assert manifests.config_map["data"] == {"envoy.yaml": "envoy-config"}
+    assert manifests.deployment["metadata"]["labels"]["longlink.io/resource-scope"] == "platform"
     assert manifests.deployment["metadata"]["annotations"]["longlink.io/runtime-revision"] == manifests.runtime_revision
     assert manifests.service["metadata"]["annotations"]["longlink.io/runtime-revision"] == manifests.runtime_revision
     container = manifests.deployment["spec"]["template"]["spec"]["containers"][0]

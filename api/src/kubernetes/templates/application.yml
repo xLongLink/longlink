@@ -16,6 +16,7 @@ metadata:
     longlink.io/application-id: $application_id
     longlink.io/compute-id: "$compute_id"
     longlink.io/organization-id: "$organization_id"
+    longlink.io/resource-scope: application
 spec:
   replicas: 1
   strategy:
@@ -26,9 +27,7 @@ spec:
   template:
     metadata:
       annotations:
-        longlink.io/platform-version: "$platform_version"
         longlink.io/runtime-revision: "$runtime_revision"
-        longlink.io/template-revision: "$template_revision"
       labels:
         app: $application_id
         app.kubernetes.io/managed-by: longlink-platform
@@ -103,6 +102,7 @@ metadata:
     longlink.io/application-id: $application_id
     longlink.io/compute-id: "$compute_id"
     longlink.io/organization-id: "$organization_id"
+    longlink.io/resource-scope: application
 spec:
   type: ClusterIP
   selector:

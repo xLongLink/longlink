@@ -11,6 +11,7 @@ from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.database.services import operations
+from src.models.operations import ReconciliationScope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -247,7 +248,12 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
         if compute is None:
             raise RuntimeError("Organization compute registry not found")
         compute.updated_id = user.id
-        await operations.enqueue_in_session(session, compute.id, locked_compute=compute)
+        await operations.enqueue_in_session(
+            session,
+            compute.id,
+            ReconciliationScope.application,
+            locked_compute=compute,
+        )
         await session.commit()
         return True
 
@@ -346,7 +352,12 @@ async def create(
 
         # Queue reconciliation and translate unique conflicts from autoflush or commit.
         try:
-            operation = await operations.enqueue_in_session(session, compute.id, locked_compute=compute)
+            operation = await operations.enqueue_in_session(
+                session,
+                compute.id,
+                ReconciliationScope.application,
+                locked_compute=compute,
+            )
             await session.commit()
 
         # Keep Organization uniqueness collisions at the service boundary as an API conflict.
@@ -486,7 +497,12 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
 
         # Tombstones and their reconciliation request commit atomically.
         compute.updated_id = user.id
-        operation = await operations.enqueue_in_session(session, compute.id, locked_compute=compute)
+        operation = await operations.enqueue_in_session(
+            session,
+            compute.id,
+            ReconciliationScope.application,
+            locked_compute=compute,
+        )
 
         await session.commit()
         statement = (

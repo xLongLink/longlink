@@ -6,6 +6,7 @@ from src.version import platform_version_key, latest_platform_version
 from src.environments import env
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
+from src.models.operations import ReconciliationScope
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
@@ -50,9 +51,12 @@ async def reject_platform_downgrade() -> None:
 async def enqueue_in_session(
     session: AsyncSession,
     compute_id: UUID,
+    scope: ReconciliationScope,
     locked_compute: ComputeRegistry | None = None,
+    *,
+    desired_change: bool = True,
 ) -> Operation:
-    """Coalesce compute reconciliation inside the caller's desired-state transaction.
+    """Coalesce scoped compute reconciliation inside the caller's desired-state transaction.
 
     Compute locking keeps the release target monotonic and queueing atomic across LongLink Platform replicas. Callers
     that already locked the compute in this transaction can supply it to avoid selecting the same row again.
@@ -87,9 +91,16 @@ async def enqueue_in_session(
         )
     ).scalar_one_or_none()
 
-    # New desired state supersedes active attempts and removes inherited retry delays.
+    # Application reconciliation includes Platform dependencies and dominates coalesced Platform-only work.
+    effective_scope = scope
+    if existing is not None and existing.scope == ReconciliationScope.application:
+        effective_scope = ReconciliationScope.application
+
+    # Desired-state changes and release upgrades supersede active attempts and remove inherited retry delays.
     if existing is not None:
         version_changed = platform_version_key(platform_version) > platform_version_key(existing.platform_version)
+        if not desired_change and not version_changed:
+            return existing
         now = utcnow()
 
         # A fresh desired target receives a complete attempt budget after the previous row exhausted its own.
@@ -99,6 +110,7 @@ async def enqueue_in_session(
             existing.stopped_at = now
             existing.lease_expires_at = None
         else:
+            existing.scope = effective_scope
             if version_changed:
                 existing.platform_version = platform_version
             existing.scheduled_at = now
@@ -108,6 +120,7 @@ async def enqueue_in_session(
 
     # New work starts ready for the Platform release that owns the compute target.
     operation = Operation(
+        scope=effective_scope,
         platform_version=platform_version,
         compute_id=compute_id,
         scheduled_at=utcnow(),
@@ -117,14 +130,40 @@ async def enqueue_in_session(
     return operation
 
 
-async def enqueue(compute_id: UUID) -> Operation:
+async def enqueue(compute_id: UUID, scope: ReconciliationScope = ReconciliationScope.application) -> Operation:
     """Queue one compute reconciliation in a dedicated transaction."""
 
     # Convenience callers use the same transactional enqueue implementation as domain services.
     async with session_scope() as session:
-        operation = await enqueue_in_session(session, compute_id)
+        operation = await enqueue_in_session(session, compute_id, scope)
         await session.commit()
         return operation
+
+
+async def enqueue_platform_reconciliation() -> None:
+    """Queue release reconciliation for computes not yet observed at this Platform release."""
+
+    # Serialize concurrent API replica startup through stable compute locks.
+    async with session_scope() as session:
+        statement = (
+            select(ComputeRegistry)
+            .where(or_(ComputeRegistry.version.is_(None), ComputeRegistry.version != env.VERSION))
+            .order_by(ComputeRegistry.id)
+            .with_for_update()
+        )
+        computes = (await session.execute(statement)).scalars().all()
+
+        # Repeated startup scans preserve current work, while deleted computes retain complete cleanup scope.
+        for compute in computes:
+            scope = ReconciliationScope.application if compute.deleted_at is not None else ReconciliationScope.platform
+            await enqueue_in_session(
+                session,
+                compute.id,
+                scope,
+                locked_compute=compute,
+                desired_change=False,
+            )
+        await session.commit()
 
 
 async def claim_next() -> Operation | None:

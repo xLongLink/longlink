@@ -7,6 +7,7 @@ from copy import deepcopy
 from typing import Any, TypeVar
 from kr8s.asyncio import Api
 from kr8s.asyncio.objects import Secret, APIObject, object_from_spec
+from src.models.operations import ReconciliationScope
 
 KubernetesDocument = dict[str, Any]
 KubernetesResource = TypeVar("KubernetesResource", bound=APIObject)
@@ -14,6 +15,7 @@ KubernetesResource = TypeVar("KubernetesResource", bound=APIObject)
 FIELD_MANAGER = "longlink-platform"
 MANAGED_BY_LABEL = "app.kubernetes.io/managed-by"
 COMPUTE_ID_LABEL = "longlink.io/compute-id"
+RESOURCE_SCOPE_LABEL = "longlink.io/resource-scope"
 LONG_LINK_METADATA_PREFIX = "longlink.io/"
 SECRET_REPLACE_ATTEMPTS = 3
 SERVER_METADATA_FIELDS = {
@@ -299,20 +301,19 @@ class KubernetesResources:
         self,
         resource_class: type[KubernetesResource],
         compute_id: str,
+        scope: ReconciliationScope,
         namespace: str | None = None,
     ) -> builtins.list[KubernetesResource]:
-        """List resources only when both LongLink manager and compute labels match.
+        """List resources only when all LongLink ownership labels match."""
 
-        This selector is the first ownership boundary; callers still validate kind-specific identity before mutation.
-        """
-
-        # Both labels are required so another controller's resources cannot be adopted accidentally.
+        # Exact scope selection prevents either reconciliation plane from discovering resources owned by the other.
         return await self.list(
             resource_class,
             namespace,
             {
                 MANAGED_BY_LABEL: FIELD_MANAGER,
                 COMPUTE_ID_LABEL: compute_id,
+                RESOURCE_SCOPE_LABEL: scope.value,
             },
         )
 

@@ -23,6 +23,7 @@ from src.database.services import database as database_service
 from src.database.services import operations
 from src.database.services import applications as application_service
 from src.database.services import organizations as organization_service
+from src.models.operations import ReconciliationScope
 from src.models.applications import ApplicationCreate
 from src.database.models.users import User
 from src.models.infrastructure import exoscale_zone
@@ -211,7 +212,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     if organization is None:
         # Repair an existing compute before a new Organization requires its ready state.
         if not compute_ready:
-            await operations.enqueue(compute_registry.id)
+            await operations.enqueue(compute_registry.id, ReconciliationScope.platform)
             await reconcile_until_complete(compute_registry.id)
             compute_ready = True
         organization, _ = await organization_service.create(
@@ -238,7 +239,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     if application is None:
         # Repair an existing compute before Application creation checks its ready state.
         if not compute_ready:
-            await operations.enqueue(compute_registry.id)
+            await operations.enqueue(compute_registry.id, ReconciliationScope.platform)
             await reconcile_until_complete(compute_registry.id)
         await application_service.create(
             organization.id,
@@ -262,7 +263,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
         )
         if application is None:
             raise RuntimeError("Local sample Application no longer exists")
-        await operations.enqueue(compute_registry.id)
+        await operations.enqueue(compute_registry.id, ReconciliationScope.application)
     await reconcile_until_complete(compute_registry.id)
 
 

@@ -348,6 +348,11 @@ def upgrade() -> None:
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("compute_id", sa.Uuid(), nullable=False),
         sa.Column("failed", sa.Boolean(), nullable=False),
+        sa.Column(
+            "scope",
+            sa.Enum("platform", "application", name="reconciliation_scope_enum", native_enum=False),
+            nullable=False,
+        ),
         sa.Column("attempt_count", sa.Integer(), nullable=False),
         sa.Column("platform_version", sa.String(length=128), nullable=False),
         sa.Column("lease_expires_at", longlink.database.types.UTCDateTime(), nullable=True),

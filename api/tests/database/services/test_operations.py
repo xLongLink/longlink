@@ -4,7 +4,7 @@ from src.environments import env
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.services import operations
-from src.models.operations import OperationStatus
+from src.models.operations import OperationStatus, ReconciliationScope
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
@@ -57,7 +57,7 @@ async def test_operations_service_enqueue_coalesces_and_expires_active_lease() -
 
     # Arrange
     compute = await create_compute("local")
-    first = await operations.enqueue(compute.id)
+    first = await operations.enqueue(compute.id, ReconciliationScope.platform)
     claimed = await operations.claim_next()
     assert claimed is not None
     assert claimed.lease_expires_at is not None
@@ -70,6 +70,7 @@ async def test_operations_service_enqueue_coalesces_and_expires_active_lease() -
 
     # Assert
     assert changed.id == first.id
+    assert changed.scope == ReconciliationScope.application
     assert changed.lease_expires_at is not None
     assert changed.lease_expires_at <= utcnow()
     assert stale_completion is None
@@ -291,7 +292,7 @@ async def test_operations_service_platform_upgrade_supersedes_leased_work(monkey
     # Arrange
     monkeypatch.setattr(env, "VERSION", "v1.0.0")
     compute = await create_compute("local")
-    operation = await operations.enqueue(compute.id)
+    operation = await operations.enqueue(compute.id, ReconciliationScope.platform)
     claimed = await operations.claim_next()
     assert claimed is not None
 
@@ -305,7 +306,9 @@ async def test_operations_service_platform_upgrade_supersedes_leased_work(monkey
 
     # Act
     monkeypatch.setattr(env, "VERSION", "v1.1.0")
-    upgraded = await operations.enqueue(compute.id)
+    await operations.enqueue_platform_reconciliation()
+    await operations.enqueue_platform_reconciliation()
+    upgraded = next(item for item in await operations.fetch() if item.compute_id == compute.id and item.stopped_at is None)
     stale_completion = await operations.complete(operation.id, claimed.attempt_count)
     replacement = await operations.claim_next()
     monkeypatch.setattr(env, "VERSION", "v1.0.0")
@@ -313,6 +316,7 @@ async def test_operations_service_platform_upgrade_supersedes_leased_work(monkey
     # Assert
     assert upgraded.id != operation.id
     assert upgraded.platform_version == "v1.1.0"
+    assert upgraded.scope == ReconciliationScope.platform
     assert upgraded.attempt_count == 0
     assert upgraded.lease_expires_at is None
     assert stale_completion is None

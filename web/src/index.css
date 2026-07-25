@@ -56,6 +56,50 @@
     box-shadow: var(--shadow-low);
 }
 
+.homepage-hero-horizon {
+    --horizon-accent: var(--color-accent);
+    --horizon-background: var(--color-background-body);
+    background: var(--horizon-background);
+}
+
+.homepage-hero-globe {
+    position: absolute;
+    bottom: clamp(-94rem, -74vw, -58rem);
+    left: 50%;
+    width: max(84rem, 112vw);
+    max-width: none;
+    color: var(--horizon-accent);
+    opacity: 0.9;
+    pointer-events: none;
+    transform: translateX(-50%);
+}
+
+@media (max-width: 40rem) {
+    .homepage-hero-globe {
+        bottom: -42rem;
+        width: 68rem;
+    }
+}
+
+.homepage-hero-globe-surface {
+    fill: color-mix(in oklch, var(--horizon-background) 96%, currentColor 4%);
+}
+
+.homepage-hero-globe-land {
+    fill: none;
+    opacity: 0.72;
+    stroke: currentColor;
+    stroke-width: 1.05;
+    vector-effect: non-scaling-stroke;
+}
+
+.homepage-hero-globe-horizon {
+    fill: none;
+    stroke: currentColor;
+    stroke-opacity: 0.58;
+    stroke-width: 1.4;
+}
+
 .homepage-visual-node {
     box-shadow: var(--shadow-med);
 }

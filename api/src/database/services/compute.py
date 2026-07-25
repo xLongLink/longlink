@@ -9,6 +9,7 @@ from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus
 from src.database.session import session_scope
 from src.database.services import operations
+from src.models.operations import ReconciliationScope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
@@ -72,7 +73,7 @@ async def create(name: str, slug: str, kubeconfig: str, user: User) -> tuple[Com
 
         # Translate unique registry names and slugs to one stable API conflict.
         try:
-            operation = await operations.enqueue_in_session(session, registry.id)
+            operation = await operations.enqueue_in_session(session, registry.id, ReconciliationScope.platform)
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
@@ -116,7 +117,14 @@ async def delete(registry_id: UUID, user: User) -> tuple[ComputeRegistry, Operat
         registry.deleted_id = user.id
         registry.updated_at = now
         registry.updated_id = user.id
-        operation = await operations.enqueue_in_session(session, registry.id, locked_compute=registry)
+
+        # Complete compute deletion uses Application scope so orphaned resources are removed before the Platform Namespace.
+        operation = await operations.enqueue_in_session(
+            session,
+            registry.id,
+            ReconciliationScope.application,
+            locked_compute=registry,
+        )
         await session.commit()
         statement = (
             select(ComputeRegistry)

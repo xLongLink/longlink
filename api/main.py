@@ -21,6 +21,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Validate release compatibility, then run this API replica's Operation scheduler."""
 
     await operations.reject_platform_downgrade()
+    await operations.enqueue_platform_reconciliation()
     worker = asyncio.create_task(run_operation_scheduler(operation_computes.reconcile))
 
     # Always stop the Operation scheduler when the application lifespan exits.

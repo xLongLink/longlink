@@ -11,7 +11,7 @@ from src.models.metadata import LongLinkMetadata
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.database.services import compute, operations, applications, organizations
-from src.models.operations import OperationStatus
+from src.models.operations import OperationStatus, ReconciliationScope
 from src.kubernetes.gateway import GatewayTLSMaterial
 from src.kubernetes.reconcile import DesiredCompute, ReconcileResult
 from src.database.models.computes import ComputeRegistry
@@ -269,7 +269,9 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
     desired, proxy_secret, existing_tls = reconciliations[0]
     assert desired.id == compute_registry.id
     assert desired.deleting is False
+    assert desired.scope == ReconciliationScope.application
     assert [(item.id, item.slug) for item in desired.organizations] == [(active_organization.id, "acme")]
+    assert [(item.id, item.namespace) for item in desired.routes] == [(active_application.id, "acme")]
     assert len(desired.applications) == 1
     desired_application = desired.applications[0]
     assert desired_application.id == active_application.id
@@ -368,6 +370,8 @@ async def test_execute_compute_reconcile_operation_retries_transient_failure(mon
 
             assert desired.organizations == ()
             assert desired.applications == ()
+            assert desired.routes == ()
+            assert desired.scope == ReconciliationScope.platform
             assert proxy_secret == "proxy-secret"
             assert existing_tls is None
             raise RuntimeError("https://admin:password@db.example?token=secret")
@@ -381,7 +385,7 @@ async def test_execute_compute_reconcile_operation_retries_transient_failure(mon
         errors.append(message % args)
 
     monkeypatch.setattr(jobs.logger, "exception", log_exception)
-    operation = await operations.enqueue(compute_registry.id)
+    operation = await operations.enqueue(compute_registry.id, ReconciliationScope.platform)
     claimed = await operations.claim_next()
     assert claimed is not None
     assert claimed.id == operation.id

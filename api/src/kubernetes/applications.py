@@ -8,7 +8,8 @@ from src.utils import templates
 from dataclasses import dataclass
 from importlib.resources import files
 from kr8s.asyncio.objects import Pod, Deployment
-from src.kubernetes.resources import KubernetesDocument, KubernetesResources
+from src.models.operations import ReconciliationScope
+from src.kubernetes.resources import RESOURCE_SCOPE_LABEL, KubernetesDocument, KubernetesResources
 
 if TYPE_CHECKING:
     from src.kubernetes.reconcile import DesiredApplication, DesiredOrganization
@@ -91,7 +92,7 @@ class Applications:
         The Secret is an exact snapshot, so omitted environment keys are removed, while its revision rolls dependent Pods.
         """
 
-        # Hash the source and complete runtime input so image and Secret changes roll the pods.
+        # Hash only Application runtime input so Platform metadata and Service changes do not roll pods.
         source = TEMPLATES.joinpath("application.yml")
         revision_input = json.dumps(
             {
@@ -106,7 +107,7 @@ class Applications:
         )
         runtime_revision = hmac.new(
             revision_key.encode("utf-8"),
-            f"{source.read_text(encoding='utf-8')}\n{revision_input}".encode(),
+            revision_input.encode(),
             hashlib.sha256,
         ).hexdigest()
         application_id = str(application.id)
@@ -117,11 +118,10 @@ class Applications:
             APPLICATION_ID_LABEL: application_id,
             "longlink.io/compute-id": compute_id,
             ORGANIZATION_ID_LABEL: str(application.organization_id),
+            RESOURCE_SCOPE_LABEL: ReconciliationScope.application.value,
         }
         annotations = {
-            "longlink.io/platform-version": platform_version,
             "longlink.io/runtime-revision": runtime_revision,
-            "longlink.io/template-revision": TEMPLATE_REVISION,
         }
         secret: KubernetesDocument = {
             "apiVersion": "v1",

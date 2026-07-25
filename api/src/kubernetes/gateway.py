@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 if TYPE_CHECKING:
-    from src.kubernetes.reconcile import DesiredApplication
+    from src.kubernetes.reconcile import DesiredGatewayRoute
 
 TEMPLATES = files("src.kubernetes.templates")
 TEMPLATE_REVISION = "2026-07-24.1"
@@ -93,7 +93,7 @@ class Gateway:
 
         return hashlib.sha256(TEMPLATES.joinpath("gateway_service.yml").read_bytes()).hexdigest()
 
-    def config(self, applications: "tuple[DesiredApplication, ...]") -> str:
+    def config(self, desired_routes: "tuple[DesiredGatewayRoute, ...]") -> str:
         """Render deterministic authenticated Envoy routes from the authoritative application snapshot.
 
         Omitted applications receive no route even if stale Services still exist.
@@ -106,10 +106,10 @@ class Gateway:
             "name": "x-longlink-gateway-secret",
             "string_match": {"exact": "__LONG_LINK_GATEWAY_SECRET__"},
         }
-        for application in sorted(applications, key=lambda item: (item.namespace, str(item.id))):
-            application_id = str(application.id)
+        for route in sorted(desired_routes, key=lambda item: (item.namespace, str(item.id))):
+            application_id = str(route.id)
             service_name = f"app-{application_id}"
-            cluster_name = f"{application.namespace}-{application_id}"
+            cluster_name = f"{route.namespace}-{application_id}"
             application_id_match: EnvoyDocument = {
                 "name": "x-longlink-application-id",
                 "string_match": {"exact": application_id},
@@ -141,7 +141,7 @@ class Gateway:
                                         "endpoint": {
                                             "address": {
                                                 "socket_address": {
-                                                    "address": f"{service_name}.{application.namespace}.svc",
+                                                    "address": f"{service_name}.{route.namespace}.svc",
                                                     "port_value": 8000,
                                                 }
                                             }

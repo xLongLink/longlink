@@ -287,10 +287,10 @@ async def test_seed_local_development_refreshes_existing_sample_application(monk
         calls["application_update"] = (args, fields)
         return application
 
-    async def enqueue_operation(compute_id: UUID) -> SimpleNamespace:
+    async def enqueue_operation(compute_id: UUID, scope: object) -> SimpleNamespace:
         """Record the reconciliation requested for the refreshed image."""
 
-        calls["enqueue"] = compute_id
+        calls["enqueue"] = (compute_id, scope)
         return operation
 
     async def claim_operation() -> SimpleNamespace:
@@ -338,5 +338,5 @@ async def test_seed_local_development_refreshes_existing_sample_application(monk
             "envs": {"REQUIRED": "local-development"},
         },
     )
-    assert calls["enqueue"] == compute.id
+    assert calls["enqueue"] == (compute.id, seed.ReconciliationScope.application)
     assert executed == [operation]

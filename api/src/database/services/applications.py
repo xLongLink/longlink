@@ -12,6 +12,7 @@ from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.database.services import operations
+from src.models.operations import ReconciliationScope
 from src.adapters.storage.base import StorageRuntimeCredentials
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -265,7 +266,12 @@ async def create(
             )
         )
         compute.updated_id = user.id
-        operation = await operations.enqueue_in_session(session, compute.id, locked_compute=compute)
+        operation = await operations.enqueue_in_session(
+            session,
+            compute.id,
+            ReconciliationScope.application,
+            locked_compute=compute,
+        )
         await session.commit()
 
         statement = (
@@ -462,7 +468,12 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
 
         # Application tombstone and reconciliation request are one Platform transaction.
         compute.updated_id = user.id
-        operation = await operations.enqueue_in_session(session, compute.id, locked_compute=compute)
+        operation = await operations.enqueue_in_session(
+            session,
+            compute.id,
+            ReconciliationScope.application,
+            locked_compute=compute,
+        )
 
         await session.commit()
         statement = (
