@@ -157,7 +157,6 @@ async def enqueue(compute_id: UUID, desired_change: bool = True) -> Operation:
     async with session_scope() as session:
         operation = await enqueue_in_session(session, compute_id, desired_change)
         await session.commit()
-        await session.refresh(operation)
         return operation
 
 
@@ -203,7 +202,6 @@ async def claim_next() -> Operation | None:
             operation.attempt_count += 1
             operation.lease_expires_at = now + timedelta(seconds=OPERATION_LEASE_SECONDS)
             await session.commit()
-            await session.refresh(operation)
             return operation
 
 
@@ -273,7 +271,6 @@ async def complete(operation_id: UUID, attempt_count: int) -> Operation | None:
         operation.lease_expires_at = None
 
         await session.commit()
-        await session.refresh(operation)
         return operation
 
 

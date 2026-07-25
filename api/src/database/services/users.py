@@ -51,7 +51,6 @@ async def update(
             user.language = language
 
         await session.commit()
-        await session.refresh(user)
         return user
 
 

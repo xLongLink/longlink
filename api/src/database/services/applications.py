@@ -373,7 +373,6 @@ async def provision_storage_credentials(
             application.storage_access_key_id = generated["access_key_id"]
             application.storage_secret_access_key = generated["secret_access_key"]
             await session.commit()
-            await session.refresh(application)
             return application, generated
     except Exception:
         # Delete only a definitely unpersisted key; preserve it when a lost commit response actually stored it.
@@ -386,7 +385,7 @@ async def provision_storage_credentials(
 
 
 async def set_status(application_id: UUID, status: ApplicationStatus) -> Application | None:
-    """Update one application status and return the refreshed row."""
+    """Update one application status and return the persisted row."""
 
     # Update the status inside one session.
     async with session_scope() as session:
@@ -397,7 +396,6 @@ async def set_status(application_id: UUID, status: ApplicationStatus) -> Applica
 
         application.status = status
         await session.commit()
-        await session.refresh(application)
         return application
 
 
@@ -438,7 +436,6 @@ async def update_runtime(
         if envs is not None:
             application.envs = dict(envs)
         await session.commit()
-        await session.refresh(application)
         return application
 
 
