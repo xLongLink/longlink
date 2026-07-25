@@ -9,7 +9,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import type { ApiOrganizationApplication } from '@/lib/types';
-import XmlLayout from '@/layout/XmlLayout';
+import XmlLayout from '@/xml/layout';
 import { getIconComponent } from '@/lib/icons';
 import { ApiError, fetchApiText } from '@/lib/api';
 import { usePages, type RuntimePage } from '@/hooks/use-pages';

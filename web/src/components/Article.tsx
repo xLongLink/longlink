@@ -1,7 +1,5 @@
-import { useLocation } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { Card } from '@astryxdesign/core/Card';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
@@ -10,28 +8,20 @@ import { useTranslator } from '@astryxdesign/core/i18n';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Layout, LayoutContent, LayoutHeader, LayoutPanel } from '@astryxdesign/core/Layout';
-import type { ArticleNavigationGroup, ArticlePage } from '@/pages/catalog';
+import type { ArticlePage } from '@/pages/catalog';
 import { formatDate } from '@/lib/utils';
-import { Sidebar } from '@/components/Sidebar';
 import { PageContainer } from '@/components/PageContainer';
 import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
-import SideLayout from './SideLayout';
-
-type ArticleLayoutProps = {
-    page: ArticlePage;
-    navigationGroups: ArticleNavigationGroup[];
-};
 
 type ArticleContentProps = Pick<ArticlePage, 'content' | 'metadata'>;
 
 const FALLBACK_UPDATED_AT = Date.now();
 
-/** Renders an article page using the shared article shell. */
-export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutProps) {
+/** Renders shared documentation and legal article content. */
+export function Article({ page }: { page: ArticlePage }) {
     const t = useTranslator();
     const { user } = useUserProfile();
     const { organizations } = useUserOrganizations();
-    const location = useLocation();
     const { content, metadata } = page;
     const pageToc = metadata.toc?.map((item) => ({ id: item.id, label: item.label, level: item.level ?? 2 })) ?? [];
     const getStartedHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
@@ -49,8 +39,6 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
             })}
         </Breadcrumbs>
     );
-
-    const sidebar = <Sidebar currentPath={location.pathname} groups={navigationGroups} />;
     const header = (
         <LayoutHeader className="sticky top-14 z-20 bg-card lg:top-2" padding={0}>
             <Stack direction="horizontal" height={64} width="100%">
@@ -70,56 +58,36 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
     );
 
     return (
-        <SideLayout sideNav={sidebar}>
-            <Card
-                aria-hidden="true"
-                className="pointer-events-none fixed end-0 bottom-0 start-0 top-12 z-0 overflow-clip lg:start-[260px] lg:top-0"
-                padding={0}
-                variant="transparent"
-            >
-                <Stack height="100%" padding={2}>
-                    <Card className="border-0 overflow-clip" height="100%" width="100%" />
-                </Stack>
-            </Card>
-            <Stack className="relative z-10" padding={2}>
-                <Layout
-                    height="auto"
-                    header={header}
-                    content={
-                        <LayoutContent isScrollable={false} padding={6}>
-                            <PageContainer maxWidth={768}>
-                                <ArticleContent content={content} metadata={metadata} />
-                            </PageContainer>
-                        </LayoutContent>
-                    }
-                    end={
-                        <LayoutPanel
-                            className="sticky top-20 hidden self-start lg:block"
-                            isScrollable={false}
-                            label={pageToc.length ? t('common.onThisPage') : undefined}
-                            padding={5}
-                            role={pageToc.length ? 'complementary' : undefined}
-                            width={224}
-                        >
-                            {pageToc.length ? (
-                                <Stack gap={3}>
-                                    <Text type="label" weight="semibold">
-                                        {t('common.onThisPage')}
-                                    </Text>
-                                    <Outline items={pageToc} density="compact" label={t('common.onThisPage')} />
-                                </Stack>
-                            ) : null}
-                        </LayoutPanel>
-                    }
-                />
-            </Stack>
-            <Card
-                aria-hidden="true"
-                className="pointer-events-none fixed end-0 bottom-0 start-0 top-12 z-30 border-8 border-body bg-transparent lg:start-[260px] lg:top-0"
-                padding={0}
-                variant="transparent"
-            />
-        </SideLayout>
+        <Layout
+            height="auto"
+            header={header}
+            content={
+                <LayoutContent isScrollable={false} padding={6}>
+                    <PageContainer maxWidth={768}>
+                        <ArticleContent content={content} metadata={metadata} />
+                    </PageContainer>
+                </LayoutContent>
+            }
+            end={
+                <LayoutPanel
+                    className="sticky top-20 hidden self-start lg:block"
+                    isScrollable={false}
+                    label={pageToc.length ? t('common.onThisPage') : undefined}
+                    padding={5}
+                    role={pageToc.length ? 'complementary' : undefined}
+                    width={224}
+                >
+                    {pageToc.length ? (
+                        <Stack gap={3}>
+                            <Text type="label" weight="semibold">
+                                {t('common.onThisPage')}
+                            </Text>
+                            <Outline items={pageToc} density="compact" label={t('common.onThisPage')} />
+                        </Stack>
+                    ) : null}
+                </LayoutPanel>
+            }
+        />
     );
 }
 

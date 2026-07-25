@@ -2,7 +2,7 @@ import { Outlet } from 'react-router';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { AppWindow, ArrowUpDown, Building2, Database, HardDrive, Users, Wrench } from 'lucide-react';
 import { Auth } from '@/components/Auth';
-import PlatformLayout from '@/layout/PlatformLayout';
+import PlatformLayout from '@/pages/layout';
 import { PageContainer } from '@/components/PageContainer';
 
 /** Renders the admin shell with tabbed navigation. */

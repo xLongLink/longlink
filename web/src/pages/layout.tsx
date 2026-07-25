@@ -3,11 +3,11 @@ import { useLocation } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { ExternalLink, type LucideIcon } from 'lucide-react';
+import TopLayout from '@/layout/TopLayout';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
 import { UserProfile } from '@/components/Profile';
 import { Breadcrumb } from '@/components/Breadcrumb';
-import TopLayout from './TopLayout';
 
 type PlatformLayoutTab = {
     href: string;

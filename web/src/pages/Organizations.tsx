@@ -11,7 +11,7 @@ import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { ApiUserOrganizationMembership } from '@/lib/types';
-import PlatformLayout from '@/layout/PlatformLayout';
+import PlatformLayout from '@/pages/layout';
 import { SignInCard } from '@/components/SignInCard';
 import { sanitizeRedirectPath } from '@/lib/redirects';
 import { PageContainer } from '@/components/PageContainer';

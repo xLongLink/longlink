@@ -4,7 +4,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { AppWindow, Settings2 } from 'lucide-react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useTranslator } from '@astryxdesign/core/i18n';
-import PlatformLayout from '@/layout/PlatformLayout';
+import PlatformLayout from '@/pages/layout';
 import { PageContainer } from '@/components/PageContainer';
 import { useOrganization } from '@/hooks/use-organization';
 import NotFound from './NotFound';

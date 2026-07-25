@@ -3,11 +3,11 @@ import type { LucideIcon } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { useTranslator } from '@astryxdesign/core/i18n';
+import TopLayout from '@/layout/TopLayout';
 import { Wordmark } from '@/components/Wordmark';
 import { UserProfile } from '@/components/Profile';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { PageContainer } from '@/components/PageContainer';
-import TopLayout from './TopLayout';
 
 type XmlLayoutTab = {
     href: string;

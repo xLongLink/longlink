@@ -22,12 +22,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await operations.reject_platform_downgrade()
     worker = asyncio.create_task(run_operation_scheduler(operation_computes.reconcile))
     reconciler = asyncio.create_task(operation_computes.run_periodic_reconciliation())
-    yield
 
-    reconciler.cancel()
-    worker.cancel()
-    with contextlib.suppress(asyncio.CancelledError):
-        await asyncio.gather(worker, reconciler)
+    # Always stop both schedulers when the application lifespan exits.
+    try:
+        yield
+    finally:
+        reconciler.cancel()
+        worker.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await asyncio.gather(worker, reconciler)
 
 
 app = FastAPI(

@@ -33,13 +33,6 @@ def exoscale_zone(endpoint_url: str) -> str:
     return zone
 
 
-class ComputeConfiguration(BaseModel):
-    """Kubernetes connection configuration for one compute registry."""
-
-    # Connection
-    kubeconfig: str = Field(min_length=1, max_length=1024 * 1024)
-
-
 class DatabaseConfiguration(BaseModel):
     """Database connection configuration for one registry."""
 

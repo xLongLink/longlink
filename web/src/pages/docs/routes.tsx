@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router';
 import NotFound from '@/pages/NotFound';
-import ArticleLayout from '@/layout/ArticleLayout';
-import { DOC_GROUPS, DOC_PAGES } from '@/pages/docs/catalog';
+import DocsLayout from '@/pages/docs/layout';
+import { DOC_PAGES } from '@/pages/docs/catalog';
 
 /** Resolves documentation paths inside the lazy-loaded documentation route group. */
 export default function DocumentationRoutes() {
@@ -14,5 +14,5 @@ export default function DocumentationRoutes() {
         return <NotFound />;
     }
 
-    return <ArticleLayout page={page} navigationGroups={DOC_GROUPS} />;
+    return <DocsLayout page={page} />;
 }

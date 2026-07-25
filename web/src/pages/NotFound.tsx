@@ -5,7 +5,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import PlatformLayout from '@/layout/PlatformLayout';
+import PlatformLayout from '@/pages/layout';
 
 /** Renders the shared 404 page for unknown or unavailable routes. */
 export default function NotFound() {

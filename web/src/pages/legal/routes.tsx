@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router';
 import NotFound from '@/pages/NotFound';
-import ArticleLayout from '@/layout/ArticleLayout';
-import { LEGAL_GROUPS, LEGAL_PAGES } from '@/pages/legal/catalog';
+import LegalLayout from '@/pages/legal/layout';
+import { LEGAL_PAGES } from '@/pages/legal/catalog';
 
 /** Resolves legal paths inside the lazy-loaded legal route group. */
 export default function LegalRoutes() {
@@ -14,5 +14,5 @@ export default function LegalRoutes() {
         return <NotFound />;
     }
 
-    return <ArticleLayout page={page} navigationGroups={LEGAL_GROUPS} />;
+    return <LegalLayout page={page} />;
 }
