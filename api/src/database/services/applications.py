@@ -62,7 +62,7 @@ async def for_compute(compute_id: UUID, include_deleted: bool = False) -> list[A
         return result.scalars().all()
 
 
-async def purge(application_id: UUID) -> bool:
+async def purge(application_id: UUID) -> None:
     """Hard-delete one application after all external runtime resources are gone."""
 
     # The tombstone remains the retry marker until cleanup can finish with this transaction.
@@ -71,13 +71,12 @@ async def purge(application_id: UUID) -> bool:
             await session.execute(select(Application).where(Application.id == application_id).with_for_update())
         ).scalar_one_or_none()
         if application is None:
-            return False
+            return
         if application.deleted_at is None:
             raise RuntimeError("Active applications cannot be purged")
         await session.execute(delete(UserApplication).where(UserApplication.application_id == application_id))
         await session.execute(delete(Application).where(Application.id == application_id))
         await session.commit()
-        return True
 
 
 async def get(application_id: UUID, include_deleted: bool = False) -> Application | None:
@@ -384,19 +383,18 @@ async def provision_storage_credentials(
         raise
 
 
-async def set_status(application_id: UUID, status: ApplicationStatus) -> Application | None:
-    """Update one application status and return the persisted row."""
+async def set_status(application_id: UUID, status: ApplicationStatus) -> None:
+    """Update one application status when the row exists."""
 
     # Update the status inside one session.
     async with session_scope() as session:
         # Ignore missing applications for status updates.
         application = await session.get(Application, application_id)
         if application is None:
-            return None
+            return
 
         application.status = status
         await session.commit()
-        return application
 
 
 async def update_runtime(

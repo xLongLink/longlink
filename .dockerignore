@@ -19,6 +19,7 @@ opencode.json
 **/.dmypy.json
 **/.env
 **/.env.*
+**/.react-router
 **/.mypy_cache
 **/.pytest_cache
 **/.pyright
@@ -41,8 +42,8 @@ opencode.json
 **/*.tsbuildinfo
 **/*kubeconfig*.yaml
 **/coverage
+**/build
 **/dist
-**/dist-ssr
 **/kubeconfig.yaml
 **/logs
 

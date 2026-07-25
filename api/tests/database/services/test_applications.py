@@ -10,6 +10,7 @@ from src.models.statuses import ComputeStatus, ApplicationStatus
 from src.database.session import get_session
 from src.database.services import compute, operations, applications, organizations
 from src.models.operations import OperationStatus
+from src.adapters.storage.base import StorageRuntimeCredentials
 from src.database.models.users import User
 from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
@@ -295,8 +296,9 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     user, _, application = await create_application_context("runtime")
 
     # Act
-    running = await applications.set_status(application.id, ApplicationStatus.running)
-    missing_status = await applications.set_status(uuid4(), ApplicationStatus.running)
+    await applications.set_status(application.id, ApplicationStatus.running)
+    await applications.set_status(uuid4(), ApplicationStatus.running)
+    running = await applications.get(application.id)
     updated = await applications.update_runtime(
         application.id,
         "ghcr.io/longlink/dashboard:2.0.0",
@@ -318,7 +320,6 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     # Assert
     assert running is not None
     assert running.status == ApplicationStatus.running
-    assert missing_status is None
     assert updated is not None
     assert updated.image == "ghcr.io/longlink/dashboard:2.0.0"
     assert updated.status == ApplicationStatus.failed
@@ -346,12 +347,12 @@ async def test_provision_storage_credentials_rejects_stale_operation_lease() -> 
         row.lease_expires_at = utcnow() - timedelta(seconds=1)
         await session.commit()
 
-    async def provision() -> dict[str, str]:
+    async def provision() -> StorageRuntimeCredentials:
         """Fail if stale lease validation reaches credential provisioning."""
 
         raise AssertionError("stale workers must not provision credentials")
 
-    async def discard(credentials: dict[str, str]) -> None:
+    async def discard(credentials: StorageRuntimeCredentials) -> None:
         """Fail if no credentials were generated."""
 
         raise AssertionError(f"unexpected credentials: {credentials}")

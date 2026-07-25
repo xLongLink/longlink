@@ -13,6 +13,7 @@
         "allowImportingTsExtensions": true,
         "verbatimModuleSyntax": true,
         "moduleDetection": "force",
+        "rootDirs": [".", "./.react-router/types"],
         "noEmit": true,
         "jsx": "react-jsx",
 
@@ -27,5 +28,5 @@
             "@/*": ["./src/*"]
         }
     },
-    "include": ["src"]
+    "include": ["src", ".react-router/types/**/*"]
 }

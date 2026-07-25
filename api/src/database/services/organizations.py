@@ -63,7 +63,7 @@ async def set_runtime(organization_id: UUID, status: OrganizationStatus) -> None
         await session.commit()
 
 
-async def purge(organization_id: UUID) -> bool:
+async def purge(organization_id: UUID) -> None:
     """Hard-delete one organization after all applications and external resources are gone."""
 
     # The organization tombstone remains until every child application has been purged.
@@ -72,7 +72,7 @@ async def purge(organization_id: UUID) -> bool:
             await session.execute(select(Organization).where(Organization.id == organization_id).with_for_update())
         ).scalar_one_or_none()
         if organization is None:
-            return False
+            return
         if organization.deleted_at is None:
             raise RuntimeError("Active organizations cannot be purged")
         application = (
@@ -85,7 +85,6 @@ async def purge(organization_id: UUID) -> bool:
         await session.execute(delete(UserOrganization).where(UserOrganization.organization_id == organization_id))
         await session.execute(delete(Organization).where(Organization.id == organization_id))
         await session.commit()
-        return True
 
 
 async def applications(organization_id: UUID, include_deleted: bool = False) -> list[Application]:

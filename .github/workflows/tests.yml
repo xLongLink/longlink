@@ -129,14 +129,10 @@ jobs:
         working-directory: web
         run: bun run test
 
+      - name: Run lint
+        working-directory: web
+        run: bun run lint
+
       - name: Run typecheck
         working-directory: web
         run: bun run typecheck
-
-      - name: Build API bundle
-        working-directory: web
-        run: bun run build:api:bundle --logLevel warn
-
-      - name: Build SDK bundle
-        working-directory: web
-        run: bun run build:sdk:bundle --logLevel warn

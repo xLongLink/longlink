@@ -28,6 +28,8 @@ export type ArticleItem = {
     title: string;
     path: string;
     icon: ArticleIcon;
+    description: string;
+    seoTitle?: string;
     breadcrumbs: ArticleBreadcrumb[];
 };
 
@@ -38,7 +40,7 @@ export type ArticlePage = ArticleItem & {
 };
 
 /** Sidebar navigation item for article-like pages. */
-export type ArticleNavigationItem = Omit<ArticleItem, 'breadcrumbs' | 'icon'> & {
+export type ArticleNavigationItem = Pick<ArticleItem, 'title' | 'path'> & {
     icon?: ArticleIcon;
     children?: ArticleNavigationItem[];
 };

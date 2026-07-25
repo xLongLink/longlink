@@ -14,6 +14,7 @@ import {
     Waypoints,
 } from 'lucide-react';
 import type { ArticleBreadcrumb, ArticleNavigationGroup, ArticleNavigationItem, ArticlePage } from '@/platform/catalog';
+import { documentationPages } from '@/platform/public';
 import { pageElementDocPages } from '@/platform/docs/sdk/elements';
 import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/platform/docs/index';
 import { content as docsApiIndexContent, metadata as docsApiIndexMetadata } from '@/platform/docs/api/index';
@@ -60,9 +61,12 @@ type DocSection = {
     items: DocNavigationPage[];
 };
 
-const documentationBreadcrumb: ArticleBreadcrumb = { title: 'Documentation', path: '/docs' };
-const platformBreadcrumb: ArticleBreadcrumb = { title: 'Platform', path: '/docs/api' };
-const applicationsBreadcrumb: ArticleBreadcrumb = { title: 'Applications', path: '/docs/sdk' };
+const documentationBreadcrumb: ArticleBreadcrumb = {
+    title: 'Documentation',
+    path: documentationPages.introduction.path,
+};
+const platformBreadcrumb: ArticleBreadcrumb = { title: 'Platform', path: documentationPages.platform.path };
+const applicationsBreadcrumb: ArticleBreadcrumb = { title: 'Applications', path: documentationPages.sdk.path };
 const docBreadcrumbsByGroup: Record<DocGroupTitle, ArticleBreadcrumb[]> = {
     Overview: [documentationBreadcrumb],
     Platform: [documentationBreadcrumb, platformBreadcrumb],
@@ -147,8 +151,7 @@ function navigationItem(page: DocNavigationPage): ArticleNavigationItem {
 const DOC_SECTIONS: DocSection[] = [
     docSection('Overview', [
         {
-            title: 'Introduction',
-            path: '/docs',
+            ...documentationPages.introduction,
             icon: <BookOpen aria-hidden="true" size={16} />,
             content: docsIndexContent,
             metadata: docsIndexMetadata,
@@ -156,29 +159,25 @@ const DOC_SECTIONS: DocSection[] = [
     ]),
     docSection('Platform', [
         {
-            title: 'Overview',
-            path: '/docs/api',
+            ...documentationPages.platform,
             icon: <ShieldCheck aria-hidden="true" size={16} />,
             content: docsApiIndexContent,
             metadata: docsApiIndexMetadata,
         },
         {
-            title: 'Organizations',
-            path: '/docs/api/organizations',
+            ...documentationPages.organizations,
             icon: <Building2 aria-hidden="true" size={16} />,
             content: docsApiOrganizationsContent,
             metadata: docsApiOrganizationsMetadata,
         },
         {
-            title: 'Applications',
-            path: '/docs/api/applications',
+            ...documentationPages.applications,
             icon: <AppWindow aria-hidden="true" size={16} />,
             content: docsApiApplicationsContent,
             metadata: docsApiApplicationsMetadata,
         },
         {
-            title: 'Self-hosted',
-            path: '/docs/api/self-hosted',
+            ...documentationPages.selfHosted,
             icon: <ServerCog aria-hidden="true" size={16} />,
             content: docsApiSelfHostedContent,
             metadata: docsApiSelfHostedMetadata,
@@ -186,58 +185,50 @@ const DOC_SECTIONS: DocSection[] = [
     ]),
     docSection('Applications', [
         {
-            title: 'Overview',
-            path: '/docs/sdk',
+            ...documentationPages.sdk,
             icon: <Package aria-hidden="true" size={16} />,
             content: docsSdkIndexContent,
             metadata: docsSdkIndexMetadata,
         },
         {
-            title: 'Environments',
-            path: '/docs/sdk/environments',
+            ...documentationPages.environments,
             icon: <Globe aria-hidden="true" size={16} />,
             content: docsSdkEnvironmentsContent,
             metadata: docsSdkEnvironmentsMetadata,
         },
         {
-            title: 'Routes',
-            path: '/docs/sdk/routes',
+            ...documentationPages.routes,
             icon: <Waypoints aria-hidden="true" size={16} />,
             content: docsSdkRoutesContent,
             metadata: docsSdkRoutesMetadata,
         },
         {
-            title: 'Storage',
-            path: '/docs/sdk/storage',
+            ...documentationPages.storage,
             icon: <HardDrive aria-hidden="true" size={16} />,
             content: docsSdkStorageContent,
             metadata: docsSdkStorageMetadata,
         },
         {
-            title: 'Database',
-            path: '/docs/sdk/database',
+            ...documentationPages.database,
             icon: <Database aria-hidden="true" size={16} />,
             content: docsSdkDatabaseContent,
             metadata: docsSdkDatabaseMetadata,
         },
         {
-            title: 'Pages',
-            path: '/docs/sdk/pages',
+            ...documentationPages.pages,
             icon: <FileCode2 aria-hidden="true" size={16} />,
             content: docsSdkPagesContent,
             metadata: docsSdkPagesMetadata,
             routes: pageElementDocPages,
         },
         {
-            title: 'Testing',
-            path: '/docs/sdk/testing',
+            ...documentationPages.testing,
             icon: <FlaskConical aria-hidden="true" size={16} />,
             content: docsSdkTestingContent,
             metadata: docsSdkTestingMetadata,
         },
         {
-            title: 'Building',
-            path: '/docs/sdk/building',
+            ...documentationPages.building,
             icon: <Rocket aria-hidden="true" size={16} />,
             content: docsSdkBuildingContent,
             metadata: docsSdkBuildingMetadata,

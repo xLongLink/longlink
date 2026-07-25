@@ -3,13 +3,14 @@ import { useLayoutEffect, useState, type ReactNode } from 'react';
 import interFont from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, type MetaFunction } from 'react-router';
 import '@/index.css';
+import { noIndexMeta } from '@/lib/seo';
 import { I18nProvider } from '@/lib/i18n';
 import { AstryxProvider } from '@/providers';
 import { createQueryClient } from '@/lib/react-query';
 import { ThemeBootstrap } from '@/components/ThemeBootstrap';
 import { UserProvider, useUserProfile } from '@/hooks/use-user';
 
-export const meta: MetaFunction = () => [{ title: 'LongLink' }];
+export const meta: MetaFunction = () => noIndexMeta();
 
 /** Renders the complete Platform HTML document for prerendering and hydration. */
 export function Layout({ children }: { children: ReactNode }) {

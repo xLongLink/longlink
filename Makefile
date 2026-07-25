@@ -78,8 +78,8 @@ sdk\:scaffold\:tests: sdk\:install sdk\:build
 web\:tests: web\:install
 	bun run --cwd web test
 	bun run --cwd web typecheck
-	bun run --cwd web vite build --mode api --logLevel warn
-	bun run --cwd web vite build --mode sdk --logLevel warn
+	bun run --cwd web build:api:bundle --logLevel warn
+	bun run --cwd web build:sdk:bundle --logLevel warn
 
 
 # Run API and SDK Pyright checks.
@@ -99,18 +99,18 @@ sdk\:pyright:
 # Typecheck and build both web bundle modes.
 build: web\:install
 	bun run --cwd web typecheck
-	bun run --cwd web vite build --mode api --logLevel warn
-	bun run --cwd web vite build --mode sdk --logLevel warn
+	bun run --cwd web build:api:bundle --logLevel warn
+	bun run --cwd web build:sdk:bundle --logLevel warn
 
 
 # Build the API web bundle.
 api\:build: web\:install
-	bun run --cwd web vite build --mode api --logLevel warn
+	bun run --cwd web build:api:bundle --logLevel warn
 
 
 # Build the embedded SDK web bundle.
 sdk\:build: web\:install
-	bun run --cwd web vite build --mode sdk --logLevel warn
+	bun run --cwd web build:sdk:bundle --logLevel warn
 
 
 # Remove generated build and test artifacts for every workspace.
@@ -143,7 +143,7 @@ sdk\:image\:clean:
 
 # Remove generated web build artifacts.
 web\:clean:
-	rm -rf web/dist web/dist-ssr web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite
+	rm -rf web/build web/.react-router web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite
 
 
 # Start isolated local services and the cluster, then wait for the local registry.

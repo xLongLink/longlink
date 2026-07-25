@@ -7,11 +7,12 @@ from typing import cast
 from fastapi import Depends, Request, Response, HTTPException
 from sqlmodel import col
 from src.utils import mail, urls, roles
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from dataclasses import dataclass
 from src.database import session as database
 from urllib.parse import urlencode
 from fastapi_users import UUIDIDMixin, FastAPIUsers, BaseUserManager, schemas
+from sqlalchemy.orm import QueryableAttribute, selectinload
 from collections.abc import AsyncIterator
 from fastapi_users.db import SQLAlchemyUserDatabase
 from src.environments import env
@@ -187,6 +188,22 @@ class SessionAccountsService:
 class LongLinkUserDatabase(SQLAlchemyUserDatabase[User, UUID]):
     """Use FastAPI Users without retaining upstream provider credentials."""
 
+    async def get_by_oauth_account(self, oauth: str, account_id: str) -> User | None:
+        """Return one user with provider identities loaded for the OAuth callback."""
+
+        # OAuth callbacks inspect the complete collection after locating one matching provider identity.
+        statement = (
+            select(User)
+            .join(OAuthAccount)
+            .options(selectinload(cast(QueryableAttribute[OAuthAccount], User.oauth_accounts)))
+            .where(
+                col(OAuthAccount.oauth_name) == oauth,
+                col(OAuthAccount.account_id) == account_id,
+            )
+        )
+        result = await self.session.execute(statement)
+        return result.unique().scalar_one_or_none()
+
     async def create(self, create_dict: dict[str, object]) -> User:
         """Stage a user with one canonical case-insensitive email identity."""
 
@@ -211,7 +228,11 @@ class LongLinkUserDatabase(SQLAlchemyUserDatabase[User, UUID]):
             "refresh_token": None,
             "expires_at": None,
         }
-        return await super().add_oauth_account(user, sanitized)
+        account = OAuthAccount(user_id=user.id, **sanitized)
+        self.session.add(account)
+        await self.session.commit()
+        await self.session.refresh(user, attribute_names=["oauth_accounts"])
+        return user
 
     async def update_oauth_account(self, user: User, oauth_account: OAuthAccount, update_dict: dict[str, object]) -> User:
         """Refresh provider identity metadata without retaining credentials."""

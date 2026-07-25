@@ -1,8 +1,8 @@
 import type { Config } from '@react-router/dev/config';
 import path from 'node:path';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
-import { publicPagePaths } from './src/platform/paths';
-import { publicRoutePath, SITE_URL } from './src/lib/seo';
+import { publicPagePaths } from './src/platform/prerender';
+import { publicRoutePath, SITE_URL } from './src/platform/public';
 
 const requestedMode = import.meta.env.MODE;
 
