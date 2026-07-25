@@ -191,7 +191,8 @@ async def test_operations_service_lease_updates_reject_stale_attempts() -> None:
     reclaimed = await operations.claim_next()
     assert reclaimed is not None
     assert reclaimed.attempt_count == claimed.attempt_count + 1
-    assert reclaimed.lease_expires_at is not None
+    previous_lease_expiry = reclaimed.lease_expires_at
+    assert previous_lease_expiry is not None
 
     # Act
     stale_lease = await operations.lease_is_current(operation.id, claimed.attempt_count)
@@ -201,11 +202,13 @@ async def test_operations_service_lease_updates_reject_stale_attempts() -> None:
     stale_failure = await operations.fail(operation.id, claimed.attempt_count)
     current_lease = await operations.lease_is_current(operation.id, reclaimed.attempt_count)
     renewed = await operations.renew_lease(operation.id, reclaimed.attempt_count)
-    assert renewed is not None
+    assert renewed is True
 
     async with session_scope() as session:
         row = await session.get(Operation, operation.id)
         assert row is not None
+        assert row.lease_expires_at is not None
+        assert row.lease_expires_at > previous_lease_expiry
         row.lease_expires_at = utcnow() - timedelta(seconds=1)
         await session.commit()
 
@@ -217,15 +220,13 @@ async def test_operations_service_lease_updates_reject_stale_attempts() -> None:
 
     # Assert
     assert stale_lease is False
-    assert stale_renewal is None
+    assert stale_renewal is False
     assert stale_defer is None
     assert stale_completion is None
     assert stale_failure is None
     assert current_lease is True
-    assert renewed.lease_expires_at is not None
-    assert renewed.lease_expires_at >= reclaimed.lease_expires_at
     assert expired_lease is False
-    assert expired_renewal is None
+    assert expired_renewal is False
     assert expired_defer is None
     assert expired_completion is None
     assert expired_failure is None

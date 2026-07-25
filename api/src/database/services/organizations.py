@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from src.utils import names
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, selectinload
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
@@ -14,6 +14,7 @@ from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
+from src.database.models.operations import Operation
 from src.database.models.association import UserApplication, UserOrganization
 from src.database.models.invitations import OrganizationInvitation
 from src.database.models.applications import Application
@@ -156,10 +157,10 @@ async def get(organization_id: UUID, include_deleted: bool = False) -> Organizat
         return result.scalar_one_or_none()
 
 
-async def members(organization_id: UUID, include_deleted: bool = False) -> list[tuple[User, UserOrganization]]:
+async def members(organization_id: UUID, include_deleted: bool = False) -> list[UserOrganization]:
     """Return organization member rows for one organization."""
 
-    # Query memberships with user rows so routes can shape API payloads.
+    # Query memberships with their users so detached callers can shape API payloads.
     async with session_scope() as session:
         conditions = [UserOrganization.organization_id == organization_id]
 
@@ -167,9 +168,9 @@ async def members(organization_id: UUID, include_deleted: bool = False) -> list[
         if not include_deleted:
             conditions.append(UserOrganization.deleted_at.is_(None))
 
-        statement = select(User, UserOrganization).join(UserOrganization, UserOrganization.user_id == User.id).where(*conditions)
+        statement = select(UserOrganization).options(joinedload(UserOrganization.user)).where(*conditions)
         result = await session.execute(statement)
-        return [(user, membership) for user, membership in result.all()]
+        return result.scalars().all()
 
 
 async def membership_role(organization_id: UUID, user_id: UUID) -> OrganizationRoles | None:
@@ -252,7 +253,7 @@ async def create(
     country: str,
     avatar: str | None = None,
     organization_id: UUID | None = None,
-) -> Organization:
+) -> tuple[Organization, Operation]:
     """Create an Organization with immutable infrastructure assignments and queue reconciliation."""
 
     # Validate the user-derived runtime namespace before creating the row.
@@ -326,7 +327,7 @@ async def create(
         )
         session.add(organization)
         compute.updated_id = user.id
-        await operations.enqueue_in_session(session, compute.id)
+        operation = await operations.enqueue_in_session(session, compute.id)
 
         # Commit creation and translate unique conflicts.
         try:
@@ -347,10 +348,10 @@ async def create(
             .where(Organization.id == organization.id)
         )
         result = await session.execute(statement)
-        return result.scalar_one()
+        return result.scalar_one(), operation
 
 
-async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
+async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, Operation] | None:
     """Tombstone an Organization and nested state while atomically queueing compute cleanup."""
 
     # Soft-delete organization data in one transaction.
@@ -437,7 +438,7 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
 
         # Tombstones and their reconciliation request commit atomically.
         compute.updated_id = user.id
-        await operations.enqueue_in_session(session, compute.id)
+        operation = await operations.enqueue_in_session(session, compute.id)
 
         await session.commit()
         statement = (
@@ -450,4 +451,4 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
             .where(Organization.id == organization.id)
         )
         result = await session.execute(statement)
-        return result.scalar_one()
+        return result.scalar_one(), operation

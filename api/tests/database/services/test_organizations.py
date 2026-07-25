@@ -47,7 +47,7 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     assert reloaded.name == "acme"
     assert reloaded.slug == "acme"
     assert reloaded.country == "DE"
-    assert [member.id for member, _ in memberships] == [owner.id]
+    assert [membership.user.id for membership in memberships] == [owner.id]
 
     Session = await get_session()
     async with Session() as session:
@@ -82,7 +82,7 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
 
     # Assert
     assert reloaded is not None
-    assert {user.id for user, _ in memberships} == {owner.id, member.id}
+    assert {membership.user.id for membership in memberships} == {owner.id, member.id}
 
 
 async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User]) -> None:
@@ -220,7 +220,7 @@ async def test_members_can_include_deleted_memberships(users: tuple[User, User, 
     members = await organizations.members(organization.id, include_deleted=True)
 
     # Assert
-    memberships = {user.email: membership for user, membership in members}
+    memberships = {membership.user.email: membership for membership in members}
     assert set(memberships) == {owner.email, member.email, deleted_member.email}
     assert memberships[owner.email].role == OrganizationRoles.owner
     assert memberships[member.email].role == OrganizationRoles.write
@@ -277,7 +277,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    application = await applications.create(
+    application, _ = await applications.create(
         organization.id,
         "Dashboard",
         "dashboard",
@@ -306,7 +306,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
         await session.commit()
 
     # Act
-    deleted = await organizations.soft_delete(organization.id, owner)
+    result = await organizations.soft_delete(organization.id, owner)
     active_organization = await organizations.get(organization.id)
     deleted_organization = await organizations.get(organization.id, include_deleted=True)
     active_application = await applications.get(application.id)
@@ -317,7 +317,8 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     open_operations = [item for item in await operations.fetch() if item.stopped_at is None]
 
     # Assert
-    assert deleted is not None
+    assert result is not None
+    deleted, operation = result
     assert deleted.deleted_id == owner.id
     assert active_organization is None
     assert deleted_organization is not None
@@ -340,6 +341,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert reloaded_compute.status == ComputeStatus.ready
     assert reloaded_compute.version == env.VERSION
     assert len(open_operations) == 1
+    assert open_operations[0].id == operation.id
     assert open_operations[0].compute_id == infrastructure.compute.id
     assert open_operations[0].platform_version == env.VERSION
     assert open_operations[0].status == OperationStatus.scheduled

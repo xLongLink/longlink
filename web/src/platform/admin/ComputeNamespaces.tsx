@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -7,7 +6,8 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Table, type TableColumn, paginateData, proportional, useTablePagination } from '@astryxdesign/core/Table';
+import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
+import { useAdminPagination } from '@/platform/admin/pagination';
 import { useComputeNamespaces, useComputes } from '@/data/compute';
 
 type ComputeNamespaceRow = Record<string, unknown> & {
@@ -18,7 +18,6 @@ type ComputeNamespaceRow = Record<string, unknown> & {
 export default function ComputeNamespaces() {
     const t = useTranslator();
     const { compute = '' } = useParams();
-    const [page, setPage] = useState(1);
     const { items: computes, error: computeError, isLoading: computesIsLoading } = useComputes();
     const computeRegistry = computes.find((registry) => registry.slug === compute);
     const columns: TableColumn<ComputeNamespaceRow>[] = [
@@ -42,17 +41,7 @@ export default function ComputeNamespaces() {
         isLoading: namespacesIsLoading,
     } = useComputeNamespaces(computeRegistry?.id ?? '');
     const rows = namespaceNames.map((name) => ({ name }));
-    const pageSize = 25;
-    const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
-    const currentPage = Math.min(page, pageCount);
-    const pagination = useTablePagination<ComputeNamespaceRow>({
-        page: currentPage,
-        onPageChange: setPage,
-        totalItems: rows.length,
-        pageSize,
-        label: `${t('actions.previous')} / ${t('actions.next')}`,
-        size: 'sm',
-    });
+    const { pageItems, pagination } = useAdminPagination(rows);
     const error =
         computeError ??
         (!computesIsLoading && !computeRegistry
@@ -72,7 +61,7 @@ export default function ComputeNamespaces() {
             ) : (
                 <Table
                     columns={columns}
-                    data={paginateData(rows, currentPage, pageSize)}
+                    data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}
                     hasHover

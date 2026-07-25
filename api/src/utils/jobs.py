@@ -135,7 +135,7 @@ async def renew_operation_lease(operation_id: UUID, attempt_count: int) -> None:
         renewed = await operations.renew_lease(operation_id, attempt_count)
 
         # Signal the scheduler so it can cancel the stale handler immediately.
-        if renewed is None:
+        if not renewed:
             raise OperationLeaseLost(operation_id)
 
 

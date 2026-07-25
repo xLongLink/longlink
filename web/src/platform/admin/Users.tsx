@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Text } from '@astryxdesign/core/Text';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -10,34 +9,17 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import {
-    Table,
-    type TableColumn,
-    pixel,
-    paginateData,
-    proportional,
-    useTablePagination,
-} from '@astryxdesign/core/Table';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApiUserListItem } from '@/lib/types';
 import { useUsers } from '@/data/admin';
+import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Renders the admin users page. */
 export default function AdminUsers() {
     const t = useTranslator();
     const toast = useToast();
     const { items: users, error, isLoading } = useUsers();
-    const [page, setPage] = useState(1);
-    const pageSize = 25;
-    const pageCount = Math.max(1, Math.ceil(users.length / pageSize));
-    const currentPage = Math.min(page, pageCount);
-    const pagination = useTablePagination<ApiUserListItem>({
-        page: currentPage,
-        onPageChange: setPage,
-        totalItems: users.length,
-        pageSize,
-        label: `${t('actions.previous')} / ${t('actions.next')}`,
-        size: 'sm',
-    });
+    const { pageItems, pagination } = useAdminPagination(users);
     const columns: TableColumn<ApiUserListItem>[] = [
         {
             key: 'user',
@@ -103,7 +85,7 @@ export default function AdminUsers() {
             ) : (
                 <Table
                     columns={columns}
-                    data={paginateData(users, currentPage, pageSize)}
+                    data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}
                     hasHover

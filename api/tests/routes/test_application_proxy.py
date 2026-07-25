@@ -24,7 +24,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     remote_infrastructure = await create_ready_infrastructure(user, slug="remote", name="Remote testing")
     organization = await create_organization(remote_infrastructure, user)
     await mark_organization_running(organization)
-    app = await applications.create(
+    app, _ = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -165,7 +165,7 @@ async def test_application_proxy_rejects_oversized_request_body(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    app = await applications.create(
+    app, _ = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -225,7 +225,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    app = await applications.create(
+    app, _ = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -261,7 +261,7 @@ async def test_application_proxy_requires_application_role_for_regular_member(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    app = await applications.create(
+    app, _ = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -301,7 +301,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     infrastructure = await create_ready_infrastructure(user)
     organization = await create_organization(infrastructure, user)
     await mark_organization_running(organization)
-    app = await applications.create(
+    app, _ = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -368,7 +368,7 @@ async def test_application_proxy_enforces_method_role(
     infrastructure = await create_ready_infrastructure(user)
     organization = await create_organization(infrastructure, user)
     await mark_organization_running(organization)
-    app = await applications.create(
+    app, _ = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -415,7 +415,7 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    app = await applications.create(
+    app, _ = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",

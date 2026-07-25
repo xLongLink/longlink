@@ -24,15 +24,6 @@ async def fetch() -> list[Operation]:
         return result.scalars().all()
 
 
-async def latest(compute_id: UUID) -> Operation | None:
-    """Return the newest reconciliation operation for one compute target."""
-
-    # Mutation services commit their operation atomically before routes load it for the response.
-    async with session_scope() as session:
-        statement = select(Operation).where(Operation.compute_id == compute_id).order_by(Operation.created_at.desc()).limit(1)
-        return (await session.execute(statement)).scalar_one_or_none()
-
-
 async def reject_platform_downgrade() -> None:
     """Reject an API binary older than any persisted LongLink Platform release target or observation."""
 
@@ -176,7 +167,7 @@ async def claim_next() -> Operation | None:
             return operation
 
 
-async def renew_lease(operation_id: UUID, attempt_count: int) -> Operation | None:
+async def renew_lease(operation_id: UUID, attempt_count: int) -> bool:
     """Extend a matching operation lease only while it remains unexpired."""
 
     # Include the current attempt in the ownership check so expired workers cannot revive their lease.
@@ -197,11 +188,10 @@ async def renew_lease(operation_id: UUID, attempt_count: int) -> Operation | Non
 
         # A non-matching update means the caller has lost exclusive ownership.
         if result.rowcount == 0:
-            return None
+            return False
 
         await session.commit()
-        refreshed = await session.execute(select(Operation).where(Operation.id == operation_id))
-        return refreshed.scalar_one_or_none()
+        return True
 
 
 async def complete(operation_id: UUID, attempt_count: int) -> Operation | None:

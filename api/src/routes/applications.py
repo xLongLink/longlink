@@ -9,7 +9,7 @@ from collections.abc import AsyncIterator
 from src.models.roles import APPLICATION_PROXY_METHODS, APPLICATION_PROXY_METHOD_ROLES, ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
 from starlette.responses import StreamingResponse
-from src.database.services import compute, operations, applications
+from src.database.services import compute, applications
 from src.kubernetes.client import Kubernetes
 from src.models.applications import (ApplicationCreate, ApplicationResponse, ApplicationMemberUpdate, ApplicationMemberResponse,
                                      ApplicationMutationResponse)
@@ -51,7 +51,7 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
 
     logger.info("Creating application desired state %s/%s", organization.slug, application_slug)
 
-    application = await applications.create(
+    application, operation = await applications.create(
         organization.id,
         payload.name,
         application_slug,
@@ -63,9 +63,6 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         user=user,
     )
 
-    operation = await operations.latest(organization.compute_id)
-    if operation is None:
-        raise RuntimeError("Application reconciliation operation not found")
     return {"application": application, "operation": operation}
 
 
@@ -213,13 +210,11 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
         if not roles.atleast(membership.role, OrganizationRoles.maintain):
             raise HTTPException(status_code=403, detail="Permission required")
 
-    deleted = await applications.soft_delete(application_id, user)
-    if deleted is None:
+    result = await applications.soft_delete(application_id, user)
+    if result is None:
         raise HTTPException(status_code=404, detail="Application not found")
 
-    operation = await operations.latest(deleted.organization.compute_id)
-    if operation is None:
-        raise RuntimeError("Application reconciliation operation not found")
+    deleted, operation = result
     return {"application": deleted, "operation": operation}
 
 

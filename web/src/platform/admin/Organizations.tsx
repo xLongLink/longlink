@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Copy } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -12,20 +11,14 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
-import {
-    Table,
-    type TableColumn,
-    pixel,
-    paginateData,
-    proportional,
-    useTablePagination,
-} from '@astryxdesign/core/Table';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApiOrganizationSummary } from '@/lib/types';
 import { fetchApiVoid } from '@/lib/api';
 import { useOrganizations } from '@/data/admin';
 import { useUserProfile } from '@/hooks/use-user';
 import { organizationsQueryKey } from '@/lib/query-keys';
 import { formatDateTime, useDeleteDialog } from '@/lib/utils';
+import { useAdminPagination } from '@/platform/admin/pagination';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 
 /** Returns localized admin organization table columns. */
@@ -117,18 +110,7 @@ export default function AdminOrganizations() {
         },
     });
     const { items: organizations, error, isLoading } = useOrganizations();
-    const [page, setPage] = useState(1);
-    const pageSize = 25;
-    const pageCount = Math.max(1, Math.ceil(organizations.length / pageSize));
-    const currentPage = Math.min(page, pageCount);
-    const pagination = useTablePagination<ApiOrganizationSummary>({
-        page: currentPage,
-        onPageChange: setPage,
-        totalItems: organizations.length,
-        pageSize,
-        label: `${t('actions.previous')} / ${t('actions.next')}`,
-        size: 'sm',
-    });
+    const { pageItems, pagination } = useAdminPagination(organizations);
     const deleteDialog = useDeleteDialog({
         title: t('deleteDialog.deleteOrganizationTitle'),
         mutation: deleteOrganization,
@@ -184,7 +166,7 @@ export default function AdminOrganizations() {
             ) : (
                 <Table
                     columns={organizationColumns}
-                    data={paginateData(organizations, currentPage, pageSize)}
+                    data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}
                     hasHover

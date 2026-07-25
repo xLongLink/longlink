@@ -55,7 +55,6 @@ async def for_compute(compute_id: UUID, include_deleted: bool = False) -> list[A
         statement = (
             select(Application)
             .join(Organization, Organization.id == Application.organization_id)
-            .options(selectinload(Application.organization))
             .where(*conditions)
         )
         result = await session.execute(statement)
@@ -90,18 +89,7 @@ async def get(application_id: UUID, include_deleted: bool = False) -> Applicatio
         if not include_deleted:
             conditions.append(Application.deleted_at.is_(None))
 
-        statement = (
-            select(Application)
-            .options(
-                selectinload(Application.organization).selectinload(Organization.created_by),
-                selectinload(Application.organization).selectinload(Organization.updated_by),
-                selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.created_by),
-                selectinload(Application.updated_by),
-                selectinload(Application.deleted_by),
-            )
-            .where(*conditions)
-        )
+        statement = select(Application).where(*conditions)
         result = await session.execute(statement)
         return result.scalar_one_or_none()
 
@@ -229,7 +217,7 @@ async def create(
     digest: str | None = None,
     icon: str | None = None,
     envs: dict[str, str] | None = None,
-) -> Application:
+) -> tuple[Application, Operation]:
     """Create an Organization-owned LongLink Application and queue compute reconciliation."""
 
     # Validate direct service callers while preserving already-validated API values.
@@ -291,7 +279,7 @@ async def create(
             )
         )
         compute.updated_id = user.id
-        await operations.enqueue_in_session(session, compute.id)
+        operation = await operations.enqueue_in_session(session, compute.id)
         await session.commit()
 
         statement = (
@@ -307,7 +295,7 @@ async def create(
             .where(Application.id == application.id)
         )
         result = await session.execute(statement)
-        return result.scalar_one()
+        return result.scalar_one(), operation
 
 
 def storage_credentials(application: Application) -> StorageRuntimeCredentials | None:
@@ -437,7 +425,7 @@ async def update_runtime(
         return application
 
 
-async def soft_delete(application_id: UUID, user: User) -> Application | None:
+async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Operation] | None:
     """Tombstone a LongLink Application and atomically queue compute cleanup."""
 
     # Soft-delete the application and memberships together.
@@ -487,7 +475,7 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
 
         # Application tombstone and reconciliation request are one Platform transaction.
         compute.updated_id = user.id
-        await operations.enqueue_in_session(session, compute.id)
+        operation = await operations.enqueue_in_session(session, compute.id)
 
         await session.commit()
         statement = (
@@ -503,4 +491,4 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
             .where(Application.id == application_id)
         )
         result = await session.execute(statement)
-        return result.scalar_one_or_none()
+        return result.scalar_one(), operation

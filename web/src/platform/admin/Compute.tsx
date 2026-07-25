@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Copy, Wrench } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -11,20 +10,14 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
-import {
-    Table,
-    type TableColumn,
-    pixel,
-    paginateData,
-    proportional,
-    useTablePagination,
-} from '@astryxdesign/core/Table';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApiComputeRegistry } from '@/lib/types';
 import { useComputes } from '@/data/compute';
 import { useDeleteDialog } from '@/lib/utils';
 import { useUserProfile } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiJson } from '@/lib/api';
 import CreateCompute from '@/components/dialogs/CreateCompute';
+import { useAdminPagination } from '@/platform/admin/pagination';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { computesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
 import { apiComputeMutationResponseSchema, parseApiResponse } from '@/lib/api-schemas';
@@ -79,18 +72,7 @@ export default function AdminCompute() {
         },
     });
     const { items: computes, error, isLoading } = useComputes();
-    const [page, setPage] = useState(1);
-    const pageSize = 25;
-    const pageCount = Math.max(1, Math.ceil(computes.length / pageSize));
-    const currentPage = Math.min(page, pageCount);
-    const pagination = useTablePagination<ApiComputeRegistry>({
-        page: currentPage,
-        onPageChange: setPage,
-        totalItems: computes.length,
-        pageSize,
-        label: `${t('actions.previous')} / ${t('actions.next')}`,
-        size: 'sm',
-    });
+    const { pageItems, pagination } = useAdminPagination(computes);
     const deleteDialog = useDeleteDialog({
         title: t('admin.deleteComputeTitle'),
         mutation: deleteCompute,
@@ -149,7 +131,7 @@ export default function AdminCompute() {
             ) : (
                 <Table
                     columns={computeColumns}
-                    data={paginateData(computes, currentPage, pageSize)}
+                    data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}
                     hasHover

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Copy } from 'lucide-react';
 import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -10,14 +9,7 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
-import {
-    Table,
-    type TableColumn,
-    pixel,
-    paginateData,
-    proportional,
-    useTablePagination,
-} from '@astryxdesign/core/Table';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApiStorageRegistry } from '@/lib/types';
 import { S3 } from '@/svg/S3';
 import { fetchApiJson } from '@/lib/api';
@@ -25,6 +17,7 @@ import { useStorages } from '@/data/storage';
 import { useDeleteDialog } from '@/lib/utils';
 import { useUserProfile } from '@/hooks/use-user';
 import CreateStorage from '@/components/dialogs/CreateStorage';
+import { useAdminPagination } from '@/platform/admin/pagination';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { apiStorageRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
 import { infrastructureOptionsQueryKey, storagesQueryKey } from '@/lib/query-keys';
@@ -75,18 +68,7 @@ export default function AdminStorage() {
         },
     });
     const { items: storages, error, isLoading } = useStorages();
-    const [page, setPage] = useState(1);
-    const pageSize = 25;
-    const pageCount = Math.max(1, Math.ceil(storages.length / pageSize));
-    const currentPage = Math.min(page, pageCount);
-    const pagination = useTablePagination<ApiStorageRegistry>({
-        page: currentPage,
-        onPageChange: setPage,
-        totalItems: storages.length,
-        pageSize,
-        label: `${t('actions.previous')} / ${t('actions.next')}`,
-        size: 'sm',
-    });
+    const { pageItems, pagination } = useAdminPagination(storages);
     const deleteDialog = useDeleteDialog({
         title: t('admin.deleteStorageTitle'),
         mutation: deleteStorage,
@@ -145,7 +127,7 @@ export default function AdminStorage() {
             ) : (
                 <Table
                     columns={storageColumns}
-                    data={paginateData(storages, currentPage, pageSize)}
+                    data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}
                     hasHover

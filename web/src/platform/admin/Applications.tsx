@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Wrench } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -10,17 +9,11 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
-import {
-    Table,
-    type TableColumn,
-    pixel,
-    paginateData,
-    proportional,
-    useTablePagination,
-} from '@astryxdesign/core/Table';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApiApplicationResponse } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils';
 import { useApplications } from '@/data/admin';
+import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Builds localized admin application table columns. */
 function createAppColumns(t: TranslatorFn): TableColumn<ApiApplicationResponse>[] {
@@ -82,18 +75,7 @@ function createAppColumns(t: TranslatorFn): TableColumn<ApiApplicationResponse>[
 export default function AdminApplications() {
     const t = useTranslator();
     const { items: applications, error, isLoading } = useApplications();
-    const [page, setPage] = useState(1);
-    const pageSize = 25;
-    const pageCount = Math.max(1, Math.ceil(applications.length / pageSize));
-    const currentPage = Math.min(page, pageCount);
-    const pagination = useTablePagination<ApiApplicationResponse>({
-        page: currentPage,
-        onPageChange: setPage,
-        totalItems: applications.length,
-        pageSize,
-        label: `${t('actions.previous')} / ${t('actions.next')}`,
-        size: 'sm',
-    });
+    const { pageItems, pagination } = useAdminPagination(applications);
 
     return (
         <VStack gap={6} width="100%">
@@ -106,7 +88,7 @@ export default function AdminApplications() {
             ) : (
                 <Table
                     columns={createAppColumns(t)}
-                    data={paginateData(applications, currentPage, pageSize)}
+                    data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}
                     hasHover

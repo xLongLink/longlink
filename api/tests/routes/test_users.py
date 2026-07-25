@@ -58,8 +58,8 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
     infrastructure = await create_ready_infrastructure(user)
     active = await create_organization(infrastructure, user, name="active", slug="active")
     deleted = await create_organization(infrastructure, user, name="deleted", slug="deleted")
-    deleted_organization = await organization_service.soft_delete(deleted.id, user)
-    assert deleted_organization is not None
+    deleted_result = await organization_service.soft_delete(deleted.id, user)
+    assert deleted_result is not None
     client = clients[0]
 
     # Act

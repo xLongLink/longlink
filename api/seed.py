@@ -50,7 +50,7 @@ class SeedSettings(BaseSettings):
     EXOSCALE_STORAGE_ENDPOINT_URL: str = Field(min_length=1)
 
     model_config = SettingsConfigDict(
-        env_file=".env.seed",
+        env_file=(".env.seed", ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -218,7 +218,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
             await operations.enqueue(compute_registry.id)
             await reconcile_until_complete(compute_registry.id)
             compute_ready = True
-        organization = await organization_service.create(
+        organization, _ = await organization_service.create(
             LOCAL_ORG,
             LOCAL_ORG,
             compute_registry.id,

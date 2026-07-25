@@ -9,7 +9,7 @@ from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.statuses import ComputeStatus
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import OrganizationDatabaseResourceResponse
-from src.database.services import compute, storage, database, operations, invitations, organizations
+from src.database.services import compute, storage, database, invitations, organizations
 from src.models.applications import ApplicationAccessResponse
 from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary, OrganizationMemberUpdate,
                                       OrganizationInvitationCreate, OrganizationMutationResponse)
@@ -73,7 +73,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
 
     return {
         "organization": organization,
-        "members": [{"user": member, "role": member_membership.role} for member, member_membership in memberships],
+        "members": memberships,
         "invitations": active_invitations,
         "applications": [
             {"application": application, "role": application_roles.get(application.id)} for application in active_applications
@@ -233,13 +233,11 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
         if not roles.atleast(membership.role, OrganizationRoles.owner):
             raise HTTPException(status_code=403, detail="Permission required")
 
-    deleted = await organizations.soft_delete(organization_id, user)
-    if deleted is None:
+    result = await organizations.soft_delete(organization_id, user)
+    if result is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    operation = await operations.latest(deleted.compute_id)
-    if operation is None:
-        raise RuntimeError("Organization reconciliation operation not found")
+    deleted, operation = result
     return {"organization": deleted, "operation": operation}
 
 
@@ -395,7 +393,7 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
 
     # Create through the service so API and direct callers share namespace validation.
     try:
-        organization = await organizations.create(
+        organization, operation = await organizations.create(
             payload.name,
             slug,
             payload.compute_id,
@@ -408,7 +406,4 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
 
-    operation = await operations.latest(organization.compute_id)
-    if operation is None:
-        raise RuntimeError("Organization reconciliation operation not found")
     return {"organization": organization, "operation": operation}

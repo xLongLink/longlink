@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Copy } from 'lucide-react';
 import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -10,20 +9,14 @@ import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
-import {
-    Table,
-    type TableColumn,
-    pixel,
-    paginateData,
-    proportional,
-    useTablePagination,
-} from '@astryxdesign/core/Table';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApiDatabaseRegistry } from '@/lib/types';
 import { fetchApiJson } from '@/lib/api';
 import { PostgreSQL } from '@/svg/PostgreSQL';
 import { useDeleteDialog } from '@/lib/utils';
 import { useDatabases } from '@/data/database';
 import { useUserProfile } from '@/hooks/use-user';
+import { useAdminPagination } from '@/platform/admin/pagination';
 import CreateDatabase from '@/components/dialogs/CreateDatabase';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { apiDatabaseRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
@@ -82,18 +75,7 @@ export default function AdminDatabase() {
         },
     });
     const { items: databases, error, isLoading } = useDatabases();
-    const [page, setPage] = useState(1);
-    const pageSize = 25;
-    const pageCount = Math.max(1, Math.ceil(databases.length / pageSize));
-    const currentPage = Math.min(page, pageCount);
-    const pagination = useTablePagination<ApiDatabaseRegistry>({
-        page: currentPage,
-        onPageChange: setPage,
-        totalItems: databases.length,
-        pageSize,
-        label: `${t('actions.previous')} / ${t('actions.next')}`,
-        size: 'sm',
-    });
+    const { pageItems, pagination } = useAdminPagination(databases);
     const deleteDialog = useDeleteDialog({
         title: t('admin.deleteDatabaseTitle'),
         mutation: deleteDatabase,
@@ -152,7 +134,7 @@ export default function AdminDatabase() {
             ) : (
                 <Table
                     columns={databaseColumns}
-                    data={paginateData(databases, currentPage, pageSize)}
+                    data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}
                     hasHover

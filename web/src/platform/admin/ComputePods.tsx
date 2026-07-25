@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useParams } from 'react-router';
 import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -6,22 +5,15 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import {
-    Table,
-    type TableColumn,
-    pixel,
-    paginateData,
-    proportional,
-    useTablePagination,
-} from '@astryxdesign/core/Table';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApiComputePod } from '@/lib/types';
 import { useComputePods, useComputes } from '@/data/compute';
+import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Renders pods in a namespace on a compute backend. */
 export default function ComputePods() {
     const t = useTranslator();
     const { compute = '', namespace = '' } = useParams();
-    const [page, setPage] = useState(1);
     const columns: TableColumn<ApiComputePod>[] = [
         {
             key: 'name',
@@ -49,17 +41,7 @@ export default function ComputePods() {
         error: podsError,
         isLoading: podsIsLoading,
     } = useComputePods(computeRegistry?.id ?? '', namespace);
-    const pageSize = 25;
-    const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
-    const currentPage = Math.min(page, pageCount);
-    const pagination = useTablePagination<ApiComputePod>({
-        page: currentPage,
-        onPageChange: setPage,
-        totalItems: rows.length,
-        pageSize,
-        label: `${t('actions.previous')} / ${t('actions.next')}`,
-        size: 'sm',
-    });
+    const { pageItems, pagination } = useAdminPagination(rows);
     const error =
         computeError ??
         (!computesIsLoading && !computeRegistry
@@ -79,7 +61,7 @@ export default function ComputePods() {
             ) : (
                 <Table
                     columns={columns}
-                    data={paginateData(rows, currentPage, pageSize)}
+                    data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}
                     hasHover

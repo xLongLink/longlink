@@ -103,6 +103,8 @@ class OrganizationMutationResponse(BaseModel):
 class OrganizationMemberAccessResponse(BaseModel):
     """Represent one Organization member and their access role."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     # Relationships
     user: UserIdentity
 

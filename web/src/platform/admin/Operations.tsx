@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -6,17 +5,11 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
-import {
-    Table,
-    type TableColumn,
-    pixel,
-    paginateData,
-    proportional,
-    useTablePagination,
-} from '@astryxdesign/core/Table';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApiOperation } from '@/lib/types';
 import { useOperations } from '@/data/admin';
 import { formatDateTime } from '@/lib/utils';
+import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Returns localized admin operation table columns. */
 function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
@@ -92,16 +85,7 @@ function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
 export default function AdminOperations() {
     const t = useTranslator();
     const { items: operations, error, isLoading } = useOperations();
-    const [page, setPage] = useState(1);
-    const pageSize = 25;
-    const pageCount = Math.max(1, Math.ceil(operations.length / pageSize));
-    const currentPage = Math.min(page, pageCount);
-    const pagination = useTablePagination<ApiOperation>({
-        page: currentPage,
-        onPageChange: setPage,
-        totalItems: operations.length,
-        pageSize,
-    });
+    const { pageItems, pagination } = useAdminPagination(operations, { controls: 'default' });
 
     return (
         <VStack gap={6} width="100%">
@@ -114,7 +98,7 @@ export default function AdminOperations() {
             ) : (
                 <Table
                     columns={createOperationColumns(t)}
-                    data={paginateData(operations, currentPage, pageSize)}
+                    data={pageItems}
                     density="compact"
                     emptyState={<EmptyState title={t('common.noResults')} isCompact />}
                     hasHover

@@ -118,11 +118,11 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
         calls["storage"] = args
         return storage
 
-    async def create_organization(*args: object, **fields: object) -> SimpleNamespace:
+    async def create_organization(*args: object, **fields: object) -> tuple[SimpleNamespace, SimpleNamespace]:
         """Record local Organization desired-state creation."""
 
         calls["organization"] = (args, fields)
-        return organization
+        return organization, operation
 
     async def list_no_applications(organization_id: UUID) -> list[object]:
         """Return no existing sample Application."""
@@ -130,11 +130,11 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
         calls["application_lookup"] = organization_id
         return []
 
-    async def create_application(*args: object, **fields: object) -> SimpleNamespace:
+    async def create_application(*args: object, **fields: object) -> tuple[SimpleNamespace, SimpleNamespace]:
         """Record sample Application desired-state creation."""
 
         calls["application"] = (args, fields)
-        return application
+        return application, operation
 
     async def claim_operation() -> SimpleNamespace:
         """Return one terminally executable Operation for each seed mutation."""
