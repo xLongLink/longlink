@@ -29,8 +29,8 @@ function ApiAppShell() {
     );
 }
 
-/** Renders the bundle-specific app shell. */
-function AppShell() {
+/** Renders the bundle-specific providers and application. */
+function BundleShell() {
     // SDK mode has no user profile query to replace cached Platform preferences.
     useLayoutEffect(() => {
         if (import.meta.env.MODE === 'sdk') {
@@ -70,7 +70,7 @@ const shouldHydrate = prerenderPath === currentPath;
 const app = (
     <StrictMode>
         <QueryClientProvider client={queryClient}>
-            <AppShell />
+            <BundleShell />
         </QueryClientProvider>
     </StrictMode>
 );

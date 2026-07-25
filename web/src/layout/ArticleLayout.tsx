@@ -6,7 +6,6 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Outline } from '@astryxdesign/core/Outline';
-import { AppShell } from '@astryxdesign/core/AppShell';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
@@ -16,6 +15,7 @@ import { formatDate } from '@/lib/utils';
 import { Sidebar } from '@/components/Sidebar';
 import { PageContainer } from '@/components/PageContainer';
 import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
+import SideLayout from './SideLayout';
 
 type ArticleLayoutProps = {
     page: ArticlePage;
@@ -70,7 +70,7 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
     );
 
     return (
-        <AppShell contentPadding={0} height="auto" mobileNav={{ breakpoint: 'lg' }} sideNav={sidebar} variant="wash">
+        <SideLayout sideNav={sidebar}>
             <Card
                 aria-hidden="true"
                 className="pointer-events-none fixed end-0 bottom-0 start-0 top-12 z-0 overflow-clip lg:start-[260px] lg:top-0"
@@ -119,7 +119,7 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
                 padding={0}
                 variant="transparent"
             />
-        </AppShell>
+        </SideLayout>
     );
 }
 

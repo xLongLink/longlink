@@ -256,10 +256,9 @@ async def create(
 ) -> Organization:
     """Create an Organization with immutable infrastructure assignments and queue reconciliation."""
 
-    # Validate deterministic runtime resource names before creating the row.
+    # Validate the user-derived runtime namespace before creating the row.
     organization_id = organization_id or uuid4()
     names.knames(slug)
-    names.organization_bucket(organization_id)
 
     # Create the organization and owner membership together.
     async with session_scope() as session:

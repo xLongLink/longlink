@@ -48,7 +48,7 @@ def organization_bucket(organization_id: UUID) -> str:
     """Return the storage bucket name derived from an Organization ID."""
 
     # Organization buckets use the same UUID-hex nomenclature as Organization databases.
-    return knames(organization_id.hex)
+    return organization_id.hex
 
 
 def shared_storage_prefix() -> str:

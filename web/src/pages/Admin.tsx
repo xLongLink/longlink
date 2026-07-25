@@ -1,8 +1,8 @@
 import { Outlet } from 'react-router';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { AppWindow, ArrowUpDown, Building2, Database, HardDrive, Users, Wrench } from 'lucide-react';
-import Layout from '@/layout/Layout';
 import { Auth } from '@/components/Auth';
+import PlatformLayout from '@/layout/PlatformLayout';
 import { PageContainer } from '@/components/PageContainer';
 
 /** Renders the admin shell with tabbed navigation. */
@@ -11,7 +11,7 @@ export default function Admin() {
 
     return (
         <Auth requiredRole="support">
-            <Layout
+            <PlatformLayout
                 tabs={{
                     [t('admin.tabs.users')]: { href: '/admin/users', icon: Users },
                     [t('admin.tabs.applications')]: { href: '/admin/applications', icon: AppWindow },
@@ -25,7 +25,7 @@ export default function Admin() {
                 <PageContainer gap={8}>
                     <Outlet />
                 </PageContainer>
-            </Layout>
+            </PlatformLayout>
         </Auth>
     );
 }

@@ -7,11 +7,9 @@
 
 Use LongLink terminology consistently.
 
-| Term                  | Use                                                                                    |
-| --------------------- | -------------------------------------------------------------------------------------- |
-| LongLink              | The product as a whole.                                                                |
-| LongLink Platform     | The shared platform layer that owns authentication, organizations, infrastructure .... |
-| LongLink Applications | Process-specific Python applications running on LongLink.                              |
+- `LongLink`: The product as a whole.
+- `Platform`: The shared platform layer that owns authentication, infrastructure, ...
+- `Applications`: Process-specific Python applications running on LongLink.
 
 
 ## Architecture

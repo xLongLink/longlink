@@ -5,7 +5,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import Layout from '@/layout/Layout';
+import PlatformLayout from '@/layout/PlatformLayout';
 
 /** Renders the shared 404 page for unknown or unavailable routes. */
 export default function NotFound() {
@@ -13,7 +13,7 @@ export default function NotFound() {
     const location = useLocation();
 
     return (
-        <Layout brandOnly>
+        <PlatformLayout brandOnly>
             <Center minHeight="70dvh" width="100%">
                 <EmptyState
                     actions={
@@ -28,6 +28,6 @@ export default function NotFound() {
                     title={t('notFound.title')}
                 />
             </Center>
-        </Layout>
+        </PlatformLayout>
     );
 }

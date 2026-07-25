@@ -9,7 +9,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
 import type { ApiOrganizationApplication } from '@/lib/types';
-import XML from '@/layout/XmlLayout';
+import XmlLayout from '@/layout/XmlLayout';
 import { getIconComponent } from '@/lib/icons';
 import { ApiError, fetchApiText } from '@/lib/api';
 import { usePages, type RuntimePage } from '@/hooks/use-pages';
@@ -507,18 +507,18 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
     // Show deployment loading before rendering runtime pages.
     if (applicationIsLoading || pagesLoading) {
         return (
-            <XML tabs={tabs}>
+            <XmlLayout tabs={tabs}>
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     <LoadingState status={applicationStatus ?? 'loading'} />
                 </Center>
-            </XML>
+            </XmlLayout>
         );
     }
 
     // Surface page manifest loading failures in the shell.
     if (error) {
         return (
-            <XML tabs={tabs}>
+            <XmlLayout tabs={tabs}>
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     <ErrorState
                         actionHref={organization ? `/orgs/${organization}` : '/organizations'}
@@ -527,7 +527,7 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
                         title={t('appView.unableToLoadApplication')}
                     />
                 </Center>
-            </XML>
+            </XmlLayout>
         );
     }
 
@@ -604,14 +604,14 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
     }
 
     return (
-        <XML tabs={tabs}>
+        <XmlLayout tabs={tabs}>
             {renderedPagePanels}
             {activeFallback ? (
                 <Center minHeight="calc(100vh - 14rem)" width="100%">
                     {activeFallback}
                 </Center>
             ) : null}
-        </XML>
+        </XmlLayout>
     );
 }
 

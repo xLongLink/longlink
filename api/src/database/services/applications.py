@@ -1,9 +1,9 @@
 import secrets
-from uuid import UUID, uuid4
+from uuid import UUID
 from fastapi import HTTPException
-from src.utils import names
 from contextlib import suppress
 from sqlalchemy import and_, delete, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from collections.abc import Callable, Awaitable
 from src.models.roles import ApplicationRoles
@@ -255,23 +255,8 @@ async def create(
         if organization.deleted_at is not None or organization.status != OrganizationStatus.running:
             raise HTTPException(status_code=409, detail="Organization is not ready")
 
-        # Check slug uniqueness so K8s resource names stay collision-free.
-        slug_statement = select(Application.id).where(
-            Application.organization_id == organization_id,
-            Application.slug == slug,
-        )
-        slug_result = await session.execute(slug_statement)
-
-        # Prevent duplicate application slugs within the organization.
-        if slug_result.scalar_one_or_none() is not None:
-            raise HTTPException(status_code=409, detail="Application slug already exists")
-
-        # Generate the application ID before validating its deterministic storage prefix.
-        application_id = uuid4()
-        names.application_storage_prefix(application_id)
-
+        # Build the Application row before checking its Organization-scoped uniqueness.
         application = Application(
-            id=application_id,
             organization_id=organization_id,
             name=name,
             slug=slug,
@@ -288,6 +273,14 @@ async def create(
         application.created_id = user.id
         application.updated_id = user.id
         session.add(application)
+
+        # Let the Organization-scoped database constraint arbitrate slug uniqueness.
+        try:
+            await session.flush()
+        except IntegrityError as exc:
+            await session.rollback()
+            raise HTTPException(status_code=409, detail="Application slug already exists") from exc
+
         session.add(
             UserApplication(
                 application_id=application.id,

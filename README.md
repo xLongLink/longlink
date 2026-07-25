@@ -56,6 +56,7 @@ longlink dev
 ## Principles
 
 - The usage must be intuitive. Anything unclear is considered a bug.
+- Work is done locally, validation is managed on the Cloud.
 
 <br />
 

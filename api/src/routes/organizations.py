@@ -1,5 +1,5 @@
 from src import adapters
-from uuid import UUID, uuid4
+from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authsupport
 from src.utils import mail, names, roles
@@ -431,14 +431,10 @@ async def _storage_usage_rows(
 async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)):
     """Create Organization desired state and queue compute reconciliation."""
 
-    # Generate the row ID before insert so derived resource names use the final UUID.
-    organization_id = uuid4()
-
-    # Validate derived resource names before creating the organization.
+    # Validate the user-derived runtime namespace before creating the organization.
     try:
         slug = names.slugify(payload.name)
         names.knames(slug)
-        names.organization_bucket(organization_id)
 
     # Return invalid names as request conflicts.
     except ValueError as exc:
@@ -453,7 +449,6 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
         user,
         country=payload.country,
         avatar=payload.avatar,
-        organization_id=organization_id,
     )
 
     operation = await operations.latest(organization.compute_id)

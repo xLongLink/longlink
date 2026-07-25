@@ -1,8 +1,6 @@
 import re
 from lxml import etree
-from typing import Any
 from dataclasses import dataclass
-from collections.abc import Callable
 from fastapi.responses import Response
 
 PAGE_PARAMETER_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -19,7 +17,6 @@ class PageDefinition:
     """Describe a registered XML page."""
 
     path: str
-    handler: Callable[..., Any]
     route: str
     tab: str
     name: str | None = None

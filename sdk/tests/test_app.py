@@ -88,11 +88,13 @@ def test_xml_pages_are_registered_from_default_pages_directory(
     page_path = tmp_path / "src" / "pages" / relative_path
     page_path.parent.mkdir(parents=True, exist_ok=True)
     page_path.write_text(content, encoding="utf-8")
+    alternate_path = tmp_path / "alternate.xml"
+    alternate_path.write_text("<longlink><Text>Alternate</Text></longlink>", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
 
     # Act
     client = TestClient(LongLink())
-    response = client.get(f"/pages/{relative_path}")
+    response = client.get(f"/pages/{relative_path}", params={"page_path": str(alternate_path)})
     pages_response = client.get("/pages.json")
 
     # Assert

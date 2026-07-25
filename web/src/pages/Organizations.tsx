@@ -11,7 +11,7 @@ import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import type { ApiUserOrganizationMembership } from '@/lib/types';
-import Layout from '@/layout/Layout';
+import PlatformLayout from '@/layout/PlatformLayout';
 import { SignInCard } from '@/components/SignInCard';
 import { sanitizeRedirectPath } from '@/lib/redirects';
 import { PageContainer } from '@/components/PageContainer';
@@ -34,11 +34,11 @@ export default function Organizations() {
     // Show sign-in prompt for anonymous visitors.
     if (!user) {
         return (
-            <Layout brandOnly brandHref="/" fillViewport reserveTabSpace>
+            <PlatformLayout brandOnly brandHref="/" fillViewport reserveTabSpace>
                 <VStack height="100%" justify="center" align="center" width="100%">
                     <SignInCard redirectTo={redirectTo} initialEmail={initialEmail} />
                 </VStack>
-            </Layout>
+            </PlatformLayout>
         );
     }
 
@@ -63,7 +63,7 @@ export default function Organizations() {
     const tableError = error ? new Error(t('errors.loadOrganizations')) : null;
 
     return (
-        <Layout
+        <PlatformLayout
             brandOnly
             brandHref="/"
             tabs={{
@@ -92,6 +92,6 @@ export default function Organizations() {
                     />
                 )}
             </PageContainer>
-        </Layout>
+        </PlatformLayout>
     );
 }

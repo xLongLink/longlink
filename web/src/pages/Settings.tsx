@@ -17,8 +17,8 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Building2, Paintbrush, Settings2, UserRound } from 'lucide-react';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import Layout from '@/layout/Layout';
 import { useDeleteDialog } from '@/lib/utils';
+import PlatformLayout from '@/layout/PlatformLayout';
 import { PageContainer } from '@/components/PageContainer';
 import { useDeleteOrganization } from '@/hooks/use-organization';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
@@ -150,7 +150,7 @@ export default function Settings() {
     ];
 
     return (
-        <Layout
+        <PlatformLayout
             brandOnly
             tabs={{
                 [t('navigation.organizations')]: { href: '/organizations', icon: Building2 },
@@ -362,6 +362,6 @@ export default function Settings() {
 
                 <DeleteConfirmation {...deleteDialog.dialogProps} />
             </PageContainer>
-        </Layout>
+        </PlatformLayout>
     );
 }

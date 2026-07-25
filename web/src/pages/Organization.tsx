@@ -4,7 +4,7 @@ import { Stack } from '@astryxdesign/core/Stack';
 import { AppWindow, Settings2 } from 'lucide-react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useTranslator } from '@astryxdesign/core/i18n';
-import Layout from '@/layout/Layout';
+import PlatformLayout from '@/layout/PlatformLayout';
 import { PageContainer } from '@/components/PageContainer';
 import { useOrganization } from '@/hooks/use-organization';
 import NotFound from './NotFound';
@@ -60,7 +60,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
 
     // Keep edge-aware content aligned within the centered page container.
     return (
-        <Layout
+        <PlatformLayout
             tabs={{
                 [t('navigation.applications')]: { href: `/orgs/${organization}`, icon: AppWindow },
                 [t('navigation.settings')]: { href: `/orgs/${organization}/settings`, icon: Settings2 },
@@ -90,6 +90,6 @@ export default function Organization({ settingsSection }: OrganizationProps) {
                     />
                 ) : null}
             </PageContainer>
-        </Layout>
+        </PlatformLayout>
     );
 }
