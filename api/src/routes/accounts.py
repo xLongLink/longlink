@@ -1,5 +1,7 @@
 from fastapi import Depends, Request, Response, APIRouter
-from src.auth import SessionAccountsService, get_auth_session, clear_auth_cookie, revoke_access_token, current_optional_user_token
+from src.auth import AUTH_COOKIE, SessionAccountsService, get_auth_session, current_optional_user_token
+from src.utils import token
+from src.environments import env
 from src.models.users import UserListItem
 from src.database.services import users
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,7 +23,7 @@ async def deactivate_account(
 
     # Revoke the active database token when one is present.
     if current_user is not None and current_token is not None:
-        await revoke_access_token(session, current_token)
+        await token.revoke_access_token(session, current_token)
         await session.commit()
 
     accounts: list[User] = []
@@ -32,7 +34,14 @@ async def deactivate_account(
         if user is not None:
             accounts.append(user)
 
-    clear_auth_cookie(response)
+    # Match the session-cookie scope so browsers reliably remove the credential.
+    response.delete_cookie(
+        AUTH_COOKIE,
+        path="/",
+        secure=not env.DEVELOPMENT,
+        httponly=True,
+        samesite="lax",
+    )
     return accounts
 
 
@@ -58,15 +67,22 @@ async def logout(
 ) -> Response:
     """Revoke the active token and remove that account from the switcher."""
 
-    user, token = authentication
+    user, credential = authentication
 
     # Remove only the active account while preserving other saved accounts.
     if user is not None:
         SessionAccountsService(request).remove(user.id)
-    if token is not None:
-        await revoke_access_token(session, token)
+    if credential is not None:
+        await token.revoke_access_token(session, credential)
         await session.commit()
 
+    # Return a response that removes the browser credential at its original scope.
     response = Response(status_code=204)
-    clear_auth_cookie(response)
+    response.delete_cookie(
+        AUTH_COOKIE,
+        path="/",
+        secure=not env.DEVELOPMENT,
+        httponly=True,
+        samesite="lax",
+    )
     return response

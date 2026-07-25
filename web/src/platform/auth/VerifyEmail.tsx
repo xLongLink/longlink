@@ -49,7 +49,6 @@ export default function VerifyEmail() {
     const [accountExists, setAccountExists] = useState(false);
     const [setupMismatch, setSetupMismatch] = useState(false);
     const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
-    const fallbackNextPath = sanitizeRedirectPath(new URLSearchParams(location.search).get('next'));
     const welcomeTitle = (
         <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
             <span>{t('auth.welcomeTo')}</span>
@@ -155,7 +154,7 @@ export default function VerifyEmail() {
     }, [token, verifyRegistration]);
 
     const recoverySetup = verification.data ?? lastVerifiedSetup;
-    const recoveryNextPath = sanitizeRedirectPath(recoverySetup?.next ?? fallbackNextPath);
+    const recoveryNextPath = sanitizeRedirectPath(recoverySetup?.next);
     const recoveryQuery = new URLSearchParams({
         next: recoveryNextPath,
         ...(recoverySetup?.email ? { email: recoverySetup.email } : {}),

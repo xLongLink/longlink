@@ -713,7 +713,7 @@ async def test_create_organization_invitation_returns_204(
     assert messages[0][:2] == (invitee.email, "Invitation to join acme on LongLink")
     assert "You have been invited to join acme on LongLink." in messages[0][2]
     assert "Role: write" in messages[0][2]
-    assert f"http://localhost:5173/auth/register?{urlencode({'email': invitee.email, 'next': '/organizations'})}" in messages[0][2]
+    assert f"http://localhost:5173/auth/register?{urlencode({'email': invitee.email})}" in messages[0][2]
     assert messages[0][3] is not None
     assert "Join acme with write access." in messages[0][3]
     assert "Open invitation" in messages[0][3]

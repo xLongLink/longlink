@@ -50,7 +50,6 @@ async def reject_platform_downgrade() -> None:
 async def enqueue_in_session(
     session: AsyncSession,
     compute_id: UUID,
-    desired_change: bool = True,
     locked_compute: ComputeRegistry | None = None,
 ) -> Operation:
     """Coalesce compute reconciliation inside the caller's desired-state transaction.
@@ -88,11 +87,9 @@ async def enqueue_in_session(
         )
     ).scalar_one_or_none()
 
-    # Desired changes and release upgrades supersede active attempts and remove inherited retry delays.
+    # New desired state supersedes active attempts and removes inherited retry delays.
     if existing is not None:
         version_changed = platform_version_key(platform_version) > platform_version_key(existing.platform_version)
-        if not desired_change and not version_changed:
-            return existing
         now = utcnow()
 
         # A fresh desired target receives a complete attempt budget after the previous row exhausted its own.
@@ -120,12 +117,12 @@ async def enqueue_in_session(
     return operation
 
 
-async def enqueue(compute_id: UUID, desired_change: bool = True) -> Operation:
+async def enqueue(compute_id: UUID) -> Operation:
     """Queue one compute reconciliation in a dedicated transaction."""
 
     # Convenience callers use the same transactional enqueue implementation as domain services.
     async with session_scope() as session:
-        operation = await enqueue_in_session(session, compute_id, desired_change)
+        operation = await enqueue_in_session(session, compute_id)
         await session.commit()
         return operation
 

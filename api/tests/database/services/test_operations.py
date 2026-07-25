@@ -63,15 +63,12 @@ async def test_operations_service_enqueue_coalesces_and_expires_active_lease() -
     assert claimed.lease_expires_at is not None
 
     # Act
-    periodic = await operations.enqueue(compute.id, desired_change=False)
     changed = await operations.enqueue(compute.id)
     stale_completion = await operations.complete(claimed.id, claimed.attempt_count)
     replacement = await operations.claim_next()
     fetched = await operations.fetch()
 
     # Assert
-    assert periodic.id == first.id
-    assert periodic.lease_expires_at == claimed.lease_expires_at
     assert changed.id == first.id
     assert changed.lease_expires_at is not None
     assert changed.lease_expires_at <= utcnow()
@@ -308,7 +305,7 @@ async def test_operations_service_platform_upgrade_supersedes_leased_work(monkey
 
     # Act
     monkeypatch.setattr(env, "VERSION", "v1.1.0")
-    upgraded = await operations.enqueue(compute.id, desired_change=False)
+    upgraded = await operations.enqueue(compute.id)
     stale_completion = await operations.complete(operation.id, claimed.attempt_count)
     replacement = await operations.claim_next()
     monkeypatch.setattr(env, "VERSION", "v1.0.0")

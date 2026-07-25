@@ -1,7 +1,8 @@
 import pytest
 from uuid import uuid4
 from fastapi import Request
-from src.auth import SessionAccountsService, access_token_digest
+from src.auth import SessionAccountsService
+from src.utils import token
 
 pytestmark = pytest.mark.no_db
 
@@ -10,9 +11,9 @@ def test_access_token_digest_is_deterministic_and_hides_raw_token() -> None:
     """Hash browser tokens before persistence."""
 
     # Act
-    first = access_token_digest("browser-token")
-    repeated = access_token_digest("browser-token")
-    other = access_token_digest("other-token")
+    first = token.access_token_digest("browser-token")
+    repeated = token.access_token_digest("browser-token")
+    other = token.access_token_digest("other-token")
 
     # Assert
     assert first == repeated

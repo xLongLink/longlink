@@ -35,9 +35,6 @@ class Env(BaseSettings):
     # Control plane database URL
     DATABASE_URL: str
 
-    # Reconciliation
-    RECONCILE_INTERVAL_SECONDS: int = Field(default=300, ge=30, le=86400)
-
     model_config = SettingsConfigDict(
         env_file=(".env.sample", ".env") if DEVELOPMENT else (".env",),
         env_file_encoding="utf-8",

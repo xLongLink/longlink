@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } f
 
 export const metadata = {
     toc: [{ id: 'api-environment-variables', label: 'API Environment Variables' }],
-    lastUpdated: '2026-07-22',
+    lastUpdated: '2026-07-25',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/api/self-hosted.tsx',
 };
 
@@ -32,12 +32,12 @@ export const content = (
             .
         </Text>
         <Text as="p">
-            Release images carry an immutable <Code>vX.Y.Z</Code> LongLink Platform version. On startup, the reconciler
-            migrates active compute targets to that release and records the version only after Kubernetes, database, and
-            storage work succeeds. Operation history reports failures and retry progress. Platform releases are
-            forward-only for now: a binary older than any recorded compute or Operation release refuses to start.
-            Recover by deploying the recorded release or a newer release, or by restoring a database backup that matches
-            the older binary.
+            Release images carry an immutable <Code>vX.Y.Z</Code> LongLink Platform version. Desired-state changes
+            enqueue compute reconciliation Operations for the current release, which is recorded only after Kubernetes,
+            database, and storage work succeeds. Operation history reports failures and retry progress. Platform
+            releases are forward-only for now: a binary older than any recorded compute or Operation release refuses to
+            start. Recover by deploying the recorded release or a newer release, or by restoring a database backup that
+            matches the older binary.
         </Text>
         <Heading id="api-environment-variables" level={2}>
             API Environment Variables
@@ -49,22 +49,6 @@ export const content = (
                 </TableRow>
             </TableHeader>
             <TableBody>
-                <TableRow>
-                    <TableCell>
-                        <Stack gap={1}>
-                            <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-                                <Code>RECONCILE_INTERVAL_SECONDS</Code>
-                                <Text type="supporting">
-                                    Default: <Code>300</Code>
-                                </Text>
-                            </Stack>
-                            <Text type="supporting">
-                                Interval used to enqueue compute drift repair. Multiple Platform containers may scan
-                                safely; the Operation queue coalesces concurrent requests per compute target.
-                            </Text>
-                        </Stack>
-                    </TableCell>
-                </TableRow>
                 <TableRow>
                     <TableCell>
                         <Stack gap={1}>

@@ -25,21 +25,3 @@ def database(database_url: str, default_sslmode: DatabaseSSLMode = DatabaseSSLMo
         raise ValueError("PostgreSQL database URL has an invalid SSL mode")
 
     return parsed_url.update_query_dict({"ssl": sslmode}).render_as_string(hide_password=False)
-
-
-def safe_local_path(value: object, fallback: str) -> str:
-    """Return a same-origin local path or the fallback path."""
-
-    # Only string values can be safe redirect paths.
-    if not isinstance(value, str):
-        return fallback
-
-    # Local paths must be rooted and not protocol-relative.
-    if not value.startswith("/") or value.startswith("//") or "\\" in value:
-        return fallback
-
-    # Control characters are never valid path content.
-    if any(ord(character) < 32 or ord(character) == 127 for character in value):
-        return fallback
-
-    return value

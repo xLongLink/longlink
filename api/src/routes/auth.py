@@ -1,11 +1,10 @@
+import jwt
 import time
 from fastapi import Cookie, Depends, Request, Response, APIRouter, HTTPException, BackgroundTasks
 from sqlmodel import col, select
-from src.auth import (REGISTRATION_COOKIE, PASSWORD_RESET_COOKIE, InvalidAuthToken, SessionAccountsService, set_auth_cookie,
-                      get_auth_session, create_access_token, password_reset_user, registration_claims, set_registration_cookie,
-                      clear_registration_cookie, create_registration_token, revoke_user_access_tokens, set_password_reset_cookie,
-                      clear_password_reset_cookie, create_password_reset_token)
-from src.utils import mail, urls, passwords
+from src.auth import (AUTH_COOKIE, REGISTRATION_COOKIE, PASSWORD_RESET_COOKIE, PASSWORD_RESET_COOKIE_LIFETIME_SECONDS,
+                      SessionAccountsService, get_auth_session)
+from src.utils import mail, token, passwords
 from threading import Lock
 from sqlalchemy import func
 from urllib.parse import urlencode
@@ -89,13 +88,21 @@ async def password_login(
         user.hashed_password = updated_hash
 
     # Issue the session and accept email-bound Organization access atomically.
-    token = create_access_token(session, user)
+    credential = token.create_access_token(session, user)
     await invitations.accept_in_session(session, user)
     await session.commit()
 
     # Publish authentication only after all persistent login effects commit.
     response.headers["Cache-Control"] = "no-store"
-    set_auth_cookie(response, token)
+    response.set_cookie(
+        AUTH_COOKIE,
+        credential,
+        max_age=env.AUTH_SESSION_LIFETIME_SECONDS,
+        path="/",
+        secure=not env.DEVELOPMENT,
+        httponly=True,
+        samesite="lax",
+    )
     SessionAccountsService(request).remember(user.id)
 
 
@@ -122,9 +129,8 @@ async def request_password_reset(
         return
 
     # Generate signed proof and perform SMTP delivery only after the response has been sent.
-    next_path = urls.safe_local_path(payload.next, "/organizations")
-    query = urlencode({"next": next_path})
-    fragment = urlencode({"token": create_password_reset_token(user)})
+    query = urlencode({"next": payload.next})
+    fragment = urlencode({"token": token.create_password_reset_token(user)})
     url = f"{env.PUBLIC_URL.rstrip('/')}/auth/reset-password?{query}#{fragment}"
     email = user.email
     await session.rollback()
@@ -146,11 +152,19 @@ async def verify_password_reset_token(
 
     # Validate the bearer credential before moving it into a restricted cookie.
     try:
-        await password_reset_user(session, payload.token)
-    except InvalidAuthToken as exc:
+        await token.password_reset_user(session, payload.token)
+    except jwt.PyJWTError as exc:
         raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
     response.headers["Cache-Control"] = "no-store"
-    set_password_reset_cookie(response, payload.token)
+    response.set_cookie(
+        PASSWORD_RESET_COOKIE,
+        payload.token,
+        max_age=PASSWORD_RESET_COOKIE_LIFETIME_SECONDS,
+        path="/api/auth/reset-password",
+        secure=not env.DEVELOPMENT,
+        httponly=True,
+        samesite="lax",
+    )
 
 
 @router.get("/api/auth/reset-password/setup", status_code=204, tags=["auth"])
@@ -163,8 +177,8 @@ async def get_password_reset_setup(
 
     # Refreshes validate only the restricted cookie, never an exposed URL credential.
     try:
-        await password_reset_user(session, password_reset_token or "")
-    except InvalidAuthToken as exc:
+        await token.password_reset_user(session, password_reset_token or "")
+    except jwt.PyJWTError as exc:
         raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
     response.headers["Cache-Control"] = "no-store"
 
@@ -180,18 +194,24 @@ async def reset_password(
 
     # Resolve the active account from one valid, current password-reset credential.
     try:
-        user = await password_reset_user(session, password_reset_token or "")
-    except InvalidAuthToken as exc:
+        user = await token.password_reset_user(session, password_reset_token or "")
+    except jwt.PyJWTError as exc:
         raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
 
     # Replace the credential and revoke every existing browser session atomically.
     user.hashed_password = passwords.hash(payload.password)
-    await revoke_user_access_tokens(session, user.id)
+    await token.revoke_user_access_tokens(session, user.id)
     await session.commit()
 
     # Remove reset proof only after the password and session revocation both commit.
     response.headers["Cache-Control"] = "no-store"
-    clear_password_reset_cookie(response)
+    response.delete_cookie(
+        PASSWORD_RESET_COOKIE,
+        path="/api/auth/reset-password",
+        secure=not env.DEVELOPMENT,
+        httponly=True,
+        samesite="lax",
+    )
 
 
 @router.post("/api/auth/register", status_code=202, tags=["auth"])
@@ -213,9 +233,8 @@ async def request_registration(
     await session.rollback()
 
     # Email proof contains no password or pending user identifier.
-    next_path = urls.safe_local_path(payload.next, "/organizations")
-    token = create_registration_token(normalized_email, next_path)
-    background_tasks.add_task(mail.send_signup_verification_email, normalized_email, token)
+    credential = token.create_registration_token(normalized_email, payload.next)
+    background_tasks.add_task(mail.send_signup_verification_email, normalized_email, credential)
 
 
 @router.post("/api/auth/verify", response_model=RegistrationVerified, tags=["auth"])
@@ -224,12 +243,20 @@ async def verify_registration_token(payload: RegistrationTokenConfirm, response:
 
     # Convert invalid and expired tokens into one stable authentication error.
     try:
-        claims = registration_claims(payload.token)
-    except InvalidAuthToken as exc:
+        email, next_path = token.registration_claims(payload.token)
+    except jwt.PyJWTError as exc:
         raise HTTPException(status_code=400, detail="VERIFY_USER_BAD_TOKEN") from exc
     response.headers["Cache-Control"] = "no-store"
-    set_registration_cookie(response, payload.token)
-    return {"email": claims.email, "next": claims.next_path}
+    response.set_cookie(
+        REGISTRATION_COOKIE,
+        payload.token,
+        max_age=token.REGISTRATION_TOKEN_LIFETIME_SECONDS,
+        path="/api/auth/register",
+        secure=not env.DEVELOPMENT,
+        httponly=True,
+        samesite="lax",
+    )
+    return {"email": email, "next": next_path}
 
 
 @router.get("/api/auth/register/setup", response_model=RegistrationVerified, tags=["auth"])
@@ -241,11 +268,11 @@ async def get_registration_setup(
 
     # Refreshes never need the emailed credential after its initial exchange.
     try:
-        claims = registration_claims(registration_token or "")
-    except InvalidAuthToken as exc:
+        email, next_path = token.registration_claims(registration_token or "")
+    except jwt.PyJWTError as exc:
         raise HTTPException(status_code=400, detail="VERIFY_USER_BAD_TOKEN") from exc
     response.headers["Cache-Control"] = "no-store"
-    return {"email": claims.email, "next": claims.next_path}
+    return {"email": email, "next": next_path}
 
 
 @router.post("/api/auth/register/complete", response_model=UserProfile, status_code=201, tags=["auth"])
@@ -260,10 +287,9 @@ async def complete_registration(
 
     # Bind account creation to the signed email rather than any client-supplied identity.
     try:
-        claims = registration_claims(registration_token or "")
-    except InvalidAuthToken as exc:
+        email, _ = token.registration_claims(registration_token or "")
+    except jwt.PyJWTError as exc:
         raise HTTPException(status_code=400, detail="VERIFY_USER_BAD_TOKEN") from exc
-    email = claims.email
 
     # Prevent another browser tab's setup cookie from changing the displayed account identity.
     if str(payload.email).lower() != email:
@@ -288,7 +314,7 @@ async def complete_registration(
     try:
         await session.flush()
         await invitations.accept_in_session(session, user)
-        token = create_access_token(session, user)
+        credential = token.create_access_token(session, user)
         await session.commit()
     except IntegrityError as exc:
         await session.rollback()
@@ -296,7 +322,21 @@ async def complete_registration(
 
     # Publish browser authentication only after both persistent records commit.
     response.headers["Cache-Control"] = "no-store"
-    set_auth_cookie(response, token)
-    clear_registration_cookie(response)
+    response.set_cookie(
+        AUTH_COOKIE,
+        credential,
+        max_age=env.AUTH_SESSION_LIFETIME_SECONDS,
+        path="/",
+        secure=not env.DEVELOPMENT,
+        httponly=True,
+        samesite="lax",
+    )
+    response.delete_cookie(
+        REGISTRATION_COOKIE,
+        path="/api/auth/register",
+        secure=not env.DEVELOPMENT,
+        httponly=True,
+        samesite="lax",
+    )
     SessionAccountsService(request).remember(user.id)
     return user

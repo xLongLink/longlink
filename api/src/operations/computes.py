@@ -1,9 +1,7 @@
-import asyncio
 from src import adapters, projections
 from uuid import UUID
 from typing import cast
 from src.utils import jobs, names, images
-from src.logger import logger
 from src.version import platform_version_key
 from src.environments import env
 from src.models.types import Image
@@ -15,21 +13,6 @@ from src.kubernetes.reconcile import DesiredCompute, DesiredApplication, Desired
 from src.adapters.storage.base import Storage
 from src.models.infrastructure import exoscale_zone
 from src.database.models.operations import Operation
-
-
-async def run_periodic_reconciliation() -> None:
-    """Periodically request drift repair for every active or incompletely deleted compute target."""
-
-    # Every API replica may scan because the open-operation index coalesces duplicate requests.
-    while True:
-        try:
-            for registry in await compute.fetch(include_deleted=True):
-                if registry.deleted_at is not None and registry.version is not None:
-                    continue
-                await operations.enqueue(registry.id, desired_change=False)
-        except Exception as exc:
-            logger.exception("Periodic compute reconciliation scan failed: %r", exc)
-        await asyncio.sleep(env.RECONCILE_INTERVAL_SECONDS)
 
 
 async def reconcile(operation: Operation) -> jobs.OperationOutcome:
