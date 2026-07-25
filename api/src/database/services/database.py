@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 from src.models.types import DatabaseSSLMode
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
@@ -19,9 +19,9 @@ async def fetch() -> list[DatabaseRegistry]:
         statement = (
             select(DatabaseRegistry)
             .options(
-                selectinload(DatabaseRegistry.created_by),
-                selectinload(DatabaseRegistry.updated_by),
-                selectinload(DatabaseRegistry.deleted_by),
+                joinedload(DatabaseRegistry.created_by),
+                joinedload(DatabaseRegistry.updated_by),
+                joinedload(DatabaseRegistry.deleted_by),
             )
             .where(DatabaseRegistry.deleted_at.is_(None))
         )
@@ -43,9 +43,9 @@ async def get(registry_id: UUID, include_deleted: bool = False) -> DatabaseRegis
         statement = (
             select(DatabaseRegistry)
             .options(
-                selectinload(DatabaseRegistry.created_by),
-                selectinload(DatabaseRegistry.updated_by),
-                selectinload(DatabaseRegistry.deleted_by),
+                joinedload(DatabaseRegistry.created_by),
+                joinedload(DatabaseRegistry.updated_by),
+                joinedload(DatabaseRegistry.deleted_by),
             )
             .where(*conditions)
         )

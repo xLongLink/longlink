@@ -1,0 +1,88 @@
+name: Nightly Image
+
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: nightly-api-image
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/tests.yml
+
+  publish-api-image:
+    needs: tests
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Resolve Platform version
+        id: platform
+        run: |
+          set -euo pipefail
+
+          version="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*')"
+          if [[ ! "$version" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+              printf 'Invalid Platform version: %s\n' "$version" >&2
+              exit 1
+          fi
+
+          printf 'version=%s\n' "$version" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Log in to GHCR
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check current nightly image
+        id: nightly
+        env:
+          PLATFORM_VERSION: ${{ steps.platform.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          image="$(docker buildx imagetools inspect ghcr.io/xlonglink/longlink:nightly --format '{{json .Image}}' 2>/dev/null || true)"
+          revision="$(jq -r '.config.Labels["org.opencontainers.image.revision"] // empty' <<< "$image")"
+          version="$(jq -r '[.config.Env[]? | select(startswith("VERSION=")) | ltrimstr("VERSION=")][0] // empty' <<< "$image")"
+          publish=true
+          if [ "$revision" = "$GITHUB_SHA" ] && [ "$version" = "$PLATFORM_VERSION" ]; then
+            publish=false
+            echo "The nightly image already contains commit $GITHUB_SHA with Platform version $PLATFORM_VERSION."
+          fi
+
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push nightly API image
+        if: steps.nightly.outputs.publish == 'true'
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: api/Dockerfile
+          push: true
+          build-args: |
+            VERSION=${{ steps.platform.outputs.version }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=nightly
+          tags: ghcr.io/xlonglink/longlink:nightly

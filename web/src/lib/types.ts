@@ -2,7 +2,6 @@ import type { z } from 'zod';
 import type {
     apiApplicationMemberSchema,
     apiApplicationResponseSchema,
-    apiAuthConfigSchema,
     apiComputePodSchema,
     apiComputeRegistrySchema,
     apiDatabaseRegistrySchema,
@@ -24,7 +23,6 @@ import type {
     apiUserSummarySchema,
 } from '@/lib/api-schemas';
 
-export type ApiAuthConfig = z.infer<typeof apiAuthConfigSchema>;
 export type ApiInvitation = z.infer<typeof apiInvitationSchema>;
 export type ApiUserSummary = z.infer<typeof apiUserSummarySchema>;
 export type ApiUserListItem = z.infer<typeof apiUserListItemSchema>;

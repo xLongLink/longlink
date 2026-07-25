@@ -10,3 +10,4 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: longlink-platform
     longlink.io/compute-id: "$compute_id"
+    longlink.io/resource-scope: platform

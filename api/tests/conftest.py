@@ -6,9 +6,9 @@ import pytest_asyncio
 from uuid import UUID
 from httpx2 import Cookies, AsyncClient, ASGITransport
 from pathlib import Path
+from src.utils import passwords
 from itsdangerous import TimestampSigner
 from collections.abc import AsyncIterator
-from fastapi_users.password import PasswordHelper
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 # Seed the required settings before importing the FastAPI app.
@@ -19,16 +19,9 @@ os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./dev.db")
 os.environ["DEVELOPMENT"] = "true"
 os.environ["ENVIRONMENT"] = "testing"
 
-# Keep optional providers disabled so tests never perform external discovery.
-for provider_setting in (
-    "GITHUB_CLIENT_ID",
-    "GITHUB_CLIENT_SECRET",
-):
-    os.environ.pop(provider_setting, None)
-
 from main import app
 from sqlmodel import SQLModel
-from src.auth import access_token_digest
+from src.utils import token
 from src.database import session
 from src.environments import env
 from src.models.roles import PlatformRoles
@@ -106,7 +99,7 @@ def authenticated_cookies(user_id: UUID, accounts: list[UUID] | None = None) -> 
 def password_hash() -> str:
     """Hash the shared fixture credential once for the test session."""
 
-    return PasswordHelper().hash(TEST_PASSWORD)
+    return passwords.hash(TEST_PASSWORD)
 
 
 @pytest_asyncio.fixture
@@ -120,7 +113,6 @@ async def users(password_hash: str) -> tuple[User, User, User]:
             name="user1",
             email="user1@example.com",
             hashed_password=password_hash,
-            is_superuser=True,
             role=PlatformRoles.administrator,
         )
         user2 = User(name="user2", email="user2@example.com", hashed_password=password_hash)
@@ -130,9 +122,9 @@ async def users(password_hash: str) -> tuple[User, User, User]:
         db_session.add_all([user1, user2, user3])
         db_session.add_all(
             [
-                AccessToken(token=access_token_digest(str(user1.id)), user_id=user1.id),
-                AccessToken(token=access_token_digest(str(user2.id)), user_id=user2.id),
-                AccessToken(token=access_token_digest(str(user3.id)), user_id=user3.id),
+                AccessToken(token=token.access_token_digest(str(user1.id)), user_id=user1.id),
+                AccessToken(token=token.access_token_digest(str(user2.id)), user_id=user2.id),
+                AccessToken(token=token.access_token_digest(str(user3.id)), user_id=user3.id),
             ]
         )
         await db_session.commit()

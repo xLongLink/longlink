@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlmodel import Field
 from contextlib import asynccontextmanager
 from sqlalchemy.orm import relationship, declared_attr
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from sqlalchemy.engine import URL
 from longlink.utils.time import utcnow
 from longlink.shared.models import User
@@ -96,7 +96,7 @@ def create_engine(env: Envs) -> AsyncEngine:
 
 
 @asynccontextmanager
-async def get_session() -> AsyncIterator[AsyncSession]:
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """Yield a SQLModel async session."""
 
     # Open one session from the lazily initialized session factory.

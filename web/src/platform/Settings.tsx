@@ -7,7 +7,6 @@ import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Slider } from '@astryxdesign/core/Slider';
-import { useToast } from '@astryxdesign/core/Toast';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -17,6 +16,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Building2, Paintbrush, Settings2, UserRound } from 'lucide-react';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
+import { useToast } from '@/hooks/use-toast';
 import { useDeleteDialog } from '@/lib/utils';
 import PlatformLayout from '@/platform/layout';
 import { PageContainer } from '@/components/PageContainer';
@@ -24,7 +24,6 @@ import { useDeleteOrganization } from '@/hooks/use-organization';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useUpdateUser, useUserOrganizations, useUserProfile } from '@/hooks/use-user';
-import { LANGUAGE_OPTIONS, resolveSupportedLanguage, type Language } from '@/lib/languages';
 import {
     ACCENT_OPTIONS,
     DEFAULT_RADIUS,
@@ -52,7 +51,7 @@ export default function Settings() {
     const t = useTranslator();
     const toast = useToast();
     const location = useLocation();
-    const { user, theme, accent, radius, language, isLoading: isProfileLoading } = useUserProfile();
+    const { user, theme, accent, radius, isLoading: isProfileLoading } = useUserProfile();
     const { memberships, isLoading: areOrganizationsLoading } = useUserOrganizations();
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
     const deleteOrganization = useDeleteOrganization();
@@ -64,7 +63,6 @@ export default function Settings() {
         hash === 'appearance' || hash === 'organizations' || hash === 'account' ? hash : 'account';
     const name = editedName ?? user?.name ?? '';
     const accountName = name.trim();
-    const selectedLanguage = resolveSupportedLanguage(language);
     const isLoading = isProfileLoading || areOrganizationsLoading;
 
     /** Saves the edited account name when focus leaves its input. */
@@ -218,28 +216,6 @@ export default function Settings() {
                                         value={user?.email ?? ''}
                                         width="100%"
                                         isDisabled
-                                    />
-                                    <Selector
-                                        label={t('labels.language')}
-                                        options={LANGUAGE_OPTIONS.map((option) => ({
-                                            value: option.value,
-                                            label: option.nativeLabel,
-                                        }))}
-                                        value={selectedLanguage}
-                                        width="100%"
-                                        isDisabled={isLoading || isPending || !user}
-                                        placeholder={t('settings.placeholders.language')}
-                                        onChange={(value) => {
-                                            void updateUser({ language: value as Language }).catch((error: unknown) => {
-                                                toast({
-                                                    body:
-                                                        error instanceof Error
-                                                            ? error.message
-                                                            : t('errors.updateAccount'),
-                                                    type: 'error',
-                                                });
-                                            });
-                                        }}
                                     />
                                 </HStack>
                             </VStack>

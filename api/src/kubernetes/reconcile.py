@@ -11,7 +11,8 @@ from src.kubernetes import gateway
 from collections.abc import Callable, Awaitable
 from src.environments import env
 from kr8s.asyncio.objects import Pod, Secret, Service, APIObject, ConfigMap, Namespace, Deployment, NetworkPolicy
-from src.kubernetes.resources import FIELD_MANAGER, COMPUTE_ID_LABEL, MANAGED_BY_LABEL, KubernetesDocument, KubernetesResources
+from src.models.operations import ReconciliationScope
+from src.kubernetes.resources import KubernetesDocument, KubernetesResources
 from src.kubernetes.applications import ENVIRONMENT_NAME, APPLICATION_ID_LABEL, ORGANIZATION_ID_LABEL, Applications
 
 LOAD_BALANCER_TIMEOUT_SECONDS = 300
@@ -32,11 +33,16 @@ class DesiredOrganization:
 
 
 @dataclass(frozen=True, slots=True)
-class DesiredApplication:
-    """Describe one application workload within its organization's Namespace.
+class DesiredGatewayRoute:
+    """Describe one Application route without carrying workload configuration."""
 
-    These fields are the authoritative workload inputs for a compute snapshot.
-    """
+    id: UUID
+    namespace: str
+
+
+@dataclass(frozen=True, slots=True)
+class DesiredApplication:
+    """Describe one authoritative Application workload input."""
 
     id: UUID
     organization_id: UUID
@@ -47,15 +53,19 @@ class DesiredApplication:
 
 @dataclass(frozen=True, slots=True)
 class DesiredCompute:
-    """Describe the authoritative, complete snapshot for one compute target.
+    """Describe one scoped desired-state snapshot for a compute target.
 
-    Omitted managed organizations and applications are pruned, and deleting snapshots must be empty.
+    Complete Application snapshots prune omitted tenant resources, targeted snapshots prune only selected Application IDs, and Platform
+    snapshots leave tenant resources untouched. Deleting snapshots must be empty.
     """
 
     id: UUID
+    routes: tuple[DesiredGatewayRoute, ...]
     organizations: tuple[DesiredOrganization, ...]
     applications: tuple[DesiredApplication, ...]
+    application_ids: tuple[UUID, ...] | None = None
     deleting: bool = False
+    scope: ReconciliationScope = ReconciliationScope.application
 
 
 @dataclass(frozen=True, slots=True)
@@ -231,17 +241,17 @@ class Reconciler:
         platform_version = env.VERSION
 
         # The system Namespace is an immutable compute claim and is never adopted implicitly.
-        system_namespace = self._gateway.system_namespace(compute_id, platform_version)
-        await self._claim_namespace(system_namespace, compute_id, fence)
+        system_namespace = await self._claim_namespace(
+            self._gateway.system_namespace(compute_id, platform_version),
+            fence,
+        )
 
         # Deletion removes all LongLink resources and releases the cluster ownership Namespace last.
         if desired.deleting:
             await self._prune(desired, fence)
-            claimed_namespace = await self._resources.read(Namespace, gateway.GATEWAY_NAMESPACE)
-            if claimed_namespace is not None:
-                await self._check_fence(fence)
-                await self._resources.delete(Namespace, claimed_namespace.name, uid=_uid(claimed_namespace))
-                await self._wait_for_namespace_deletion(claimed_namespace.name)
+            await self._check_fence(fence)
+            await self._resources.delete(Namespace, system_namespace.name, uid=_uid(system_namespace))
+            await self._wait_for_namespace_deletion(system_namespace.name)
             return ReconcileResult(
                 gateway_url=None,
                 gateway_ca_certificate=None,
@@ -251,53 +261,44 @@ class Reconciler:
 
         # Create the standard public Service before workloads because cloud address allocation is asynchronous.
         initial_service = self._gateway.service(compute_id, self._gateway.initial_service_revision(), platform_version)
-        await self._check_fence(fence)
-        await self._resources.apply(initial_service)
+        await self._apply(initial_service, fence)
         endpoint = await self._wait_for_gateway_endpoint()
         tls = self._gateway.tls(compute_id, endpoint, existing_tls)
         if tls != existing_tls and stage_tls is not None:
             await self._check_fence(fence)
             await stage_tls(tls)
 
-        # Claim organization Namespaces before applying their namespaced policies and workloads.
-        organization_manifests = [
-            self._applications.organization_manifests(organization, compute_id, platform_version)
-            for organization in sorted(desired.organizations, key=lambda item: item.slug)
-        ]
-        for manifests in organization_manifests:
-            await self._claim_namespace(manifests.namespace, compute_id, fence)
-            await self._check_fence(fence)
-            await self._resources.apply(manifests.network_policy)
+        # Complete Application work owns Organization boundaries; targeted work assumes its parents are already ready.
+        if desired.scope == ReconciliationScope.application:
+            if desired.application_ids is None:
+                organization_manifests = [
+                    self._applications.organization_manifests(organization, compute_id, platform_version)
+                    for organization in sorted(desired.organizations, key=lambda item: item.slug)
+                ]
+                for manifests in organization_manifests:
+                    await self._claim_namespace(manifests.namespace, fence)
+                    await self._apply(manifests.network_policy, fence)
 
-        # Replace each application Secret exactly before server-side applying its workload resources.
-        for application in sorted(desired.applications, key=lambda item: (item.namespace, str(item.id))):
-            manifests = self._applications.manifests(application, compute_id, proxy_secret, platform_version)
-            await self._check_fence(fence)
-            secret = await self._resources.replace_secret(manifests.secret)
-            _set_pod_annotation(manifests.deployment, "longlink.io/secret-resource-version", _resource_version(secret))
-            await self._check_fence(fence)
-            await self._apply_deployment(manifests.deployment, fence)
-            await self._check_fence(fence)
-            await self._resources.apply(manifests.service)
+            # Exact Secret data and the runtime revision roll only Applications whose desired runtime changed.
+            for application in sorted(desired.applications, key=lambda item: (item.namespace, str(item.id))):
+                manifests = self._applications.manifests(application, compute_id, proxy_secret, platform_version)
+                secret = await self._replace_secret(manifests.secret, fence)
+                _set_pod_annotation(manifests.deployment, "longlink.io/secret-resource-version", _resource_version(secret))
+                await self._apply_deployment(manifests.deployment, fence)
+                await self._apply(manifests.service, fence)
 
         # Gateway configuration is derived only from desired applications, never from live Service discovery.
-        envoy_config = self._gateway.config(desired.applications)
+        envoy_config = self._gateway.config(desired.routes)
         gateway_manifests = self._gateway.manifests(compute_id, proxy_secret, tls, envoy_config, platform_version)
-        await self._check_fence(fence)
-        auth_secret = await self._resources.replace_secret(gateway_manifests.auth_secret)
-        await self._check_fence(fence)
-        tls_secret = await self._resources.replace_secret(gateway_manifests.tls_secret)
-        await self._check_fence(fence)
-        config_map = await self._resources.apply(gateway_manifests.config_map)
+        auth_secret = await self._replace_secret(gateway_manifests.auth_secret, fence)
+        tls_secret = await self._replace_secret(gateway_manifests.tls_secret, fence)
+        config_map = await self._apply(gateway_manifests.config_map, fence)
         _set_pod_annotation(gateway_manifests.deployment, "longlink.io/auth-resource-version", _resource_version(auth_secret))
         _set_pod_annotation(gateway_manifests.deployment, "longlink.io/tls-resource-version", _resource_version(tls_secret))
         _set_pod_annotation(gateway_manifests.deployment, "longlink.io/config-resource-version", _resource_version(config_map))
-        await self._check_fence(fence)
         await self._apply_deployment(gateway_manifests.deployment, fence)
-        await self._check_fence(fence)
-        await self._resources.apply(gateway_manifests.service)
-        await self._check_fence(fence)
-        await self._resources.apply(gateway_manifests.network_policy)
+        await self._apply(gateway_manifests.service, fence)
+        await self._apply(gateway_manifests.network_policy, fence)
 
         # Pruning starts only after the desired gateway revision is observed and fully ready.
         await self._wait_for_gateway_rollout(gateway_manifests.runtime_revision)
@@ -318,12 +319,33 @@ class Reconciler:
         """Validate desired identities, relationships, and Kubernetes-safe values."""
 
         # A deleting compute target must present an empty desired graph.
-        if desired.deleting and (desired.organizations or desired.applications):
-            raise ValueError("Deleting compute desired state must not contain organizations or applications")
+        if desired.deleting and (desired.routes or desired.organizations or desired.applications or desired.application_ids is not None):
+            raise ValueError("Deleting compute desired state must not contain routes or resources")
+        if desired.deleting and desired.scope != ReconciliationScope.application:
+            raise ValueError("Deleting compute desired state requires Application scope")
+
+        # Platform snapshots carry gateway routes only and cannot hide ignored Application desired state.
+        if desired.scope == ReconciliationScope.platform and (
+            desired.organizations or desired.applications or desired.application_ids is not None
+        ):
+            raise ValueError("Platform desired state must not contain Organization or Application resources")
+
+        # Explicit Application targets must be non-empty and unique.
+        target_ids = set(desired.application_ids or ())
+        if desired.application_ids is not None and (not target_ids or len(target_ids) != len(desired.application_ids)):
+            raise ValueError("Targeted Application desired state requires unique Application IDs")
 
         # Active gateways use the platform's URL-safe generated bearer secret in an init substitution.
         if not desired.deleting and (not proxy_secret or PROXY_SECRET.fullmatch(proxy_secret) is None):
             raise ValueError("Gateway proxy secret must contain only letters, numbers, underscores, and hyphens")
+
+        # Gateway routes need unique Application IDs and valid backend Namespaces.
+        route_ids: set[UUID] = set()
+        for route in desired.routes:
+            names.knames(route.namespace)
+            if route.id in route_ids:
+                raise ValueError(f"Duplicate desired gateway route Application ID {route.id}")
+            route_ids.add(route.id)
 
         # Organization IDs and namespace slugs must both be unique and cannot target system namespaces.
         organizations_by_id: dict[UUID, DesiredOrganization] = {}
@@ -347,6 +369,7 @@ class Reconciler:
                 raise ValueError(f"Desired application {application.id} references an unknown organization")
             if application.namespace != organization.slug:
                 raise ValueError(f"Desired application {application.id} namespace does not match its organization")
+
             if not application.image.strip():
                 raise ValueError(f"Desired application {application.id} image must not be empty")
             if not env.DEVELOPMENT and IMMUTABLE_IMAGE.search(application.image) is None:
@@ -358,31 +381,48 @@ class Reconciler:
                 raise TypeError(f"Desired application {application.id} environment values must be strings")
             application_ids.add(application.id)
 
+        # Complete work publishes exactly its workloads; targeted work preserves unrelated routes.
+        if desired.scope == ReconciliationScope.application:
+            expected_routes = {(application.id, application.namespace) for application in desired.applications}
+            routes = {(route.id, route.namespace) for route in desired.routes}
+            if desired.application_ids is None and routes != expected_routes:
+                raise ValueError("Application desired state must provide exactly one gateway route per Application")
+            if desired.application_ids is not None:
+                targeted_routes = {(route.id, route.namespace) for route in desired.routes if route.id in target_ids}
+                if not application_ids.issubset(target_ids) or targeted_routes != expected_routes:
+                    raise ValueError("Targeted Application desired state contains invalid workloads or routes")
+
     async def _claim_namespace(
         self,
         body: KubernetesDocument,
-        compute_id: str,
         fence: Callable[[], Awaitable[None]] | None,
-    ) -> None:
-        """Claim a Namespace only after validating that any existing object belongs to the same LongLink compute target.
+    ) -> Namespace:
+        """Apply one Namespace only within its exact LongLink ownership scope."""
 
-        Refuse adoption across the cluster ownership boundary.
-        """
+        applied = await self._apply(body, fence)
+        if not isinstance(applied, Namespace):
+            raise TypeError("Kubernetes Namespace apply returned an unexpected resource kind")
+        return applied
 
-        # Read and validate ownership before server-side apply can claim metadata fields.
-        metadata = body.get("metadata")
-        if not isinstance(metadata, dict):
-            raise TypeError("Desired Namespace metadata must be a mapping")
-        name = metadata.get("name")
-        if not isinstance(name, str) or not name:
-            raise TypeError("Desired Namespace metadata.name must be a non-empty string")
-        existing = await self._resources.read(Namespace, name)
-        if existing is not None:
-            labels = _string_map(_metadata(existing), "labels")
-            if labels.get(MANAGED_BY_LABEL) != FIELD_MANAGER or labels.get(COMPUTE_ID_LABEL) != compute_id:
-                raise ValueError(f"Kubernetes Namespace {name!r} is not owned by compute {compute_id}")
+    async def _apply(
+        self,
+        body: KubernetesDocument,
+        fence: Callable[[], Awaitable[None]] | None,
+    ) -> APIObject:
+        """Fence and server-side apply one ownership-validated resource."""
+
         await self._check_fence(fence)
-        await self._resources.apply(body)
+        return await self._resources.apply(body)
+
+    async def _replace_secret(
+        self,
+        body: KubernetesDocument,
+        fence: Callable[[], Awaitable[None]] | None,
+    ) -> Secret:
+        """Fence and replace one ownership-validated authoritative Secret."""
+
+        await self._check_fence(fence)
+        return await self._resources.replace_secret(body)
 
     async def _check_fence(self, fence: Callable[[], Awaitable[None]] | None) -> None:
         """Verify operation ownership before issuing one Kubernetes mutation."""
@@ -398,7 +438,7 @@ class Reconciler:
     ) -> Deployment:
         """Apply one Deployment and recreate it when foreign pod-list entries survive SSA."""
 
-        applied = await self._resources.apply(body)
+        applied = await self._apply(body, fence)
         if not isinstance(applied, Deployment):
             raise TypeError("Kubernetes Deployment apply returned an unexpected resource kind")
         if _deployment_shape_matches(body, applied):
@@ -412,8 +452,7 @@ class Reconciler:
             if time.monotonic() >= deadline:
                 raise TimeoutError(f"Kubernetes Deployment {applied.name!r} did not terminate before recreation")
             await asyncio.sleep(POLL_INTERVAL_SECONDS)
-        await self._check_fence(fence)
-        recreated = await self._resources.apply(body)
+        recreated = await self._apply(body, fence)
         if not isinstance(recreated, Deployment) or not _deployment_shape_matches(body, recreated):
             raise RuntimeError(f"Kubernetes Deployment {applied.name!r} retained unexpected pod entries")
         return recreated
@@ -481,16 +520,34 @@ class Reconciler:
             await asyncio.sleep(POLL_INTERVAL_SECONDS)
 
     async def _prune(self, desired: DesiredCompute, fence: Callable[[], Awaitable[None]] | None) -> None:
-        """Delete only recognized, compute-owned resources omitted from the authoritative snapshot, using UID preconditions.
+        """Prune only the requested resource scopes and wait for safe downstream cleanup."""
 
-        Remove child resources before organization Namespaces and wait for termination before reporting pruning complete.
-        """
+        removed_applications: set[tuple[str, str]] = set()
+        removed_namespaces: set[str] = set()
+
+        # Application pruning is never entered by Platform-only reconciliation.
+        if desired.scope == ReconciliationScope.application:
+            removed_applications, removed_namespaces = await self._prune_applications(desired, fence)
+
+        # Both scopes reconcile their shared Platform dependencies, so both prune obsolete Platform resources.
+        await self._prune_platform(desired, fence)
+
+        # Provider cleanup starts only after workload Pods and requested Namespaces have actually disappeared.
+        await self._wait_for_prune(removed_applications, removed_namespaces, desired.deleting)
+
+    async def _prune_applications(
+        self,
+        desired: DesiredCompute,
+        fence: Callable[[], Awaitable[None]] | None,
+    ) -> tuple[set[tuple[str, str]], set[str]]:
+        """Prune selected Application omissions or the complete omitted tenant graph."""
 
         compute_id = str(desired.id)
         desired_namespaces = {organization.slug for organization in desired.organizations}
-        owned_namespaces = await self._resources.list_owned(Namespace, compute_id)
+        target_ids = {str(application_id) for application_id in desired.application_ids or ()}
+        owned_namespaces = await self._resources.list_owned(Namespace, compute_id, ReconciliationScope.application)
 
-        # Only Namespaces with a valid organization identity are eligible for workload or Namespace pruning.
+        # Only Namespaces with a valid Organization identity are eligible for pruning.
         organization_namespaces: list[Namespace] = []
         for namespace in owned_namespaces:
             if namespace.name == gateway.GATEWAY_NAMESPACE or namespace.name in names.KUBERNETES_SYSTEM_NAMESPACES:
@@ -505,13 +562,17 @@ class Reconciler:
                 continue
             organization_namespaces.append(namespace)
 
-        # Prune only canonical app Deployment, Service, and Secret names inside owned organization Namespaces.
+        # Prune only canonical Application resources inside Application-scoped Organization Namespaces.
         desired_applications = {str(application.id): application for application in desired.applications}
         removed_applications: set[tuple[str, str]] = set()
-        removed_namespaces: set[str] = set()
         for namespace in organization_namespaces:
             for resource_class in (Deployment, Service, Secret):
-                resources = await self._resources.list_owned(resource_class, compute_id, namespace.name)
+                resources = await self._resources.list_owned(
+                    resource_class,
+                    compute_id,
+                    ReconciliationScope.application,
+                    namespace.name,
+                )
                 for resource in resources:
                     labels = _string_map(_metadata(resource), "labels")
                     application_id = labels.get(APPLICATION_ID_LABEL)
@@ -520,6 +581,8 @@ class Reconciler:
                     try:
                         canonical_id = str(UUID(application_id))
                     except ValueError:
+                        continue
+                    if desired.application_ids is not None and canonical_id not in target_ids:
                         continue
                     expected_name = f"app-{canonical_id}" if resource_class is Service else canonical_id
                     if resource.name != expected_name:
@@ -531,15 +594,34 @@ class Reconciler:
                     await self._check_fence(fence)
                     await self._resources.delete(resource_class, resource.name, namespace.name, _uid(resource))
 
-        # Organization ingress policy is known by its fixed name and remains only in desired Namespaces.
-        for namespace in organization_namespaces:
-            policies = await self._resources.list_owned(NetworkPolicy, compute_id, namespace.name)
-            for policy in policies:
-                if policy.name == "longlink-gateway-ingress" and namespace.name not in desired_namespaces:
-                    await self._check_fence(fence)
-                    await self._resources.delete(NetworkPolicy, policy.name, namespace.name, _uid(policy))
+        removed_namespaces: set[str] = set()
+        if desired.application_ids is None:
+            # Full reconciliation prunes Organization policies and Namespaces omitted from desired state.
+            for namespace in organization_namespaces:
+                policies = await self._resources.list_owned(
+                    NetworkPolicy,
+                    compute_id,
+                    ReconciliationScope.application,
+                    namespace.name,
+                )
+                for policy in policies:
+                    if policy.name == "longlink-gateway-ingress" and namespace.name not in desired_namespaces:
+                        await self._check_fence(fence)
+                        await self._resources.delete(NetworkPolicy, policy.name, namespace.name, _uid(policy))
 
-        # Gateway kinds are limited to resources carrying the gateway label in the claimed system Namespace.
+            # Namespace deletion is last so failures above never hide unpruned child resources.
+            for namespace in organization_namespaces:
+                if namespace.name not in desired_namespaces:
+                    removed_namespaces.add(namespace.name)
+                    await self._check_fence(fence)
+                    await self._resources.delete(Namespace, namespace.name, uid=_uid(namespace))
+        return removed_applications, removed_namespaces
+
+    async def _prune_platform(self, desired: DesiredCompute, fence: Callable[[], Awaitable[None]] | None) -> None:
+        """Prune obsolete Platform gateway resources from the system Namespace."""
+
+        # Platform resources require the gateway label and a canonical kind and name.
+        compute_id = str(desired.id)
         gateway_resources: tuple[tuple[type[APIObject], set[str]], ...] = (
             (ConfigMap, {gateway.GATEWAY_NAME}),
             (Secret, {gateway.GATEWAY_AUTH_SECRET_NAME, gateway.GATEWAY_TLS_SECRET_NAME}),
@@ -548,7 +630,12 @@ class Reconciler:
             (NetworkPolicy, {"longlink-gateway-ingress"}),
         )
         for resource_class, active_names in gateway_resources:
-            resources = await self._resources.list_owned(resource_class, compute_id, gateway.GATEWAY_NAMESPACE)
+            resources = await self._resources.list_owned(
+                resource_class,
+                compute_id,
+                ReconciliationScope.platform,
+                gateway.GATEWAY_NAMESPACE,
+            )
             for resource in resources:
                 labels = _string_map(_metadata(resource), "labels")
                 if labels.get(GATEWAY_LABEL) != gateway.GATEWAY_NAME:
@@ -557,16 +644,6 @@ class Reconciler:
                     continue
                 await self._check_fence(fence)
                 await self._resources.delete(resource_class, resource.name, gateway.GATEWAY_NAMESPACE, _uid(resource))
-
-        # Namespace deletion is last so failures above never hide unpruned child resources.
-        for namespace in organization_namespaces:
-            if namespace.name not in desired_namespaces:
-                removed_namespaces.add(namespace.name)
-                await self._check_fence(fence)
-                await self._resources.delete(Namespace, namespace.name, uid=_uid(namespace))
-
-        # Provider cleanup starts only after workload Pods and requested Namespaces have actually disappeared.
-        await self._wait_for_prune(removed_applications, removed_namespaces, desired.deleting)
 
     async def _wait_for_prune(
         self,

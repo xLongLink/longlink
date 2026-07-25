@@ -2,9 +2,9 @@ from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel
-from sqlalchemy import Index, text
+from sqlalchemy import JSON, Enum, Index, Column, text
 from longlink.utils.time import utcnow
-from src.models.operations import OperationStatus
+from src.models.operations import OperationStatus, ReconciliationScope
 from longlink.database.types import UTCDateTime
 
 
@@ -30,9 +30,13 @@ class Operation(SQLModel, table=True):
 
     # Reference
     compute_id: UUID = Field(foreign_key="compute_registries.id")
+    application_ids: list[str] | None = Field(default=None, sa_column=Column(JSON, nullable=True))
 
     # State
     failed: bool = Field(default=False, nullable=False)
+    scope: ReconciliationScope = Field(
+        sa_column=Column(Enum(ReconciliationScope, name="reconciliation_scope_enum", native_enum=False), nullable=False)
+    )
     attempt_count: int = Field(default=0, nullable=False, ge=0)
     platform_version: str = Field(max_length=128)
 

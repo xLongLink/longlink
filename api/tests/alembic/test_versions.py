@@ -51,20 +51,20 @@ def test_migrations_execute_against_postgresql_and_match_current_metadata(monkey
         wait_for_postgres(container, "longlink", "secret", "longlink", POSTGRES_PORT)
 
         # Run the real Alembic environment against the isolated PostgreSQL database.
-        database_url = f"postgresql+psycopg://longlink:secret@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?sslmode=disable"
+        database_url = f"postgresql+asyncpg://longlink:secret@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?ssl=disable"
         monkeypatch.setattr(env, "DATABASE_URL", database_url)
         config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
         command.upgrade(config, "head")
 
         # Compare every migrated platform table and column with the current model metadata.
-        engine = create_engine(database_url)
+        inspection_url = f"postgresql+psycopg://longlink:secret@{container.host()}:{container.port(POSTGRES_PORT)}/longlink?sslmode=disable"
+        engine = create_engine(inspection_url)
         model_columns = {table.name: {column.name for column in table.columns} for table in SQLModel.metadata.sorted_tables}
         with engine.connect() as connection:
             inspector = inspect(connection)
             migrated_tables = set(inspector.get_table_names())
             migrated_columns = {
-                table_name: {column["name"] for column in inspector.get_columns(table_name)}
-                for table_name in model_columns
+                table_name: {column["name"] for column in inspector.get_columns(table_name)} for table_name in model_columns
             }
 
         # Require exact table and column parity rather than migration-source approximations.

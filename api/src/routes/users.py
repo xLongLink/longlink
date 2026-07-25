@@ -1,5 +1,5 @@
 from fastapi import Depends, APIRouter
-from src.auth import authuser, authsupport
+from src.auth import authuser, authsupport, current_authenticated_user
 from src.models.users import UserUpdate, UserProfile, UserListItem, UserOrganizationMembership
 from src.database.services import users
 from src.database.models.users import User
@@ -8,7 +8,7 @@ router = APIRouter()
 
 
 @router.get("/api/me", response_model=UserProfile)
-async def get_me(user: User = Depends(authuser)):
+async def get_me(user: User = Depends(current_authenticated_user)):
     """Return the authenticated user's details."""
 
     return user
@@ -30,7 +30,7 @@ async def list_users(_: User = Depends(authsupport)):
 
 
 @router.patch("/api/me", response_model=UserProfile)
-async def patch_me(payload: UserUpdate, user: User = Depends(authuser)):
+async def patch_me(payload: UserUpdate, user: User = Depends(current_authenticated_user)):
     """Update the authenticated user's details."""
 
     params = payload.model_dump(exclude_unset=True)

@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { ICON_NAMES } from '@/lib/icons';
-import { LANGUAGE_VALUES } from '@/lib/languages';
 import { ACCENT_VALUES, MAX_RADIUS, MIN_RADIUS, THEME_VALUES } from '@/lib/theme';
 import { APPLICATION_ROLE_NAMES, PLATFORM_ROLE_NAMES, ROLE_NAMES } from '@/lib/roles';
 
@@ -12,20 +11,11 @@ const themeSchema = z.enum(THEME_VALUES);
 const accentSchema = z.enum(ACCENT_VALUES);
 const radiusSchema = z.number().min(MIN_RADIUS).max(MAX_RADIUS);
 const iconNameSchema = z.enum(ICON_NAMES).nullable();
-const languageSchema = z.enum(LANGUAGE_VALUES);
 const databaseSslModeSchema = z.enum(['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full']);
-
-export const apiAuthConfigSchema = z.object({
-    github_enabled: z.boolean(),
-});
 
 export const apiRegistrationVerifiedSchema = z.object({
     email: z.email(),
     next: z.string(),
-});
-
-export const apiAuthorizationSchema = z.object({
-    authorization_url: z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
 });
 
 export const apiUserIdentitySchema = z.object({
@@ -59,7 +49,6 @@ export const apiUserProfileSchema = apiUserListItemSchema.extend({
     theme: themeSchema,
     accent: accentSchema,
     radius: radiusSchema,
-    language: languageSchema,
 });
 
 export const apiInvitationSchema = z.object({
@@ -206,6 +195,7 @@ export const apiComputeRegistrySchema = z.object({
 export const apiOperationSchema = z.object({
     id: z.string(),
     compute_id: z.string(),
+    scope: z.enum(['platform', 'application']),
     status: z.enum(['scheduled', 'active', 'completed', 'failed']),
     platform_version: z.string(),
     attempt_count: z.number().int().nonnegative(),

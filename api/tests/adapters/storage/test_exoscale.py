@@ -1,10 +1,99 @@
 import pytest
 import importlib
+from botocore.exceptions import ClientError
 
 exoscale = importlib.import_module("src.adapters.storage.exoscale")
 Exoscale = exoscale.Exoscale
 
 pytestmark = pytest.mark.no_db
+
+
+async def test_exoscale_bucket_returns_existing_owned_bucket(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Return the bucket name when the bucket already exists for the current credentials."""
+
+    class Client:
+        """Provide the S3 calls used by the test."""
+
+        async def __aenter__(self) -> "Client":
+            """Enter the fake client context."""
+
+            return self
+
+        async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
+            """Exit the fake client context."""
+
+        async def create_bucket(self, Bucket: str) -> None:
+            """Raise the duplicate-owned-bucket error from S3-compatible backends."""
+
+            assert Bucket == "bucket"
+            raise ClientError({"Error": {"Code": "BucketAlreadyOwnedByYou"}}, "CreateBucket")
+
+    storage = Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
+    monkeypatch.setattr(storage, "_client", lambda: Client())
+
+    assert await storage.create("bucket") == "bucket"
+
+
+async def test_exoscale_buckets_returns_named_buckets(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Return bucket names from the storage client response."""
+
+    class Client:
+        """Provide the bucket-listing calls used by the test."""
+
+        async def __aenter__(self) -> "Client":
+            """Enter the fake client context."""
+
+            return self
+
+        async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
+            """Exit the fake client context."""
+
+        async def list_buckets(self) -> dict[str, list[dict[str, str]]]:
+            """Return buckets with one malformed item ignored by the adapter."""
+
+            return {"Buckets": [{"Name": "acme"}, {}, {"Name": "globex"}]}
+
+    storage = Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
+    monkeypatch.setattr(storage, "_client", lambda: Client())
+
+    assert await storage.buckets() == ["acme", "globex"]
+
+
+async def test_exoscale_usage_aggregates_pages_and_ignores_prefix_marker(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Aggregate object usage across pages while skipping the zero-byte prefix marker."""
+
+    class Paginator:
+        """Yield fake S3 object-list pages."""
+
+        async def paginate(self, Bucket: str, Prefix: str):
+            """Return pages for the requested bucket and prefix."""
+
+            assert Bucket == "acme"
+            assert Prefix == "shared/"
+            yield {"Contents": [{"Key": "shared/", "Size": 0}, {"Key": "shared/a.txt", "Size": 5}]}
+            yield {"Contents": [{"Key": "shared/b.txt", "Size": 7}, {"Key": "shared/empty.txt", "Size": 0}]}
+
+    class Client:
+        """Provide the paginator used by usage()."""
+
+        async def __aenter__(self) -> "Client":
+            """Enter the fake client context."""
+
+            return self
+
+        async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
+            """Exit the fake client context."""
+
+        def get_paginator(self, name: str) -> Paginator:
+            """Return the object-list paginator."""
+
+            assert name == "list_objects_v2"
+            return Paginator()
+
+    storage = Exoscale("https://sos-ch-gva-2.exo.io", "access", "secret")
+    monkeypatch.setattr(storage, "_client", lambda: Client())
+
+    assert await storage.usage("acme", "shared/") == {"object_count": 3, "space_used": 12}
 
 
 async def test_exoscale_credentials_replaces_prior_material_and_scopes_policy(monkeypatch: pytest.MonkeyPatch) -> None:

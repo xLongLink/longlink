@@ -5,7 +5,6 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration, type MetaFunction } fr
 import '@/index.css';
 import { I18nProvider } from '@/lib/i18n';
 import { AstryxProvider } from '@/providers';
-import { DEFAULT_LANGUAGE } from '@/lib/languages';
 import { createQueryClient } from '@/lib/react-query';
 
 export const meta: MetaFunction = () => [{ title: 'LongLink' }];
@@ -37,7 +36,7 @@ export default function ApplicationRoot() {
 
     return (
         <QueryClientProvider client={client}>
-            <I18nProvider language={DEFAULT_LANGUAGE}>
+            <I18nProvider>
                 <AstryxProvider mode="dark">
                     <Outlet />
                 </AstryxProvider>

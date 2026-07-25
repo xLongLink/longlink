@@ -1,6 +1,6 @@
 import pytest
 from uuid import UUID
-from src.kubernetes.reconcile import Reconciler, DesiredCompute, DesiredApplication, DesiredOrganization
+from src.kubernetes.reconcile import Reconciler, DesiredCompute, DesiredApplication, DesiredGatewayRoute, DesiredOrganization
 from src.kubernetes.resources import KubernetesResources
 
 pytestmark = pytest.mark.no_db
@@ -46,17 +46,33 @@ def application(
     )
 
 
+def route(
+    application_id: str = "20000000-0000-4000-8000-000000000001",
+    namespace: str = "acme",
+) -> DesiredGatewayRoute:
+    """Build one desired gateway route for validation tests."""
+
+    return DesiredGatewayRoute(id=UUID(application_id), namespace=namespace)
+
+
 @pytest.mark.parametrize(
     ("desired", "proxy_secret", "message"),
     [
         (
-            DesiredCompute(id=UUID("00000000-0000-4000-8000-000000000001"), organizations=(organization(),), applications=(), deleting=True),
+            DesiredCompute(
+                id=UUID("00000000-0000-4000-8000-000000000001"),
+                routes=(),
+                organizations=(organization(),),
+                applications=(),
+                deleting=True,
+            ),
             "proxy-secret",
             "Deleting compute desired state",
         ),
         (
             DesiredCompute(
                 id=UUID("00000000-0000-4000-8000-000000000001"),
+                routes=(),
                 organizations=(organization(slug="acme"), organization("10000000-0000-4000-8000-000000000002", "acme")),
                 applications=(),
             ),
@@ -64,17 +80,27 @@ def application(
             "Duplicate desired organization namespace",
         ),
         (
-            DesiredCompute(id=UUID("00000000-0000-4000-8000-000000000001"), organizations=(organization(),), applications=(application(namespace="wrong"),)),
+            DesiredCompute(
+                id=UUID("00000000-0000-4000-8000-000000000001"),
+                routes=(route(namespace="wrong"),),
+                organizations=(organization(),),
+                applications=(application(namespace="wrong"),),
+            ),
             "proxy-secret",
             "namespace does not match",
         ),
         (
-            DesiredCompute(id=UUID("00000000-0000-4000-8000-000000000001"), organizations=(organization(),), applications=(application(envs={"BAD-NAME": "x"}),)),
+            DesiredCompute(
+                id=UUID("00000000-0000-4000-8000-000000000001"),
+                routes=(route(),),
+                organizations=(organization(),),
+                applications=(application(envs={"BAD-NAME": "x"}),),
+            ),
             "proxy-secret",
             "invalid environment names",
         ),
         (
-            DesiredCompute(id=UUID("00000000-0000-4000-8000-000000000001"), organizations=(), applications=()),
+            DesiredCompute(id=UUID("00000000-0000-4000-8000-000000000001"), routes=(), organizations=(), applications=()),
             "bad secret",
             "Gateway proxy secret",
         ),

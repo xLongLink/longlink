@@ -7,6 +7,7 @@ from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.services import operations
+from src.models.operations import ReconciliationScope
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -145,7 +146,7 @@ async def accept_in_session(session: AsyncSession, user: User) -> int:
 
     # Publish new Organization access to managed runtimes after the transaction commits.
     for compute_id in sorted(changed_compute_ids, key=str):
-        await operations.enqueue_in_session(session, compute_id)
+        await operations.enqueue_in_session(session, compute_id, ReconciliationScope.application)
 
     return len(rows)
 

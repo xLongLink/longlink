@@ -5,17 +5,7 @@ import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
-import {
-    AppWindow,
-    ArrowLeftRight,
-    Code2,
-    Database,
-    HardDrive,
-    Languages,
-    Palette,
-    PanelTop,
-    UserRound,
-} from 'lucide-react';
+import { AppWindow, ArrowLeftRight, Code2, Database, HardDrive, Palette, PanelTop, UserRound } from 'lucide-react';
 import { CodeTabs } from '@/components/CodeTabs';
 import { CodeBlock } from '@/components/CodeBlock';
 
@@ -30,7 +20,6 @@ function LocalRuntimeDiagram() {
                         <Text weight="semibold">User</Text>
                         <Text type="supporting">Browser</Text>
                         <Stack direction="horizontal" gap={3} justify="center">
-                            <Languages aria-label="Languages" className="text-secondary" size={16} />
                             <Palette aria-label="Theming" className="text-secondary" size={16} />
                             <PanelTop aria-label="Application shell" className="text-secondary" size={16} />
                         </Stack>

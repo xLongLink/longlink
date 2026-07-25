@@ -7,7 +7,6 @@ import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useToast } from '@astryxdesign/core/Toast';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -24,6 +23,7 @@ import type {
     ApiOrganizationSummary,
 } from '@/lib/types';
 import { S3 } from '@/svg/S3';
+import { useToast } from '@/hooks/use-toast';
 import { PostgreSQL } from '@/svg/PostgreSQL';
 import { useUserProfile } from '@/hooks/use-user';
 import { hasMinimumRole, type Role } from '@/lib/roles';

@@ -97,7 +97,7 @@ async def send_organization_invitation_email(recipient: str, organization_name: 
 
     # Prefill the shared registration flow while retaining the sign-in option for existing accounts.
     subject = f"Invitation to join {organization_name} on LongLink"
-    invitation_url = f"{env.PUBLIC_URL.rstrip('/')}/auth/register?{urlencode({'email': recipient, 'next': '/organizations'})}"
+    invitation_url = f"{env.PUBLIC_URL.rstrip('/')}/auth/register?{urlencode({'email': recipient})}"
     role_label = role.value
 
     # Keep a plain-text fallback for clients that do not render HTML.

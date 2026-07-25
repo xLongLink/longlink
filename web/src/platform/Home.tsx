@@ -1,5 +1,11 @@
-import type { CSSProperties } from 'react';
+import { Text } from '@astryxdesign/core/Text';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { Section } from '@astryxdesign/core/Section';
+import { Heading } from '@astryxdesign/core/Heading';
+import { type PointerEvent, useEffect, useState } from 'react';
+import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import {
     Activity,
     ArrowRight,
@@ -11,7 +17,6 @@ import {
     FileCode,
     HardDrive,
     KeyRound,
-    Languages,
     Logs,
     Mail,
     PackageCheck,
@@ -32,6 +37,7 @@ import { Pydantic } from '@/svg/Pydantic';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { Wordmark } from '@/components/Wordmark';
+import { HeroGlobe } from '@/platform/HeroGlobe';
 import { CliWorkflowConnector } from '@/svg/CliWorkflowConnector';
 import { WorkNetworkConnections } from '@/svg/WorkNetworkConnections';
 
@@ -50,7 +56,6 @@ const homepageCards = [
             'Authentication',
             'Organizations',
             'Permissions',
-            'Languages',
             'Theming',
             'Application shell',
             'Databases',
@@ -86,17 +91,44 @@ const homepageCards = [
     },
 ] as const;
 
+const paths = [
+    {
+        title: 'Use',
+        description:
+            'Deploy an existing application as it is. Get a proven process running without rebuilding what already exists.',
+        action: 'Explore existing apps',
+        href: '/marketplace',
+    },
+    {
+        title: 'Adapt',
+        description:
+            'Fork an existing application and change its workflow, fields, rules, integrations, or interface around your requirements.',
+        action: 'Start from a foundation',
+        href: '/docs',
+    },
+    {
+        title: 'Create',
+        description:
+            'Build a dedicated application when the process is uniquely yours. LongLink handles the platform; you own the application.',
+        action: 'Build a new app',
+        href: '/docs',
+    },
+] as const;
+
+const integrationContextCount = 336_000_000;
+const humanRobotHandsImage = '/human_robot_hands_vector.svg';
+
 /** Renders the XML-to-UI showcase card visual. */
 function XmlShowcaseVisual() {
     return (
         <div aria-hidden="true" className="relative h-44 overflow-hidden">
             <div className="absolute inset-0 rounded-md p-3 transition-[transform,opacity] duration-500 ease-out group-hover:-translate-y-4 group-hover:scale-[0.97] group-hover:opacity-0 motion-reduce:transition-none">
                 <div className="mb-2 flex gap-1.5">
-                    <span className="size-1.5 rounded-full bg-[#d99c64]/80" />
-                    <span className="size-1.5 rounded-full bg-[#84e2d1]/70" />
-                    <span className="size-1.5 rounded-full bg-[color-mix(in_srgb,var(--color-text-secondary)_40%,transparent)]" />
+                    <span className="size-1.5 rounded-full bg-accent-bg" />
+                    <span className="size-1.5 rounded-full bg-muted" />
+                    <span className="size-1.5 rounded-full bg-border" />
                 </div>
-                <pre className="whitespace-pre-wrap break-words font-mono text-[10px] leading-4 text-[#a3a3a3]">
+                <pre className="whitespace-pre-wrap break-words font-mono text-[10px] leading-4 text-secondary">
                     <code>{`<longlink name="Access">
   <TextInput label="Email" />
   <Selector label="Role">
@@ -108,16 +140,16 @@ function XmlShowcaseVisual() {
             </div>
 
             <div className="absolute inset-0 translate-y-6 scale-[0.96] rounded-md p-3 opacity-0 transition-[transform,opacity] duration-500 ease-out group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 motion-reduce:transition-none">
-                <div className="mb-3 text-sm font-medium text-[#f5f5f5]">Access request</div>
+                <div className="mb-3 text-sm font-medium text-primary">Access request</div>
                 <div className="space-y-2">
                     <div className="space-y-1">
-                        <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#a3a3a3]">Email</div>
+                        <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-secondary">Email</div>
                         <div className="rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-primary">
                             alex@company.com
                         </div>
                     </div>
                     <div className="space-y-1">
-                        <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-[#a3a3a3]">Role</div>
+                        <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-secondary">Role</div>
                         <div className="flex items-center justify-between rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-primary">
                             Reviewer
                             <ChevronDown className="size-3 text-secondary" strokeWidth={1.8} />
@@ -172,7 +204,6 @@ const foundationVisualColumns = [
         { key: 'logs', icon: Logs },
     ],
     [
-        { key: 'languages', icon: Languages },
         { key: 'storage', icon: HardDrive },
         { key: 'status', icon: Activity },
     ],
@@ -253,7 +284,7 @@ const workNetworkNodes = [
 function FoundationCardVisual() {
     return (
         <div aria-hidden="true" className="relative h-40 overflow-hidden">
-            <div className="absolute left-1/2 top-1/2 size-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#4cc7b1]/8 blur-2xl" />
+            <div className="absolute left-1/2 top-1/2 size-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent-bg/10 blur-2xl" />
             <div className="relative z-10 grid h-full grid-cols-4 px-7 py-3">
                 {foundationVisualColumns.map((tiles, columnIndex) => (
                     <div
@@ -265,13 +296,12 @@ function FoundationCardVisual() {
                         {tiles.map(({ key, icon: TileIcon }) => (
                             <div
                                 key={key}
-                                className="relative flex size-9 items-center justify-center rounded-md border border-[#29534d] bg-[#14211f]/92 text-[#84e2d1] shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_10px_30px_rgba(0,0,0,0.35),0_0_26px_rgba(70,190,170,0.16)]"
+                                className="homepage-visual-node relative flex size-9 items-center justify-center rounded-md border border-border bg-card/90 text-accent"
                             >
                                 <TileIcon
                                     className="size-4 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
                                     strokeWidth={1.8}
                                 />
-                                <span className="absolute inset-0 rounded-md bg-gradient-to-br from-white/10 to-transparent" />
                             </div>
                         ))}
                     </div>
@@ -280,10 +310,7 @@ function FoundationCardVisual() {
 
             {['left-[22%] top-[25%]', 'left-[47%] top-[30%]', 'right-[18%] top-[23%]', 'left-[54%] bottom-[22%]'].map(
                 (className) => (
-                    <div
-                        key={className}
-                        className={`absolute size-9 rounded-md bg-black/12 shadow-inner ${className}`}
-                    />
+                    <div key={className} className={`absolute size-9 rounded-md bg-muted shadow-inner ${className}`} />
                 )
             )}
         </div>
@@ -295,25 +322,25 @@ function CliCardVisual() {
     return (
         <div aria-hidden="true" className="relative h-40 overflow-hidden">
             <div className="absolute left-1/2 top-0 h-40 w-[280px] -translate-x-1/2">
-                <div className="absolute left-1/2 top-1/2 h-28 w-60 -translate-x-1/2 -translate-y-1/2 rounded-[28px] bg-[#d9b469]/5 shadow-[0_0_42px_rgba(217,180,105,0.08)] transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" />
+                <div className="absolute left-1/2 top-1/2 h-28 w-60 -translate-x-1/2 -translate-y-1/2 rounded-[28px] bg-accent-bg/5 transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" />
                 {cliWorkflowConnectors.map(({ key, className }) => (
                     <CliWorkflowConnector
                         key={key}
-                        className={`absolute h-11 w-[58px] overflow-visible ${className}`}
+                        className={`absolute h-11 w-[58px] overflow-visible text-accent ${className}`}
                     />
                 ))}
 
                 {cliWorkflowSteps.map(({ command, icon: StepIcon, className }) => (
                     <div
                         key={command}
-                        className={`absolute z-20 flex w-20 items-center gap-1.5 rounded-full border border-[#4b3d25] bg-[#18130d]/95 px-2.5 py-2 shadow-[0_10px_28px_rgba(0,0,0,0.32),0_0_20px_rgba(215,171,89,0.12)] ${className}`}
+                        className={`homepage-visual-node absolute z-20 flex w-20 items-center gap-1.5 rounded-full border border-border bg-card/95 px-2.5 py-2 ${className}`}
                     >
                         <StepIcon
-                            className="size-3.5 shrink-0 text-[#f4c878] transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
+                            className="size-3.5 shrink-0 text-accent transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
                             strokeWidth={1.8}
                         />
                         <div className="min-w-0">
-                            <div className="font-mono text-[10px] leading-3 text-[#f1d79b]">{command}</div>
+                            <div className="font-mono text-[10px] leading-3 text-primary">{command}</div>
                         </div>
                     </div>
                 ))}
@@ -326,23 +353,22 @@ function CliCardVisual() {
 function WorkNetworkVisual() {
     return (
         <div aria-hidden="true" className="relative h-40 overflow-hidden">
-            <WorkNetworkConnections className="absolute inset-0 h-full w-full" />
+            <WorkNetworkConnections className="absolute inset-0 h-full w-full text-accent" />
 
-            <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-md border border-[#6a3e49] bg-[#181013]/95 px-5 py-3 shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_16px_36px_rgba(0,0,0,0.38),0_0_30px_rgba(224,151,166,0.2)]">
-                <Wordmark className="[&>span:first-child]:text-[#f0a6b6] [&>span:last-child]:text-[#f5f5f5]" />
-                <span className="pointer-events-none absolute inset-0 rounded-md bg-gradient-to-br from-white/10 to-transparent" />
+            <div className="homepage-visual-node absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-card/95 px-5 py-3">
+                <Wordmark className="[&>span:first-child]:text-accent [&>span:last-child]:text-primary" />
             </div>
 
             {workNetworkNodes.map(({ label, icon: NodeIcon, className }) => (
                 <div
                     key={label}
-                    className={`absolute z-20 flex min-w-[84px] items-center gap-1.5 rounded-full border border-[#56333d] bg-[#181013]/95 px-2.5 py-1.5 shadow-[0_10px_28px_rgba(0,0,0,0.32),0_0_20px_rgba(224,151,166,0.12)] ${className}`}
+                    className={`homepage-visual-node absolute z-20 flex min-w-[84px] items-center gap-1.5 rounded-full border border-border bg-card/95 px-2.5 py-1.5 ${className}`}
                 >
                     <NodeIcon
-                        className="size-3.5 shrink-0 text-[#f0a6b6] transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
+                        className="size-3.5 shrink-0 text-accent transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
                         strokeWidth={1.8}
                     />
-                    <span className="text-[10px] font-medium leading-3 text-[#f6c0ca]">{label}</span>
+                    <span className="text-[10px] font-medium leading-3 text-primary">{label}</span>
                 </div>
             ))}
         </div>
@@ -353,92 +379,159 @@ function WorkNetworkVisual() {
 function PythonCardVisual() {
     return (
         <div aria-hidden="true" className="relative h-40 overflow-hidden">
-            <div className="absolute left-1/2 top-1/2 size-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#6d472c]/35 bg-[#8f5424]/10" />
-            <div className="absolute left-1/2 top-1/2 size-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#8a5a35]/45 bg-[#b16a2e]/10" />
-            <div className="absolute left-1/2 top-1/2 size-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#a8683a]/55 bg-[#c77735]/12" />
-            <div className="absolute left-1/2 top-1/2 h-px w-40 -translate-x-1/2 bg-[#8a5a35]/35" />
-            <div className="absolute left-1/2 top-1/2 h-40 w-px -translate-y-1/2 bg-[#8a5a35]/35" />
-            <div className="absolute left-1/2 top-1/2 h-px w-40 -translate-x-1/2 rotate-45 bg-[#8a5a35]/25" />
-            <div className="absolute left-1/2 top-1/2 h-px w-40 -translate-x-1/2 -rotate-45 bg-[#8a5a35]/25" />
+            <div className="absolute left-1/2 top-1/2 size-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-muted" />
+            <div className="absolute left-1/2 top-1/2 size-28 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-muted" />
+            <div className="absolute left-1/2 top-1/2 size-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-muted" />
+            <div className="absolute left-1/2 top-1/2 h-px w-40 -translate-x-1/2 bg-border" />
+            <div className="absolute left-1/2 top-1/2 h-40 w-px -translate-y-1/2 bg-border" />
+            <div className="absolute left-1/2 top-1/2 h-px w-40 -translate-x-1/2 rotate-45 bg-border" />
+            <div className="absolute left-1/2 top-1/2 h-px w-40 -translate-x-1/2 -rotate-45 bg-border" />
 
-            <div className="absolute left-1/2 top-1/2 z-20 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#6a4a33] bg-[#4f3523]/95 text-[#f5c18b] shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_12px_32px_rgba(0,0,0,0.38),0_0_34px_rgba(226,147,78,0.26)]">
+            <div className="homepage-visual-node absolute left-1/2 top-1/2 z-20 flex size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/95 text-accent">
                 <Python className="size-6 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none" />
-                <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/12 to-transparent" />
             </div>
 
             {pythonOrbitLibraries.map(({ key, icon: LibraryIcon, className }) => (
                 <div
                     key={key}
-                    className={`absolute z-20 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#5c4030] bg-[#2a1d15]/90 text-[#f5c18b] shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_10px_28px_rgba(0,0,0,0.35),0_0_24px_rgba(226,147,78,0.18)] ${className}`}
+                    className={`homepage-visual-node absolute z-20 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/90 text-accent ${className}`}
                 >
                     <LibraryIcon
                         className="size-4 transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"
                         strokeWidth={1.8}
                     />
-                    <span className="absolute inset-0 rounded-full bg-gradient-to-br from-white/10 to-transparent" />
                 </div>
             ))}
         </div>
     );
 }
 
+/** Renders the integration-scale callout and counts up when it enters the viewport. */
+function IntegrationScale() {
+    const [count, setCount] = useState(0);
+
+    useEffect(() => {
+        // Observe the number so the count remains at zero until users can see it.
+        const target = document.getElementById('integration-context-count');
+        if (!target) return;
+
+        // Show the final value without movement when reduced motion is requested.
+        let frame = 0;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            frame = requestAnimationFrame(() => setCount(integrationContextCount));
+            return () => cancelAnimationFrame(frame);
+        }
+
+        // Count up once using the design system's slow motion duration.
+        const duration =
+            Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--duration-slow-max')) * 2;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry?.isIntersecting) return;
+
+                observer.disconnect();
+                const startedAt = performance.now();
+
+                const animate = (time: number) => {
+                    const progress = Math.min((time - startedAt) / duration, 1);
+                    const easedProgress = 1 - Math.pow(1 - progress, 3);
+
+                    setCount(Math.round(integrationContextCount * easedProgress));
+                    if (progress < 1) frame = requestAnimationFrame(animate);
+                };
+
+                frame = requestAnimationFrame(animate);
+            },
+            { threshold: 0.4 }
+        );
+
+        observer.observe(target);
+
+        return () => {
+            observer.disconnect();
+            cancelAnimationFrame(frame);
+        };
+    }, []);
+
+    return (
+        <Section className="relative z-10 bg-transparent" variant="transparent" padding={6} paddingBlock={10}>
+            <Stack
+                className="relative mx-auto pb-10 pt-14 text-center sm:pb-16 sm:pt-20"
+                width="100%"
+                maxWidth={1000}
+                gap={6}
+                hAlign="center"
+            >
+                <Text className="text-xs font-medium uppercase tracking-widest" color="secondary">
+                    The integration surface
+                </Text>
+                <Stack gap={3} hAlign="center">
+                    <Heading
+                        id="integration-context-count"
+                        level={2}
+                        type="display-1"
+                        color="accent"
+                        textWrap="nowrap"
+                        justify="center"
+                        className="text-4xl tracking-tight sm:text-5xl lg:text-6xl"
+                    >
+                        {count.toLocaleString('en-US').replaceAll(',', "'")}+
+                    </Heading>
+                    <Text as="p" className="text-lg tracking-tight sm:text-2xl" weight="medium">
+                        Unique Industry & Geography Contexts.
+                    </Text>
+                </Stack>
+                <Text as="p" className="max-w-2xl" color="secondary" textWrap="pretty">
+                    Every industry and geography brings its own regulations, systems, data models, and workflows.
+                    <br />
+                    Each combination creates a distinct integration context that rigid, one-size-fits-all software
+                    cannot cover.
+                </Text>
+            </Stack>
+        </Section>
+    );
+}
+
 /** Renders the public home page. */
 export default function Home() {
+    const [paintingHasEntered, setPaintingHasEntered] = useState(false);
+
+    useEffect(() => {
+        const target = document.getElementById('homepage-hands-scroll-swing');
+        if (!target) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry?.isIntersecting) return;
+
+                setPaintingHasEntered(true);
+                observer.disconnect();
+            },
+            { threshold: 0.35 }
+        );
+
+        observer.observe(target);
+
+        return () => observer.disconnect();
+    }, []);
+
+    function handlePaintingPointerMove(event: PointerEvent<HTMLDivElement>) {
+        const bounds = event.currentTarget.getBoundingClientRect();
+        const horizontalPosition = ((event.clientX - bounds.left) / bounds.width - 0.5) * 2;
+
+        event.currentTarget.style.setProperty('--painting-swing', `${horizontalPosition * 2.8}deg`);
+    }
+
+    function handlePaintingPointerLeave(event: PointerEvent<HTMLDivElement>) {
+        event.currentTarget.style.setProperty('--painting-swing', '0deg');
+    }
+
     return (
         <div className="min-h-screen overflow-hidden">
             <Navbar />
             <main className="relative -mt-[84px] flex min-h-screen w-full items-center justify-center px-6 pb-10 pt-28">
-                <div
-                    aria-hidden="true"
-                    className="absolute inset-0 overflow-hidden"
-                    style={
-                        {
-                            '--horizon-accent': 'var(--color-accent)',
-                            '--horizon-background': 'var(--color-background-body)',
-                        } as CSSProperties
-                    }
-                >
-                    <div
-                        className="absolute inset-0"
-                        style={
-                            {
-                                background:
-                                    'radial-gradient(68% 18% at 50% 74%, color-mix(in oklch, var(--horizon-accent) 34%, var(--horizon-background) 66%) 0 4%, color-mix(in oklch, var(--horizon-accent) 20%, transparent) 24%, transparent 72%), radial-gradient(98% 30% at 50% 82%, color-mix(in oklch, var(--horizon-accent) 20%, var(--horizon-background) 80%) 0 8%, color-mix(in oklch, var(--horizon-accent) 16%, transparent) 34%, transparent 76%), linear-gradient(180deg, var(--horizon-background) 0 54%, color-mix(in oklch, var(--horizon-accent) 10%, var(--horizon-background)) 76%, var(--horizon-background) 100%)',
-                            } as CSSProperties
-                        }
-                    />
-                    <div
-                        className="absolute"
-                        style={
-                            {
-                                background: 'var(--horizon-background)',
-                                boxShadow:
-                                    '0 -1px 0 color-mix(in oklch, var(--horizon-accent) 50%, var(--horizon-background) 50%), 0 -18px 54px color-mix(in oklch, var(--horizon-accent) 36%, transparent), 0 -44px 130px color-mix(in oklch, var(--horizon-accent) 18%, transparent)',
-                                right: '-16%',
-                                bottom: '-17%',
-                                left: '-16%',
-                                height: '45%',
-                                borderRadius: '50% 50% 0 0',
-                                transform: 'perspective(900px) rotateX(12deg)',
-                                transformOrigin: 'center bottom',
-                            } as CSSProperties
-                        }
-                    />
-                    <div
-                        className="absolute"
-                        style={
-                            {
-                                right: '8%',
-                                bottom: '11%',
-                                left: '8%',
-                                height: '24%',
-                                background:
-                                    'radial-gradient(50% 54% at 50% 100%, color-mix(in oklch, var(--horizon-accent) 22%, var(--horizon-background) 78%) 0 2%, color-mix(in oklch, var(--horizon-accent) 26%, transparent) 18%, transparent 72%)',
-                                filter: 'blur(22px)',
-                                opacity: 0.9,
-                            } as CSSProperties
-                        }
-                    />
+                <div aria-hidden="true" className="homepage-hero-horizon absolute inset-0 overflow-visible">
+                    <HeroGlobe />
                 </div>
                 <section className="relative z-10 mx-auto flex w-full max-w-5xl -translate-y-16 flex-col items-center text-center sm:-translate-y-24">
                     <div className="space-y-5">
@@ -463,11 +556,11 @@ export default function Home() {
                         </p>
                     </div>
                 </section>
-
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-24 bg-gradient-to-t from-body to-transparent" />
             </main>
-            <section className="relative z-10 bg-body px-6 py-10">
-                <div className="mx-auto grid w-full max-w-[1000px] auto-rows-[minmax(190px,auto)] grid-cols-1 gap-3 md:grid-cols-6">
+            <IntegrationScale />
+            <section className="relative z-20 bg-body px-6 py-10">
+                <div aria-hidden="true" className="homepage-feature-transition" />
+                <div className="relative z-10 mx-auto grid w-full max-w-[1000px] auto-rows-[minmax(190px,auto)] grid-cols-1 gap-3 md:grid-cols-6">
                     {homepageCards.map(({ title, description, details, layoutClassName, variant }) => {
                         const isXmlCard = variant === 'xml';
                         const isCliCard = variant === 'cli';
@@ -478,56 +571,13 @@ export default function Home() {
                         return (
                             <article
                                 key={title}
-                                className={`group relative overflow-hidden rounded-lg border p-5 text-primary shadow-[0_24px_80px_rgba(0,0,0,0.12)] ${layoutClassName} ${
-                                    isFoundationCard
-                                        ? 'border-[#294943] bg-[#0d1214]'
-                                        : isPythonCard
-                                          ? 'border-[#35241a] bg-[#140d09]'
-                                          : isXmlCard
-                                            ? 'border-[#30343b] bg-[#101214]'
-                                            : isCliCard
-                                              ? 'border-[#3d3321] bg-[#12100b]'
-                                              : isWorkCard
-                                                ? 'border-[#3b2c32] bg-[#120d10]'
-                                                : 'border-border bg-[color-mix(in_srgb,var(--color-background-card)_80%,transparent)]'
-                                }`}
+                                className={`homepage-feature-card group relative overflow-hidden rounded-lg border border-border bg-card p-5 text-primary ${layoutClassName}`}
                             >
-                                <div
-                                    className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent opacity-60 ${
-                                        isFoundationCard
-                                            ? 'via-[#84e2d1]'
-                                            : isPythonCard
-                                              ? 'via-[#d99c64]'
-                                              : isXmlCard
-                                                ? 'via-[#9aa4b2]'
-                                                : isCliCard
-                                                  ? 'via-[#d9b469]'
-                                                  : isWorkCard
-                                                    ? 'via-[#e49aaa]'
-                                                    : 'via-[color-mix(in_srgb,var(--color-accent)_70%,transparent)]'
-                                    } to-transparent`}
-                                />
-                                <div
-                                    className={`absolute -right-16 -top-20 size-44 rounded-full blur-3xl ${
-                                        isFoundationCard
-                                            ? 'bg-[#4cc7b1]/12'
-                                            : isPythonCard
-                                              ? 'bg-[#d9945c]/12'
-                                              : isXmlCard
-                                                ? 'bg-[#9aa4b2]/10'
-                                                : isCliCard
-                                                  ? 'bg-[#d9b469]/10'
-                                                  : isWorkCard
-                                                    ? 'bg-[#e49aaa]/10'
-                                                    : 'bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)]'
-                                    }`}
-                                />
-
                                 <div className="relative flex h-full flex-col justify-between gap-6">
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <h2 className="text-lg font-medium text-[#f5f5f5]">{title}</h2>
-                                            <p className="max-w-md text-sm leading-6 text-[#a3a3a3]">{description}</p>
+                                            <h2 className="text-lg font-medium text-primary">{title}</h2>
+                                            <p className="max-w-md text-sm leading-6 text-secondary">{description}</p>
                                             {details.length ? <p className="sr-only">{details.join(', ')}</p> : null}
                                         </div>
                                         {isXmlCard ? (
@@ -548,7 +598,115 @@ export default function Home() {
                     })}
                 </div>
             </section>
-            <section className="relative z-10 bg-body px-6 py-24 text-center sm:py-28">
+            <section className="homepage-painting-section relative z-20 overflow-hidden px-6 py-24 sm:py-32">
+                <div className="mx-auto w-full max-w-[1000px]">
+                    <div className="homepage-hands-hanging-frame">
+                        <div aria-hidden="true" className="homepage-hands-nail" />
+                        <div
+                            id="homepage-hands-scroll-swing"
+                            className={`homepage-hands-scroll-swing ${
+                                paintingHasEntered ? 'homepage-hands-scroll-swing-active' : ''
+                            }`}
+                        >
+                            <div
+                                className="homepage-hands-swing"
+                                onPointerLeave={handlePaintingPointerLeave}
+                                onPointerMove={handlePaintingPointerMove}
+                            >
+                                <div
+                                    aria-hidden="true"
+                                    className="homepage-hands-support homepage-hands-support-left"
+                                />
+                                <div
+                                    aria-hidden="true"
+                                    className="homepage-hands-support homepage-hands-support-right"
+                                />
+
+                                <div className="homepage-hands-frame">
+                                    <div className="homepage-hands-mat">
+                                        <img
+                                            alt="Human and robot hands reaching toward each other"
+                                            className="homepage-hands-image h-auto w-full object-contain"
+                                            decoding="async"
+                                            loading="lazy"
+                                            src={humanRobotHandsImage}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="homepage-hands-description">
+                            <p className="homepage-hands-description-title">Designed for Human and Agents</p>
+                            <p className="homepage-hands-description-copy">
+                                LongLink gives agents the same governed application layer people use: structured
+                                workflows, permissions, data, and APIs they can act on without brittle dashboard
+                                automation.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <Section
+                className="homepage-path-section relative z-20"
+                variant="transparent"
+                padding={6}
+                paddingBlock={10}
+            >
+                <Stack className="mx-auto" width="100%" maxWidth={1000} gap={8}>
+                    <Text className="text-xs font-medium uppercase tracking-widest" color="secondary">
+                        Application paths
+                    </Text>
+                    <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }} gap={0} width="100%">
+                        {paths.map(({ title, description, action, href }) => (
+                            <ClickableCard
+                                key={title}
+                                className="group min-h-80 rounded-none bg-transparent sm:min-h-96"
+                                href={href}
+                                label={action}
+                                padding={6}
+                            >
+                                <Stack
+                                    aria-hidden="true"
+                                    className="absolute inset-0 origin-left scale-x-0 bg-muted transition-transform duration-500 ease-out group-hover:scale-x-100 group-focus-within:scale-x-100 motion-reduce:transition-none"
+                                />
+                                <Stack className="relative z-10" height="100%" gap={8} justify="between">
+                                    <Stack gap={4}>
+                                        <Heading
+                                            level={2}
+                                            type="display-1"
+                                            textWrap="nowrap"
+                                            className="text-6xl tracking-tighter sm:text-7xl"
+                                        >
+                                            {title}
+                                        </Heading>
+                                        <Text as="p" color="secondary" textWrap="pretty">
+                                            {description}
+                                        </Text>
+                                    </Stack>
+                                    <Stack
+                                        direction="horizontal"
+                                        hAlign="between"
+                                        vAlign="center"
+                                        width="100%"
+                                        className="whitespace-nowrap"
+                                    >
+                                        <Text weight="medium">{action}</Text>
+                                        <ArrowRight
+                                            aria-hidden="true"
+                                            className="size-4 transition-transform group-hover:translate-x-1 group-focus-within:translate-x-1 motion-reduce:transition-none"
+                                        />
+                                    </Stack>
+                                </Stack>
+                                <Stack
+                                    aria-hidden="true"
+                                    className="path-navigation-cue absolute inset-x-0 bottom-0 z-10 h-1 origin-left scale-x-0 bg-accent-bg opacity-0 group-hover:scale-x-100 group-hover:opacity-100"
+                                />
+                            </ClickableCard>
+                        ))}
+                    </Grid>
+                </Stack>
+            </Section>
+            <section className="homepage-tertiary-section relative z-10 px-6 py-24 text-center sm:py-28">
                 <div className="mx-auto flex max-w-2xl flex-col items-center gap-8">
                     <div className="space-y-3">
                         <p className="text-xs font-medium uppercase tracking-[0.18em] text-secondary">Next step</p>
@@ -578,7 +736,7 @@ export default function Home() {
                     </div>
                 </div>
             </section>
-            <div className="relative z-10 bg-body">
+            <div className="homepage-tertiary-section relative z-10">
                 <Footer />
             </div>
         </div>

@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
-import { useToast } from '@astryxdesign/core/Toast';
 import type { Props } from '@/xml/types';
+import { useToast } from '@/hooks/use-toast';
 import { fetchApiResponse } from '@/lib/api';
 import { renderNode } from '@/xml/core/node';
 import { useXmlContext } from '@/xml/core/context';

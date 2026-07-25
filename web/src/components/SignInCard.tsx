@@ -1,12 +1,10 @@
 import { z } from 'zod';
-import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
-import { useToast } from '@astryxdesign/core/Toast';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,22 +13,18 @@ import { List, ListItem } from '@astryxdesign/core/List';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { GitHub } from '@/svg/GitHub';
-import { useAuthConfig } from '@/hooks/use-auth';
+import { fetchApiVoid } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 import { Wordmark } from '@/components/Wordmark';
 import { useSavedAccounts } from '@/hooks/use-user';
-import { fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { userProfileQueryKey } from '@/lib/query-keys';
+import { sanitizeRedirectPath } from '@/lib/redirects';
 import { PasswordInput } from '@/components/PasswordInput';
-import { accountsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
-import { apiAuthorizationSchema, parseApiResponse } from '@/lib/api-schemas';
-import { AUTH_RETURN_PATH_KEY, sanitizeRedirectPath } from '@/lib/redirects';
 
 type LoginValues = {
     email: string;
     password: string;
 };
-
-type AuthProvider = 'github';
 
 /** Renders the shared LongLink sign-in form and saved account selector. */
 export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: string; initialEmail?: string }) {
@@ -38,13 +32,11 @@ export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: stri
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const accounts = useSavedAccounts();
-    const { data: authConfig } = useAuthConfig();
     const showToast = useToast();
-    const [pendingProvider, setPendingProvider] = useState<AuthProvider | null>(null);
     const safeRedirectTo = sanitizeRedirectPath(redirectTo);
     const loginSchema = z.object({
         email: z.string().trim().min(1, t('auth.emailRequired')).email(t('auth.emailInvalid')),
-        password: z.string().min(1, t('auth.passwordRequired')),
+        password: z.string().min(1, t('auth.passwordRequired')).max(1024, t('auth.passwordTooLong')),
     });
     const form = useForm<LoginValues>({
         defaultValues: { email: initialEmail, password: '' },
@@ -54,15 +46,12 @@ export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: stri
     const nextQuery = new URLSearchParams({ next: safeRedirectTo }).toString();
     const registerQuery = new URLSearchParams({ next: safeRedirectTo, ...(email ? { email } : {}) }).toString();
     const login = useMutation({
-        mutationFn: async (payload: LoginValues) => {
-            const body = new URLSearchParams({ username: payload.email, password: payload.password });
-
-            await fetchApiVoid('/api/auth/password/login', {
+        mutationFn: (payload: LoginValues) =>
+            fetchApiVoid('/api/auth/password/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body,
-            });
-        },
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            }),
     });
 
     /** Prefills a saved account while requiring normal password authentication. */
@@ -75,10 +64,7 @@ export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: stri
     async function handlePasswordSignIn(payload: LoginValues) {
         try {
             await login.mutateAsync(payload);
-            await Promise.all([
-                queryClient.invalidateQueries({ queryKey: userProfileQueryKey() }),
-                queryClient.invalidateQueries({ queryKey: accountsQueryKey() }),
-            ]);
+            await queryClient.invalidateQueries({ queryKey: userProfileQueryKey() });
             navigate(safeRedirectTo, { replace: true });
         } catch (loginError) {
             showToast({
@@ -88,26 +74,8 @@ export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: stri
         }
     }
 
-    /** Requests an external authorization URL and preserves the safe return path. */
-    async function handleProviderSignIn(provider: AuthProvider) {
-        setPendingProvider(provider);
-
-        try {
-            const authorization = await fetchApiJson(`/api/auth/${provider}/authorize`, undefined, (value) =>
-                parseApiResponse(apiAuthorizationSchema, value)
-            );
-
-            sessionStorage.setItem(AUTH_RETURN_PATH_KEY, safeRedirectTo);
-            window.location.assign(authorization.authorization_url);
-        } catch {
-            showToast({ body: t('auth.providerSignInFailed'), type: 'error' });
-            setPendingProvider(null);
-        }
-    }
-
     const hasSavedAccounts = accounts.items.length > 0;
-    const hasProviders = authConfig?.github_enabled;
-    const isPending = login.isPending || pendingProvider !== null;
+    const isPending = login.isPending;
 
     return (
         <Stack gap={4} maxWidth={384} width="100%">
@@ -202,23 +170,6 @@ export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: stri
                     width="100%"
                 />
             </Stack>
-
-            {hasProviders ? (
-                <Stack gap={3}>
-                    <Divider label={t('auth.orContinueWith')} />
-                    <Stack direction="horizontal" gap={2} wrap="wrap">
-                        {authConfig.github_enabled ? (
-                            <Button
-                                icon={<GitHub aria-hidden="true" className="size-4" />}
-                                isDisabled={isPending}
-                                label={t('auth.github')}
-                                onClick={() => void handleProviderSignIn('github')}
-                                variant="secondary"
-                            />
-                        ) : null}
-                    </Stack>
-                </Stack>
-            ) : null}
 
             <Divider
                 label={

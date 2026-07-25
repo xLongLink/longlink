@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 from src.models.types import StorageKind
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
@@ -19,9 +19,9 @@ async def fetch() -> list[StorageRegistry]:
         statement = (
             select(StorageRegistry)
             .options(
-                selectinload(StorageRegistry.created_by),
-                selectinload(StorageRegistry.updated_by),
-                selectinload(StorageRegistry.deleted_by),
+                joinedload(StorageRegistry.created_by),
+                joinedload(StorageRegistry.updated_by),
+                joinedload(StorageRegistry.deleted_by),
             )
             .where(StorageRegistry.deleted_at.is_(None))
         )
@@ -43,9 +43,9 @@ async def get(registry_id: UUID, include_deleted: bool = False) -> StorageRegist
         statement = (
             select(StorageRegistry)
             .options(
-                selectinload(StorageRegistry.created_by),
-                selectinload(StorageRegistry.updated_by),
-                selectinload(StorageRegistry.deleted_by),
+                joinedload(StorageRegistry.created_by),
+                joinedload(StorageRegistry.updated_by),
+                joinedload(StorageRegistry.deleted_by),
             )
             .where(*conditions)
         )

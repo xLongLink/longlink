@@ -9,19 +9,6 @@ from src.database.session import get_session
 from src.database.models.users import User, AccessToken
 
 
-@pytest.mark.no_db
-async def test_auth_config_reports_local_development_capabilities(client: AsyncClient) -> None:
-    """Expose local registration without unconfigured external providers."""
-
-    # Read the public capabilities used to construct the sign-in interface.
-    response = await client.get("/api/auth/config")
-
-    assert response.status_code == 200
-    assert response.json() == {
-        "github_enabled": False,
-    }
-
-
 async def test_registration_request_does_not_enumerate_existing_accounts(
     client: AsyncClient, users: tuple[User, User, User], monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -82,7 +69,7 @@ async def test_register_verify_and_password_login(client: AsyncClient, monkeypat
         "surname": "User",
         "password": TEST_PASSWORD,
     }
-    login_payload = {"username": email, "password": TEST_PASSWORD}
+    login_payload = {"email": email, "password": TEST_PASSWORD}
     messages: list[tuple[str, str, str, str | None]] = []
 
     async def capture_mail(recipient: str, subject: str, text: str, html: str | None = None) -> None:
@@ -132,7 +119,7 @@ async def test_register_verify_and_password_login(client: AsyncClient, monkeypat
     assert client.cookies.get(AUTH_COOKIE) is None
 
     # Complete profile and password setup in the same transaction as the first session.
-    unauthenticated_login = await client.post("/api/auth/password/login", data=login_payload)
+    unauthenticated_login = await client.post("/api/auth/password/login", json=login_payload)
     restored_setup = await client.get("/api/auth/register/setup")
     mismatched_setup = await client.post(
         "/api/auth/register/complete",
@@ -176,7 +163,7 @@ async def test_register_verify_and_password_login(client: AsyncClient, monkeypat
     assert repeat_client.cookies.get(AUTH_COOKIE) is None
 
     # Password login still works after the verification-link login path.
-    login_response = await client.post("/api/auth/password/login", data=login_payload)
+    login_response = await client.post("/api/auth/password/login", json=login_payload)
 
     assert login_response.status_code == 204
 
@@ -234,11 +221,11 @@ async def test_forgot_and_reset_password(
     # Prove only the new password can create a fresh session.
     old_login = await client.post(
         "/api/auth/password/login",
-        data={"username": user.email, "password": TEST_PASSWORD},
+        json={"email": user.email, "password": TEST_PASSWORD},
     )
     new_login = await client.post(
         "/api/auth/password/login",
-        data={"username": user.email, "password": "replacement-password"},
+        json={"email": user.email, "password": "replacement-password"},
     )
 
     assert old_login.status_code == 400

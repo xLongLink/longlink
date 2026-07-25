@@ -3,6 +3,7 @@ from uuid import UUID, uuid4
 from fastapi import HTTPException
 from src.utils import names
 from sqlalchemy import delete, select
+from sqlalchemy import update as sql_update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload, selectinload
 from src.models.roles import OrganizationRoles
@@ -10,6 +11,7 @@ from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.database.services import operations
+from src.models.operations import ReconciliationScope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -44,7 +46,14 @@ async def for_compute(compute_id: UUID) -> list[Organization]:
 
     # Reconciliation requires active and pending-removal rows in one snapshot.
     async with session_scope() as session:
-        statement = select(Organization).where(Organization.compute_id == compute_id)
+        statement = (
+            select(Organization)
+            .options(
+                joinedload(Organization.database),
+                joinedload(Organization.storage),
+            )
+            .where(Organization.compute_id == compute_id)
+        )
         result = await session.execute(statement)
         return result.scalars().all()
 
@@ -54,10 +63,14 @@ async def set_runtime(organization_id: UUID, status: OrganizationStatus) -> None
 
     # Runtime status is observed independently from immutable Organization configuration.
     async with session_scope() as session:
-        organization = await session.get(Organization, organization_id)
-        if organization is None:
-            return
-        organization.status = status
+        await session.execute(
+            sql_update(Organization)
+            .where(
+                Organization.id == organization_id,
+                Organization.status != status,
+            )
+            .values(status=status)
+        )
         await session.commit()
 
 
@@ -235,7 +248,12 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
         if compute is None:
             raise RuntimeError("Organization compute registry not found")
         compute.updated_id = user.id
-        await operations.enqueue_in_session(session, compute.id)
+        await operations.enqueue_in_session(
+            session,
+            compute.id,
+            ReconciliationScope.application,
+            locked_compute=compute,
+        )
         await session.commit()
         return True
 
@@ -331,13 +349,18 @@ async def create(
         )
         session.add(organization)
         compute.updated_id = user.id
-        operation = await operations.enqueue_in_session(session, compute.id)
 
-        # Commit creation and translate unique conflicts.
+        # Queue reconciliation and translate unique conflicts from autoflush or commit.
         try:
+            operation = await operations.enqueue_in_session(
+                session,
+                compute.id,
+                ReconciliationScope.application,
+                locked_compute=compute,
+            )
             await session.commit()
 
-        # Keep name collisions at the service boundary as an API conflict.
+        # Keep Organization uniqueness collisions at the service boundary as an API conflict.
         except IntegrityError as exc:
             await session.rollback()
             raise HTTPException(status_code=409, detail="Organization already exists") from exc
@@ -474,7 +497,12 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
 
         # Tombstones and their reconciliation request commit atomically.
         compute.updated_id = user.id
-        operation = await operations.enqueue_in_session(session, compute.id)
+        operation = await operations.enqueue_in_session(
+            session,
+            compute.id,
+            ReconciliationScope.application,
+            locked_compute=compute,
+        )
 
         await session.commit()
         statement = (

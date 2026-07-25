@@ -3,12 +3,12 @@ import { useLocation } from 'react-router';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { useToast } from '@astryxdesign/core/Toast';
 import { useMutation } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
 import { ApiError, fetchApiVoid } from '@/lib/api';
 import { sanitizeRedirectPath } from '@/lib/redirects';
@@ -34,7 +34,7 @@ export default function ResetPassword() {
     const nextPath = sanitizeRedirectPath(search.get('next'));
     const nextQuery = new URLSearchParams({ next: nextPath }).toString();
     const schema = z.object({
-        password: z.string().min(1, t('auth.passwordRequired')),
+        password: z.string().min(1, t('auth.passwordRequired')).max(1024, t('auth.passwordTooLong')),
     });
     const form = useForm<ResetPasswordValues>({
         defaultValues: { password: '' },
@@ -88,12 +88,6 @@ export default function ResetPassword() {
         } catch (error) {
             // The bad-token response blocks this workflow and is rendered below.
             if (error instanceof ApiError && error.status === 400 && error.code === 'RESET_PASSWORD_BAD_TOKEN') {
-                return;
-            }
-
-            // Keep server-side password policy failures with the password field.
-            if (error instanceof ApiError && error.code === 'RESET_PASSWORD_INVALID_PASSWORD') {
-                form.setError('password', { message: error.message, type: 'server' });
                 return;
             }
 

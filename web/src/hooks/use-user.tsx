@@ -17,9 +17,9 @@ import {
 
 export type User = ApiUserProfile;
 
-type UserUpdate = Partial<Pick<User, 'name' | 'avatar' | 'theme' | 'accent' | 'radius' | 'language'>>;
+type UserUpdate = Partial<Pick<User, 'name' | 'avatar' | 'theme' | 'accent' | 'radius'>>;
 
-type UserPreferences = Pick<User, 'theme' | 'accent' | 'radius' | 'language'>;
+type UserPreferences = Pick<User, 'theme' | 'accent' | 'radius'>;
 
 type StoredThemePreferences = Pick<User, 'theme' | 'accent' | 'radius'>;
 
@@ -37,7 +37,6 @@ type UserProfileState = {
     theme: User['theme'];
     accent: User['accent'];
     radius: User['radius'];
-    language: User['language'];
     isLoading: boolean;
     error: Error | null;
 };
@@ -54,7 +53,6 @@ const DEFAULT_USER_PREFERENCES = {
     theme: 'dark' as Theme,
     accent: 'neutral' as Accent,
     radius: DEFAULT_RADIUS,
-    language: 'en',
 } as const satisfies UserPreferences;
 
 /** Caches non-sensitive theme preferences for the next page's first paint. */
@@ -107,7 +105,6 @@ export function useUserProfile(): UserProfileState {
             theme: DEFAULT_USER_PREFERENCES.theme,
             accent: DEFAULT_USER_PREFERENCES.accent,
             radius: DEFAULT_USER_PREFERENCES.radius,
-            language: DEFAULT_USER_PREFERENCES.language,
             isLoading,
             error: error ?? null,
         };
@@ -119,7 +116,6 @@ export function useUserProfile(): UserProfileState {
         theme: user.theme,
         accent: user.accent,
         radius: user.radius,
-        language: user.language,
         isLoading,
         error: error ?? null,
     };

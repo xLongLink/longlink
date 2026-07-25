@@ -1,6 +1,6 @@
 import contextlib
 from src.utils import urls
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from src.environments import env
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
@@ -40,7 +40,7 @@ async def get_session() -> async_sessionmaker[AsyncSession]:
 
 
 @contextlib.asynccontextmanager
-async def session_scope() -> AsyncIterator[AsyncSession]:
+async def session_scope() -> AsyncGenerator[AsyncSession, None]:
     """Yield one SQLAlchemy session from the shared session factory."""
 
     Session = await get_session()

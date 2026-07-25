@@ -1,4 +1,3 @@
-from .s3 import S3
 from uuid import UUID
 from .base import Storage, StorageRuntimeCredentials
 from contextlib import suppress
@@ -22,37 +21,11 @@ class Exoscale(Storage):
         # Validate the SOS endpoint before using its zone for storage and control-plane clients.
         zone = exoscale_zone(endpoint_url)
 
-        # Keep S3 bucket transport separate from Exoscale IAM behavior.
-        self._s3 = S3(endpoint_url, access_key_id, secret_access_key, zone)
-        self._access_key_id = access_key_id
-        self._secret_access_key = secret_access_key
+        # Initialize the common S3-compatible bucket transport.
+        super().__init__(endpoint_url, access_key_id, secret_access_key, zone)
 
         # Configure the async control-plane client for the SOS endpoint's zone.
         self._api_url = f"https://api-{zone}.exoscale.com/v2"
-
-    async def create(self, bucket: str) -> str:
-        """Create one Exoscale SOS bucket and return its name."""
-
-        # Delegate provider-neutral bucket creation to the S3 transport.
-        return await self._s3.create(bucket)
-
-    async def create_prefix(self, bucket: str, prefix: str) -> None:
-        """Create one Exoscale SOS prefix marker without replacing an existing object."""
-
-        # Delegate provider-neutral prefix creation to the S3 transport.
-        await self._s3.create_prefix(bucket, prefix)
-
-    async def delete(self, bucket: str) -> None:
-        """Delete one Exoscale SOS bucket and its objects."""
-
-        # Delegate provider-neutral bucket cleanup to the S3 transport.
-        await self._s3.delete(bucket)
-
-    async def delete_prefix(self, bucket: str, prefix: str) -> None:
-        """Delete every object under one Exoscale SOS bucket prefix."""
-
-        # Delegate provider-neutral prefix cleanup to the S3 transport.
-        await self._s3.delete_prefix(bucket, prefix)
 
     async def credentials(
         self,

@@ -80,12 +80,12 @@ class _FakeEngine:
         """Dispose the fake engine."""
 
 
-def test_alembic_normalizes_postgresql_urls(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Normalize PostgreSQL database URLs to the asynchronous driver."""
+def test_alembic_uses_async_postgresql_urls(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Use async PostgreSQL database URLs for online migrations."""
 
     # Arrange
     captured: dict[str, object] = {}
-    database_url = "postgresql+psycopg://longlink:sec%40ret@db.longlink.internal:5432/longlink?sslmode=require&application_name=longlink"
+    database_url = "postgresql+asyncpg://longlink:sec%40ret@db.longlink.internal:5432/longlink?ssl=require&application_name=longlink"
 
     def fake_is_offline_mode() -> bool:
         """Select Alembic's online migration path."""
@@ -126,11 +126,9 @@ def test_alembic_normalizes_postgresql_urls(monkeypatch: pytest.MonkeyPatch) -> 
 
     # Assert
     assert captured == {
-        "configured_url": "postgresql+psycopg://longlink:sec%%40ret@db.longlink.internal:5432/longlink?sslmode=require&application_name=longlink",
+        "configured_url": "postgresql+asyncpg://longlink:sec%%40ret@db.longlink.internal:5432/longlink?ssl=require&application_name=longlink",
         "engine_url": str(
-            make_url(
-                "postgresql+asyncpg://longlink:sec%40ret@db.longlink.internal:5432/longlink?application_name=longlink&ssl=require"
-            )
+            make_url("postgresql+asyncpg://longlink:sec%40ret@db.longlink.internal:5432/longlink?application_name=longlink&ssl=require")
         ),
         "engine_options": {"poolclass": module.pool.NullPool},
     }
