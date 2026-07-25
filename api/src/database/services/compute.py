@@ -78,7 +78,6 @@ async def create(name: str, slug: str, kubeconfig: str, user: User) -> tuple[Com
             await session.rollback()
             raise HTTPException(status_code=409, detail="Compute registry already exists") from exc
 
-        await session.refresh(operation)
         statement = (
             select(ComputeRegistry)
             .options(
@@ -119,7 +118,6 @@ async def delete(registry_id: UUID, user: User) -> tuple[ComputeRegistry, Operat
         registry.updated_id = user.id
         operation = await operations.enqueue_in_session(session, registry.id)
         await session.commit()
-        await session.refresh(operation)
         statement = (
             select(ComputeRegistry)
             .options(
@@ -190,7 +188,7 @@ async def record_failure(
 ) -> None:
     """Mark a compute target failed when the caller still owns its reconciliation attempt."""
 
-    # Detailed diagnostics remain on the Operation row to avoid duplicated error state.
+    # Lock the compute before checking optional operation ownership and updating its state.
     async with session_scope() as session:
         registry = (
             await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())

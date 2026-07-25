@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
 import { useLocation } from 'react-router';
 import { Center } from '@astryxdesign/core/Center';
-import Layout from '@/layout/Layout';
-import NotFound from '@/pages/NotFound';
+import NotFound from '@/platform/NotFound';
+import PlatformLayout from '@/platform/layout';
 import { useUserProfile } from '@/hooks/use-user';
 import { SignInCard } from '@/components/SignInCard';
 import { hasMinimumRole, type PlatformRole } from '@/lib/roles';
@@ -20,11 +20,11 @@ export function Auth({ children, requiredRole }: { children: ReactElement; requi
     // Show sign-in UI for unauthenticated users.
     if (!user) {
         return (
-            <Layout brandOnly brandHref="/" fillViewport reserveTabSpace>
+            <PlatformLayout brandOnly brandHref="/" fillViewport reserveTabSpace>
                 <Center height="100%" width="100%">
                     <SignInCard redirectTo={`${location.pathname}${location.search}${location.hash}`} />
                 </Center>
-            </Layout>
+            </PlatformLayout>
         );
     }
 

@@ -1,0 +1,98 @@
+import { Wrench } from 'lucide-react';
+import { Link } from '@astryxdesign/core/Link';
+import { Text } from '@astryxdesign/core/Text';
+import { Badge } from '@astryxdesign/core/Badge';
+import { Banner } from '@astryxdesign/core/Banner';
+import { Avatar } from '@astryxdesign/core/Avatar';
+import { HStack } from '@astryxdesign/core/HStack';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Heading } from '@astryxdesign/core/Heading';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
+import type { ApiApplicationResponse } from '@/lib/types';
+import { formatDateTime } from '@/lib/utils';
+import { useApplications } from '@/data/admin';
+import { useAdminPagination } from '@/platform/admin/pagination';
+
+/** Builds localized admin application table columns. */
+function createAppColumns(t: TranslatorFn): TableColumn<ApiApplicationResponse>[] {
+    return [
+        {
+            key: 'name',
+            header: t('columns.application'),
+            width: proportional(2),
+            renderCell: (app) => (
+                <HStack gap={3} align="start">
+                    <Wrench className="text-accent" size={20} />
+                    <VStack gap={1}>
+                        <Link href={`/orgs/${app.organization.slug}/apps/${app.slug}`} weight="semibold">
+                            {app.name}
+                        </Link>
+                        {app.description ? <Text type="supporting">{app.description}</Text> : null}
+                    </VStack>
+                </HStack>
+            ),
+        },
+        {
+            key: 'organization',
+            header: t('columns.organization'),
+            width: proportional(1),
+            renderCell: (app) => (
+                <HStack gap={3} align="center">
+                    <Avatar src={app.organization.avatar ?? undefined} name={app.organization.name} size="md" />
+                    <Link href={`/orgs/${app.organization.slug}`} weight="semibold">
+                        {app.organization.name}
+                    </Link>
+                </HStack>
+            ),
+        },
+        {
+            key: 'status',
+            header: t('columns.status'),
+            width: pixel(128),
+            renderCell: (app) => <Badge label={app.status} />,
+        },
+        {
+            key: 'image',
+            header: t('columns.image'),
+            width: proportional(2),
+            renderCell: (app) => <Text type="supporting">{app.image}</Text>,
+        },
+        {
+            key: 'created_at',
+            header: t('columns.created'),
+            width: pixel(208),
+            renderCell: (app) => formatDateTime(app.created_at),
+        },
+    ];
+}
+
+/** Renders the admin applications page. */
+export default function AdminApplications() {
+    const t = useTranslator();
+    const { items: applications, error, isLoading } = useApplications();
+    const { pageItems, pagination } = useAdminPagination(applications);
+
+    return (
+        <VStack gap={6} width="100%">
+            <VStack gap={1}>
+                <Heading level={1}>{t('admin.applicationsTitle')}</Heading>
+                <Text type="supporting">{t('admin.applicationsDescription')}</Text>
+            </VStack>
+            {isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
+                <Banner status="error" title={error.message} />
+            ) : (
+                <Table
+                    columns={createAppColumns(t)}
+                    data={pageItems}
+                    density="compact"
+                    emptyState={<EmptyState title={t('common.noResults')} isCompact />}
+                    hasHover
+                    idKey="id"
+                    plugins={{ pagination }}
+                />
+            )}
+        </VStack>
+    );
+}

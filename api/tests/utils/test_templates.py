@@ -1,6 +1,8 @@
 import pytest
 from src.utils import templates
 
+pytestmark = pytest.mark.no_db
+
 
 @pytest.mark.parametrize(
     ("content", "expected"),

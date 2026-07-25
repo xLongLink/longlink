@@ -70,7 +70,6 @@ async def create(organization_id: UUID, email: str, role: OrganizationRoles, use
             await session.rollback()
             raise HTTPException(status_code=409, detail="Invitation already exists") from exc
 
-        await session.refresh(invitation)
         return invitation
 
 

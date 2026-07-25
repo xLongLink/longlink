@@ -98,23 +98,29 @@ def authenticated_cookies(user_id: UUID, accounts: list[UUID] | None = None) -> 
     return {AUTH_COOKIE: str(user_id), **session_cookie(saved_accounts)}
 
 
+@pytest.fixture(scope="session")
+def password_hash() -> str:
+    """Hash the shared fixture credential once for the test session."""
+
+    return PasswordHelper().hash(TEST_PASSWORD)
+
+
 @pytest_asyncio.fixture
-async def users() -> tuple[User, User, User]:
+async def users(password_hash: str) -> tuple[User, User, User]:
     """Create three persisted users for tests."""
 
-    # Hash the shared fixture credential using FastAPI Users' production helper.
-    password = PasswordHelper().hash(TEST_PASSWORD)
+    # Persist independent users with the shared session-scoped credential.
     Session = await session.get_session()
     async with Session() as db_session:
         user1 = User(
             name="user1",
             email="user1@example.com",
-            hashed_password=password,
+            hashed_password=password_hash,
             is_superuser=True,
             role=PlatformRoles.administrator,
         )
-        user2 = User(name="user2", email="user2@example.com", hashed_password=password)
-        user3 = User(name="user3", email="user3@example.com", hashed_password=password)
+        user2 = User(name="user2", email="user2@example.com", hashed_password=password_hash)
+        user3 = User(name="user3", email="user3@example.com", hashed_password=password_hash)
 
         # Persist one matching database token for every authenticated fixture client.
         db_session.add_all([user1, user2, user3])
@@ -126,11 +132,6 @@ async def users() -> tuple[User, User, User]:
             ]
         )
         await db_session.commit()
-
-        await db_session.refresh(user1)
-        await db_session.refresh(user2)
-        await db_session.refresh(user3)
-
         return user1, user2, user3
 
 

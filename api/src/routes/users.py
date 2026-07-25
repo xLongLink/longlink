@@ -18,19 +18,8 @@ async def get_me(user: User = Depends(authuser)):
 async def get_my_organizations(user: User = Depends(authuser)):
     """Return the authenticated user's organization memberships."""
 
-    # Flatten loaded organization memberships with their roles for the API response.
-    return [
-        {
-            "id": organization.id,
-            "name": organization.name,
-            "slug": organization.slug,
-            "avatar": organization.avatar,
-            "country": organization.country,
-            "role": membership.role,
-        }
-        for membership in user.organization_memberships
-        if (organization := membership.organization).deleted_at is None
-    ]
+    # Exclude memberships whose related Organization has been soft-deleted.
+    return [membership for membership in user.organization_memberships if membership.organization.deleted_at is None]
 
 
 @router.get("/api/users", response_model=list[UserListItem])

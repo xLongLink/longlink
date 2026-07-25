@@ -22,7 +22,7 @@ async def test_list_organization_apps_returns_app_membership_role(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    app = await applications.create(
+    app, _ = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -57,8 +57,9 @@ async def test_list_organization_apps_returns_app_membership_role(
     # Assert
     assert response.status_code == 200
     payload = response.json()
-    assert [item["id"] for item in payload] == [str(app.id)]
+    assert [item["application"]["id"] for item in payload] == [str(app.id)]
     assert payload[0]["role"] == ApplicationRoles.write
+    assert "role" not in payload[0]["application"]
 
 
 async def test_list_apps_without_organization_returns_all_apps_for_admin(
@@ -74,14 +75,14 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
     globex = await create_organization(infrastructure, user, name="globex", slug="globex")
     await mark_organization_running(acme)
     await mark_organization_running(globex)
-    dashboard = await applications.create(
+    dashboard, _ = await applications.create(
         acme.id,
         "dashboard",
         slug="dashboard",
         image="ghcr.io/longlink/dashboard:latest",
         user=user,
     )
-    console = await applications.create(
+    console, _ = await applications.create(
         globex.id,
         "console",
         slug="console",
@@ -241,7 +242,7 @@ async def test_get_app_logs_returns_pod_logs(
     infrastructure = await create_ready_infrastructure(user)
     organization = await create_organization(infrastructure, user)
     await mark_organization_running(organization)
-    app = await applications.create(
+    app, _ = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -296,7 +297,7 @@ async def test_app_logs_require_maintainer_access(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    app = await applications.create(
+    app, _ = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -329,7 +330,7 @@ async def test_app_logs_return_unavailable_when_backend_fails(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    app = await applications.create(
+    app, _ = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -375,7 +376,7 @@ async def test_application_member_routes_list_update_remove_and_reject_missing_m
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    app = await applications.create(
+    app, _ = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -398,7 +399,7 @@ async def test_application_member_routes_list_update_remove_and_reject_missing_m
 
     # Assert
     assert list_response.status_code == 200
-    assert {item["id"] for item in list_response.json()} == {str(owner.id), str(member.id)}
+    assert {item["user"]["id"] for item in list_response.json()} == {str(owner.id), str(member.id)}
     assert create_response.status_code == 204
     assert created_role == ApplicationRoles.read
     assert remove_response.status_code == 204
@@ -418,7 +419,7 @@ async def test_application_member_update_rejects_regular_member(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    app = await applications.create(
+    app, _ = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",
@@ -451,7 +452,7 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
     infrastructure = await create_ready_infrastructure(user)
     organization = await create_organization(infrastructure, user)
     await mark_organization_running(organization)
-    app = await applications.create(
+    app, _ = await applications.create(
         organization.id,
         "dashboard",
         slug="dashboard",

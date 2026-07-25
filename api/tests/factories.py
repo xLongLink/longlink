@@ -67,9 +67,6 @@ async def create_ready_infrastructure(
         )
         session.add_all([compute, database, storage])
         await session.commit()
-        await session.refresh(compute)
-        await session.refresh(database)
-        await session.refresh(storage)
         return Infrastructure(compute=compute, database=database, storage=storage)
 
 
@@ -79,7 +76,6 @@ async def create_organization(
     name: str = "acme",
     slug: str = "acme",
     avatar: str | None = None,
-    country: str = "CH",
     organization_id: UUID | None = None,
 ) -> Organization:
     """Create one Organization through the service using a complete infrastructure assignment."""
@@ -87,7 +83,7 @@ async def create_organization(
     # Import lazily so tests can share this factory without introducing service import cycles.
     from src.database.services import organizations
 
-    return await organizations.create(
+    organization, _ = await organizations.create(
         name,
         slug,
         infrastructure.compute.id,
@@ -95,9 +91,9 @@ async def create_organization(
         infrastructure.storage.id,
         owner,
         avatar=avatar,
-        country=country,
         organization_id=organization_id,
     )
+    return organization
 
 
 async def mark_organization_running(organization: Organization) -> Organization:

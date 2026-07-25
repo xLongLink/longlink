@@ -1,9 +1,9 @@
 import secrets
-from uuid import UUID, uuid4
+from uuid import UUID
 from fastapi import HTTPException
-from src.utils import names
 from contextlib import suppress
 from sqlalchemy import and_, delete, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 from collections.abc import Callable, Awaitable
 from src.models.roles import ApplicationRoles
@@ -44,25 +44,21 @@ async def fetch() -> list[Application]:
         return result.scalars().all()
 
 
-async def for_compute(compute_id: UUID, include_deleted: bool = False) -> list[Application]:
-    """Return Applications belonging to Organizations on one compute target."""
+async def for_compute(compute_id: UUID) -> list[Application]:
+    """Return all Applications belonging to Organizations on one compute target."""
 
-    # Reconciliation loads active and pending-removal rows through the same query shape.
+    # Reconciliation requires active and pending-removal rows in one snapshot.
     async with session_scope() as session:
-        conditions = [Organization.compute_id == compute_id]
-        if not include_deleted:
-            conditions.extend([Organization.deleted_at.is_(None), Application.deleted_at.is_(None)])
         statement = (
             select(Application)
             .join(Organization, Organization.id == Application.organization_id)
-            .options(selectinload(Application.organization))
-            .where(*conditions)
+            .where(Organization.compute_id == compute_id)
         )
         result = await session.execute(statement)
         return result.scalars().all()
 
 
-async def purge(application_id: UUID) -> bool:
+async def purge(application_id: UUID) -> None:
     """Hard-delete one application after all external runtime resources are gone."""
 
     # The tombstone remains the retry marker until cleanup can finish with this transaction.
@@ -71,13 +67,12 @@ async def purge(application_id: UUID) -> bool:
             await session.execute(select(Application).where(Application.id == application_id).with_for_update())
         ).scalar_one_or_none()
         if application is None:
-            return False
+            return
         if application.deleted_at is None:
             raise RuntimeError("Active applications cannot be purged")
         await session.execute(delete(UserApplication).where(UserApplication.application_id == application_id))
         await session.execute(delete(Application).where(Application.id == application_id))
         await session.commit()
-        return True
 
 
 async def get(application_id: UUID, include_deleted: bool = False) -> Application | None:
@@ -91,18 +86,7 @@ async def get(application_id: UUID, include_deleted: bool = False) -> Applicatio
         if not include_deleted:
             conditions.append(Application.deleted_at.is_(None))
 
-        statement = (
-            select(Application)
-            .options(
-                selectinload(Application.organization).selectinload(Organization.created_by),
-                selectinload(Application.organization).selectinload(Organization.updated_by),
-                selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.created_by),
-                selectinload(Application.updated_by),
-                selectinload(Application.deleted_by),
-            )
-            .where(*conditions)
-        )
+        statement = select(Application).where(*conditions)
         result = await session.execute(statement)
         return result.scalar_one_or_none()
 
@@ -147,10 +131,7 @@ async def members(application_id: UUID, organization_id: UUID) -> list[tuple[Use
             .order_by(User.name, User.email)
         )
         result = await session.execute(statement)
-        return [
-            (member, organization_membership, application_membership)
-            for member, organization_membership, application_membership in result.all()
-        ]
+        return result.tuples().all()
 
 
 async def set_member_role(application_id: UUID, organization_id: UUID, member_id: UUID, role: ApplicationRoles | None, user: User) -> bool:
@@ -222,15 +203,10 @@ async def create(
     slug: str,
     image: Image | str,
     user: User,
-    status: ApplicationStatus = ApplicationStatus.creating,
-    database_password: str | None = None,
-    version: str | None = None,
-    sdk: str | None = None,
     description: str | None = None,
-    digest: str | None = None,
     icon: str | None = None,
     envs: dict[str, str] | None = None,
-) -> Application:
+) -> tuple[Application, Operation]:
     """Create an Organization-owned LongLink Application and queue compute reconciliation."""
 
     # Validate direct service callers while preserving already-validated API values.
@@ -255,39 +231,29 @@ async def create(
         if organization.deleted_at is not None or organization.status != OrganizationStatus.running:
             raise HTTPException(status_code=409, detail="Organization is not ready")
 
-        # Check slug uniqueness so K8s resource names stay collision-free.
-        slug_statement = select(Application.id).where(
-            Application.organization_id == organization_id,
-            Application.slug == slug,
-        )
-        slug_result = await session.execute(slug_statement)
-
-        # Prevent duplicate application slugs within the organization.
-        if slug_result.scalar_one_or_none() is not None:
-            raise HTTPException(status_code=409, detail="Application slug already exists")
-
-        # Generate the application ID before validating its deterministic storage prefix.
-        application_id = uuid4()
-        names.application_storage_prefix(application_id)
-
+        # Build the Application row before checking its Organization-scoped uniqueness.
         application = Application(
-            id=application_id,
             organization_id=organization_id,
             name=name,
             slug=slug,
-            status=status,
-            sdk=sdk,
-            digest=digest,
-            version=version,
+            status=ApplicationStatus.creating,
             description=description,
             image=image.value,
             icon=icon,
             envs=dict(envs or {}),
-            database_password=database_password or secrets.token_urlsafe(24),
+            database_password=secrets.token_urlsafe(24),
         )
         application.created_id = user.id
         application.updated_id = user.id
         session.add(application)
+
+        # Let the Organization-scoped database constraint arbitrate slug uniqueness.
+        try:
+            await session.flush()
+        except IntegrityError as exc:
+            await session.rollback()
+            raise HTTPException(status_code=409, detail="Application slug already exists") from exc
+
         session.add(
             UserApplication(
                 application_id=application.id,
@@ -299,7 +265,7 @@ async def create(
             )
         )
         compute.updated_id = user.id
-        await operations.enqueue_in_session(session, compute.id)
+        operation = await operations.enqueue_in_session(session, compute.id)
         await session.commit()
 
         statement = (
@@ -315,7 +281,7 @@ async def create(
             .where(Application.id == application.id)
         )
         result = await session.execute(statement)
-        return result.scalar_one()
+        return result.scalar_one(), operation
 
 
 def storage_credentials(application: Application) -> StorageRuntimeCredentials | None:
@@ -380,7 +346,6 @@ async def provision_storage_credentials(
             application.storage_access_key_id = generated["access_key_id"]
             application.storage_secret_access_key = generated["secret_access_key"]
             await session.commit()
-            await session.refresh(application)
             return application, generated
     except Exception:
         # Delete only a definitely unpersisted key; preserve it when a lost commit response actually stored it.
@@ -392,27 +357,24 @@ async def provision_storage_credentials(
         raise
 
 
-async def set_status(application_id: UUID, status: ApplicationStatus) -> Application | None:
-    """Update one application status and return the refreshed row."""
+async def set_status(application_id: UUID, status: ApplicationStatus) -> None:
+    """Update one application status when the row exists."""
 
     # Update the status inside one session.
     async with session_scope() as session:
         # Ignore missing applications for status updates.
         application = await session.get(Application, application_id)
         if application is None:
-            return None
+            return
 
         application.status = status
         await session.commit()
-        await session.refresh(application)
-        return application
 
 
 async def update_runtime(
     application_id: UUID,
     image: str,
     user: User | None,
-    status: ApplicationStatus = ApplicationStatus.creating,
     version: str | None = None,
     sdk: str | None = None,
     description: str | None = None,
@@ -437,7 +399,7 @@ async def update_runtime(
         if user is not None:
             application.updated_id = user.id
         application.version = version
-        application.status = status
+        application.status = ApplicationStatus.creating
         application.image = image
         application.icon = icon
 
@@ -445,11 +407,10 @@ async def update_runtime(
         if envs is not None:
             application.envs = dict(envs)
         await session.commit()
-        await session.refresh(application)
         return application
 
 
-async def soft_delete(application_id: UUID, user: User) -> Application | None:
+async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Operation] | None:
     """Tombstone a LongLink Application and atomically queue compute cleanup."""
 
     # Soft-delete the application and memberships together.
@@ -499,7 +460,7 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
 
         # Application tombstone and reconciliation request are one Platform transaction.
         compute.updated_id = user.id
-        await operations.enqueue_in_session(session, compute.id)
+        operation = await operations.enqueue_in_session(session, compute.id)
 
         await session.commit()
         statement = (
@@ -515,4 +476,4 @@ async def soft_delete(application_id: UUID, user: User) -> Application | None:
             .where(Application.id == application_id)
         )
         result = await session.execute(statement)
-        return result.scalar_one_or_none()
+        return result.scalar_one(), operation

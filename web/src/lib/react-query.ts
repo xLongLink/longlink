@@ -1,14 +1,17 @@
 import { hashKey, QueryClient, type QueryKey } from '@tanstack/react-query';
 
-export const queryClient = new QueryClient({
-    defaultOptions: {
-        queries: {
-            staleTime: 60_000,
-            refetchOnWindowFocus: false,
-            retry: 1,
+/** Creates an isolated query cache for one browser or prerendered document. */
+export function createQueryClient(): QueryClient {
+    return new QueryClient({
+        defaultOptions: {
+            queries: {
+                staleTime: 60_000,
+                refetchOnWindowFocus: false,
+                retry: 1,
+            },
         },
-    },
-});
+    });
+}
 
 /** Cancels and removes cached API data except for observers that callers will reseed. */
 export async function clearSessionQueries(client: QueryClient, preserve: QueryKey[] = []): Promise<void> {

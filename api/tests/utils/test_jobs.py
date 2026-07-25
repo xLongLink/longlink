@@ -84,11 +84,12 @@ async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytes
 
 
 async def test_execute_retries_location_work_with_exponential_backoff(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Persist a handler-requested retry with bounded exponential backoff."""
+    """Log a handler-requested retry and persist bounded exponential backoff."""
 
     # Arrange
     operation = leased_operation(attempt_count=3)
-    transitions: list[tuple[UUID, int, float, str | None]] = []
+    transitions: list[tuple[UUID, int, float]] = []
+    warnings: list[str] = []
 
     async def retry_handler(claimed: Operation) -> operation_worker.OperationOutcome:
         """Request another attempt for the claimed compute target."""
@@ -96,10 +97,10 @@ async def test_execute_retries_location_work_with_exponential_backoff(monkeypatc
         assert claimed is operation
         return operation_worker.retry("workloads are starting")
 
-    async def fake_defer(operation_id: UUID, attempt_count: int, delay: float, error: str | None) -> Operation:
+    async def fake_defer(operation_id: UUID, attempt_count: int, delay: float) -> Operation:
         """Record the retry transition and return scheduled work."""
 
-        transitions.append((operation_id, attempt_count, delay, error))
+        transitions.append((operation_id, attempt_count, delay))
         return Operation(
             id=operation_id,
             compute_id=operation.compute_id,
@@ -107,14 +108,21 @@ async def test_execute_retries_location_work_with_exponential_backoff(monkeypatc
             attempt_count=operation.attempt_count,
         )
 
+    def log_warning(message: str, *args: object) -> None:
+        """Capture the formatted retry warning."""
+
+        warnings.append(message % args)
+
     monkeypatch.setattr(operation_worker.operations, "defer", fake_defer)
+    monkeypatch.setattr(operation_worker.logger, "warning", log_warning)
 
     # Act
     result = await operation_worker.execute(operation, retry_handler)
 
     # Assert
     assert result.status == OperationStatus.scheduled
-    assert transitions == [(operation.id, operation.attempt_count, 20, "workloads are starting")]
+    assert transitions == [(operation.id, operation.attempt_count, 20)]
+    assert warnings == [f"Operation {operation.id} will retry: workloads are starting"]
 
 
 async def test_execute_raises_when_location_lease_is_lost(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -148,7 +156,8 @@ async def test_execute_fails_retry_at_attempt_limit(monkeypatch: pytest.MonkeyPa
 
     # Arrange
     operation = leased_operation(attempt_count=operation_worker.OPERATION_ATTEMPT_LIMIT)
-    transitions: list[tuple[UUID, str, int]] = []
+    transitions: list[tuple[UUID, int]] = []
+    errors: list[str] = []
 
     async def retry_handler(claimed: Operation) -> operation_worker.OperationOutcome:
         """Request a retry after consuming the complete attempt budget."""
@@ -156,20 +165,26 @@ async def test_execute_fails_retry_at_attempt_limit(monkeypatch: pytest.MonkeyPa
         assert claimed is operation
         return operation_worker.retry("workloads are still starting")
 
-    async def fake_fail(operation_id: UUID, error: str, attempt_count: int) -> Operation:
+    async def fake_fail(operation_id: UUID, attempt_count: int) -> Operation:
         """Record terminal failure after the attempt budget is exhausted."""
 
-        transitions.append((operation_id, error, attempt_count))
+        transitions.append((operation_id, attempt_count))
         return Operation(
             id=operation_id,
             compute_id=operation.compute_id,
-            error=error,
+            failed=True,
             platform_version=operation.platform_version,
             attempt_count=attempt_count,
             stopped_at=utcnow(),
         )
 
+    def log_error(message: str, *args: object) -> None:
+        """Capture the formatted terminal error."""
+
+        errors.append(message % args)
+
     monkeypatch.setattr(operation_worker.operations, "fail", fake_fail)
+    monkeypatch.setattr(operation_worker.logger, "error", log_error)
 
     # Act
     result = await operation_worker.execute(operation, retry_handler)
@@ -177,7 +192,8 @@ async def test_execute_fails_retry_at_attempt_limit(monkeypatch: pytest.MonkeyPa
     # Assert
     assert result.status == OperationStatus.failed
     assert operation_worker.OPERATION_ATTEMPT_LIMIT == 6
-    assert transitions == [(operation.id, "workloads are still starting", 6)]
+    assert transitions == [(operation.id, 6)]
+    assert errors == [f"Operation {operation.id} failed after 6 attempts: workloads are still starting"]
 
 
 async def test_run_claimed_operation_cancels_action_when_heartbeat_loses_lease(monkeypatch: pytest.MonkeyPatch) -> None:

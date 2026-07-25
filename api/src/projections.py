@@ -11,7 +11,8 @@ async def sync_organization_users(organization: Organization) -> None:
     users: list[shared_users.UserRow] = []
 
     # Convert API user and membership state at the synchronization boundary.
-    for user, membership in memberships:
+    for membership in memberships:
+        user = membership.user
         deleted_at = user.deleted_at
 
         # A projected user is inactive when either the account or membership is inactive.

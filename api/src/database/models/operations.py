@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 from typing import ClassVar
 from datetime import datetime
 from sqlmodel import Field, SQLModel
-from sqlalchemy import Index, Column, String, text
+from sqlalchemy import Index, text
 from longlink.utils.time import utcnow
 from src.models.operations import OperationStatus
 from longlink.database.types import UTCDateTime
@@ -32,7 +32,7 @@ class Operation(SQLModel, table=True):
     compute_id: UUID = Field(foreign_key="compute_registries.id")
 
     # State
-    error: str | None = Field(default=None, sa_column=Column(String(length=2000), nullable=True))
+    failed: bool = Field(default=False, nullable=False)
     attempt_count: int = Field(default=0, nullable=False, ge=0)
     platform_version: str = Field(max_length=128)
 
@@ -47,15 +47,11 @@ class Operation(SQLModel, table=True):
 
     @property
     def status(self) -> OperationStatus:
-        """Derive lifecycle state from terminal timestamps, error state, and the current lease expiry."""
+        """Derive lifecycle state from terminal state and the current lease expiry."""
 
         # Stopped operations are terminal.
         if self.stopped_at is not None:
-            # Preserve error states as failed terminal operations.
-            if self.error is not None:
-                return OperationStatus.failed
-
-            return OperationStatus.completed
+            return OperationStatus.failed if self.failed else OperationStatus.completed
 
         # An unexpired lease identifies the currently active attempt.
         if self.started_at is not None and self.lease_expires_at is not None and self.lease_expires_at > utcnow():

@@ -1,5 +1,5 @@
 from src import adapters
-from uuid import UUID, uuid4
+from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
 from src.auth import authuser, authsupport
 from src.utils import mail, names, roles
@@ -9,10 +9,10 @@ from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.statuses import ComputeStatus
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import OrganizationDatabaseResourceResponse
-from src.database.services import compute, storage, database, operations, invitations, organizations
-from src.models.applications import ApplicationResponse
-from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary, OrganizationMemberUpdate,
-                                      OrganizationInvitationCreate, OrganizationMutationResponse)
+from src.database.services import compute, storage, database, invitations, organizations
+from src.models.applications import ApplicationAccessResponse
+from src.models.organizations import (OrganizationCreate, OrganizationUpdate, OrganizationDetails, OrganizationSummary,
+                                      OrganizationMemberUpdate, OrganizationInvitationCreate, OrganizationMutationResponse)
 from longlink.shared.constants import SHARED_SCHEMA
 from src.database.models.users import User
 from src.models.infrastructure import InfrastructureOptionsResponse
@@ -72,49 +72,37 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
         active_invitations = await organizations.invitations(organization.id)
 
     return {
-        "id": organization.id,
-        "name": organization.name,
-        "slug": organization.slug,
-        "avatar": organization.avatar,
-        "country": organization.country,
-        "compute_id": organization.compute_id,
-        "database_id": organization.database_id,
-        "storage_id": organization.storage_id,
-        "status": organization.status,
-        "created_at": organization.created_at,
-        "updated_at": organization.updated_at,
-        "created_by": organization.created_by,
-        "updated_by": organization.updated_by,
-        "deleted_at": organization.deleted_at,
-        "deleted_by": organization.deleted_by,
-        "users": [
-            {
-                "id": member.id,
-                "name": member.name,
-                "email": member.email,
-                "avatar": member.avatar,
-                "role": member_membership.role,
-                "last_access_at": member_membership.updated_at,
-            }
-            for member, member_membership in memberships
-        ],
+        "organization": organization,
+        "members": memberships,
         "invitations": active_invitations,
         "applications": [
-            {
-                **application.model_dump(),
-                "created_by": application.created_by,
-                "updated_by": application.updated_by,
-                "deleted_by": application.deleted_by,
-                "role": application_roles.get(application.id),
-            }
-            for application in active_applications
+            {"application": application, "role": application_roles.get(application.id)} for application in active_applications
         ],
     }
 
 
+@router.patch("/api/organizations/{organization_id}", response_model=OrganizationSummary)
+async def update_organization(organization_id: UUID, payload: OrganizationUpdate, user: User = Depends(authuser)):
+    """Update mutable organization settings."""
+
+    # Load organization access before changing its settings.
+    membership = roles.access(user, organization_id, "organization")
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
+
+    # Require organization administrators to change shared metadata.
+    if not roles.atleast(membership.role, OrganizationRoles.admin):
+        raise HTTPException(status_code=403, detail="Permission required")
+
+    organization = await organizations.update(organization_id, str(payload.avatar), user)
+    if organization is None:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    return organization
+
+
 @router.get(
     "/api/organizations/{organization_id}/applications",
-    response_model=list[ApplicationResponse],
+    response_model=list[ApplicationAccessResponse],
 )
 async def list_organization_applications(organization_id: UUID, user: User = Depends(authuser)):
     """Return the applications for one organization."""
@@ -131,17 +119,7 @@ async def list_organization_applications(organization_id: UUID, user: User = Dep
         if application_membership.organization_id == membership.organization_id
     }
 
-    return [
-        {
-            **application.model_dump(),
-            "organization": application.organization,
-            "created_by": application.created_by,
-            "updated_by": application.updated_by,
-            "deleted_by": application.deleted_by,
-            "role": application_roles.get(application.id),
-        }
-        for application in active_applications
-    ]
+    return [{"application": application, "role": application_roles.get(application.id)} for application in active_applications]
 
 
 @router.get(
@@ -274,13 +252,11 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
         if not roles.atleast(membership.role, OrganizationRoles.owner):
             raise HTTPException(status_code=403, detail="Permission required")
 
-    deleted = await organizations.soft_delete(organization_id, user)
-    if deleted is None:
+    result = await organizations.soft_delete(organization_id, user)
+    if result is None:
         raise HTTPException(status_code=404, detail="Organization not found")
 
-    operation = await operations.latest(deleted.compute_id)
-    if operation is None:
-        raise RuntimeError("Organization reconciliation operation not found")
+    deleted, operation = result
     return {"organization": deleted, "operation": operation}
 
 
@@ -431,32 +407,20 @@ async def _storage_usage_rows(
 async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)):
     """Create Organization desired state and queue compute reconciliation."""
 
-    # Generate the row ID before insert so derived resource names use the final UUID.
-    organization_id = uuid4()
+    # Derive the Organization's runtime namespace from its display name.
+    slug = names.slugify(payload.name)
 
-    # Validate derived resource names before creating the organization.
+    # Create through the service so API and direct callers share namespace validation.
     try:
-        slug = names.slugify(payload.name)
-        names.knames(slug)
-        names.organization_bucket(organization_id)
-
-    # Return invalid names as request conflicts.
+        organization, operation = await organizations.create(
+            payload.name,
+            slug,
+            None,
+            None,
+            None,
+            user,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
 
-    organization = await organizations.create(
-        payload.name,
-        slug,
-        payload.compute_id,
-        payload.database_id,
-        payload.storage_id,
-        user,
-        country=payload.country,
-        avatar=payload.avatar,
-        organization_id=organization_id,
-    )
-
-    operation = await operations.latest(organization.compute_id)
-    if operation is None:
-        raise RuntimeError("Organization reconciliation operation not found")
     return {"organization": organization, "operation": operation}

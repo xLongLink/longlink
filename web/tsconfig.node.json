@@ -7,7 +7,7 @@
         "target": "ES2023",
         "lib": ["ES2023", "DOM", "DOM.Iterable"],
         "module": "ESNext",
-        "types": ["node", "bun"],
+        "types": ["node", "bun", "vite/client"],
         "skipLibCheck": true,
 
         /* Bundler mode */
@@ -26,5 +26,5 @@
         "noFallthroughCasesInSwitch": true,
         "noUncheckedSideEffectImports": true
     },
-    "include": ["vite.config.ts", "scripts", "tests"]
+    "include": ["vite.config.ts", "react-router.config.ts", "tests"]
 }

@@ -23,7 +23,6 @@ dependencies = [
     'aiomysql>=0.3.2',
     'pydantic>=2.13.4',
     'pydantic-settings>=2.14.2',
-    'pycountry>=26.2.16',
     'python-slugify>=8.0.4',
     'psycopg[binary,pool]>=3.3.4',
     'sqlalchemy>=2.0.51',
@@ -41,8 +40,7 @@ exoscale = { git = "https://github.com/xLongLink/python-exoscale", rev = "7a1ed1
 
 [project.optional-dependencies]
 dev = [
-    'mypy>=2.2.0',
-    'pyright>=1.1.411',
+    'ty>=0.0.63',
     'ruff>=0.15.20',
     'pytest>=9.0.3',
     'pytest-asyncio>=1.4.0',
@@ -85,17 +83,15 @@ no_sections = true
 lines_between_types = 0
 length_sort = true
 
-[tool.pyright]
-typeCheckingMode = "basic"
-pythonVersion = "3.12"
-venvPath = "."
-venv = ".venv"
+[tool.ty.environment]
+python-version = "3.12"
+extra-paths = ["src", "../sdk", "tests"]
+
+[tool.ty.src]
 include = ["main.py", "seed.py", "src", "alembic"]
-exclude = [".venv", "build", "dist", "src/.static", "tests", "**/__pycache__"]
-# Pyright treats SQLModel descriptors as plain Python values, so keep ORM diagnostics
-# out of the gate while still checking callers and non-ORM API code.
-ignore = ["src/database/models", "src/database/services"]
-extraPaths = ["src", "../sdk", "tests"]
+# Keep SQLModel descriptor diagnostics out of the gate while still checking
+# callers and non-ORM API code.
+exclude = ["src/.static", "tests", "src/database/models", "src/database/services"]
 
 [tool.pytest.ini_options]
 pythonpath = [".", "../sdk"]

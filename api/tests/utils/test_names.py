@@ -2,6 +2,8 @@ import pytest
 from fastapi import HTTPException
 from src.utils import names
 
+pytestmark = pytest.mark.no_db
+
 
 def test_slugify_normalizes_to_dns_label() -> None:
     """Normalize mixed user input into a lowercase DNS label slug."""

@@ -32,9 +32,9 @@ make api:format     # Format API code
 make sdk:format     # Format SDK code
 make web:format     # Format web and docs code
 
-make pyright        # Run API and SDK type checks
-make api:pyright    # Run API type checks
-make sdk:pyright    # Run SDK type checks
+make ty             # Run API and SDK type checks
+make api:ty         # Run API type checks
+make sdk:ty         # Run SDK type checks
 
 make tests          # Run API, SDK, and web tests
 make api:tests      # Run API tests

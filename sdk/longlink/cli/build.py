@@ -9,6 +9,7 @@ import tempfile
 import subprocess
 import urllib.parse
 from pathlib import Path
+from collections.abc import Mapping, Sequence
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as package_version
 from longlink.utils.metadata import load_metadata
@@ -294,7 +295,7 @@ def encode_label_value(value: object) -> str:
     return json.dumps(value)
 
 
-def render_longlink_labels(metadata: dict[str, object], env_spec: dict[str, list[dict[str, object]]]) -> str:
+def render_longlink_labels(metadata: Mapping[str, object], env_spec: Mapping[str, Sequence[Mapping[str, object]]]) -> str:
     """Render the LongLink metadata labels for a Dockerfile."""
 
     label_items = [

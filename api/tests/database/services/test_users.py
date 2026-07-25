@@ -8,18 +8,15 @@ from src.database.models.users import User
 async def test_fetch_and_get_return_persisted_users(users: tuple[User, User, User]) -> None:
     """Return persisted users by their stable local identifiers."""
 
-    first_user, second_user, third_user = users
+    first_user, selected_user, third_user = users
 
     # Read the collection and individual users through the service boundary.
     fetched = await user_service.fetch()
-    second_result = await user_service.get(second_user.id)
-    third_result = await user_service.get(third_user.id)
+    selected = await user_service.get(selected_user.id)
 
-    assert {user.id for user in fetched} == {first_user.id, second_user.id, third_user.id}
-    assert second_result is not None
-    assert second_result.id == second_user.id
-    assert third_result is not None
-    assert third_result.id == third_user.id
+    assert {user.id for user in fetched} == {first_user.id, selected_user.id, third_user.id}
+    assert selected is not None
+    assert selected.id == selected_user.id
 
 
 async def test_missing_user_get_returns_none() -> None:

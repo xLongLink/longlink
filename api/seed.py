@@ -50,7 +50,7 @@ class SeedSettings(BaseSettings):
     EXOSCALE_STORAGE_ENDPOINT_URL: str = Field(min_length=1)
 
     model_config = SettingsConfigDict(
-        env_file=".env.seed",
+        env_file=(".env.seed", ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -150,8 +150,8 @@ async def reconcile_until_complete(compute_id: UUID) -> None:
         if result.compute_id != compute_id:
             continue
         if result.stopped_at is not None:
-            if result.error is not None:
-                raise RuntimeError(result.error)
+            if result.failed:
+                raise RuntimeError(f"Compute reconciliation {result.id} failed; see the Platform logs")
             return
         await asyncio.sleep(1)
 
@@ -218,7 +218,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
             await operations.enqueue(compute_registry.id)
             await reconcile_until_complete(compute_registry.id)
             compute_ready = True
-        organization = await organization_service.create(
+        organization, _ = await organization_service.create(
             LOCAL_ORG,
             LOCAL_ORG,
             compute_registry.id,
@@ -226,7 +226,6 @@ async def seed_local_development(settings: SeedSettings) -> None:
             storage_registry.id,
             admin,
             avatar=LOCAL_ORG_AVATAR,
-            country="CH",
         )
         await reconcile_until_complete(compute_registry.id)
     else:

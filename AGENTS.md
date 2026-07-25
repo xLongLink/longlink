@@ -2,16 +2,15 @@
 
 - When listing improvement suggestions, use numbered lists.
 - Project is in MVP mode - No need for backwards compatibility
+- At the end of each task, list 5 cleanup and simplification opportunities
 
 ## Product Language
 
 Use LongLink terminology consistently.
 
-| Term                  | Use                                                                                    |
-| --------------------- | -------------------------------------------------------------------------------------- |
-| LongLink              | The product as a whole.                                                                |
-| LongLink Platform     | The shared platform layer that owns authentication, organizations, infrastructure .... |
-| LongLink Applications | Process-specific Python applications running on LongLink.                              |
+- `LongLink`: The product as a whole.
+- `Platform`: The shared platform layer that owns authentication, infrastructure, ...
+- `Applications`: Process-specific Python applications running on LongLink.
 
 
 ## Architecture
@@ -53,11 +52,12 @@ longlink/
 │   └── tests/                    # SDK tests
 ├── web/                          # Vite/React frontend, docs, XML runtime, API and SDK bundle modes
 │   ├── src/
+│   │   ├── application/          # Embedded Application routes and runtime page rendering
 │   │   ├── components/           # Shared UI and dialogs
 │   │   ├── hooks/                # React hooks
 │   │   ├── layout/               # Layout shells
 │   │   ├── lib/                  # API clients, theme, shared types
-│   │   ├── pages/                # Platform pages and docs
+│   │   ├── platform/             # Platform routes, pages, docs, and legal content
 │   │   └── xml/                  # XML parser, adapters, renderer, translations
 │   └── tests/                    # Web and XML tests
 ```

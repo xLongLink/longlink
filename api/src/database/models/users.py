@@ -84,7 +84,7 @@ class User(SQLModel, table=True):
     )
     oauth_accounts: list["OAuthAccount"] = Relationship(
         back_populates="user",
-        sa_relationship_kwargs={"lazy": "selectin", "cascade": "all, delete-orphan"},
+        sa_relationship_kwargs={"lazy": "raise", "cascade": "all, delete-orphan"},
     )
 
 

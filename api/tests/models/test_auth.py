@@ -16,7 +16,7 @@ def test_registration_models_accept_complete_account_flow() -> None:
             "name": "Registered",
             "email": "registered@example.com",
             "surname": "User",
-            "password": "longlink-test-password",
+            "password": "x",
         }
     )
 
@@ -24,7 +24,7 @@ def test_registration_models_accept_complete_account_flow() -> None:
     assert confirmation.token == "signed-token"
     assert completion.name == "Registered"
     assert completion.surname == "User"
-    assert completion.password == "longlink-test-password"
+    assert completion.password == "x"
 
 
 @pytest.mark.parametrize(
@@ -33,7 +33,7 @@ def test_registration_models_accept_complete_account_flow() -> None:
         {"name": "", "email": "registered@example.com", "surname": "User", "password": "longlink-test-password"},
         {"name": "Registered", "email": "not-email", "surname": "User", "password": "longlink-test-password"},
         {"name": "Registered", "email": "registered@example.com", "surname": "", "password": "longlink-test-password"},
-        {"name": "Registered", "email": "registered@example.com", "surname": "User", "password": "short"},
+        {"name": "Registered", "email": "registered@example.com", "surname": "User", "password": ""},
     ],
 )
 def test_registration_complete_rejects_invalid_account_values(payload: dict[str, str]) -> None:

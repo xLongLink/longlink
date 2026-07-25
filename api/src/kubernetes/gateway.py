@@ -211,8 +211,8 @@ class Gateway:
                     content_commitment=False,
                     data_encipherment=False,
                     crl_sign=True,
-                    encipher_only=None,  # pyright: ignore[reportArgumentType]
-                    decipher_only=None,  # pyright: ignore[reportArgumentType]
+                    encipher_only=None,  # ty: ignore[invalid-argument-type]
+                    decipher_only=None,  # ty: ignore[invalid-argument-type]
                 ),
                 critical=True,
             )
@@ -246,8 +246,8 @@ class Gateway:
                     content_commitment=False,
                     data_encipherment=False,
                     crl_sign=False,
-                    encipher_only=None,  # pyright: ignore[reportArgumentType]
-                    decipher_only=None,  # pyright: ignore[reportArgumentType]
+                    encipher_only=None,  # ty: ignore[invalid-argument-type]
+                    decipher_only=None,  # ty: ignore[invalid-argument-type]
                 ),
                 critical=True,
             )

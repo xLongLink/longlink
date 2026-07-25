@@ -3,7 +3,8 @@ from src.database import session
 from src.models.roles import PlatformRoles
 from src.models.users import UserProfile, UserListItem
 from fastapi.testclient import TestClient
-from src.database.services import users as user_service, organizations as organization_service
+from src.database.services import users as user_service
+from src.database.services import organizations as organization_service
 from src.database.models.users import User
 
 
@@ -34,11 +35,12 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
     assert organizations_response.status_code == 200
     assert organizations_response.json() == [
         {
-            "id": str(organization.id),
-            "name": "acme",
-            "slug": "acme",
-            "avatar": "https://example.com/organizations/acme.png",
-            "country": "CH",
+            "organization": {
+                "id": str(organization.id),
+                "name": "acme",
+                "slug": "acme",
+                "avatar": "https://example.com/organizations/acme.png",
+            },
             "role": "owner",
         }
     ]
@@ -55,8 +57,8 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
     infrastructure = await create_ready_infrastructure(user)
     active = await create_organization(infrastructure, user, name="active", slug="active")
     deleted = await create_organization(infrastructure, user, name="deleted", slug="deleted")
-    deleted_organization = await organization_service.soft_delete(deleted.id, user)
-    assert deleted_organization is not None
+    deleted_result = await organization_service.soft_delete(deleted.id, user)
+    assert deleted_result is not None
     client = clients[0]
 
     # Act
@@ -64,7 +66,7 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
 
     # Assert
     assert response.status_code == 200
-    assert [item["id"] for item in response.json()] == [str(active.id)]
+    assert [item["organization"]["id"] for item in response.json()] == [str(active.id)]
 
 
 async def test_list_users_returns_admin_user_summaries(

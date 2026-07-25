@@ -1,70 +1,56 @@
-import { DOC_PAGES } from '@/pages/docs/catalog';
-import { LEGAL_PAGES } from '@/pages/legal/catalog';
+import type { MetaDescriptor } from 'react-router';
+import { publicRoutePath, SITE_URL, type PublicPage } from '@/platform/public';
 
-export type PublicSeoPage = {
-    path: string;
-    title: string;
-    description: string;
-};
-
-export const SITE_URL = 'https://longlink.dev';
-
-const descriptionsByPath: Record<string, string> = {
-    '/docs': 'Learn how LongLink helps teams build and run structured business applications.',
-    '/docs/api': 'Understand the LongLink Platform for organizations, applications, infrastructure, and operations.',
-    '/docs/api/organizations': 'Learn how LongLink organizations, memberships, and access boundaries work.',
-    '/docs/api/applications': 'Learn how LongLink registers, deploys, routes, and manages business applications.',
-    '/docs/api/self-hosted':
-        'Run the LongLink Platform with self-hosted infrastructure and required environment settings.',
-    '/docs/sdk':
-        'Build LongLink applications locally with the Python SDK, XML pages, routes, storage, and database tools.',
-    '/docs/sdk/environments':
-        'Configure LongLink applications for local development, testing, and production environments.',
-    '/docs/sdk/routes': 'Add FastAPI routes to LongLink applications for APIs, actions, and process-specific behavior.',
-    '/docs/sdk/storage':
-        'Use LongLink storage abstractions across local filesystems, tests, and production object storage.',
-    '/docs/sdk/database': 'Use LongLink database helpers and migrations for application-owned data models.',
-    '/docs/sdk/testing': 'Test LongLink applications with isolated runtime configuration and Python testing workflows.',
-    '/docs/sdk/building':
-        'Package LongLink applications into deployable images with metadata and environment requirements.',
-    '/docs/sdk/pages': 'Build LongLink application pages with XML components, data bindings, and runtime metadata.',
-    '/terms': 'Read the LongLink terms of service.',
-    '/privacy': 'Read the LongLink privacy policy.',
-    '/impressum': 'Read the LongLink legal notice and company information.',
-};
-
-const titlesByPath: Record<string, string> = {
-    '/docs': 'Documentation | LongLink',
-    '/docs/api': 'Platform Documentation | LongLink',
-    '/docs/sdk': 'Applications Documentation | LongLink',
-    '/terms': 'Terms of Service | LongLink',
-    '/privacy': 'Privacy | LongLink',
-    '/impressum': 'Impressum | LongLink',
-};
-
-/** Builds one public SEO page from an article route catalog entry. */
-function articleSeoPage(page: { path: string; title: string }): PublicSeoPage {
-    const fallbackTitle = page.path.startsWith('/docs') ? `${page.title} | LongLink Docs` : `${page.title} | LongLink`;
-
-    return {
-        path: page.path,
-        title: titlesByPath[page.path] ?? fallbackTitle,
-        description: descriptionsByPath[page.path] ?? `Read ${page.title} on LongLink.`,
-    };
+/** Builds metadata for routes that search engines must not index. */
+export function noIndexMeta(title = 'LongLink'): MetaDescriptor[] {
+    return [{ title }, { name: 'robots', content: 'noindex, nofollow' }];
 }
 
-export const publicSeoPages: PublicSeoPage[] = [
-    {
-        path: '/',
-        title: 'LongLink | Python Platform for Business Applications',
-        description:
-            'LongLink is an open-source platform for building and running custom business-process applications with Python.',
-    },
-    {
-        path: '/pricing',
-        title: 'Pricing | LongLink',
-        description: 'Simple LongLink pricing for building and running business-process applications.',
-    },
-    ...DOC_PAGES.map(articleSeoPage),
-    ...LEGAL_PAGES.map(articleSeoPage),
-];
+/** Builds React Router metadata for one prerendered public page. */
+export function publicSeoMeta(page: PublicPage): MetaDescriptor[] {
+    const routePath = publicRoutePath(page.path);
+    const canonicalUrl = `${SITE_URL}${routePath}`;
+    const title =
+        page.seoTitle ?? (page.path.startsWith('/docs') ? `${page.title} | LongLink Docs` : `${page.title} | LongLink`);
+    const structuredData =
+        page.path === '/'
+            ? {
+                  '@context': 'https://schema.org',
+                  '@type': 'WebSite',
+                  name: 'LongLink',
+                  url: canonicalUrl,
+                  hasPart: [
+                      { '@type': 'SiteNavigationElement', name: 'Pricing', url: `${SITE_URL}/pricing/` },
+                      { '@type': 'SiteNavigationElement', name: 'Documentation', url: `${SITE_URL}/docs/` },
+                      {
+                          '@type': 'SiteNavigationElement',
+                          name: 'Applications / SDK Docs',
+                          url: `${SITE_URL}/docs/sdk/`,
+                      },
+                      {
+                          '@type': 'SiteNavigationElement',
+                          name: 'Platform Docs',
+                          url: `${SITE_URL}/docs/api/`,
+                      },
+                  ],
+              }
+            : {
+                  '@context': 'https://schema.org',
+                  '@type': page.path.startsWith('/docs') ? 'TechArticle' : 'WebPage',
+                  name: title,
+                  description: page.description,
+                  url: canonicalUrl,
+              };
+
+    return [
+        { title },
+        { name: 'description', content: page.description },
+        { name: 'robots', content: 'index, follow' },
+        { tagName: 'link', rel: 'canonical', href: canonicalUrl },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:url', content: canonicalUrl },
+        { property: 'og:title', content: title },
+        { property: 'og:description', content: page.description },
+        { 'script:ld+json': structuredData },
+    ];
+}

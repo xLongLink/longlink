@@ -10,6 +10,7 @@ from src.models.statuses import ComputeStatus, ApplicationStatus
 from src.database.session import get_session
 from src.database.services import compute, operations, applications, organizations
 from src.models.operations import OperationStatus
+from src.adapters.storage.base import StorageRuntimeCredentials
 from src.database.models.users import User
 from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
@@ -29,7 +30,7 @@ async def create_application_context(prefix: str) -> tuple[User, Organization, A
         slug=f"{prefix}-org",
     )
     await mark_organization_running(organization)
-    application = await applications.create(
+    application, _ = await applications.create(
         organization.id,
         "Dashboard",
         slug="dashboard",
@@ -76,7 +77,7 @@ async def test_create_requires_running_organization_and_coalesces_compute_reconc
             user=user,
         )
     await mark_organization_running(organization)
-    application = await applications.create(
+    application, operation = await applications.create(
         organization.id,
         "Dashboard",
         slug="dashboard",
@@ -91,6 +92,7 @@ async def test_create_requires_running_organization_and_coalesces_compute_reconc
     assert exc.value.detail == "Organization is not ready"
     assert application.name == "Dashboard"
     assert application.organization_id == organization.id
+    assert operation.id == open_before[0].id
     assert reloaded_compute is not None
     assert reloaded_compute.status == ComputeStatus.ready
     assert reloaded_compute.version == env.VERSION
@@ -127,7 +129,7 @@ async def test_fetch_and_organization_applications_ignore_deleted_applications()
 
     # Arrange
     user, organization, deleted_application = await create_application_context("collections")
-    active_application = await applications.create(
+    active_application, _ = await applications.create(
         organization.id,
         "Reports",
         slug="reports",
@@ -177,7 +179,7 @@ async def test_list_members_includes_organization_members_with_optional_applicat
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    application = await applications.create(
+    application, _ = await applications.create(
         organization.id,
         "Dashboard",
         slug="dashboard",
@@ -222,7 +224,7 @@ async def test_set_member_role_creates_updates_removes_and_restores_memberships(
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
-    application = await applications.create(
+    application, _ = await applications.create(
         organization.id,
         "Dashboard",
         slug="dashboard",
@@ -295,13 +297,13 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     user, _, application = await create_application_context("runtime")
 
     # Act
-    running = await applications.set_status(application.id, ApplicationStatus.running)
-    missing_status = await applications.set_status(uuid4(), ApplicationStatus.running)
+    await applications.set_status(application.id, ApplicationStatus.running)
+    await applications.set_status(uuid4(), ApplicationStatus.running)
+    running = await applications.get(application.id)
     updated = await applications.update_runtime(
         application.id,
         "ghcr.io/longlink/dashboard:2.0.0",
         user,
-        status=ApplicationStatus.failed,
         version="2.0.0",
         sdk="1.2.3",
         description="Updated dashboard",
@@ -318,10 +320,9 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     # Assert
     assert running is not None
     assert running.status == ApplicationStatus.running
-    assert missing_status is None
     assert updated is not None
     assert updated.image == "ghcr.io/longlink/dashboard:2.0.0"
-    assert updated.status == ApplicationStatus.failed
+    assert updated.status == ApplicationStatus.creating
     assert updated.version == "2.0.0"
     assert updated.sdk == "1.2.3"
     assert updated.description == "Updated dashboard"
@@ -346,12 +347,12 @@ async def test_provision_storage_credentials_rejects_stale_operation_lease() -> 
         row.lease_expires_at = utcnow() - timedelta(seconds=1)
         await session.commit()
 
-    async def provision() -> dict[str, str]:
+    async def provision() -> StorageRuntimeCredentials:
         """Fail if stale lease validation reaches credential provisioning."""
 
         raise AssertionError("stale workers must not provision credentials")
 
-    async def discard(credentials: dict[str, str]) -> None:
+    async def discard(credentials: StorageRuntimeCredentials) -> None:
         """Fail if no credentials were generated."""
 
         raise AssertionError(f"unexpected credentials: {credentials}")
@@ -380,7 +381,7 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     user, organization, application = await create_application_context("delete")
 
     # Act
-    deleted = await applications.soft_delete(application.id, user)
+    result = await applications.soft_delete(application.id, user)
     active_application = await applications.get(application.id)
     deleted_application = await applications.get(application.id, include_deleted=True)
     role = await applications.membership_role(application.id, user.id)
@@ -390,7 +391,8 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     open_operations = [item for item in await operations.fetch() if item.stopped_at is None]
 
     # Assert
-    assert deleted is not None
+    assert result is not None
+    deleted, operation = result
     assert deleted.deleted_id == user.id
     assert active_application is None
     assert deleted_application is not None
@@ -402,6 +404,7 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     assert compute_after.status == ComputeStatus.ready
     assert compute_after.version == env.VERSION
     assert len(open_operations) == 1
+    assert open_operations[0].id == operation.id
     assert open_operations[0].compute_id == organization.compute_id
     assert open_operations[0].platform_version == env.VERSION
     assert open_operations[0].status == OperationStatus.scheduled

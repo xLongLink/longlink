@@ -31,7 +31,6 @@ class Organization(SQLModel, table=True):
     name: str = Field(unique=True, max_length=128)
     slug: str = Field(unique=True, max_length=128)
     avatar: str = Field(default="", max_length=2048, sa_column_kwargs={"nullable": False})
-    country: str = Field(sa_column=Column(String(2), nullable=False))
 
     # Infrastructure
     compute: "ComputeRegistry" = Relationship()

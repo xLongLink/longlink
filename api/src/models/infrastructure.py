@@ -1,7 +1,7 @@
 import re
 import urllib.parse
 from uuid import UUID
-from pydantic import Field, BaseModel, ValidationInfo, field_validator
+from pydantic import Field, BaseModel, ConfigDict, ValidationInfo, field_validator
 from src.models.types import StorageKind, DatabaseSSLMode
 
 
@@ -31,13 +31,6 @@ def exoscale_zone(endpoint_url: str) -> str:
         raise ValueError("Exoscale storage endpoint URL must use https://sos-{zone}.exo.io")
 
     return zone
-
-
-class ComputeConfiguration(BaseModel):
-    """Kubernetes connection configuration for one compute registry."""
-
-    # Connection
-    kubeconfig: str = Field(min_length=1, max_length=1024 * 1024)
 
 
 class DatabaseConfiguration(BaseModel):
@@ -142,6 +135,8 @@ class StorageConfiguration(BaseModel):
 
 class RegistryOption(BaseModel):
     """Expose one assignable infrastructure registry without connection metadata."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     # Identifier
     id: UUID

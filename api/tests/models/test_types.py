@@ -1,25 +1,7 @@
 import pytest
-from src.models.types import Image, Country
+from src.models.types import Image
 
 pytestmark = pytest.mark.no_db
-
-
-def test_country_accepts_uppercase_iso_code() -> None:
-    """Accept the exact country code shape returned by the countries API."""
-
-    # Country values preserve their validated string form.
-    country = Country("CH")
-
-    assert country == "CH"
-
-
-@pytest.mark.parametrize("code", ["ch", "XX", "CHE"])
-def test_country_rejects_invalid_codes(code: str) -> None:
-    """Reject country values outside uppercase ISO alpha-2 codes."""
-
-    # Invalid country values fail before model persistence.
-    with pytest.raises(ValueError):
-        Country(code)
 
 
 def test_image_parses_registry_repository_and_tag() -> None:

@@ -1,7 +1,7 @@
 from uuid import UUID
 from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.roles import PlatformRoles, OrganizationRoles
-from src.models.types import Theme, Accent, Country, Language
+from src.models.types import Theme, Accent, Language
 
 ACCENT_COLORS: dict[Accent, str] = {
     Accent.slate: "#64748b",
@@ -45,24 +45,8 @@ class UserUpdate(BaseModel):
     language: Language | None = None
 
 
-class UserOrganizationMembership(BaseModel):
-    """Represent one current-user organization membership."""
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    name: str
-    slug: str
-    avatar: str = ""
-    country: Country
-
-    # State
-    role: OrganizationRoles
-
-
-class UserSummary(BaseModel):
-    """Represent a compact user object in nested responses."""
+class UserIdentity(BaseModel):
+    """Represent a user identity in nested API responses."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -73,6 +57,36 @@ class UserSummary(BaseModel):
     name: str
     email: EmailStr
     avatar: str = ""
+
+
+class UserOrganizationSummary(BaseModel):
+    """Represent a compact Organization in current-user membership responses."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    # Identifier
+    id: UUID
+
+    # Metadata
+    name: str
+    slug: str
+    avatar: str = ""
+
+
+class UserOrganizationMembership(BaseModel):
+    """Represent one current-user Organization membership."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    # Relationships
+    organization: UserOrganizationSummary
+
+    # Access
+    role: OrganizationRoles
+
+
+class UserSummary(UserIdentity):
+    """Represent a compact user object in nested responses."""
 
     # State
     role: PlatformRoles

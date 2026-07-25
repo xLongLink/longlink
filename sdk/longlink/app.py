@@ -224,6 +224,16 @@ class LongLink(FastAPI):
             page.path for page in registered_pages if page.path.startswith(stale_page_prefix)
         }
 
+        def bind_page(page_path: Path) -> Callable[[], str]:
+            """Return a zero-argument handler bound to one trusted page file."""
+
+            def read_page() -> str:
+                """Return XML page content from disk."""
+
+                return page_path.read_text(encoding="utf-8")
+
+            return read_page
+
         # Remove previously registered SDK page routes before replacing the page registry.
         if stale_page_paths:
             self.router.routes = [
@@ -241,17 +251,12 @@ class LongLink(FastAPI):
             page = LonglinkXml(page_file)
             page.validate()
             page_name, page_icon = extract_longlink_metadata(page.content)
-
-            async def page_endpoint(page_path: Path = page_file) -> str:
-                """Return XML page content from disk."""
-
-                return page_path.read_text(encoding="utf-8")
+            page_endpoint = bind_page(page_file)
 
             registered_path = normalize_page_path(route_path)
             registered_pages.append(
                 PageDefinition(
                     path=registered_path,
-                    handler=page_endpoint,
                     route=page_file_route(relative_path),
                     tab=page_file_tab(relative_path),
                     name=page_name,

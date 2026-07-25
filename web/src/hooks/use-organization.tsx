@@ -4,7 +4,8 @@ import type {
     ApiInvitation,
     ApiOrganizationApplication,
     ApiOrganizationDetails,
-    ApiOrganizationMemberSummary,
+    ApiOrganizationMember,
+    ApiOrganizationSummary,
 } from '@/lib/types';
 import { useApiQuery } from '@/hooks/use-api';
 import { useUserOrganizations } from '@/hooks/use-user';
@@ -14,12 +15,13 @@ import {
     apiApplicationMutationResponseSchema,
     apiOrganizationDetailsSchema,
     apiOrganizationMutationResponseSchema,
+    apiOrganizationSummarySchema,
     parseApiResponse,
 } from '@/lib/api-schemas';
 
 type UseOrganizationResult = {
-    organization: ApiOrganizationDetails | undefined;
-    people: ApiOrganizationMemberSummary[];
+    organization: ApiOrganizationSummary | undefined;
+    members: ApiOrganizationMember[];
     invitations: ApiInvitation[];
     applications: ApiOrganizationApplication[];
     role: Role | null;
@@ -29,9 +31,9 @@ type UseOrganizationResult = {
 
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string): UseOrganizationResult {
-    const { organizations, isLoading: isUserLoading } = useUserOrganizations();
-    const membership = organizations.find((item) => item.slug === organizationSlug);
-    const organizationId = membership?.id ?? '';
+    const { memberships, isLoading: isUserLoading } = useUserOrganizations();
+    const membership = memberships.find((item) => item.organization.slug === organizationSlug);
+    const organizationId = membership?.organization.id ?? '';
     const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
 
     const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
@@ -49,8 +51,8 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
             : null);
 
     return {
-        organization: organizationQuery.data,
-        people: organizationQuery.data?.users ?? [],
+        organization: organizationQuery.data?.organization,
+        members: organizationQuery.data?.members ?? [],
         invitations: organizationQuery.data?.invitations ?? [],
         applications: organizationQuery.data?.applications ?? [],
         role: membership?.role ?? null,
@@ -207,21 +209,7 @@ export function useCreateOrganization() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({
-            name,
-            compute_id,
-            database_id,
-            storage_id,
-            avatar,
-            country,
-        }: {
-            name: string;
-            compute_id: string;
-            database_id: string;
-            storage_id: string;
-            avatar?: string | null;
-            country: string;
-        }) => {
+        mutationFn: async ({ name }: { name: string }) => {
             return fetchApiJson(
                 '/api/organizations',
                 {
@@ -229,11 +217,6 @@ export function useCreateOrganization() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         name,
-                        compute_id,
-                        database_id,
-                        storage_id,
-                        avatar: avatar?.trim() ?? '',
-                        country,
                     }),
                 },
                 (value) => parseApiResponse(apiOrganizationMutationResponseSchema, value).organization
@@ -241,6 +224,47 @@ export function useCreateOrganization() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() });
+        },
+    });
+}
+
+/** Updates mutable organization settings and refreshes organization caches. */
+export function useUpdateOrganization(organizationId: string, canManageOrganization: boolean) {
+    const queryClient = useQueryClient();
+    const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
+
+    return useMutation({
+        mutationFn: async ({ avatar }: { avatar: string }) => {
+            // Require a resolved organization and local management permission.
+            if (organizationPath === null) {
+                throw new Error('Organization not found');
+            }
+            if (!canManageOrganization) {
+                throw new Error('Organization management permissions required');
+            }
+
+            return fetchApiJson(
+                organizationPath,
+                {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ avatar }),
+                },
+                (value) => parseApiResponse(apiOrganizationSummarySchema, value)
+            );
+        },
+        onSuccess: async () => {
+            if (organizationPath === null) {
+                return;
+            }
+
+            // Refresh every response that embeds Organization metadata.
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) }),
+                queryClient.invalidateQueries({ queryKey: applicationsQueryKey() }),
+                queryClient.invalidateQueries({ queryKey: organizationsQueryKey() }),
+                queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() }),
+            ]);
         },
     });
 }

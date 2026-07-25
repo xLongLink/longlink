@@ -1,4 +1,4 @@
-.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests pyright api\:pyright sdk\:pyright
+.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
 
 LOCAL_SDK_IMAGE := localhost:15000/longlink-app:dev
 LOCAL_SDK_IMAGE_LABEL := longlink.name=longlink-app
@@ -47,15 +47,15 @@ web\:format: web\:install
 	cd web && bunx prettier --log-level warn --write . $$(cd .. && find . -name '*.md' -o -name '*.yml' -o -name '*.yaml' | sed 's#^./#../#')
 
 
-# Run all API, SDK, and web tests/checks without container-backed integration tests.
+# Run fast API, SDK, and web checks without infrastructure or scaffold smoke tests.
 tests:
 	$(MAKE) api:tests API_PYTEST_MARK='-m "not integration"'
 	$(MAKE) sdk:tests SDK_PYTEST_MARK='-m "not integration"'
 	$(MAKE) web:tests
 
 
-# Run all API, SDK, and web tests/checks, including container-backed integration tests.
-tests\:all: api\:tests sdk\:tests web\:tests
+# Run all checks, including container-backed integration and generated scaffold tests.
+tests\:all: api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests
 
 
 # Run all API tests with coverage, including container-backed integration tests.
@@ -63,10 +63,9 @@ api\:tests: api\:install api\:build
 	cd api && ENVIRONMENT=testing uv run --locked pytest $(API_PYTEST_MARK) --cov=src --cov-report=term-missing tests
 
 
-# Build the embedded web bundle, then run SDK and generated scaffold tests.
+# Build the embedded web bundle, then run SDK tests.
 sdk\:tests: sdk\:install sdk\:build
 	cd sdk && uv run --locked pytest $(SDK_PYTEST_MARK) --cov=longlink --cov-report=term-missing tests
-	cd sdk && sh tests/scaffold-smoke.sh
 
 
 # Generate an isolated application and run its shipped tests.
@@ -78,39 +77,39 @@ sdk\:scaffold\:tests: sdk\:install sdk\:build
 web\:tests: web\:install
 	bun run --cwd web test
 	bun run --cwd web typecheck
-	bun run --cwd web vite build --mode api --logLevel warn
-	bun run --cwd web vite build --mode sdk --logLevel warn
+	bun run --cwd web build:api:bundle --logLevel warn
+	bun run --cwd web build:sdk:bundle --logLevel warn
 
 
-# Run API and SDK Pyright checks.
-pyright: api\:pyright sdk\:pyright
+# Run API and SDK ty checks.
+ty: api\:ty sdk\:ty
 
 
-# Run API Pyright checks.
-api\:pyright:
-	cd api && uv run --locked --extra dev pyright
+# Run API ty checks.
+api\:ty:
+	cd api && uv run --locked --extra dev ty check
 
 
-# Run SDK Pyright checks.
-sdk\:pyright:
-	cd sdk && uv run --locked --group dev pyright
+# Run SDK ty checks.
+sdk\:ty:
+	cd sdk && uv run --locked --group dev ty check
 
 
 # Typecheck and build both web bundle modes.
 build: web\:install
 	bun run --cwd web typecheck
-	bun run --cwd web vite build --mode api --logLevel warn
-	bun run --cwd web vite build --mode sdk --logLevel warn
+	bun run --cwd web build:api:bundle --logLevel warn
+	bun run --cwd web build:sdk:bundle --logLevel warn
 
 
 # Build the API web bundle.
 api\:build: web\:install
-	bun run --cwd web vite build --mode api --logLevel warn
+	bun run --cwd web build:api:bundle --logLevel warn
 
 
 # Build the embedded SDK web bundle.
 sdk\:build: web\:install
-	bun run --cwd web vite build --mode sdk --logLevel warn
+	bun run --cwd web build:sdk:bundle --logLevel warn
 
 
 # Remove generated build and test artifacts for every workspace.
@@ -143,7 +142,7 @@ sdk\:image\:clean:
 
 # Remove generated web build artifacts.
 web\:clean:
-	rm -rf web/dist web/dist-ssr web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite
+	rm -rf web/build web/.react-router web/*.tsbuildinfo web/node_modules/.tmp web/node_modules/.vite
 
 
 # Start isolated local services and the cluster, then wait for the local registry.

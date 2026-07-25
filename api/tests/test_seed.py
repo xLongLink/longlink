@@ -38,7 +38,7 @@ async def test_reconcile_until_complete_drains_until_target_operation(monkeypatc
 
         assert handler is seed.operation_computes.reconcile
         executed.append(claimed_operation)
-        return fake_resource(compute_id=claimed_operation.compute_id, stopped_at=object(), error=None)
+        return fake_resource(compute_id=claimed_operation.compute_id, stopped_at=object(), failed=False)
 
     async def sleep(seconds: float) -> None:
         """Record queue polling backoff without slowing the test."""
@@ -72,7 +72,7 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
     organization = fake_resource(id=UUID("33333333-3333-3333-3333-333333333333"), slug=seed.LOCAL_ORG)
     application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
     operation = fake_resource(compute_id=compute.id, platform_version=env.VERSION)
-    completed = fake_resource(compute_id=compute.id, platform_version=env.VERSION, stopped_at=object(), error=None)
+    completed = fake_resource(compute_id=compute.id, platform_version=env.VERSION, stopped_at=object(), failed=False)
     kubeconfig = tmp_path / "kubeconfig.yaml"
     kubeconfig.write_text("apiVersion: v1\nclusters: []\n", encoding="utf-8")
     settings = seed.SeedSettings(
@@ -118,11 +118,11 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
         calls["storage"] = args
         return storage
 
-    async def create_organization(*args: object, **fields: object) -> SimpleNamespace:
+    async def create_organization(*args: object, **fields: object) -> tuple[SimpleNamespace, SimpleNamespace]:
         """Record local Organization desired-state creation."""
 
         calls["organization"] = (args, fields)
-        return organization
+        return organization, operation
 
     async def list_no_applications(organization_id: UUID) -> list[object]:
         """Return no existing sample Application."""
@@ -130,11 +130,11 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
         calls["application_lookup"] = organization_id
         return []
 
-    async def create_application(*args: object, **fields: object) -> SimpleNamespace:
+    async def create_application(*args: object, **fields: object) -> tuple[SimpleNamespace, SimpleNamespace]:
         """Record sample Application desired-state creation."""
 
         calls["application"] = (args, fields)
-        return application
+        return application, operation
 
     async def claim_operation() -> SimpleNamespace:
         """Return one terminally executable Operation for each seed mutation."""
@@ -194,7 +194,7 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
     )
     assert calls["organization"] == (
         (seed.LOCAL_ORG, seed.LOCAL_ORG, compute.id, database.id, storage.id, user),
-        {"avatar": seed.LOCAL_ORG_AVATAR, "country": "CH"},
+        {"avatar": seed.LOCAL_ORG_AVATAR},
     )
     assert calls["application_lookup"] == organization.id
     assert calls["application"] == (
@@ -231,7 +231,7 @@ async def test_seed_local_development_refreshes_existing_sample_application(monk
     organization = fake_resource(id=UUID("33333333-3333-3333-3333-333333333333"), slug=seed.LOCAL_ORG)
     application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
     operation = fake_resource(compute_id=compute.id, platform_version=env.VERSION)
-    completed = fake_resource(compute_id=compute.id, platform_version=env.VERSION, stopped_at=object(), error=None)
+    completed = fake_resource(compute_id=compute.id, platform_version=env.VERSION, stopped_at=object(), failed=False)
     settings = seed.SeedSettings(
         EXOSCALE_API_KEY="access-key",
         EXOSCALE_API_SECRET="secret-key",

@@ -2,13 +2,14 @@ import asyncio
 import contextlib
 from fastapi import FastAPI
 from pathlib import Path
-from src.routes import auth, icons, image, users, health, accounts, branding, computes, storages, countries, databases
+from src.routes import auth, icons, image, users, health, accounts, branding, computes, storages, databases
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
 from src.operations import computes as operation_computes
 from src.utils.jobs import run_operation_scheduler
 from collections.abc import AsyncIterator
 from src.environments import env
+from fastapi.responses import FileResponse
 from longlink.middleware import install_frontend_middleware
 from src.database.services import operations
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,12 +23,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await operations.reject_platform_downgrade()
     worker = asyncio.create_task(run_operation_scheduler(operation_computes.reconcile))
     reconciler = asyncio.create_task(operation_computes.run_periodic_reconciliation())
-    yield
 
-    reconciler.cancel()
-    worker.cancel()
-    with contextlib.suppress(asyncio.CancelledError):
-        await asyncio.gather(worker, reconciler)
+    # Always stop both schedulers when the application lifespan exits.
+    try:
+        yield
+    finally:
+        reconciler.cancel()
+        worker.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await asyncio.gather(worker, reconciler)
 
 
 app = FastAPI(
@@ -53,7 +57,6 @@ app.include_router(accounts.router)
 app.include_router(applications.router)
 app.include_router(branding.router)
 app.include_router(computes.router)
-app.include_router(countries.router)
 app.include_router(databases.router)
 app.include_router(health.router)
 app.include_router(icons.router)
@@ -66,6 +69,14 @@ app.include_router(users.router)
 
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():
+
+    # Serve the prerendered home document before registering the generic SPA fallback.
+    @app.get("/", response_class=FileResponse, include_in_schema=False)
+    async def frontend_root():
+        """Return the prerendered LongLink home page."""
+
+        return FileResponse(static_dir / "__root.html")
+
     app.frontend("/", directory=static_dir)
 
 # Local development entrypoint. Production imports the app with Uvicorn, so this block is not executed.

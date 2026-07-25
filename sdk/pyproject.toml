@@ -44,7 +44,7 @@ dev = [
     "pytest-asyncio>=1.3.0",
     "pytest-cov>=7.1.0",
     "pytest-mock>=3.14.1",
-    "pyright>=1.1.411",
+    "ty>=0.0.63",
     "ruff>=0.15.20",
     "lxml-stubs>=0.5.1",
     "isort>=8.0.1",
@@ -58,7 +58,7 @@ dev = [
     "pytest-asyncio>=1.3.0",
     "pytest-cov>=7.1.0",
     "pytest-mock>=3.14.1",
-    "pyright>=1.1.411",
+    "ty>=0.0.63",
     "ruff>=0.15.20",
     "lxml-stubs>=0.5.1",
     "isort>=8.0.1",
@@ -121,11 +121,10 @@ omit = [
     "longlink/shared/alembic/*",
 ]
 
-[tool.pyright]
-typeCheckingMode = "basic"
-pythonVersion = "3.12"
-venvPath = "."
-venv = ".venv"
+[tool.ty.environment]
+python-version = "3.12"
+extra-paths = ["."]
+
+[tool.ty.src]
 include = ["longlink", "tests"]
-exclude = [".venv", "build", "dist", "dev", "longlink/.static", "**/__pycache__"]
-extraPaths = ["."]
+exclude = ["dev", "longlink/.static"]
