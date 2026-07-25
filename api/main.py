@@ -7,7 +7,7 @@ from src.routes import operations as operations_route
 from src.routes import applications, organizations
 from src.operations import computes as operation_computes
 from src.utils.jobs import run_operation_scheduler
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse
 from longlink.middleware import install_frontend_middleware
@@ -17,7 +17,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 
 @contextlib.asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Validate release compatibility, then run this API replica's Operation scheduler."""
 
     await operations.reject_platform_downgrade()

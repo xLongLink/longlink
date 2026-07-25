@@ -2,7 +2,7 @@ import contextlib
 from uuid import UUID
 from typing import TypedDict
 from sqlalchemy import String, text
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from longlink.shared import migrations as shared_migrations
 from src.models.types import DatabaseSSLMode
 from sqlalchemy.engine import URL
@@ -96,7 +96,7 @@ class Postgres:
         *,
         autocommit: bool = False,
         search_path: str | None = None,
-    ) -> AsyncIterator[AsyncConnection]:
+    ) -> AsyncGenerator[AsyncConnection, None]:
         """Open one managed SQLAlchemy connection for a database.
 
         The adapter owns the engine lifecycle and disposes it after every operation.
