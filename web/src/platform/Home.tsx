@@ -652,7 +652,7 @@ export default function Home() {
                     </Grid>
                 </Stack>
             </Section>
-            <section className="relative z-10 bg-body px-6 py-24 text-center sm:py-28">
+            <section className="homepage-tertiary-section relative z-10 px-6 py-24 text-center sm:py-28">
                 <div className="mx-auto flex max-w-2xl flex-col items-center gap-8">
                     <div className="space-y-3">
                         <p className="text-xs font-medium uppercase tracking-[0.18em] text-secondary">Next step</p>
@@ -682,7 +682,7 @@ export default function Home() {
                     </div>
                 </div>
             </section>
-            <div className="relative z-10 bg-body">
+            <div className="homepage-tertiary-section relative z-10">
                 <Footer />
             </div>
         </div>

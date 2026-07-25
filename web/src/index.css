@@ -119,11 +119,20 @@
 }
 
 .homepage-painting-section {
+    --homepage-background-primary: var(--color-background-body);
+    --homepage-background-secondary: color-mix(
+        in oklch,
+        var(--color-background-body) 42%,
+        var(--color-background-card) 58%
+    );
+    --homepage-background-tertiary: color-mix(
+        in oklch,
+        var(--color-background-body) 20%,
+        var(--color-background-muted) 80%
+    );
     --painting-divider-height: clamp(3rem, 5vw, 4.75rem);
-    --painting-section-background: color-mix(in oklch, var(--color-background-card) 88%, var(--color-accent) 4%);
-    --painting-next-background: color-mix(in oklch, var(--color-background-body) 86%, var(--color-background-card) 14%);
     background:
-        radial-gradient(circle at 50% 8%, rgb(255 255 255 / 5%), transparent 28%), var(--painting-section-background);
+        radial-gradient(circle at 50% 8%, rgb(255 255 255 / 4%), transparent 28%), var(--homepage-background-secondary);
 }
 
 .homepage-painting-section::before,
@@ -131,25 +140,35 @@
     position: absolute;
     inset-inline: 0;
     z-index: 1;
-    height: var(--painting-divider-height);
+    height: calc(var(--painting-divider-height) + 2px);
     content: '';
     pointer-events: none;
 }
 
 .homepage-painting-section::before {
     top: 0;
-    background: var(--color-background-body);
+    background: var(--homepage-background-primary);
     clip-path: polygon(0 0, 100% 0, 0 100%);
 }
 
 .homepage-painting-section::after {
-    bottom: 0;
-    background: var(--painting-next-background);
+    bottom: -1px;
+    background: var(--homepage-background-tertiary);
     clip-path: polygon(0 0, 100% 100%, 0 100%);
 }
 
+.homepage-path-section,
+.homepage-tertiary-section {
+    --homepage-background-tertiary: color-mix(
+        in oklch,
+        var(--color-background-body) 20%,
+        var(--color-background-muted) 80%
+    );
+    background: var(--homepage-background-tertiary);
+}
+
 .homepage-path-section {
-    background: color-mix(in oklch, var(--color-background-body) 86%, var(--color-background-card) 14%);
+    margin-top: -1px;
 }
 
 .homepage-hands-hanging-frame {
@@ -249,15 +268,16 @@
     max-width: min(28rem, 46%);
     margin: clamp(0.75rem, 1.8vw, 1.15rem) 0 0 auto;
     padding: clamp(0.7rem, 1.5vw, 1rem);
-    border: 1px solid color-mix(in oklch, var(--color-border) 70%, white 30%);
-    border-radius: 0.3rem;
+    border: 1px solid color-mix(in oklch, var(--color-border) 76%, white 24%);
+    border-radius: 0.16rem;
     background:
-        linear-gradient(115deg, rgb(255 255 255 / 18%), transparent 34%),
-        linear-gradient(180deg, rgb(255 255 255 / 10%), rgb(0 0 0 / 18%)),
-        color-mix(in oklch, var(--color-background-card) 78%, white 22%);
+        linear-gradient(105deg, rgb(255 255 255 / 10%), transparent 32%),
+        linear-gradient(180deg, rgb(255 255 255 / 7%), rgb(0 0 0 / 12%)),
+        color-mix(in oklch, var(--color-background-card) 88%, white 12%);
     box-shadow:
-        0 1rem 2rem rgb(0 0 0 / 44%),
-        inset 0 0 0 1px rgb(255 255 255 / 8%);
+        0 1px 1px rgb(0 0 0 / 34%),
+        inset 0 1px 0 rgb(255 255 255 / 12%),
+        inset 0 -1px 0 rgb(0 0 0 / 22%);
     color: var(--color-text-primary);
     text-wrap: balance;
 }
@@ -271,7 +291,43 @@
     pointer-events: none;
 }
 
+.homepage-hands-description::after {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+        radial-gradient(
+            circle at 0.45rem 0.45rem,
+            rgb(255 255 255 / 34%) 0 0.04rem,
+            rgb(0 0 0 / 48%) 0.05rem 0.13rem,
+            transparent 0.14rem
+        ),
+        radial-gradient(
+            circle at calc(100% - 0.45rem) 0.45rem,
+            rgb(255 255 255 / 34%) 0 0.04rem,
+            rgb(0 0 0 / 48%) 0.05rem 0.13rem,
+            transparent 0.14rem
+        ),
+        radial-gradient(
+            circle at 0.45rem calc(100% - 0.45rem),
+            rgb(255 255 255 / 26%) 0 0.04rem,
+            rgb(0 0 0 / 42%) 0.05rem 0.13rem,
+            transparent 0.14rem
+        ),
+        radial-gradient(
+            circle at calc(100% - 0.45rem) calc(100% - 0.45rem),
+            rgb(255 255 255 / 26%) 0 0.04rem,
+            rgb(0 0 0 / 42%) 0.05rem 0.13rem,
+            transparent 0.14rem
+        );
+    content: '';
+    opacity: 0.72;
+    pointer-events: none;
+}
+
 .homepage-hands-description-title {
+    position: relative;
+    z-index: 1;
     margin: 0;
     color: var(--color-text-primary);
     font-size: clamp(0.78rem, 1.15vw, 0.95rem);
@@ -281,6 +337,8 @@
 }
 
 .homepage-hands-description-copy {
+    position: relative;
+    z-index: 1;
     margin: 0.45rem 0 0;
     color: var(--color-text-secondary);
     font-size: clamp(0.62rem, 0.85vw, 0.78rem);
@@ -291,8 +349,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
     .group:hover .path-navigation-cue {
-        animation: path-navigation-cue calc(var(--duration-slow-max) + var(--duration-slow-max)) var(--ease-standard)
-            infinite;
+        animation: path-navigation-cue calc(var(--duration-slow-max) + var(--duration-slow-max)) var(--ease-standard) 1;
     }
 }
 
