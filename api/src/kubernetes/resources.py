@@ -109,7 +109,10 @@ class KubernetesResources:
                 raise ValueError("Kubernetes kubeconfig must be a mapping")
 
             # kr8s accepts in-memory mappings although its public factory annotation only declares file paths.
-            self._api_client = await kr8s.asyncio.api(**{"kubeconfig": kubeconfig, "serviceaccount": ""})
+            self._api_client = await kr8s.asyncio.api(
+                kubeconfig=kubeconfig,
+                serviceaccount="",
+            )
 
         return self._api_client
 

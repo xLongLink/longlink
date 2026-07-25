@@ -19,7 +19,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 class Table(Base):
     """Base SQLModel for DB tables with common timestamp and audit fields."""
 
-    __allow_unmapped__: ClassVar[bool] = True
+    __allow_unmapped__: ClassVar[bool] = True  # ty: ignore[invalid-attribute-override]
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Allow inherited SDK relationship annotations on mapped subclasses."""

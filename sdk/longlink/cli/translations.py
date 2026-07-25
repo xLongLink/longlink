@@ -2,6 +2,7 @@ import re
 import json
 import click
 from lxml import etree
+from typing import cast
 from pathlib import Path
 
 DEFAULT_TRANSLATION_FILE = Path("src") / "i18n" / "en.json"
@@ -47,21 +48,22 @@ def generate_command() -> None:
                 f'Invalid translation entry "{key}" in {DEFAULT_TRANSLATION_FILE}: expected an object.'
             )
 
-        unsupported_fields = set(entry) - {"defaultMessage", "description"}
+        translation = cast(dict[str, object], entry)
+        unsupported_fields = set(translation) - {"defaultMessage", "description"}
         if unsupported_fields:
             fields = ", ".join(sorted(unsupported_fields))
             raise click.ClickException(
                 f'Invalid translation entry "{key}" in {DEFAULT_TRANSLATION_FILE}: unsupported fields: {fields}.'
             )
 
-        default_message = entry.get("defaultMessage")
+        default_message = translation.get("defaultMessage")
         if not isinstance(default_message, str):
             raise click.ClickException(
                 f'Invalid translation entry "{key}" in {DEFAULT_TRANSLATION_FILE}: defaultMessage must be a string.'
             )
 
-        description = entry.get("description")
-        if "description" in entry and not isinstance(description, str):
+        description = translation.get("description")
+        if "description" in translation and not isinstance(description, str):
             raise click.ClickException(
                 f'Invalid translation entry "{key}" in {DEFAULT_TRANSLATION_FILE}: description must be a string.'
             )

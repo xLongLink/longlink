@@ -11,4 +11,4 @@ class Base(SQLModel, registry=database_registry):
     """Base SQLModel for application and shared read models."""
 
     metadata = database_metadata
-    model_config: ClassVar[ConfigDict] = ConfigDict(ignored_types=(declared_attr,))
+    model_config: ClassVar[ConfigDict] = ConfigDict(ignored_types=(declared_attr,))  # ty: ignore[invalid-assignment]

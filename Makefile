@@ -1,4 +1,4 @@
-.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests pyright api\:pyright sdk\:pyright
+.PHONY: up down build api\:build sdk\:build seed clean api\:clean sdk\:clean sdk\:image\:clean web\:clean format api\:format sdk\:format web\:format api web sdk install api\:install sdk\:install web\:install tests tests\:all api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests ty api\:ty sdk\:ty
 
 LOCAL_SDK_IMAGE := localhost:15000/longlink-app:dev
 LOCAL_SDK_IMAGE_LABEL := longlink.name=longlink-app
@@ -81,18 +81,18 @@ web\:tests: web\:install
 	bun run --cwd web build:sdk:bundle --logLevel warn
 
 
-# Run API and SDK Pyright checks.
-pyright: api\:pyright sdk\:pyright
+# Run API and SDK ty checks.
+ty: api\:ty sdk\:ty
 
 
-# Run API Pyright checks.
-api\:pyright:
-	cd api && uv run --locked --extra dev pyright
+# Run API ty checks.
+api\:ty:
+	cd api && uv run --locked --extra dev ty check
 
 
-# Run SDK Pyright checks.
-sdk\:pyright:
-	cd sdk && uv run --locked --group dev pyright
+# Run SDK ty checks.
+sdk\:ty:
+	cd sdk && uv run --locked --group dev ty check
 
 
 # Typecheck and build both web bundle modes.

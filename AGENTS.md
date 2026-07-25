@@ -2,6 +2,7 @@
 
 - When listing improvement suggestions, use numbered lists.
 - Project is in MVP mode - No need for backwards compatibility
+- At the end of each task, list 5 cleanup and simplification opportunities
 
 ## Product Language
 

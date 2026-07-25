@@ -212,7 +212,7 @@ class LongLinkUserDatabase(SQLAlchemyUserDatabase[User, UUID]):
         normalized = {**create_dict, "email": email.lower() if isinstance(email, str) else email}
 
         # Keep the user pending until provider-account creation commits both records.
-        user = self.user_table(**normalized)
+        user = self.user_table(**normalized)  # ty: ignore[invalid-argument-type]
         self.session.add(user)
         await self.session.flush()
         return user
@@ -228,7 +228,7 @@ class LongLinkUserDatabase(SQLAlchemyUserDatabase[User, UUID]):
             "refresh_token": None,
             "expires_at": None,
         }
-        account = OAuthAccount(user_id=user.id, **sanitized)
+        account = OAuthAccount(user_id=user.id, **sanitized)  # ty: ignore[invalid-argument-type]
         self.session.add(account)
         await self.session.commit()
         await self.session.refresh(user, attribute_names=["oauth_accounts"])
@@ -294,7 +294,7 @@ async def get_auth_session() -> AsyncIterator[AsyncSession]:
 async def get_user_database(session: AsyncSession = Depends(get_auth_session)) -> AsyncIterator[LongLinkUserDatabase]:
     """Yield the FastAPI Users adapter for LongLink user models."""
 
-    yield LongLinkUserDatabase(session, User, OAuthAccount)  # pyright: ignore[reportArgumentType]
+    yield LongLinkUserDatabase(session, User, OAuthAccount)  # ty: ignore[invalid-argument-type]
 
 
 async def get_access_token_database(

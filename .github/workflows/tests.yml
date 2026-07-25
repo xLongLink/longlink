@@ -52,9 +52,9 @@ jobs:
         working-directory: api
         run: ENVIRONMENT=testing uv run --locked pytest -m "not integration" --cov=src --cov-report=term-missing tests
 
-      - name: Run Pyright
+      - name: Run ty
         working-directory: api
-        run: uv run --locked --extra dev pyright
+        run: uv run --locked --extra dev ty check
 
   # The SDK requires Python 3.12 or newer.
   sdk-tests:
@@ -96,9 +96,9 @@ jobs:
         working-directory: sdk
         run: uv run --locked pytest -m "not integration" --cov=longlink --cov-report=term-missing tests
 
-      - name: Run Pyright
+      - name: Run ty
         working-directory: sdk
-        run: uv run --locked --group dev pyright
+        run: uv run --locked --group dev ty check
 
       - name: Build SDK distribution
         working-directory: sdk
