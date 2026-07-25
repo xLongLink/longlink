@@ -22,7 +22,7 @@ import CreateOrganization from '@/components/dialogs/CreateOrganization';
 export default function Organizations() {
     const t = useTranslator();
     const { user, isLoading: isProfileLoading, error: profileError } = useUserProfile();
-    const { organizations, isLoading: areOrganizationsLoading, error: organizationsError } = useUserOrganizations();
+    const { memberships, isLoading: areOrganizationsLoading, error: organizationsError } = useUserOrganizations();
     const location = useLocation();
     const search = new URLSearchParams(location.search);
     const nextPath = search.get('next');
@@ -47,14 +47,18 @@ export default function Organizations() {
             key: 'name',
             header: t('columns.name'),
             width: proportional(1),
-            renderCell: (organization) => (
+            renderCell: (membership) => (
                 <HStack gap={3} align="center">
-                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="md" />
+                    <Avatar
+                        src={membership.organization.avatar || undefined}
+                        name={membership.organization.name}
+                        size="md"
+                    />
                     <VStack gap={1}>
-                        <Link href={`/orgs/${organization.slug}`} weight="semibold">
-                            {organization.name}
+                        <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
+                            {membership.organization.name}
                         </Link>
-                        <Text type="supporting">{organization.country}</Text>
+                        <Text type="supporting">{membership.organization.country}</Text>
                     </VStack>
                 </HStack>
             ),
@@ -79,16 +83,16 @@ export default function Organizations() {
                     </VStack>
                     <CreateOrganization />
                 </HStack>
-                {isLoading && organizations.length === 0 ? null : tableError && organizations.length === 0 ? (
+                {isLoading && memberships.length === 0 ? null : tableError && memberships.length === 0 ? (
                     <Banner status="error" title={tableError.message} />
                 ) : (
                     <Table
                         columns={columns}
-                        data={organizations}
+                        data={memberships}
                         density="compact"
                         emptyState={<EmptyState title={t('common.noResults')} isCompact />}
                         hasHover
-                        idKey="id"
+                        idKey={(membership) => membership.organization.id}
                     />
                 )}
             </PageContainer>

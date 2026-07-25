@@ -28,14 +28,16 @@ export default function Applications({
             key: 'name',
             header: t('columns.application'),
             width: proportional(1),
-            renderCell: (application) => (
+            renderCell: (access) => (
                 <HStack gap={3} align="center">
                     <Wrench aria-hidden="true" className="shrink-0 text-accent" size={20} />
                     <VStack gap={1}>
-                        <Link href={`/orgs/${organization}/apps/${application.slug}`} weight="semibold">
-                            {application.name}
+                        <Link href={`/orgs/${organization}/apps/${access.application.slug}`} weight="semibold">
+                            {access.application.name}
                         </Link>
-                        {application.description ? <Text type="supporting">{application.description}</Text> : null}
+                        {access.application.description ? (
+                            <Text type="supporting">{access.application.description}</Text>
+                        ) : null}
                     </VStack>
                 </HStack>
             ),
@@ -58,7 +60,7 @@ export default function Applications({
             density="compact"
             emptyState={<EmptyState title={t('common.noResults')} isCompact />}
             hasHover
-            idKey="id"
+            idKey={(access) => access.application.id}
         />
     );
 }

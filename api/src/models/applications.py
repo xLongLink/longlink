@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.types import Icon, Image
-from src.models.users import UserSummary
+from src.models.users import UserSummary, UserIdentity
 from src.models.statuses import ApplicationStatus
 from src.models.operations import OperationResponse
 from src.models.organizations import OrganizationSummary
@@ -86,7 +86,6 @@ class ApplicationResponse(BaseModel):
     description: str | None = None
 
     # State
-    role: ApplicationRoles | None = None
     status: ApplicationStatus
 
     # Audit
@@ -109,6 +108,16 @@ class ApplicationMutationResponse(BaseModel):
     operation: OperationResponse
 
 
+class ApplicationAccessResponse(BaseModel):
+    """Represent one LongLink Application and the current user's access role."""
+
+    # Relationships
+    application: ApplicationResponse
+
+    # Access
+    role: ApplicationRoles | None = None
+
+
 class ApplicationMemberUpdate(BaseModel):
     """Validate application member role updates."""
 
@@ -119,14 +128,9 @@ class ApplicationMemberUpdate(BaseModel):
 class ApplicationMemberResponse(BaseModel):
     """Represent one organization member's application access."""
 
-    # Identifier
-    id: UUID
+    # Relationships
+    user: UserIdentity
 
-    # Metadata
-    name: str
-    email: str
-    avatar: str = ""
-
-    # State
+    # Access
     application_role: ApplicationRoles | None = None
     organization_role: OrganizationRoles

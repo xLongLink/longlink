@@ -1,9 +1,9 @@
 import pytest
 from uuid import UUID
-from urllib.parse import urlencode
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
 from src.utils import mail as mail_module
 from src.utils import names
+from urllib.parse import urlencode
 from src.environments import env
 from src.models.roles import OrganizationRoles
 from fastapi.testclient import TestClient
@@ -115,11 +115,12 @@ async def test_get_organization_returns_member_payload(
     assert response.status_code == 200
 
     payload = response.json()
-    assert payload["id"] == str(organization.id)
-    assert payload["name"] == "acme"
-    assert payload["users"][0]["id"] == str(owner.id)
-    assert payload["users"][0]["role"] == "owner"
-    assert payload["applications"][0]["id"] == str(application.id)
+    assert set(payload) == {"organization", "members", "invitations", "applications"}
+    assert payload["organization"]["id"] == str(organization.id)
+    assert payload["organization"]["name"] == "acme"
+    assert payload["members"][0]["user"]["id"] == str(owner.id)
+    assert payload["members"][0]["role"] == "owner"
+    assert payload["applications"][0]["application"]["id"] == str(application.id)
     assert payload["applications"][0]["role"] == "admin"
 
 

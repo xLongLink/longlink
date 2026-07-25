@@ -22,7 +22,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
     const section = settingsSection === undefined ? 'applications' : 'settings';
     const {
         organization: organizationDetails,
-        people,
+        members,
         invitations,
         applications,
         role: organizationRole,
@@ -40,7 +40,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
         !isLoading &&
         error === null &&
         settingsApplication.length > 0 &&
-        !applications.some((application) => application.slug === settingsApplication)
+        !applications.some((access) => access.application.slug === settingsApplication)
     ) {
         return <NotFound />;
     }
@@ -81,7 +81,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
                         organization={organization}
                         organizationDetails={organizationDetails}
                         applications={applications}
-                        people={people}
+                        members={members}
                         invitations={invitations}
                         organizationRole={organizationRole}
                         routeSection={settingsSection ?? 'organization'}

@@ -1,5 +1,4 @@
-import { DOC_PAGES } from '@/pages/docs/catalog';
-import { LEGAL_PAGES } from '@/pages/legal/catalog';
+import type { MetaDescriptor } from 'react-router';
 
 export type PublicSeoPage = {
     path: string;
@@ -42,8 +41,13 @@ const titlesByPath: Record<string, string> = {
     '/impressum': 'Impressum | LongLink',
 };
 
+/** Returns the canonical document path served by FastAPI. */
+export function publicRoutePath(routePath: string): string {
+    return routePath === '/' ? '/' : `${routePath}/`;
+}
+
 /** Builds one public SEO page from an article route catalog entry. */
-function articleSeoPage(page: { path: string; title: string }): PublicSeoPage {
+export function articleSeoPage(page: { path: string; title: string }): PublicSeoPage {
     const fallbackTitle = page.path.startsWith('/docs') ? `${page.title} | LongLink Docs` : `${page.title} | LongLink`;
 
     return {
@@ -53,18 +57,62 @@ function articleSeoPage(page: { path: string; title: string }): PublicSeoPage {
     };
 }
 
-export const publicSeoPages: PublicSeoPage[] = [
-    {
-        path: '/',
-        title: 'LongLink | Python Platform for Business Applications',
-        description:
-            'LongLink is an open-source platform for building and running custom business-process applications with Python.',
-    },
-    {
-        path: '/pricing',
-        title: 'Pricing | LongLink',
-        description: 'Simple LongLink pricing for building and running business-process applications.',
-    },
-    ...DOC_PAGES.map(articleSeoPage),
-    ...LEGAL_PAGES.map(articleSeoPage),
-];
+export const homeSeoPage: PublicSeoPage = {
+    path: '/',
+    title: 'LongLink | Python Platform for Business Applications',
+    description:
+        'LongLink is an open-source platform for building and running custom business-process applications with Python.',
+};
+
+export const pricingSeoPage: PublicSeoPage = {
+    path: '/pricing',
+    title: 'Pricing | LongLink',
+    description: 'Simple LongLink pricing for building and running business-process applications.',
+};
+
+/** Builds React Router metadata for one prerendered public page. */
+export function publicSeoMeta(page: PublicSeoPage): MetaDescriptor[] {
+    const routePath = publicRoutePath(page.path);
+    const canonicalUrl = `${SITE_URL}${routePath}`;
+    const structuredData =
+        page.path === '/'
+            ? {
+                  '@context': 'https://schema.org',
+                  '@type': 'WebSite',
+                  name: 'LongLink',
+                  url: canonicalUrl,
+                  hasPart: [
+                      { '@type': 'SiteNavigationElement', name: 'Pricing', url: `${SITE_URL}/pricing/` },
+                      { '@type': 'SiteNavigationElement', name: 'Documentation', url: `${SITE_URL}/docs/` },
+                      {
+                          '@type': 'SiteNavigationElement',
+                          name: 'Applications / SDK Docs',
+                          url: `${SITE_URL}/docs/sdk/`,
+                      },
+                      {
+                          '@type': 'SiteNavigationElement',
+                          name: 'Platform Docs',
+                          url: `${SITE_URL}/docs/api/`,
+                      },
+                  ],
+              }
+            : {
+                  '@context': 'https://schema.org',
+                  '@type': page.path.startsWith('/docs') ? 'TechArticle' : 'WebPage',
+                  name: page.title,
+                  description: page.description,
+                  url: canonicalUrl,
+              };
+
+    return [
+        { title: page.title },
+        { name: 'description', content: page.description },
+        { name: 'robots', content: 'index, follow' },
+        { tagName: 'link', rel: 'canonical', href: canonicalUrl },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:url', content: canonicalUrl },
+        { property: 'og:title', content: page.title },
+        { property: 'og:description', content: page.description },
+        { 'script:ld+json': structuredData },
+    ];
+}

@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.types import DatabaseSSLMode
 from src.models.users import UserSummary
-from src.models.resources import OrganizationResourceApplicationResponse
+from src.models.resources import OrganizationApplicationSummary
 from src.models.infrastructure import DatabaseConfiguration
 
 
@@ -27,7 +27,7 @@ class OrganizationDatabaseResourceResponse(BaseModel):
     database_name: str
 
     # Relationships
-    application: OrganizationResourceApplicationResponse | None = None
+    application: OrganizationApplicationSummary | None = None
 
     # Usage
     space_used: int | None = None

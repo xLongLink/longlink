@@ -4,8 +4,8 @@ from src.models.types import Icon
 from src.models.statuses import ApplicationStatus
 
 
-class OrganizationResourceApplicationResponse(BaseModel):
-    """Represent the application using one organization runtime resource."""
+class OrganizationApplicationSummary(BaseModel):
+    """Represent a compact LongLink Application in nested Organization responses."""
 
     model_config = ConfigDict(from_attributes=True)
 

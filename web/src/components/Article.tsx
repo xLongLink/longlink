@@ -21,10 +21,11 @@ const FALLBACK_UPDATED_AT = Date.now();
 export function Article({ page }: { page: ArticlePage }) {
     const t = useTranslator();
     const { user } = useUserProfile();
-    const { organizations } = useUserOrganizations();
+    const { memberships } = useUserOrganizations();
     const { content, metadata } = page;
     const pageToc = metadata.toc?.map((item) => ({ id: item.id, label: item.label, level: item.level ?? 2 })) ?? [];
-    const getStartedHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
+    const getStartedHref =
+        user && memberships.length === 1 ? `/orgs/${memberships[0].organization.slug}` : '/organizations';
 
     const breadcrumbs = (
         <Breadcrumbs className="min-w-0 overflow-hidden" separator=">" variant="supporting">

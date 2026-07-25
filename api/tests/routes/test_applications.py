@@ -57,8 +57,9 @@ async def test_list_organization_apps_returns_app_membership_role(
     # Assert
     assert response.status_code == 200
     payload = response.json()
-    assert [item["id"] for item in payload] == [str(app.id)]
+    assert [item["application"]["id"] for item in payload] == [str(app.id)]
     assert payload[0]["role"] == ApplicationRoles.write
+    assert "role" not in payload[0]["application"]
 
 
 async def test_list_apps_without_organization_returns_all_apps_for_admin(
@@ -398,7 +399,7 @@ async def test_application_member_routes_list_update_remove_and_reject_missing_m
 
     # Assert
     assert list_response.status_code == 200
-    assert {item["id"] for item in list_response.json()} == {str(owner.id), str(member.id)}
+    assert {item["user"]["id"] for item in list_response.json()} == {str(owner.id), str(member.id)}
     assert create_response.status_code == 204
     assert created_role == ApplicationRoles.read
     assert remove_response.status_code == 204

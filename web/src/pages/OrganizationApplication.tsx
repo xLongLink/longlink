@@ -20,13 +20,14 @@ function OrganizationApplicationView() {
     const { organization = '', application = '' } = useParams();
     const {
         organization: organizationDetails,
+        applications,
         role: organizationRole,
         isLoading,
         error,
     } = useOrganization(organization);
     const { language } = useUserProfile();
-    const organizationApplication = organizationDetails?.applications.find((item) => item.slug === application);
-    const applicationRole = organizationApplication?.role ?? null;
+    const applicationAccess = applications.find((item) => item.application.slug === application);
+    const applicationRole = applicationAccess?.role ?? null;
     const hasApplicationAccess = applicationRole !== null || hasMinimumRole(organizationRole, 'maintain');
 
     // Show the shell while organization/application access is still resolving.
@@ -35,15 +36,15 @@ function OrganizationApplicationView() {
     }
 
     // Hide unknown org/app combinations behind the shared 404 page.
-    if (error?.status === 404 || !organizationDetails || !organizationApplication || !hasApplicationAccess) {
+    if (error?.status === 404 || !organizationDetails || !applicationAccess || !hasApplicationAccess) {
         return <NotFound />;
     }
 
     return (
         <View
-            applicationStatus={organizationApplication.status}
+            applicationStatus={applicationAccess.application.status}
             locale={language}
-            pages={`/api/applications/${organizationApplication.id}/proxy/pages.json`}
+            pages={`/api/applications/${applicationAccess.application.id}/proxy/pages.json`}
         />
     );
 }

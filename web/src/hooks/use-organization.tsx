@@ -4,7 +4,8 @@ import type {
     ApiInvitation,
     ApiOrganizationApplication,
     ApiOrganizationDetails,
-    ApiOrganizationMemberSummary,
+    ApiOrganizationMember,
+    ApiOrganizationSummary,
 } from '@/lib/types';
 import { useApiQuery } from '@/hooks/use-api';
 import { useUserOrganizations } from '@/hooks/use-user';
@@ -18,8 +19,8 @@ import {
 } from '@/lib/api-schemas';
 
 type UseOrganizationResult = {
-    organization: ApiOrganizationDetails | undefined;
-    people: ApiOrganizationMemberSummary[];
+    organization: ApiOrganizationSummary | undefined;
+    members: ApiOrganizationMember[];
     invitations: ApiInvitation[];
     applications: ApiOrganizationApplication[];
     role: Role | null;
@@ -29,9 +30,9 @@ type UseOrganizationResult = {
 
 /** Fetches organization details and related collections for the current workspace. */
 export function useOrganization(organizationSlug: string): UseOrganizationResult {
-    const { organizations, isLoading: isUserLoading } = useUserOrganizations();
-    const membership = organizations.find((item) => item.slug === organizationSlug);
-    const organizationId = membership?.id ?? '';
+    const { memberships, isLoading: isUserLoading } = useUserOrganizations();
+    const membership = memberships.find((item) => item.organization.slug === organizationSlug);
+    const organizationId = membership?.organization.id ?? '';
     const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
 
     const missingOrganization = !isUserLoading && organizationSlug.length > 0 && organizationId.length === 0;
@@ -49,8 +50,8 @@ export function useOrganization(organizationSlug: string): UseOrganizationResult
             : null);
 
     return {
-        organization: organizationQuery.data,
-        people: organizationQuery.data?.users ?? [],
+        organization: organizationQuery.data?.organization,
+        members: organizationQuery.data?.members ?? [],
         invitations: organizationQuery.data?.invitations ?? [],
         applications: organizationQuery.data?.applications ?? [],
         role: membership?.role ?? null,

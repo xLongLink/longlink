@@ -125,10 +125,7 @@ async def list_application_members(application_id: UUID, user: User = Depends(au
     member_rows = await applications.members(application_id, membership.organization_id)
     return [
         {
-            "id": member.id,
-            "name": member.name,
-            "email": member.email,
-            "avatar": member.avatar,
+            "user": member,
             "application_role": application_membership.role if application_membership is not None else None,
             "organization_role": organization_membership.role,
         }

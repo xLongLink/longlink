@@ -20,14 +20,14 @@ import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout as DialogLayout, LayoutContent } from '@astryxdesign/core/Layout';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { Role } from '@/lib/roles';
-import type { ApiInvitation, ApiOrganizationMemberSummary } from '@/lib/types';
+import type { ApiInvitation, ApiOrganizationMember } from '@/lib/types';
 import { ROLE_NAMES } from '@/lib/roles';
 import { formatDate } from '@/lib/utils';
 import { useChangeOrganizationMemberRole, useInviteOrganizationMember } from '@/hooks/use-organization';
 
 type PeopleProps = {
     organizationId: string;
-    people: ApiOrganizationMemberSummary[];
+    members: ApiOrganizationMember[];
     invitations: ApiInvitation[];
     activeSection?: 'members' | 'invitations';
     canInviteMembers: boolean;
@@ -47,7 +47,7 @@ const ORGANIZATION_ROLE_LABELS: Record<Role, string> = {
 /** Renders the organization people lists for settings sections. */
 export default function People({
     organizationId,
-    people,
+    members,
     invitations,
     activeSection = 'members',
     canInviteMembers,
@@ -61,24 +61,24 @@ export default function People({
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteRole, setInviteRole] = useState<Role>('write');
     const [roleChangeTarget, setRoleChangeTarget] = useState<{
-        user: ApiOrganizationMemberSummary;
+        member: ApiOrganizationMember;
         role: Role;
     } | null>(null);
     const inviteMember = useInviteOrganizationMember(organizationId, canInviteMembers);
     const changeMemberRole = useChangeOrganizationMemberRole(organizationId, canManageMembers);
     const roleChangeTargetLabel = roleChangeTarget ? ORGANIZATION_ROLE_LABELS[roleChangeTarget.role] : '';
 
-    const peopleColumns: TableColumn<ApiOrganizationMemberSummary>[] = [
+    const memberColumns: TableColumn<ApiOrganizationMember>[] = [
         {
             key: 'member',
             header: t('columns.user'),
             width: proportional(1),
-            renderCell: (user) => (
+            renderCell: (member) => (
                 <HStack gap={3} align="center">
-                    <Avatar src={user.avatar} name={user.name} size="md" />
+                    <Avatar src={member.user.avatar} name={member.user.name} size="md" />
                     <VStack gap={1}>
-                        <Text weight="semibold">{user.name}</Text>
-                        <Text type="supporting">{user.email}</Text>
+                        <Text weight="semibold">{member.user.name}</Text>
+                        <Text type="supporting">{member.user.email}</Text>
                     </VStack>
                 </HStack>
             ),
@@ -87,22 +87,22 @@ export default function People({
             key: 'membership',
             header: t('columns.role'),
             width: pixel(128),
-            renderCell: (user) => <Badge label={user.role} />,
+            renderCell: (member) => <Badge label={member.role} />,
         },
         {
             key: 'actions',
             header: t('columns.action'),
             width: pixel(96),
             align: 'end',
-            renderCell: (user) => (
+            renderCell: (member) => (
                 <MoreMenu
-                    label={t('common.openActionsFor', { name: user.name })}
+                    label={t('common.openActionsFor', { name: member.user.name })}
                     size="sm"
                     isDisabled={!canManageMembers}
-                    items={ROLE_NAMES.filter((role) => role !== user.role).map((role) => ({
+                    items={ROLE_NAMES.filter((role) => role !== member.role).map((role) => ({
                         label: t('people.grantPermission', { role: ORGANIZATION_ROLE_LABELS[role] }),
                         onClick: () => {
-                            setRoleChangeTarget({ user, role });
+                            setRoleChangeTarget({ member, role });
                         },
                     }))}
                 />
@@ -141,16 +141,16 @@ export default function People({
                         <Text type="supporting">{t('people.membersDescription')}</Text>
                     </VStack>
                     <Divider />
-                    {isLoading && people.length === 0 ? null : peopleError && people.length === 0 ? (
+                    {isLoading && members.length === 0 ? null : peopleError && members.length === 0 ? (
                         <Banner status="error" title={peopleError.message} />
                     ) : (
                         <Table
-                            columns={peopleColumns}
-                            data={people}
+                            columns={memberColumns}
+                            data={members}
                             density="compact"
                             emptyState={<EmptyState title={t('people.noPeople')} isCompact />}
                             hasHover
-                            idKey="id"
+                            idKey={(member) => member.user.id}
                         />
                     )}
                 </VStack>
@@ -201,7 +201,7 @@ export default function People({
                 description={
                     roleChangeTarget
                         ? t('people.changeRoleDescription', {
-                              name: roleChangeTarget.user.name,
+                              name: roleChangeTarget.member.user.name,
                               role: roleChangeTargetLabel,
                           })
                         : t('people.changeRoleFallback')
@@ -219,12 +219,12 @@ export default function People({
                     // Persist the selected organization role.
                     try {
                         await changeMemberRole.mutateAsync({
-                            memberId: roleChangeTarget.user.id,
+                            memberId: roleChangeTarget.member.user.id,
                             role: roleChangeTarget.role,
                         });
                         toast({
                             body: t('people.roleChanged', {
-                                name: roleChangeTarget.user.name,
+                                name: roleChangeTarget.member.user.name,
                                 role: roleChangeTargetLabel,
                             }),
                         });

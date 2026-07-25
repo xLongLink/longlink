@@ -53,7 +53,7 @@ export default function Settings() {
     const toast = useToast();
     const location = useLocation();
     const { user, theme, accent, radius, language, isLoading: isProfileLoading } = useUserProfile();
-    const { organizations, isLoading: areOrganizationsLoading } = useUserOrganizations();
+    const { memberships, isLoading: areOrganizationsLoading } = useUserOrganizations();
     const { mutateAsync: updateUser, isPending } = useUpdateUser();
     const deleteOrganization = useDeleteOrganization();
     const [editedName, setEditedName] = useState<string | null>(null);
@@ -103,26 +103,31 @@ export default function Settings() {
     const deleteDialog = useDeleteDialog({
         title: t('deleteDialog.deleteOrganizationTitle'),
         mutation: deleteOrganization,
-        items: organizations,
-        getId: (organization) => organization.id,
-        description: (organization) => t('deleteDialog.deleteOrganizationDescription', { name: organization.name }),
+        items: memberships,
+        getId: (membership) => membership.organization.id,
+        description: (membership) =>
+            t('deleteDialog.deleteOrganizationDescription', { name: membership.organization.name }),
         errorMessage: t('deleteDialog.failedDeleteOrganization'),
         fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
         onError: (message) => toast({ body: message, type: 'error' }),
     });
-    const organizationColumns: TableColumn<(typeof organizations)[number]>[] = [
+    const organizationColumns: TableColumn<(typeof memberships)[number]>[] = [
         {
             key: 'name',
             header: t('columns.name'),
             width: proportional(1),
-            renderCell: (organization) => (
+            renderCell: (membership) => (
                 <HStack gap={3} align="center">
-                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="md" />
+                    <Avatar
+                        src={membership.organization.avatar || undefined}
+                        name={membership.organization.name}
+                        size="md"
+                    />
                     <VStack gap={1}>
-                        <Link href={`/orgs/${organization.slug}`} weight="semibold">
-                            {organization.name}
+                        <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
+                            {membership.organization.name}
                         </Link>
-                        <Text type="supporting">{organization.country}</Text>
+                        <Text type="supporting">{membership.organization.country}</Text>
                     </VStack>
                 </HStack>
             ),
@@ -131,19 +136,19 @@ export default function Settings() {
             key: 'role',
             header: t('columns.role'),
             width: pixel(128),
-            renderCell: (organization) => <Badge label={organization.role} />,
+            renderCell: (membership) => <Badge label={membership.role} />,
         },
         {
             key: 'actions',
             header: t('columns.actions'),
             width: pixel(96),
             align: 'end',
-            renderCell: (organization) =>
-                organization.role === 'owner' ? (
+            renderCell: (membership) =>
+                membership.role === 'owner' ? (
                     <MoreMenu
-                        label={t('common.openActionsFor', { name: organization.name })}
+                        label={t('common.openActionsFor', { name: membership.organization.name })}
                         size="sm"
-                        items={[{ label: t('actions.delete'), onClick: () => deleteDialog.openFor(organization) }]}
+                        items={[{ label: t('actions.delete'), onClick: () => deleteDialog.openFor(membership) }]}
                     />
                 ) : null,
         },
@@ -345,14 +350,14 @@ export default function Settings() {
                                     </VStack>
                                     <CreateOrganization />
                                 </HStack>
-                                {isLoading && organizations.length === 0 ? null : (
+                                {isLoading && memberships.length === 0 ? null : (
                                     <Table
                                         columns={organizationColumns}
-                                        data={organizations}
+                                        data={memberships}
                                         density="compact"
                                         emptyState={<EmptyState title={t('common.noResults')} isCompact />}
                                         hasHover
-                                        idKey="id"
+                                        idKey={(membership) => membership.organization.id}
                                     />
                                 )}
                             </VStack>

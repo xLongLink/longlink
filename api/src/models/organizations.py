@@ -2,9 +2,10 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import Field, EmailStr, BaseModel, ConfigDict
 from src.models.roles import ApplicationRoles, OrganizationRoles
-from src.models.types import Icon, Country
-from src.models.users import UserSummary
-from src.models.statuses import ApplicationStatus, OrganizationStatus
+from src.models.types import Country
+from src.models.users import UserSummary, UserIdentity
+from src.models.statuses import OrganizationStatus
+from src.models.resources import OrganizationApplicationSummary
 from src.models.operations import OperationResponse
 
 
@@ -99,88 +100,33 @@ class OrganizationMutationResponse(BaseModel):
     operation: OperationResponse
 
 
-class OrganizationApplicationResponse(BaseModel):
-    """Represent one application in an organization payload."""
+class OrganizationMemberAccessResponse(BaseModel):
+    """Represent one Organization member and their access role."""
 
-    model_config = ConfigDict(from_attributes=True)
+    # Relationships
+    user: UserIdentity
 
-    # Identifier
-    id: UUID
-
-    # Metadata
-    sdk: str | None = None
-    name: str
-    slug: str
-    icon: Icon | None = None
-    image: str
-    digest: str | None = None
-    version: str | None = None
-    description: str | None = None
-
-    # State
-    role: ApplicationRoles | None = None
-    status: ApplicationStatus
-
-    # Audit
-    created_at: datetime
-    updated_at: datetime
-    created_by: UserSummary
-    updated_by: UserSummary
-    deleted_at: datetime | None = None
-    deleted_by: UserSummary | None = None
-
-
-class OrganizationMemberSummary(BaseModel):
-    """Represent one organization member in API responses."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    name: str
-    email: str
-    avatar: str = ""
-
-    # State
+    # Access
     role: OrganizationRoles
 
-    # Audit
-    last_access_at: datetime | None = None
+
+class OrganizationApplicationAccessResponse(BaseModel):
+    """Represent one compact LongLink Application and the current user's access role."""
+
+    # Relationships
+    application: OrganizationApplicationSummary
+
+    # Access
+    role: ApplicationRoles | None = None
 
 
 class OrganizationDetails(BaseModel):
-    """Represent an organization with its members."""
+    """Represent an Organization with its members and Application access."""
 
-    model_config = ConfigDict(from_attributes=True)
-
-    # Identifier
-    id: UUID
-
-    # Metadata
-    name: str
-    slug: str
-    avatar: str = ""
-    country: Country
-
-    # Infrastructure
-    compute_id: UUID
-    database_id: UUID
-    storage_id: UUID
-
-    # State
-    status: OrganizationStatus
-
-    # Audit
-    created_at: datetime
-    updated_at: datetime
-    created_by: UserSummary
-    updated_by: UserSummary
-    deleted_at: datetime | None = None
-    deleted_by: UserSummary | None = None
+    # Organization
+    organization: OrganizationSummary
 
     # Relationships
-    users: list[OrganizationMemberSummary]
+    members: list[OrganizationMemberAccessResponse]
     invitations: list[OrganizationInvitationResponse] = Field(default_factory=list)
-    applications: list[OrganizationApplicationResponse] = Field(default_factory=list)
+    applications: list[OrganizationApplicationAccessResponse] = Field(default_factory=list)

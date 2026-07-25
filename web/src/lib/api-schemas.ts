@@ -28,11 +28,14 @@ export const apiAuthorizationSchema = z.object({
     authorization_url: z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
 });
 
-export const apiUserSummarySchema = z.object({
+export const apiUserIdentitySchema = z.object({
     id: z.string(),
     name: z.string(),
     email: z.string(),
     avatar: z.string(),
+});
+
+export const apiUserSummarySchema = apiUserIdentitySchema.extend({
     role: platformRoleSchema,
 });
 
@@ -40,12 +43,16 @@ export const apiUserListItemSchema = apiUserSummarySchema;
 
 const nullableUserSummarySchema = apiUserSummarySchema.nullable();
 
-export const apiUserOrganizationMembershipSchema = z.object({
+export const apiUserOrganizationSchema = z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
     avatar: z.string(),
     country: z.string(),
+});
+
+export const apiUserOrganizationMembershipSchema = z.object({
+    organization: apiUserOrganizationSchema,
     role: roleSchema,
 });
 
@@ -63,11 +70,8 @@ export const apiInvitationSchema = z.object({
     created_at: z.string(),
 });
 
-export const apiOrganizationMemberSummarySchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    email: z.string(),
-    avatar: z.string(),
+export const apiOrganizationMemberSchema = z.object({
+    user: apiUserIdentitySchema,
     role: roleSchema,
 });
 
@@ -89,28 +93,23 @@ export const apiOrganizationSummarySchema = z.object({
     deleted_by: nullableUserSummarySchema,
 });
 
-export const apiOrganizationApplicationSchema = z.object({
+export const apiOrganizationApplicationSummarySchema = z.object({
     id: z.string(),
     name: z.string(),
     slug: z.string(),
-    image: z.string(),
-    version: z.string().nullable(),
-    sdk: z.string().nullable(),
-    digest: z.string().nullable(),
-    status: applicationStatusSchema,
-    role: applicationRoleSchema.nullable(),
-    description: z.string().nullable(),
     icon: iconNameSchema,
-    created_at: z.string(),
-    updated_at: z.string(),
-    created_by: nullableUserSummarySchema,
-    updated_by: nullableUserSummarySchema,
-    deleted_at: z.string().nullable(),
-    deleted_by: nullableUserSummarySchema,
+    description: z.string().nullable(),
+    status: applicationStatusSchema,
 });
 
-export const apiOrganizationDetailsSchema = apiOrganizationSummarySchema.extend({
-    users: z.array(apiOrganizationMemberSummarySchema),
+export const apiOrganizationApplicationSchema = z.object({
+    application: apiOrganizationApplicationSummarySchema,
+    role: applicationRoleSchema.nullable(),
+});
+
+export const apiOrganizationDetailsSchema = z.object({
+    organization: apiOrganizationSummarySchema,
+    members: z.array(apiOrganizationMemberSchema),
     invitations: z.array(apiInvitationSchema),
     applications: z.array(apiOrganizationApplicationSchema),
 });
@@ -149,7 +148,6 @@ export const apiApplicationResponseSchema = z.object({
     sdk: z.string().nullable(),
     digest: z.string().nullable(),
     status: applicationStatusSchema,
-    role: applicationRoleSchema.nullable(),
     description: z.string().nullable(),
     icon: iconNameSchema,
     created_at: z.string(),
@@ -161,10 +159,7 @@ export const apiApplicationResponseSchema = z.object({
 });
 
 export const apiApplicationMemberSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    email: z.string(),
-    avatar: z.string(),
+    user: apiUserIdentitySchema,
     application_role: applicationRoleSchema.nullable(),
     organization_role: roleSchema,
 });
@@ -261,21 +256,12 @@ export const apiInfrastructureOptionsSchema = z.object({
     storages: z.array(apiRegistryOptionSchema),
 });
 
-const apiOrganizationResourceApplicationSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    slug: z.string(),
-    icon: iconNameSchema,
-    description: z.string().nullable(),
-    status: applicationStatusSchema,
-});
-
 export const apiOrganizationDatabaseResourceSchema = z.object({
     name: z.string(),
     database_name: z.string(),
     space_used: z.number().nullable(),
     table_count: z.number().nullable(),
-    application: apiOrganizationResourceApplicationSchema.nullable(),
+    application: apiOrganizationApplicationSummarySchema.nullable(),
 });
 
 export const apiOrganizationStorageResourceSchema = z.object({
@@ -283,7 +269,7 @@ export const apiOrganizationStorageResourceSchema = z.object({
     name: z.string(),
     bucket_name: z.string(),
     prefix: z.string(),
-    application: apiOrganizationResourceApplicationSchema.nullable(),
+    application: apiOrganizationApplicationSummarySchema.nullable(),
     space_used: z.number().nullable(),
     object_count: z.number().nullable(),
 });

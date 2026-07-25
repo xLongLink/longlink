@@ -1,10 +1,12 @@
 # Contributing
 
-The web folder contains the frontend runtime for LongLink. It owns the shared UI, XML runtime, docs, and platform rendering path.
+The web folder contains the frontend runtime for LongLink. It owns the shared UI, XML runtime, docs, and Platform rendering path.
 
 ## Architecture
 
 The combined repository architecture is maintained in `../AGENTS.md`.
+
+React Router Framework Mode builds two browser applications from the shared package. `src/platform/` contains the Platform routes and prerendered public pages, while `src/application/` contains the SPA embedded in LongLink Applications. Builds publish directly to `../api/src/.static/web/` and `../sdk/longlink/.static/web/`.
 
 ## Pages
 
@@ -53,10 +55,11 @@ The combined repository architecture is maintained in `../AGENTS.md`.
 ```
 
 ```bash
-bun run dev         # Starts the Vite dev server on localhost for live preview.
-bun run build:api   # Builds the platform web bundle
-bun run build:sdk   # Builds the SDK embedded web bundle
-bun run format      # Format the code
+bun run dev         # Starts the Platform development server
+bun run dev:sdk     # Starts the embedded Application development server
+bun run build:api   # Builds the Platform web bundle
+bun run build:sdk   # Builds the embedded Application web bundle
+bun run format      # Formats the code
 ```
 
 ## Guidelines

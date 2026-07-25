@@ -10,7 +10,7 @@ from src.models.statuses import ComputeStatus
 from src.models.storages import OrganizationStorageResourceKind, OrganizationStorageResourceResponse
 from src.models.databases import OrganizationDatabaseResourceResponse
 from src.database.services import compute, storage, database, operations, invitations, organizations
-from src.models.applications import ApplicationResponse
+from src.models.applications import ApplicationAccessResponse
 from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary, OrganizationMemberUpdate,
                                       OrganizationInvitationCreate, OrganizationMutationResponse)
 from longlink.shared.constants import SHARED_SCHEMA
@@ -72,49 +72,18 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
         active_invitations = await organizations.invitations(organization.id)
 
     return {
-        "id": organization.id,
-        "name": organization.name,
-        "slug": organization.slug,
-        "avatar": organization.avatar,
-        "country": organization.country,
-        "compute_id": organization.compute_id,
-        "database_id": organization.database_id,
-        "storage_id": organization.storage_id,
-        "status": organization.status,
-        "created_at": organization.created_at,
-        "updated_at": organization.updated_at,
-        "created_by": organization.created_by,
-        "updated_by": organization.updated_by,
-        "deleted_at": organization.deleted_at,
-        "deleted_by": organization.deleted_by,
-        "users": [
-            {
-                "id": member.id,
-                "name": member.name,
-                "email": member.email,
-                "avatar": member.avatar,
-                "role": member_membership.role,
-                "last_access_at": member_membership.updated_at,
-            }
-            for member, member_membership in memberships
-        ],
+        "organization": organization,
+        "members": [{"user": member, "role": member_membership.role} for member, member_membership in memberships],
         "invitations": active_invitations,
         "applications": [
-            {
-                **application.model_dump(),
-                "created_by": application.created_by,
-                "updated_by": application.updated_by,
-                "deleted_by": application.deleted_by,
-                "role": application_roles.get(application.id),
-            }
-            for application in active_applications
+            {"application": application, "role": application_roles.get(application.id)} for application in active_applications
         ],
     }
 
 
 @router.get(
     "/api/organizations/{organization_id}/applications",
-    response_model=list[ApplicationResponse],
+    response_model=list[ApplicationAccessResponse],
 )
 async def list_organization_applications(organization_id: UUID, user: User = Depends(authuser)):
     """Return the applications for one organization."""
@@ -131,17 +100,7 @@ async def list_organization_applications(organization_id: UUID, user: User = Dep
         if application_membership.organization_id == membership.organization_id
     }
 
-    return [
-        {
-            **application.model_dump(),
-            "organization": application.organization,
-            "created_by": application.created_by,
-            "updated_by": application.updated_by,
-            "deleted_by": application.deleted_by,
-            "role": application_roles.get(application.id),
-        }
-        for application in active_applications
-    ]
+    return [{"application": application, "role": application_roles.get(application.id)} for application in active_applications]
 
 
 @router.get(

@@ -14,8 +14,9 @@ import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 export function Navbar() {
     const t = useTranslator();
     const { user } = useUserProfile();
-    const { organizations } = useUserOrganizations();
-    const getStartedHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
+    const { memberships } = useUserOrganizations();
+    const getStartedHref =
+        user && memberships.length === 1 ? `/orgs/${memberships[0].organization.slug}` : '/organizations';
 
     return (
         <>

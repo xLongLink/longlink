@@ -54,17 +54,17 @@ export default function ApplicationSettings({
     const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
     const [logsTarget, setLogsTarget] = useState<ApiOrganizationApplication | null>(null);
     const deleteApplication = useDeleteOrganizationApplication(organizationId);
-    const deleteTarget = applications.find((application) => application.id === deleteTargetId) ?? null;
-    const selectedApplication = applications.find((application) => application.slug === settingsApplication) ?? null;
-    const applicationMembersPath = selectedApplication ? `/api/applications/${selectedApplication.id}/members` : null;
+    const deleteTarget = applications.find((access) => access.application.id === deleteTargetId) ?? null;
+    const selectedAccess = applications.find((access) => access.application.slug === settingsApplication) ?? null;
+    const applicationMembersPath = selectedAccess ? `/api/applications/${selectedAccess.application.id}/members` : null;
     const organizationDetailsPath = organizationId ? `/api/organizations/${organizationId}` : null;
     const applicationMembersQuery = useApiQuery<ApiApplicationMember[]>(applicationMembersPath, {
         parse: (value) => parseApiCollection(apiApplicationMemberSchema, value),
         retry: false,
     });
     const applicationMembers = applicationMembersQuery.data ?? [];
-    const canManageSelectedApplication = selectedApplication
-        ? hasMinimumRole(selectedApplication.role, 'maintain') || canManageApplications
+    const canManageSelectedApplication = selectedAccess
+        ? hasMinimumRole(selectedAccess.role, 'maintain') || canManageApplications
         : false;
 
     const changeApplicationMemberRole = useMutation({
@@ -100,17 +100,19 @@ export default function ApplicationSettings({
             key: 'name',
             header: t('columns.application'),
             width: proportional(1),
-            renderCell: (application) => (
+            renderCell: (access) => (
                 <HStack gap={3} align="center">
                     <Wrench aria-hidden="true" className="shrink-0 text-accent" size={20} />
                     <VStack gap={1}>
                         <Link
-                            href={`/orgs/${organization}/settings/applications/${application.slug}`}
+                            href={`/orgs/${organization}/settings/applications/${access.application.slug}`}
                             weight="semibold"
                         >
-                            {application.name}
+                            {access.application.name}
                         </Link>
-                        {application.description ? <Text type="supporting">{application.description}</Text> : null}
+                        {access.application.description ? (
+                            <Text type="supporting">{access.application.description}</Text>
+                        ) : null}
                     </VStack>
                 </HStack>
             ),
@@ -120,8 +122,8 @@ export default function ApplicationSettings({
             header: t('columns.action'),
             width: pixel(96),
             align: 'end',
-            renderCell: (application) => {
-                const canManageApplication = hasMinimumRole(application.role, 'maintain') || canManageApplications;
+            renderCell: (access) => {
+                const canManageApplication = hasMinimumRole(access.role, 'maintain') || canManageApplications;
                 const canReadLogs = platformRole === 'administrator' || canManageApplication;
 
                 // Hide the action menu when no actions are available.
@@ -131,18 +133,18 @@ export default function ApplicationSettings({
 
                 return (
                     <MoreMenu
-                        label={t('common.openActionsFor', { name: application.name })}
+                        label={t('common.openActionsFor', { name: access.application.name })}
                         size="sm"
                         items={[
                             ...(canReadLogs
-                                ? [{ label: t('organizationSettings.logs'), onClick: () => setLogsTarget(application) }]
+                                ? [{ label: t('organizationSettings.logs'), onClick: () => setLogsTarget(access) }]
                                 : []),
                             ...(canManageApplication
                                 ? [
                                       {
                                           label: t('actions.delete'),
                                           onClick: () => {
-                                              setDeleteTargetId(application.id);
+                                              setDeleteTargetId(access.application.id);
                                           },
                                       },
                                   ]
@@ -160,10 +162,10 @@ export default function ApplicationSettings({
             width: proportional(1),
             renderCell: (member) => (
                 <HStack gap={3} align="center">
-                    <Avatar src={member.avatar} name={member.name} size="md" />
+                    <Avatar src={member.user.avatar} name={member.user.name} size="md" />
                     <VStack gap={1}>
-                        <Text weight="semibold">{member.name}</Text>
-                        <Text type="supporting">{member.email}</Text>
+                        <Text weight="semibold">{member.user.name}</Text>
+                        <Text type="supporting">{member.user.email}</Text>
                     </VStack>
                 </HStack>
             ),
@@ -194,7 +196,7 @@ export default function ApplicationSettings({
                         isDisabled={!canManageSelectedApplication || changeApplicationMemberRole.isPending}
                         onChange={async (nextValue) => {
                             // Ignore changes without an active application.
-                            if (selectedApplication === null) {
+                            if (selectedAccess === null) {
                                 return;
                             }
 
@@ -208,8 +210,8 @@ export default function ApplicationSettings({
                             // Persist the selected application role.
                             try {
                                 await changeApplicationMemberRole.mutateAsync({
-                                    applicationId: selectedApplication.id,
-                                    memberId: member.id,
+                                    applicationId: selectedAccess.application.id,
+                                    memberId: member.user.id,
                                     role: nextRole,
                                 });
                             } catch (mutationError) {
@@ -233,30 +235,30 @@ export default function ApplicationSettings({
             <VStack gap={4}>
                 <HStack gap={4} justify="between" align="end" wrap="wrap">
                     <VStack gap={1}>
-                        {selectedApplication ? (
+                        {selectedAccess ? (
                             <Link href={`/orgs/${organization}/settings/applications`}>
                                 {t('organizationSettings.back')}
                             </Link>
                         ) : null}
                         <Heading level={2}>
-                            {selectedApplication
+                            {selectedAccess
                                 ? t('organizationSettings.applicationPermissionsTitle', {
-                                      name: selectedApplication.name,
+                                      name: selectedAccess.application.name,
                                   })
                                 : t('navigation.applications')}
                         </Heading>
-                        {!selectedApplication ? (
+                        {!selectedAccess ? (
                             <Text type="supporting">{t('organizationSettings.reviewApplications')}</Text>
                         ) : !canManageSelectedApplication ? (
                             <Text type="supporting">{t('organizationSettings.cannotChangePermissions')}</Text>
                         ) : null}
                     </VStack>
-                    {!selectedApplication ? (
+                    {!selectedAccess ? (
                         <CreateApplication organizationId={organizationId} canCreate={canManageApplications} />
                     ) : null}
                 </HStack>
 
-                {selectedApplication ? (
+                {selectedAccess ? (
                     applicationMembersQuery.isLoading &&
                     applicationMembers.length === 0 ? null : applicationMembersQuery.error &&
                       applicationMembers.length === 0 ? (
@@ -268,7 +270,7 @@ export default function ApplicationSettings({
                             density="compact"
                             emptyState={<EmptyState title={t('resources.noOrganizationMembers')} isCompact />}
                             hasHover
-                            idKey="id"
+                            idKey={(member) => member.user.id}
                         />
                     )
                 ) : isLoading && applications.length === 0 ? null : error && applications.length === 0 ? (
@@ -280,15 +282,15 @@ export default function ApplicationSettings({
                         density="compact"
                         emptyState={<EmptyState title={t('organizationSettings.noApplications')} isCompact />}
                         hasHover
-                        idKey="id"
+                        idKey={(access) => access.application.id}
                     />
                 )}
             </VStack>
 
             {logsTarget ? (
                 <Logs
-                    applicationId={logsTarget.id}
-                    applicationName={logsTarget.name}
+                    applicationId={logsTarget.application.id}
+                    applicationName={logsTarget.application.name}
                     open={logsTarget !== null}
                     onOpenChange={(open) => {
                         // Clear the selected log target when closing.
@@ -310,7 +312,9 @@ export default function ApplicationSettings({
                 title={t('organizationSettings.deleteApplicationTitle')}
                 description={
                     deleteTarget
-                        ? t('organizationSettings.deleteApplicationDescription', { name: deleteTarget.name })
+                        ? t('organizationSettings.deleteApplicationDescription', {
+                              name: deleteTarget.application.name,
+                          })
                         : t('organizationSettings.deleteApplicationFallback')
                 }
                 cancelLabel={t('actions.cancel')}
@@ -329,7 +333,7 @@ export default function ApplicationSettings({
                         await deleteApplication.mutateAsync(id);
 
                         // Leave the detail view if it was deleted.
-                        if (selectedApplication?.id === id) {
+                        if (selectedAccess?.application.id === id) {
                             navigate(`/orgs/${organization}/settings/applications`);
                         }
                         setDeleteTargetId(null);

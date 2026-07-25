@@ -15,9 +15,9 @@ import type {
     ApiInvitation,
     ApiOrganizationApplication,
     ApiOrganizationDatabaseResource,
-    ApiOrganizationDetails,
-    ApiOrganizationMemberSummary,
+    ApiOrganizationMember,
     ApiOrganizationStorageResource,
+    ApiOrganizationSummary,
 } from '@/lib/types';
 import { S3 } from '@/svg/S3';
 import { PostgreSQL } from '@/svg/PostgreSQL';
@@ -30,9 +30,9 @@ import ApplicationSettings from './ApplicationSettings';
 
 type SettingsProps = {
     organization: string;
-    organizationDetails: ApiOrganizationDetails | undefined;
+    organizationDetails: ApiOrganizationSummary | undefined;
     applications: ApiOrganizationApplication[];
-    people: ApiOrganizationMemberSummary[];
+    members: ApiOrganizationMember[];
     invitations: ApiInvitation[];
     organizationRole: Role | null;
     routeSection: SettingsRouteSection;
@@ -119,7 +119,7 @@ export default function Settings({
     organization,
     organizationDetails,
     applications,
-    people,
+    members,
     invitations,
     organizationRole,
     routeSection,
@@ -326,7 +326,7 @@ export default function Settings({
                 {section === 'members' || section === 'invitations' ? (
                     <People
                         organizationId={organizationId}
-                        people={people}
+                        members={members}
                         invitations={invitations}
                         activeSection={section}
                         canInviteMembers={hasOrganizationApplicationAccess}

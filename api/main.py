@@ -2,6 +2,7 @@ import asyncio
 import contextlib
 from fastapi import FastAPI
 from pathlib import Path
+from fastapi.responses import FileResponse
 from src.routes import auth, icons, image, users, health, accounts, branding, computes, storages, countries, databases
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
@@ -69,6 +70,14 @@ app.include_router(users.router)
 
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():
+
+    # Serve the prerendered home document before registering the generic SPA fallback.
+    @app.get("/", response_class=FileResponse, include_in_schema=False)
+    async def frontend_root():
+        """Return the prerendered LongLink home page."""
+
+        return FileResponse(static_dir / "__root.html")
+
     app.frontend("/", directory=static_dir)
 
 # Local development entrypoint. Production imports the app with Uvicorn, so this block is not executed.

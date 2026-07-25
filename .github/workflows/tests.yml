@@ -46,7 +46,7 @@ jobs:
 
       - name: Build API web bundle
         working-directory: web
-        run: bun run vite build --mode api --logLevel warn
+        run: bun run build:api:bundle --logLevel warn
 
       - name: Run tests
         working-directory: api
@@ -90,7 +90,7 @@ jobs:
 
       - name: Build SDK web bundle
         working-directory: web
-        run: bun run vite build --mode sdk --logLevel warn
+        run: bun run build:sdk:bundle --logLevel warn
 
       - name: Run tests
         working-directory: sdk
@@ -135,8 +135,8 @@ jobs:
 
       - name: Build API bundle
         working-directory: web
-        run: bun run vite build --mode api --logLevel warn
+        run: bun run build:api:bundle --logLevel warn
 
       - name: Build SDK bundle
         working-directory: web
-        run: bun run vite build --mode sdk --logLevel warn
+        run: bun run build:sdk:bundle --logLevel warn

@@ -1,7 +1,7 @@
 import re
 import urllib.parse
 from uuid import UUID
-from pydantic import Field, BaseModel, ValidationInfo, field_validator
+from pydantic import Field, BaseModel, ConfigDict, ValidationInfo, field_validator
 from src.models.types import StorageKind, DatabaseSSLMode
 
 
@@ -135,6 +135,8 @@ class StorageConfiguration(BaseModel):
 
 class RegistryOption(BaseModel):
     """Expose one assignable infrastructure registry without connection metadata."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     # Identifier
     id: UUID

@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.types import StorageKind
 from src.models.users import UserSummary
-from src.models.resources import OrganizationResourceApplicationResponse
+from src.models.resources import OrganizationApplicationSummary
 from src.models.infrastructure import StorageConfiguration
 
 
@@ -32,7 +32,7 @@ class OrganizationStorageResourceResponse(BaseModel):
     bucket_name: str
 
     # Relationships
-    application: OrganizationResourceApplicationResponse | None
+    application: OrganizationApplicationSummary | None
 
     # Usage
     space_used: int | None = None

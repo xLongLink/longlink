@@ -43,7 +43,7 @@ type UserProfileState = {
 };
 
 type UserOrganizationsState = {
-    organizations: ApiUserOrganizationMembership[];
+    memberships: ApiUserOrganizationMembership[];
     isLoading: boolean;
     error: Error | null;
 };
@@ -134,7 +134,7 @@ export function useUserOrganizations(): UserOrganizationsState {
     });
 
     return {
-        organizations: query.items,
+        memberships: query.items,
         isLoading: profile.isLoading || (profile.user !== null && query.isLoading),
         error: profile.error ?? query.error ?? null,
     };

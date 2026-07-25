@@ -24,7 +24,7 @@ import {
 import NotFound from './NotFound';
 
 type ViewProps = {
-    applicationStatus?: ApiOrganizationApplication['status'] | 'loading';
+    applicationStatus?: ApiOrganizationApplication['application']['status'] | 'loading';
     locale?: string;
     pages: string;
     runtimeContext?: ExecutionContext;
@@ -39,7 +39,7 @@ type ErrorStateProps = {
 };
 
 type LoadingStateProps = {
-    status: ApiOrganizationApplication['status'] | 'loading';
+    status: ApiOrganizationApplication['application']['status'] | 'loading';
 };
 
 type PageState = {
