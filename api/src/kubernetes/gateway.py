@@ -94,7 +94,7 @@ class Gateway:
         return hashlib.sha256(TEMPLATES.joinpath("gateway_service.yml").read_bytes()).hexdigest()
 
     def config(self, desired_routes: "tuple[DesiredGatewayRoute, ...]") -> str:
-        """Render deterministic authenticated Envoy routes from the authoritative application snapshot.
+        """Render deterministic authenticated Envoy routes from the authoritative route snapshot.
 
         Omitted applications receive no route even if stale Services still exist.
         """

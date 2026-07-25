@@ -14,12 +14,9 @@ import {
     Building2,
     ChevronDown,
     Database,
-    Factory,
     FileCode,
-    HeartPulse,
     HardDrive,
     KeyRound,
-    Landmark,
     Logs,
     Mail,
     PackageCheck,
@@ -30,11 +27,8 @@ import {
     Rocket,
     Route,
     ShieldCheck,
-    ShoppingCart,
     Terminal,
-    Truck,
     Users,
-    Wheat,
     Wrench,
 } from 'lucide-react';
 import { Python } from '@/svg/Python';
@@ -122,15 +116,6 @@ const paths = [
 ] as const;
 
 const integrationContextCount = 336_000_000;
-
-const integrationIndustries = [
-    { key: 'manufacturing', icon: Factory, className: '-rotate-6 left-16 top-8' },
-    { key: 'healthcare', icon: HeartPulse, className: 'right-16 top-10 rotate-6' },
-    { key: 'public-services', icon: Landmark, className: 'left-4 top-1/2 rotate-3' },
-    { key: 'retail', icon: ShoppingCart, className: '-rotate-3 right-4 top-1/2' },
-    { key: 'logistics', icon: Truck, className: 'bottom-8 left-20 rotate-6' },
-    { key: 'agriculture', icon: Wheat, className: '-rotate-6 bottom-10 right-20' },
-] as const;
 
 /** Renders the XML-to-UI showcase card visual. */
 function XmlShowcaseVisual() {
@@ -470,22 +455,12 @@ function IntegrationScale() {
     return (
         <Section className="relative z-10 bg-transparent" variant="transparent" padding={6} paddingBlock={10}>
             <Stack
-                className="relative mx-auto pb-10 pt-6 text-center sm:pb-16 sm:pt-10"
+                className="relative mx-auto pb-10 pt-14 text-center sm:pb-16 sm:pt-20"
                 width="100%"
                 maxWidth={1000}
                 gap={6}
                 hAlign="center"
             >
-                <Stack aria-hidden="true" className="pointer-events-none absolute inset-0">
-                    {integrationIndustries.map(({ key, icon: IndustryIcon, className }) => (
-                        <Stack
-                            key={key}
-                            className={`industry-float absolute hidden size-12 items-center justify-center rounded-xl border border-border bg-card/80 text-accent backdrop-blur-sm lg:flex ${className}`}
-                        >
-                            <IndustryIcon className="size-5" strokeWidth={1.6} />
-                        </Stack>
-                    ))}
-                </Stack>
                 <Text className="text-xs font-medium uppercase tracking-widest" color="secondary">
                     The integration surface
                 </Text>
@@ -497,11 +472,11 @@ function IntegrationScale() {
                         color="accent"
                         textWrap="nowrap"
                         justify="center"
-                        className="text-4xl tracking-tighter sm:text-6xl lg:text-8xl"
+                        className="text-4xl tracking-tight sm:text-5xl lg:text-6xl"
                     >
                         {count.toLocaleString('en-US').replaceAll(',', "'")}+
                     </Heading>
-                    <Text as="p" className="text-xl tracking-tight sm:text-3xl" weight="medium">
+                    <Text as="p" className="text-lg tracking-tight sm:text-2xl" weight="medium">
                         Unique Industry x Geography Contexts.
                     </Text>
                 </Stack>
@@ -549,8 +524,9 @@ export default function Home() {
                 </section>
             </main>
             <IntegrationScale />
-            <section className="relative z-10 px-6 py-10">
-                <div className="mx-auto grid w-full max-w-[1000px] auto-rows-[minmax(190px,auto)] grid-cols-1 gap-3 md:grid-cols-6">
+            <div aria-hidden="true" className="homepage-globe-card-blur relative z-10" />
+            <section className="homepage-feature-section relative z-10 px-6 py-10">
+                <div className="relative z-10 mx-auto grid w-full max-w-[1000px] auto-rows-[minmax(190px,auto)] grid-cols-1 gap-3 md:grid-cols-6">
                     {homepageCards.map(({ title, description, details, layoutClassName, variant }) => {
                         const isXmlCard = variant === 'xml';
                         const isCliCard = variant === 'cli';

@@ -12,7 +12,7 @@ from collections.abc import Callable, Awaitable
 from src.environments import env
 from kr8s.asyncio.objects import Pod, Secret, Service, APIObject, ConfigMap, Namespace, Deployment, NetworkPolicy
 from src.models.operations import ReconciliationScope
-from src.kubernetes.resources import FIELD_MANAGER, COMPUTE_ID_LABEL, MANAGED_BY_LABEL, KubernetesDocument, KubernetesResources
+from src.kubernetes.resources import KubernetesDocument, KubernetesResources
 from src.kubernetes.applications import ENVIRONMENT_NAME, APPLICATION_ID_LABEL, ORGANIZATION_ID_LABEL, Applications
 
 LOAD_BALANCER_TIMEOUT_SECONDS = 300
@@ -239,17 +239,17 @@ class Reconciler:
         platform_version = env.VERSION
 
         # The system Namespace is an immutable compute claim and is never adopted implicitly.
-        system_namespace = self._gateway.system_namespace(compute_id, platform_version)
-        await self._claim_namespace(system_namespace, compute_id, fence)
+        system_namespace = await self._claim_namespace(
+            self._gateway.system_namespace(compute_id, platform_version),
+            fence,
+        )
 
         # Deletion removes all LongLink resources and releases the cluster ownership Namespace last.
         if desired.deleting:
             await self._prune(desired, fence)
-            claimed_namespace = await self._resources.read(Namespace, gateway.GATEWAY_NAMESPACE)
-            if claimed_namespace is not None:
-                await self._check_fence(fence)
-                await self._resources.delete(Namespace, claimed_namespace.name, uid=_uid(claimed_namespace))
-                await self._wait_for_namespace_deletion(claimed_namespace.name)
+            await self._check_fence(fence)
+            await self._resources.delete(Namespace, system_namespace.name, uid=_uid(system_namespace))
+            await self._wait_for_namespace_deletion(system_namespace.name)
             return ReconcileResult(
                 gateway_url=None,
                 gateway_ca_certificate=None,
@@ -259,8 +259,7 @@ class Reconciler:
 
         # Create the standard public Service before workloads because cloud address allocation is asynchronous.
         initial_service = self._gateway.service(compute_id, self._gateway.initial_service_revision(), platform_version)
-        await self._check_fence(fence)
-        await self._resources.apply(initial_service)
+        await self._apply(initial_service, fence)
         endpoint = await self._wait_for_gateway_endpoint()
         tls = self._gateway.tls(compute_id, endpoint, existing_tls)
         if tls != existing_tls and stage_tls is not None:
@@ -274,39 +273,29 @@ class Reconciler:
                 for organization in sorted(desired.organizations, key=lambda item: item.slug)
             ]
             for manifests in organization_manifests:
-                await self._claim_namespace(manifests.namespace, compute_id, fence)
-                await self._check_fence(fence)
-                await self._resources.apply(manifests.network_policy)
+                await self._claim_namespace(manifests.namespace, fence)
+                await self._apply(manifests.network_policy, fence)
 
             # Exact Secret data and the runtime revision roll only Applications whose desired runtime changed.
             for application in sorted(desired.applications, key=lambda item: (item.namespace, str(item.id))):
                 manifests = self._applications.manifests(application, compute_id, proxy_secret, platform_version)
-                await self._check_fence(fence)
-                secret = await self._resources.replace_secret(manifests.secret)
+                secret = await self._replace_secret(manifests.secret, fence)
                 _set_pod_annotation(manifests.deployment, "longlink.io/secret-resource-version", _resource_version(secret))
-                await self._check_fence(fence)
                 await self._apply_deployment(manifests.deployment, fence)
-                await self._check_fence(fence)
-                await self._resources.apply(manifests.service)
+                await self._apply(manifests.service, fence)
 
         # Gateway configuration is derived only from desired applications, never from live Service discovery.
         envoy_config = self._gateway.config(desired.routes)
         gateway_manifests = self._gateway.manifests(compute_id, proxy_secret, tls, envoy_config, platform_version)
-        await self._check_fence(fence)
-        auth_secret = await self._resources.replace_secret(gateway_manifests.auth_secret)
-        await self._check_fence(fence)
-        tls_secret = await self._resources.replace_secret(gateway_manifests.tls_secret)
-        await self._check_fence(fence)
-        config_map = await self._resources.apply(gateway_manifests.config_map)
+        auth_secret = await self._replace_secret(gateway_manifests.auth_secret, fence)
+        tls_secret = await self._replace_secret(gateway_manifests.tls_secret, fence)
+        config_map = await self._apply(gateway_manifests.config_map, fence)
         _set_pod_annotation(gateway_manifests.deployment, "longlink.io/auth-resource-version", _resource_version(auth_secret))
         _set_pod_annotation(gateway_manifests.deployment, "longlink.io/tls-resource-version", _resource_version(tls_secret))
         _set_pod_annotation(gateway_manifests.deployment, "longlink.io/config-resource-version", _resource_version(config_map))
-        await self._check_fence(fence)
         await self._apply_deployment(gateway_manifests.deployment, fence)
-        await self._check_fence(fence)
-        await self._resources.apply(gateway_manifests.service)
-        await self._check_fence(fence)
-        await self._resources.apply(gateway_manifests.network_policy)
+        await self._apply(gateway_manifests.service, fence)
+        await self._apply(gateway_manifests.network_policy, fence)
 
         # Pruning starts only after the desired gateway revision is observed and fully ready.
         await self._wait_for_gateway_rollout(gateway_manifests.runtime_revision)
@@ -328,7 +317,13 @@ class Reconciler:
 
         # A deleting compute target must present an empty desired graph.
         if desired.deleting and (desired.routes or desired.organizations or desired.applications):
-            raise ValueError("Deleting compute desired state must not contain organizations or applications")
+            raise ValueError("Deleting compute desired state must not contain routes or resources")
+        if desired.deleting and desired.scope != ReconciliationScope.application:
+            raise ValueError("Deleting compute desired state requires Application scope")
+
+        # Platform snapshots carry gateway routes only and cannot hide ignored Application desired state.
+        if desired.scope == ReconciliationScope.platform and (desired.organizations or desired.applications):
+            raise ValueError("Platform desired state must not contain Organization or Application resources")
 
         # Active gateways use the platform's URL-safe generated bearer secret in an init substitution.
         if not desired.deleting and (not proxy_secret or PROXY_SECRET.fullmatch(proxy_secret) is None):
@@ -365,17 +360,15 @@ class Reconciler:
             if application.namespace != organization.slug:
                 raise ValueError(f"Desired application {application.id} namespace does not match its organization")
 
-            # Platform-only snapshots carry route identities without authoritative workload inputs.
-            if desired.scope == ReconciliationScope.application:
-                if not application.image.strip():
-                    raise ValueError(f"Desired application {application.id} image must not be empty")
-                if not env.DEVELOPMENT and IMMUTABLE_IMAGE.search(application.image) is None:
-                    raise ValueError(f"Desired application {application.id} image must use an immutable digest")
-                invalid_envs = sorted(name for name in application.envs if ENVIRONMENT_NAME.fullmatch(name) is None)
-                if invalid_envs:
-                    raise ValueError(f"Desired application {application.id} has invalid environment names: {', '.join(invalid_envs)}")
-                if not all(isinstance(value, str) for value in application.envs.values()):
-                    raise TypeError(f"Desired application {application.id} environment values must be strings")
+            if not application.image.strip():
+                raise ValueError(f"Desired application {application.id} image must not be empty")
+            if not env.DEVELOPMENT and IMMUTABLE_IMAGE.search(application.image) is None:
+                raise ValueError(f"Desired application {application.id} image must use an immutable digest")
+            invalid_envs = sorted(name for name in application.envs if ENVIRONMENT_NAME.fullmatch(name) is None)
+            if invalid_envs:
+                raise ValueError(f"Desired application {application.id} has invalid environment names: {', '.join(invalid_envs)}")
+            if not all(isinstance(value, str) for value in application.envs.values()):
+                raise TypeError(f"Desired application {application.id} environment values must be strings")
             application_ids.add(application.id)
 
         # Application work publishes exactly the routes represented by its complete desired workload graph.
@@ -388,28 +381,34 @@ class Reconciler:
     async def _claim_namespace(
         self,
         body: KubernetesDocument,
-        compute_id: str,
         fence: Callable[[], Awaitable[None]] | None,
-    ) -> None:
-        """Claim a Namespace only after validating that any existing object belongs to the same LongLink compute target.
+    ) -> Namespace:
+        """Apply one Namespace only within its exact LongLink ownership scope."""
 
-        Refuse adoption across the cluster ownership boundary.
-        """
+        applied = await self._apply(body, fence)
+        if not isinstance(applied, Namespace):
+            raise TypeError("Kubernetes Namespace apply returned an unexpected resource kind")
+        return applied
 
-        # Read and validate ownership before server-side apply can claim metadata fields.
-        metadata = body.get("metadata")
-        if not isinstance(metadata, dict):
-            raise TypeError("Desired Namespace metadata must be a mapping")
-        name = metadata.get("name")
-        if not isinstance(name, str) or not name:
-            raise TypeError("Desired Namespace metadata.name must be a non-empty string")
-        existing = await self._resources.read(Namespace, name)
-        if existing is not None:
-            labels = _string_map(_metadata(existing), "labels")
-            if labels.get(MANAGED_BY_LABEL) != FIELD_MANAGER or labels.get(COMPUTE_ID_LABEL) != compute_id:
-                raise ValueError(f"Kubernetes Namespace {name!r} is not owned by compute {compute_id}")
+    async def _apply(
+        self,
+        body: KubernetesDocument,
+        fence: Callable[[], Awaitable[None]] | None,
+    ) -> APIObject:
+        """Fence and server-side apply one ownership-validated resource."""
+
         await self._check_fence(fence)
-        await self._resources.apply(body)
+        return await self._resources.apply(body)
+
+    async def _replace_secret(
+        self,
+        body: KubernetesDocument,
+        fence: Callable[[], Awaitable[None]] | None,
+    ) -> Secret:
+        """Fence and replace one ownership-validated authoritative Secret."""
+
+        await self._check_fence(fence)
+        return await self._resources.replace_secret(body)
 
     async def _check_fence(self, fence: Callable[[], Awaitable[None]] | None) -> None:
         """Verify operation ownership before issuing one Kubernetes mutation."""
@@ -425,7 +424,7 @@ class Reconciler:
     ) -> Deployment:
         """Apply one Deployment and recreate it when foreign pod-list entries survive SSA."""
 
-        applied = await self._resources.apply(body)
+        applied = await self._apply(body, fence)
         if not isinstance(applied, Deployment):
             raise TypeError("Kubernetes Deployment apply returned an unexpected resource kind")
         if _deployment_shape_matches(body, applied):
@@ -439,8 +438,7 @@ class Reconciler:
             if time.monotonic() >= deadline:
                 raise TimeoutError(f"Kubernetes Deployment {applied.name!r} did not terminate before recreation")
             await asyncio.sleep(POLL_INTERVAL_SECONDS)
-        await self._check_fence(fence)
-        recreated = await self._resources.apply(body)
+        recreated = await self._apply(body, fence)
         if not isinstance(recreated, Deployment) or not _deployment_shape_matches(body, recreated):
             raise RuntimeError(f"Kubernetes Deployment {applied.name!r} retained unexpected pod entries")
         return recreated

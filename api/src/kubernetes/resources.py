@@ -89,11 +89,42 @@ def _comparable_secret(body: KubernetesDocument) -> KubernetesDocument:
     return comparable
 
 
-class KubernetesResources:
-    """Provide the low-level cluster boundary for apply, exact Secret replacement, discovery, and conditional deletion.
+def _desired_ownership(body: KubernetesDocument) -> dict[str, str]:
+    """Return the complete ownership labels required from one desired resource."""
 
-    Higher layers must establish ownership and canonical identity before mutating discovered resources.
-    """
+    metadata = body.get("metadata")
+    labels = metadata.get("labels") if isinstance(metadata, dict) else None
+    if not isinstance(labels, dict):
+        raise ValueError("Desired Kubernetes resource metadata.labels must be a mapping")
+    compute_id = labels.get(COMPUTE_ID_LABEL)
+    scope = labels.get(RESOURCE_SCOPE_LABEL)
+    if labels.get(MANAGED_BY_LABEL) != FIELD_MANAGER or not isinstance(compute_id, str) or not compute_id:
+        raise ValueError("Desired Kubernetes resource has invalid ownership labels")
+    if scope not in {item.value for item in ReconciliationScope}:
+        raise ValueError("Desired Kubernetes resource has invalid ownership scope")
+    return {
+        MANAGED_BY_LABEL: FIELD_MANAGER,
+        COMPUTE_ID_LABEL: compute_id,
+        RESOURCE_SCOPE_LABEL: scope,
+    }
+
+
+def _validate_existing_ownership(resource: APIObject, expected: dict[str, str]) -> None:
+    """Reject an existing resource outside the exact desired LongLink ownership boundary."""
+
+    body: Any = resource.to_dict()
+    metadata = body.get("metadata") if isinstance(body, dict) else None
+    labels = metadata.get("labels") if isinstance(metadata, dict) else None
+    if isinstance(labels, dict) and all(labels.get(key) == value for key, value in expected.items()):
+        return
+    raise ValueError(
+        f"Kubernetes {resource.kind} {resource.name!r} is not owned by compute "
+        f"{expected[COMPUTE_ID_LABEL]} in {expected[RESOURCE_SCOPE_LABEL]} scope"
+    )
+
+
+class KubernetesResources:
+    """Provide ownership-safe apply, exact Secret replacement, discovery, and conditional deletion."""
 
     def __init__(self, kubeconfig: str) -> None:
         """Initialize lazy access to one configured cluster."""
@@ -119,15 +150,16 @@ class KubernetesResources:
         return self._api_client
 
     async def apply(self, body: KubernetesDocument) -> APIObject:
-        """Server-side apply one resource under LongLink's field manager.
+        """Validate exact ownership and server-side apply one resource under LongLink's field manager."""
 
-        Apply forces field conflicts, so callers must establish authority over any existing resource first.
-        """
-
-        # Resolve the resource class once so its endpoint and scope drive the PATCH request.
+        # Resolve and validate ownership before forced apply can claim fields on an existing resource.
         api = await self.api()
         resource = _resource_from_body(body, api)
         namespace = resource.namespace if resource.namespaced else None
+        expected = _desired_ownership(body)
+        existing = await self.read(type(resource), resource.name, namespace)
+        if existing is not None:
+            _validate_existing_ownership(existing, expected)
 
         # Server-side apply creates or updates the desired object in one API request.
         async with api.call_api(
@@ -157,6 +189,7 @@ class KubernetesResources:
         if not isinstance(resource, Secret):
             raise ValueError("Exact replacement only supports v1 Secret resources")
         namespace = resource.namespace
+        expected = _desired_ownership(body)
 
         # A conflicting create or replace is retried from a fresh read a bounded number of times.
         for attempt in range(SECRET_REPLACE_ATTEMPTS):
@@ -180,6 +213,9 @@ class KubernetesResources:
                         if not isinstance(document, dict):
                             raise TypeError("Kubernetes Secret response must be a mapping")
                         return Secret(document, api=api)
+
+                # Every retry revalidates ownership before exact replacement can change labels or data.
+                _validate_existing_ownership(existing, expected)
 
                 # Keep annotations and finalizers controlled by Kubernetes providers.
                 existing_body = existing.to_dict()

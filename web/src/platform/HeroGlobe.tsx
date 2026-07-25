@@ -27,14 +27,55 @@ export function HeroGlobe() {
             xmlns="http://www.w3.org/2000/svg"
         >
             <defs>
+                <linearGradient
+                    id="hero-globe-cap-shadow"
+                    gradientUnits="userSpaceOnUse"
+                    x1="0"
+                    x2="0"
+                    y1="230"
+                    y2="560"
+                >
+                    <stop offset="0%" stopColor="black" stopOpacity="1" />
+                    <stop offset="28%" stopColor="black" stopOpacity="0.82" />
+                    <stop offset="100%" stopColor="black" stopOpacity="0" />
+                </linearGradient>
+                <linearGradient
+                    id="hero-globe-land-reveal"
+                    gradientUnits="userSpaceOnUse"
+                    x1="0"
+                    x2="0"
+                    y1="0"
+                    y2="1260"
+                >
+                    <stop offset="0%" stopColor="black" />
+                    <stop offset="22%" stopColor="black" />
+                    <stop offset="32%" stopColor="white" />
+                    <stop offset="100%" stopColor="white" />
+                </linearGradient>
+                <filter id="hero-globe-rim-blur" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="14" />
+                </filter>
                 <clipPath id="hero-globe-clip">
                     <ellipse cx={centerX} cy={centerY} rx={radiusX} ry={radiusY} />
                 </clipPath>
+                <mask id="hero-globe-land-mask" height="1260" maskUnits="userSpaceOnUse" width="1400" x="0" y="0">
+                    <rect fill="url(#hero-globe-land-reveal)" height="1260" width="1400" />
+                </mask>
             </defs>
 
             <ellipse className="homepage-hero-globe-surface" cx={centerX} cy={centerY} rx={radiusX} ry={radiusY} />
+            <ellipse
+                className="homepage-hero-globe-blue-rim"
+                cx={centerX}
+                cy={centerY}
+                filter="url(#hero-globe-rim-blur)"
+                rx={radiusX}
+                ry={radiusY}
+            />
             <g clipPath="url(#hero-globe-clip)">
+                <rect className="homepage-hero-globe-cap-shadow" height="1260" width="1400" />
                 <g
+                    mask="url(#hero-globe-land-mask)"
                     transform={`translate(${centerX} ${centerY}) scale(${mapStretch} 1) translate(${-centerX} ${-centerY})`}
                 >
                     <path className="homepage-hero-globe-land" d={landPath} />

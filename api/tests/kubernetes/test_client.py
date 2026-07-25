@@ -234,7 +234,15 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
             {
                 "apiVersion": "v1",
                 "kind": "ConfigMap",
-                "metadata": {"name": "longlink-gateway", "namespace": "longlink-system"},
+                "metadata": {
+                    "name": "longlink-gateway",
+                    "namespace": "longlink-system",
+                    "labels": {
+                        "app.kubernetes.io/managed-by": "longlink-platform",
+                        "longlink.io/compute-id": str(compute_id),
+                        "longlink.io/resource-scope": "platform",
+                    },
+                },
                 "data": {"envoy.yaml": "drift"},
             }
         )
@@ -242,7 +250,15 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
             {
                 "apiVersion": "v1",
                 "kind": "Secret",
-                "metadata": {"name": str(application_id), "namespace": "acme"},
+                "metadata": {
+                    "name": str(application_id),
+                    "namespace": "acme",
+                    "labels": {
+                        "app.kubernetes.io/managed-by": "longlink-platform",
+                        "longlink.io/compute-id": str(compute_id),
+                        "longlink.io/resource-scope": "application",
+                    },
+                },
                 "type": "Opaque",
                 "stringData": {"STALE": "value"},
             }
