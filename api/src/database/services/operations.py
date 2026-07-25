@@ -316,16 +316,17 @@ async def defer(
                 scheduled_at=now + timedelta(seconds=max(0, delay_seconds)),
                 lease_expires_at=None,
             )
+            .returning(Operation)
         )
         result = await session.execute(statement)
+        operation = result.scalar_one_or_none()
 
-        # A non-matching update means the attempt was superseded or its lease expired.
-        if result.rowcount == 0:
+        # A missing returned row means the attempt was superseded or its lease expired.
+        if operation is None:
             return None
 
         await session.commit()
-        refreshed = await session.execute(select(Operation).where(Operation.id == operation_id))
-        return refreshed.scalar_one_or_none()
+        return operation
 
 
 async def fail(operation_id: UUID, error: str, attempt_count: int) -> Operation | None:
@@ -348,13 +349,14 @@ async def fail(operation_id: UUID, error: str, attempt_count: int) -> Operation 
                 stopped_at=now,
                 lease_expires_at=None,
             )
+            .returning(Operation)
         )
         result = await session.execute(statement)
+        operation = result.scalar_one_or_none()
 
-        # A non-matching update means the attempt was superseded or its lease expired.
-        if result.rowcount == 0:
+        # A missing returned row means the attempt was superseded or its lease expired.
+        if operation is None:
             return None
 
         await session.commit()
-        refreshed = await session.execute(select(Operation).where(Operation.id == operation_id))
-        return refreshed.scalar_one_or_none()
+        return operation
