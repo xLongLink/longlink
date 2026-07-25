@@ -2,12 +2,12 @@ import { z } from 'zod';
 import { useId, useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { useToast } from '@astryxdesign/core/Toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
@@ -20,6 +20,8 @@ const schema = z.object({
     name: z.string().trim().min(1),
     endpoint_url: z.string().trim().url(),
     runtime_endpoint_url: z.union([z.literal(''), z.string().trim().url()]),
+    access_key_id: z.string().min(1),
+    secret_access_key: z.string().min(1),
 });
 
 type Values = z.infer<typeof schema>;
@@ -27,16 +29,18 @@ type Values = z.infer<typeof schema>;
 /** Registers one Exoscale SOS backend. */
 export default function CreateStorage() {
     const t = useTranslator();
+    const toast = useToast();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const formId = useId();
     const [open, setOpen] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const form = useForm<Values>({
         defaultValues: {
             name: '',
             endpoint_url: '',
             runtime_endpoint_url: '',
+            access_key_id: '',
+            secret_access_key: '',
         },
         mode: 'onChange',
         resolver: zodResolver(schema),
@@ -71,10 +75,9 @@ export default function CreateStorage() {
         return null;
     }
 
-    /** Clears form state and errors when the dialog closes. */
+    /** Clears connection secrets when the dialog closes. */
     function resetDialogState() {
         form.reset();
-        setError(null);
     }
 
     /** Updates dialog state while protecting an in-flight registration. */
@@ -111,15 +114,16 @@ export default function CreateStorage() {
                             <form
                                 id={formId}
                                 onSubmit={form.handleSubmit(async (payload) => {
-                                    setError(null);
                                     try {
                                         await mutation.mutateAsync(payload);
                                     } catch (mutationError) {
-                                        setError(
-                                            mutationError instanceof Error
-                                                ? mutationError.message
-                                                : t('dialogs.failedConnectStorage')
-                                        );
+                                        toast({
+                                            body:
+                                                mutationError instanceof Error
+                                                    ? mutationError.message
+                                                    : t('dialogs.failedConnectStorage'),
+                                            type: 'error',
+                                        });
                                     }
                                 })}
                             >
@@ -170,7 +174,37 @@ export default function CreateStorage() {
                                             />
                                         )}
                                     />
-                                    {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
+                                    <Controller
+                                        control={form.control}
+                                        name="access_key_id"
+                                        render={({ field }) => (
+                                            <TextInput
+                                                ref={field.ref}
+                                                label={t('labels.accessKeyId')}
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isRequired
+                                                onBlur={field.onBlur}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
+                                    <Controller
+                                        control={form.control}
+                                        name="secret_access_key"
+                                        render={({ field }) => (
+                                            <TextInput
+                                                ref={field.ref}
+                                                label={t('labels.secretAccessKey')}
+                                                type="password"
+                                                value={field.value}
+                                                htmlName={field.name}
+                                                isRequired
+                                                onBlur={field.onBlur}
+                                                onChange={field.onChange}
+                                            />
+                                        )}
+                                    />
                                 </FormLayout>
                             </form>
                         </LayoutContent>

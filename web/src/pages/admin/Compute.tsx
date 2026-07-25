@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Icon } from '@astryxdesign/core/Icon';
+import { Copy, Wrench } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -38,7 +38,7 @@ function createComputeColumns(t: TranslatorFn): TableColumn<ApiComputeRegistry>[
             width: proportional(1),
             renderCell: (compute) => (
                 <HStack gap={3} align="center">
-                    <Icon icon="wrench" color="accent" />
+                    <Wrench className="text-accent" size={20} />
                     <VStack gap={1}>
                         <Link href={`/admin/compute/${encodeURIComponent(compute.slug)}`} weight="semibold">
                             {compute.name}
@@ -99,6 +99,7 @@ export default function AdminCompute() {
         description: (compute) => t('admin.deleteComputeDescription', { slug: compute.slug }),
         errorMessage: t('admin.failedDeleteCompute'),
         fallbackDescription: t('admin.deleteComputeFallback'),
+        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns = createComputeColumns(t);
     const computeColumns: TableColumn<ApiComputeRegistry>[] = canManage
@@ -116,10 +117,14 @@ export default function AdminCompute() {
                           items={[
                               {
                                   label: `${t('actions.copy')} ${t('admin.copyComputeSlug').toLowerCase()}`,
-                                  icon: <Icon icon="copy" size="sm" />,
-                                  onClick: () => {
-                                      void navigator.clipboard.writeText(compute.slug);
-                                      toast({ body: `${t('admin.copyComputeSlug')}: ${t('actions.copied')}` });
+                                  icon: <Copy size={16} />,
+                                  onClick: async () => {
+                                      try {
+                                          await navigator.clipboard.writeText(compute.slug);
+                                          toast({ body: `${t('admin.copyComputeSlug')}: ${t('actions.copied')}` });
+                                      } catch {
+                                          toast({ body: t('toasts.copyFailed'), type: 'error' });
+                                      }
                                   },
                               },
                               { label: t('actions.delete'), onClick: () => deleteDialog.openFor(compute) },

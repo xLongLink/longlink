@@ -1,5 +1,4 @@
 import { Eye, EyeOff } from 'lucide-react';
-import { Icon } from '@astryxdesign/core/Icon';
 import { useState, type ComponentProps } from 'react';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { IconButton } from '@astryxdesign/core/IconButton';
@@ -30,6 +29,7 @@ export function PasswordInput({
 
     return (
         <InputGroup
+            className="w-full"
             description={description}
             isDisabled={isDisabled}
             isLabelHidden={isLabelHidden}
@@ -38,7 +38,6 @@ export function PasswordInput({
             label={label}
             labelTooltip={labelTooltip}
             size={size}
-            style={{ width: '100%' }}
             status={status}
         >
             <TextInput
@@ -53,7 +52,7 @@ export function PasswordInput({
             <InputGroupText>
                 <IconButton
                     aria-pressed={visible}
-                    icon={<Icon icon={visible ? EyeOff : Eye} size="sm" />}
+                    icon={visible ? <EyeOff aria-hidden="true" size={16} /> : <Eye aria-hidden="true" size={16} />}
                     label={toggleLabel}
                     onClick={() => setVisible((current) => !current)}
                     size="sm"

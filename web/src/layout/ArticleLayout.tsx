@@ -2,19 +2,20 @@ import { useLocation } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Card } from '@astryxdesign/core/Card';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Outline } from '@astryxdesign/core/Outline';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { useTranslator } from '@astryxdesign/core/i18n';
+import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
-import { Layout, LayoutContent, LayoutHeader } from '@astryxdesign/core/Layout';
+import { Layout, LayoutContent, LayoutHeader, LayoutPanel } from '@astryxdesign/core/Layout';
 import type { ArticleNavigationGroup, ArticlePage } from '@/pages/catalog';
 import { formatDate } from '@/lib/utils';
 import { Sidebar } from '@/components/Sidebar';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useUserProfile } from '@/hooks/use-user';
+import { PageContainer } from '@/components/PageContainer';
+import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 
 type ArticleLayoutProps = {
     page: ArticlePage;
@@ -23,21 +24,20 @@ type ArticleLayoutProps = {
 
 type ArticleContentProps = Pick<ArticlePage, 'content' | 'metadata'>;
 
-const DOCS_SIDEBAR_WIDTH = 260;
 const FALLBACK_UPDATED_AT = Date.now();
 
 /** Renders an article page using the shared article shell. */
 export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutProps) {
     const t = useTranslator();
-    const { user, organizations } = useUserProfile();
-    const isMobile = useIsMobile();
+    const { user } = useUserProfile();
+    const { organizations } = useUserOrganizations();
     const location = useLocation();
     const { content, metadata } = page;
     const pageToc = metadata.toc?.map((item) => ({ id: item.id, label: item.label, level: item.level ?? 2 })) ?? [];
     const getStartedHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
 
     const breadcrumbs = (
-        <Breadcrumbs separator=">" variant="supporting">
+        <Breadcrumbs className="min-w-0 overflow-hidden" separator=">" variant="supporting">
             {page.breadcrumbs.map((item, index) => {
                 const isLast = index === page.breadcrumbs.length - 1;
 
@@ -52,101 +52,74 @@ export default function ArticleLayout({ page, navigationGroups }: ArticleLayoutP
 
     const sidebar = <Sidebar currentPath={location.pathname} groups={navigationGroups} />;
     const header = (
-        <LayoutHeader padding={0}>
-            <div className="relative grid h-16 grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[minmax(0,1fr)_14rem]">
-                <div className="min-w-0 px-4 lg:px-6">
-                    <div className="mx-auto flex h-full w-full max-w-3xl items-center">{breadcrumbs}</div>
-                </div>
-                <div className="flex items-center justify-end pe-2 lg:px-5">
-                    <Button href={getStartedHref} label={t('actions.getStarted')} size="sm" variant="primary" />
-                </div>
-                <div aria-hidden="true" className="absolute inset-x-2 bottom-0 border-b border-border" />
-            </div>
-        </LayoutHeader>
-    );
-    const body = (
-        <div className="grid min-h-full w-full grid-cols-1 lg:grid-cols-[minmax(0,1fr)_14rem]">
-            <div className="min-w-0 p-4 pt-7 pb-12 lg:p-6 lg:pt-10 lg:pb-12">
-                <div className="mx-auto w-full max-w-3xl">
-                    <ArticleContent content={content} metadata={metadata} />
-                </div>
-            </div>
-
-            {pageToc.length ? (
-                <aside
-                    className="fixed end-2 top-16 bottom-2 z-20 hidden w-56 overflow-auto px-5 py-6 lg:block"
-                    aria-label={t('common.onThisPage')}
-                >
-                    <Stack gap={3}>
-                        <Text type="label" weight="semibold">
-                            {t('common.onThisPage')}
-                        </Text>
-                        <Outline items={pageToc} density="compact" label={t('common.onThisPage')} />
+        <LayoutHeader className="sticky top-14 z-20 bg-card lg:top-2" padding={0}>
+            <Stack direction="horizontal" height={64} width="100%">
+                <StackItem className="min-w-0" size="fill">
+                    <Stack height="100%" paddingInline={6} vAlign="center">
+                        <PageContainer maxWidth={768}>{breadcrumbs}</PageContainer>
                     </Stack>
-                </aside>
-            ) : null}
-        </div>
+                </StackItem>
+                <Center className="shrink-0 px-2 lg:w-56 lg:px-5" height={64}>
+                    <Button href={getStartedHref} label={t('actions.getStarted')} size="sm" variant="primary" />
+                </Center>
+            </Stack>
+            <Stack paddingInline={4}>
+                <Divider />
+            </Stack>
+        </LayoutHeader>
     );
 
     return (
-        <div style={{ paddingInlineStart: isMobile ? 0 : DOCS_SIDEBAR_WIDTH }}>
-            {!isMobile ? (
-                <div className="fixed inset-y-0 start-0 z-30 bg-body" style={{ width: DOCS_SIDEBAR_WIDTH }}>
-                    {sidebar}
-                </div>
-            ) : null}
-
-            <AppShell contentPadding={2} height="auto" sideNav={isMobile ? sidebar : undefined} variant="wash">
-                {isMobile ? (
-                    <Card minHeight="calc(100dvh - var(--spacing-4))" width="100%">
-                        <Layout
-                            height="auto"
-                            header={header}
-                            content={
-                                <LayoutContent isScrollable={false} padding={0}>
-                                    {body}
-                                </LayoutContent>
-                            }
-                        />
-                    </Card>
-                ) : (
-                    <div className="relative min-h-[calc(100dvh-var(--spacing-4))]">
-                        <Card
-                            style={{
-                                position: 'fixed',
-                                insetBlock: 'var(--spacing-2)',
-                                insetInlineStart: `calc(${DOCS_SIDEBAR_WIDTH}px + var(--spacing-2))`,
-                                insetInlineEnd: 'var(--spacing-2)',
-                                border: 'none',
-                                pointerEvents: 'none',
-                                zIndex: 0,
-                            }}
-                        />
-                        <div
-                            style={{
-                                position: 'fixed',
-                                insetBlockStart: 'var(--spacing-2)',
-                                insetInlineStart: `calc(${DOCS_SIDEBAR_WIDTH}px + var(--spacing-2))`,
-                                insetInlineEnd: 'var(--spacing-2)',
-                                backgroundColor: 'var(--color-background-card)',
-                                borderStartStartRadius: 'var(--radius-container)',
-                                borderStartEndRadius: 'var(--radius-container)',
-                                overflow: 'hidden',
-                                zIndex: 20,
-                            }}
+        <AppShell contentPadding={0} height="auto" mobileNav={{ breakpoint: 'lg' }} sideNav={sidebar} variant="wash">
+            <Card
+                aria-hidden="true"
+                className="pointer-events-none fixed end-0 bottom-0 start-0 top-12 z-0 overflow-clip lg:start-[260px] lg:top-0"
+                padding={0}
+                variant="transparent"
+            >
+                <Stack height="100%" padding={2}>
+                    <Card className="border-0 overflow-clip" height="100%" width="100%" />
+                </Stack>
+            </Card>
+            <Stack className="relative z-10" padding={2}>
+                <Layout
+                    height="auto"
+                    header={header}
+                    content={
+                        <LayoutContent isScrollable={false} padding={6}>
+                            <PageContainer maxWidth={768}>
+                                <ArticleContent content={content} metadata={metadata} />
+                            </PageContainer>
+                        </LayoutContent>
+                    }
+                    end={
+                        <LayoutPanel
+                            className="sticky top-20 hidden self-start lg:block"
+                            isScrollable={false}
+                            label={pageToc.length ? t('common.onThisPage') : undefined}
+                            padding={5}
+                            role={pageToc.length ? 'complementary' : undefined}
+                            width={224}
                         >
-                            {header}
-                        </div>
-                        <div
-                            aria-hidden="true"
-                            className="pointer-events-none fixed inset-y-0 end-0 z-[25] border-8 border-body"
-                            style={{ insetInlineStart: DOCS_SIDEBAR_WIDTH }}
-                        />
-                        <div className="relative z-10 pt-12">{body}</div>
-                    </div>
-                )}
-            </AppShell>
-        </div>
+                            {pageToc.length ? (
+                                <Stack gap={3}>
+                                    <Text type="label" weight="semibold">
+                                        {t('common.onThisPage')}
+                                    </Text>
+                                    <Outline items={pageToc} density="compact" label={t('common.onThisPage')} />
+                                </Stack>
+                            ) : null}
+                        </LayoutPanel>
+                    }
+                />
+            </Stack>
+            <Card
+                aria-hidden="true"
+                className="pointer-events-none fixed end-0 bottom-0 start-0 top-12 z-30 border-8 border-body bg-transparent lg:start-[260px] lg:top-0"
+                padding={0}
+                variant="transparent"
+            />
+        </AppShell>
     );
 }
 

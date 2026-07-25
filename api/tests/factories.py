@@ -2,7 +2,7 @@ import secrets
 from uuid import UUID, uuid4
 from dataclasses import dataclass
 from src.environments import env
-from src.models.types import StorageKind
+from src.models.types import StorageKind, DatabaseSSLMode
 from src.models.statuses import ComputeStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.database.models.users import User
@@ -50,7 +50,7 @@ async def create_ready_infrastructure(
             port=5432,
             username="admin",
             password="secret",
-            sslmode="disable",
+            sslmode=DatabaseSSLMode.disable,
             created_id=owner.id,
             updated_id=owner.id,
         )
@@ -60,6 +60,8 @@ async def create_ready_infrastructure(
             slug=f"{slug}-{suffix}-storage",
             endpoint_url="https://sos-ch-gva-2.exo.io",
             runtime_endpoint_url="https://sos-ch-gva-2.exo.io",
+            access_key_id="access-key",
+            secret_access_key="secret-key",
             created_id=owner.id,
             updated_id=owner.id,
         )

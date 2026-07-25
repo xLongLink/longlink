@@ -40,9 +40,8 @@ The API folder contains the LongLink Platform API. It manages authentication, pe
 
 ## Development
 
-Create `api/.env` with `EXOSCALE_API_KEY`, `EXOSCALE_API_SECRET`, `EXOSCALE_ORGANIZATION_ID`, and
-`EXOSCALE_STORAGE_ENDPOINT_URL`. The endpoint selects the development SOS zone explicitly so storage provisioning follows
-the same SOS and IAM path as production.
+Configure `api/.env.seed` with `EXOSCALE_API_KEY`, `EXOSCALE_API_SECRET`, and `EXOSCALE_STORAGE_ENDPOINT_URL`. The endpoint
+selects the development SOS zone explicitly so storage provisioning follows the same SOS and IAM path as production.
 
 Run from `api/`:
 

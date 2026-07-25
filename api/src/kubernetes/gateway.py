@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from src.kubernetes.reconcile import DesiredApplication
 
 TEMPLATES = files("src.kubernetes.templates")
-TEMPLATE_REVISION = "2026-07-20.1"
+TEMPLATE_REVISION = "2026-07-24.1"
 GATEWAY_NAME = "longlink-gateway"
 GATEWAY_NAMESPACE = "longlink-system"
 GATEWAY_AUTH_SECRET_NAME = "longlink-gateway-auth"

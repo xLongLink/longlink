@@ -95,9 +95,9 @@ async def send_authentication_email(recipient: str, subject: str, body: str) -> 
 async def send_organization_invitation_email(recipient: str, organization_name: str, role: OrganizationRoles) -> None:
     """Deliver one organization invitation email."""
 
-    # Link invitees to the authenticated organizations page so LongLink can handle sign-in or registration.
+    # Prefill the shared registration flow while retaining the sign-in option for existing accounts.
     subject = f"Invitation to join {organization_name} on LongLink"
-    invitation_url = f"{env.PUBLIC_URL.rstrip('/')}/organizations"
+    invitation_url = f"{env.PUBLIC_URL.rstrip('/')}/auth/register?{urlencode({'email': recipient, 'next': '/organizations'})}"
     role_label = role.value
 
     # Keep a plain-text fallback for clients that do not render HTML.
@@ -125,11 +125,11 @@ async def send_signup_verification_email(recipient: str, token: str) -> None:
 
     # Render the responsive MJML body while preserving a plain-text fallback for all clients.
     subject = "Welcome to LongLink"
-    verification_url = f"{env.PUBLIC_URL.rstrip('/')}/auth/verify-email?{urlencode({'email': recipient, 'token': token, 'sent': 'true'})}"
+    verification_url = f"{env.PUBLIC_URL.rstrip('/')}/auth/verify-email#{urlencode({'token': token})}"
     text = (
         "Welcome to LongLink.\n\n"
-        "Please confirm your email address to activate your account.\n\n"
-        f"Confirm your account: {verification_url}\n\n"
+        "Please confirm your email address to continue account setup.\n\n"
+        f"Continue account setup: {verification_url}\n\n"
         "If you did not sign up for LongLink, you can ignore this email.\n\n"
         "GitHub: https://github.com/xLongLink/longlink\n"
         "LinkedIn: https://www.linkedin.com/company/longlink\n"

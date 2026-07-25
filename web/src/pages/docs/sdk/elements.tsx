@@ -390,9 +390,9 @@ const elementDocs: ElementDoc[] = [
             { name: 'fallbackSrc', description: 'Fallback image URL.' },
             { name: 'name', description: 'Name used for initials and default alt text.' },
             { name: 'alt', description: 'Explicit alternative text.' },
-            { name: 'size', description: 'tiny, xsmall, small, medium, or large.' },
+            { name: 'size', description: 'xsm, sm, md, lg, or xl.' },
         ],
-        example: `<Avatar src="$user.avatarUrl" name="$user.name" alt="$user.name" size="medium" />`,
+        example: `<Avatar src="$user.avatarUrl" name="$user.name" alt="$user.name" size="lg" />`,
     },
     {
         name: 'Code',
@@ -428,12 +428,13 @@ const elementDocs: ElementDoc[] = [
         name: 'Icon',
         slug: 'icon',
         category: 'Content',
-        summary: 'Displays a semantic Astryx icon.',
+        summary: 'Displays a Lucide icon.',
         usage: 'Use Icon for compact visual signals that support nearby text.',
         attributes: [
             {
                 name: 'icon',
-                description: 'Semantic icon name such as info, success, warning, error, search, or wrench.',
+                description:
+                    'Lucide icon name such as info, circle-check, triangle-alert, circle-x, search, or wrench.',
                 required: true,
             },
             { name: 'size', description: 'Icon size.' },

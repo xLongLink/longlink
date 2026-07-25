@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { SideNav as AstryxSideNav, SideNavItem as AstryxSideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import type { ASTNode, ExecutionContext, Props } from '@/xml/types';
+import { renderIcon } from '@/lib/icons';
 import { evaluate } from '@/xml/expressions';
 import { renderNode } from '@/xml/core/node';
 import { useXmlContext } from '@/xml/core/context';
@@ -41,17 +42,21 @@ export function SideNav({ props, nodes }: Props) {
 
     return (
         <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
-            <AstryxSideNav style={{ height: 'auto', width: '100%' }}>
+            <AstryxSideNav className="h-auto w-full">
                 <SideNavSection title={label} isHeaderHidden>
-                    {items.map((item) => (
-                        <AstryxSideNavItem
-                            icon={item.icon}
-                            isSelected={item.value === value}
-                            key={item.value}
-                            label={item.label}
-                            onClick={() => setValue(item.value)}
-                        />
-                    ))}
+                    {items.map((item) => {
+                        const icon = item.icon ? renderIcon(item.icon, { 'aria-hidden': true, size: 16 }) : undefined;
+
+                        return (
+                            <AstryxSideNavItem
+                                icon={icon}
+                                isSelected={item.value === value}
+                                key={item.value}
+                                label={item.label}
+                                onClick={() => setValue(item.value)}
+                            />
+                        );
+                    })}
                 </SideNavSection>
             </AstryxSideNav>
             <div className="min-w-0">{activeItem ? renderNode(activeItem.nodes, ctx) : null}</div>

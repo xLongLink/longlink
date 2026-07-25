@@ -19,6 +19,8 @@ async def create_storage_registry(payload: StorageRegistryCreate, user: User = D
         payload.kind,
         payload.endpoint_url,
         payload.runtime_endpoint_url,
+        payload.access_key_id,
+        payload.secret_access_key,
         user,
     )
 

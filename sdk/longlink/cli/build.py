@@ -510,7 +510,12 @@ def resolve_image_tag(app_name: str, version: str, registry: str | None = None) 
     is_flag=True,
     help="Push the built image tag after building.",
 )
-def build_command(tag: str | None, registry: str | None, push: bool) -> None:
+@click.option(
+    "--builder",
+    default=None,
+    help="Optional Docker Buildx builder used to isolate build cache.",
+)
+def build_command(tag: str | None, registry: str | None, push: bool, builder: str | None) -> None:
     """Create temporary Docker build artifacts and build the image locally."""
 
     # Build inside a temporary context.
@@ -535,10 +540,11 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
         try:
 
             # Build from a context that includes local path dependencies referenced by uv.
-            subprocess.run(
+            command = [docker_command, "build"]
+            if builder:
+                command = [docker_command, "buildx", "build", "--builder", builder, "--load"]
+            command.extend(
                 [
-                    docker_command,
-                    "build",
                     "--iidfile",
                     str(image_id_path),
                     "-f",
@@ -546,9 +552,9 @@ def build_command(tag: str | None, registry: str | None, push: bool) -> None:
                     "-t",
                     image_tag,
                     str(build_context),
-                ],
-                check=True,
+                ]
             )
+            subprocess.run(command, check=True)
             image_id = image_id_path.read_text().strip()
 
             # Push the tag only when requested.

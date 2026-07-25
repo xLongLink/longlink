@@ -1,7 +1,6 @@
 import { Card } from '@astryxdesign/core/Card';
 import { Code } from '@astryxdesign/core/Code';
 import { Grid } from '@astryxdesign/core/Grid';
-import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -27,30 +26,30 @@ function LocalRuntimeDiagram() {
             <Stack align="end">
                 <Card width="80%" variant="muted">
                     <Stack gap={3} align="center">
-                        <Icon icon={UserRound} color="accent" aria-hidden />
+                        <UserRound aria-hidden className="text-accent" size={20} />
                         <Text weight="semibold">User</Text>
                         <Text type="supporting">Browser</Text>
                         <Stack direction="horizontal" gap={3} justify="center">
-                            <Icon icon={Languages} size="sm" color="secondary" aria-label="Languages" />
-                            <Icon icon={Palette} size="sm" color="secondary" aria-label="Theming" />
-                            <Icon icon={PanelTop} size="sm" color="secondary" aria-label="Application shell" />
+                            <Languages aria-label="Languages" className="text-secondary" size={16} />
+                            <Palette aria-label="Theming" className="text-secondary" size={16} />
+                            <PanelTop aria-label="Application shell" className="text-secondary" size={16} />
                         </Stack>
                     </Stack>
                 </Card>
             </Stack>
             <Stack align="center">
-                <Icon icon={ArrowLeftRight} color="secondary" aria-label="Local runtime request flow" />
+                <ArrowLeftRight aria-label="Local runtime request flow" className="text-secondary" size={20} />
             </Stack>
             <Stack align="start">
                 <Card width="80%" variant="muted">
                     <Stack gap={3} align="center">
-                        <Icon icon={AppWindow} color="accent" aria-hidden />
+                        <AppWindow aria-hidden className="text-accent" size={20} />
                         <Text weight="semibold">Application</Text>
                         <Text type="supporting">Runtime at localhost:1707</Text>
                         <Stack direction="horizontal" gap={3} justify="center">
-                            <Icon icon={Code2} size="sm" color="secondary" aria-label="Application logic" />
-                            <Icon icon={Database} size="sm" color="secondary" aria-label="Database logic" />
-                            <Icon icon={HardDrive} size="sm" color="secondary" aria-label="File storage" />
+                            <Code2 aria-label="Application logic" className="text-secondary" size={16} />
+                            <Database aria-label="Database logic" className="text-secondary" size={16} />
+                            <HardDrive aria-label="File storage" className="text-secondary" size={16} />
                         </Stack>
                     </Stack>
                 </Card>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Icon } from '@astryxdesign/core/Icon';
+import { Copy } from 'lucide-react';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -37,7 +37,7 @@ function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganization
             width: proportional(1),
             renderCell: (organization) => (
                 <HStack gap={3} align="center">
-                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="small" />
+                    <Avatar src={organization.avatar ?? undefined} name={organization.name} size="md" />
                     <Link href={`/orgs/${organization.slug}`} weight="semibold">
                         {organization.name}
                     </Link>
@@ -51,7 +51,7 @@ function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganization
             renderCell: (organization) =>
                 organization.created_by ? (
                     <HStack gap={3} align="center">
-                        <Avatar src={organization.created_by.avatar} name={organization.created_by.name} size="small" />
+                        <Avatar src={organization.created_by.avatar} name={organization.created_by.name} size="md" />
                         <VStack gap={1}>
                             <Text weight="semibold">{organization.created_by.name}</Text>
                             <Text type="supporting">{formatDateTime(organization.created_at)}</Text>
@@ -68,7 +68,7 @@ function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganization
             renderCell: (organization) =>
                 organization.updated_by ? (
                     <HStack gap={3} align="center">
-                        <Avatar src={organization.updated_by.avatar} name={organization.updated_by.name} size="small" />
+                        <Avatar src={organization.updated_by.avatar} name={organization.updated_by.name} size="md" />
                         <VStack gap={1}>
                             <Text weight="semibold">{organization.updated_by.name}</Text>
                             <Text type="supporting">{formatDateTime(organization.updated_at)}</Text>
@@ -85,7 +85,7 @@ function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganization
             renderCell: (organization) =>
                 organization.deleted_by ? (
                     <HStack gap={3} align="center">
-                        <Avatar src={organization.deleted_by.avatar} name={organization.deleted_by.name} size="small" />
+                        <Avatar src={organization.deleted_by.avatar} name={organization.deleted_by.name} size="md" />
                         <VStack gap={1}>
                             <Text weight="semibold">{organization.deleted_by.name}</Text>
                             <Text type="supporting">
@@ -137,6 +137,7 @@ export default function AdminOrganizations() {
         description: (organization) => t('admin.deleteOrganizationDescription', { name: organization.name }),
         errorMessage: t('deleteDialog.failedDeleteOrganization'),
         fallbackDescription: t('deleteDialog.deleteOrganizationFallback'),
+        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns = createOrganizationColumns(t);
     const organizationColumns: TableColumn<ApiOrganizationSummary>[] = canManage
@@ -154,10 +155,14 @@ export default function AdminOrganizations() {
                           items={[
                               {
                                   label: `${t('actions.copy')} ${t('admin.organizationName').toLowerCase()}`,
-                                  icon: <Icon icon="copy" size="sm" />,
-                                  onClick: () => {
-                                      void navigator.clipboard.writeText(organization.name);
-                                      toast({ body: `${t('admin.organizationName')}: ${t('actions.copied')}` });
+                                  icon: <Copy size={16} />,
+                                  onClick: async () => {
+                                      try {
+                                          await navigator.clipboard.writeText(organization.name);
+                                          toast({ body: `${t('admin.organizationName')}: ${t('actions.copied')}` });
+                                      } catch {
+                                          toast({ body: t('toasts.copyFailed'), type: 'error' });
+                                      }
                                   },
                               },
                               { label: t('actions.delete'), onClick: () => deleteDialog.openFor(organization) },

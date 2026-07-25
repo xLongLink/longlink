@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { Dialog as AstryxDialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import type { Props } from '@/xml/types';
 import { renderNode } from '@/xml/core/node';
@@ -61,14 +62,20 @@ export function Dialog({ props, nodes }: Props) {
                 variant={variant}
                 width={resolveXmlSizeValue(props, 'width', ctx)}
             >
-                <Stack gap={4}>
-                    <DialogHeader
-                        onOpenChange={purpose === 'required' ? undefined : setOpen}
-                        subtitle={subtitle || undefined}
-                        title={title}
-                    />
-                    {renderNode(nodes, ctx)}
-                </Stack>
+                <Layout
+                    header={
+                        <DialogHeader
+                            onOpenChange={purpose === 'required' ? undefined : setOpen}
+                            subtitle={subtitle || undefined}
+                            title={title}
+                        />
+                    }
+                    content={
+                        <LayoutContent>
+                            <Stack gap={4}>{renderNode(nodes, ctx)}</Stack>
+                        </LayoutContent>
+                    }
+                />
             </AstryxDialog>
         </>
     );

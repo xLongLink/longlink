@@ -5,19 +5,24 @@ import secrets
 from uuid import UUID
 from typing import cast
 from fastapi import Depends, Request, Response, HTTPException
-from src.utils import mail, roles
+from sqlmodel import col
+from src.utils import mail, urls, roles
+from sqlalchemy import delete
+from dataclasses import dataclass
 from src.database import session as database
+from urllib.parse import urlencode
 from fastapi_users import UUIDIDMixin, FastAPIUsers, BaseUserManager, schemas
 from collections.abc import AsyncIterator
 from fastapi_users.db import SQLAlchemyUserDatabase
 from src.environments import env
 from src.models.roles import PlatformRoles
 from fastapi.responses import RedirectResponse
-from fastapi_users.jwt import decode_jwt
-from src.database.services import users
+from fastapi_users.jwt import decode_jwt, generate_jwt
+from src.database.services import users, invitations
 from httpx_oauth.exceptions import GetIdEmailError
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi_users.exceptions import InvalidID, UserNotExists, InvalidVerifyToken, UserAlreadyVerified, InvalidPasswordException
+from fastapi_users.exceptions import (InvalidID, UserInactive, UserNotExists, InvalidVerifyToken, InvalidPasswordException,
+                                      InvalidResetPasswordToken)
 from src.database.models.users import User, AccessToken, OAuthAccount
 from httpx_oauth.clients.github import GitHubOAuth2
 from fastapi_users.authentication import CookieTransport, AuthenticationBackend
@@ -25,6 +30,19 @@ from fastapi_users.authentication.strategy.db import DatabaseStrategy
 from fastapi_users_db_sqlalchemy.access_token import SQLAlchemyAccessTokenDatabase
 
 AUTH_COOKIE = "longlink_auth"
+REGISTRATION_COOKIE = "longlink_registration"
+PASSWORD_RESET_COOKIE = "longlink_password_reset"
+REGISTRATION_TOKEN_AUDIENCE = "longlink:register"
+REGISTRATION_TOKEN_LIFETIME_SECONDS = 3600
+PASSWORD_RESET_COOKIE_LIFETIME_SECONDS = 900
+
+
+@dataclass(frozen=True)
+class RegistrationClaims:
+    """Represent identity and navigation authenticated by a registration token."""
+
+    email: str
+    next_path: str
 
 
 def access_token_digest(token: str) -> str:
@@ -32,6 +50,90 @@ def access_token_digest(token: str) -> str:
 
     # Keep the database value deterministic while avoiding raw bearer-token storage.
     return hmac.new(env.SESSION_KEY.encode("utf-8"), token.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+def create_registration_token(email: str, next_path: str) -> str:
+    """Create one signed, expiring proof of email ownership."""
+
+    # Normalize the only account identifier carried by the stateless registration token.
+    normalized_email = email.strip().lower()
+    return generate_jwt(
+        {"email": normalized_email, "next": next_path, "aud": REGISTRATION_TOKEN_AUDIENCE},
+        env.SESSION_KEY,
+        REGISTRATION_TOKEN_LIFETIME_SECONDS,
+    )
+
+
+def registration_claims(token: str) -> RegistrationClaims:
+    """Return the identity and navigation carried by one registration token."""
+
+    # Reject invalid, expired, or wrong-purpose tokens before account setup.
+    try:
+        data = decode_jwt(token, env.SESSION_KEY, [REGISTRATION_TOKEN_AUDIENCE])
+    except jwt.PyJWTError as exc:
+        raise InvalidVerifyToken() from exc
+
+    email = data.get("email")
+    next_path = data.get("next")
+    if not isinstance(email, str) or not email or not isinstance(next_path, str):
+        raise InvalidVerifyToken()
+    return RegistrationClaims(email=email, next_path=next_path)
+
+
+def set_registration_cookie(response: Response, token: str) -> None:
+    """Store verified registration proof in a short-lived browser-only cookie."""
+
+    # Restrict the credential to account setup endpoints and keep it inaccessible to scripts.
+    response.set_cookie(
+        REGISTRATION_COOKIE,
+        token,
+        max_age=REGISTRATION_TOKEN_LIFETIME_SECONDS,
+        path="/api/auth/register",
+        secure=not env.DEVELOPMENT,
+        httponly=True,
+        samesite="lax",
+    )
+
+
+def clear_registration_cookie(response: Response) -> None:
+    """Remove browser registration proof after account creation."""
+
+    # Match the setup-cookie scope so browsers reliably remove the credential.
+    response.delete_cookie(
+        REGISTRATION_COOKIE,
+        path="/api/auth/register",
+        secure=not env.DEVELOPMENT,
+        httponly=True,
+        samesite="lax",
+    )
+
+
+def set_password_reset_cookie(response: Response, token: str) -> None:
+    """Store password reset proof in a short-lived browser-only cookie."""
+
+    # Scope the bearer credential to password reset endpoints and hide it from scripts.
+    response.set_cookie(
+        PASSWORD_RESET_COOKIE,
+        token,
+        max_age=PASSWORD_RESET_COOKIE_LIFETIME_SECONDS,
+        path="/api/auth/reset-password",
+        secure=not env.DEVELOPMENT,
+        httponly=True,
+        samesite="lax",
+    )
+
+
+def clear_password_reset_cookie(response: Response) -> None:
+    """Remove browser password reset proof after password replacement."""
+
+    # Match the reset-cookie scope so browsers reliably remove the credential.
+    response.delete_cookie(
+        PASSWORD_RESET_COOKIE,
+        path="/api/auth/reset-password",
+        secure=not env.DEVELOPMENT,
+        httponly=True,
+        samesite="lax",
+    )
 
 
 class SessionAccountsService:
@@ -85,17 +187,52 @@ class SessionAccountsService:
 class LongLinkUserDatabase(SQLAlchemyUserDatabase[User, UUID]):
     """Use FastAPI Users without retaining upstream provider credentials."""
 
+    async def create(self, create_dict: dict[str, object]) -> User:
+        """Stage a user with one canonical case-insensitive email identity."""
+
+        # Normalize OAuth and any future FastAPI Users creation path before uniqueness enforcement.
+        email = create_dict.get("email")
+        normalized = {**create_dict, "email": email.lower() if isinstance(email, str) else email}
+
+        # Keep the user pending until provider-account creation commits both records.
+        user = self.user_table(**normalized)
+        self.session.add(user)
+        await self.session.flush()
+        return user
+
     async def add_oauth_account(self, user: User, create_dict: dict[str, object]) -> User:
         """Persist provider identity while discarding access and refresh tokens."""
 
-        sanitized = {**create_dict, "access_token": "", "refresh_token": None, "expires_at": None}
+        account_email = create_dict.get("account_email")
+        sanitized = {
+            **create_dict,
+            "account_email": account_email.lower() if isinstance(account_email, str) else account_email,
+            "access_token": "",
+            "refresh_token": None,
+            "expires_at": None,
+        }
         return await super().add_oauth_account(user, sanitized)
 
     async def update_oauth_account(self, user: User, oauth_account: OAuthAccount, update_dict: dict[str, object]) -> User:
         """Refresh provider identity metadata without retaining credentials."""
 
-        sanitized = {**update_dict, "access_token": "", "refresh_token": None, "expires_at": None}
+        account_email = update_dict.get("account_email")
+        sanitized = {
+            **update_dict,
+            "account_email": account_email.lower() if isinstance(account_email, str) else account_email,
+            "access_token": "",
+            "refresh_token": None,
+            "expires_at": None,
+        }
         return await super().update_oauth_account(user, oauth_account, sanitized)
+
+    async def revoke_access_tokens(self, user_id: UUID) -> None:
+        """Revoke every browser access token issued to one user."""
+
+        # Password replacement invalidates all existing authenticated browser sessions.
+        statement = delete(AccessToken).where(col(AccessToken.user_id) == user_id)
+        await self.session.execute(statement)
+        await self.session.commit()
 
 
 class VerifiedGitHubOAuth2(GitHubOAuth2):
@@ -177,7 +314,34 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
     """Connect FastAPI Users lifecycle events to LongLink account policy."""
 
     reset_password_token_secret = env.SESSION_KEY
-    verification_token_secret = env.SESSION_KEY
+
+    async def validate_reset_password_token(self, token: str) -> User:
+        """Return the active user authenticated by a password reset token."""
+
+        # Decode the signed credential with FastAPI Users' reset-token audience.
+        try:
+            data = decode_jwt(token, self.reset_password_token_secret, [self.reset_password_token_audience])
+        except jwt.PyJWTError as exc:
+            raise InvalidResetPasswordToken() from exc
+
+        # Require both identity and password-version claims before loading the account.
+        user_id = data.get("sub")
+        password_fingerprint = data.get("password_fgpt")
+        if not isinstance(user_id, str) or not isinstance(password_fingerprint, str):
+            raise InvalidResetPasswordToken()
+        try:
+            parsed_id = self.parse_id(user_id)
+        except InvalidID as exc:
+            raise InvalidResetPasswordToken() from exc
+        user = await self.get(parsed_id)
+
+        # Match the current password hash so old and already-used reset tokens fail.
+        valid_fingerprint, _ = self.password_helper.verify_and_update(user.hashed_password, password_fingerprint)
+        if not valid_fingerprint:
+            raise InvalidResetPasswordToken()
+        if not user.is_active:
+            raise UserInactive()
+        return user
 
     async def validate_password(self, password: str, user: schemas.BaseUserCreate | User) -> None:
         """Require a practical minimum password length."""
@@ -187,70 +351,43 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         if len(password) > 1024:
             raise InvalidPasswordException(reason="Password cannot exceed 1024 characters")
 
-    async def verify_email_token(self, token: str, request: Request | None = None) -> User:
-        """Verify one signed email token and return the account for login."""
-
-        # Decode the signed token using the same constraints FastAPI Users applies.
-        try:
-            data = decode_jwt(token, self.verification_token_secret, [self.verification_token_audience])
-        except jwt.PyJWTError as exc:
-            raise InvalidVerifyToken() from exc
-
-        # Require the token identity claims before resolving the account.
-        user_id = data.get("sub")
-        email = data.get("email")
-        if not isinstance(user_id, str) or not isinstance(email, str):
-            raise InvalidVerifyToken()
-
-        # Load and match the target account exactly before changing verification state.
-        try:
-            user = await self.get_by_email(email)
-            parsed_id = self.parse_id(user_id)
-        except (InvalidID, UserNotExists) as exc:
-            raise InvalidVerifyToken() from exc
-        if parsed_id != user.id:
-            raise InvalidVerifyToken()
-
-        # Treat valid already-used links as login links for the same verified account.
-        if user.is_verified:
-            return user
-
-        # Mark the account verified before issuing the browser session cookie.
-        verified_user = await self.user_db.update(user, {"is_verified": True})
-        await self.on_after_verify(verified_user, request)
-        return verified_user
-
     async def on_after_register(self, user: User, request: Request | None = None) -> None:
-        """Complete local profile defaults and start email verification."""
+        """Complete profile defaults after provider authentication."""
 
         updates: dict[str, object] = {}
         if not user.name:
             updates["name"] = user.email.split("@", 1)[0]
-        if env.INITIAL_ADMIN_EMAIL is not None and user.email.casefold() == env.INITIAL_ADMIN_EMAIL.casefold():
+        if env.INITIAL_ADMIN_EMAIL is not None and user.email.lower() == env.INITIAL_ADMIN_EMAIL.lower():
             updates["role"] = PlatformRoles.administrator
             updates["is_superuser"] = True
 
-        # Persist derived profile and bootstrap state before exposing the account.
+        # Persist derived profile and bootstrap state after provider authentication.
         if updates:
-            user = await self.user_db.update(user, updates)
-
-        # OAuth providers can establish verified email ownership during callback.
-        if not user.is_verified:
-            await self.request_verify(user, request)
-
-    async def on_after_request_verify(self, user: User, token: str, request: Request | None = None) -> None:
-        """Send the email verification link generated for a local account."""
-
-        await mail.send_signup_verification_email(user.email, token)
+            await self.user_db.update(user, updates)
 
     async def on_after_forgot_password(self, user: User, token: str, request: Request | None = None) -> None:
         """Send the password reset link generated by FastAPI Users."""
 
-        url = f"{env.PUBLIC_URL.rstrip('/')}/auth/reset-password?token={token}"
+        # Carry only sanitized navigation in the query and keep the bearer credential in the fragment.
+        requested_next = getattr(request.state, "password_reset_next", None) if request is not None else None
+        next_path = urls.safe_local_path(requested_next, "/organizations")
+        query = urlencode({"next": next_path})
+        fragment = urlencode({"token": token})
+        url = f"{env.PUBLIC_URL.rstrip('/')}/auth/reset-password?{query}#{fragment}"
         await mail.send_authentication_email(user.email, "Reset your LongLink password", f"Reset your password:\n\n{url}\n")
 
+    async def on_after_reset_password(self, user: User, request: Request | None = None) -> None:
+        """Revoke every existing browser session after password replacement."""
+
+        # The configured user database owns the transaction used by this manager request.
+        user_database = cast(LongLinkUserDatabase, self.user_db)
+        await user_database.revoke_access_tokens(user.id)
+
     async def on_after_login(self, user: User, request: Request | None = None, response: Response | None = None) -> None:
-        """Remember the local account for the browser account switcher."""
+        """Accept Organization invitations and remember the local browser account."""
+
+        # Apply email-bound Organization access before the authenticated request continues.
+        await invitations.accept(user)
 
         if request is not None:
             SessionAccountsService(request).remember(user.id)
@@ -289,7 +426,7 @@ def get_database_strategy(
 cookie_backend = AuthenticationBackend(name="cookie", transport=cookie_transport, get_strategy=get_database_strategy)
 oauth_cookie_backend = AuthenticationBackend(name="oauth_cookie", transport=oauth_cookie_transport, get_strategy=get_database_strategy)
 fastapi_users = FastAPIUsers[User, UUID](get_user_manager, [cookie_backend])
-current_active_verified_user = fastapi_users.current_user(active=True, verified=True)
+current_authenticated_user = fastapi_users.current_user()
 current_optional_user_token = fastapi_users.authenticator.current_user_token(optional=True)
 
 github_oauth_client = (
@@ -297,7 +434,9 @@ github_oauth_client = (
     if env.GITHUB_CLIENT_ID is not None and env.GITHUB_CLIENT_SECRET is not None
     else None
 )
-async def authuser(authenticated: User = Depends(current_active_verified_user)) -> User:
+
+
+async def authuser(authenticated: User = Depends(current_authenticated_user)) -> User:
     """Load the authenticated user with current LongLink resource access."""
 
     user = await users.get(authenticated.id, include_access=True)

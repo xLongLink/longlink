@@ -69,10 +69,10 @@ async def create(name: str, slug: str, kubeconfig: str, user: User) -> tuple[Com
             updated_id=user.id,
         )
         session.add(registry)
-        operation = await operations.enqueue_in_session(session, registry.id)
 
         # Translate unique registry names and slugs to one stable API conflict.
         try:
+            operation = await operations.enqueue_in_session(session, registry.id)
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()

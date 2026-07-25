@@ -1,7 +1,6 @@
-import type { IconName } from '@astryxdesign/core/Icon';
+import type { LucideIcon } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
-import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -10,10 +9,17 @@ import {
     Activity,
     AppWindow,
     ArrowLeftRight,
+    ArrowUp,
+    ArrowUpDown,
     Building2,
+    CheckCheck,
+    CheckCircle,
     Code2,
+    Columns,
+    Copy,
     Database,
     HardDrive,
+    Info,
     KeyRound,
     Languages,
     Logs,
@@ -24,62 +30,63 @@ import {
     ServerCog,
     ShieldCheck,
     UserRound,
+    Wrench,
 } from 'lucide-react';
 import { Wordmark } from '@/components/Wordmark';
 
-const sharedFoundationItems: { description: string; icon: IconName; name: string }[] = [
+const sharedFoundationItems: { description: string; icon: LucideIcon; name: string }[] = [
     {
         name: 'Authentication',
         description: 'Email, password, OAuth, sessions, and current-user context.',
-        icon: 'success',
+        icon: CheckCircle,
     },
     {
         name: 'Organizations',
         description: 'Tenant boundaries, memberships, and organization resources.',
-        icon: 'info',
+        icon: Info,
     },
     {
         name: 'Permissions',
         description: 'Organization and application roles enforced before runtime access.',
-        icon: 'checkDouble',
+        icon: CheckCheck,
     },
-    { name: 'Languages', description: 'Locale-aware web shell and application page rendering.', icon: 'info' },
-    { name: 'Theming', description: 'Shared visual system and user interface preferences.', icon: 'info' },
+    { name: 'Languages', description: 'Locale-aware web shell and application page rendering.', icon: Info },
+    { name: 'Theming', description: 'Shared visual system and user interface preferences.', icon: Info },
     {
         name: 'Application shell',
         description: 'Consistent navigation around platform and runtime pages.',
-        icon: 'viewColumns',
+        icon: Columns,
     },
     {
         name: 'Application contract',
         description: 'Metadata, routing, deployment, logs, and runtime access for application services.',
-        icon: 'wrench',
+        icon: Wrench,
     },
     {
         name: 'Databases',
         description: 'Organization databases, shared schemas, and application schemas.',
-        icon: 'viewColumns',
+        icon: Columns,
     },
     {
         name: 'Storage',
         description: 'One S3-compatible bucket per Organization, with shared and application prefixes.',
-        icon: 'copy',
+        icon: Copy,
     },
     {
         name: 'Routing',
         description: 'Gateway-backed routing from authenticated users to internal application services.',
-        icon: 'arrowsUpDown',
+        icon: ArrowUpDown,
     },
     {
         name: 'Deployment',
         description: 'Container image inspection, Kubernetes resources, and rollout verification.',
-        icon: 'arrowUp',
+        icon: ArrowUp,
     },
-    { name: 'Logs', description: 'Runtime log access for deployment checks and troubleshooting.', icon: 'info' },
+    { name: 'Logs', description: 'Runtime log access for deployment checks and troubleshooting.', icon: Info },
     {
         name: 'Status',
         description: 'Application, registry, and operation state tracked by the platform.',
-        icon: 'success',
+        icon: CheckCircle,
     },
 ];
 
@@ -90,56 +97,55 @@ function PlatformFlowDiagram() {
             <Stack direction="horizontal" gap={6} align="center" justify="end">
                 <Card width="80%" variant="muted">
                     <Stack gap={3} align="center">
-                        <Icon icon={UserRound} color="accent" aria-hidden />
+                        <UserRound aria-hidden className="text-accent" size={20} />
                         <Text weight="semibold">User</Text>
                         <Text type="supporting">Browser</Text>
                         <Stack direction="horizontal" gap={3} justify="center">
-                            <Icon icon={Languages} size="sm" color="secondary" aria-label="Languages" />
-                            <Icon icon={Palette} size="sm" color="secondary" aria-label="Theming" />
-                            <Icon icon={PanelTop} size="sm" color="secondary" aria-label="Application shell" />
+                            <Languages aria-label="Languages" className="text-secondary" size={16} />
+                            <Palette aria-label="Theming" className="text-secondary" size={16} />
+                            <PanelTop aria-label="Application shell" className="text-secondary" size={16} />
                         </Stack>
                     </Stack>
                 </Card>
-                <Icon icon={ArrowLeftRight} size="sm" color="secondary" aria-label="User and platform request flow" />
+                <ArrowLeftRight aria-label="User and platform request flow" className="text-secondary" size={16} />
             </Stack>
             <Card padding={6} variant="muted">
                 <Stack gap={3} align="center">
-                    <Icon icon={ServerCog} color="accent" aria-hidden />
+                    <ServerCog aria-hidden className="text-accent" size={20} />
                     <Wordmark />
                     <Text type="supporting">Platform</Text>
                     <Stack gap={3} align="center">
                         <Stack direction="horizontal" gap={3} justify="center">
-                            <Icon icon={KeyRound} size="sm" color="secondary" aria-label="Identity" />
-                            <Icon icon={Building2} size="sm" color="secondary" aria-label="Organizations" />
+                            <KeyRound aria-label="Identity" className="text-secondary" size={16} />
+                            <Building2 aria-label="Organizations" className="text-secondary" size={16} />
                         </Stack>
                         <Stack direction="horizontal" gap={3} justify="center">
-                            <Icon icon={ShieldCheck} size="sm" color="secondary" aria-label="Policy" />
-                            <Icon icon={Route} size="sm" color="secondary" aria-label="Routing" />
-                            <Icon icon={Rocket} size="sm" color="secondary" aria-label="Deployment" />
+                            <ShieldCheck aria-label="Policy" className="text-secondary" size={16} />
+                            <Route aria-label="Routing" className="text-secondary" size={16} />
+                            <Rocket aria-label="Deployment" className="text-secondary" size={16} />
                         </Stack>
                         <Stack direction="horizontal" gap={3} justify="center">
-                            <Icon icon={Logs} size="sm" color="secondary" aria-label="Logs" />
-                            <Icon icon={Activity} size="sm" color="secondary" aria-label="Status" />
+                            <Logs aria-label="Logs" className="text-secondary" size={16} />
+                            <Activity aria-label="Status" className="text-secondary" size={16} />
                         </Stack>
                     </Stack>
                 </Stack>
             </Card>
             <Stack direction="horizontal" gap={6} align="center" justify="start">
-                <Icon
-                    icon={ArrowLeftRight}
-                    size="sm"
-                    color="secondary"
+                <ArrowLeftRight
                     aria-label="Platform and application request flow"
+                    className="text-secondary"
+                    size={16}
                 />
                 <Card width="80%" variant="muted">
                     <Stack gap={3} align="center">
-                        <Icon icon={AppWindow} color="accent" aria-hidden />
+                        <AppWindow aria-hidden className="text-accent" size={20} />
                         <Text weight="semibold">Application</Text>
                         <Text type="supporting">Runtime</Text>
                         <Stack direction="horizontal" gap={3} justify="center">
-                            <Icon icon={Code2} size="sm" color="secondary" aria-label="Application logic" />
-                            <Icon icon={Database} size="sm" color="secondary" aria-label="Database logic" />
-                            <Icon icon={HardDrive} size="sm" color="secondary" aria-label="File storage" />
+                            <Code2 aria-label="Application logic" className="text-secondary" size={16} />
+                            <Database aria-label="Database logic" className="text-secondary" size={16} />
+                            <HardDrive aria-label="File storage" className="text-secondary" size={16} />
                         </Stack>
                     </Stack>
                 </Card>
@@ -178,22 +184,22 @@ export const content = (
         <Heading id="shared-foundation" level={2}>
             Shared Foundation
         </Heading>
-        <Table<Record<string, unknown>>>
+        <Table<Record<string, unknown>> density="compact">
             <TableHeader>
                 <TableRow>
                     <TableHeaderCell>Capability</TableHeaderCell>
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {sharedFoundationItems.map((item) => (
-                    <TableRow key={item.name}>
+                {sharedFoundationItems.map(({ description, icon: ItemIcon, name }) => (
+                    <TableRow key={name}>
                         <TableCell>
                             <Stack gap={1}>
                                 <Stack direction="horizontal" gap={2} align="center">
-                                    <Icon icon={item.icon} size="sm" color="accent" />
-                                    <Text weight="semibold">{item.name}</Text>
+                                    <ItemIcon aria-hidden="true" className="text-accent" size={16} />
+                                    <Text weight="semibold">{name}</Text>
                                 </Stack>
-                                <Text type="supporting">{item.description}</Text>
+                                <Text type="supporting">{description}</Text>
                             </Stack>
                         </TableCell>
                     </TableRow>

@@ -2,11 +2,11 @@ import sys
 import time
 import socket
 import importlib.util
-from typing import Any
 from alembic import command
 from pathlib import Path
 from alembic.config import Config
 from sqlalchemy.exc import OperationalError
+from alembic.operations.ops import MigrationScript
 from longlink.shared.constants import SHARED_TABLE_INFO_KEY
 
 CURRENT_FILE = Path(__file__).resolve()
@@ -125,7 +125,7 @@ def make_migrations() -> bool:
     cfg.set_main_option("version_locations", str(migrations_path))
     migration_created = True
 
-    def _skip_empty_revision(_context: object, _revision: object, directives: list[Any]) -> None:
+    def _skip_empty_revision(_context: object, _revision: object, directives: list[MigrationScript]) -> None:
         """Skip writing a migration script when autogenerate finds no changes."""
         nonlocal migration_created
 
@@ -136,10 +136,9 @@ def make_migrations() -> bool:
 
         # The first directive is Alembic's MigrationScript for this revision.
         script = directives[0]
-        upgrade_ops = getattr(script, "upgrade_ops", None)
 
         # When no schema operations are detected, prevent file generation.
-        if upgrade_ops is not None and upgrade_ops.is_empty():
+        if all(upgrade_ops.is_empty() for upgrade_ops in script.upgrade_ops_list):
             directives[:] = []
             migration_created = False
 

@@ -1,9 +1,13 @@
 from uuid import UUID
 from fastapi import HTTPException
+from src.utils import roles
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from src.models.roles import OrganizationRoles
+from longlink.utils.time import utcnow
 from src.database.session import session_scope
+from src.database.services import operations
+from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 from src.database.models.invitations import OrganizationInvitation
@@ -68,3 +72,91 @@ async def create(organization_id: UUID, email: str, role: OrganizationRoles, use
 
         await session.refresh(invitation)
         return invitation
+
+
+async def accept_in_session(session: AsyncSession, user: User) -> int:
+    """Accept pending invitations for one user's verified email in the caller's transaction."""
+
+    normalized_email = user.email.strip().lower()
+
+    # Lock matching invitations and retain their exact Organization boundaries.
+    statement = (
+        select(OrganizationInvitation, Organization.compute_id)
+        .join(Organization, Organization.id == OrganizationInvitation.organization_id)
+        .where(
+            OrganizationInvitation.deleted_at.is_(None),
+            Organization.deleted_at.is_(None),
+            func.lower(OrganizationInvitation.email) == normalized_email,
+        )
+        .order_by(OrganizationInvitation.organization_id, OrganizationInvitation.created_at, OrganizationInvitation.id)
+        .with_for_update()
+    )
+    rows = (await session.execute(statement)).all()
+    if not rows:
+        return 0
+
+    # Group by Organization so duplicate pending rows can never create or elevate multiple memberships.
+    organization_invitations: dict[UUID, list[OrganizationInvitation]] = {}
+    organization_computes: dict[UUID, UUID] = {}
+    for invitation, compute_id in rows:
+        organization_invitations.setdefault(invitation.organization_id, []).append(invitation)
+        organization_computes[invitation.organization_id] = compute_id
+
+    now = utcnow()
+    changed_compute_ids: set[UUID] = set()
+
+    # Create or restore access within each invitation's Organization without changing active roles.
+    for organization_id, pending in organization_invitations.items():
+        invitation = min(pending, key=lambda item: roles.rank(item.role))
+        membership = (
+            await session.execute(
+                select(UserOrganization)
+                .where(
+                    UserOrganization.user_id == user.id,
+                    UserOrganization.organization_id == organization_id,
+                )
+                .with_for_update()
+            )
+        ).scalar_one_or_none()
+        if membership is None:
+            session.add(
+                UserOrganization(
+                    user_id=user.id,
+                    organization_id=organization_id,
+                    role=invitation.role,
+                    created_id=invitation.created_id,
+                    updated_id=user.id,
+                )
+            )
+            changed_compute_ids.add(organization_computes[organization_id])
+        elif membership.deleted_at is not None:
+            membership.role = invitation.role
+            membership.updated_at = now
+            membership.updated_id = user.id
+            membership.deleted_at = None
+            membership.deleted_id = None
+            changed_compute_ids.add(organization_computes[organization_id])
+
+        # Consume every matching invitation, including safe duplicate rows.
+        for item in pending:
+            item.updated_at = now
+            item.updated_id = user.id
+            item.deleted_at = now
+            item.deleted_id = user.id
+
+    # Publish new Organization access to managed runtimes after the transaction commits.
+    for compute_id in sorted(changed_compute_ids, key=str):
+        await operations.enqueue_in_session(session, compute_id)
+
+    return len(rows)
+
+
+async def accept(user: User) -> int:
+    """Accept and commit pending Organization invitations for one user."""
+
+    # Keep membership creation and invitation consumption in one transaction.
+    async with session_scope() as session:
+        accepted = await accept_in_session(session, user)
+        if accepted:
+            await session.commit()
+        return accepted

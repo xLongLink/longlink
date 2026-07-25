@@ -1,6 +1,5 @@
 import { Package } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
-import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
@@ -39,7 +38,7 @@ export function Footer() {
                                             rel="noopener noreferrer"
                                         >
                                             <span className="group-hover:text-accent">
-                                                <Icon icon={LinkedIn} size="sm" />
+                                                <LinkedIn aria-hidden="true" className="size-4" />
                                             </span>
                                         </Link>
                                     </li>
@@ -54,7 +53,7 @@ export function Footer() {
                                             rel="noopener noreferrer"
                                         >
                                             <span className="group-hover:text-accent">
-                                                <Icon icon={GitHub} size="sm" />
+                                                <GitHub aria-hidden="true" className="size-4" />
                                             </span>
                                         </Link>
                                     </li>
@@ -69,7 +68,7 @@ export function Footer() {
                                             rel="noopener noreferrer"
                                         >
                                             <span className="group-hover:text-accent">
-                                                <Icon icon={Package} size="sm" />
+                                                <Package aria-hidden="true" size={16} />
                                             </span>
                                         </Link>
                                     </li>

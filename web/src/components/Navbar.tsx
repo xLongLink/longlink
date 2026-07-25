@@ -7,13 +7,14 @@ import { Center } from '@astryxdesign/core/Center';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { Wordmark } from '@/components/Wordmark';
-import { useUserProfile } from '@/hooks/use-user';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
+import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 
 /** Renders the public landing page navigation. */
 export function Navbar() {
     const t = useTranslator();
-    const { user, organizations } = useUserProfile();
+    const { user } = useUserProfile();
+    const { organizations } = useUserOrganizations();
     const getStartedHref = user && organizations.length === 1 ? `/orgs/${organizations[0].slug}` : '/organizations';
 
     return (

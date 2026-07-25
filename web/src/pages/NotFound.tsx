@@ -1,5 +1,5 @@
+import { Search } from 'lucide-react';
 import { useLocation } from 'react-router';
-import { Icon } from '@astryxdesign/core/Icon';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
@@ -24,7 +24,7 @@ export default function NotFound() {
                     }
                     description={t('notFound.description', { path: location.pathname })}
                     headingLevel={1}
-                    icon={<Icon icon="search" size="lg" />}
+                    icon={<Search aria-hidden="true" size={24} />}
                     title={t('notFound.title')}
                 />
             </Center>

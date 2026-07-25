@@ -1,14 +1,17 @@
 import pytest
 from uuid import uuid4
 from fastapi import HTTPException
+from datetime import timedelta
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
+from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, ApplicationStatus
 from src.database.session import get_session
 from src.database.services import compute, operations, applications, organizations
 from src.models.operations import OperationStatus
 from src.database.models.users import User
+from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
@@ -47,7 +50,6 @@ async def create_user(prefix: str) -> User:
             name=f"{prefix} User",
             email=f"{prefix}@longlink.dev",
             hashed_password="test-password-hash",
-            is_verified=True,
         )
         session.add(user)
         await session.commit()
@@ -327,6 +329,48 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     assert updated.icon == "activity"
     assert updated.updated_id == user.id
     assert deleted_runtime is None
+
+
+async def test_provision_storage_credentials_rejects_stale_operation_lease() -> None:
+    """Do not persist generated storage credentials from a stale worker lease."""
+
+    # Arrange
+    user, organization, application = await create_application_context("storage-lease")
+    operation = await operations.enqueue(organization.compute_id)
+    claimed = await operations.claim_next()
+    assert claimed is not None
+    Session = await get_session()
+    async with Session() as session:
+        row = await session.get(Operation, operation.id)
+        assert row is not None
+        row.lease_expires_at = utcnow() - timedelta(seconds=1)
+        await session.commit()
+
+    async def provision() -> dict[str, str]:
+        """Fail if stale lease validation reaches credential provisioning."""
+
+        raise AssertionError("stale workers must not provision credentials")
+
+    async def discard(credentials: dict[str, str]) -> None:
+        """Fail if no credentials were generated."""
+
+        raise AssertionError(f"unexpected credentials: {credentials}")
+
+    # Act
+    result = await applications.provision_storage_credentials(
+        application.id,
+        operation.id,
+        claimed.attempt_count,
+        env.VERSION,
+        provision,
+        discard,
+    )
+    reloaded = await applications.get(application.id)
+
+    # Assert
+    assert result is None
+    assert reloaded is not None
+    assert applications.storage_credentials(reloaded) is None
 
 
 async def test_soft_delete_marks_application_and_memberships_deleted() -> None:

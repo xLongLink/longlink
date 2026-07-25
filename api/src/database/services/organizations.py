@@ -442,5 +442,14 @@ async def soft_delete(organization_id: UUID, user: User) -> Organization | None:
         await operations.enqueue_in_session(session, compute.id)
 
         await session.commit()
-        await session.refresh(organization)
-        return organization
+        statement = (
+            select(Organization)
+            .options(
+                selectinload(Organization.created_by),
+                selectinload(Organization.updated_by),
+                selectinload(Organization.deleted_by),
+            )
+            .where(Organization.id == organization.id)
+        )
+        result = await session.execute(statement)
+        return result.scalar_one()

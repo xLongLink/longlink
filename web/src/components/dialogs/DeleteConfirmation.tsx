@@ -2,7 +2,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { useTranslator } from '@astryxdesign/core/i18n';
-import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import type { DeleteConfirmationProps } from '@/lib/utils';
@@ -12,7 +11,6 @@ export function DeleteConfirmation({
     open,
     title,
     description,
-    error,
     isPending,
     onConfirm,
     onOpenChange,
@@ -43,12 +41,9 @@ export function DeleteConfirmation({
                 }
                 content={
                     <LayoutContent>
-                        <Stack gap={3}>
-                            <Text as="div" color="secondary">
-                                {description}
-                            </Text>
-                            {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
-                        </Stack>
+                        <Text as="div" color="secondary">
+                            {description}
+                        </Text>
                     </LayoutContent>
                 }
                 footer={

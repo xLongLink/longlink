@@ -21,6 +21,10 @@ class Storage(Protocol):
         """Create or return one bucket and return its name."""
         ...
 
+    async def create_prefix(self, bucket: str, prefix: str) -> None:
+        """Create one console-visible prefix marker without replacing an existing object."""
+        ...
+
     async def delete(self, bucket: str) -> None:
         """Delete one bucket and its objects."""
         ...

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Stack } from '@astryxdesign/core/Stack';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
@@ -24,13 +25,9 @@ function TopLayout({
             variant="elevated"
         >
             {fullHeight && height === 'auto' ? (
-                <div
-                    style={{
-                        minHeight: 'calc(100dvh - var(--appshell-header-height, 0px) - var(--spacing-12))',
-                    }}
-                >
+                <Stack minHeight="calc(100dvh - var(--appshell-header-height, 0px) - var(--spacing-12))">
                     {children}
-                </div>
+                </Stack>
             ) : (
                 children
             )}

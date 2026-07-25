@@ -118,7 +118,10 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
             await fence()
             await projections.sync_organization_users(organization)
             await fence()
-            await object_storage.create(names.organization_bucket(organization.id))
+            bucket = names.organization_bucket(organization.id)
+            await object_storage.create(bucket)
+            await fence()
+            await object_storage.create_prefix(bucket, names.shared_storage_prefix())
             desired_organizations.append(DesiredOrganization(id=organization.id, slug=organization.slug))
 
         pending_applications = []
@@ -160,6 +163,10 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
             bucket = names.organization_bucket(organization.id)
             prefix = names.application_storage_prefix(application.id)
             shared_prefix = names.shared_storage_prefix()
+
+            # Keep the UUID-named Application folder visible even before it contains runtime data.
+            await fence()
+            await object_storage.create_prefix(bucket, prefix)
             credentials = applications.storage_credentials(application)
             if credentials is None:
                 await fence()

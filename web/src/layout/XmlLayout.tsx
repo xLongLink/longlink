@@ -1,21 +1,21 @@
 import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Center } from '@astryxdesign/core/Center';
 import { TopNav } from '@astryxdesign/core/TopNav';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { Icon, type IconName, type IconType } from '@astryxdesign/core/Icon';
 import { Wordmark } from '@/components/Wordmark';
 import { UserProfile } from '@/components/Profile';
 import { Breadcrumb } from '@/components/Breadcrumb';
+import { PageContainer } from '@/components/PageContainer';
 import TopLayout from './TopLayout';
 
 type LayoutTab = {
     href: string;
     active?: boolean;
-    icon?: IconName | IconType;
+    icon?: LucideIcon;
 };
 
 type LayoutProps = {
@@ -50,8 +50,8 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
     const header = (
         <Stack gap={0}>
             <TopNav
+                className="px-7"
                 label={t('common.mainNavigation')}
-                style={{ paddingInline: 'var(--spacing-7)' }}
                 heading={
                     isSdkMode ? (
                         <Link
@@ -92,15 +92,19 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
                         size="sm"
                         value={activeHref}
                     >
-                        {resolvedTabs.map((tab) => (
-                            <Tab
-                                key={tab.label}
-                                href={tab.href}
-                                icon={tab.icon ? <Icon icon={tab.icon} size="sm" /> : undefined}
-                                label={tab.label}
-                                value={tab.href}
-                            />
-                        ))}
+                        {resolvedTabs.map((tab) => {
+                            const TabIcon = tab.icon;
+
+                            return (
+                                <Tab
+                                    key={tab.label}
+                                    href={tab.href}
+                                    icon={TabIcon ? <TabIcon aria-hidden="true" size={16} /> : undefined}
+                                    label={tab.label}
+                                    value={tab.href}
+                                />
+                            );
+                        })}
                     </TabList>
                 </Stack>
             )}
@@ -110,16 +114,7 @@ export default function Layout({ tabs, brandOnly = false, brandHref = '/organiza
     // Keep XML page content aligned within the centered application container.
     return (
         <TopLayout header={header} fullHeight={!brandOnly && resolvedTabs.length > 0}>
-            <Center axis="horizontal" width="100%">
-                <Stack
-                    className="[--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
-                    minHeight={isSdkMode ? '100%' : undefined}
-                    width="100%"
-                    maxWidth={1000}
-                >
-                    {children}
-                </Stack>
-            </Center>
+            <PageContainer minHeight={isSdkMode ? '100%' : undefined}>{children}</PageContainer>
         </TopLayout>
     );
 }

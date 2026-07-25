@@ -1,11 +1,27 @@
 import pytest
 from uuid import uuid4
+from typing import cast
 from fastapi import Request
-from src.auth import UserManager, SessionAccountsService
-from src.models.auth import AuthUserCreate
+from src.auth import UserManager, LongLinkUserDatabase, SessionAccountsService, access_token_digest
+from fastapi_users import schemas
 from fastapi_users.exceptions import InvalidPasswordException
 
 pytestmark = pytest.mark.no_db
+
+
+def test_access_token_digest_is_deterministic_and_hides_raw_token() -> None:
+    """Hash browser tokens before persistence."""
+
+    # Act
+    first = access_token_digest("browser-token")
+    repeated = access_token_digest("browser-token")
+    other = access_token_digest("other-token")
+
+    # Assert
+    assert first == repeated
+    assert first != other
+    assert first != "browser-token"
+    assert len(first) == 64
 
 
 def test_session_accounts_filters_invalid_and_duplicate_ids() -> None:
@@ -46,15 +62,18 @@ def test_session_accounts_remember_and_remove_local_users() -> None:
     assert accounts.list() == account_ids[1:]
 
 
-async def test_user_manager_requires_twelve_character_passwords() -> None:
-    """Reject short local passwords while accepting the configured minimum."""
+async def test_user_manager_requires_configured_password_bounds() -> None:
+    """Reject local passwords outside the configured length bounds."""
 
-    manager = UserManager(None)  # type: ignore[arg-type]
-    user = AuthUserCreate(name="Test User", email="user@example.com", password="unused-password")
+    manager = UserManager(cast(LongLinkUserDatabase, None))
+    user = schemas.BaseUserCreate(email="user@example.com", password="unused-password")
 
     # Enforce the LongLink password policy before FastAPI Users persists credentials.
-    with pytest.raises(InvalidPasswordException) as exc:
+    with pytest.raises(InvalidPasswordException) as short_password:
         await manager.validate_password("too-short", user)
+    with pytest.raises(InvalidPasswordException) as long_password:
+        await manager.validate_password("x" * 1025, user)
 
-    assert exc.value.reason == "Password must contain at least 12 characters"
+    assert short_password.value.reason == "Password must contain at least 12 characters"
+    assert long_password.value.reason == "Password cannot exceed 1024 characters"
     await manager.validate_password("twelve-chars", user)

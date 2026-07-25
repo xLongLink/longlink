@@ -42,7 +42,7 @@ export const content = (
         <Heading id="api-environment-variables" level={2}>
             API Environment Variables
         </Heading>
-        <Table<Record<string, unknown>>>
+        <Table<Record<string, unknown>> density="compact">
             <TableHeader>
                 <TableRow>
                     <TableHeaderCell>Variable</TableHeaderCell>
@@ -61,23 +61,6 @@ export const content = (
                             <Text type="supporting">
                                 Interval used to enqueue compute drift repair. Multiple Platform containers may scan
                                 safely; the Operation queue coalesces concurrent requests per compute target.
-                            </Text>
-                        </Stack>
-                    </TableCell>
-                </TableRow>
-                <TableRow>
-                    <TableCell>
-                        <Stack gap={1}>
-                            <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-                                <Text>
-                                    <Code>EXOSCALE_API_KEY</Code>, <Code>EXOSCALE_API_SECRET</Code>, and{' '}
-                                    <Code>EXOSCALE_ORGANIZATION_ID</Code>
-                                </Text>
-                                <Text type="supporting">Required for Exoscale storage</Text>
-                            </Stack>
-                            <Text type="supporting">
-                                Platform-only provisioning identity used to manage SOS buckets and Application-scoped
-                                IAM credentials. LongLink does not inject these credentials into Application runtimes.
                             </Text>
                         </Stack>
                     </TableCell>
@@ -119,7 +102,7 @@ export const content = (
                                 <Text type="supporting">Required</Text>
                             </Stack>
                             <Text type="supporting">
-                                Public web origin used for password reset and OAuth completion links.
+                                Public web origin used for registration, password reset, and OAuth completion links.
                             </Text>
                         </Stack>
                     </TableCell>
@@ -132,8 +115,9 @@ export const content = (
                                 <Text type="supporting">Optional in local development</Text>
                             </Stack>
                             <Text type="supporting">
-                                Sends verification-code and reset emails. Registration is always enabled; verification
-                                and reset messages are logged when running locally without SMTP.
+                                Sends registration-link and password-reset emails. Registration requests create no user
+                                record until the recipient verifies the link and completes account setup. Messages are
+                                logged when running locally without SMTP.
                             </Text>
                         </Stack>
                     </TableCell>
@@ -161,9 +145,8 @@ export const content = (
                                 <Text type="supporting">Recommended for new installations</Text>
                             </Stack>
                             <Text type="supporting">
-                                Grants the platform administrator role when this exact email address completes
-                                registration. The account must still verify ownership of the address before it can sign
-                                in.
+                                Grants the platform administrator role when this exact email address verifies the
+                                registration link and creates its authenticated account.
                             </Text>
                         </Stack>
                     </TableCell>

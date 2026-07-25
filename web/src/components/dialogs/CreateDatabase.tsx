@@ -3,13 +3,13 @@ import { useId, useState } from 'react';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { useToast } from '@astryxdesign/core/Toast';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Selector } from '@astryxdesign/core/Selector';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -42,11 +42,11 @@ type Values = z.infer<typeof schema>;
 /** Registers one database backend. */
 export default function CreateDatabase() {
     const t = useTranslator();
+    const toast = useToast();
     const { role } = useUserProfile();
     const queryClient = useQueryClient();
     const formId = useId();
     const [open, setOpen] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [passwordVisible, setPasswordVisible] = useState(false);
     const form = useForm<Values>({
         defaultValues: { name: '', host: '', port: 5432, sslmode: 'require', username: '', password: '' },
@@ -79,10 +79,9 @@ export default function CreateDatabase() {
         return null;
     }
 
-    /** Clears connection secrets and errors when the dialog closes. */
+    /** Clears connection secrets when the dialog closes. */
     function resetDialogState() {
         form.reset();
-        setError(null);
         setPasswordVisible(false);
     }
 
@@ -120,15 +119,16 @@ export default function CreateDatabase() {
                             <form
                                 id={formId}
                                 onSubmit={form.handleSubmit(async (payload) => {
-                                    setError(null);
                                     try {
                                         await mutation.mutateAsync(payload);
                                     } catch (mutationError) {
-                                        setError(
-                                            mutationError instanceof Error
-                                                ? mutationError.message
-                                                : t('dialogs.failedConnectDatabase')
-                                        );
+                                        toast({
+                                            body:
+                                                mutationError instanceof Error
+                                                    ? mutationError.message
+                                                    : t('dialogs.failedConnectDatabase'),
+                                            type: 'error',
+                                        });
                                     }
                                 })}
                             >
@@ -245,7 +245,6 @@ export default function CreateDatabase() {
                                             </Stack>
                                         )}
                                     />
-                                    {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
                                 </FormLayout>
                             </form>
                         </LayoutContent>

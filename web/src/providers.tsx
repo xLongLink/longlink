@@ -3,6 +3,7 @@ import { Theme } from '@astryxdesign/core/theme';
 import { Link as RouterLink } from 'react-router';
 import { LinkProvider } from '@astryxdesign/core/Link';
 import { LayerProvider } from '@astryxdesign/core/Layer';
+import { longlinkNeutralDefaultTheme } from '@/lib/generated/longlink-neutral-default.js';
 import { DEFAULT_RADIUS, getAstryxTheme, type Accent, type Theme as ThemeMode } from '@/lib/theme';
 
 type AstryxRouterLinkProps = Omit<ComponentPropsWithoutRef<'a'>, 'href'> & { href: string };
@@ -24,7 +25,10 @@ export function AstryxProvider({
     mode: ThemeMode;
     radius?: number;
 }) {
-    const theme = getAstryxTheme(accent, radius);
+    const theme =
+        accent === 'neutral' && radius === DEFAULT_RADIUS
+            ? longlinkNeutralDefaultTheme
+            : getAstryxTheme(accent, radius);
 
     return (
         <Theme theme={theme} mode={mode}>

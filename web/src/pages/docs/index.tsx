@@ -1,11 +1,11 @@
-import type { IconName } from '@astryxdesign/core/Icon';
+import type { LucideIcon } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
-import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
+import { AlertTriangle, Columns, Copy, MoreHorizontal, Wrench } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
 
 const industryLevels = [
@@ -42,28 +42,28 @@ const geographyLevels = [
     { label: 'Municipal', value: '400,000+', href: 'https://gadm.org/data.html' },
 ];
 
-const approaches: { description: string; icon: IconName; name: string }[] = [
-    { name: 'Spreadsheets', description: 'What happens when the person leaves?', icon: 'viewColumns' },
+const approaches: { description: string; icon: LucideIcon; name: string }[] = [
+    { name: 'Spreadsheets', description: 'What happens when the person leaves?', icon: Columns },
     {
         name: 'Generic SaaS',
         description: 'Just write to the support, not even AI understand the documentation.',
-        icon: 'wrench',
+        icon: Wrench,
     },
-    { name: 'Specialized SaaS', description: 'Wait untill you see the invoice.', icon: 'copy' },
+    { name: 'Specialized SaaS', description: 'Wait untill you see the invoice.', icon: Copy },
     {
         name: 'No-Code / Low-Code',
         description: 'Not sure, an intern has set this up a few years ago.',
-        icon: 'moreHorizontal',
+        icon: MoreHorizontal,
     },
     {
         name: 'Vibecoded Solutions',
         description: 'Move the button on the top right. Wait ... where did the database go?',
-        icon: 'warning',
+        icon: AlertTriangle,
     },
     {
         name: 'Custom Build',
         description: 'Yes we know, someone has opened a Jira ticket a few years ago.',
-        icon: 'wrench',
+        icon: Wrench,
     },
 ];
 
@@ -123,22 +123,22 @@ export const content = (
             forms, dashboards, email, enterprise platforms, and custom software, resulting in a fragmented and often
             poorly documented ecosystem.
         </Text>
-        <Table<Record<string, unknown>>>
+        <Table<Record<string, unknown>> density="compact">
             <TableHeader>
                 <TableRow>
                     <TableHeaderCell>Approach</TableHeaderCell>
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {approaches.map((approach) => (
-                    <TableRow key={approach.name}>
+                {approaches.map(({ description, icon: ApproachIcon, name }) => (
+                    <TableRow key={name}>
                         <TableCell>
                             <Stack gap={1}>
                                 <Stack direction="horizontal" gap={2} align="center">
-                                    <Icon icon={approach.icon} size="sm" color="accent" />
-                                    <Text weight="semibold">{approach.name}</Text>
+                                    <ApproachIcon aria-hidden="true" className="text-accent" size={16} />
+                                    <Text weight="semibold">{name}</Text>
                                 </Stack>
-                                <Text type="supporting">{approach.description}</Text>
+                                <Text type="supporting">{description}</Text>
                             </Stack>
                         </TableCell>
                     </TableRow>

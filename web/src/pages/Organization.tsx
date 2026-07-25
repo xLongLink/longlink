@@ -1,10 +1,11 @@
 import { useParams } from 'react-router';
 import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Center } from '@astryxdesign/core/Center';
+import { AppWindow, Settings2 } from 'lucide-react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import Layout from '@/layout/Layout';
+import { PageContainer } from '@/components/PageContainer';
 import { useOrganization } from '@/hooks/use-organization';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
@@ -24,6 +25,7 @@ export default function Organization({ settingsSection }: OrganizationProps) {
         people,
         invitations,
         applications,
+        role: organizationRole,
         isLoading,
         error,
     } = useOrganization(organization);
@@ -60,40 +62,34 @@ export default function Organization({ settingsSection }: OrganizationProps) {
     return (
         <Layout
             tabs={{
-                [t('navigation.applications')]: { href: `/orgs/${organization}`, icon: 'viewColumns' },
-                [t('navigation.settings')]: { href: `/orgs/${organization}/settings`, icon: 'wrench' },
+                [t('navigation.applications')]: { href: `/orgs/${organization}`, icon: AppWindow },
+                [t('navigation.settings')]: { href: `/orgs/${organization}/settings`, icon: Settings2 },
             }}
         >
-            <Center axis="horizontal" width="100%">
-                <Stack
-                    className="[--container-padding-block-end:0px] [--container-padding-block-start:0px] [--container-padding-inline-end:0px] [--container-padding-inline-start:0px]"
-                    gap={8}
-                    maxWidth={1000}
-                    width="100%"
-                >
-                    {content}
-                    {section === 'applications' ? (
-                        <Applications
-                            organization={organization}
-                            applications={applications}
-                            isLoading={isLoading}
-                            error={error}
-                        />
-                    ) : null}
-                    {section === 'settings' ? (
-                        <OrganizationSettings
-                            organization={organization}
-                            organizationDetails={organizationDetails}
-                            applications={applications}
-                            people={people}
-                            invitations={invitations}
-                            routeSection={settingsSection ?? 'organization'}
-                            isLoading={isLoading}
-                            error={error}
-                        />
-                    ) : null}
-                </Stack>
-            </Center>
+            <PageContainer gap={8}>
+                {content}
+                {section === 'applications' ? (
+                    <Applications
+                        organization={organization}
+                        applications={applications}
+                        isLoading={isLoading}
+                        error={error}
+                    />
+                ) : null}
+                {section === 'settings' ? (
+                    <OrganizationSettings
+                        organization={organization}
+                        organizationDetails={organizationDetails}
+                        applications={applications}
+                        people={people}
+                        invitations={invitations}
+                        organizationRole={organizationRole}
+                        routeSection={settingsSection ?? 'organization'}
+                        isLoading={isLoading}
+                        error={error}
+                    />
+                ) : null}
+            </PageContainer>
         </Layout>
     );
 }

@@ -117,10 +117,10 @@ export const content = (
             </Heading>
             <P>
                 Avatar is a single data-oriented element. Set its image, fallback image, name, and alternative text as
-                attributes instead of using image and fallback children. Sizes are <Code>tiny</Code>,{' '}
-                <Code>xsmall</Code>, <Code>small</Code>, <Code>medium</Code>, and <Code>large</Code>.
+                attributes instead of using image and fallback children. Sizes are <Code>xsm</Code>, <Code>sm</Code>,{' '}
+                <Code>md</Code>, <Code>lg</Code>, and <Code>xl</Code>.
             </P>
-            <CodeBlock language="xml">{`<Avatar src="$user.avatarUrl" name="$user.name" alt="$user.name" size="medium" />`}</CodeBlock>
+            <CodeBlock language="xml">{`<Avatar src="$user.avatarUrl" name="$user.name" alt="$user.name" size="lg" />`}</CodeBlock>
         </Stack>
 
         <Stack gap={3}>

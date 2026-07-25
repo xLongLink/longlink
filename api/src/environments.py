@@ -1,10 +1,8 @@
 import os
-from uuid import UUID
 from typing import Self
 from pydantic import Field, model_validator
 from src.version import PLATFORM_VERSION_PATTERN
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from src.models.infrastructure import exoscale_zone
 
 DEVELOPMENT = os.getenv("DEVELOPMENT", "").strip().lower() in {"1", "true", "yes", "on", "y"}
 
@@ -44,12 +42,6 @@ class Env(BaseSettings):
     # Reconciliation
     RECONCILE_INTERVAL_SECONDS: int = Field(default=300, ge=30, le=86400)
 
-    # Exoscale provisioning
-    EXOSCALE_API_KEY: str | None = None
-    EXOSCALE_API_SECRET: str | None = None
-    EXOSCALE_ORGANIZATION_ID: UUID | None = None
-    EXOSCALE_STORAGE_ENDPOINT_URL: str | None = None
-
     model_config = SettingsConfigDict(
         env_file=(".env.sample", ".env") if DEVELOPMENT else (".env",),
         env_file_encoding="utf-8",
@@ -70,24 +62,6 @@ class Env(BaseSettings):
             raise ValueError("SMTP_USE_TLS and SMTP_START_TLS cannot both be enabled")
 
         return self
-
-    def exoscale(self) -> tuple[str, str, UUID]:
-        """Return complete Platform-only Exoscale provisioning credentials."""
-
-        # Require the complete provider identity only when an Exoscale adapter is selected.
-        if self.EXOSCALE_API_KEY is None or self.EXOSCALE_API_SECRET is None or self.EXOSCALE_ORGANIZATION_ID is None:
-            raise ValueError("Exoscale provisioning requires EXOSCALE_API_KEY, EXOSCALE_API_SECRET, and EXOSCALE_ORGANIZATION_ID")
-
-        return self.EXOSCALE_API_KEY, self.EXOSCALE_API_SECRET, self.EXOSCALE_ORGANIZATION_ID
-
-    def exoscale_storage_endpoint(self) -> str:
-        """Return the Exoscale SOS endpoint used by local development seeding."""
-
-        # Local development uses an explicitly selected production-equivalent SOS zone.
-        if self.EXOSCALE_STORAGE_ENDPOINT_URL is None:
-            raise ValueError("Local seeding requires EXOSCALE_STORAGE_ENDPOINT_URL")
-        exoscale_zone(self.EXOSCALE_STORAGE_ENDPOINT_URL)
-        return self.EXOSCALE_STORAGE_ENDPOINT_URL
 
 
 env = Env(**{})

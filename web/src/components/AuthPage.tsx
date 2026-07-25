@@ -18,7 +18,7 @@ export function AuthPage({
     return (
         <Layout brandOnly brandHref="/" fillViewport reserveTabSpace>
             <Center height="100%" width="100%">
-                <Stack gap={4} maxWidth={384} width="100%">
+                <Stack gap={4} maxWidth={384} paddingBlock={8} paddingInline={4} width="100%">
                     <Stack gap={1}>
                         <Heading justify="center" level={1}>
                             {title}

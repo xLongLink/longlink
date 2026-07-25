@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Icon } from '@astryxdesign/core/Icon';
+import { Copy } from 'lucide-react';
 import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -38,7 +38,7 @@ function createDatabaseColumns(t: TranslatorFn): TableColumn<ApiDatabaseRegistry
             width: proportional(1),
             renderCell: (database) => (
                 <HStack gap={3} align="center">
-                    <Icon icon={PostgreSQL} size="lg" />
+                    <PostgreSQL height={24} width={24} />
                     <VStack gap={1}>
                         <Text weight="semibold">{database.name}</Text>
                         <Text type="supporting">{`${database.host}:${database.port}`}</Text>
@@ -102,6 +102,7 @@ export default function AdminDatabase() {
         description: (database) => t('admin.deleteDatabaseDescription', { slug: database.slug }),
         errorMessage: t('admin.failedDeleteDatabase'),
         fallbackDescription: t('admin.deleteDatabaseFallback'),
+        onError: (message) => toast({ body: message, type: 'error' }),
     });
     const columns = createDatabaseColumns(t);
     const databaseColumns: TableColumn<ApiDatabaseRegistry>[] = canManage
@@ -119,10 +120,14 @@ export default function AdminDatabase() {
                           items={[
                               {
                                   label: `${t('actions.copy')} ${t('admin.copyDatabaseSlug').toLowerCase()}`,
-                                  icon: <Icon icon="copy" size="sm" />,
-                                  onClick: () => {
-                                      void navigator.clipboard.writeText(database.slug);
-                                      toast({ body: `${t('admin.copyDatabaseSlug')}: ${t('actions.copied')}` });
+                                  icon: <Copy size={16} />,
+                                  onClick: async () => {
+                                      try {
+                                          await navigator.clipboard.writeText(database.slug);
+                                          toast({ body: `${t('admin.copyDatabaseSlug')}: ${t('actions.copied')}` });
+                                      } catch {
+                                          toast({ body: t('toasts.copyFailed'), type: 'error' });
+                                      }
                                   },
                               },
                               { label: t('actions.delete'), onClick: () => deleteDialog.openFor(database) },

@@ -102,8 +102,6 @@ export default function AdminOperations() {
         onPageChange: setPage,
         totalItems: operations.length,
         pageSize,
-        label: `${t('actions.previous')} / ${t('actions.next')}`,
-        size: 'sm',
     });
 
     return (

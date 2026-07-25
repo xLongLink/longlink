@@ -3,12 +3,12 @@ import { useId, useState } from 'react';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { useToast } from '@astryxdesign/core/Toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Selector } from '@astryxdesign/core/Selector';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { FieldStatus } from '@astryxdesign/core/FieldStatus';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
@@ -40,11 +40,11 @@ const defaultCreateOrganizationValues = {
 /** Renders the create-organization dialog. */
 export default function CreateOrganization() {
     const t = useTranslator();
+    const toast = useToast();
     const { role } = useUserProfile();
     const createOrganization = useCreateOrganization();
     const formId = useId();
     const [open, setOpen] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const form = useForm<CreateOrganizationInput, unknown, CreateOrganizationValues>({
         defaultValues: defaultCreateOrganizationValues,
         mode: 'onChange',
@@ -69,7 +69,6 @@ export default function CreateOrganization() {
     /** Clears the organization creation form state. */
     function resetDialogState() {
         form.reset(defaultCreateOrganizationValues);
-        setError(null);
     }
 
     /** Updates dialog state while protecting an in-flight creation. */
@@ -107,8 +106,6 @@ export default function CreateOrganization() {
                             <form
                                 id={formId}
                                 onSubmit={form.handleSubmit(async (payload) => {
-                                    setError(null);
-
                                     // Create the organization and close the dialog on success.
                                     try {
                                         await createOrganization.mutateAsync({
@@ -122,11 +119,13 @@ export default function CreateOrganization() {
                                         setOpen(false);
                                         resetDialogState();
                                     } catch (mutationError) {
-                                        setError(
-                                            mutationError instanceof Error
-                                                ? mutationError.message
-                                                : t('createOrganization.error')
-                                        );
+                                        toast({
+                                            body:
+                                                mutationError instanceof Error
+                                                    ? mutationError.message
+                                                    : t('createOrganization.error'),
+                                            type: 'error',
+                                        });
                                     }
                                 })}
                             >
@@ -230,7 +229,6 @@ export default function CreateOrganization() {
                                             }
                                         />
                                     </Grid>
-                                    {error ? <FieldStatus type="error" message={error} variant="detached" /> : null}
                                 </FormLayout>
                             </form>
                         </LayoutContent>

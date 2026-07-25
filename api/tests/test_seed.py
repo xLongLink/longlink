@@ -14,6 +14,50 @@ def fake_resource(**fields: object) -> SimpleNamespace:
     return SimpleNamespace(**fields)
 
 
+async def test_reconcile_until_complete_drains_until_target_operation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Drain local seed operations until the requested compute reconciliation finishes."""
+
+    # Arrange
+    target_compute_id = UUID("22222222-2222-2222-2222-222222222222")
+    other_compute_id = UUID("33333333-3333-3333-3333-333333333333")
+    unrelated_operation = fake_resource(compute_id=other_compute_id)
+    target_operation = fake_resource(compute_id=target_compute_id)
+    claims: list[SimpleNamespace | None] = [None, unrelated_operation, target_operation]
+    executed: list[SimpleNamespace] = []
+    sleeps: list[float] = []
+
+    async def claim_operation() -> SimpleNamespace | None:
+        """Return one queued operation or an empty poll result."""
+
+        if not claims:
+            raise AssertionError("Seed attempted to claim unexpected reconciliation work")
+        return claims.pop(0)
+
+    async def execute_operation(claimed_operation: SimpleNamespace, handler: object) -> SimpleNamespace:
+        """Complete each claimed operation without invoking infrastructure providers."""
+
+        assert handler is seed.operation_computes.reconcile
+        executed.append(claimed_operation)
+        return fake_resource(compute_id=claimed_operation.compute_id, stopped_at=object(), error=None)
+
+    async def sleep(seconds: float) -> None:
+        """Record queue polling backoff without slowing the test."""
+
+        sleeps.append(seconds)
+
+    monkeypatch.setattr(seed.operations, "claim_next", claim_operation)
+    monkeypatch.setattr(seed.jobs, "run_claimed_operation", execute_operation)
+    monkeypatch.setattr(seed.asyncio, "sleep", sleep)
+
+    # Act
+    await seed.reconcile_until_complete(target_compute_id)
+
+    # Assert
+    assert executed == [unrelated_operation, target_operation]
+    assert sleeps == [1]
+    assert claims == []
+
+
 async def test_seed_local_development_creates_registries_and_drains_reconciliation(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path,
@@ -31,6 +75,11 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
     completed = fake_resource(compute_id=compute.id, platform_version=env.VERSION, stopped_at=object(), error=None)
     kubeconfig = tmp_path / "kubeconfig.yaml"
     kubeconfig.write_text("apiVersion: v1\nclusters: []\n", encoding="utf-8")
+    settings = seed.SeedSettings(
+        EXOSCALE_API_KEY="access-key",
+        EXOSCALE_API_SECRET="secret-key",
+        EXOSCALE_STORAGE_ENDPOINT_URL="https://sos-ch-gva-2.exo.io",
+    )
     calls: dict[str, object] = {}
     claimed = [operation, operation, operation]
     executed: list[object] = []
@@ -102,10 +151,6 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
         return completed
 
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
-    monkeypatch.setattr(env, "EXOSCALE_API_KEY", "access-key")
-    monkeypatch.setattr(env, "EXOSCALE_API_SECRET", "secret-key")
-    monkeypatch.setattr(env, "EXOSCALE_ORGANIZATION_ID", UUID("77777777-7777-7777-7777-777777777777"))
-    monkeypatch.setattr(env, "EXOSCALE_STORAGE_ENDPOINT_URL", "https://sos-ch-gva-2.exo.io")
     monkeypatch.setattr(seed, "local_database_host", local_database_host)
     monkeypatch.setattr(seed, "seed_local_administrator", seed_administrator)
     monkeypatch.setattr(seed.compute_service, "fetch", fetch_no_resources)
@@ -122,7 +167,7 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
     monkeypatch.setattr(seed.jobs, "run_claimed_operation", execute_operation)
 
     # Act
-    await seed.seed_local_development()
+    await seed.seed_local_development(settings)
 
     # Assert
     assert calls["administrator"] == seed.LOCAL_ADMIN_EMAIL
@@ -143,6 +188,8 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
         seed.StorageKind.exoscale,
         "https://sos-ch-gva-2.exo.io",
         None,
+        "access-key",
+        "secret-key",
         user,
     )
     assert calls["organization"] == (
@@ -178,18 +225,20 @@ async def test_seed_local_development_refreshes_existing_sample_application(monk
         id=UUID("66666666-6666-6666-6666-666666666666"),
         slug="local-storage",
         endpoint_url="https://sos-ch-gva-2.exo.io",
+        access_key_id="access-key",
+        secret_access_key="secret-key",
     )
     organization = fake_resource(id=UUID("33333333-3333-3333-3333-333333333333"), slug=seed.LOCAL_ORG)
     application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
     operation = fake_resource(compute_id=compute.id, platform_version=env.VERSION)
     completed = fake_resource(compute_id=compute.id, platform_version=env.VERSION, stopped_at=object(), error=None)
+    settings = seed.SeedSettings(
+        EXOSCALE_API_KEY="access-key",
+        EXOSCALE_API_SECRET="secret-key",
+        EXOSCALE_STORAGE_ENDPOINT_URL="https://sos-ch-gva-2.exo.io",
+    )
     calls: dict[str, object] = {}
     executed: list[object] = []
-
-    monkeypatch.setattr(env, "EXOSCALE_API_KEY", "access-key")
-    monkeypatch.setattr(env, "EXOSCALE_API_SECRET", "secret-key")
-    monkeypatch.setattr(env, "EXOSCALE_ORGANIZATION_ID", UUID("77777777-7777-7777-7777-777777777777"))
-    monkeypatch.setattr(env, "EXOSCALE_STORAGE_ENDPOINT_URL", "https://sos-ch-gva-2.exo.io")
 
     async def seed_administrator() -> SimpleNamespace:
         """Return the fixed local administrator."""
@@ -274,7 +323,7 @@ async def test_seed_local_development_refreshes_existing_sample_application(monk
     monkeypatch.setattr(seed.jobs, "run_claimed_operation", execute_operation)
 
     # Act
-    await seed.seed_local_development()
+    await seed.seed_local_development(settings)
 
     # Assert
     assert calls["owner"] == (organization.id, user.id)

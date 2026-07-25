@@ -19,6 +19,11 @@ export const apiAuthConfigSchema = z.object({
     github_enabled: z.boolean(),
 });
 
+export const apiRegistrationVerifiedSchema = z.object({
+    email: z.email(),
+    next: z.string(),
+});
+
 export const apiAuthorizationSchema = z.object({
     authorization_url: z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
 });
