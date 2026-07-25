@@ -1,6 +1,6 @@
+import pytest
 from uuid import uuid4
 from datetime import UTC, datetime
-import pytest
 from pydantic import ValidationError
 from src.models.types import StorageKind
 from src.models.storages import StorageRegistryCreate, StorageRegistryResponse
@@ -18,6 +18,8 @@ def test_storage_registry_create_accepts_exoscale_endpoint_payload() -> None:
             "name": "Primary Storage",
             "endpoint_url": "https://sos-ch-gva-2.exo.io/",
             "runtime_endpoint_url": None,
+            "access_key_id": "access-key",
+            "secret_access_key": "secret-key",
         }
     )
 
@@ -30,13 +32,27 @@ def test_storage_registry_create_accepts_exoscale_endpoint_payload() -> None:
 @pytest.mark.parametrize(
     "payload",
     [
-        {"kind": "exoscale", "name": "", "endpoint_url": "https://sos-ch-gva-2.exo.io"},
-        {"kind": "exoscale", "name": "Primary Storage", "endpoint_url": "http://sos-ch-gva-2.exo.io"},
+        {
+            "kind": "exoscale",
+            "name": "",
+            "endpoint_url": "https://sos-ch-gva-2.exo.io",
+            "access_key_id": "access-key",
+            "secret_access_key": "secret-key",
+        },
+        {
+            "kind": "exoscale",
+            "name": "Primary Storage",
+            "endpoint_url": "http://sos-ch-gva-2.exo.io",
+            "access_key_id": "access-key",
+            "secret_access_key": "secret-key",
+        },
         {
             "kind": "exoscale",
             "name": "Primary Storage",
             "endpoint_url": "https://sos-ch-gva-2.exo.io",
             "runtime_endpoint_url": "https://sos-de-fra-1.exo.io",
+            "access_key_id": "access-key",
+            "secret_access_key": "secret-key",
         },
     ],
 )

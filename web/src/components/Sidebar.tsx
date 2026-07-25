@@ -1,5 +1,10 @@
+import { Link } from '@astryxdesign/core/Link';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Center } from '@astryxdesign/core/Center';
+import { Divider } from '@astryxdesign/core/Divider';
 import { SideNav as AstryxSideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
 import type { ArticleNavigationGroup, ArticleNavigationItem } from '@/pages/catalog';
+import { Wordmark } from '@/components/Wordmark';
 
 export type SidebarProps = {
     currentPath: string;
@@ -34,6 +39,7 @@ function renderArticleNavigationItem(item: ArticleNavigationItem, currentPath: s
             icon={item.icon}
             isSelected={isSelected}
             label={item.title}
+            size="sm"
         >
             {item.children?.map((child) => renderArticleNavigationItem(child, currentPath))}
         </SideNavItem>
@@ -43,7 +49,20 @@ function renderArticleNavigationItem(item: ArticleNavigationItem, currentPath: s
 /** Renders the left navigation for article pages. */
 export function Sidebar({ currentPath, groups }: SidebarProps) {
     return (
-        <AstryxSideNav>
+        <AstryxSideNav
+            header={
+                <Stack className="-my-2">
+                    <Center className="lg:mt-2" height={64} width="100%">
+                        <Link href="/" label="LongLink home" color="inherit">
+                            <Wordmark size="heading" />
+                        </Link>
+                    </Center>
+                    <Stack paddingInline={2}>
+                        <Divider />
+                    </Stack>
+                </Stack>
+            }
+        >
             {groups.map((group) => (
                 <SideNavSection key={group.title} title={group.title}>
                     {group.items.map((item) => renderArticleNavigationItem(item, currentPath))}

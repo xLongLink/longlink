@@ -44,12 +44,11 @@ k3d kubeconfig get compute > api/kubeconfig.yaml
 
 ## Local seed setup
 
-Configure the Exoscale provisioning identity and select the development SOS zone in `api/.env`:
+Configure the Exoscale provisioning identity and select the development SOS zone in `api/.env.seed`:
 
 ```bash
 EXOSCALE_API_KEY=EXO...
 EXOSCALE_API_SECRET=replace-with-the-api-secret
-EXOSCALE_ORGANIZATION_ID=00000000-0000-0000-0000-000000000000
 EXOSCALE_STORAGE_ENDPOINT_URL=https://sos-ch-gva-2.exo.io
 ```
 

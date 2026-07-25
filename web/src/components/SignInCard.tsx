@@ -154,6 +154,7 @@ export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: stri
                         <TextInput
                             ref={field.ref}
                             htmlName={field.name}
+                            isRequired
                             label={t('labels.email')}
                             onChange={field.onChange}
                             status={fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined}
@@ -179,6 +180,7 @@ export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: stri
                                 autoComplete="current-password"
                                 htmlName={field.name}
                                 isLabelHidden
+                                isRequired
                                 label={t('labels.password')}
                                 onBlur={field.onBlur}
                                 onChange={field.onChange}

@@ -387,7 +387,7 @@
         "defaultMessage": "Provider sign in failed"
     },
     "auth.registerDescription": {
-        "defaultMessage": "Enter your email to begin secure account setup."
+        "defaultMessage": "Please enter your email"
     },
     "auth.registrationRequestFailed": {
         "defaultMessage": "Could not send the registration link. Try again shortly."
@@ -674,6 +674,9 @@
     "labels.accentColor": {
         "defaultMessage": "Accent color"
     },
+    "labels.accessKeyId": {
+        "defaultMessage": "Access key ID"
+    },
     "labels.country": {
         "defaultMessage": "Country"
     },
@@ -724,6 +727,9 @@
     },
     "labels.runtimeEndpointUrl": {
         "defaultMessage": "Runtime endpoint URL"
+    },
+    "labels.secretAccessKey": {
+        "defaultMessage": "Secret access key"
     },
     "labels.theme": {
         "defaultMessage": "Theme"

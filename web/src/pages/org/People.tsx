@@ -289,6 +289,7 @@ export default function People({
                                             isRequired
                                         />
                                         <Selector
+                                            isRequired
                                             label={t('columns.role')}
                                             options={[...ROLE_NAMES]}
                                             value={inviteRole}

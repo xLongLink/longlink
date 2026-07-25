@@ -40,6 +40,8 @@ def test_storage_configuration_accepts_same_exoscale_zone() -> None:
         kind=StorageKind.exoscale,
         endpoint_url="https://sos-ch-gva-2.exo.io/",
         runtime_endpoint_url="https://sos-ch-gva-2.exo.io",
+        access_key_id="access-key",
+        secret_access_key="secret-key",
     )
 
     assert payload.endpoint_url == "https://sos-ch-gva-2.exo.io"
@@ -55,4 +57,6 @@ def test_storage_configuration_rejects_cross_zone_exoscale_endpoints() -> None:
             kind=StorageKind.exoscale,
             endpoint_url="https://sos-ch-gva-2.exo.io",
             runtime_endpoint_url="https://sos-de-fra-1.exo.io",
+            access_key_id="access-key",
+            secret_access_key="secret-key",
         )

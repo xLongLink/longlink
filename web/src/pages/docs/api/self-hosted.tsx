@@ -69,23 +69,6 @@ export const content = (
                     <TableCell>
                         <Stack gap={1}>
                             <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
-                                <Text>
-                                    <Code>EXOSCALE_API_KEY</Code>, <Code>EXOSCALE_API_SECRET</Code>, and{' '}
-                                    <Code>EXOSCALE_ORGANIZATION_ID</Code>
-                                </Text>
-                                <Text type="supporting">Required for Exoscale storage</Text>
-                            </Stack>
-                            <Text type="supporting">
-                                Platform-only provisioning identity used to manage SOS buckets and Application-scoped
-                                IAM credentials. LongLink does not inject these credentials into Application runtimes.
-                            </Text>
-                        </Stack>
-                    </TableCell>
-                </TableRow>
-                <TableRow>
-                    <TableCell>
-                        <Stack gap={1}>
-                            <Stack direction="horizontal" gap={2} align="center" wrap="wrap">
                                 <Code>SESSION_KEY</Code>
                                 <Text type="supporting">Required</Text>
                             </Stack>

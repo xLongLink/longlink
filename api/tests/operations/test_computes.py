@@ -49,6 +49,8 @@ async def create_compute_infrastructure(
             slug=f"{slug}-storage",
             endpoint_url="https://sos-ch-gva-2.exo.io",
             runtime_endpoint_url="https://sos-ch-gva-2.exo.io",
+            access_key_id="access-key",
+            secret_access_key="secret-key",
         )
         session.add_all([compute_registry, database_registry, storage_registry])
         await session.commit()

@@ -153,7 +153,11 @@ def upgrade() -> None:
         sa.Column("host", sa.String(length=255), nullable=False),
         sa.Column("port", sa.Integer(), nullable=False),
         sa.Column("password", sa.String(length=255), nullable=False),
-        sa.Column("sslmode", sa.Enum("disable", "allow", "prefer", "require", "verify-ca", "verify-full", name="databasesslmode", native_enum=False), nullable=False),
+        sa.Column(
+            "sslmode",
+            sa.Enum("disable", "allow", "prefer", "require", "verify-ca", "verify-full", name="databasesslmode", native_enum=False),
+            nullable=False,
+        ),
         sa.Column("username", sa.String(length=255), nullable=False),
         sa.Column("deleted_id", sa.Uuid(), nullable=True),
         sa.ForeignKeyConstraint(
@@ -182,6 +186,8 @@ def upgrade() -> None:
         sa.Column("slug", sa.String(length=128), nullable=False),
         sa.Column("endpoint_url", sa.String(length=255), nullable=False),
         sa.Column("runtime_endpoint_url", sa.String(length=255), nullable=False),
+        sa.Column("access_key_id", sa.String(length=255), nullable=False),
+        sa.Column("secret_access_key", sa.String(length=255), nullable=False),
         sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("created_id", sa.Uuid(), nullable=True),
         sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),

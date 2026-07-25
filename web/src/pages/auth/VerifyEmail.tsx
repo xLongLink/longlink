@@ -11,8 +11,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocation, useNavigate } from 'react-router';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AuthPage } from '@/components/AuthPage';
 import { ApiError, fetchApiJson } from '@/lib/api';
 import { sanitizeRedirectPath } from '@/lib/redirects';
@@ -47,7 +47,6 @@ export default function VerifyEmail() {
     const [accountExists, setAccountExists] = useState(false);
     const [setupMismatch, setSetupMismatch] = useState(false);
     const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
-    const verificationStarted = useRef(false);
     const fallbackNextPath = sanitizeRedirectPath(new URLSearchParams(location.search).get('next'));
     const schema = z.object({
         name: z.string().trim().min(1, t('auth.nameRequired')).max(127, t('auth.nameTooLong')),
@@ -145,12 +144,7 @@ export default function VerifyEmail() {
     }, [fragmentToken, location.pathname, location.search]);
 
     useEffect(() => {
-        // Strict Mode may rerun effects, but setup restoration needs only one initial request.
-        if (verificationStarted.current) {
-            return;
-        }
-
-        verificationStarted.current = true;
+        // Repeat the idempotent exchange when Strict Mode remounts the mutation observer.
         verifyRegistration(token);
     }, [token, verifyRegistration]);
 

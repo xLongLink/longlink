@@ -674,6 +674,9 @@
     "labels.accentColor": {
         "defaultMessage": "Colore accento"
     },
+    "labels.accessKeyId": {
+        "defaultMessage": "ID chiave di accesso"
+    },
     "labels.country": {
         "defaultMessage": "Paese"
     },
@@ -724,6 +727,9 @@
     },
     "labels.runtimeEndpointUrl": {
         "defaultMessage": "URL endpoint runtime"
+    },
+    "labels.secretAccessKey": {
+        "defaultMessage": "Chiave di accesso segreta"
     },
     "labels.theme": {
         "defaultMessage": "Tema"

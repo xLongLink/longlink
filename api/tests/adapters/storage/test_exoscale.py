@@ -1,6 +1,5 @@
 import pytest
 import importlib
-from uuid import UUID
 
 exoscale = importlib.import_module("src.adapters.storage.exoscale")
 Exoscale = exoscale.Exoscale
@@ -53,6 +52,12 @@ async def test_exoscale_credentials_replaces_prior_material_and_scopes_policy(mo
             calls.append(("delete-iam-role", id))
             return {"id": f"delete-{id}"}
 
+        async def get_organization(self) -> dict[str, str]:
+            """Return the organization authenticated by the provisioning key."""
+
+            calls.append(("get-organization", None))
+            return {"id": "11111111-1111-1111-1111-111111111111"}
+
         async def create_iam_role(self, name: str, description: str, editable: bool, policy: dict[str, object]) -> dict[str, str]:
             """Record role creation with its generated policy."""
 
@@ -74,7 +79,7 @@ async def test_exoscale_credentials_replaces_prior_material_and_scopes_policy(mo
             return {}
 
     monkeypatch.setattr(exoscale, "AsyncClient", Client)
-    storage = Exoscale("https://sos-ch-gva-2.exo.io", "control-key", "control-secret", UUID("11111111-1111-1111-1111-111111111111"))
+    storage = Exoscale("https://sos-ch-gva-2.exo.io", "control-key", "control-secret")
 
     # Act
     credentials = await storage.credentials("dashboard", "acme", ("shared/",), "apps/dashboard/")
@@ -84,9 +89,11 @@ async def test_exoscale_credentials_replaces_prior_material_and_scopes_policy(mo
     assert credentials == {"access_key_id": "runtime-key", "secret_access_key": "runtime-secret"}
     assert ("delete-api-key", "old-key") in calls
     assert ("delete-iam-role", "old-role") in calls
+    assert ("get-organization", None) in calls
     assert isinstance(role_call, dict)
     policy = role_call["policy"]
     assert isinstance(policy, dict)
+    assert "identity.org.uuid == '11111111-1111-1111-1111-111111111111'" in str(policy)
     assert "acme" in str(policy)
     assert "shared/" in str(policy)
     assert "apps/dashboard/" in str(policy)
@@ -123,6 +130,11 @@ async def test_exoscale_credentials_revokes_on_generation_failure(monkeypatch: p
 
             return {"iam-roles": []}
 
+        async def get_organization(self) -> dict[str, str]:
+            """Return the organization authenticated by the provisioning key."""
+
+            return {"id": "11111111-1111-1111-1111-111111111111"}
+
         async def create_iam_role(self, name: str, description: str, editable: bool, policy: dict[str, object]) -> dict[str, str]:
             """Return a created role operation."""
 
@@ -139,7 +151,7 @@ async def test_exoscale_credentials_revokes_on_generation_failure(monkeypatch: p
             return {"reference": {"id": "runtime-role"}}
 
     monkeypatch.setattr(exoscale, "AsyncClient", Client)
-    storage = Exoscale("https://sos-ch-gva-2.exo.io", "control-key", "control-secret", UUID("11111111-1111-1111-1111-111111111111"))
+    storage = Exoscale("https://sos-ch-gva-2.exo.io", "control-key", "control-secret")
 
     # Act and assert
     with pytest.raises(RuntimeError, match="key generation failed"):

@@ -75,6 +75,11 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
     completed = fake_resource(compute_id=compute.id, platform_version=env.VERSION, stopped_at=object(), error=None)
     kubeconfig = tmp_path / "kubeconfig.yaml"
     kubeconfig.write_text("apiVersion: v1\nclusters: []\n", encoding="utf-8")
+    settings = seed.SeedSettings(
+        EXOSCALE_API_KEY="access-key",
+        EXOSCALE_API_SECRET="secret-key",
+        EXOSCALE_STORAGE_ENDPOINT_URL="https://sos-ch-gva-2.exo.io",
+    )
     calls: dict[str, object] = {}
     claimed = [operation, operation, operation]
     executed: list[object] = []
@@ -146,10 +151,6 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
         return completed
 
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
-    monkeypatch.setattr(env, "EXOSCALE_API_KEY", "access-key")
-    monkeypatch.setattr(env, "EXOSCALE_API_SECRET", "secret-key")
-    monkeypatch.setattr(env, "EXOSCALE_ORGANIZATION_ID", UUID("77777777-7777-7777-7777-777777777777"))
-    monkeypatch.setattr(env, "EXOSCALE_STORAGE_ENDPOINT_URL", "https://sos-ch-gva-2.exo.io")
     monkeypatch.setattr(seed, "local_database_host", local_database_host)
     monkeypatch.setattr(seed, "seed_local_administrator", seed_administrator)
     monkeypatch.setattr(seed.compute_service, "fetch", fetch_no_resources)
@@ -166,7 +167,7 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
     monkeypatch.setattr(seed.jobs, "run_claimed_operation", execute_operation)
 
     # Act
-    await seed.seed_local_development()
+    await seed.seed_local_development(settings)
 
     # Assert
     assert calls["administrator"] == seed.LOCAL_ADMIN_EMAIL
@@ -187,6 +188,8 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
         seed.StorageKind.exoscale,
         "https://sos-ch-gva-2.exo.io",
         None,
+        "access-key",
+        "secret-key",
         user,
     )
     assert calls["organization"] == (
@@ -222,18 +225,20 @@ async def test_seed_local_development_refreshes_existing_sample_application(monk
         id=UUID("66666666-6666-6666-6666-666666666666"),
         slug="local-storage",
         endpoint_url="https://sos-ch-gva-2.exo.io",
+        access_key_id="access-key",
+        secret_access_key="secret-key",
     )
     organization = fake_resource(id=UUID("33333333-3333-3333-3333-333333333333"), slug=seed.LOCAL_ORG)
     application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
     operation = fake_resource(compute_id=compute.id, platform_version=env.VERSION)
     completed = fake_resource(compute_id=compute.id, platform_version=env.VERSION, stopped_at=object(), error=None)
+    settings = seed.SeedSettings(
+        EXOSCALE_API_KEY="access-key",
+        EXOSCALE_API_SECRET="secret-key",
+        EXOSCALE_STORAGE_ENDPOINT_URL="https://sos-ch-gva-2.exo.io",
+    )
     calls: dict[str, object] = {}
     executed: list[object] = []
-
-    monkeypatch.setattr(env, "EXOSCALE_API_KEY", "access-key")
-    monkeypatch.setattr(env, "EXOSCALE_API_SECRET", "secret-key")
-    monkeypatch.setattr(env, "EXOSCALE_ORGANIZATION_ID", UUID("77777777-7777-7777-7777-777777777777"))
-    monkeypatch.setattr(env, "EXOSCALE_STORAGE_ENDPOINT_URL", "https://sos-ch-gva-2.exo.io")
 
     async def seed_administrator() -> SimpleNamespace:
         """Return the fixed local administrator."""
@@ -318,7 +323,7 @@ async def test_seed_local_development_refreshes_existing_sample_application(monk
     monkeypatch.setattr(seed.jobs, "run_claimed_operation", execute_operation)
 
     # Act
-    await seed.seed_local_development()
+    await seed.seed_local_development(settings)
 
     # Assert
     assert calls["owner"] == (organization.id, user.id)

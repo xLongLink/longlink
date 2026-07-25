@@ -2,7 +2,6 @@ import aioboto3
 import urllib.parse
 from typing import TYPE_CHECKING, TypedDict, cast
 from contextlib import AbstractAsyncContextManager
-from src.environments import env
 from src.models.infrastructure import exoscale_zone
 from src.database.models.storages import StorageRegistry
 
@@ -26,9 +25,8 @@ def client(registry: StorageRegistry) -> "AbstractAsyncContextManager[S3Client]"
     if parsed_url.scheme not in {"http", "https"}:
         raise ValueError("Storage endpoint URL must use http or https")
 
-    # Resolve Exoscale credentials from their authoritative control-plane boundary.
+    # Resolve the zone and credentials from the selected storage registry.
     region = exoscale_zone(registry.endpoint_url)
-    access_key_id, secret_access_key, _organization_id = env.exoscale()
 
     return cast(
         "AbstractAsyncContextManager[S3Client]",
@@ -37,8 +35,8 @@ def client(registry: StorageRegistry) -> "AbstractAsyncContextManager[S3Client]"
             use_ssl=parsed_url.scheme == "https",
             endpoint_url=registry.endpoint_url,
             region_name=region,
-            aws_access_key_id=access_key_id,
-            aws_secret_access_key=secret_access_key,
+            aws_access_key_id=registry.access_key_id,
+            aws_secret_access_key=registry.secret_access_key,
         ),
     )
 
@@ -63,11 +61,7 @@ async def usage(registry: StorageRegistry, bucket_name: str, prefix: str) -> Sto
     async with client(registry) as s3:
         paginator = s3.get_paginator("list_objects_v2")
         async for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
-            contents = [
-                item
-                for item in page.get("Contents", [])
-                if item.get("Key") != prefix or int(item.get("Size", 0)) != 0
-            ]
+            contents = [item for item in page.get("Contents", []) if item.get("Key") != prefix or int(item.get("Size", 0)) != 0]
             object_count += len(contents)
             space_used += sum(int(item.get("Size", 0)) for item in contents)
 

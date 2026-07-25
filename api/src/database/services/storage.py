@@ -3,7 +3,6 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
-from src.environments import env
 from src.models.types import StorageKind
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
@@ -60,14 +59,13 @@ async def create(
     kind: StorageKind,
     endpoint_url: str,
     runtime_endpoint_url: str | None,
+    access_key_id: str,
+    secret_access_key: str,
     user: User,
 ) -> StorageRegistry:
     """Register one Exoscale SOS backend."""
 
-    # Fail registration when the Platform cannot provision Exoscale resources.
-    env.exoscale()
-
-    # Persist provider routing while credentials remain in Platform settings.
+    # Persist the complete provider connection so each registry has an independent provisioning identity.
     async with session_scope() as session:
         registry = StorageRegistry(
             kind=kind,
@@ -75,6 +73,8 @@ async def create(
             slug=slug,
             endpoint_url=endpoint_url,
             runtime_endpoint_url=runtime_endpoint_url or endpoint_url,
+            access_key_id=access_key_id,
+            secret_access_key=secret_access_key,
             created_id=user.id,
             updated_id=user.id,
         )

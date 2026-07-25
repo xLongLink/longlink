@@ -1,7 +1,6 @@
-import os
 import json
 import httpx2
-from typing import Any
+from typing import cast
 from src.logger import logger
 from collections.abc import Mapping
 from src.environments import env
@@ -52,18 +51,13 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
             manifest_config = manifest.get("config", {})
 
             # Require a config object in the manifest.
-            if not isinstance(manifest_config, dict):
+            if not isinstance(manifest_config, dict) or not all(isinstance(key, str) for key in manifest_config):
                 return None
+            manifest_config = cast(dict[str, object], manifest_config)
 
-            # Require a config blob digest.
+            # Require a valid config blob digest.
             config_digest = manifest_config.get("digest")
-            if config_digest is None:
-                return None
-
-            config_digest = str(config_digest)
-
-            # Reject malformed config digests.
-            if not IMAGE_DIGEST_PATTERN.fullmatch(config_digest):
+            if not isinstance(config_digest, str) or not IMAGE_DIGEST_PATTERN.fullmatch(config_digest):
                 return None
 
             blob_response = await client.get(f"{registry_url}/v2/{image.repository}/blobs/{config_digest}")
@@ -72,25 +66,28 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
             if not blob_response.is_success:
                 return None
 
-            config_blob = blob_response.json()
-
             # Require a JSON object config blob.
-            if not isinstance(config_blob, dict):
+            raw_config_blob: object = blob_response.json()
+            if not isinstance(raw_config_blob, dict) or not all(isinstance(key, str) for key in raw_config_blob):
                 return None
-
-            image_config = config_blob.get("config", {})
+            config_blob = cast(dict[str, object], raw_config_blob)
 
             # Require a config object inside the blob.
-            if not isinstance(image_config, dict):
+            image_config = config_blob.get("config", {})
+            if not isinstance(image_config, dict) or not all(isinstance(key, str) for key in image_config):
                 return None
+            image_config = cast(dict[str, object], image_config)
 
-            raw_labels: Any = image_config.get("Labels") or {}
-
-            # Require Docker labels to be an object.
-            if not isinstance(raw_labels, dict):
+            # Require Docker labels to map strings to strings when present.
+            raw_labels = image_config.get("Labels")
+            if raw_labels is None:
+                labels: dict[str, str] = {}
+            elif isinstance(raw_labels, dict) and all(
+                isinstance(key, str) and isinstance(value, str) for key, value in raw_labels.items()
+            ):
+                labels = cast(dict[str, str], raw_labels)
+            else:
                 return None
-
-            labels = {str(key): value for key, value in raw_labels.items()}
 
             result = LongLinkMetadata(
                 sdk=labels.get("longlink.sdk"),
@@ -135,13 +132,10 @@ def _registry_url(registry: str) -> str:
 
     normalized_registry = registry.strip().rstrip("/").lower()
 
-    # Allow local registries only in safe environments.
+    # Allow local registries only in development.
     if normalized_registry == "localhost" or normalized_registry.startswith("localhost:"):
-        testing = os.getenv("ENVIRONMENT", "").strip().lower() == "testing"
-
-        # Protect production from local registry references.
-        if not env.DEVELOPMENT and not testing:
-            raise ValueError("Local image registries are only supported in development and testing")
+        if not env.DEVELOPMENT:
+            raise ValueError("Local image registries are only supported in development")
 
         return f"http://{normalized_registry}"
 
@@ -158,7 +152,7 @@ async def _fetch_manifest(
     registry_url: str,
     repository: str,
     reference: str,
-) -> tuple[dict[str, Any], str] | None:
+) -> tuple[dict[str, object], str] | None:
     """Fetch an image manifest, resolving manifest lists to a single platform manifest."""
 
     url = f"{registry_url}/v2/{repository}/manifests/{reference}"
@@ -168,28 +162,21 @@ async def _fetch_manifest(
     if not manifest_response.is_success:
         return None
 
-    data = manifest_response.json()
-
     # Require JSON manifest objects.
-    if not isinstance(data, dict):
+    raw_data: object = manifest_response.json()
+    if not isinstance(raw_data, dict) or not all(isinstance(key, str) for key in raw_data):
         return None
+    data = cast(dict[str, object], raw_data)
 
+    # Validate the registry-provided digest or retain a digest reference.
     digest = manifest_response.headers.get("Docker-Content-Digest")
-
-    # Validate registry-provided digests when present.
-    if digest is not None:
-        # Reject malformed manifest digests.
-        if not IMAGE_DIGEST_PATTERN.fullmatch(digest):
-            return None
-
-    # Use digest references when response headers omit the digest.
-    elif IMAGE_DIGEST_PATTERN.fullmatch(reference):
+    if digest is not None and not IMAGE_DIGEST_PATTERN.fullmatch(digest):
+        return None
+    if digest is None and IMAGE_DIGEST_PATTERN.fullmatch(reference):
         digest = reference
 
     # Resolve multi-arch manifest list to a single platform manifest.
     manifests = data.get("manifests")
-
-    # Resolve manifest lists when present.
     if isinstance(manifests, list) and manifests:
         manifest_entries = [item for item in manifests if isinstance(item, dict)]
 
@@ -206,14 +193,11 @@ async def _fetch_manifest(
             manifest_entries[0],
         )
 
+        # Require string digest and media type values for the selected manifest.
         manifest_digest = entry.get("digest")
         media_type = entry.get("mediaType")
-
-        # Require digest and media type for the selected manifest.
-        if manifest_digest is None or media_type is None:
+        if not isinstance(manifest_digest, str) or not isinstance(media_type, str):
             return None
-
-        manifest_digest = str(manifest_digest)
 
         # Reject malformed selected manifest digests.
         if not IMAGE_DIGEST_PATTERN.fullmatch(manifest_digest):
@@ -221,22 +205,21 @@ async def _fetch_manifest(
 
         manifest_response = await client.get(
             f"{registry_url}/v2/{repository}/manifests/{manifest_digest}",
-            headers={"Accept": str(media_type)},
+            headers={"Accept": media_type},
         )
 
         # Stop when the platform manifest cannot be fetched.
         if not manifest_response.is_success:
             return None
 
-        data = manifest_response.json()
-
         # Require JSON platform manifest objects.
-        if not isinstance(data, dict):
+        raw_data = manifest_response.json()
+        if not isinstance(raw_data, dict) or not all(isinstance(key, str) for key in raw_data):
             return None
-
-        selected_digest = manifest_response.headers.get("Docker-Content-Digest") or manifest_digest
+        data = cast(dict[str, object], raw_data)
 
         # Validate the inspected platform while retaining the multi-platform index digest for deployment.
+        selected_digest = manifest_response.headers.get("Docker-Content-Digest") or manifest_digest
         if not IMAGE_DIGEST_PATTERN.fullmatch(selected_digest):
             return None
 

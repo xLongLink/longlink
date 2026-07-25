@@ -4,6 +4,7 @@ import subprocess
 from src import adapters
 from uuid import UUID
 from pathlib import Path
+from pydantic import Field, field_validator
 from sqlmodel import col
 from src.utils import jobs, names
 from sqlalchemy import text, select, inspect
@@ -11,6 +12,7 @@ from src.operations import computes as operation_computes
 from src.environments import env
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.types import Image, StorageKind, DatabaseSSLMode
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus
@@ -24,6 +26,7 @@ from src.database.services import organizations as organization_service
 from fastapi_users.password import PasswordHelper
 from src.models.applications import ApplicationCreate
 from src.database.models.users import User
+from src.models.infrastructure import exoscale_zone
 from src.database.models.association import UserOrganization
 
 LOCAL_ORG = "test"
@@ -36,6 +39,30 @@ LOCAL_DOCKER_NETWORK = "longlink-dev"
 LOCAL_APPLICATION_IMAGE = "localhost:15000/longlink-app:dev"
 LOCAL_APP_NAME = "sample"
 KUBECONFIG = Path(__file__).with_name("kubeconfig.yaml")
+
+
+class SeedSettings(BaseSettings):
+    """Define credentials required only while seeding local development."""
+
+    # Exoscale storage
+    EXOSCALE_API_KEY: str = Field(min_length=1)
+    EXOSCALE_API_SECRET: str = Field(min_length=1)
+    EXOSCALE_STORAGE_ENDPOINT_URL: str = Field(min_length=1)
+
+    model_config = SettingsConfigDict(
+        env_file=".env.seed",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    @field_validator("EXOSCALE_STORAGE_ENDPOINT_URL")
+    @classmethod
+    def validate_storage_endpoint(cls, value: str) -> str:
+        """Require a supported Exoscale SOS endpoint."""
+
+        # Reject unsupported providers and malformed Exoscale endpoint URLs at the seed boundary.
+        exoscale_zone(value)
+        return value
 
 
 def local_database_host() -> str:
@@ -129,12 +156,13 @@ async def reconcile_until_complete(compute_id: UUID) -> None:
         await asyncio.sleep(1)
 
 
-async def seed_local_development() -> None:
+async def seed_local_development(settings: SeedSettings) -> None:
     """Create or repair local infrastructure, Organization, and sample Application desired state."""
 
-    # Validate the complete Exoscale development target before creating any local desired state.
-    env.exoscale()
-    storage_endpoint_url = env.exoscale_storage_endpoint()
+    # Load the Exoscale identity used to bootstrap the local storage registry.
+    access_key_id = settings.EXOSCALE_API_KEY
+    secret_access_key = settings.EXOSCALE_API_SECRET
+    storage_endpoint_url = settings.EXOSCALE_STORAGE_ENDPOINT_URL
 
     admin = await seed_local_administrator()
     compute_registry = next((item for item in await compute_service.fetch() if item.slug == "local-compute"), None)
@@ -172,10 +200,16 @@ async def seed_local_development() -> None:
             StorageKind.exoscale,
             storage_endpoint_url,
             None,
+            access_key_id,
+            secret_access_key,
             admin,
         )
-    elif storage_registry.endpoint_url != storage_endpoint_url:
-        raise ValueError("Local storage registry uses a different Exoscale endpoint; run make down before changing zones")
+    elif (
+        storage_registry.endpoint_url != storage_endpoint_url
+        or storage_registry.access_key_id != access_key_id
+        or storage_registry.secret_access_key != secret_access_key
+    ):
+        raise ValueError("Local storage registry uses different Exoscale settings; run make down before changing them")
 
     organization = next((item for item in await organization_service.fetch() if item.slug == LOCAL_ORG), None)
     if organization is None:
@@ -261,7 +295,11 @@ async def cleanup_local_development() -> None:
         result = await session.execute(
             text(
                 """
-                SELECT storage_registries.endpoint_url, organizations.id, applications.id
+                SELECT storage_registries.endpoint_url,
+                       storage_registries.access_key_id,
+                       storage_registries.secret_access_key,
+                       organizations.id,
+                       applications.id
                 FROM organizations
                 JOIN storage_registries ON storage_registries.id = organizations.storage_id
                 LEFT JOIN applications ON applications.organization_id = organizations.id
@@ -270,9 +308,14 @@ async def cleanup_local_development() -> None:
             ),
             {"kind": StorageKind.exoscale.value},
         )
-        resources: dict[tuple[str, UUID], set[UUID]] = {}
-        for endpoint_url, organization_id, application_id in result:
-            key = (str(endpoint_url), UUID(str(organization_id)))
+        resources: dict[tuple[str, str, str, UUID], set[UUID]] = {}
+        for endpoint_url, access_key_id, secret_access_key, organization_id, application_id in result:
+            key = (
+                str(endpoint_url),
+                str(access_key_id),
+                str(secret_access_key),
+                UUID(str(organization_id)),
+            )
             applications = resources.setdefault(key, set())
             if application_id is not None:
                 applications.add(UUID(str(application_id)))
@@ -282,9 +325,13 @@ async def cleanup_local_development() -> None:
         return
 
     # Remove scoped credentials before emptying and deleting each Organization bucket.
-    access_key_id, secret_access_key, exoscale_organization_id = env.exoscale()
-    for (endpoint_url, organization_id), application_ids in resources.items():
-        storage = adapters.Exoscale(endpoint_url, access_key_id, secret_access_key, exoscale_organization_id)
+    for (
+        endpoint_url,
+        access_key_id,
+        secret_access_key,
+        organization_id,
+    ), application_ids in resources.items():
+        storage = adapters.Exoscale(endpoint_url, access_key_id, secret_access_key)
         for application_id in application_ids:
             await storage.revoke(application_id.hex)
         await storage.delete(names.organization_bucket(organization_id))
@@ -302,7 +349,7 @@ def main() -> None:
     if arguments.cleanup:
         asyncio.run(cleanup_local_development())
     else:
-        asyncio.run(seed_local_development())
+        asyncio.run(seed_local_development(SeedSettings(**{})))
         print(f"Local administrator: {LOCAL_ADMIN_EMAIL} / {LOCAL_ADMIN_PASSWORD}")
 
 

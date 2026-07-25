@@ -1,7 +1,5 @@
-from uuid import uuid4
 from factories import create_organization, create_ready_infrastructure
 from src.database import session
-from src.environments import env
 from src.models.roles import PlatformRoles
 from fastapi.testclient import TestClient
 from src.database.models.users import User
@@ -37,20 +35,18 @@ async def test_storage_registry_endpoints_return_backend(
 
 async def test_storage_registry_create_duplicate_and_delete(
     clients: tuple[TestClient, TestClient, TestClient],
-    monkeypatch,
 ) -> None:
     """Create one storage registry, reject a duplicate, and tombstone the unused registry."""
 
     # Arrange
-    monkeypatch.setattr(env, "EXOSCALE_API_KEY", "key")
-    monkeypatch.setattr(env, "EXOSCALE_API_SECRET", "secret")
-    monkeypatch.setattr(env, "EXOSCALE_ORGANIZATION_ID", uuid4())
     client = clients[0]
     payload = {
         "kind": "exoscale",
         "name": "Ephemeral Storage",
         "endpoint_url": "https://sos-ch-gva-2.exo.io",
         "runtime_endpoint_url": "https://sos-ch-gva-2.exo.io",
+        "access_key_id": "key",
+        "secret_access_key": "secret",
     }
 
     # Act
@@ -120,6 +116,8 @@ async def test_storage_registry_routes_enforce_support_and_admin_roles(
             "name": "Support Storage",
             "endpoint_url": "https://sos-ch-gva-2.exo.io",
             "runtime_endpoint_url": "https://sos-ch-gva-2.exo.io",
+            "access_key_id": "key",
+            "secret_access_key": "secret",
         },
     )
     ordinary_read_response = ordinary_client.get("/api/storages")

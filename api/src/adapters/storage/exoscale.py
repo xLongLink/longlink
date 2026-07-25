@@ -16,7 +16,7 @@ JsonObject = dict[str, object]
 class Exoscale(Storage):
     """Exoscale SOS adapter with IAM-scoped runtime credentials."""
 
-    def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str, organization_id: UUID) -> None:
+    def __init__(self, endpoint_url: str, access_key_id: str, secret_access_key: str) -> None:
         """Initialize the Exoscale SOS and IAM adapter."""
 
         # Validate the SOS endpoint before using its zone for storage and control-plane clients.
@@ -26,7 +26,6 @@ class Exoscale(Storage):
         self._s3 = S3(endpoint_url, access_key_id, secret_access_key, zone)
         self._access_key_id = access_key_id
         self._secret_access_key = secret_access_key
-        self._organization_id = organization_id
 
         # Configure the async control-plane client for the SOS endpoint's zone.
         self._api_url = f"https://api-{zone}.exoscale.com/v2"
@@ -76,11 +75,18 @@ class Exoscale(Storage):
         api = AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url)
         try:
             async with api:
+                # Bind the runtime policy to the organization authenticated by the provisioning key.
+                organization = await api.get_organization()
+                try:
+                    organization_id = UUID(self._string(organization, "id"))
+                except ValueError as exc:
+                    raise RuntimeError("Exoscale organization response contains an invalid 'id'") from exc
+
                 operation = await api.create_iam_role(
                     name=credential_name,
                     description=f"LongLink Application storage access for {name}",
                     editable=False,
-                    policy=self._bucket_policy(bucket, read_prefixes, write_prefix),
+                    policy=self._bucket_policy(bucket, read_prefixes, write_prefix, organization_id),
                 )
                 role_id = await self._wait_operation(api, operation, require_reference=True)
                 if role_id is None:
@@ -191,7 +197,7 @@ class Exoscale(Storage):
 
         return None
 
-    def _bucket_policy(self, bucket: str, read_prefixes: tuple[str, ...], write_prefix: str) -> JsonObject:
+    def _bucket_policy(self, bucket: str, read_prefixes: tuple[str, ...], write_prefix: str, organization_id: UUID) -> JsonObject:
         """Build one IAM policy for shared reads and private Application writes."""
 
         # Application writes are also readable, while shared prefixes remain read-only.
@@ -200,7 +206,7 @@ class Exoscale(Storage):
             f"parameters.key == {prefix.rstrip('/')!r} || parameters.key.startsWith({prefix!r})" for prefix in readable_prefixes
         )
         readable_lists = " || ".join(f"parameters.prefix.startsWith({prefix!r})" for prefix in readable_prefixes)
-        organization_match = f"identity.org.uuid == '{self._organization_id}'"
+        organization_match = f"identity.org.uuid == '{organization_id}'"
         bucket_match = f"parameters.bucket == {bucket!r}"
 
         # Restrict SOS access to the Organization bucket and granted Application prefixes.
