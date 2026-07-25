@@ -1,4 +1,5 @@
 import pytest
+from uuid import uuid4
 from datetime import timedelta
 from src.environments import env
 from longlink.utils.time import utcnow
@@ -57,20 +58,33 @@ async def test_operations_service_enqueue_coalesces_and_expires_active_lease() -
 
     # Arrange
     compute = await create_compute("local")
+    first_application_id = uuid4()
+    second_application_id = uuid4()
     first = await operations.enqueue(compute.id, ReconciliationScope.platform)
     claimed = await operations.claim_next()
     assert claimed is not None
     assert claimed.lease_expires_at is not None
 
     # Act
+    targeted = await operations.enqueue(
+        compute.id,
+        application_ids={first_application_id},
+    )
+    combined = await operations.enqueue(
+        compute.id,
+        application_ids={second_application_id},
+    )
     changed = await operations.enqueue(compute.id)
     stale_completion = await operations.complete(claimed.id, claimed.attempt_count)
     replacement = await operations.claim_next()
     fetched = await operations.fetch()
 
     # Assert
+    assert targeted.application_ids == [str(first_application_id)]
+    assert combined.application_ids == sorted([str(first_application_id), str(second_application_id)])
     assert changed.id == first.id
     assert changed.scope == ReconciliationScope.application
+    assert changed.application_ids is None
     assert changed.lease_expires_at is not None
     assert changed.lease_expires_at <= utcnow()
     assert stale_completion is None

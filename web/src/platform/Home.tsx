@@ -116,6 +116,7 @@ const paths = [
 ] as const;
 
 const integrationContextCount = 336_000_000;
+const humanRobotHandsImage = '/human_robot_hands_vector.svg';
 
 /** Renders the XML-to-UI showcase card visual. */
 function XmlShowcaseVisual() {
@@ -477,13 +478,14 @@ function IntegrationScale() {
                         {count.toLocaleString('en-US').replaceAll(',', "'")}+
                     </Heading>
                     <Text as="p" className="text-lg tracking-tight sm:text-2xl" weight="medium">
-                        Unique Industry x Geography Contexts.
+                        Unique Industry & Geography Contexts.
                     </Text>
                 </Stack>
                 <Text as="p" className="max-w-2xl" color="secondary" textWrap="pretty">
-                    Every industry and geography brings its own regulations, systems, data models, and workflows. Each
-                    combination creates a distinct integration context that rigid, one-size-fits-all software cannot
-                    cover.
+                    Every industry and geography brings its own regulations, systems, data models, and workflows.
+                    <br />
+                    Each combination creates a distinct integration context that rigid, one-size-fits-all software
+                    cannot cover.
                 </Text>
             </Stack>
         </Section>
@@ -524,8 +526,8 @@ export default function Home() {
                 </section>
             </main>
             <IntegrationScale />
-            <div aria-hidden="true" className="homepage-globe-card-blur relative z-10" />
-            <section className="homepage-feature-section relative z-10 px-6 py-10">
+            <section className="relative z-20 bg-body px-6 py-10">
+                <div aria-hidden="true" className="homepage-feature-transition" />
                 <div className="relative z-10 mx-auto grid w-full max-w-[1000px] auto-rows-[minmax(190px,auto)] grid-cols-1 gap-3 md:grid-cols-6">
                     {homepageCards.map(({ title, description, details, layoutClassName, variant }) => {
                         const isXmlCard = variant === 'xml';
@@ -537,7 +539,7 @@ export default function Home() {
                         return (
                             <article
                                 key={title}
-                                className={`homepage-feature-card group relative overflow-hidden rounded-lg border border-border bg-card/65 p-5 text-primary ${layoutClassName}`}
+                                className={`homepage-feature-card group relative overflow-hidden rounded-lg border border-border bg-card p-5 text-primary ${layoutClassName}`}
                             >
                                 <div className="relative flex h-full flex-col justify-between gap-6">
                                     <div className="space-y-4">
@@ -564,7 +566,36 @@ export default function Home() {
                     })}
                 </div>
             </section>
-            <Section variant="transparent" padding={6} paddingBlock={10}>
+            <section className="relative z-20 bg-body px-6 py-20 sm:py-28">
+                <div className="mx-auto w-full max-w-[1000px]">
+                    <div className="homepage-hands-hanging-frame">
+                        <div aria-hidden="true" className="homepage-hands-nail" />
+                        <div aria-hidden="true" className="homepage-hands-support homepage-hands-support-left" />
+                        <div aria-hidden="true" className="homepage-hands-support homepage-hands-support-right" />
+
+                        <div className="homepage-hands-frame">
+                            <div className="homepage-hands-mat">
+                                <img
+                                    alt="Human and robot hands reaching toward each other"
+                                    className="homepage-hands-image h-auto w-full object-contain"
+                                    decoding="async"
+                                    loading="lazy"
+                                    src={humanRobotHandsImage}
+                                />
+                            </div>
+                        </div>
+                        <div className="homepage-hands-description">
+                            <p className="homepage-hands-description-title">Designed for Human and Agents</p>
+                            <p className="homepage-hands-description-copy">
+                                LongLink gives agents the same governed application layer people use: structured
+                                workflows, permissions, data, and APIs they can act on without brittle dashboard
+                                automation.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <Section className="relative z-20 bg-body" variant="transparent" padding={6} paddingBlock={10}>
                 <Stack className="mx-auto" width="100%" maxWidth={1000} gap={8}>
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }} gap={0} width="100%">
                         {paths.map(({ title, description, action, href }) => (

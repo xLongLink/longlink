@@ -57,8 +57,8 @@ async def create_compute_infrastructure(
         return compute_registry, database_registry, storage_registry
 
 
-async def test_execute_compute_reconcile_operation_converges_complete_desired_state(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reconcile active tenant state, persist gateway trust, and clean tombstoned provider state."""
+async def test_execute_compute_reconcile_operation_converges_targeted_application_state(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reconcile targeted Application state without preparing or deleting shared Organization resources."""
 
     # Arrange
     compute_registry, database_registry, storage_registry = await create_compute_infrastructure()
@@ -72,6 +72,7 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
         database_id=database_registry.id,
         storage_id=storage_registry.id,
         shared_schema_url=f"postgresql://shared/{active_organization_id.hex}",
+        status=OrganizationStatus.running,
     )
     deleted_organization_id = uuid4()
     deleted_organization = Organization(
@@ -93,6 +94,14 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
         database_password="database-password",
         envs={"CUSTOM_VALUE": "configured"},
     )
+    unselected_application = Application(
+        organization_id=active_organization.id,
+        name="Reports",
+        slug="reports",
+        image="ghcr.io/longlink/reports@sha256:resolved",
+        digest="sha256:resolved",
+        database_password="reports-password",
+    )
     deleted_application = Application(
         organization_id=deleted_organization.id,
         name="Legacy",
@@ -103,7 +112,9 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
         deleted_at=deleted_at,
     )
     async with session_scope() as session:
-        session.add_all([active_organization, deleted_organization, active_application, deleted_application])
+        session.add_all(
+            [active_organization, deleted_organization, active_application, unselected_application, deleted_application]
+        )
         await session.commit()
 
     events: list[tuple[object, ...]] = []
@@ -254,7 +265,10 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
     monkeypatch.setattr(compute_operations.projections, "sync_organization_users", sync_organization_users)
     monkeypatch.setattr(compute_operations.images, "metadata", image_metadata)
     monkeypatch.setattr(compute_operations, "Kubernetes", FakeKubernetes)
-    operation = await operations.enqueue(compute_registry.id)
+    operation = await operations.enqueue(
+        compute_registry.id,
+        application_ids={active_application.id, deleted_application.id},
+    )
     claimed = await operations.claim_next()
     assert claimed is not None
     assert claimed.id == operation.id
@@ -270,8 +284,12 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
     assert desired.id == compute_registry.id
     assert desired.deleting is False
     assert desired.scope == ReconciliationScope.application
+    assert desired.application_ids == tuple(sorted((active_application.id, deleted_application.id), key=str))
     assert [(item.id, item.slug) for item in desired.organizations] == [(active_organization.id, "acme")]
-    assert [(item.id, item.namespace) for item in desired.routes] == [(active_application.id, "acme")]
+    assert [(item.id, item.namespace) for item in desired.routes] == [
+        (active_application.id, "acme"),
+        (unselected_application.id, "acme"),
+    ]
     assert len(desired.applications) == 1
     desired_application = desired.applications[0]
     assert desired_application.id == active_application.id
@@ -296,13 +314,9 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
         "LONGLINK_STORAGE_SHARED_PREFIX": names.shared_storage_prefix(),
         "LONGLINK_STORAGE_USERNAME": "runtime-access",
     }
+    assert ("application-ready", str(unselected_application.id)) not in events
     assert proxy_secret == "proxy-secret"
     assert existing_tls is None
-    assert (
-        "create-prefix",
-        names.organization_bucket(active_organization.id),
-        names.shared_storage_prefix(),
-    ) in events
     assert (
         "create-prefix",
         names.organization_bucket(active_organization.id),
@@ -315,8 +329,7 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
         names.organization_bucket(deleted_organization.id),
         names.application_storage_prefix(deleted_application.id),
     ) in events
-    assert ("delete-database", deleted_organization.id) in events
-    assert ("delete-bucket", names.organization_bucket(deleted_organization.id)) in events
+    assert not any(event[0] in {"prepare-database", "sync-users", "create-bucket", "delete-database", "delete-bucket"} for event in events)
 
     refreshed_compute = await compute.get(compute_registry.id)
     refreshed_organization = await organizations.get(active_organization.id)
@@ -339,7 +352,7 @@ async def test_execute_compute_reconcile_operation_converges_complete_desired_st
     assert refreshed_application.digest == "sha256:resolved"
     assert refreshed_application.storage_access_key_id == "runtime-access"
     assert refreshed_application.storage_secret_access_key == "runtime-secret"
-    assert removed_organization is None
+    assert removed_organization is not None
     assert removed_application is None
 
 

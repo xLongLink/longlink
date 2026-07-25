@@ -84,11 +84,11 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
     claimed = [operation, operation, operation]
     executed: list[object] = []
 
-    async def seed_administrator() -> SimpleNamespace:
+    async def seed_administrator() -> tuple[SimpleNamespace, bool]:
         """Return the fixed local administrator."""
 
         calls["administrator"] = seed.LOCAL_ADMIN_EMAIL
-        return user
+        return user, False
 
     def local_database_host() -> str:
         """Return a deterministic host without inspecting Docker."""
@@ -240,10 +240,10 @@ async def test_seed_local_development_refreshes_existing_sample_application(monk
     calls: dict[str, object] = {}
     executed: list[object] = []
 
-    async def seed_administrator() -> SimpleNamespace:
+    async def seed_administrator() -> tuple[SimpleNamespace, bool]:
         """Return the fixed local administrator."""
 
-        return user
+        return user, False
 
     async def fetch_compute() -> list[SimpleNamespace]:
         """Return the existing compute registry."""
@@ -265,10 +265,11 @@ async def test_seed_local_development_refreshes_existing_sample_application(monk
 
         return [organization]
 
-    async def ensure_owner(organization_id: UUID, user_id: UUID) -> None:
+    async def ensure_owner(organization_id: UUID, user_id: UUID) -> bool:
         """Record owner repair for reused local data."""
 
         calls["owner"] = (organization_id, user_id)
+        return False
 
     async def list_applications(organization_id: UUID) -> list[SimpleNamespace]:
         """Return the existing sample Application."""
@@ -287,10 +288,15 @@ async def test_seed_local_development_refreshes_existing_sample_application(monk
         calls["application_update"] = (args, fields)
         return application
 
-    async def enqueue_operation(compute_id: UUID, scope: object) -> SimpleNamespace:
+    async def enqueue_operation(
+        compute_id: UUID,
+        scope: object,
+        *,
+        application_ids: set[UUID] | None = None,
+    ) -> SimpleNamespace:
         """Record the reconciliation requested for the refreshed image."""
 
-        calls["enqueue"] = (compute_id, scope)
+        calls["enqueue"] = (compute_id, scope, application_ids)
         return operation
 
     async def claim_operation() -> SimpleNamespace:
@@ -338,5 +344,5 @@ async def test_seed_local_development_refreshes_existing_sample_application(monk
             "envs": {"REQUIRED": "local-development"},
         },
     )
-    assert calls["enqueue"] == (compute.id, seed.ReconciliationScope.application)
+    assert calls["enqueue"] == (compute.id, seed.ReconciliationScope.application, {application.id})
     assert executed == [operation]

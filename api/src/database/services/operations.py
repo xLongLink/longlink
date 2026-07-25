@@ -55,12 +55,22 @@ async def enqueue_in_session(
     locked_compute: ComputeRegistry | None = None,
     *,
     desired_change: bool = True,
+    application_ids: set[UUID] | None = None,
 ) -> Operation:
     """Coalesce scoped compute reconciliation inside the caller's desired-state transaction.
 
     Compute locking keeps the release target monotonic and queueing atomic across LongLink Platform replicas. Callers
     that already locked the compute in this transaction can supply it to avoid selecting the same row again.
     """
+
+    # Platform work cannot target Applications, and an explicit target set must contain work.
+    if scope == ReconciliationScope.platform and application_ids is not None:
+        raise ValueError("Platform reconciliation cannot target Applications")
+    if application_ids is not None and not application_ids:
+        raise ValueError("Application reconciliation targets cannot be empty")
+    requested_ids: list[str] | None = (
+        sorted(str(application_id) for application_id in application_ids) if application_ids is not None else None
+    )
 
     # Reuse a caller-owned aggregate lock when available.
     compute = locked_compute
@@ -91,15 +101,25 @@ async def enqueue_in_session(
         )
     ).scalar_one_or_none()
 
-    # Application reconciliation includes Platform dependencies and dominates coalesced Platform-only work.
+    # Application reconciliation dominates Platform work; complete work dominates and targeted work is unioned.
     effective_scope = scope
-    if existing is not None and existing.scope == ReconciliationScope.application:
+    effective_application_ids: list[str] | None = requested_ids
+    if existing is not None and (
+        existing.scope == ReconciliationScope.application or scope == ReconciliationScope.application
+    ):
         effective_scope = ReconciliationScope.application
+        if (existing.scope == ReconciliationScope.application and existing.application_ids is None) or (
+            scope == ReconciliationScope.application and requested_ids is None
+        ):
+            effective_application_ids = None
+        else:
+            effective_application_ids = sorted(set(existing.application_ids or []) | set(requested_ids or []))
 
     # Desired-state changes and release upgrades supersede active attempts and remove inherited retry delays.
     if existing is not None:
         version_changed = platform_version_key(platform_version) > platform_version_key(existing.platform_version)
-        if not desired_change and not version_changed:
+        work_changed = existing.scope != effective_scope or existing.application_ids != effective_application_ids
+        if not desired_change and not version_changed and not work_changed:
             return existing
         now = utcnow()
 
@@ -111,6 +131,7 @@ async def enqueue_in_session(
             existing.lease_expires_at = None
         else:
             existing.scope = effective_scope
+            existing.application_ids = effective_application_ids
             if version_changed:
                 existing.platform_version = platform_version
             existing.scheduled_at = now
@@ -121,6 +142,7 @@ async def enqueue_in_session(
     # New work starts ready for the Platform release that owns the compute target.
     operation = Operation(
         scope=effective_scope,
+        application_ids=effective_application_ids,
         platform_version=platform_version,
         compute_id=compute_id,
         scheduled_at=utcnow(),
@@ -130,12 +152,17 @@ async def enqueue_in_session(
     return operation
 
 
-async def enqueue(compute_id: UUID, scope: ReconciliationScope = ReconciliationScope.application) -> Operation:
+async def enqueue(
+    compute_id: UUID,
+    scope: ReconciliationScope = ReconciliationScope.application,
+    *,
+    application_ids: set[UUID] | None = None,
+) -> Operation:
     """Queue one compute reconciliation in a dedicated transaction."""
 
     # Convenience callers use the same transactional enqueue implementation as domain services.
     async with session_scope() as session:
-        operation = await enqueue_in_session(session, compute_id, scope)
+        operation = await enqueue_in_session(session, compute_id, scope, application_ids=application_ids)
         await session.commit()
         return operation
 

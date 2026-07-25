@@ -271,6 +271,7 @@ async def create(
             compute.id,
             ReconciliationScope.application,
             locked_compute=compute,
+            application_ids={application.id},
         )
         await session.commit()
 
@@ -473,6 +474,7 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
             compute.id,
             ReconciliationScope.application,
             locked_compute=compute,
+            application_ids={application.id},
         )
 
         await session.commit()

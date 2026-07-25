@@ -347,6 +347,7 @@ def upgrade() -> None:
         "operations",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("compute_id", sa.Uuid(), nullable=False),
+        sa.Column("application_ids", sa.JSON(), nullable=True),
         sa.Column("failed", sa.Boolean(), nullable=False),
         sa.Column(
             "scope",

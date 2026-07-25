@@ -81,35 +81,46 @@ def local_database_host() -> str:
     return host
 
 
-async def seed_local_administrator() -> User:
-    """Create or update the fixed local administrator account."""
+async def seed_local_administrator() -> tuple[User, bool]:
+    """Create or repair the local administrator and report shared user changes."""
 
     async with session_scope() as session:
         result = await session.execute(select(User).where(col(User.email) == LOCAL_ADMIN_EMAIL))
         user = result.scalar_one_or_none()
-        password = passwords.hash(LOCAL_ADMIN_PASSWORD)
 
         # Create the local account or repair its development credentials and role.
         if user is None:
             user = User(
                 name=LOCAL_ADMIN_NAME,
                 email=LOCAL_ADMIN_EMAIL,
-                hashed_password=password,
+                hashed_password=passwords.hash(LOCAL_ADMIN_PASSWORD),
                 role=PlatformRoles.administrator,
             )
             session.add(user)
+            user_changed = True
         else:
+            verified, updated_hash = passwords.verify(LOCAL_ADMIN_PASSWORD, user.hashed_password)
+            user_changed = (
+                not verified
+                or updated_hash is not None
+                or user.name != LOCAL_ADMIN_NAME
+                or user.role != PlatformRoles.administrator
+                or user.deleted_at is not None
+            )
             user.name = LOCAL_ADMIN_NAME
-            user.hashed_password = password
+            if not verified:
+                user.hashed_password = passwords.hash(LOCAL_ADMIN_PASSWORD)
+            elif updated_hash is not None:
+                user.hashed_password = updated_hash
             user.role = PlatformRoles.administrator
             user.deleted_at = None
 
         await session.commit()
-        return user
+        return user, user_changed
 
 
-async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) -> None:
-    """Grant the local administrator owner access to a reused organization."""
+async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) -> bool:
+    """Grant local administrator ownership and report whether shared Organization state changed."""
 
     # Local reseeding repairs only Platform membership metadata.
     async with session_scope() as session:
@@ -126,12 +137,19 @@ async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) 
                 )
             )
         else:
+            if (
+                membership.role == OrganizationRoles.owner
+                and membership.deleted_at is None
+                and membership.deleted_id is None
+            ):
+                return False
             membership.role = OrganizationRoles.owner
             membership.deleted_at = None
             membership.deleted_id = None
             membership.updated_at = now
             membership.updated_id = user_id
         await session.commit()
+        return True
 
 
 async def reconcile_until_complete(compute_id: UUID) -> None:
@@ -161,7 +179,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     secret_access_key = settings.EXOSCALE_API_SECRET
     storage_endpoint_url = settings.EXOSCALE_STORAGE_ENDPOINT_URL
 
-    admin = await seed_local_administrator()
+    admin, administrator_changed = await seed_local_administrator()
     compute_registry = next((item for item in await compute_service.fetch() if item.slug == "local-compute"), None)
     compute_ready = compute_registry is not None and compute_registry.status == ComputeStatus.ready
 
@@ -208,6 +226,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     ):
         raise ValueError("Local storage registry uses different Exoscale settings; run make down before changing them")
 
+    organization_changed = False
     organization = next((item for item in await organization_service.fetch() if item.slug == LOCAL_ORG), None)
     if organization is None:
         # Repair an existing compute before a new Organization requires its ready state.
@@ -226,7 +245,8 @@ async def seed_local_development(settings: SeedSettings) -> None:
         )
         await reconcile_until_complete(compute_registry.id)
     else:
-        await ensure_local_organization_owner(organization.id, admin.id)
+        owner_changed = await ensure_local_organization_owner(organization.id, admin.id)
+        organization_changed = administrator_changed or owner_changed
 
     # The sample application follows the same desired-state service used by the API route.
     payload = ApplicationCreate(
@@ -251,6 +271,8 @@ async def seed_local_development(settings: SeedSettings) -> None:
             icon=payload.icon.value if payload.icon is not None else None,
             envs=payload.envs,
         )
+        if organization_changed:
+            await operations.enqueue(compute_registry.id, ReconciliationScope.application)
     else:
         # Resolve the rebuilt local tag again instead of retaining a prior immutable digest.
         application = await application_service.update_runtime(
@@ -263,7 +285,11 @@ async def seed_local_development(settings: SeedSettings) -> None:
         )
         if application is None:
             raise RuntimeError("Local sample Application no longer exists")
-        await operations.enqueue(compute_registry.id, ReconciliationScope.application)
+        await operations.enqueue(
+            compute_registry.id,
+            ReconciliationScope.application,
+            application_ids=None if organization_changed else {application.id},
+        )
     await reconcile_until_complete(compute_registry.id)
 
 

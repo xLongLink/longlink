@@ -55,13 +55,15 @@ class DesiredApplication:
 class DesiredCompute:
     """Describe one scoped desired-state snapshot for a compute target.
 
-    Application snapshots prune omitted tenant resources; Platform snapshots leave them untouched. Deleting snapshots must be empty.
+    Complete Application snapshots prune omitted tenant resources, targeted snapshots prune only selected Application IDs, and Platform
+    snapshots leave tenant resources untouched. Deleting snapshots must be empty.
     """
 
     id: UUID
     routes: tuple[DesiredGatewayRoute, ...]
     organizations: tuple[DesiredOrganization, ...]
     applications: tuple[DesiredApplication, ...]
+    application_ids: tuple[UUID, ...] | None = None
     deleting: bool = False
     scope: ReconciliationScope = ReconciliationScope.application
 
@@ -266,15 +268,16 @@ class Reconciler:
             await self._check_fence(fence)
             await stage_tls(tls)
 
-        # Application-scoped work alone may create or update tenant boundaries and workloads.
+        # Complete Application work owns Organization boundaries; targeted work assumes its parents are already ready.
         if desired.scope == ReconciliationScope.application:
-            organization_manifests = [
-                self._applications.organization_manifests(organization, compute_id, platform_version)
-                for organization in sorted(desired.organizations, key=lambda item: item.slug)
-            ]
-            for manifests in organization_manifests:
-                await self._claim_namespace(manifests.namespace, fence)
-                await self._apply(manifests.network_policy, fence)
+            if desired.application_ids is None:
+                organization_manifests = [
+                    self._applications.organization_manifests(organization, compute_id, platform_version)
+                    for organization in sorted(desired.organizations, key=lambda item: item.slug)
+                ]
+                for manifests in organization_manifests:
+                    await self._claim_namespace(manifests.namespace, fence)
+                    await self._apply(manifests.network_policy, fence)
 
             # Exact Secret data and the runtime revision roll only Applications whose desired runtime changed.
             for application in sorted(desired.applications, key=lambda item: (item.namespace, str(item.id))):
@@ -316,14 +319,21 @@ class Reconciler:
         """Validate desired identities, relationships, and Kubernetes-safe values."""
 
         # A deleting compute target must present an empty desired graph.
-        if desired.deleting and (desired.routes or desired.organizations or desired.applications):
+        if desired.deleting and (desired.routes or desired.organizations or desired.applications or desired.application_ids is not None):
             raise ValueError("Deleting compute desired state must not contain routes or resources")
         if desired.deleting and desired.scope != ReconciliationScope.application:
             raise ValueError("Deleting compute desired state requires Application scope")
 
         # Platform snapshots carry gateway routes only and cannot hide ignored Application desired state.
-        if desired.scope == ReconciliationScope.platform and (desired.organizations or desired.applications):
+        if desired.scope == ReconciliationScope.platform and (
+            desired.organizations or desired.applications or desired.application_ids is not None
+        ):
             raise ValueError("Platform desired state must not contain Organization or Application resources")
+
+        # Explicit Application targets must be non-empty and unique.
+        target_ids = set(desired.application_ids or ())
+        if desired.application_ids is not None and (not target_ids or len(target_ids) != len(desired.application_ids)):
+            raise ValueError("Targeted Application desired state requires unique Application IDs")
 
         # Active gateways use the platform's URL-safe generated bearer secret in an init substitution.
         if not desired.deleting and (not proxy_secret or PROXY_SECRET.fullmatch(proxy_secret) is None):
@@ -371,12 +381,16 @@ class Reconciler:
                 raise TypeError(f"Desired application {application.id} environment values must be strings")
             application_ids.add(application.id)
 
-        # Application work publishes exactly the routes represented by its complete desired workload graph.
+        # Complete work publishes exactly its workloads; targeted work preserves unrelated routes.
         if desired.scope == ReconciliationScope.application:
             expected_routes = {(application.id, application.namespace) for application in desired.applications}
             routes = {(route.id, route.namespace) for route in desired.routes}
-            if routes != expected_routes:
+            if desired.application_ids is None and routes != expected_routes:
                 raise ValueError("Application desired state must provide exactly one gateway route per Application")
+            if desired.application_ids is not None:
+                targeted_routes = {(route.id, route.namespace) for route in desired.routes if route.id in target_ids}
+                if not application_ids.issubset(target_ids) or targeted_routes != expected_routes:
+                    raise ValueError("Targeted Application desired state contains invalid workloads or routes")
 
     async def _claim_namespace(
         self,
@@ -526,10 +540,11 @@ class Reconciler:
         desired: DesiredCompute,
         fence: Callable[[], Awaitable[None]] | None,
     ) -> tuple[set[tuple[str, str]], set[str]]:
-        """Prune omitted Application resources and Organization Namespaces."""
+        """Prune selected Application omissions or the complete omitted tenant graph."""
 
         compute_id = str(desired.id)
         desired_namespaces = {organization.slug for organization in desired.organizations}
+        target_ids = {str(application_id) for application_id in desired.application_ids or ()}
         owned_namespaces = await self._resources.list_owned(Namespace, compute_id, ReconciliationScope.application)
 
         # Only Namespaces with a valid Organization identity are eligible for pruning.
@@ -567,6 +582,8 @@ class Reconciler:
                         canonical_id = str(UUID(application_id))
                     except ValueError:
                         continue
+                    if desired.application_ids is not None and canonical_id not in target_ids:
+                        continue
                     expected_name = f"app-{canonical_id}" if resource_class is Service else canonical_id
                     if resource.name != expected_name:
                         continue
@@ -577,26 +594,27 @@ class Reconciler:
                     await self._check_fence(fence)
                     await self._resources.delete(resource_class, resource.name, namespace.name, _uid(resource))
 
-        # Organization ingress policy is known by its fixed name and remains only in desired Namespaces.
-        for namespace in organization_namespaces:
-            policies = await self._resources.list_owned(
-                NetworkPolicy,
-                compute_id,
-                ReconciliationScope.application,
-                namespace.name,
-            )
-            for policy in policies:
-                if policy.name == "longlink-gateway-ingress" and namespace.name not in desired_namespaces:
-                    await self._check_fence(fence)
-                    await self._resources.delete(NetworkPolicy, policy.name, namespace.name, _uid(policy))
-
-        # Namespace deletion is last so failures above never hide unpruned child resources.
         removed_namespaces: set[str] = set()
-        for namespace in organization_namespaces:
-            if namespace.name not in desired_namespaces:
-                removed_namespaces.add(namespace.name)
-                await self._check_fence(fence)
-                await self._resources.delete(Namespace, namespace.name, uid=_uid(namespace))
+        if desired.application_ids is None:
+            # Full reconciliation prunes Organization policies and Namespaces omitted from desired state.
+            for namespace in organization_namespaces:
+                policies = await self._resources.list_owned(
+                    NetworkPolicy,
+                    compute_id,
+                    ReconciliationScope.application,
+                    namespace.name,
+                )
+                for policy in policies:
+                    if policy.name == "longlink-gateway-ingress" and namespace.name not in desired_namespaces:
+                        await self._check_fence(fence)
+                        await self._resources.delete(NetworkPolicy, policy.name, namespace.name, _uid(policy))
+
+            # Namespace deletion is last so failures above never hide unpruned child resources.
+            for namespace in organization_namespaces:
+                if namespace.name not in desired_namespaces:
+                    removed_namespaces.add(namespace.name)
+                    await self._check_fence(fence)
+                    await self._resources.delete(Namespace, namespace.name, uid=_uid(namespace))
         return removed_applications, removed_namespaces
 
     async def _prune_platform(self, desired: DesiredCompute, fence: Callable[[], Awaitable[None]] | None) -> None:
