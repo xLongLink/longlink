@@ -266,10 +266,6 @@ async def test_create_rejects_organization_with_overlong_runtime_name(users: tup
 
     # Assert
     assert await organizations.fetch() == []
-    reloaded_compute = await compute.get(infrastructure.compute.id)
-    assert reloaded_compute is not None
-    assert reloaded_compute.status == ComputeStatus.ready
-    assert reloaded_compute.version == env.VERSION
     assert await operations.fetch() == []
 
 

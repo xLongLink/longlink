@@ -1,25 +1,23 @@
-import { useLocation } from 'react-router';
+import { useMatches } from 'react-router';
 import type { SettingsRouteSection } from '@/platform/org/Settings';
 import { Auth } from '@/components/Auth';
 import Organization from '@/platform/Organization';
 
 const sections: Record<string, SettingsRouteSection> = {
-    applications: 'applications',
-    people: 'people',
-    database: 'database',
-    storage: 'storage',
+    'organization-settings': 'organization',
+    'organization-application-settings': 'applications',
+    'organization-people': 'people',
+    'organization-database': 'database',
+    'organization-storage': 'storage',
 };
 
-/** Protects an organization route and selects its settings section from the URL. */
+/** Protects an organization route and selects its settings section from the matched route. */
 export default function OrganizationRoute() {
-    const location = useLocation();
-    const settingsPath = location.pathname.split('/settings')[1];
-    const segment = settingsPath?.split('/').filter(Boolean)[0];
-    const section = segment === undefined ? 'organization' : (sections[segment] ?? 'organization');
+    const routeId = useMatches().at(-1)?.id ?? '';
 
     return (
         <Auth requiredRole="user">
-            <Organization settingsSection={settingsPath === undefined ? undefined : section} />
+            <Organization settingsSection={sections[routeId]} />
         </Auth>
     );
 }

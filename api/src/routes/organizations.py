@@ -390,25 +390,23 @@ async def _storage_usage_rows(
 async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)):
     """Create Organization desired state and queue compute reconciliation."""
 
-    # Validate the user-derived runtime namespace before creating the organization.
-    try:
-        slug = names.slugify(payload.name)
-        names.knames(slug)
+    # Derive the Organization's runtime namespace from its display name.
+    slug = names.slugify(payload.name)
 
-    # Return invalid names as request conflicts.
+    # Create through the service so API and direct callers share namespace validation.
+    try:
+        organization = await organizations.create(
+            payload.name,
+            slug,
+            payload.compute_id,
+            payload.database_id,
+            payload.storage_id,
+            user,
+            country=payload.country,
+            avatar=payload.avatar,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc
-
-    organization = await organizations.create(
-        payload.name,
-        slug,
-        payload.compute_id,
-        payload.database_id,
-        payload.storage_id,
-        user,
-        country=payload.country,
-        avatar=payload.avatar,
-    )
 
     operation = await operations.latest(organization.compute_id)
     if operation is None:

@@ -54,12 +54,12 @@ async def update(
         return user
 
 
-async def get(user_id: UUID, include_deleted: bool = False, include_access: bool = False) -> User | None:
+async def get(user_id: UUID, include_access: bool = False) -> User | None:
     """Load a user by local identifier, optionally including resource access."""
 
-    # Read the user through a managed database session.
+    # Read the active user through a managed database session.
     async with session_scope() as session:
-        statement = select(User).where(User.id == user_id)
+        statement = select(User).where(User.id == user_id, User.deleted_at.is_(None))
 
         # Eager-load resource relationships for request authentication when requested.
         if include_access:
@@ -70,10 +70,6 @@ async def get(user_id: UUID, include_deleted: bool = False, include_access: bool
                 selectinload(User.application_memberships).selectinload(UserApplication.application),
                 selectinload(User.application_memberships).selectinload(UserApplication.organization),
             )
-
-        # Hide soft-deleted users unless explicitly requested.
-        if not include_deleted:
-            statement = statement.where(User.deleted_at.is_(None))
 
         result = await session.execute(statement)
         return result.scalar_one_or_none()
