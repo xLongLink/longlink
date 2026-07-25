@@ -29,5 +29,10 @@ export default defineConfig(({ mode }) => {
                 '/logo.svg': 'http://localhost:8000',
             },
         },
+
+        // Keep React Router's build-time preview request on the socket Vite binds in containers.
+        preview: {
+            host: '127.0.0.1',
+        },
     };
 });
