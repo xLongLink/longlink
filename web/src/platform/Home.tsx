@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
 import { Text } from '@astryxdesign/core/Text';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
 import { Section } from '@astryxdesign/core/Section';
 import { Heading } from '@astryxdesign/core/Heading';
+import { type PointerEvent, useEffect, useState } from 'react';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import {
     Activity,
@@ -494,6 +494,38 @@ function IntegrationScale() {
 
 /** Renders the public home page. */
 export default function Home() {
+    const [paintingHasEntered, setPaintingHasEntered] = useState(false);
+
+    useEffect(() => {
+        const target = document.getElementById('homepage-hands-scroll-swing');
+        if (!target) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry?.isIntersecting) return;
+
+                setPaintingHasEntered(true);
+                observer.disconnect();
+            },
+            { threshold: 0.35 }
+        );
+
+        observer.observe(target);
+
+        return () => observer.disconnect();
+    }, []);
+
+    function handlePaintingPointerMove(event: PointerEvent<HTMLDivElement>) {
+        const bounds = event.currentTarget.getBoundingClientRect();
+        const horizontalPosition = ((event.clientX - bounds.left) / bounds.width - 0.5) * 2;
+
+        event.currentTarget.style.setProperty('--painting-swing', `${horizontalPosition * 2.8}deg`);
+    }
+
+    function handlePaintingPointerLeave(event: PointerEvent<HTMLDivElement>) {
+        event.currentTarget.style.setProperty('--painting-swing', '0deg');
+    }
+
     return (
         <div className="min-h-screen overflow-hidden">
             <Navbar />
@@ -570,18 +602,37 @@ export default function Home() {
                 <div className="mx-auto w-full max-w-[1000px]">
                     <div className="homepage-hands-hanging-frame">
                         <div aria-hidden="true" className="homepage-hands-nail" />
-                        <div aria-hidden="true" className="homepage-hands-support homepage-hands-support-left" />
-                        <div aria-hidden="true" className="homepage-hands-support homepage-hands-support-right" />
-
-                        <div className="homepage-hands-frame">
-                            <div className="homepage-hands-mat">
-                                <img
-                                    alt="Human and robot hands reaching toward each other"
-                                    className="homepage-hands-image h-auto w-full object-contain"
-                                    decoding="async"
-                                    loading="lazy"
-                                    src={humanRobotHandsImage}
+                        <div
+                            id="homepage-hands-scroll-swing"
+                            className={`homepage-hands-scroll-swing ${
+                                paintingHasEntered ? 'homepage-hands-scroll-swing-active' : ''
+                            }`}
+                        >
+                            <div
+                                className="homepage-hands-swing"
+                                onPointerLeave={handlePaintingPointerLeave}
+                                onPointerMove={handlePaintingPointerMove}
+                            >
+                                <div
+                                    aria-hidden="true"
+                                    className="homepage-hands-support homepage-hands-support-left"
                                 />
+                                <div
+                                    aria-hidden="true"
+                                    className="homepage-hands-support homepage-hands-support-right"
+                                />
+
+                                <div className="homepage-hands-frame">
+                                    <div className="homepage-hands-mat">
+                                        <img
+                                            alt="Human and robot hands reaching toward each other"
+                                            className="homepage-hands-image h-auto w-full object-contain"
+                                            decoding="async"
+                                            loading="lazy"
+                                            src={humanRobotHandsImage}
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div className="homepage-hands-description">
@@ -602,6 +653,9 @@ export default function Home() {
                 paddingBlock={10}
             >
                 <Stack className="mx-auto" width="100%" maxWidth={1000} gap={8}>
+                    <Text className="text-xs font-medium uppercase tracking-widest" color="secondary">
+                        Application paths
+                    </Text>
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }} gap={0} width="100%">
                         {paths.map(({ title, description, action, href }) => (
                             <ClickableCard

@@ -27,14 +27,35 @@
     15% {
         opacity: 1;
     }
-    70% {
+    100% {
         opacity: 1;
         transform: scaleX(1);
     }
-    85%,
+}
+
+@keyframes homepage-hands-scroll-swing {
+    0% {
+        transform: rotate(-2.6deg);
+    }
+
+    20% {
+        transform: rotate(2deg);
+    }
+
+    42% {
+        transform: rotate(-1.25deg);
+    }
+
+    64% {
+        transform: rotate(0.65deg);
+    }
+
+    84% {
+        transform: rotate(-0.22deg);
+    }
+
     100% {
-        opacity: 0;
-        transform: scaleX(1);
+        transform: rotate(0deg);
     }
 }
 
@@ -174,7 +195,24 @@
 .homepage-hands-hanging-frame {
     position: relative;
     z-index: 2;
+}
+
+.homepage-hands-scroll-swing {
+    position: relative;
+    transform-origin: 50% 0.56rem;
+}
+
+.homepage-hands-scroll-swing-active {
+    animation: homepage-hands-scroll-swing 3800ms var(--ease-standard) both;
+}
+
+.homepage-hands-swing {
+    position: relative;
     padding-top: clamp(2.35rem, 4.5vw, 3.8rem);
+    transform: rotate(var(--painting-swing, 0deg));
+    transform-origin: 50% 0.56rem;
+    transition: transform 950ms var(--ease-standard);
+    will-change: transform;
 }
 
 .homepage-hands-nail {
@@ -353,8 +391,20 @@
     }
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .homepage-hands-scroll-swing-active {
+        animation: none;
+    }
+
+    .homepage-hands-swing {
+        transform: none;
+        transition: none;
+        will-change: auto;
+    }
+}
+
 @media (max-width: 40rem) {
-    .homepage-hands-hanging-frame {
+    .homepage-hands-swing {
         padding-top: 2.6rem;
     }
 
