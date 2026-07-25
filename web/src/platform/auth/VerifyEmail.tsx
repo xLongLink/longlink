@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
+import { Grid } from '@astryxdesign/core/Grid';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
@@ -14,6 +15,7 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AuthPage } from '@/components/AuthPage';
+import { Wordmark } from '@/components/Wordmark';
 import { ApiError, fetchApiJson } from '@/lib/api';
 import { sanitizeRedirectPath } from '@/lib/redirects';
 import { clearSessionQueries } from '@/lib/react-query';
@@ -48,10 +50,16 @@ export default function VerifyEmail() {
     const [setupMismatch, setSetupMismatch] = useState(false);
     const [lastVerifiedSetup, setLastVerifiedSetup] = useState<RegistrationSetup | null>(null);
     const fallbackNextPath = sanitizeRedirectPath(new URLSearchParams(location.search).get('next'));
+    const welcomeTitle = (
+        <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
+            <span>{t('auth.welcomeTo')}</span>
+            <Wordmark size="heading" />
+        </span>
+    );
     const schema = z.object({
         name: z.string().trim().min(1, t('auth.nameRequired')).max(127, t('auth.nameTooLong')),
         surname: z.string().trim().min(1, t('auth.surnameRequired')).max(127, t('auth.surnameTooLong')),
-        password: z.string().min(12, t('auth.passwordTooShort')).max(1024, t('auth.passwordTooLong')),
+        password: z.string().min(1, t('auth.passwordRequired')).max(1024, t('auth.passwordTooLong')),
     });
     const form = useForm<RegistrationCompleteValues>({
         defaultValues: { name: '', surname: '', password: '' },
@@ -212,53 +220,56 @@ export default function VerifyEmail() {
     }
 
     return (
-        <AuthPage
-            title={t('auth.completeRegistrationTitle')}
-            description={t('auth.completeRegistrationDescription', { email: verification.data.email })}
-        >
+        <AuthPage title={welcomeTitle} description={<Divider label={t('auth.completeRegistrationDescription')} />}>
             <Stack gap={4}>
                 <Stack as="form" gap={3} onSubmit={form.handleSubmit(handleComplete)}>
-                    <Controller
-                        control={form.control}
-                        name="name"
-                        render={({ field, fieldState }) => (
-                            <TextInput
-                                {...nameInputAttributes}
-                                ref={field.ref}
-                                hasAutoFocus
-                                htmlName={field.name}
-                                isRequired
-                                label={t('labels.name')}
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
-                                status={
-                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
-                                }
-                                value={field.value}
-                                width="100%"
-                            />
-                        )}
-                    />
-                    <Controller
-                        control={form.control}
-                        name="surname"
-                        render={({ field, fieldState }) => (
-                            <TextInput
-                                {...surnameInputAttributes}
-                                ref={field.ref}
-                                htmlName={field.name}
-                                isRequired
-                                label={t('labels.surname')}
-                                onBlur={field.onBlur}
-                                onChange={field.onChange}
-                                status={
-                                    fieldState.error ? { type: 'error', message: fieldState.error.message } : undefined
-                                }
-                                value={field.value}
-                                width="100%"
-                            />
-                        )}
-                    />
+                    <Grid columns={{ minWidth: 128, max: 2, repeat: 'fit' }} gap={3} width="100%">
+                        <Controller
+                            control={form.control}
+                            name="name"
+                            render={({ field, fieldState }) => (
+                                <TextInput
+                                    {...nameInputAttributes}
+                                    ref={field.ref}
+                                    hasAutoFocus
+                                    htmlName={field.name}
+                                    isRequired
+                                    label={t('labels.name')}
+                                    onBlur={field.onBlur}
+                                    onChange={field.onChange}
+                                    status={
+                                        fieldState.error
+                                            ? { type: 'error', message: fieldState.error.message }
+                                            : undefined
+                                    }
+                                    value={field.value}
+                                    width="100%"
+                                />
+                            )}
+                        />
+                        <Controller
+                            control={form.control}
+                            name="surname"
+                            render={({ field, fieldState }) => (
+                                <TextInput
+                                    {...surnameInputAttributes}
+                                    ref={field.ref}
+                                    htmlName={field.name}
+                                    isRequired
+                                    label={t('labels.surname')}
+                                    onBlur={field.onBlur}
+                                    onChange={field.onChange}
+                                    status={
+                                        fieldState.error
+                                            ? { type: 'error', message: fieldState.error.message }
+                                            : undefined
+                                    }
+                                    value={field.value}
+                                    width="100%"
+                                />
+                            )}
+                        />
+                    </Grid>
                     <Controller
                         control={form.control}
                         name="password"

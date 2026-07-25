@@ -21,14 +21,13 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     infrastructure = await create_ready_infrastructure(owner)
 
     # Act
-    organization = await create_organization(infrastructure, owner, country="DE")
+    organization = await create_organization(infrastructure, owner)
     reloaded_compute = await compute.get(infrastructure.compute.id)
     open_operations = [item for item in await operations.fetch() if item.stopped_at is None]
 
     # Assert
     assert organization.name == "acme"
     assert organization.slug == "acme"
-    assert organization.country == "DE"
     assert organization.compute_id == infrastructure.compute.id
     assert organization.database_id == infrastructure.database.id
     assert organization.storage_id == infrastructure.storage.id
@@ -46,7 +45,6 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     memberships = await organizations.members(organization.id)
     assert reloaded.name == "acme"
     assert reloaded.slug == "acme"
-    assert reloaded.country == "DE"
     assert [membership.user.id for membership in memberships] == [owner.id]
 
     Session = await get_session()

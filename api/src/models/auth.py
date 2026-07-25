@@ -47,7 +47,7 @@ class RegistrationComplete(BaseModel):
     surname: TrimmedName
 
     # Authentication
-    password: str = Field(min_length=12, max_length=1024)
+    password: str = Field(min_length=1, max_length=1024)
 
 
 class PasswordResetRequest(BaseModel):
@@ -71,4 +71,4 @@ class PasswordResetComplete(BaseModel):
     """Validate a new password supplied with browser-only reset proof."""
 
     # Authentication
-    password: str
+    password: str = Field(min_length=1, max_length=1024)

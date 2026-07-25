@@ -1,6 +1,5 @@
 import type {
     ApiApplicationResponse,
-    ApiCountryOption,
     ApiInfrastructureOptions,
     ApiOperation,
     ApiOrganizationSummary,
@@ -10,7 +9,6 @@ import { useApiQuery } from '@/hooks/use-api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import {
     apiApplicationResponseSchema,
-    apiCountryOptionSchema,
     apiInfrastructureOptionsSchema,
     apiOperationSchema,
     apiOrganizationSummarySchema,
@@ -32,14 +30,6 @@ export function useInfrastructureOptions(enabled = true) {
 export function useApplications() {
     return useCollectionQuery<ApiApplicationResponse>('/api/applications', {
         parse: (value) => parseApiCollection(apiApplicationResponseSchema, value),
-    });
-}
-
-/** Fetches ISO country options for selectors. */
-export function useCountries(enabled = true) {
-    return useCollectionQuery<ApiCountryOption>(enabled ? '/api/countries' : null, {
-        enabled,
-        parse: (value) => parseApiCollection(apiCountryOptionSchema, value),
     });
 }
 

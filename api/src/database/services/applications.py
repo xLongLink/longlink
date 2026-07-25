@@ -44,18 +44,15 @@ async def fetch() -> list[Application]:
         return result.scalars().all()
 
 
-async def for_compute(compute_id: UUID, include_deleted: bool = False) -> list[Application]:
-    """Return Applications belonging to Organizations on one compute target."""
+async def for_compute(compute_id: UUID) -> list[Application]:
+    """Return all Applications belonging to Organizations on one compute target."""
 
-    # Reconciliation loads active and pending-removal rows through the same query shape.
+    # Reconciliation requires active and pending-removal rows in one snapshot.
     async with session_scope() as session:
-        conditions = [Organization.compute_id == compute_id]
-        if not include_deleted:
-            conditions.extend([Organization.deleted_at.is_(None), Application.deleted_at.is_(None)])
         statement = (
             select(Application)
             .join(Organization, Organization.id == Application.organization_id)
-            .where(*conditions)
+            .where(Organization.compute_id == compute_id)
         )
         result = await session.execute(statement)
         return result.scalars().all()
@@ -134,10 +131,7 @@ async def members(application_id: UUID, organization_id: UUID) -> list[tuple[Use
             .order_by(User.name, User.email)
         )
         result = await session.execute(statement)
-        return [
-            (member, organization_membership, application_membership)
-            for member, organization_membership, application_membership in result.all()
-        ]
+        return result.tuples().all()
 
 
 async def set_member_role(application_id: UUID, organization_id: UUID, member_id: UUID, role: ApplicationRoles | None, user: User) -> bool:
@@ -209,12 +203,7 @@ async def create(
     slug: str,
     image: Image | str,
     user: User,
-    status: ApplicationStatus = ApplicationStatus.creating,
-    database_password: str | None = None,
-    version: str | None = None,
-    sdk: str | None = None,
     description: str | None = None,
-    digest: str | None = None,
     icon: str | None = None,
     envs: dict[str, str] | None = None,
 ) -> tuple[Application, Operation]:
@@ -247,15 +236,12 @@ async def create(
             organization_id=organization_id,
             name=name,
             slug=slug,
-            status=status,
-            sdk=sdk,
-            digest=digest,
-            version=version,
+            status=ApplicationStatus.creating,
             description=description,
             image=image.value,
             icon=icon,
             envs=dict(envs or {}),
-            database_password=database_password or secrets.token_urlsafe(24),
+            database_password=secrets.token_urlsafe(24),
         )
         application.created_id = user.id
         application.updated_id = user.id
@@ -389,7 +375,6 @@ async def update_runtime(
     application_id: UUID,
     image: str,
     user: User | None,
-    status: ApplicationStatus = ApplicationStatus.creating,
     version: str | None = None,
     sdk: str | None = None,
     description: str | None = None,
@@ -414,7 +399,7 @@ async def update_runtime(
         if user is not None:
             application.updated_id = user.id
         application.version = version
-        application.status = status
+        application.status = ApplicationStatus.creating
         application.image = image
         application.icon = icon
 

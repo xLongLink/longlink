@@ -291,7 +291,7 @@
         "defaultMessage": "Torna all'accesso"
     },
     "auth.completeRegistrationDescription": {
-        "defaultMessage": "Email verificata per {email}. Aggiungi profilo e password per creare il tuo account."
+        "defaultMessage": "Email verificata. Completa il tuo profilo."
     },
     "auth.completeRegistrationTitle": {
         "defaultMessage": "Completa il tuo account"
@@ -367,9 +367,6 @@
     },
     "auth.passwordRequired": {
         "defaultMessage": "La password e obbligatoria"
-    },
-    "auth.passwordTooShort": {
-        "defaultMessage": "La password deve contenere almeno 12 caratteri"
     },
     "auth.passwordTooLong": {
         "defaultMessage": "La password non puo superare 1024 caratteri"
@@ -599,41 +596,17 @@
     "common.unknown": {
         "defaultMessage": "Sconosciuto"
     },
-    "createOrganization.avatarLabel": {
-        "defaultMessage": "URL avatar"
-    },
-    "createOrganization.avatarPlaceholder": {
-        "defaultMessage": "https://example.com/org.png"
-    },
     "createOrganization.description": {
         "defaultMessage": "Crea un nuovo spazio di lavoro per il tuo account."
     },
     "createOrganization.error": {
         "defaultMessage": "Impossibile creare l'organizzazione"
     },
-    "createOrganization.computeLabel": {
-        "defaultMessage": "Calcolo"
-    },
-    "createOrganization.computePlaceholder": {
-        "defaultMessage": "Scegli il calcolo"
-    },
-    "createOrganization.databaseLabel": {
-        "defaultMessage": "Database"
-    },
-    "createOrganization.databasePlaceholder": {
-        "defaultMessage": "Scegli un database"
-    },
     "createOrganization.nameLabel": {
         "defaultMessage": "Nome"
     },
     "createOrganization.namePlaceholder": {
         "defaultMessage": "Esempio LongLink"
-    },
-    "createOrganization.storageLabel": {
-        "defaultMessage": "Archiviazione"
-    },
-    "createOrganization.storagePlaceholder": {
-        "defaultMessage": "Scegli l'archiviazione"
     },
     "createOrganization.title": {
         "defaultMessage": "Nuova organizzazione"
@@ -676,9 +649,6 @@
     },
     "labels.accessKeyId": {
         "defaultMessage": "ID chiave di accesso"
-    },
-    "labels.country": {
-        "defaultMessage": "Paese"
     },
     "labels.description": {
         "defaultMessage": "Descrizione"
@@ -923,9 +893,6 @@
     "resources.namespacesTitle": {
         "defaultMessage": "Namespace"
     },
-    "dialogs.chooseCountry": {
-        "defaultMessage": "Scegli un paese"
-    },
     "dialogs.chooseDatabaseKind": {
         "defaultMessage": "Scegli un tipo di database"
     },
@@ -1058,6 +1025,18 @@
     "organizationSettings.applicationPermissionsTitle": {
         "defaultMessage": "Permessi di {name}"
     },
+    "organizationSettings.avatarInvalid": {
+        "defaultMessage": "Inserisci un URL avatar HTTP(S) valido."
+    },
+    "organizationSettings.avatarLabel": {
+        "defaultMessage": "URL avatar"
+    },
+    "organizationSettings.avatarPlaceholder": {
+        "defaultMessage": "https://example.com/org.png"
+    },
+    "organizationSettings.avatarSaved": {
+        "defaultMessage": "Avatar salvato"
+    },
     "organizationSettings.back": {
         "defaultMessage": "Indietro"
     },
@@ -1078,6 +1057,9 @@
     },
     "organizationSettings.failedDeleteApplication": {
         "defaultMessage": "Impossibile eliminare l'applicazione"
+    },
+    "organizationSettings.failedUpdateAvatar": {
+        "defaultMessage": "Impossibile aggiornare l'avatar"
     },
     "organizationSettings.loadApplicationsFailed": {
         "defaultMessage": "Impossibile caricare le applicazioni."

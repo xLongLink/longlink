@@ -34,7 +34,7 @@ export default function ResetPassword() {
     const nextPath = sanitizeRedirectPath(search.get('next'));
     const nextQuery = new URLSearchParams({ next: nextPath }).toString();
     const schema = z.object({
-        password: z.string().min(12, t('auth.passwordTooShort')),
+        password: z.string().min(1, t('auth.passwordRequired')),
     });
     const form = useForm<ResetPasswordValues>({
         defaultValues: { password: '' },

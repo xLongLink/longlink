@@ -47,15 +47,15 @@ web\:format: web\:install
 	cd web && bunx prettier --log-level warn --write . $$(cd .. && find . -name '*.md' -o -name '*.yml' -o -name '*.yaml' | sed 's#^./#../#')
 
 
-# Run all API, SDK, and web tests/checks without container-backed integration tests.
+# Run fast API, SDK, and web checks without infrastructure or scaffold smoke tests.
 tests:
 	$(MAKE) api:tests API_PYTEST_MARK='-m "not integration"'
 	$(MAKE) sdk:tests SDK_PYTEST_MARK='-m "not integration"'
 	$(MAKE) web:tests
 
 
-# Run all API, SDK, and web tests/checks, including container-backed integration tests.
-tests\:all: api\:tests sdk\:tests web\:tests
+# Run all checks, including container-backed integration and generated scaffold tests.
+tests\:all: api\:tests sdk\:tests sdk\:scaffold\:tests web\:tests
 
 
 # Run all API tests with coverage, including container-backed integration tests.
@@ -63,10 +63,9 @@ api\:tests: api\:install api\:build
 	cd api && ENVIRONMENT=testing uv run --locked pytest $(API_PYTEST_MARK) --cov=src --cov-report=term-missing tests
 
 
-# Build the embedded web bundle, then run SDK and generated scaffold tests.
+# Build the embedded web bundle, then run SDK tests.
 sdk\:tests: sdk\:install sdk\:build
 	cd sdk && uv run --locked pytest $(SDK_PYTEST_MARK) --cov=longlink --cov-report=term-missing tests
-	cd sdk && sh tests/scaffold-smoke.sh
 
 
 # Generate an isolated application and run its shipped tests.

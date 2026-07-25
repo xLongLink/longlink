@@ -1,6 +1,7 @@
 import httpx2
 from types import SimpleNamespace
 from factories import create_organization, mark_organization_running, create_ready_infrastructure
+from src.routes import applications as application_routes
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from fastapi.testclient import TestClient
 from src.models.statuses import ApplicationStatus
@@ -158,7 +159,7 @@ async def test_application_proxy_rejects_oversized_request_body(
     users: tuple[User, User, User],
     monkeypatch,
 ) -> None:
-    """Reject request bodies larger than the current proxy limit."""
+    """Reject request bodies larger than the configured proxy limit."""
 
     # Arrange
     owner = users[0]
@@ -204,10 +205,12 @@ async def test_application_proxy_rejects_oversized_request_body(
 
     monkeypatch.setattr("src.routes.applications.ssl.create_default_context", fake_ssl_context)
     monkeypatch.setattr("src.routes.applications.httpx2.AsyncClient", FakeProxyClient)
+    assert application_routes.PROXY_REQUEST_MAX_BYTES == 16 * 1024 * 1024
+    monkeypatch.setattr(application_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
     client = clients[0]
 
     # Act
-    response = client.post(f"/api/applications/{app.id}/proxy/upload", content=b"x" * (16 * 1024 * 1024 + 1))
+    response = client.post(f"/api/applications/{app.id}/proxy/upload", content=b"x" * 1025)
 
     # Assert
     assert response.status_code == 413

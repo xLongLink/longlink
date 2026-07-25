@@ -39,15 +39,12 @@ async def fetch() -> list[Organization]:
         return result.scalars().all()
 
 
-async def for_compute(compute_id: UUID, include_deleted: bool = False) -> list[Organization]:
-    """Return Organizations assigned to one compute target."""
+async def for_compute(compute_id: UUID) -> list[Organization]:
+    """Return all Organizations assigned to one compute target."""
 
-    # Reconciliation includes tombstones only when it needs to finish external cleanup.
+    # Reconciliation requires active and pending-removal rows in one snapshot.
     async with session_scope() as session:
-        conditions = [Organization.compute_id == compute_id]
-        if not include_deleted:
-            conditions.append(Organization.deleted_at.is_(None))
-        statement = select(Organization).where(*conditions)
+        statement = select(Organization).where(Organization.compute_id == compute_id)
         result = await session.execute(statement)
         return result.scalars().all()
 
@@ -246,11 +243,10 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
 async def create(
     name: str,
     slug: str,
-    compute_id: UUID,
-    database_id: UUID,
-    storage_id: UUID,
+    compute_id: UUID | None,
+    database_id: UUID | None,
+    storage_id: UUID | None,
     user: User,
-    country: str,
     avatar: str | None = None,
     organization_id: UUID | None = None,
 ) -> tuple[Organization, Operation]:
@@ -262,36 +258,45 @@ async def create(
 
     # Create the organization and owner membership together.
     async with session_scope() as session:
-        # Lock the compute reconciliation root and validate every selected registry in the same transaction.
-        compute = (
-            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
-        ).scalar_one_or_none()
+        # Lock an explicitly selected compute or assign the oldest available reconciliation root.
+        compute_statement = select(ComputeRegistry)
+        if compute_id is None:
+            compute_statement = compute_statement.where(
+                ComputeRegistry.deleted_at.is_(None),
+                ComputeRegistry.status == ComputeStatus.ready,
+            ).order_by(ComputeRegistry.created_at, ComputeRegistry.id).limit(1)
+        else:
+            compute_statement = compute_statement.where(ComputeRegistry.id == compute_id)
+        compute = (await session.execute(compute_statement.with_for_update())).scalar_one_or_none()
         if compute is None or compute.deleted_at is not None:
-            raise HTTPException(status_code=404, detail="Compute registry not found")
+            detail = "No compute registry available" if compute_id is None else "Compute registry not found"
+            raise HTTPException(status_code=503 if compute_id is None else 404, detail=detail)
         if compute.status != ComputeStatus.ready:
             raise HTTPException(status_code=409, detail="Compute registry is not ready")
-        database_registry = (
-            await session.execute(
-                select(DatabaseRegistry).where(
-                    DatabaseRegistry.id == database_id,
-                    DatabaseRegistry.deleted_at.is_(None),
-                ).with_for_update()
-            )
-        ).scalar_one_or_none()
-        storage_registry = (
-            await session.execute(
-                select(StorageRegistry).where(
-                    StorageRegistry.id == storage_id,
-                    StorageRegistry.deleted_at.is_(None),
-                ).with_for_update()
-            )
-        ).scalar_one_or_none()
-        if database_registry is None:
-            raise HTTPException(status_code=404, detail="Database registry not found")
-        if storage_registry is None:
-            raise HTTPException(status_code=404, detail="Storage registry not found")
 
-        # Derive the immutable Organization connection from its selected database registry.
+        # Lock an explicitly selected database or assign the oldest active registry.
+        database_statement = select(DatabaseRegistry).where(DatabaseRegistry.deleted_at.is_(None))
+        if database_id is None:
+            database_statement = database_statement.order_by(DatabaseRegistry.created_at, DatabaseRegistry.id).limit(1)
+        else:
+            database_statement = database_statement.where(DatabaseRegistry.id == database_id)
+        database_registry = (await session.execute(database_statement.with_for_update())).scalar_one_or_none()
+        if database_registry is None:
+            detail = "No database registry available" if database_id is None else "Database registry not found"
+            raise HTTPException(status_code=503 if database_id is None else 404, detail=detail)
+
+        # Lock an explicitly selected storage backend or assign the oldest active registry.
+        storage_statement = select(StorageRegistry).where(StorageRegistry.deleted_at.is_(None))
+        if storage_id is None:
+            storage_statement = storage_statement.order_by(StorageRegistry.created_at, StorageRegistry.id).limit(1)
+        else:
+            storage_statement = storage_statement.where(StorageRegistry.id == storage_id)
+        storage_registry = (await session.execute(storage_statement.with_for_update())).scalar_one_or_none()
+        if storage_registry is None:
+            detail = "No storage registry available" if storage_id is None else "Storage registry not found"
+            raise HTTPException(status_code=503 if storage_id is None else 404, detail=detail)
+
+        # Derive the immutable Organization connection from its assigned database registry.
         db = adapters.Postgres(
             database_registry.host,
             database_registry.port,
@@ -306,10 +311,9 @@ async def create(
             name=name,
             slug=slug,
             avatar=avatar or "",
-            country=country,
-            compute_id=compute_id,
-            database_id=database_id,
-            storage_id=storage_id,
+            compute_id=compute.id,
+            database_id=database_registry.id,
+            storage_id=storage_registry.id,
             shared_schema_url=shared_schema_url,
         )
 
@@ -349,6 +353,38 @@ async def create(
         )
         result = await session.execute(statement)
         return result.scalar_one(), operation
+
+
+async def update(organization_id: UUID, avatar: str, user: User) -> Organization | None:
+    """Update mutable Organization metadata."""
+
+    # Lock and update the active Organization row.
+    async with session_scope() as session:
+        organization = (
+            await session.execute(
+                select(Organization)
+                .where(Organization.id == organization_id, Organization.deleted_at.is_(None))
+                .with_for_update()
+            )
+        ).scalar_one_or_none()
+        if organization is None:
+            return None
+        organization.avatar = avatar
+        organization.updated_at = utcnow()
+        organization.updated_id = user.id
+        await session.commit()
+
+        # Load audit relationships required by the organization response.
+        statement = (
+            select(Organization)
+            .options(
+                selectinload(Organization.created_by),
+                selectinload(Organization.updated_by),
+                selectinload(Organization.deleted_by),
+            )
+            .where(Organization.id == organization.id)
+        )
+        return (await session.execute(statement)).scalar_one()
 
 
 async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, Operation] | None:

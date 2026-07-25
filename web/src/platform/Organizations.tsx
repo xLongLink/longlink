@@ -54,12 +54,9 @@ export default function Organizations() {
                         name={membership.organization.name}
                         size="md"
                     />
-                    <VStack gap={1}>
-                        <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
-                            {membership.organization.name}
-                        </Link>
-                        <Text type="supporting">{membership.organization.country}</Text>
-                    </VStack>
+                    <Link href={`/orgs/${membership.organization.slug}`} weight="semibold">
+                        {membership.organization.name}
+                    </Link>
                 </HStack>
             ),
         },

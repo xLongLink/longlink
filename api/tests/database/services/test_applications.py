@@ -304,7 +304,6 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
         application.id,
         "ghcr.io/longlink/dashboard:2.0.0",
         user,
-        status=ApplicationStatus.failed,
         version="2.0.0",
         sdk="1.2.3",
         description="Updated dashboard",
@@ -323,7 +322,7 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     assert running.status == ApplicationStatus.running
     assert updated is not None
     assert updated.image == "ghcr.io/longlink/dashboard:2.0.0"
-    assert updated.status == ApplicationStatus.failed
+    assert updated.status == ApplicationStatus.creating
     assert updated.version == "2.0.0"
     assert updated.sdk == "1.2.3"
     assert updated.description == "Updated dashboard"

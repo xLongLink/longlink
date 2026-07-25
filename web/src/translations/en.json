@@ -291,7 +291,7 @@
         "defaultMessage": "Back to sign in"
     },
     "auth.completeRegistrationDescription": {
-        "defaultMessage": "Email verified for {email}. Add your profile and password to create your account."
+        "defaultMessage": "Email verified. Complete your profile."
     },
     "auth.completeRegistrationTitle": {
         "defaultMessage": "Complete your account"
@@ -367,9 +367,6 @@
     },
     "auth.passwordRequired": {
         "defaultMessage": "Password is required"
-    },
-    "auth.passwordTooShort": {
-        "defaultMessage": "Password must contain at least 12 characters"
     },
     "auth.passwordTooLong": {
         "defaultMessage": "Password cannot exceed 1024 characters"
@@ -599,41 +596,17 @@
     "common.unknown": {
         "defaultMessage": "Unknown"
     },
-    "createOrganization.avatarLabel": {
-        "defaultMessage": "Avatar URL"
-    },
-    "createOrganization.avatarPlaceholder": {
-        "defaultMessage": "https://example.com/org.png"
-    },
     "createOrganization.description": {
         "defaultMessage": "Create a new workspace for your account."
     },
     "createOrganization.error": {
         "defaultMessage": "Failed to create organization"
     },
-    "createOrganization.computeLabel": {
-        "defaultMessage": "Compute"
-    },
-    "createOrganization.computePlaceholder": {
-        "defaultMessage": "Choose compute"
-    },
-    "createOrganization.databaseLabel": {
-        "defaultMessage": "Database"
-    },
-    "createOrganization.databasePlaceholder": {
-        "defaultMessage": "Choose a database"
-    },
     "createOrganization.nameLabel": {
         "defaultMessage": "Name"
     },
     "createOrganization.namePlaceholder": {
         "defaultMessage": "Example LongLink"
-    },
-    "createOrganization.storageLabel": {
-        "defaultMessage": "Storage"
-    },
-    "createOrganization.storagePlaceholder": {
-        "defaultMessage": "Choose storage"
     },
     "createOrganization.title": {
         "defaultMessage": "New organization"
@@ -676,9 +649,6 @@
     },
     "labels.accessKeyId": {
         "defaultMessage": "Access key ID"
-    },
-    "labels.country": {
-        "defaultMessage": "Country"
     },
     "labels.description": {
         "defaultMessage": "Description"
@@ -923,9 +893,6 @@
     "resources.namespacesTitle": {
         "defaultMessage": "Namespaces"
     },
-    "dialogs.chooseCountry": {
-        "defaultMessage": "Choose a country"
-    },
     "dialogs.chooseDatabaseKind": {
         "defaultMessage": "Choose a database kind"
     },
@@ -1058,6 +1025,18 @@
     "organizationSettings.applicationPermissionsTitle": {
         "defaultMessage": "{name} permissions"
     },
+    "organizationSettings.avatarInvalid": {
+        "defaultMessage": "Enter a valid HTTP(S) avatar URL."
+    },
+    "organizationSettings.avatarLabel": {
+        "defaultMessage": "Avatar URL"
+    },
+    "organizationSettings.avatarPlaceholder": {
+        "defaultMessage": "https://example.com/org.png"
+    },
+    "organizationSettings.avatarSaved": {
+        "defaultMessage": "Avatar saved"
+    },
     "organizationSettings.back": {
         "defaultMessage": "Back"
     },
@@ -1078,6 +1057,9 @@
     },
     "organizationSettings.failedDeleteApplication": {
         "defaultMessage": "Failed to delete application"
+    },
+    "organizationSettings.failedUpdateAvatar": {
+        "defaultMessage": "Failed to update avatar"
     },
     "organizationSettings.loadApplicationsFailed": {
         "defaultMessage": "Failed to load applications."

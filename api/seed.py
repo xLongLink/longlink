@@ -226,7 +226,6 @@ async def seed_local_development(settings: SeedSettings) -> None:
             storage_registry.id,
             admin,
             avatar=LOCAL_ORG_AVATAR,
-            country="CH",
         )
         await reconcile_until_complete(compute_registry.id)
     else:

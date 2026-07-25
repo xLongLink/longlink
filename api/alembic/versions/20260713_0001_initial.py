@@ -218,7 +218,6 @@ def upgrade() -> None:
         sa.Column("name", sa.String(length=128), nullable=False),
         sa.Column("slug", sa.String(length=128), nullable=False),
         sa.Column("avatar", sa.String(length=2048), nullable=False),
-        sa.Column("country", sa.String(length=2), nullable=False),
         sa.Column("compute_id", sa.Uuid(), nullable=False),
         sa.Column("database_id", sa.Uuid(), nullable=False),
         sa.Column("storage_id", sa.Uuid(), nullable=False),

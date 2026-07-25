@@ -48,7 +48,6 @@ export const apiUserOrganizationSchema = z.object({
     name: z.string(),
     slug: z.string(),
     avatar: z.string(),
-    country: z.string(),
 });
 
 export const apiUserOrganizationMembershipSchema = z.object({
@@ -80,7 +79,6 @@ export const apiOrganizationSummarySchema = z.object({
     name: z.string(),
     slug: z.string(),
     avatar: z.string(),
-    country: z.string(),
     compute_id: z.string(),
     database_id: z.string(),
     storage_id: z.string(),
@@ -131,11 +129,6 @@ export const apiImageMetadataSchema = z.object({
 });
 
 export const apiIconsSchema = z.array(z.enum(ICON_NAMES));
-
-export const apiCountryOptionSchema = z.object({
-    code: z.string(),
-    name: z.string(),
-});
 
 export const apiApplicationResponseSchema = z.object({
     id: z.string(),

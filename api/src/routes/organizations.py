@@ -11,8 +11,8 @@ from src.models.storages import OrganizationStorageResourceKind, OrganizationSto
 from src.models.databases import OrganizationDatabaseResourceResponse
 from src.database.services import compute, storage, database, invitations, organizations
 from src.models.applications import ApplicationAccessResponse
-from src.models.organizations import (OrganizationCreate, OrganizationDetails, OrganizationSummary, OrganizationMemberUpdate,
-                                      OrganizationInvitationCreate, OrganizationMutationResponse)
+from src.models.organizations import (OrganizationCreate, OrganizationUpdate, OrganizationDetails, OrganizationSummary,
+                                      OrganizationMemberUpdate, OrganizationInvitationCreate, OrganizationMutationResponse)
 from longlink.shared.constants import SHARED_SCHEMA
 from src.database.models.users import User
 from src.models.infrastructure import InfrastructureOptionsResponse
@@ -79,6 +79,25 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
             {"application": application, "role": application_roles.get(application.id)} for application in active_applications
         ],
     }
+
+
+@router.patch("/api/organizations/{organization_id}", response_model=OrganizationSummary)
+async def update_organization(organization_id: UUID, payload: OrganizationUpdate, user: User = Depends(authuser)):
+    """Update mutable organization settings."""
+
+    # Load organization access before changing its settings.
+    membership = roles.access(user, organization_id, "organization")
+    if membership is None:
+        raise HTTPException(status_code=403, detail="Access required")
+
+    # Require organization administrators to change shared metadata.
+    if not roles.atleast(membership.role, OrganizationRoles.admin):
+        raise HTTPException(status_code=403, detail="Permission required")
+
+    organization = await organizations.update(organization_id, str(payload.avatar), user)
+    if organization is None:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    return organization
 
 
 @router.get(
@@ -396,12 +415,10 @@ async def create_organization(payload: OrganizationCreate, user: User = Depends(
         organization, operation = await organizations.create(
             payload.name,
             slug,
-            payload.compute_id,
-            payload.database_id,
-            payload.storage_id,
+            None,
+            None,
+            None,
             user,
-            country=payload.country,
-            avatar=payload.avatar,
         )
     except ValueError as exc:
         raise HTTPException(status_code=409, detail="Invalid organization runtime resource name") from exc

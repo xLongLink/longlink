@@ -3,6 +3,8 @@ from src.utils import images
 from src.models.types import Image
 from src.models.metadata import LongLinkMetadata
 
+pytestmark = pytest.mark.no_db
+
 
 async def test_metadata_rejects_unsupported_registry_hosts() -> None:
     """Avoid inspecting image metadata through unsupported registry references."""

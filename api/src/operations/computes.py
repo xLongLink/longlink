@@ -73,8 +73,8 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
         operation.platform_version
     ):
         return jobs.retry("Compute target was already reconciled by a newer Platform release")
-    organization_rows = await organizations.for_compute(compute_registry.id, include_deleted=True)
-    application_rows = await applications.for_compute(compute_registry.id, include_deleted=True)
+    organization_rows = await organizations.for_compute(compute_registry.id)
+    application_rows = await applications.for_compute(compute_registry.id)
 
     try:
         # Resolve each Organization's immutable database and storage assignments before provider writes.

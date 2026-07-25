@@ -1,3 +1,5 @@
+import { z } from 'zod';
+import { useState } from 'react';
 import { useLocation } from 'react-router';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
@@ -5,8 +7,10 @@ import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
+import { useToast } from '@astryxdesign/core/Toast';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useTranslator } from '@astryxdesign/core/i18n';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
@@ -24,6 +28,7 @@ import { PostgreSQL } from '@/svg/PostgreSQL';
 import { useUserProfile } from '@/hooks/use-user';
 import { hasMinimumRole, type Role } from '@/lib/roles';
 import { formatBytes, formatNumber } from '@/lib/utils';
+import { useUpdateOrganization } from '@/hooks/use-organization';
 import { useOrganizationDatabaseResources, useOrganizationStorageResources } from '@/data/organization';
 import People from './People';
 import ApplicationSettings from './ApplicationSettings';
@@ -43,6 +48,11 @@ type SettingsProps = {
 type PeopleSection = 'members' | 'invitations';
 export type SettingsRouteSection = 'organization' | 'applications' | 'people' | 'database' | 'storage';
 type SettingsSection = Exclude<SettingsRouteSection, 'people'> | PeopleSection;
+
+const organizationAvatarSchema = z.union([
+    z.literal(''),
+    z.url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)),
+]);
 
 /** Renders database resources while the database settings section is active. */
 function DatabaseSettings({
@@ -127,11 +137,17 @@ export default function Settings({
     error,
 }: SettingsProps) {
     const t = useTranslator();
+    const toast = useToast();
     const location = useLocation();
     const { role: platformRole } = useUserProfile();
     const organizationName = organizationDetails?.name ?? organization;
     const organizationAvatar = organizationDetails?.avatar ?? '';
     const organizationId = organizationDetails?.id ?? '';
+    const canManageOrganization = hasMinimumRole(organizationRole, 'admin');
+    const updateOrganization = useUpdateOrganization(organizationId, canManageOrganization);
+    const [editedAvatar, setEditedAvatar] = useState<string | null>(null);
+    const [avatarError, setAvatarError] = useState<string | null>(null);
+    const avatar = editedAvatar ?? organizationAvatar;
     const hasOrganizationApplicationAccess = hasMinimumRole(organizationRole, 'maintain');
     const canManageOrganizationMembers = hasMinimumRole(organizationRole, 'admin');
     const hashValue = location.hash.replace(/^#/, '');
@@ -258,6 +274,41 @@ export default function Settings({
         },
     ];
 
+    /** Saves the Organization avatar URL when focus leaves the setting. */
+    async function saveAvatar() {
+        setAvatarError(null);
+
+        // Ignore unavailable, unauthorized, and unchanged Organizations.
+        if (!organizationDetails || !canManageOrganization) {
+            return;
+        }
+        const normalizedAvatar = avatar.trim();
+        if (normalizedAvatar === organizationAvatar) {
+            return;
+        }
+
+        // Require an empty value or an HTTP(S) URL.
+        if (!organizationAvatarSchema.safeParse(normalizedAvatar).success) {
+            setAvatarError(t('organizationSettings.avatarInvalid'));
+            return;
+        }
+
+        // Persist the setting and retain the normalized server response.
+        try {
+            const updated = await updateOrganization.mutateAsync({ avatar: normalizedAvatar });
+            setEditedAvatar(updated.avatar);
+            toast({ body: t('organizationSettings.avatarSaved') });
+        } catch (mutationError) {
+            toast({
+                body:
+                    mutationError instanceof Error
+                        ? mutationError.message
+                        : t('organizationSettings.failedUpdateAvatar'),
+                type: 'error',
+            });
+        }
+    }
+
     return (
         <div className="grid w-full grid-cols-1 items-start gap-6 md:grid-cols-[260px_minmax(0,1fr)]">
             <SideNav className="h-auto w-full">
@@ -313,12 +364,24 @@ export default function Settings({
                             <Heading level={2}>{t('columns.organization')}</Heading>
                             <Text type="supporting">{t('organizationSettings.organizationDescription')}</Text>
                         </VStack>
-                        <HStack gap={3} align="center">
-                            <Avatar src={organizationAvatar} name={organizationName} size="md" />
-                            <VStack gap={1}>
-                                <Text weight="semibold">{organizationName}</Text>
-                                <Text type="supporting">{organizationDetails?.country}</Text>
-                            </VStack>
+                        <HStack gap={4} align="center" wrap="wrap">
+                            <Avatar src={avatar || undefined} name={organizationName} size="lg" />
+                            <TextInput
+                                label={t('organizationSettings.avatarLabel')}
+                                value={avatar}
+                                width="100%"
+                                isOptional
+                                isDisabled={isLoading || updateOrganization.isPending || !canManageOrganization}
+                                placeholder={t('organizationSettings.avatarPlaceholder')}
+                                status={avatarError ? { type: 'error', message: avatarError } : undefined}
+                                onChange={(value) => {
+                                    setEditedAvatar(value);
+                                    setAvatarError(null);
+                                }}
+                                onBlur={() => {
+                                    void saveAvatar();
+                                }}
+                            />
                         </HStack>
                     </VStack>
                 ) : null}

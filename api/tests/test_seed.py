@@ -194,7 +194,7 @@ async def test_seed_local_development_creates_registries_and_drains_reconciliati
     )
     assert calls["organization"] == (
         (seed.LOCAL_ORG, seed.LOCAL_ORG, compute.id, database.id, storage.id, user),
-        {"avatar": seed.LOCAL_ORG_AVATAR, "country": "CH"},
+        {"avatar": seed.LOCAL_ORG_AVATAR},
     )
     assert calls["application_lookup"] == organization.id
     assert calls["application"] == (

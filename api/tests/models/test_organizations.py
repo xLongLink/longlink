@@ -1,47 +1,32 @@
-from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 from src.models.roles import OrganizationRoles
-from src.models.organizations import OrganizationCreate, OrganizationInvitationCreate, OrganizationMemberUpdate
+from src.models.organizations import OrganizationCreate, OrganizationMemberUpdate, OrganizationInvitationCreate
 
 pytestmark = pytest.mark.no_db
 
 
-def test_organization_create_accepts_infrastructure_assignment() -> None:
+def test_organization_create_accepts_metadata() -> None:
     """Accept the Organization creation payload submitted by the Platform UI."""
 
-    # Validate the immutable infrastructure assignment at the API model boundary.
-    compute_id = uuid4()
-    database_id = uuid4()
-    storage_id = uuid4()
+    # Validate Organization metadata while infrastructure is assigned by the service.
     payload = OrganizationCreate.model_validate(
         {
             "name": "Acme",
-            "avatar": "https://example.com/acme.png",
-            "country": "CH",
-            "compute_id": compute_id,
-            "database_id": database_id,
-            "storage_id": storage_id,
         }
     )
 
     assert payload.name == "Acme"
-    assert payload.country == "CH"
-    assert payload.compute_id == compute_id
-    assert payload.database_id == database_id
-    assert payload.storage_id == storage_id
 
 
 @pytest.mark.parametrize(
     "payload",
     [
-        {"name": "", "country": "CH", "compute_id": uuid4(), "database_id": uuid4(), "storage_id": uuid4()},
-        {"name": "Acme", "country": "XX", "compute_id": uuid4(), "database_id": uuid4(), "storage_id": uuid4()},
-        {"name": "Acme", "country": "CH", "compute_id": "bad", "database_id": uuid4(), "storage_id": uuid4()},
+        {"name": ""},
     ],
 )
-def test_organization_create_rejects_invalid_assignment_payload(payload: dict[str, object]) -> None:
-    """Reject Organization creation payloads with invalid metadata or registry IDs."""
+def test_organization_create_rejects_invalid_metadata(payload: dict[str, object]) -> None:
+    """Reject Organization creation payloads with invalid metadata."""
 
     # Invalid Organization values fail before route-level access and service checks.
     with pytest.raises(ValidationError):

@@ -65,7 +65,7 @@ function OrganizationResourcesDiagram() {
 
 export const metadata = {
     toc: [{ id: 'roles', label: 'Roles' }],
-    lastUpdated: '2026-07-20',
+    lastUpdated: '2026-07-25',
     editUrl: 'https://github.com/xLongLink/longlink/edit/main/web/src/platform/docs/api/organizations.tsx',
 };
 
@@ -76,7 +76,7 @@ export const content = (
         </Heading>
         <Text as="p">
             Organizations are the tenant boundary in LongLink. They group members, invitations, Applications, and their
-            immutable compute, database, and storage registry assignments.
+            automatically assigned, immutable compute, database, and storage registries.
         </Text>
         <Text as="p">
             Every application belongs to one organization. Organization membership controls who can see the workspace,

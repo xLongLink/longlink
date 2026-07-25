@@ -15,6 +15,7 @@ import {
     apiApplicationMutationResponseSchema,
     apiOrganizationDetailsSchema,
     apiOrganizationMutationResponseSchema,
+    apiOrganizationSummarySchema,
     parseApiResponse,
 } from '@/lib/api-schemas';
 
@@ -208,21 +209,7 @@ export function useCreateOrganization() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async ({
-            name,
-            compute_id,
-            database_id,
-            storage_id,
-            avatar,
-            country,
-        }: {
-            name: string;
-            compute_id: string;
-            database_id: string;
-            storage_id: string;
-            avatar?: string | null;
-            country: string;
-        }) => {
+        mutationFn: async ({ name }: { name: string }) => {
             return fetchApiJson(
                 '/api/organizations',
                 {
@@ -230,11 +217,6 @@ export function useCreateOrganization() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         name,
-                        compute_id,
-                        database_id,
-                        storage_id,
-                        avatar: avatar?.trim() ?? '',
-                        country,
                     }),
                 },
                 (value) => parseApiResponse(apiOrganizationMutationResponseSchema, value).organization
@@ -242,6 +224,47 @@ export function useCreateOrganization() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() });
+        },
+    });
+}
+
+/** Updates mutable organization settings and refreshes organization caches. */
+export function useUpdateOrganization(organizationId: string, canManageOrganization: boolean) {
+    const queryClient = useQueryClient();
+    const organizationPath = organizationId.length > 0 ? `/api/organizations/${organizationId}` : null;
+
+    return useMutation({
+        mutationFn: async ({ avatar }: { avatar: string }) => {
+            // Require a resolved organization and local management permission.
+            if (organizationPath === null) {
+                throw new Error('Organization not found');
+            }
+            if (!canManageOrganization) {
+                throw new Error('Organization management permissions required');
+            }
+
+            return fetchApiJson(
+                organizationPath,
+                {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ avatar }),
+                },
+                (value) => parseApiResponse(apiOrganizationSummarySchema, value)
+            );
+        },
+        onSuccess: async () => {
+            if (organizationPath === null) {
+                return;
+            }
+
+            // Refresh every response that embeds Organization metadata.
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: apiQueryKey(organizationPath) }),
+                queryClient.invalidateQueries({ queryKey: applicationsQueryKey() }),
+                queryClient.invalidateQueries({ queryKey: organizationsQueryKey() }),
+                queryClient.invalidateQueries({ queryKey: userOrganizationsQueryKey() }),
+            ]);
         },
     });
 }

@@ -5,7 +5,6 @@ import type {
     apiAuthConfigSchema,
     apiComputePodSchema,
     apiComputeRegistrySchema,
-    apiCountryOptionSchema,
     apiDatabaseRegistrySchema,
     apiEnvironmentMetadataSchema,
     apiImageMetadataSchema,
@@ -36,7 +35,6 @@ export type ApiApplicationMember = z.infer<typeof apiApplicationMemberSchema>;
 export type ApiOrganizationMember = z.infer<typeof apiOrganizationMemberSchema>;
 export type ApiEnvironmentMetadata = z.infer<typeof apiEnvironmentMetadataSchema>;
 export type ApiImageMetadata = z.infer<typeof apiImageMetadataSchema>;
-export type ApiCountryOption = z.infer<typeof apiCountryOptionSchema>;
 export type ApiOrganizationSummary = z.infer<typeof apiOrganizationSummarySchema>;
 export type ApiOrganizationDetails = z.infer<typeof apiOrganizationDetailsSchema>;
 export type ApiInfrastructureOptions = z.infer<typeof apiInfrastructureOptionsSchema>;

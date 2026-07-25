@@ -40,7 +40,6 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
                 "name": "acme",
                 "slug": "acme",
                 "avatar": "https://example.com/organizations/acme.png",
-                "country": "CH",
             },
             "role": "owner",
         }

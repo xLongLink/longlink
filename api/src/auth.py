@@ -365,10 +365,11 @@ class UserManager(UUIDIDMixin, BaseUserManager[User, UUID]):
         return user
 
     async def validate_password(self, password: str, user: schemas.BaseUserCreate | User) -> None:
-        """Require a practical minimum password length."""
+        """Require a non-empty password within the supported storage limit."""
 
-        if len(password) < 12:
-            raise InvalidPasswordException(reason="Password must contain at least 12 characters")
+        # Accept weak passwords while rejecting missing and excessively large values.
+        if not password:
+            raise InvalidPasswordException(reason="Password is required")
         if len(password) > 1024:
             raise InvalidPasswordException(reason="Password cannot exceed 1024 characters")
 

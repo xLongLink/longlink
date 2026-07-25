@@ -1,8 +1,8 @@
 from uuid import UUID
+from typing import Literal
 from datetime import datetime
-from pydantic import Field, EmailStr, BaseModel, ConfigDict
+from pydantic import Field, HttpUrl, EmailStr, BaseModel, ConfigDict
 from src.models.roles import ApplicationRoles, OrganizationRoles
-from src.models.types import Country
 from src.models.users import UserSummary, UserIdentity
 from src.models.statuses import OrganizationStatus
 from src.models.resources import OrganizationApplicationSummary
@@ -14,13 +14,13 @@ class OrganizationCreate(BaseModel):
 
     # Metadata
     name: str = Field(min_length=1, max_length=128)
-    avatar: str = Field(default="", max_length=2048)
-    country: Country
 
-    # Infrastructure
-    compute_id: UUID
-    database_id: UUID
-    storage_id: UUID
+
+class OrganizationUpdate(BaseModel):
+    """Validate mutable organization settings."""
+
+    # Metadata
+    avatar: HttpUrl | Literal[""] = Field(max_length=2048)
 
 
 class OrganizationInvitationCreate(BaseModel):
@@ -70,7 +70,6 @@ class OrganizationSummary(BaseModel):
     name: str
     slug: str
     avatar: str = ""
-    country: Country
 
     # Infrastructure
     compute_id: UUID

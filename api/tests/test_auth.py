@@ -62,18 +62,18 @@ def test_session_accounts_remember_and_remove_local_users() -> None:
     assert accounts.list() == account_ids[1:]
 
 
-async def test_user_manager_requires_configured_password_bounds() -> None:
-    """Reject local passwords outside the configured length bounds."""
+async def test_user_manager_accepts_weak_passwords_within_bounds() -> None:
+    """Accept weak local passwords while rejecting empty and oversized values."""
 
     manager = UserManager(cast(LongLinkUserDatabase, None))
     user = schemas.BaseUserCreate(email="user@example.com", password="unused-password")
 
-    # Enforce the LongLink password policy before FastAPI Users persists credentials.
-    with pytest.raises(InvalidPasswordException) as short_password:
-        await manager.validate_password("too-short", user)
+    # Enforce only the required storage bounds before FastAPI Users persists credentials.
+    with pytest.raises(InvalidPasswordException) as empty_password:
+        await manager.validate_password("", user)
     with pytest.raises(InvalidPasswordException) as long_password:
         await manager.validate_password("x" * 1025, user)
 
-    assert short_password.value.reason == "Password must contain at least 12 characters"
+    assert empty_password.value.reason == "Password is required"
     assert long_password.value.reason == "Password cannot exceed 1024 characters"
-    await manager.validate_password("twelve-chars", user)
+    await manager.validate_password("x", user)
