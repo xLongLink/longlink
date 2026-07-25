@@ -15,7 +15,6 @@ description: Code improvements loop
 
 ## Focus
 
-0. Follow the `Python Guidelines` section. If anything does not follow the guidelines, propose a fix. Else, move on and check the next steps.
 
 1. Security: authentication, authorization, tenant isolation, secret handling, unsafe redirects, SSRF, XSS, injection, path traversal, header handling, CORS, CSRF, dependency risk, and sensitive logging. Perform a Static Analysis, Make a Vulnerability research, Find Edge Cases, Bugs, Primitives, Patterns
 2. Permissions: organization access, application membership, role checks, user-controlled identifiers, resource ownership, and cross-tenant data access.

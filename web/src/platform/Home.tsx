@@ -1,4 +1,4 @@
-import type { CSSProperties, SVGProps } from 'react';
+import type { CSSProperties } from 'react';
 import { Button } from '@astryxdesign/core/Button';
 import {
     Activity,
@@ -26,68 +26,14 @@ import {
     Users,
     Wrench,
 } from 'lucide-react';
+import { Python } from '@/svg/Python';
+import { FastAPI } from '@/svg/FastAPI';
+import { Pydantic } from '@/svg/Pydantic';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { Wordmark } from '@/components/Wordmark';
-
-/** Renders the FastAPI mark used in the Python card. */
-const FastAPI = (props: SVGProps<SVGSVGElement>) => (
-    <svg {...props} preserveAspectRatio="xMidYMid" viewBox="0 0 256 256">
-        <path
-            d="M128 0C57.33 0 0 57.33 0 128s57.33 128 128 128 128-57.33 128-128S198.67 0 128 0Zm-6.67 230.605v-80.288H76.699l64.128-124.922v80.288h42.966L121.33 230.605Z"
-            fill="#009688"
-        />
-    </svg>
-);
-
-/** Renders the Python mark used in the Python card. */
-const Python = (props: SVGProps<SVGSVGElement>) => (
-    <svg {...props} fill="none" viewBox="16 16 32 32">
-        <path
-            fill="url(#python__a)"
-            d="M31.885 16c-8.124 0-7.617 3.523-7.617 3.523l.01 3.65h7.752v1.095H21.197S16 23.678 16 31.876c0 8.196 4.537 7.906 4.537 7.906h2.708v-3.804s-.146-4.537 4.465-4.537h7.688s4.32.07 4.32-4.175v-7.019S40.374 16 31.885 16zm-4.275 2.454a1.394 1.394 0 1 1 0 2.79 1.393 1.393 0 0 1-1.395-1.395c0-.771.624-1.395 1.395-1.395z"
-        />
-        <path
-            fill="url(#python__b)"
-            d="M32.115 47.833c8.124 0 7.617-3.523 7.617-3.523l-.01-3.65H31.97v-1.095h10.832S48 40.155 48 31.958c0-8.197-4.537-7.906-4.537-7.906h-2.708v3.803s.146 4.537-4.465 4.537h-7.688s-4.32-.07-4.32 4.175v7.019s-.656 4.247 7.833 4.247zm4.275-2.454a1.393 1.393 0 0 1-1.395-1.395 1.394 1.394 0 1 1 1.395 1.395z"
-        />
-        <defs>
-            <linearGradient
-                id="python__a"
-                x1="19.075"
-                x2="34.898"
-                y1="18.782"
-                y2="34.658"
-                gradientUnits="userSpaceOnUse"
-            >
-                <stop stopColor="#387EB8" />
-                <stop offset="1" stopColor="#366994" />
-            </linearGradient>
-            <linearGradient
-                id="python__b"
-                x1="28.809"
-                x2="45.803"
-                y1="28.882"
-                y2="45.163"
-                gradientUnits="userSpaceOnUse"
-            >
-                <stop stopColor="#FFE052" />
-                <stop offset="1" stopColor="#FFC331" />
-            </linearGradient>
-        </defs>
-    </svg>
-);
-
-/** Renders the Pydantic mark used in the Python card. */
-const Pydantic = (props: SVGProps<SVGSVGElement>) => (
-    <svg {...props} viewBox="0 0 24 24">
-        <path
-            d="m23.826 17.316 -4.23 -5.866 -6.847 -9.496c-0.348 -0.48 -1.151 -0.48 -1.497 0l-6.845 9.494 -4.233 5.868a0.925 0.925 0 0 0 0.46 1.417l11.078 3.626h0.002a0.92 0.92 0 0 0 0.572 0h0.002l11.077 -3.626c0.28 -0.092 0.5 -0.31 0.59 -0.592a0.916 0.916 0 0 0 -0.13 -0.825h0.002ZM12.001 4.07l4.44 6.158 -4.152 -1.36c-0.032 -0.01 -0.066 -0.008 -0.098 -0.016a0.8 0.8 0 0 0 -0.096 -0.016c-0.032 -0.004 -0.062 -0.016 -0.094 -0.016s-0.062 0.012 -0.094 0.016a0.74 0.74 0 0 0 -0.096 0.016c-0.032 0.006 -0.066 0.006 -0.096 0.016L7.59 10.221l-0.026 0.008 4.44 -6.158h-0.002Zm-6.273 8.7 4.834 -1.583 0.516 -0.168v9.19L2.41 17.372l3.317 -4.6Zm7.197 7.437V11.02l5.35 1.752 3.316 4.598 -8.666 2.838Z"
-            fill="currentColor"
-            strokeWidth="1"
-        />
-    </svg>
-);
+import { CliWorkflowConnector } from '@/svg/CliWorkflowConnector';
+import { WorkNetworkConnections } from '@/svg/WorkNetworkConnections';
 
 const homepageCards = [
     {
@@ -351,41 +297,10 @@ function CliCardVisual() {
             <div className="absolute left-1/2 top-0 h-40 w-[280px] -translate-x-1/2">
                 <div className="absolute left-1/2 top-1/2 h-28 w-60 -translate-x-1/2 -translate-y-1/2 rounded-[28px] bg-[#d9b469]/5 shadow-[0_0_42px_rgba(217,180,105,0.08)] transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" />
                 {cliWorkflowConnectors.map(({ key, className }) => (
-                    <svg
+                    <CliWorkflowConnector
                         key={key}
                         className={`absolute h-11 w-[58px] overflow-visible ${className}`}
-                        viewBox="0 0 58 44"
-                    >
-                        <defs>
-                            <marker
-                                id={`cli-workflow-arrow-${key}`}
-                                markerHeight="7"
-                                markerWidth="7"
-                                orient="auto"
-                                refX="6"
-                                refY="3.5"
-                            >
-                                <path d="M0 0 7 3.5 0 7Z" fill="#d9b469" opacity="0.85" />
-                            </marker>
-                        </defs>
-                        <path
-                            d="M10 2 C2 17 4 30 20 30 H50"
-                            fill="none"
-                            stroke="#f4c878"
-                            strokeLinecap="round"
-                            strokeWidth="5"
-                            className="opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-20 motion-reduce:transition-none"
-                        />
-                        <path
-                            d="M10 2 C2 17 4 30 20 30 H50"
-                            fill="none"
-                            markerEnd={`url(#cli-workflow-arrow-${key})`}
-                            stroke="#d9b469"
-                            strokeLinecap="round"
-                            strokeWidth="1.4"
-                            className="opacity-55 transition-opacity duration-300 group-hover:opacity-85 motion-reduce:transition-none"
-                        />
-                    </svg>
+                    />
                 ))}
 
                 {cliWorkflowSteps.map(({ command, icon: StepIcon, className }) => (
@@ -411,17 +326,7 @@ function CliCardVisual() {
 function WorkNetworkVisual() {
     return (
         <div aria-hidden="true" className="relative h-40 overflow-hidden">
-            <svg className="absolute inset-0 h-full w-full" viewBox="0 0 320 160">
-                <path
-                    d="M78 24 C108 28 120 58 132 80 M78 80 H132 M78 136 C108 132 120 102 132 80 M242 24 C212 28 200 58 188 80 M242 80 H188 M242 136 C212 132 200 102 188 80"
-                    fill="none"
-                    stroke="#e49aaa"
-                    strokeLinecap="round"
-                    strokeWidth="1.2"
-                    strokeDasharray="4 6"
-                    className="opacity-40 transition-opacity duration-300 group-hover:opacity-80 motion-reduce:transition-none"
-                />
-            </svg>
+            <WorkNetworkConnections className="absolute inset-0 h-full w-full" />
 
             <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-md border border-[#6a3e49] bg-[#181013]/95 px-5 py-3 shadow-[0_0_0_1px_rgba(255,255,255,0.05),0_16px_36px_rgba(0,0,0,0.38),0_0_30px_rgba(224,151,166,0.2)]">
                 <Wordmark className="[&>span:first-child]:text-[#f0a6b6] [&>span:last-child]:text-[#f5f5f5]" />
