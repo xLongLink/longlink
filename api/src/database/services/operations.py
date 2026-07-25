@@ -51,18 +51,26 @@ async def enqueue_in_session(
     session: AsyncSession,
     compute_id: UUID,
     desired_change: bool = True,
+    locked_compute: ComputeRegistry | None = None,
 ) -> Operation:
     """Coalesce compute reconciliation inside the caller's desired-state transaction.
 
-    Compute locking keeps the release target monotonic and queueing atomic across LongLink Platform replicas.
+    Compute locking keeps the release target monotonic and queueing atomic across LongLink Platform replicas. Callers
+    that already locked the compute in this transaction can supply it to avoid selecting the same row again.
     """
 
-    # Serialize queue changes through the aggregate so release targets remain monotonic across Platform replicas.
-    compute = (
-        await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
-    ).scalar_one_or_none()
+    # Reuse a caller-owned aggregate lock when available.
+    compute = locked_compute
+    if compute is not None and compute.id != compute_id:
+        raise ValueError("Locked compute registry does not match operation compute")
+
+    # Otherwise serialize queue changes through the aggregate across Platform replicas.
     if compute is None:
-        raise ValueError("Operation compute registry not found")
+        compute = (
+            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
+        ).scalar_one_or_none()
+        if compute is None:
+            raise ValueError("Operation compute registry not found")
     versions = (
         (await session.execute(select(Operation.platform_version).where(Operation.compute_id == compute_id).distinct()))
         .scalars()

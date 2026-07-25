@@ -5,7 +5,6 @@ import { Grid } from '@astryxdesign/core/Grid';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { useToast } from '@astryxdesign/core/Toast';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,13 +13,14 @@ import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
 import { AuthPage } from '@/components/AuthPage';
 import { Wordmark } from '@/components/Wordmark';
 import { ApiError, fetchApiJson } from '@/lib/api';
 import { sanitizeRedirectPath } from '@/lib/redirects';
+import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
 import { PasswordInput } from '@/components/PasswordInput';
-import { accountsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 import { apiRegistrationVerifiedSchema, apiUserProfileSchema, parseApiResponse } from '@/lib/api-schemas';
 
 type RegistrationCompleteValues = {
@@ -113,11 +113,9 @@ export default function VerifyEmail() {
         try {
             const user = await completion.mutateAsync(payload);
             const profileKey = userProfileQueryKey();
-            const accountsKey = accountsQueryKey();
 
-            await clearSessionQueries(queryClient, [profileKey, accountsKey]);
+            await clearSessionQueries(queryClient, [profileKey]);
             queryClient.setQueryData(profileKey, user);
-            await queryClient.invalidateQueries({ queryKey: accountsKey });
             sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
             navigate(sanitizeRedirectPath(verification.data?.next), { replace: true });
         } catch (error) {

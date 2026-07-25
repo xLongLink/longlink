@@ -6,7 +6,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
-import { useToast } from '@astryxdesign/core/Toast';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,12 +15,13 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { GitHub } from '@/svg/GitHub';
+import { useToast } from '@/hooks/use-toast';
 import { useAuthConfig } from '@/hooks/use-auth';
 import { Wordmark } from '@/components/Wordmark';
 import { useSavedAccounts } from '@/hooks/use-user';
 import { fetchApiJson, fetchApiVoid } from '@/lib/api';
+import { userProfileQueryKey } from '@/lib/query-keys';
 import { PasswordInput } from '@/components/PasswordInput';
-import { accountsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
 import { apiAuthorizationSchema, parseApiResponse } from '@/lib/api-schemas';
 import { AUTH_RETURN_PATH_KEY, sanitizeRedirectPath } from '@/lib/redirects';
 
@@ -75,10 +75,7 @@ export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: stri
     async function handlePasswordSignIn(payload: LoginValues) {
         try {
             await login.mutateAsync(payload);
-            await Promise.all([
-                queryClient.invalidateQueries({ queryKey: userProfileQueryKey() }),
-                queryClient.invalidateQueries({ queryKey: accountsQueryKey() }),
-            ]);
+            await queryClient.invalidateQueries({ queryKey: userProfileQueryKey() });
             navigate(safeRedirectTo, { replace: true });
         } catch (loginError) {
             showToast({

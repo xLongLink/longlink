@@ -5,7 +5,7 @@ from sqlmodel import Field, SQLModel, Relationship
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Column, UniqueConstraint
 from src.models.roles import PlatformRoles
-from src.models.types import Theme, Accent, Language
+from src.models.types import Theme, Accent
 from longlink.utils.time import utcnow
 from longlink.database.types import UTCDateTime
 from src.database.models.association import UserApplication, UserOrganization
@@ -46,7 +46,6 @@ class User(SQLModel, table=True):
     theme: Theme = Field(default=Theme.dark)
     accent: Accent = Field(default=Accent.neutral, max_length=7)
     radius: float = Field(default=1.0, nullable=False)
-    language: Language = Field(default=Language.en, max_length=2)
 
     if TYPE_CHECKING:
         is_active: bool = True

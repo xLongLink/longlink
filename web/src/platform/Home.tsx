@@ -11,7 +11,6 @@ import {
     FileCode,
     HardDrive,
     KeyRound,
-    Languages,
     Logs,
     Mail,
     PackageCheck,
@@ -50,7 +49,6 @@ const homepageCards = [
             'Authentication',
             'Organizations',
             'Permissions',
-            'Languages',
             'Theming',
             'Application shell',
             'Databases',
@@ -172,7 +170,6 @@ const foundationVisualColumns = [
         { key: 'logs', icon: Logs },
     ],
     [
-        { key: 'languages', icon: Languages },
         { key: 'storage', icon: HardDrive },
         { key: 'status', icon: Activity },
     ],

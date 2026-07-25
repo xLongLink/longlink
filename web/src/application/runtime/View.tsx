@@ -25,7 +25,6 @@ import {
 
 type ViewProps = {
     applicationStatus?: ApiOrganizationApplication['application']['status'] | 'loading';
-    locale?: string;
     pages: string;
     runtimeContext?: ExecutionContext;
     runtimeKey?: string;
@@ -216,7 +215,7 @@ function parsePageContent(content: string): PageParseResult {
 /**
  * Renders registered XML pages for platform and application routes.
  */
-export default function View({ applicationStatus, locale, pages, runtimeContext, runtimeKey }: ViewProps) {
+export default function View({ applicationStatus, pages, runtimeContext, runtimeKey }: ViewProps) {
     const t = useTranslator();
     const { organization, application, '*': wildcardPath } = useParams();
     const navigate = useNavigate();
@@ -552,7 +551,6 @@ export default function View({ applicationStatus, locale, pages, runtimeContext,
                     ast={pageState.ast}
                     baseUrl={resolvedPagesBaseUrl}
                     ctx={pageState.runtimeContext}
-                    locale={locale}
                 />
             </Stack>
         );

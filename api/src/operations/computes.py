@@ -8,13 +8,12 @@ from src.version import platform_version_key
 from src.environments import env
 from src.models.types import Image
 from src.models.statuses import ApplicationStatus, OrganizationStatus
-from src.database.services import compute, storage, database, operations, applications, organizations
+from src.database.services import compute, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayTLSMaterial
 from src.kubernetes.reconcile import DesiredCompute, DesiredApplication, DesiredOrganization
 from src.adapters.storage.base import Storage
 from src.models.infrastructure import exoscale_zone
-from src.database.models.storages import StorageRegistry
 from src.database.models.operations import Operation
 
 
@@ -80,18 +79,9 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
         # Resolve each Organization's immutable database and storage assignments before provider writes.
         databases: dict[UUID, adapters.Postgres] = {}
         object_storages: dict[UUID, Storage] = {}
-        storage_registries: dict[UUID, StorageRegistry] = {}
         for organization in organization_rows:
-            database_registry = await database.get(organization.database_id, include_deleted=True)
-            storage_registry = await storage.get(organization.storage_id, include_deleted=True)
-            if database_registry is None or storage_registry is None:
-                await compute.record_failure(
-                    compute_registry.id,
-                    operation.id,
-                    attempt_count,
-                    operation.platform_version,
-                )
-                return jobs.fail(f"Organization '{organization.slug}' infrastructure is incomplete")
+            database_registry = organization.database
+            storage_registry = organization.storage
             databases[organization.id] = adapters.Postgres(
                 database_registry.host,
                 database_registry.port,
@@ -100,7 +90,6 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
                 database_registry.sslmode,
             )
             object_storages[organization.id] = adapters.storage(storage_registry)
-            storage_registries[organization.id] = storage_registry
 
         # Prepare active Organization and Application provider resources before rendering Kubernetes state.
         desired_organizations: list[DesiredOrganization] = []
@@ -134,7 +123,7 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
                 continue
             db = databases[organization.id]
             object_storage = object_storages[organization.id]
-            storage_registry = storage_registries[organization.id]
+            storage_registry = organization.storage
 
             # Resolve and persist the immutable image before creating provider credentials.
             if application.digest is None:

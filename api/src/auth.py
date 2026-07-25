@@ -448,7 +448,7 @@ def get_database_strategy(
 cookie_backend = AuthenticationBackend(name="cookie", transport=cookie_transport, get_strategy=get_database_strategy)
 oauth_cookie_backend = AuthenticationBackend(name="oauth_cookie", transport=oauth_cookie_transport, get_strategy=get_database_strategy)
 fastapi_users = FastAPIUsers[User, UUID](get_user_manager, [cookie_backend])
-current_authenticated_user = fastapi_users.current_user()
+current_authenticated_user = fastapi_users.current_user(active=True)
 current_optional_user_token = fastapi_users.authenticator.current_user_token(optional=True)
 
 github_oauth_client = (
@@ -469,7 +469,7 @@ async def authuser(authenticated: User = Depends(current_authenticated_user)) ->
     return user
 
 
-async def authadmin(user: User = Depends(authuser)) -> User:
+async def authadmin(user: User = Depends(current_authenticated_user)) -> User:
     """Authenticate a platform administrator."""
 
     # Only administrator accounts can continue past this check.
@@ -478,7 +478,7 @@ async def authadmin(user: User = Depends(authuser)) -> User:
     return user
 
 
-async def authsupport(user: User = Depends(authuser)) -> User:
+async def authsupport(user: User = Depends(current_authenticated_user)) -> User:
     """Authenticate a support or administrator account."""
 
     # Only support-capable accounts can continue past this check.

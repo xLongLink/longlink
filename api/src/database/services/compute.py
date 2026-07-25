@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from src.version import platform_version_key
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus
 from src.database.session import session_scope
@@ -21,9 +21,9 @@ async def fetch(include_deleted: bool = False) -> list[ComputeRegistry]:
     # Read registries within one scoped session.
     async with session_scope() as session:
         statement = select(ComputeRegistry).options(
-            selectinload(ComputeRegistry.created_by),
-            selectinload(ComputeRegistry.updated_by),
-            selectinload(ComputeRegistry.deleted_by),
+            joinedload(ComputeRegistry.created_by),
+            joinedload(ComputeRegistry.updated_by),
+            joinedload(ComputeRegistry.deleted_by),
         )
         if not include_deleted:
             statement = statement.where(ComputeRegistry.deleted_at.is_(None))
@@ -45,9 +45,9 @@ async def get(registry_id: UUID, include_deleted: bool = False) -> ComputeRegist
         statement = (
             select(ComputeRegistry)
             .options(
-                selectinload(ComputeRegistry.created_by),
-                selectinload(ComputeRegistry.updated_by),
-                selectinload(ComputeRegistry.deleted_by),
+                joinedload(ComputeRegistry.created_by),
+                joinedload(ComputeRegistry.updated_by),
+                joinedload(ComputeRegistry.deleted_by),
             )
             .where(*conditions)
         )
@@ -81,9 +81,9 @@ async def create(name: str, slug: str, kubeconfig: str, user: User) -> tuple[Com
         statement = (
             select(ComputeRegistry)
             .options(
-                selectinload(ComputeRegistry.created_by),
-                selectinload(ComputeRegistry.updated_by),
-                selectinload(ComputeRegistry.deleted_by),
+                joinedload(ComputeRegistry.created_by),
+                joinedload(ComputeRegistry.updated_by),
+                joinedload(ComputeRegistry.deleted_by),
             )
             .where(ComputeRegistry.id == registry.id)
         )
@@ -116,14 +116,14 @@ async def delete(registry_id: UUID, user: User) -> tuple[ComputeRegistry, Operat
         registry.deleted_id = user.id
         registry.updated_at = now
         registry.updated_id = user.id
-        operation = await operations.enqueue_in_session(session, registry.id)
+        operation = await operations.enqueue_in_session(session, registry.id, locked_compute=registry)
         await session.commit()
         statement = (
             select(ComputeRegistry)
             .options(
-                selectinload(ComputeRegistry.created_by),
-                selectinload(ComputeRegistry.updated_by),
-                selectinload(ComputeRegistry.deleted_by),
+                joinedload(ComputeRegistry.created_by),
+                joinedload(ComputeRegistry.updated_by),
+                joinedload(ComputeRegistry.deleted_by),
             )
             .where(ComputeRegistry.id == registry.id)
         )

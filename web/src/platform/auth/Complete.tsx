@@ -4,7 +4,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslator } from '@astryxdesign/core/i18n';
 import { AuthPage } from '@/components/AuthPage';
-import { accountsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
+import { userProfileQueryKey } from '@/lib/query-keys';
 import { AUTH_RETURN_PATH_KEY, sanitizeRedirectPath } from '@/lib/redirects';
 
 /** Refreshes session state after external authentication and returns to the saved page. */
@@ -20,10 +20,7 @@ export default function Complete() {
         /** Refreshes cached session data before leaving the callback page. */
         async function completeAuthentication() {
             try {
-                await Promise.all([
-                    queryClient.invalidateQueries({ queryKey: userProfileQueryKey() }),
-                    queryClient.invalidateQueries({ queryKey: accountsQueryKey() }),
-                ]);
+                await queryClient.invalidateQueries({ queryKey: userProfileQueryKey() });
             } finally {
                 // Navigate only from the current effect instance.
                 if (active) {

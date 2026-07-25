@@ -9,7 +9,6 @@ export const Context = createReactContext<ExecutionContext | null>(null);
 /** Creates a blank XML runtime context. */
 export function createContext(): ExecutionContext {
     return {
-        locale: 'en',
         setups: {},
         invalidate: async () => {},
         values: {},

@@ -4,7 +4,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
-import { useToast } from '@astryxdesign/core/Toast';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Popover } from '@astryxdesign/core/Popover';
 import { useTranslator } from '@astryxdesign/core/i18n';
@@ -23,6 +22,7 @@ import {
     Users,
     Wrench,
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { useUserProfile, useUserSessionActions } from '@/hooks/use-user';
 
 /** Renders a user profile popover with authentication and navigation actions. */

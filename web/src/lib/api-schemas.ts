@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { ICON_NAMES } from '@/lib/icons';
-import { LANGUAGE_VALUES } from '@/lib/languages';
 import { ACCENT_VALUES, MAX_RADIUS, MIN_RADIUS, THEME_VALUES } from '@/lib/theme';
 import { APPLICATION_ROLE_NAMES, PLATFORM_ROLE_NAMES, ROLE_NAMES } from '@/lib/roles';
 
@@ -12,7 +11,6 @@ const themeSchema = z.enum(THEME_VALUES);
 const accentSchema = z.enum(ACCENT_VALUES);
 const radiusSchema = z.number().min(MIN_RADIUS).max(MAX_RADIUS);
 const iconNameSchema = z.enum(ICON_NAMES).nullable();
-const languageSchema = z.enum(LANGUAGE_VALUES);
 const databaseSslModeSchema = z.enum(['disable', 'allow', 'prefer', 'require', 'verify-ca', 'verify-full']);
 
 export const apiAuthConfigSchema = z.object({
@@ -59,7 +57,6 @@ export const apiUserProfileSchema = apiUserListItemSchema.extend({
     theme: themeSchema,
     accent: accentSchema,
     radius: radiusSchema,
-    language: languageSchema,
 });
 
 export const apiInvitationSchema = z.object({

@@ -21,7 +21,6 @@ import {
     HardDrive,
     Info,
     KeyRound,
-    Languages,
     Logs,
     Palette,
     PanelTop,
@@ -50,7 +49,6 @@ const sharedFoundationItems: { description: string; icon: LucideIcon; name: stri
         description: 'Organization and application roles enforced before runtime access.',
         icon: CheckCheck,
     },
-    { name: 'Languages', description: 'Locale-aware web shell and application page rendering.', icon: Info },
     { name: 'Theming', description: 'Shared visual system and user interface preferences.', icon: Info },
     {
         name: 'Application shell',
@@ -101,7 +99,6 @@ function PlatformFlowDiagram() {
                         <Text weight="semibold">User</Text>
                         <Text type="supporting">Browser</Text>
                         <Stack direction="horizontal" gap={3} justify="center">
-                            <Languages aria-label="Languages" className="text-secondary" size={16} />
                             <Palette aria-label="Theming" className="text-secondary" size={16} />
                             <PanelTop aria-label="Application shell" className="text-secondary" size={16} />
                         </Stack>

@@ -62,7 +62,6 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("radius", sa.Float(), nullable=False),
-        sa.Column("language", sa.Enum("en", "it", name="language"), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_users_email", "users", ["email"], unique=True)
@@ -454,9 +453,8 @@ def downgrade() -> None:
     op.drop_index("ix_users_email", table_name="users")
     op.drop_table("users")
 
-    # Remove native preference enum types so a fresh upgrade can recreate them.
+    # Remove the native preference enum type so a fresh upgrade can recreate it.
     bind = op.get_bind()
-    sa.Enum("en", "it", name="language").drop(bind, checkfirst=True)
     sa.Enum(
         "slate",
         "gray",

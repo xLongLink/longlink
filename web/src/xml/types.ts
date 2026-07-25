@@ -10,7 +10,7 @@ export type ASTNode = {
 /** Raw XML attributes attached to an AST node. */
 export type ASTProps = Record<string, string>;
 
-/** Native Astryx translation catalog loaded for one LongLink Application locale. */
+/** Native Astryx translation catalog loaded for one LongLink Application. */
 export type XmlTranslations = Catalog;
 
 /** Adapter surface used by XML-backed React components. */
@@ -24,10 +24,8 @@ export type XmlBindableValue = unknown;
 
 /** XML runtime scope with lexical parent lookup. */
 export type ExecutionContext = {
-    locale?: string;
     translate?: TranslatorFn;
     translations?: XmlTranslations;
-    translationsLocale?: string;
     parent?: ExecutionContext;
     setups: Record<string, () => Promise<void> | void>;
     invalidate: (ids: string | string[]) => Promise<void>;

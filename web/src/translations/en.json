@@ -674,9 +674,6 @@
     "labels.kubeconfig": {
         "defaultMessage": "Kubeconfig"
     },
-    "labels.language": {
-        "defaultMessage": "Language"
-    },
     "labels.name": {
         "defaultMessage": "Name"
     },
@@ -975,7 +972,7 @@
         "defaultMessage": "2. Metadata"
     },
     "settings.accountDescription": {
-        "defaultMessage": "Update your username and language. Your account email is read-only here."
+        "defaultMessage": "Update your username. Your account email is read-only here."
     },
     "settings.accountTitle": {
         "defaultMessage": "Account"
@@ -1000,9 +997,6 @@
     },
     "settings.placeholders.color": {
         "defaultMessage": "Choose a color"
-    },
-    "settings.placeholders.language": {
-        "defaultMessage": "Choose a language"
     },
     "settings.placeholders.theme": {
         "defaultMessage": "Choose a theme"

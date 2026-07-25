@@ -17,41 +17,28 @@ type RenderXMLProps = {
     active?: boolean;
     ctx?: ExecutionContext;
     baseUrl?: string;
-    locale?: string;
 };
 
 type SetupFailure = {
     ast: ASTNode[];
     baseUrl: string;
-    locale: string;
     error: unknown;
 };
 
 /**
  * Renders a parsed XML tree with loading state while context initializes.
  */
-export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: RenderXMLProps): ReactNode {
+export function RenderXML({ ast, active = true, ctx, baseUrl = '' }: RenderXMLProps): ReactNode {
     const [runtimeCtx] = useState<ExecutionContext>(() => ctx ?? createContext());
-    const runtimeLocale = locale ?? ctx?.locale ?? runtimeCtx.locale ?? 'en';
     const requiresSetup = hasSetupNodes(ast);
     const requiresTranslations = hasTranslationNodes(ast);
     const waitsForTranslations = typeof document !== 'undefined' && requiresTranslations;
     const [initializedAst, setInitializedAst] = useState<ASTNode[] | null>(() => (requiresSetup ? null : ast));
     const [setupFailure, setSetupFailure] = useState<SetupFailure | null>(null);
     const [version, setVersion] = useState(0);
-    const setupError =
-        setupFailure?.ast === ast && setupFailure.baseUrl === baseUrl && setupFailure.locale === runtimeLocale
-            ? setupFailure.error
-            : null;
-
-    // Reset translations when the active locale changes.
-    if (runtimeCtx.locale !== undefined && runtimeCtx.locale !== runtimeLocale) {
-        runtimeCtx.translations = undefined;
-        runtimeCtx.translationsLocale = undefined;
-    }
+    const setupError = setupFailure?.ast === ast && setupFailure.baseUrl === baseUrl ? setupFailure.error : null;
 
     runtimeCtx.hashNavigation = active;
-    runtimeCtx.locale = runtimeLocale;
 
     let setupValidationError: Error | null = null;
 
@@ -94,29 +81,14 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
 
         // Hydrate translations from the SDK route before localized nodes render.
         if (waitsForTranslations && runtimeCtx.translations === undefined) {
-            const locale = runtimeCtx.locale ?? 'en';
-
-            void fetchApiJson<unknown>(resolveUrl(baseUrl, `/i18n/${locale}.json`), {
+            void fetchApiJson<unknown>(resolveUrl(baseUrl, '/i18n/en.json'), {
                 cache: 'no-cache',
             })
-                .then((translations) => ({ locale, translations }))
-                .catch((error: unknown) => {
-                    // Let missing English catalogs fail visibly.
-                    if (locale === 'en') {
-                        throw error;
-                    }
-
-                    // Keep localized apps usable when a selected account language has no catalog yet.
-                    return fetchApiJson<unknown>(resolveUrl(baseUrl, '/i18n/en.json'), { cache: 'no-cache' }).then(
-                        (translations) => ({ locale: 'en', translations })
-                    );
-                })
-                .then(({ locale: translationsLocale, translations }) => {
+                .then((translations) => {
                     // Ignore translations after cleanup.
                     if (!mounted) return;
 
                     runtimeCtx.translations = validateTranslationCatalog(translations);
-                    runtimeCtx.translationsLocale = translationsLocale;
                     setVersion((current) => current + 1);
                 })
                 .catch((error: unknown) => {
@@ -126,7 +98,6 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
                     setSetupFailure({
                         ast,
                         baseUrl,
-                        locale: runtimeLocale,
                         error: error instanceof Error ? error : new Error('Failed to load XML translations'),
                     });
                 });
@@ -161,7 +132,7 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
             }
         })().catch((error) => {
             // Report setup failures only while mounted.
-            if (mounted) setSetupFailure({ ast, baseUrl, locale: runtimeLocale, error });
+            if (mounted) setSetupFailure({ ast, baseUrl, error });
         });
 
         return () => {
@@ -172,7 +143,7 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
                 unsubscribe();
             }
         };
-    }, [ast, runtimeCtx, baseUrl, waitsForTranslations, runtimeLocale]);
+    }, [ast, runtimeCtx, baseUrl, waitsForTranslations]);
 
     // Show setup failures before rendering XML nodes.
     if (setupValidationError || setupError) {
@@ -194,18 +165,17 @@ export function RenderXML({ ast, active = true, ctx, baseUrl = '', locale }: Ren
     // Wait for translations before localized nodes render.
     if (waitsForTranslations && runtimeCtx.translations === undefined) return null;
 
-    const translationsLocale = runtimeCtx.translationsLocale ?? runtimeLocale;
     const messages: MessagesByLocale = {
         ...translationCatalogs,
-        [translationsLocale]: {
-            ...translationCatalogs[translationsLocale],
+        en: {
+            ...translationCatalogs.en,
             ...runtimeCtx.translations,
         },
     };
 
     return (
         <XmlErrorBoundary resetKey={`${version}`}>
-            <InternationalizationProvider locale={translationsLocale} messages={messages}>
+            <InternationalizationProvider locale="en" messages={messages}>
                 <XmlContent ast={ast} baseUrl={baseUrl} ctx={runtimeCtx} />
             </InternationalizationProvider>
         </XmlErrorBoundary>

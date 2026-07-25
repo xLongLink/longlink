@@ -6,7 +6,6 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useToast } from '@astryxdesign/core/Toast';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
@@ -23,6 +22,7 @@ import type { Role } from '@/lib/roles';
 import type { ApiInvitation, ApiOrganizationMember } from '@/lib/types';
 import { ROLE_NAMES } from '@/lib/roles';
 import { formatDate } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 import { useChangeOrganizationMemberRole, useInviteOrganizationMember } from '@/hooks/use-organization';
 
 type PeopleProps = {

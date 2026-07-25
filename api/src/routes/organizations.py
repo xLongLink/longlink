@@ -1,7 +1,7 @@
 from src import adapters
 from uuid import UUID
 from fastapi import Depends, APIRouter, HTTPException
-from src.auth import authuser, authsupport
+from src.auth import authuser, authsupport, current_authenticated_user
 from src.utils import mail, names, roles
 from src.utils import storage as storage_utils
 from src.logger import logger
@@ -25,7 +25,7 @@ router = APIRouter()
 
 
 @router.get("/api/infrastructure/options", response_model=InfrastructureOptionsResponse)
-async def list_infrastructure_options(_user: User = Depends(authuser)):
+async def list_infrastructure_options(_user: User = Depends(current_authenticated_user)):
     """Return assignable registry identities without exposing connection metadata."""
 
     computes = [registry for registry in await compute.fetch() if registry.status == ComputeStatus.ready]
@@ -404,7 +404,7 @@ async def _storage_usage_rows(
 
 
 @router.post("/api/organizations", response_model=OrganizationMutationResponse, status_code=202)
-async def create_organization(payload: OrganizationCreate, user: User = Depends(authuser)):
+async def create_organization(payload: OrganizationCreate, user: User = Depends(current_authenticated_user)):
     """Create Organization desired state and queue compute reconciliation."""
 
     # Derive the Organization's runtime namespace from its display name.

@@ -4,7 +4,6 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useToast } from '@astryxdesign/core/Toast';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { useTranslator } from '@astryxdesign/core/i18n';
@@ -12,6 +11,7 @@ import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
 import type { ApiUserListItem } from '@/lib/types';
 import { useUsers } from '@/data/admin';
+import { useToast } from '@/hooks/use-toast';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Renders the admin users page. */

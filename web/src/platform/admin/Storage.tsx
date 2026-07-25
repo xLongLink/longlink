@@ -3,7 +3,6 @@ import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useToast } from '@astryxdesign/core/Toast';
 import { Heading } from '@astryxdesign/core/Heading';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
@@ -13,6 +12,7 @@ import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core
 import type { ApiStorageRegistry } from '@/lib/types';
 import { S3 } from '@/svg/S3';
 import { fetchApiJson } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 import { useStorages } from '@/data/storage';
 import { useDeleteDialog } from '@/lib/utils';
 import { useUserProfile } from '@/hooks/use-user';
