@@ -175,7 +175,7 @@ async def record_success(
             await session.execute(
                 update(Operation)
                 .where(
-                    Operation.kind == OperationKind.compute,
+                    Operation.kind == OperationKind.compute_reconcile,
                     Operation.target_id == compute_id,
                     Operation.platform_version == platform_version,
                     Operation.started_at.is_(None),

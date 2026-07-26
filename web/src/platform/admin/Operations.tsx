@@ -20,8 +20,7 @@ function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
         failed: t('admin.operationStatus.failed'),
     };
     const kindLabels: Record<ApiOperation['kind'], string> = {
-        compute: t('admin.computeReconciliation'),
-        storage: t('admin.storageMigration'),
+        'compute.reconcile': t('admin.computeReconciliation'),
         'application.create': t('admin.applicationCreation'),
         'application.delete': t('admin.applicationDeletion'),
         'organization.create': t('admin.organizationCreation'),

@@ -10,7 +10,6 @@ from sqlmodel import col
 from src.utils import jobs, names
 from sqlalchemy import text, select, inspect
 from src.operations import computes as operation_computes
-from src.operations import storages as _operation_storages
 from src.operations import applications as _operation_applications
 from src.operations import organizations as operation_organizations
 from src.environments import env

@@ -7,7 +7,6 @@ from src.routes import auth, icons, image, users, health, accounts, branding, co
 from src.routes import operations as operations_route
 from src.routes import applications, organizations
 from src.operations import computes as _operation_computes
-from src.operations import storages as _operation_storages
 from src.operations import applications as _operation_applications
 from src.operations import organizations as _operation_organizations
 from collections.abc import AsyncGenerator

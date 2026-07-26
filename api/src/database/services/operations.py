@@ -29,7 +29,7 @@ async def enqueue_in_session(
     compute_id: UUID,
     locked_compute: ComputeRegistry | None = None,
     *,
-    kind: OperationKind = OperationKind.compute,
+    kind: OperationKind = OperationKind.compute_reconcile,
     target_id: UUID | None = None,
     fresh: bool = False,
 ) -> Operation:
@@ -41,9 +41,9 @@ async def enqueue_in_session(
 
     # Resolve and validate the registered resource target before queueing work.
     target = target_id or compute_id
-    if kind == OperationKind.compute and target != compute_id:
+    if kind == OperationKind.compute_reconcile and target != compute_id:
         raise ValueError("Compute operations must target their compute registry")
-    if kind != OperationKind.compute and target_id is None:
+    if kind != OperationKind.compute_reconcile and target_id is None:
         raise ValueError("Resource operations require an explicit target")
 
     # Reuse a caller-owned aggregate lock when available.
@@ -115,7 +115,7 @@ async def enqueue_in_session(
     return operation
 
 
-async def enqueue(compute_id: UUID, *, kind: OperationKind = OperationKind.compute, target_id: UUID | None = None) -> Operation:
+async def enqueue(compute_id: UUID, *, kind: OperationKind = OperationKind.compute_reconcile, target_id: UUID | None = None) -> Operation:
     """Queue one registered Platform operation in a dedicated transaction."""
 
     # Convenience callers use the same transactional enqueue implementation as domain services.

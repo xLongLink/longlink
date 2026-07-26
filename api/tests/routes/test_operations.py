@@ -26,7 +26,7 @@ async def test_operations_endpoint_returns_targeted_operations(
     payload = response.json()
     assert len(payload) == 1
     assert payload[0]["id"] == str(operation.id)
-    assert payload[0]["kind"] == OperationKind.compute
+    assert payload[0]["kind"] == OperationKind.compute_reconcile
     assert payload[0]["target_id"] == str(infrastructure.compute.id)
     assert "compute_id" not in payload[0]
     assert payload[0]["status"] == operation.status

@@ -185,9 +185,6 @@
     "admin.computeReconciliation": {
         "defaultMessage": "Compute reconciliation"
     },
-    "admin.storageMigration": {
-        "defaultMessage": "Shared storage migration"
-    },
     "admin.operationsTitle": {
         "defaultMessage": "Operations"
     },

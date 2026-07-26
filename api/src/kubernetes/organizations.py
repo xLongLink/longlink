@@ -46,7 +46,7 @@ class Organizations:
 
         # Include template source and identity in the revision applied once to both resources.
         names.knames(organization.slug)
-        source = APPLICATION_TEMPLATES.joinpath("application_network_policy.yml")
+        source = APPLICATION_TEMPLATES.joinpath("organization.yml")
         revision_input = json.dumps(
             {"id": str(organization.id), "slug": organization.slug},
             sort_keys=True,

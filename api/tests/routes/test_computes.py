@@ -63,13 +63,13 @@ async def test_compute_registry_create_duplicate_and_delete(
     assert create_response.status_code == 202
     assert created["compute"]["name"] == "Ephemeral Compute"
     assert created["operation"]["status"] == OperationStatus.scheduled
-    assert created["operation"]["kind"] == OperationKind.compute
+    assert created["operation"]["kind"] == OperationKind.compute_reconcile
     assert "kubeconfig" not in created["compute"]
     assert "proxy_secret" not in created["compute"]
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": "Compute registry already exists"}
     assert delete_response.status_code == 202
-    assert delete_response.json()["operation"]["kind"] == OperationKind.compute
+    assert delete_response.json()["operation"]["kind"] == OperationKind.compute_reconcile
     assert retry_response.status_code == 202
     assert retry_response.json()["operation"]["id"] == delete_response.json()["operation"]["id"]
     assert get_response.status_code == 404

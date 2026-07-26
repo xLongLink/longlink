@@ -62,7 +62,6 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
                 version=metadata.version,
                 description=application.description,
                 icon=application.icon,
-                user=None,
             )
             if updated is None:
                 return jobs.complete()
@@ -75,10 +74,9 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
         await object_storage.create_prefix(bucket, prefix)
         credentials = applications.storage_credentials(application)
         if credentials is None:
-            application_key = application.id.hex
             provisioned = await applications.provision_storage_credentials(
                 application.id,
-                lambda: object_storage.credentials(application_key, bucket, ("shared/",), prefix),
+                lambda: object_storage.credentials(claimed.target_id.hex, bucket, ("shared/",), prefix),
                 lambda generated: object_storage.discard(generated["access_key_id"]),
             )
             if provisioned is None:

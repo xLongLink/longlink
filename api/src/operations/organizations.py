@@ -98,20 +98,37 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
 
 @operation("organization.reconcile")
 async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
-    """Apply current shared-schema migrations and synchronize Organization users."""
+    """Reconcile one Organization's shared database and storage resources."""
 
     # Release migrations skip removed Organizations and reject mismatched ownership.
     organization = await organizations.get(claimed.target_id, include_deleted=True)
     if organization is None or organization.deleted_at is not None:
         return jobs.complete()
 
-    # Apply idempotent SDK migrations before updating Platform-owned user rows.
-    registry = await database.get(organization.database_id, include_deleted=True)
-    if registry is None:
+    # Resolve the Organization's immutable database and storage assignments.
+    database_registry = await database.get(organization.database_id, include_deleted=True)
+    if database_registry is None:
         return jobs.fail("Database registry not found")
-    db = adapters.Postgres(registry.host, registry.port, registry.username, registry.password, registry.sslmode)
+    storage_registry = await storage.get(organization.storage_id, include_deleted=True)
+    if storage_registry is None:
+        return jobs.fail("Storage registry not found")
+
+    # Apply idempotent SDK migrations before updating Platform-owned user rows.
+    db = adapters.Postgres(
+        database_registry.host,
+        database_registry.port,
+        database_registry.username,
+        database_registry.password,
+        database_registry.sslmode,
+    )
     await db.prepare_organization_database(organization.id, organization.shared_schema_url)
     await sync_users(organization)
+
+    # Converge the Organization bucket and shared folder marker in the same reconciliation.
+    object_storage = adapters.storage(storage_registry)
+    bucket = organization.id.hex
+    await object_storage.create(bucket)
+    await object_storage.create_prefix(bucket, "shared/")
     return jobs.complete()
 
 

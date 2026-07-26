@@ -48,7 +48,7 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes) -> R
     return await cluster.reconcile(desired, registry.proxy_secret, gateway_tls(registry), stage_tls)
 
 
-@operation("compute")
+@operation("compute.reconcile")
 async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     """Reconcile one compute's gateway and cluster-bootstrap resources."""
 

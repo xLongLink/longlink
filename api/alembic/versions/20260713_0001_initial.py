@@ -349,8 +349,7 @@ def upgrade() -> None:
         sa.Column(
             "kind",
             sa.Enum(
-                "compute",
-                "storage",
+                "compute.reconcile",
                 "application.create",
                 "application.delete",
                 "organization.create",

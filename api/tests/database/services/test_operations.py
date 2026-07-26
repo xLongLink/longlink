@@ -98,7 +98,7 @@ async def test_operations_service_enqueue_coalesces_each_kind_and_target() -> No
     assert replacement.attempt_count == 1
     assert len(fetched) == 3
     assert {(item.kind, item.target_id) for item in fetched} == {
-        (OperationKind.compute, compute.id),
+        (OperationKind.compute_reconcile, compute.id),
         (OperationKind.application_create, first_application_id),
         (OperationKind.organization_create, organization_id),
     }
@@ -316,7 +316,7 @@ async def test_operations_service_platform_upgrade_queues_after_locked_work(monk
     upgraded = next(
         item
         for item in await operations.fetch()
-        if item.kind == OperationKind.compute and item.target_id == compute.id and item.stopped_at is None
+        if item.kind == OperationKind.compute_reconcile and item.target_id == compute.id and item.stopped_at is None
     )
     completed = await operations.complete(operation.id, claimed.attempt_count)
     replacement = await operations.claim_next()

@@ -130,8 +130,6 @@ spec:
                   ports:
                       - name: gateway
                         containerPort: 8443
-                      - name: admin
-                        containerPort: 9901
                   startupProbe:
                       httpGet:
                           path: /ready
@@ -139,7 +137,7 @@ spec:
                           scheme: HTTPS
                       periodSeconds: 2
                       failureThreshold: 60
-                  readinessProbe:
+                  readinessProbe: &steady-state-probe
                       httpGet:
                           path: /ready
                           port: gateway
@@ -147,12 +145,8 @@ spec:
                       periodSeconds: 5
                       failureThreshold: 3
                   livenessProbe:
-                      httpGet:
-                          path: /ready
-                          port: gateway
-                          scheme: HTTPS
+                      <<: *steady-state-probe
                       periodSeconds: 10
-                      failureThreshold: 3
                   volumeMounts:
                       - name: config
                         mountPath: /etc/envoy

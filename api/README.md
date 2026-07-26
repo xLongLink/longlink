@@ -55,10 +55,10 @@ Each application has:
 
 Work that is too long for an API request is queued as a durable, typed Operation:
 
-- `compute` reconciles only cluster-bootstrap and gateway resources, including routes for running Applications. It never deploys, deletes, or repairs Organization or Application resources.
+- `compute.reconcile` reconciles only cluster-bootstrap and gateway resources, including routes for running Applications. It never deploys, deletes, or repairs Organization or Application resources.
 - `organization.create` and `organization.delete` own one Organization's provider resources and Kubernetes Namespace lifecycle.
 - `application.create` and `application.delete` own one Application's provider resources and Kubernetes workload lifecycle.
-- `organization.reconcile` and `storage` synchronize shared Organization state during releases and membership changes.
+- `organization.reconcile` synchronizes shared Organization schema, users, and storage during releases and membership changes.
 - Each API replica claims and executes one Operation at a time. Expiring worker locks and bounded retries recover work across Platform redeployments.
 - Lifecycle retries reuse persisted state and skip deployment after an Application or Organization reaches `running`.
 
@@ -68,9 +68,8 @@ Work that is too long for an API request is queued as a durable, typed Operation
 
 - Release is trigged with `vX.Y.Z` and a container is created
 - Alembic migrations run, then `setup.py` schedules release migration Operations:
-  - One gateway and cluster-bootstrap synchronization for every outdated compute.
-  - One shared-schema synchronization for every Organization.
-  - One shared-folder synchronization for every Organization bucket.
+  - One `compute.reconcile` for every compute.
+  - One `organization.reconcile` for every active Organization.
 - Each API replica starts (`main.py`).
   - `FastAPI` manage user request.
   - `lifespan` claims and executes Operations.

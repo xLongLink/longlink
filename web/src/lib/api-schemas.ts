@@ -194,8 +194,7 @@ export const apiComputeRegistrySchema = z.object({
 export const apiOperationSchema = z.object({
     id: z.string(),
     kind: z.enum([
-        'compute',
-        'storage',
+        'compute.reconcile',
         'application.create',
         'application.delete',
         'organization.create',

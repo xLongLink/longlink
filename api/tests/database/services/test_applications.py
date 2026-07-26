@@ -283,7 +283,6 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     updated = await applications.update_runtime(
         application.id,
         "ghcr.io/longlink/dashboard:2.0.0",
-        user,
         version="2.0.0",
         sdk="1.2.3",
         description="Updated dashboard",
@@ -294,7 +293,6 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     deleted_runtime = await applications.update_runtime(
         application.id,
         "ghcr.io/longlink/dashboard:3.0.0",
-        user,
     )
 
     # Assert
@@ -308,7 +306,6 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     assert updated.description == "Updated dashboard"
     assert updated.digest == "sha256:abc123"
     assert updated.icon == "activity"
-    assert updated.updated_id == user.id
     assert deleted_runtime is None
 
 

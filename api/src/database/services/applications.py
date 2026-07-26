@@ -392,7 +392,6 @@ async def mark_running(application_id: UUID, compute_id: UUID) -> Operation | No
 async def update_runtime(
     application_id: UUID,
     image: str,
-    user: User | None,
     version: str | None = None,
     sdk: str | None = None,
     description: str | None = None,
@@ -413,8 +412,6 @@ async def update_runtime(
         application.sdk = sdk
         application.digest = digest
         application.description = description
-        if user is not None:
-            application.updated_id = user.id
         application.version = version
         application.status = ApplicationStatus.creating
         application.image = image

@@ -19,7 +19,7 @@ def leased_operation(attempt_count: int = 1) -> Operation:
 
     return Operation(
         id=UUID("55555555-5555-5555-5555-555555555555"),
-        kind=OperationKind.compute,
+        kind=OperationKind.compute_reconcile,
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
         platform_version="v1.2.3",
         attempt_count=attempt_count,
@@ -64,7 +64,7 @@ async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.Monke
     monkeypatch.setattr(operation_worker.operations, "claim_next", fake_claim_next)
     monkeypatch.setattr(operation_worker, "execute", fake_execute)
     monkeypatch.setattr(operation_worker.asyncio, "sleep", fake_sleep)
-    monkeypatch.setitem(operation_worker.handlers, OperationKind.compute, handler)
+    monkeypatch.setitem(operation_worker.handlers, OperationKind.compute_reconcile, handler)
 
     # Act
     with pytest.raises(StopScheduler):
