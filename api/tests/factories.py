@@ -25,7 +25,6 @@ class Infrastructure:
 
 
 async def create_ready_infrastructure(
-    owner: User,
     slug: str = "local",
     name: str = "Local testing",
 ) -> Infrastructure:
@@ -43,8 +42,6 @@ async def create_ready_infrastructure(
             proxy_secret=secrets.token_urlsafe(32),
             status=ComputeStatus.ready,
             version=env.VERSION,
-            created_id=owner.id,
-            updated_id=owner.id,
         )
         database = DatabaseRegistry(
             name=f"{name} database {suffix}",
@@ -54,8 +51,6 @@ async def create_ready_infrastructure(
             username="admin",
             password="secret",
             sslmode=DatabaseSSLMode.disable,
-            created_id=owner.id,
-            updated_id=owner.id,
         )
         storage = StorageRegistry(
             kind=StorageKind.exoscale,
@@ -65,8 +60,6 @@ async def create_ready_infrastructure(
             runtime_endpoint_url="https://sos-ch-gva-2.exo.io",
             access_key_id="access-key",
             secret_access_key="secret-key",
-            created_id=owner.id,
-            updated_id=owner.id,
         )
         session.add_all([compute, database, storage])
         await session.commit()

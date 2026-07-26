@@ -126,7 +126,6 @@ class Gateway:
             clusters.append(
                 {
                     "name": cluster_name,
-                    "connect_timeout": "5s",
                     "type": "STRICT_DNS",
                     "load_assignment": {
                         "cluster_name": cluster_name,
@@ -150,17 +149,13 @@ class Gateway:
                 }
             )
 
-        # Health and fallback routes surround the desired application routes.
+        # Health checks bypass authentication before the desired Application routes.
         rendered_routes: list[EnvoyDocument] = [
             {
                 "match": {"path": "/ready"},
-                "direct_response": {"status": 200, "body": {"inline_string": "ready"}},
+                "direct_response": {"status": 200},
             },
             *routes,
-            {
-                "match": {"prefix": "/"},
-                "direct_response": {"status": 404, "body": {"inline_string": "Not found"}},
-            },
         ]
         config = templates.readyml_list(
             PLATFORM_TEMPLATES.joinpath("envoy.yml"),
@@ -273,7 +268,7 @@ class Gateway:
         """
 
         # Hash rendered behavior and secret material so every relevant change rolls the gateway pods.
-        sources = "".join(PLATFORM_TEMPLATES.joinpath(name).read_text(encoding="utf-8") for name in ("envoy.yml", "gateway.yml"))
+        source = PLATFORM_TEMPLATES.joinpath("gateway.yml").read_text(encoding="utf-8")
         revision_input = json.dumps(
             {
                 "ca_certificate": tls.ca_certificate,
@@ -287,12 +282,11 @@ class Gateway:
         )
         runtime_revision = hmac.new(
             proxy_secret.encode("utf-8"),
-            f"{sources}\n{revision_input}".encode(),
+            f"{source}\n{revision_input}".encode(),
             hashlib.sha256,
         ).hexdigest()
         manifests = templates.readyml_list(
             PLATFORM_TEMPLATES.joinpath("gateway.yml"),
-            ca_certificate=json.dumps(tls.ca_certificate),
             envoy_config=json.dumps(envoy_config),
             gateway_secret=json.dumps(proxy_secret),
             compute_id=compute_id,

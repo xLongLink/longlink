@@ -32,6 +32,7 @@ async def enqueue_in_session(
     kind: OperationKind = OperationKind.compute_reconcile,
     target_id: UUID | None = None,
     fresh: bool = False,
+    delay_seconds: float = 0,
 ) -> Operation:
     """Append one typed Platform operation inside the caller's state transaction.
 
@@ -108,7 +109,7 @@ async def enqueue_in_session(
         kind=kind,
         target_id=target,
         platform_version=platform_version,
-        scheduled_at=now,
+        scheduled_at=now + timedelta(seconds=max(0, delay_seconds)),
     )
     session.add(operation)
     await session.flush()
@@ -126,6 +127,28 @@ async def enqueue(compute_id: UUID, *, kind: OperationKind = OperationKind.compu
             kind=kind,
             target_id=target_id,
         )
+        await session.commit()
+        return operation
+
+
+async def schedule_now(operation_id: UUID) -> Operation | None:
+    """Make one open delayed Operation immediately eligible for claiming."""
+
+    # Preserve terminal and lease state while advancing only the due timestamp.
+    async with session_scope() as session:
+        statement = (
+            update(Operation)
+            .where(
+                Operation.id == operation_id,
+                Operation.stopped_at.is_(None),
+            )
+            .values(scheduled_at=utcnow())
+            .returning(Operation)
+        )
+        operation = (await session.execute(statement)).scalar_one_or_none()
+        if operation is None:
+            return None
+
         await session.commit()
         return operation
 

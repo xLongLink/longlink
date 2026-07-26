@@ -19,7 +19,7 @@ async def create_application_context(prefix: str) -> tuple[User, Organization, A
     """Create a user, organization, and application for service tests."""
 
     user = await create_user(prefix)
-    infrastructure = await create_ready_infrastructure(user, slug=f"{prefix}-compute", name=f"{prefix} compute")
+    infrastructure = await create_ready_infrastructure(slug=f"{prefix}-compute", name=f"{prefix} compute")
     organization = await create_organization(
         infrastructure,
         user,
@@ -52,7 +52,7 @@ async def test_create_requires_running_organization_and_queues_application_lifec
 
     # Arrange
     user = await create_user("app")
-    infrastructure = await create_ready_infrastructure(user)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, user)
     open_before = [item for item in await operations.fetch() if item.stopped_at is None]
 
@@ -170,7 +170,7 @@ async def test_list_members_includes_organization_members_with_optional_applicat
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
     application = await create_application(organization, owner, name="Dashboard")
 
@@ -208,7 +208,7 @@ async def test_set_member_role_creates_updates_removes_and_restores_memberships(
 
     # Arrange
     owner, member, non_member = users
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
     application = await create_application(organization, owner, name="Dashboard")
 

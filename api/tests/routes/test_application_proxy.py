@@ -21,8 +21,8 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
 
     # Arrange
     user = users[0]
-    await create_ready_infrastructure(user, slug="local", name="Local testing")
-    remote_infrastructure = await create_ready_infrastructure(user, slug="remote", name="Remote testing")
+    await create_ready_infrastructure(slug="local", name="Local testing")
+    remote_infrastructure = await create_ready_infrastructure(slug="remote", name="Remote testing")
     organization = await create_organization(remote_infrastructure, user)
     app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, ApplicationStatus.running)
@@ -156,7 +156,7 @@ async def test_application_proxy_rejects_oversized_request_body(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
     app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, ApplicationStatus.running)
@@ -211,7 +211,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
     app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, ApplicationStatus.running)
@@ -240,7 +240,7 @@ async def test_application_proxy_requires_application_role_for_regular_member(
     # Arrange
     owner = users[0]
     user = users[1]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
     app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, ApplicationStatus.running)
@@ -273,7 +273,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, user)
     app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, ApplicationStatus.running)
@@ -333,7 +333,7 @@ async def test_application_proxy_enforces_method_role(
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, user)
     app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, ApplicationStatus.running)
@@ -373,7 +373,7 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
     app = await create_application(organization, owner)
     client = clients[0]

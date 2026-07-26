@@ -8,14 +8,12 @@ from src.database.models.users import User
 
 async def test_compute_registry_endpoints_return_backend(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
 ) -> None:
     """Return an independently registered compute backend."""
 
     # Arrange
     client = clients[0]
-    user1, _, _ = users
-    infrastructure = await create_ready_infrastructure(user1)
+    infrastructure = await create_ready_infrastructure()
     registry = infrastructure.compute
 
     # Act
@@ -34,12 +32,13 @@ async def test_compute_registry_endpoints_return_backend(
     assert payload["version"] is not None
     assert "kubeconfig" not in payload
     assert "proxy_secret" not in payload
+    assert "created_at" not in payload
 
 
 async def test_compute_registry_create_duplicate_and_delete(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Create one compute registry, reject a duplicate, and tombstone the unused registry."""
+    """Create one compute registry, reject a duplicate, and mark the unused registry for deletion."""
 
     # Arrange
     client = clients[0]
@@ -73,9 +72,9 @@ async def test_compute_registry_create_duplicate_and_delete(
     assert retry_response.status_code == 202
     assert retry_response.json()["operation"]["id"] == delete_response.json()["operation"]["id"]
     assert get_response.status_code == 404
-    deleted = await compute.get(UUID(registry_id), include_deleted=True)
-    assert deleted is not None
-    assert deleted.deleted_at is not None
+    deleting = await compute.get(UUID(registry_id), include_deleting=True)
+    assert deleting is not None
+    assert deleting.status == "deleting"
 
 
 async def test_compute_registry_delete_rejects_assigned_registry(
@@ -86,7 +85,7 @@ async def test_compute_registry_delete_rejects_assigned_registry(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     await create_organization(infrastructure, owner)
     client = clients[0]
 
@@ -108,7 +107,7 @@ async def test_compute_registry_routes_enforce_support_and_admin_roles(
     # Arrange
     owner = users[0]
     support = users[2]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     registry = infrastructure.compute
 
     class FakeKubernetes:
@@ -160,7 +159,7 @@ async def test_compute_diagnostics_return_namespaces_and_pods(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
 
     class Pod:
         """Minimal pod object returned by the fake Kubernetes client."""
@@ -213,7 +212,7 @@ async def test_compute_diagnostics_return_unavailable_when_backend_fails(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
 
     class FailingKubernetes:
         """Raise a provider error for namespace inspection."""

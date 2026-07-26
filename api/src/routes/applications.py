@@ -9,7 +9,7 @@ from collections.abc import AsyncIterator
 from src.models.roles import APPLICATION_PROXY_METHODS, APPLICATION_PROXY_METHOD_ROLES, PlatformRoles, ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
 from starlette.responses import StreamingResponse
-from src.database.services import compute, applications
+from src.database.services import compute, operations, applications
 from src.kubernetes.client import Kubernetes
 from src.models.applications import (
     ApplicationCreate,
@@ -56,6 +56,11 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
 
     logger.info("Creating application desired state %s/%s", organization.slug, application_slug)
 
+    # Resolve the assigned cluster before committing Application state that requires Secret staging.
+    registry = await compute.get(organization.compute_id)
+    if registry is None:
+        raise HTTPException(status_code=503, detail="No compute cluster configured")
+
     application, operation = await applications.create(
         organization.id,
         payload.name,
@@ -63,9 +68,21 @@ async def create_application(organization_id: UUID, payload: ApplicationCreate, 
         image=payload.image,
         description=payload.description,
         icon=payload.icon.value if payload.icon is not None else None,
-        envs=payload.envs,
         user=user,
     )
+
+    # Store user environment values only in Kubernetes, then release the delayed lifecycle Operation.
+    try:
+        cluster = Kubernetes(registry.kubeconfig)
+        await cluster.applications.stage_envs(application.id, organization.slug, payload.envs)
+        scheduled = await operations.schedule_now(operation.id)
+        if scheduled is None:
+            raise RuntimeError("Application create Operation is no longer open")
+        operation = scheduled
+    except Exception as exc:
+        logger.warning("Application environment staging failed for '%s': %s", application.id, type(exc).__name__)
+        await applications.soft_delete(application.id, user)
+        raise HTTPException(status_code=503, detail="Application environment could not be staged") from exc
 
     return {"application": application, "operation": operation}
 
@@ -108,7 +125,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
-        logs = await compute_client.applications.logs(str(application.id), namespace, str(compute_id))
+        logs = await compute_client.applications.logs(str(application.id), namespace)
     except Exception as exc:
         logger.exception("Failed to load logs for application '%s': %r", application.id, exc)
         raise HTTPException(status_code=503, detail="Application logs unavailable") from exc

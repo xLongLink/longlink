@@ -3,60 +3,44 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
 from packaging.version import Version
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus
 from src.database.session import session_scope
 from src.database.services import operations
 from src.models.operations import OperationKind
-from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
 
-async def fetch(include_deleted: bool = False) -> list[ComputeRegistry]:
+async def fetch() -> list[ComputeRegistry]:
     """Return registered compute backends."""
 
-    # Read registries within one scoped session.
+    # Hide compute targets while asynchronous deletion is in progress.
     async with session_scope() as session:
-        statement = select(ComputeRegistry).options(
-            joinedload(ComputeRegistry.created_by),
-            joinedload(ComputeRegistry.updated_by),
-            joinedload(ComputeRegistry.deleted_by),
-        )
-        if not include_deleted:
-            statement = statement.where(ComputeRegistry.deleted_at.is_(None))
+        statement = select(ComputeRegistry).where(ComputeRegistry.status != ComputeStatus.deleting)
         result = await session.execute(statement)
         return result.scalars().all()
 
 
-async def get(registry_id: UUID, include_deleted: bool = False) -> ComputeRegistry | None:
+async def get(registry_id: UUID, include_deleting: bool = False) -> ComputeRegistry | None:
     """Return one compute backend by id."""
 
     # Build the lookup within one scoped session.
     async with session_scope() as session:
         conditions = [ComputeRegistry.id == registry_id]
 
-        # Deleted registries are hidden unless requested.
-        if not include_deleted:
-            conditions.append(ComputeRegistry.deleted_at.is_(None))
+        # Deleting registries remain available only to their reconciliation operation.
+        if not include_deleting:
+            conditions.append(ComputeRegistry.status != ComputeStatus.deleting)
 
-        statement = (
-            select(ComputeRegistry)
-            .options(
-                joinedload(ComputeRegistry.created_by),
-                joinedload(ComputeRegistry.updated_by),
-                joinedload(ComputeRegistry.deleted_by),
-            )
-            .where(*conditions)
-        )
+        statement = select(ComputeRegistry).where(*conditions)
         result = await session.execute(statement)
         return result.scalar_one_or_none()
 
 
-async def create(name: str, slug: str, kubeconfig: str, user: User) -> tuple[ComputeRegistry, Operation]:
+async def create(name: str, slug: str, kubeconfig: str) -> tuple[ComputeRegistry, Operation]:
     """Register one compute target and queue its initial reconciliation."""
 
     # Persist the target and its outbox row atomically.
@@ -66,8 +50,6 @@ async def create(name: str, slug: str, kubeconfig: str, user: User) -> tuple[Com
             slug=slug,
             kubeconfig=kubeconfig,
             proxy_secret=secrets.token_urlsafe(32),
-            created_id=user.id,
-            updated_id=user.id,
         )
         session.add(registry)
 
@@ -79,21 +61,11 @@ async def create(name: str, slug: str, kubeconfig: str, user: User) -> tuple[Com
             await session.rollback()
             raise HTTPException(status_code=409, detail="Compute registry already exists") from exc
 
-        statement = (
-            select(ComputeRegistry)
-            .options(
-                joinedload(ComputeRegistry.created_by),
-                joinedload(ComputeRegistry.updated_by),
-                joinedload(ComputeRegistry.deleted_by),
-            )
-            .where(ComputeRegistry.id == registry.id)
-        )
-        persisted = (await session.execute(statement)).scalar_one()
-        return persisted, operation
+        return registry, operation
 
 
-async def delete(registry_id: UUID, user: User) -> tuple[ComputeRegistry, Operation] | None:
-    """Tombstone an unused compute target and queue cluster cleanup."""
+async def delete(registry_id: UUID) -> tuple[ComputeRegistry, Operation] | None:
+    """Mark an unused compute target for cluster cleanup."""
 
     # Lock the target before checking assignments and queueing cleanup.
     async with session_scope() as session:
@@ -103,23 +75,18 @@ async def delete(registry_id: UUID, user: User) -> tuple[ComputeRegistry, Operat
         if registry is None:
             return None
 
-        # Tombstoned Organizations still need this target until provider cleanup finishes.
+        # Organizations retain their assigned compute until provider cleanup finishes.
         organization_id = (
             await session.execute(select(Organization.id).where(Organization.compute_id == registry_id).limit(1))
         ).scalar_one_or_none()
         if organization_id is not None:
             raise HTTPException(status_code=409, detail="Compute registry is used by organizations")
 
-        # The first request records the tombstone and receives a fresh cleanup attempt budget.
-        fresh = registry.deleted_at is None
+        # The first request marks lifecycle state and receives a fresh cleanup attempt budget.
+        fresh = registry.status != ComputeStatus.deleting
         if fresh:
-            now = utcnow()
             registry.status = ComputeStatus.deleting
             registry.version = None
-            registry.deleted_at = now
-            registry.deleted_id = user.id
-            registry.updated_at = now
-            registry.updated_id = user.id
 
         # Compute deletion owns only gateway and cluster-bootstrap resources after Organizations are gone.
         operation = await operations.enqueue_in_session(
@@ -129,17 +96,7 @@ async def delete(registry_id: UUID, user: User) -> tuple[ComputeRegistry, Operat
             fresh=fresh,
         )
         await session.commit()
-        statement = (
-            select(ComputeRegistry)
-            .options(
-                joinedload(ComputeRegistry.created_by),
-                joinedload(ComputeRegistry.updated_by),
-                joinedload(ComputeRegistry.deleted_by),
-            )
-            .where(ComputeRegistry.id == registry.id)
-        )
-        persisted = (await session.execute(statement)).scalar_one()
-        return persisted, operation
+        return registry, operation
 
 
 async def record_success(
@@ -162,13 +119,20 @@ async def record_success(
             return False
         if registry.version is not None and Version(registry.version) > Version(platform_version):
             return False
+
+        # Successful cleanup removes the internal registry after its external resources are gone.
+        if registry.status == ComputeStatus.deleting:
+            await session.delete(registry)
+            await session.commit()
+            return True
+
         registry.gateway_url = gateway_url
         registry.gateway_ca_certificate = gateway_ca_certificate
         registry.gateway_previous_ca_certificate = None
         registry.gateway_tls_certificate = gateway_tls_certificate
         registry.gateway_tls_private_key = gateway_tls_private_key
         registry.version = platform_version
-        registry.status = ComputeStatus.deleting if registry.deleted_at is not None else ComputeStatus.ready
+        registry.status = ComputeStatus.ready
 
         # Inline reconciliation can atomically retire fallback work that it fully satisfied.
         if satisfy_pending:
@@ -197,7 +161,8 @@ async def record_failure(compute_id: UUID) -> None:
         ).scalar_one_or_none()
         if registry is None:
             return
-        registry.status = ComputeStatus.failed
+        if registry.status != ComputeStatus.deleting:
+            registry.status = ComputeStatus.failed
         await session.commit()
 
 

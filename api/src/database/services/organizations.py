@@ -230,7 +230,6 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
         ).scalar_one_or_none()
         if compute is None:
             raise RuntimeError("Organization compute registry not found")
-        compute.updated_id = user.id
         await operations.enqueue_in_session(
             session,
             compute.id,
@@ -260,30 +259,29 @@ async def create(
 
     # Create the organization and owner membership together.
     async with session_scope() as session:
-        # Lock an explicitly selected compute or assign the oldest available reconciliation root.
+        # Lock an explicitly selected compute or assign the first available reconciliation root.
         compute_statement = select(ComputeRegistry)
         if compute_id is None:
             compute_statement = (
                 compute_statement.where(
-                    ComputeRegistry.deleted_at.is_(None),
                     ComputeRegistry.status == ComputeStatus.ready,
                 )
-                .order_by(ComputeRegistry.created_at, ComputeRegistry.id)
+                .order_by(ComputeRegistry.id)
                 .limit(1)
             )
         else:
             compute_statement = compute_statement.where(ComputeRegistry.id == compute_id)
         compute = (await session.execute(compute_statement.with_for_update())).scalar_one_or_none()
-        if compute is None or compute.deleted_at is not None:
+        if compute is None or compute.status == ComputeStatus.deleting:
             detail = "No compute registry available" if compute_id is None else "Compute registry not found"
             raise HTTPException(status_code=503 if compute_id is None else 404, detail=detail)
         if compute.status != ComputeStatus.ready:
             raise HTTPException(status_code=409, detail="Compute registry is not ready")
 
-        # Lock an explicitly selected database or assign the oldest active registry.
-        database_statement = select(DatabaseRegistry).where(DatabaseRegistry.deleted_at.is_(None))
+        # Lock an explicitly selected database or assign the first available registry.
+        database_statement = select(DatabaseRegistry)
         if database_id is None:
-            database_statement = database_statement.order_by(DatabaseRegistry.created_at, DatabaseRegistry.id).limit(1)
+            database_statement = database_statement.order_by(DatabaseRegistry.id).limit(1)
         else:
             database_statement = database_statement.where(DatabaseRegistry.id == database_id)
         database_registry = (await session.execute(database_statement.with_for_update())).scalar_one_or_none()
@@ -291,10 +289,10 @@ async def create(
             detail = "No database registry available" if database_id is None else "Database registry not found"
             raise HTTPException(status_code=503 if database_id is None else 404, detail=detail)
 
-        # Lock an explicitly selected storage backend or assign the oldest active registry.
-        storage_statement = select(StorageRegistry).where(StorageRegistry.deleted_at.is_(None))
+        # Lock an explicitly selected storage backend or assign the first available registry.
+        storage_statement = select(StorageRegistry)
         if storage_id is None:
-            storage_statement = storage_statement.order_by(StorageRegistry.created_at, StorageRegistry.id).limit(1)
+            storage_statement = storage_statement.order_by(StorageRegistry.id).limit(1)
         else:
             storage_statement = storage_statement.where(StorageRegistry.id == storage_id)
         storage_registry = (await session.execute(storage_statement.with_for_update())).scalar_one_or_none()
@@ -336,7 +334,6 @@ async def create(
             )
         )
         session.add(organization)
-        compute.updated_id = user.id
 
         # Queue reconciliation and translate unique conflicts from autoflush or commit.
         try:
@@ -468,7 +465,6 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
             )
 
         # Tombstones and their reconciliation request commit atomically.
-        compute.updated_id = user.id
         operation = await operations.enqueue_in_session(
             session,
             compute.id,

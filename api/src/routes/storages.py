@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 @router.post("/api/storages", response_model=StorageRegistryResponse, status_code=201)
-async def create_storage_registry(payload: StorageRegistryCreate, user: User = Depends(authadmin)):
+async def create_storage_registry(payload: StorageRegistryCreate, _user: User = Depends(authadmin)):
     """Register one Exoscale SOS backend."""
 
     return await storage.create(
@@ -21,7 +21,6 @@ async def create_storage_registry(payload: StorageRegistryCreate, user: User = D
         payload.runtime_endpoint_url,
         payload.access_key_id,
         payload.secret_access_key,
-        user,
     )
 
 
@@ -43,12 +42,9 @@ async def get_storage_registry(registry_id: UUID, _user: User = Depends(authsupp
     return registry
 
 
-@router.delete("/api/storages/{registry_id}", response_model=StorageRegistryResponse)
-async def delete_storage_registry(registry_id: UUID, user: User = Depends(authadmin)):
+@router.delete("/api/storages/{registry_id}", status_code=204)
+async def delete_storage_registry(registry_id: UUID, _user: User = Depends(authadmin)):
     """Delete one unused Exoscale SOS backend registration."""
 
-    registry = await storage.delete(registry_id, user)
-    if registry is None:
+    if not await storage.delete(registry_id):
         raise HTTPException(status_code=404, detail="Storage registry not found")
-
-    return registry

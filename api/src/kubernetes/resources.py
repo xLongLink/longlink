@@ -6,7 +6,6 @@ import base64
 import asyncio
 import builtins
 from copy import deepcopy
-from enum import StrEnum
 from typing import Any, TypeVar
 from kr8s.asyncio import Api
 from kr8s.asyncio.objects import Pod, Secret, APIObject, Deployment, object_from_spec
@@ -33,13 +32,6 @@ SERVER_METADATA_FIELDS = {
     "selfLink",
     "uid",
 }
-
-
-class ResourceScope(StrEnum):
-    """Separate gateway ownership from explicit tenant lifecycle resources."""
-
-    platform = "platform"
-    application = "application"
 
 
 def metadata(resource: APIObject) -> dict[str, Any]:
@@ -230,23 +222,24 @@ def _comparable_secret(body: KubernetesDocument) -> KubernetesDocument:
     return comparable
 
 
-def _desired_ownership(body: KubernetesDocument) -> dict[str, str]:
-    """Return the complete ownership labels required from one desired resource."""
+def _platform_ownership(body: KubernetesDocument) -> dict[str, str]:
+    """Return the complete ownership labels required from one Platform resource."""
 
     metadata = body.get("metadata")
     labels = metadata.get("labels") if isinstance(metadata, dict) else None
     if not isinstance(labels, dict):
         raise ValueError("Desired Kubernetes resource metadata.labels must be a mapping")
+    if labels.get(MANAGED_BY_LABEL) != FIELD_MANAGER:
+        raise ValueError("Desired Platform resource has invalid ownership labels")
+    if labels.get(RESOURCE_SCOPE_LABEL) != "platform":
+        raise ValueError("Desired Platform resource has invalid ownership scope")
     compute_id = labels.get(COMPUTE_ID_LABEL)
-    scope = labels.get(RESOURCE_SCOPE_LABEL)
-    if labels.get(MANAGED_BY_LABEL) != FIELD_MANAGER or not isinstance(compute_id, str) or not compute_id:
-        raise ValueError("Desired Kubernetes resource has invalid ownership labels")
-    if scope not in {item.value for item in ResourceScope}:
-        raise ValueError("Desired Kubernetes resource has invalid ownership scope")
+    if not isinstance(compute_id, str) or not compute_id:
+        raise ValueError("Desired Platform resource has invalid compute ownership")
     return {
         MANAGED_BY_LABEL: FIELD_MANAGER,
         COMPUTE_ID_LABEL: compute_id,
-        RESOURCE_SCOPE_LABEL: scope,
+        RESOURCE_SCOPE_LABEL: "platform",
     }
 
 
@@ -265,7 +258,7 @@ def _validate_existing_ownership(resource: APIObject, expected: dict[str, str]) 
 
 
 class KubernetesResources:
-    """Provide ownership-safe apply, exact Secret replacement, discovery, and conditional deletion."""
+    """Provide Platform ownership checks and explicit Application resource lifecycle access."""
 
     def __init__(self, kubeconfig: str) -> None:
         """Initialize lazy access to one configured cluster."""
@@ -290,17 +283,27 @@ class KubernetesResources:
 
         return self._api_client
 
-    async def apply(self, body: KubernetesDocument) -> APIObject:
-        """Validate exact ownership and server-side apply one resource under LongLink's field manager."""
+    async def apply_platform(self, body: KubernetesDocument) -> APIObject:
+        """Validate Platform ownership and server-side apply one resource."""
 
-        # Resolve and validate ownership before forced apply can claim fields on an existing resource.
+        return await self._apply(body, _platform_ownership(body))
+
+    async def apply_application(self, body: KubernetesDocument) -> APIObject:
+        """Server-side apply one exact Application lifecycle resource."""
+
+        return await self._apply(body)
+
+    async def _apply(self, body: KubernetesDocument, expected: dict[str, str] | None = None) -> APIObject:
+        """Server-side apply one validated resource with optional ownership enforcement."""
+
+        # Resolve the desired resource before forced apply can claim fields on an existing object.
         api = await self.api()
         resource = _resource_from_body(body, api)
         namespace = resource.namespace if resource.namespaced else None
-        expected = _desired_ownership(body)
-        existing = await self.read(type(resource), resource.name, namespace)
-        if existing is not None:
-            _validate_existing_ownership(existing, expected)
+        if expected is not None:
+            existing = await self.read(type(resource), resource.name, namespace)
+            if existing is not None:
+                _validate_existing_ownership(existing, expected)
 
         # Server-side apply creates or updates the desired object in one API request.
         async with api.call_api(
@@ -317,11 +320,21 @@ class KubernetesResources:
                 raise TypeError("Kubernetes apply response must be a mapping")
             return type(resource)(document, api=api)
 
-    async def apply_deployment(self, body: KubernetesDocument) -> Deployment:
-        """Apply one Deployment and recreate it when foreign pod-list entries survive server-side apply."""
+    async def apply_platform_deployment(self, body: KubernetesDocument) -> Deployment:
+        """Apply one Platform Deployment with ownership and exact pod-list enforcement."""
+
+        return await self._apply_deployment(body, _platform_ownership(body))
+
+    async def apply_application_deployment(self, body: KubernetesDocument) -> Deployment:
+        """Apply one Application Deployment with exact pod-list enforcement."""
+
+        return await self._apply_deployment(body)
+
+    async def _apply_deployment(self, body: KubernetesDocument, expected: dict[str, str] | None = None) -> Deployment:
+        """Apply one Deployment and recreate it when foreign pod-list entries survive."""
 
         # Apply the requested Deployment and verify its security-critical list shape.
-        applied = await self.apply(body)
+        applied = await self._apply(body, expected)
         if not isinstance(applied, Deployment):
             raise TypeError("Kubernetes Deployment apply returned an unexpected resource kind")
         if _deployment_shape_matches(body, applied):
@@ -334,16 +347,25 @@ class KubernetesResources:
             if time.monotonic() >= deadline:
                 raise TimeoutError(f"Kubernetes Deployment {applied.name!r} did not terminate before recreation")
             await asyncio.sleep(POLL_INTERVAL_SECONDS)
-        recreated = await self.apply(body)
+        recreated = await self._apply(body, expected)
         if not isinstance(recreated, Deployment) or not _deployment_shape_matches(body, recreated):
             raise RuntimeError(f"Kubernetes Deployment {applied.name!r} retained unexpected pod entries")
         return recreated
 
-    async def replace_secret(self, body: KubernetesDocument) -> Secret:
+    async def replace_platform_secret(self, body: KubernetesDocument) -> Secret:
+        """Create or replace one exact Platform Secret after validating ownership."""
+
+        return await self._replace_secret(body, _platform_ownership(body))
+
+    async def replace_application_secret(self, body: KubernetesDocument) -> Secret:
+        """Create or replace one exact Application Secret."""
+
+        return await self._replace_secret(body)
+
+    async def _replace_secret(self, body: KubernetesDocument, expected: dict[str, str] | None = None) -> Secret:
         """Create or replace a Secret with authoritative data, so omitted keys are removed rather than retained by field ownership.
 
-        Preserve existing labels plus non-LongLink annotations and finalizers, allowing desired labels to override matching keys. Retry
-        resource-version conflicts from a fresh read.
+        Preserve provider labels, annotations, and finalizers while retrying resource-version conflicts from a fresh read.
         """
 
         # Validate the body and resolve the namespace before entering the conflict retry loop.
@@ -352,8 +374,6 @@ class KubernetesResources:
         if not isinstance(resource, Secret):
             raise ValueError("Exact replacement only supports v1 Secret resources")
         namespace = resource.namespace
-        expected = _desired_ownership(body)
-
         # A conflicting create or replace is retried from a fresh read a bounded number of times.
         for attempt in range(SECRET_REPLACE_ATTEMPTS):
             try:
@@ -377,8 +397,9 @@ class KubernetesResources:
                             raise TypeError("Kubernetes Secret response must be a mapping")
                         return Secret(document, api=api)
 
-                # Every retry revalidates ownership before exact replacement can change labels or data.
-                _validate_existing_ownership(existing, expected)
+                # Every Platform retry revalidates ownership before exact replacement can change labels or data.
+                if expected is not None:
+                    _validate_existing_ownership(existing, expected)
 
                 # Keep annotations and finalizers controlled by Kubernetes providers.
                 existing_body = existing.to_dict()
@@ -398,12 +419,12 @@ class KubernetesResources:
                 else:
                     metadata.pop("annotations", None)
 
-                # Preserve labels added by providers while desired LongLink labels remain authoritative.
+                # Preserve provider labels while removing omitted LongLink labels.
                 desired_labels = metadata.get("labels", {})
                 existing_labels = existing_metadata.get("labels", {})
                 if not isinstance(desired_labels, dict) or not isinstance(existing_labels, dict):
                     raise TypeError("Kubernetes Secret labels must be mappings")
-                labels = dict(existing_labels)
+                labels = {key: value for key, value in existing_labels.items() if not key.startswith(LONG_LINK_METADATA_PREFIX)}
                 labels.update(desired_labels)
                 if labels:
                     metadata["labels"] = labels
@@ -496,65 +517,77 @@ class KubernetesResources:
             resources.append(resource)
         return resources
 
-    async def list_owned(
-        self,
-        resource_class: type[KubernetesResource],
-        compute_id: str,
-        scope: ResourceScope,
-        namespace: str | None = None,
+    async def list_platform_owned(
+        self, resource_class: type[KubernetesResource], compute_id: str, namespace: str | None = None
     ) -> builtins.list[KubernetesResource]:
-        """List resources only when all LongLink ownership labels match."""
+        """List resources owned by one LongLink Platform compute target."""
 
-        # Exact scope selection prevents either reconciliation plane from discovering resources owned by the other.
+        # Platform selection includes the compute claim and excludes Application resources.
         return await self.list(
             resource_class,
             namespace,
             {
                 MANAGED_BY_LABEL: FIELD_MANAGER,
                 COMPUTE_ID_LABEL: compute_id,
-                RESOURCE_SCOPE_LABEL: scope.value,
+                RESOURCE_SCOPE_LABEL: "platform",
             },
         )
 
-    async def read_owned(
+    async def read_platform_owned(
         self,
         resource_class: type[KubernetesResource],
         name: str,
         compute_id: str,
-        scope: ResourceScope,
         namespace: str | None = None,
-        labels: dict[str, str] | None = None,
     ) -> KubernetesResource | None:
-        """Read one exact resource only when all ownership and lifecycle identity labels match."""
+        """Read one exact resource owned by a LongLink Platform compute target."""
 
         # Keep the exact lookup and ownership check in one security boundary.
         resource = await self.read(resource_class, name, namespace)
         if resource is None:
             return None
-        expected = {
-            MANAGED_BY_LABEL: FIELD_MANAGER,
-            COMPUTE_ID_LABEL: compute_id,
-            RESOURCE_SCOPE_LABEL: scope.value,
-        }
-        _validate_existing_ownership(resource, expected)
-        existing_labels = string_map(metadata(resource), "labels")
-        if labels is not None and any(existing_labels.get(key) != value for key, value in labels.items()):
-            raise ValueError(f"Kubernetes {resource.kind} {resource.name!r} has invalid lifecycle identity labels")
+
+        _validate_existing_ownership(
+            resource,
+            {
+                MANAGED_BY_LABEL: FIELD_MANAGER,
+                COMPUTE_ID_LABEL: compute_id,
+                RESOURCE_SCOPE_LABEL: "platform",
+            },
+        )
         return resource
 
-    async def delete_owned(
+    async def read_application(
         self,
         resource_class: type[KubernetesResource],
         name: str,
-        compute_id: str,
-        scope: ResourceScope,
+        namespace: str | None = None,
+        labels: dict[str, str] | None = None,
+    ) -> KubernetesResource | None:
+        """Read one exact Application resource and validate optional identity labels."""
+
+        # Keep the exact lookup and identity check in one lifecycle boundary.
+        resource = await self.read(resource_class, name, namespace)
+        if resource is None:
+            return None
+
+        if labels is not None:
+            existing_labels = string_map(metadata(resource), "labels")
+            if any(existing_labels.get(key) != value for key, value in labels.items()):
+                raise ValueError(f"Kubernetes {resource.kind} {resource.name!r} has invalid lifecycle identity labels")
+        return resource
+
+    async def delete_application(
+        self,
+        resource_class: type[KubernetesResource],
+        name: str,
         namespace: str | None = None,
         labels: dict[str, str] | None = None,
     ) -> None:
-        """Delete one exact owned resource by UID, treating an absent resource as complete."""
+        """Delete one exact Application resource by UID, treating absence as complete."""
 
-        # Validate current ownership immediately before the conditional deletion.
-        resource = await self.read_owned(resource_class, name, compute_id, scope, namespace, labels)
+        # Validate current identity immediately before the conditional deletion.
+        resource = await self.read_application(resource_class, name, namespace, labels)
         if resource is None:
             return
         await self.delete(resource_class, name, namespace, uid(resource))

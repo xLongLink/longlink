@@ -18,7 +18,5 @@ spec:
     selector:
         app: longlink-gateway
     ports:
-        - name: https
-          protocol: TCP
-          port: 443
+        - port: 443
           targetPort: gateway

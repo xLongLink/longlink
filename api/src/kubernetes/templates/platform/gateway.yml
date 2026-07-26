@@ -14,7 +14,6 @@ metadata:
         app.kubernetes.io/managed-by: longlink-platform
         longlink.io/compute-id: '$compute_id'
         longlink.io/resource-scope: platform
-type: Opaque
 stringData:
     gateway-secret: $gateway_secret
 ---
@@ -34,7 +33,6 @@ metadata:
         longlink.io/resource-scope: platform
 type: kubernetes.io/tls
 stringData:
-    ca.crt: $ca_certificate
     tls.crt: $tls_certificate
     tls.key: $tls_private_key
 ---
@@ -112,7 +110,6 @@ spec:
                   volumeMounts:
                       - name: template
                         mountPath: /etc/envoy-template
-                        readOnly: true
                       - name: config
                         mountPath: /etc/envoy
                   securityContext:
@@ -137,25 +134,20 @@ spec:
                           scheme: HTTPS
                       periodSeconds: 2
                       failureThreshold: 60
-                  readinessProbe: &steady-state-probe
-                      httpGet:
+                  readinessProbe:
+                      httpGet: &health-check
                           path: /ready
                           port: gateway
                           scheme: HTTPS
                       periodSeconds: 5
-                      failureThreshold: 3
                   livenessProbe:
-                      <<: *steady-state-probe
-                      periodSeconds: 10
+                      httpGet: *health-check
                   volumeMounts:
                       - name: config
                         mountPath: /etc/envoy
                         readOnly: true
                       - name: tls
                         mountPath: /etc/envoy-tls
-                        readOnly: true
-                      - name: tmp
-                        mountPath: /tmp
                   resources:
                       requests:
                           cpu: 100m
@@ -178,8 +170,6 @@ spec:
                 - name: tls
                   secret:
                       secretName: longlink-gateway-tls
-                - name: tmp
-                  emptyDir: {}
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -203,5 +193,4 @@ spec:
         - Ingress
     ingress:
         - ports:
-              - protocol: TCP
-                port: 8443
+              - port: 8443

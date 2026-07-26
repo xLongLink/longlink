@@ -8,13 +8,10 @@ from uuid import UUID
 from containers import DockerRuntimeContainer, require_docker_daemon, wait_for_container_log
 from collections.abc import Iterator
 from src.environments import env
-from src.models.types import DatabaseSSLMode
 from kr8s.asyncio.objects import Pod, Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
-from src.adapters.postgres import DatabaseRuntimeConnection
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayTLSMaterial
 from src.kubernetes.reconcile import DesiredCompute, DesiredGatewayRoute
-from src.adapters.storage.base import StorageRuntimeCredentials
 from src.kubernetes.applications import DesiredApplication
 from src.kubernetes.organizations import DesiredOrganization
 
@@ -193,25 +190,29 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
     retired_organization = DesiredOrganization(id=retired_organization_id, slug="retired")
     active_application = DesiredApplication(
         id=application_id,
-        organization_id=organization_id,
         namespace="acme",
         image=ECHO_SERVER_IMAGE,
     )
     stale_application = DesiredApplication(
         id=stale_application_id,
-        organization_id=organization_id,
         namespace="acme",
         image=ECHO_SERVER_IMAGE,
     )
-    connection = DatabaseRuntimeConnection(
-        host="database.internal",
-        port=5432,
-        password="database-secret",
-        sslmode=DatabaseSSLMode.require,
-        username="application-user",
-        database_name="organization-database",
-    )
-    storage_credentials = StorageRuntimeCredentials(access_key_id="storage-user", secret_access_key="storage-secret")
+    runtime_envs = {
+        "LONGLINK_ENV": "production",
+        "LONGLINK_DATABASE_HOST": "database.internal",
+        "LONGLINK_DATABASE_NAME": "organization-database",
+        "LONGLINK_DATABASE_PASSWORD": "database-secret",
+        "LONGLINK_DATABASE_PORT": "5432",
+        "LONGLINK_DATABASE_SSLMODE": "require",
+        "LONGLINK_DATABASE_USERNAME": "application-user",
+        "LONGLINK_STORAGE_BUCKET": organization_id.hex,
+        "LONGLINK_STORAGE_ENDPOINT_URL": "https://sos-ch-gva-2.exo.io",
+        "LONGLINK_STORAGE_PASSWORD": "storage-secret",
+        "LONGLINK_STORAGE_REGION": "ch-gva-2",
+        "LONGLINK_STORAGE_SHARED_PREFIX": "shared/",
+        "LONGLINK_STORAGE_USERNAME": "storage-user",
+    }
     desired = DesiredCompute(
         id=compute_id,
         routes=(
@@ -224,25 +225,30 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
 
     try:
         # Act: install explicit tenant resources once, then reconcile only the gateway route graph.
-        await compute.organizations.apply(active_organization, str(compute_id))
-        await compute.organizations.apply(retired_organization, str(compute_id))
+        await compute.organizations.apply(active_organization)
+        await compute.organizations.apply(retired_organization)
+        await compute.applications.stage_envs(application_id, "acme", {"LONG_LINK_REQUIRED": "value", "PORT": "8000"})
+        assert await compute.applications.read_envs(application_id, "acme") == {"LONG_LINK_REQUIRED": "value", "PORT": "8000"}
         await compute.applications.apply(
             active_application,
-            str(compute_id),
-            proxy_secret,
-            envs={"LONG_LINK_REQUIRED": "value", "PORT": "8000"},
-            connection=connection,
-            storage_endpoint_url="https://sos-ch-gva-2.exo.io",
-            storage_credentials=storage_credentials,
+            envs={
+                **runtime_envs,
+                "LONG_LINK_REQUIRED": "value",
+                "PORT": "8000",
+                "LONGLINK_DATABASE_SCHEMA": active_application.id.hex,
+                "LONGLINK_STORAGE_PREFIX": f"applications/{active_application.id.hex}/",
+            },
         )
+        assert await compute.applications.read_envs(application_id, "acme") == {"LONG_LINK_REQUIRED": "value", "PORT": "8000"}
+        await compute.applications.stage_envs(stale_application_id, "acme", {"PORT": "8000"})
         await compute.applications.apply(
             stale_application,
-            str(compute_id),
-            proxy_secret,
-            envs={"PORT": "8000"},
-            connection=connection,
-            storage_endpoint_url="https://sos-ch-gva-2.exo.io",
-            storage_credentials=storage_credentials,
+            envs={
+                **runtime_envs,
+                "PORT": "8000",
+                "LONGLINK_DATABASE_SCHEMA": stale_application.id.hex,
+                "LONGLINK_STORAGE_PREFIX": f"applications/{stale_application.id.hex}/",
+            },
         )
         await compute.applications.wait_ready(str(application_id), "acme")
         await compute.applications.wait_ready(str(stale_application_id), "acme")
@@ -269,7 +275,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
             certificate=first.gateway_tls_certificate,
             private_key=first.gateway_tls_private_key,
         )
-        await compute._resources.apply(
+        await compute._resources.apply_platform(
             {
                 "apiVersion": "v1",
                 "kind": "ConfigMap",
@@ -285,18 +291,14 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
                 "data": {"envoy.yaml": "drift"},
             }
         )
-        await compute._resources.replace_secret(
+        await compute._resources.replace_application_secret(
             {
                 "apiVersion": "v1",
                 "kind": "Secret",
                 "metadata": {
                     "name": str(application_id),
                     "namespace": "acme",
-                    "labels": {
-                        "app.kubernetes.io/managed-by": "longlink-platform",
-                        "longlink.io/compute-id": str(compute_id),
-                        "longlink.io/resource-scope": "application",
-                    },
+                    "labels": {"longlink.io/application-id": str(application_id)},
                 },
                 "type": "Opaque",
                 "stringData": {"STALE": "value"},
@@ -306,8 +308,8 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         # Act: remove explicit lifecycle targets without resynchronizing the retained Application.
         current = DesiredCompute(id=compute_id, routes=(DesiredGatewayRoute(id=application_id, namespace="acme"),))
         second = await compute.reconcile(current, proxy_secret, tls_material)
-        await compute.applications.delete(stale_application_id, organization_id, "acme", str(compute_id))
-        await compute.organizations.delete(retired_organization, str(compute_id))
+        await compute.applications.delete(stale_application_id, "acme")
+        await compute.organizations.delete(retired_organization)
 
         # Assert: synchronization reused TLS and removed stale resources without repairing the live workload.
         assert second.gateway_url == first.gateway_url
@@ -361,7 +363,6 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         assert gateway_auth_secret is not None
         assert base64.b64decode(gateway_auth_secret.data["gateway-secret"]).decode("utf-8") == proxy_secret
         assert gateway_tls_secret is not None
-        assert base64.b64decode(gateway_tls_secret.data["ca.crt"]).decode("utf-8") == first.gateway_ca_certificate
         assert gateway_deployment is not None
         assert gateway_deployment.spec.replicas == 2
         assert gateway_service is not None
@@ -370,6 +371,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         assert gateway_policy is not None
         assert gateway_policy.spec.podSelector.matchLabels == {"app": "longlink-gateway"}
         assert organization_policy is not None
+        assert organization_policy.spec.podSelector == {}
         assert application_deployment is not None
         assert application_service is not None
         assert application_secret is not None
@@ -391,7 +393,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         for resource in platform_resources:
             assert resource.raw["metadata"]["annotations"]["longlink.io/platform-version"] == env.VERSION
 
-        # Tenant resources depend only on their own lifecycle and template revisions.
+        # Tenant resources carry ownership metadata without Platform revision annotations.
         tenant_resources = (
             organization_namespace,
             organization_policy,
@@ -400,9 +402,9 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
             application_secret,
         )
         for resource in tenant_resources:
-            assert "longlink.io/platform-version" not in resource.raw["metadata"].get("annotations", {})
+            assert resource.raw["metadata"].get("annotations", {}) == {}
         assert gateway_deployment.raw["spec"]["template"]["metadata"]["annotations"]["longlink.io/platform-version"] == env.VERSION
-        assert "longlink.io/platform-version" not in application_deployment.raw["spec"]["template"]["metadata"]["annotations"]
+        assert set(application_deployment.raw["spec"]["template"]["metadata"]["annotations"]) == {"longlink.io/secret-resource-version"}
 
         # Wait for the retained workload before exercising the CA-verified HTTPS gateway.
         deadline = time.monotonic() + 180
@@ -411,7 +413,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
                 break
             await asyncio.sleep(2)
         else:
-            pod = await compute.applications.pod(str(application_id), "acme", str(compute_id))
+            pod = await compute.applications.pod(str(application_id), "acme")
             pod_status = pod.raw.get("status", {}) if pod is not None else None
             pytest.fail(f"k3s application did not become ready before timeout: {pod_status}")
 
@@ -426,7 +428,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
             else:
                 pytest.fail(f"k3s gateway did not become reachable over HTTPS: {response.status_code} {response.text}")
 
-        logs = await compute.applications.logs(str(application_id), "acme", str(compute_id), lines=50)
+        logs = await compute.applications.logs(str(application_id), "acme", lines=50)
         assert any("Listening on port 8000." in line for line in logs)
 
         # A cluster claimed by one compute target must reject another target before adoption.
@@ -438,8 +440,8 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
 
         # Explicit tenant cleanup precedes compute deletion, which owns only gateway and bootstrap resources.
         await compute.reconcile(DesiredCompute(id=compute_id, routes=()), proxy_secret, tls_material)
-        await compute.applications.delete(application_id, organization_id, "acme", str(compute_id))
-        await compute.organizations.delete(active_organization, str(compute_id))
+        await compute.applications.delete(application_id, "acme")
+        await compute.organizations.delete(active_organization)
         deleted = await compute.reconcile(cleanup, proxy_secret, tls_material)
         cleanup_requested = True
         assert deleted.gateway_url is None

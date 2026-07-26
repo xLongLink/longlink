@@ -10,16 +10,10 @@ from src.models.operations import OperationResponse
 from src.models.organizations import OrganizationSummary
 
 
-class ApplicationCreate(BaseModel):
-    """Validate application creation payloads."""
+class ApplicationEnvironment(BaseModel):
+    """Validate user-owned Application environment values."""
 
-    # Metadata
-    name: str = Field(min_length=1, max_length=100)
-    icon: Icon | None = None
-    image: Image
-    description: str | None = Field(default=None, max_length=255)
-
-    # Relationships
+    # Configuration
     envs: dict[str, str] = Field(default_factory=dict)
 
     @field_validator("envs")
@@ -55,6 +49,16 @@ class ApplicationCreate(BaseModel):
             raise ValueError("Application environment is too large")
 
         return envs
+
+
+class ApplicationCreate(ApplicationEnvironment):
+    """Validate application creation payloads."""
+
+    # Metadata
+    name: str = Field(min_length=1, max_length=100)
+    icon: Icon | None = None
+    image: Image
+    description: str | None = Field(default=None, max_length=255)
 
 
 class ApplicationResponse(BaseModel):

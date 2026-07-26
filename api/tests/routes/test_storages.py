@@ -5,14 +5,12 @@ from src.database.models.users import User
 
 async def test_storage_registry_endpoints_return_backend(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
-    users: tuple[User, User, User],
 ) -> None:
     """Return an independently registered storage backend."""
 
     # Arrange
     client = clients[0]
-    user1, _, _ = users
-    infrastructure = await create_ready_infrastructure(user1)
+    infrastructure = await create_ready_infrastructure()
     registry = infrastructure.storage
 
     # Act
@@ -29,12 +27,13 @@ async def test_storage_registry_endpoints_return_backend(
     assert payload["endpoint_url"] == "https://sos-ch-gva-2.exo.io"
     assert payload["runtime_endpoint_url"] == "https://sos-ch-gva-2.exo.io"
     assert "access_key_id" not in payload
+    assert "created_at" not in payload
 
 
 async def test_storage_registry_create_duplicate_and_delete(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
 ) -> None:
-    """Create one storage registry, reject a duplicate, and tombstone the unused registry."""
+    """Create one storage registry, reject a duplicate, and delete the unused registry."""
 
     # Arrange
     client = clients[0]
@@ -60,7 +59,8 @@ async def test_storage_registry_create_duplicate_and_delete(
     assert created["name"] == "Ephemeral Storage"
     assert duplicate_response.status_code == 409
     assert duplicate_response.json() == {"detail": "Storage registry already exists"}
-    assert delete_response.status_code == 200
+    assert delete_response.status_code == 204
+    assert delete_response.content == b""
     assert get_response.status_code == 404
 
 
@@ -72,7 +72,7 @@ async def test_storage_registry_delete_rejects_assigned_registry(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     await create_organization(infrastructure, owner)
     client = clients[0]
 
@@ -93,7 +93,7 @@ async def test_storage_registry_routes_enforce_support_and_admin_roles(
     # Arrange
     owner = users[0]
     support = users[2]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     registry = infrastructure.storage
 
     support_client = clients[2]

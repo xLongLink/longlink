@@ -18,7 +18,7 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
 
     # Act
     organization = await create_organization(infrastructure, owner)
@@ -61,7 +61,7 @@ async def test_get_returns_users_from_membership_table(users: tuple[User, User, 
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
 
     Session = await get_session()
@@ -89,7 +89,7 @@ async def test_fetch_ignores_deleted_organizations(users: tuple[User, User, User
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     active_organization = await create_organization(infrastructure, owner)
     deleted_organization = await create_organization(infrastructure, owner, name="deleted", slug="deleted")
     await organizations.soft_delete(deleted_organization.id, owner)
@@ -106,7 +106,7 @@ async def test_membership_role_requires_active_membership(users: tuple[User, Use
 
     # Arrange
     owner, non_member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
 
     # Act
@@ -125,7 +125,7 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
 
     # Arrange
     owner, member, non_member = users
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
 
     Session = await get_session()
@@ -178,7 +178,7 @@ async def test_update_member_role_rejects_demoting_last_owner(users: tuple[User,
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
 
     # Act
@@ -197,7 +197,7 @@ async def test_members_can_include_deleted_memberships(users: tuple[User, User, 
     # Arrange
     owner, member, deleted_member = users
     deleted_at = utcnow()
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
 
     Session = await get_session()
@@ -238,7 +238,7 @@ async def test_create_rejects_organization_on_non_ready_compute(users: tuple[Use
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     await compute.record_failure(infrastructure.compute.id)
 
     # Act
@@ -261,7 +261,7 @@ async def test_create_rejects_organization_with_overlong_runtime_name(users: tup
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
 
     # Act
     with pytest.raises(ValueError, match="Value must be at most 63 characters"):
@@ -277,7 +277,7 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
     await mark_organization_running(organization)
     application, _ = await applications.create(

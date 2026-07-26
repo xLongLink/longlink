@@ -18,7 +18,7 @@ from src.models.types import Image, StorageKind, DatabaseSSLMode
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from longlink.utils.time import utcnow
-from src.models.statuses import ComputeStatus
+from src.models.statuses import ComputeStatus, ApplicationStatus
 from src.database.session import session_scope
 from src.database.services import compute as compute_service
 from src.database.services import storage as storage_service
@@ -26,6 +26,7 @@ from src.database.services import database as database_service
 from src.database.services import operations
 from src.database.services import applications as application_service
 from src.database.services import organizations as organization_service
+from src.kubernetes.client import Kubernetes
 from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
 from src.database.models.users import User
@@ -185,7 +186,6 @@ async def seed_local_development(settings: SeedSettings) -> None:
             "local compute",
             "local-compute",
             settings.KUBECONFIG.read_text(encoding="utf-8"),
-            admin,
         )
         await reconcile_until_complete(operation.id)
         compute_ready = True
@@ -201,7 +201,6 @@ async def seed_local_development(settings: SeedSettings) -> None:
             "admin",
             "admin",
             DatabaseSSLMode.disable,
-            admin,
         )
     storage_registry = next((item for item in await storage_service.fetch() if item.slug == "local-storage"), None)
     if storage_registry is None:
@@ -213,7 +212,6 @@ async def seed_local_development(settings: SeedSettings) -> None:
             None,
             settings.EXOSCALE_API_KEY,
             settings.EXOSCALE_API_SECRET,
-            admin,
         )
     elif (
         storage_registry.endpoint_url != settings.EXOSCALE_STORAGE_ENDPOINT_URL
@@ -264,7 +262,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
         if not compute_ready:
             operation = await operations.enqueue(compute_registry.id)
             await reconcile_until_complete(operation.id)
-        _, operation = await application_service.create(
+        application, operation = await application_service.create(
             organization.id,
             payload.name,
             names.slugify(payload.name),
@@ -272,8 +270,23 @@ async def seed_local_development(settings: SeedSettings) -> None:
             admin,
             description=payload.description,
             icon=payload.icon.value if payload.icon is not None else None,
-            envs=payload.envs,
         )
+    elif application.status == ApplicationStatus.creating:
+        operation = await operations.enqueue(
+            compute_registry.id,
+            kind=OperationKind.application_create,
+            target_id=application.id,
+        )
+    else:
+        operation = None
+
+    # Stage local user values in Kubernetes before releasing Application lifecycle work.
+    if operation is not None:
+        cluster = Kubernetes(compute_registry.kubeconfig)
+        await cluster.applications.stage_envs(application.id, organization.slug, payload.envs)
+        operation = await operations.schedule_now(operation.id)
+        if operation is None:
+            raise RuntimeError("Local Application create Operation is no longer open")
         await reconcile_until_complete(operation.id)
 
 

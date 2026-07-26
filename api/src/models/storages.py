@@ -1,9 +1,7 @@
 from enum import StrEnum
 from uuid import UUID
-from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.types import StorageKind
-from src.models.users import UserSummary
 from src.models.resources import OrganizationApplicationSummary
 from src.models.infrastructure import StorageConfiguration
 
@@ -55,11 +53,3 @@ class StorageRegistryResponse(BaseModel):
     # Connection
     endpoint_url: str
     runtime_endpoint_url: str
-
-    # Audit
-    created_at: datetime
-    created_by: UserSummary
-    updated_at: datetime
-    updated_by: UserSummary
-    deleted_at: datetime | None = None
-    deleted_by: UserSummary | None = None

@@ -1,6 +1,5 @@
 import pytest
 from uuid import uuid4
-from datetime import UTC, datetime
 from pydantic import ValidationError
 from src.models.types import StorageKind
 from src.models.storages import StorageRegistryCreate, StorageRegistryResponse
@@ -68,7 +67,6 @@ def test_storage_registry_response_filters_provider_credentials() -> None:
     """Exclude provider credentials from storage registry responses."""
 
     # Response serialization exposes endpoint metadata while omitting provider credentials.
-    user_id = uuid4()
     payload = StorageRegistryResponse.model_validate(
         {
             "id": uuid4(),
@@ -79,10 +77,6 @@ def test_storage_registry_response_filters_provider_credentials() -> None:
             "runtime_endpoint_url": "https://sos-ch-gva-2.exo.io",
             "access_key_id": "access-key",
             "secret_access_key": "secret-key",
-            "created_at": datetime.now(UTC),
-            "updated_at": datetime.now(UTC),
-            "created_by": {"id": user_id, "name": "Admin", "email": "admin@example.com", "role": "administrator"},
-            "updated_by": {"id": user_id, "name": "Admin", "email": "admin@example.com", "role": "administrator"},
         }
     )
 

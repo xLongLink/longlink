@@ -153,12 +153,6 @@ export const apiDatabaseRegistrySchema = z.object({
     port: z.number(),
     sslmode: databaseSslModeSchema,
     username: z.string(),
-    created_at: z.string(),
-    created_by: nullableUserSummarySchema,
-    updated_at: z.string(),
-    updated_by: nullableUserSummarySchema,
-    deleted_at: z.string().nullable(),
-    deleted_by: nullableUserSummarySchema,
 });
 
 export const apiStorageRegistrySchema = z.object({
@@ -168,12 +162,6 @@ export const apiStorageRegistrySchema = z.object({
     slug: z.string(),
     endpoint_url: z.string(),
     runtime_endpoint_url: z.string(),
-    created_at: z.string(),
-    created_by: nullableUserSummarySchema,
-    updated_at: z.string(),
-    updated_by: nullableUserSummarySchema,
-    deleted_at: z.string().nullable(),
-    deleted_by: nullableUserSummarySchema,
 });
 
 export const apiComputeRegistrySchema = z.object({
@@ -183,12 +171,6 @@ export const apiComputeRegistrySchema = z.object({
     gateway_url: z.string().nullable(),
     status: z.enum(['provisioning', 'ready', 'failed', 'deleting']),
     version: z.string().nullable(),
-    created_at: z.string(),
-    created_by: nullableUserSummarySchema,
-    updated_at: z.string(),
-    updated_by: nullableUserSummarySchema,
-    deleted_at: z.string().nullable(),
-    deleted_by: nullableUserSummarySchema,
 });
 
 export const apiOperationSchema = z.object({

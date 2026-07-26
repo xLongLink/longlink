@@ -1,7 +1,5 @@
 from uuid import UUID
-from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
-from src.models.users import UserSummary
 from src.models.statuses import ComputeStatus
 from src.models.operations import OperationResponse
 
@@ -35,14 +33,6 @@ class ComputeRegistryResponse(BaseModel):
     # State
     status: ComputeStatus
     version: str | None
-
-    # Audit
-    created_at: datetime
-    created_by: UserSummary
-    updated_at: datetime
-    updated_by: UserSummary
-    deleted_at: datetime | None = None
-    deleted_by: UserSummary | None = None
 
 
 class ComputeRegistryMutationResponse(BaseModel):

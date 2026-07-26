@@ -15,7 +15,7 @@ async def test_operations_endpoint_returns_targeted_operations(
     # Arrange
     client = clients[0]
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
+    infrastructure = await create_ready_infrastructure()
     operation = await operations.enqueue(infrastructure.compute.id)
 
     # Act
@@ -43,7 +43,7 @@ async def test_operations_endpoint_enforces_support_access(
     # Arrange
     owner = users[0]
     support = users[2]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     operation = await operations.enqueue(infrastructure.compute.id)
 
     support_client = clients[2]

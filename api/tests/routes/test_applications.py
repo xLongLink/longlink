@@ -19,7 +19,7 @@ async def test_list_organization_apps_returns_app_membership_role(
     # Arrange
     owner = users[0]
     user = users[1]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
     app = await create_application(organization, owner)
 
@@ -63,7 +63,7 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
+    infrastructure = await create_ready_infrastructure()
     acme = await create_organization(infrastructure, user)
     globex = await create_organization(infrastructure, user, name="globex", slug="globex")
     dashboard = await create_application(acme, user)
@@ -111,7 +111,7 @@ async def test_list_organization_apps_returns_403_for_non_member(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
     await create_application(organization, owner)
     client = clients[1]
@@ -127,14 +127,32 @@ async def test_list_organization_apps_returns_403_for_non_member(
 async def test_create_app_persists_desired_state_and_queues_reconciliation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
+    monkeypatch,
 ) -> None:
     """Persist Application desired state and return its compute Operation."""
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, user)
     await mark_organization_running(organization)
+    staged: dict[str, object] = {}
+
+    class FakeCompute:
+        """Capture Application environment Secret staging."""
+
+        def __init__(self, kubeconfig: str) -> None:
+            """Capture the assigned compute target."""
+
+            assert kubeconfig == infrastructure.compute.kubeconfig
+            self.applications = self
+
+        async def stage_envs(self, application_id: UUID, namespace: str, envs: dict[str, str]) -> None:
+            """Record user values sent to the Kubernetes Secret boundary."""
+
+            staged.update({"application_id": application_id, "namespace": namespace, "envs": envs})
+
+    monkeypatch.setattr("src.routes.applications.Kubernetes", FakeCompute)
     client = clients[0]
 
     # Act
@@ -167,7 +185,12 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     persisted = await applications.get(UUID(application["id"]))
     assert persisted is not None
     assert persisted.organization_id == organization.id
-    assert persisted.envs == {"API_KEY": "secret-value", "PORT": "8080"}
+    assert not hasattr(persisted, "envs")
+    assert staged == {
+        "application_id": persisted.id,
+        "namespace": organization.slug,
+        "envs": {"API_KEY": "secret-value", "PORT": "8080"},
+    }
     queued = await operations.fetch()
     assert len(queued) == 2
     assert any(str(item.id) == operation["id"] for item in queued)
@@ -182,7 +205,7 @@ async def test_create_app_returns_403_for_regular_member(
     # Arrange
     owner = users[0]
     regular_member = users[1]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
 
     Session = await get_session()
@@ -218,7 +241,7 @@ async def test_get_app_logs_returns_pod_logs(
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, user)
     app = await create_application(organization, user)
     registry = infrastructure.compute
@@ -233,13 +256,12 @@ async def test_get_app_logs_returns_pod_logs(
             self.applications = self
             captured["kubeconfig"] = kubeconfig
 
-        async def logs(self, application_id: str, namespace: str, compute_id: str, lines: int = 200) -> list[str]:
+        async def logs(self, application_id: str, namespace: str, lines: int = 200) -> list[str]:
             """Record the log request and return fake pod logs."""
 
             captured["logs"] = {
                 "application_id": application_id,
                 "namespace": namespace,
-                "compute_id": compute_id,
                 "lines": lines,
             }
             return ["line 1", "line 2"]
@@ -257,7 +279,6 @@ async def test_get_app_logs_returns_pod_logs(
     assert captured["logs"] == {
         "application_id": str(app.id),
         "namespace": organization.slug,
-        "compute_id": str(registry.id),
         "lines": 200,
     }
 
@@ -270,7 +291,7 @@ async def test_app_logs_require_maintainer_access(
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
     app = await create_application(organization, owner)
     Session = await get_session()
@@ -296,7 +317,7 @@ async def test_app_logs_return_unavailable_when_backend_fails(
 
     # Arrange
     owner = users[0]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
     app = await create_application(organization, owner)
 
@@ -309,12 +330,11 @@ async def test_app_logs_return_unavailable_when_backend_fails(
             assert kubeconfig == infrastructure.compute.kubeconfig
             self.applications = self
 
-        async def logs(self, application_id: str, namespace: str, compute_id: str, lines: int = 200) -> list[str]:
+        async def logs(self, application_id: str, namespace: str, lines: int = 200) -> list[str]:
             """Raise the backend error expected by the test."""
 
             assert application_id == str(app.id)
             assert namespace == organization.slug
-            assert compute_id == str(infrastructure.compute.id)
             assert lines == 200
             raise RuntimeError("logs unavailable")
 
@@ -337,7 +357,7 @@ async def test_application_member_routes_list_update_remove_and_reject_missing_m
 
     # Arrange
     owner, member, non_member = users
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
     app = await create_application(organization, owner)
     Session = await get_session()
@@ -373,7 +393,7 @@ async def test_application_member_update_rejects_regular_member(
 
     # Arrange
     owner, member = users[0], users[1]
-    infrastructure = await create_ready_infrastructure(owner)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
     app = await create_application(organization, owner)
     Session = await get_session()
@@ -399,7 +419,7 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, user)
     app = await create_application(organization, user)
     client = clients[0]

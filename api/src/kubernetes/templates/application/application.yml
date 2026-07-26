@@ -5,35 +5,16 @@ kind: Deployment
 metadata:
     name: $application_id
     namespace: $namespace
-    annotations:
-        longlink.io/runtime-revision: '$runtime_revision'
-        longlink.io/template-revision: '$template_revision'
-    labels:
-        app: $application_id
-        app.kubernetes.io/managed-by: longlink-platform
-        compute-role: application
-        longlink.io/application-id: $application_id
-        longlink.io/compute-id: '$compute_id'
-        longlink.io/organization-id: '$organization_id'
-        longlink.io/resource-scope: application
 spec:
-    replicas: 1
     strategy:
         type: Recreate
     selector:
         matchLabels:
-            app: $application_id
+            longlink.io/application-id: $application_id
     template:
         metadata:
-            annotations:
-                longlink.io/runtime-revision: '$runtime_revision'
             labels:
-                app: $application_id
-                app.kubernetes.io/managed-by: longlink-platform
-                compute-role: application
                 longlink.io/application-id: $application_id
-                longlink.io/compute-id: '$compute_id'
-                longlink.io/organization-id: '$organization_id'
         spec:
             automountServiceAccountToken: false
             securityContext:
@@ -46,20 +27,17 @@ spec:
             containers:
                 - name: application
                   image: $image
-                  imagePullPolicy: Always
                   ports:
                       - name: http
                         containerPort: 8000
                   startupProbe:
-                      httpGet:
+                      httpGet: &health-check
                           path: /health
                           port: http
                       periodSeconds: 2
                       failureThreshold: 60
                   readinessProbe:
-                      httpGet:
-                          path: /health
-                          port: http
+                      httpGet: *health-check
                       periodSeconds: 5
                       failureThreshold: 3
                   envFrom:
@@ -74,13 +52,6 @@ spec:
                   volumeMounts:
                       - name: tmp
                         mountPath: /tmp
-                  resources:
-                      requests:
-                          cpu: 100m
-                          memory: 128Mi
-                      limits:
-                          cpu: 500m
-                          memory: 256Mi
             volumes:
                 - name: tmp
                   emptyDir: {}
@@ -90,21 +61,9 @@ kind: Service
 metadata:
     name: app-$application_id
     namespace: $namespace
-    annotations:
-        longlink.io/runtime-revision: '$runtime_revision'
-        longlink.io/template-revision: '$template_revision'
-    labels:
-        app: $application_id
-        app.kubernetes.io/managed-by: longlink-platform
-        compute-role: application
-        longlink.io/application-id: $application_id
-        longlink.io/compute-id: '$compute_id'
-        longlink.io/organization-id: '$organization_id'
-        longlink.io/resource-scope: application
 spec:
-    type: ClusterIP
     selector:
-        app: $application_id
+        longlink.io/application-id: $application_id
     ports:
         - name: http
           port: 8000

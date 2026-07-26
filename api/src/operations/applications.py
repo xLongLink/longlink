@@ -7,6 +7,8 @@ from src.models.types import Image
 from src.models.statuses import ApplicationStatus
 from src.database.services import compute, storage, database, applications, organizations
 from src.kubernetes.client import Kubernetes
+from src.models.applications import ApplicationEnvironment
+from src.models.infrastructure import exoscale_zone
 from src.kubernetes.applications import DesiredApplication
 from src.database.models.operations import Operation
 
@@ -25,18 +27,32 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
     organization = await organizations.get(application.organization_id, include_deleted=True)
     if organization is None or organization.deleted_at is not None:
         return jobs.fail("Application Organization not found")
-    registry = await compute.get(organization.compute_id, include_deleted=True)
-    if registry is None or registry.deleted_at is not None:
+    registry = await compute.get(organization.compute_id)
+    if registry is None:
         return jobs.fail("Compute registry not found")
 
     cluster = Kubernetes(registry.kubeconfig)
 
     # A retry after deployment reached running state skips workload deployment.
     if application.status == ApplicationStatus.creating:
-        database_registry = await database.get(organization.database_id, include_deleted=True)
+        # Kubernetes is the only durable source for user-owned environment values.
+        try:
+            staged_envs = await cluster.applications.read_envs(application.id, organization.slug)
+            user_envs = None if staged_envs is None else ApplicationEnvironment(envs=staged_envs).envs
+        except (TypeError, ValueError):
+            await applications.set_status(application.id, ApplicationStatus.failed)
+            return jobs.fail("Application environment Secret is invalid")
+        if user_envs is None:
+            if claimed.attempt_count < jobs.OPERATION_ATTEMPT_LIMIT:
+                return jobs.retry("Application environment Secret is not staged")
+            await applications.set_status(application.id, ApplicationStatus.failed)
+            return jobs.fail("Application environment Secret was not staged")
+
+        # Resolve the Application's immutable provider assignments.
+        database_registry = await database.get(organization.database_id)
         if database_registry is None:
             return jobs.fail("Database registry not found")
-        storage_registry = await storage.get(organization.storage_id, include_deleted=True)
+        storage_registry = await storage.get(organization.storage_id)
         if storage_registry is None:
             return jobs.fail("Storage registry not found")
         db = adapters.Postgres(
@@ -50,7 +66,7 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
 
         # Resolve and persist the immutable image before creating provider credentials.
         if application.digest is None:
-            metadata = await images.metadata(Image(application.image), application.envs)
+            metadata = await images.metadata(Image(application.image), user_envs)
             if metadata is None:
                 await applications.set_status(application.id, ApplicationStatus.failed)
                 return jobs.complete()
@@ -87,16 +103,27 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
         await cluster.applications.apply(
             DesiredApplication(
                 id=application.id,
-                organization_id=organization.id,
                 namespace=organization.slug,
                 image=application.image,
             ),
-            str(registry.id),
-            registry.proxy_secret,
-            envs=application.envs,
-            connection=connection,
-            storage_endpoint_url=storage_registry.runtime_endpoint_url,
-            storage_credentials=credentials,
+            envs={
+                **user_envs,
+                "LONGLINK_ENV": "production",
+                "LONGLINK_DATABASE_HOST": connection["host"],
+                "LONGLINK_DATABASE_NAME": connection["database_name"],
+                "LONGLINK_DATABASE_PASSWORD": connection["password"],
+                "LONGLINK_DATABASE_PORT": str(connection["port"]),
+                "LONGLINK_DATABASE_SCHEMA": application.id.hex,
+                "LONGLINK_DATABASE_SSLMODE": connection["sslmode"].value,
+                "LONGLINK_DATABASE_USERNAME": connection["username"],
+                "LONGLINK_STORAGE_BUCKET": bucket,
+                "LONGLINK_STORAGE_ENDPOINT_URL": storage_registry.runtime_endpoint_url,
+                "LONGLINK_STORAGE_PASSWORD": credentials["secret_access_key"],
+                "LONGLINK_STORAGE_PREFIX": prefix,
+                "LONGLINK_STORAGE_REGION": exoscale_zone(storage_registry.runtime_endpoint_url),
+                "LONGLINK_STORAGE_SHARED_PREFIX": "shared/",
+                "LONGLINK_STORAGE_USERNAME": credentials["access_key_id"],
+            },
         )
         try:
             await cluster.applications.wait_ready(str(application.id), organization.slug)
@@ -144,18 +171,18 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
     organization = await organizations.get(application.organization_id, include_deleted=True)
     if organization is None:
         return jobs.fail("Application Organization not found")
-    registry = await compute.get(organization.compute_id, include_deleted=True)
+    registry = await compute.get(organization.compute_id)
     if registry is None:
         return jobs.fail("Compute registry not found")
-    database_registry = await database.get(organization.database_id, include_deleted=True)
-    storage_registry = await storage.get(organization.storage_id, include_deleted=True)
+    database_registry = await database.get(organization.database_id)
+    storage_registry = await storage.get(organization.storage_id)
     if database_registry is None or storage_registry is None:
         return jobs.fail("Application provider registry not found")
     cluster = Kubernetes(registry.kubeconfig)
 
     # Remove the gateway route and await rollout before terminating the backend Service and Pods.
     result = await computes.reconcile_gateway(registry, cluster)
-    await cluster.applications.delete(application.id, organization.id, organization.slug, str(registry.id))
+    await cluster.applications.delete(application.id, organization.slug)
 
     # Provider credentials remain available until Kubernetes confirms no Pod can use them.
     db = adapters.Postgres(

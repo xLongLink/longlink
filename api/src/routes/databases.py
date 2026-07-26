@@ -12,7 +12,7 @@ router = APIRouter()
 
 
 @router.post("/api/databases", response_model=DatabaseRegistryResponse, status_code=201)
-async def create_database_registry(payload: DatabaseRegistryCreate, user: User = Depends(authadmin)):
+async def create_database_registry(payload: DatabaseRegistryCreate, _user: User = Depends(authadmin)):
     """Register one database backend."""
 
     return await database.create(
@@ -23,7 +23,6 @@ async def create_database_registry(payload: DatabaseRegistryCreate, user: User =
         payload.username,
         payload.password,
         payload.sslmode,
-        user,
     )
 
 
@@ -45,15 +44,12 @@ async def get_database_registry(registry_id: UUID, _user: User = Depends(authsup
     return registry
 
 
-@router.delete("/api/databases/{registry_id}", response_model=DatabaseRegistryResponse)
-async def delete_database_registry(registry_id: UUID, user: User = Depends(authadmin)):
+@router.delete("/api/databases/{registry_id}", status_code=204)
+async def delete_database_registry(registry_id: UUID, _user: User = Depends(authadmin)):
     """Delete one unused database backend registration."""
 
-    registry = await database.delete(registry_id, user)
-    if registry is None:
+    if not await database.delete(registry_id):
         raise HTTPException(status_code=404, detail="Database registry not found")
-
-    return registry
 
 
 @router.get("/api/databases/{registry_id}/usage", response_model=int)

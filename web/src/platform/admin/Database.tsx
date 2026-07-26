@@ -14,8 +14,7 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useDatabases } from '@/data/database';
 import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/use-user';
-import { fetchApiJson } from '@/lib/api';
-import { apiDatabaseRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
+import { fetchApiVoid } from '@/lib/api';
 import { databasesQueryKey } from '@/lib/query-keys';
 import type { ApiDatabaseRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
@@ -62,10 +61,9 @@ export default function AdminDatabase() {
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
     const deleteDatabase = useMutation({
-        mutationFn: async (databaseId: string) =>
-            fetchApiJson(`/api/databases/${databaseId}`, { method: 'DELETE' }, (value) =>
-                parseApiResponse(apiDatabaseRegistrySchema, value)
-            ),
+        mutationFn: async (databaseId: string) => {
+            await fetchApiVoid(`/api/databases/${databaseId}`, { method: 'DELETE' });
+        },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
             toast({ body: t('admin.databaseDeleted') });

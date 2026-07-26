@@ -1,8 +1,6 @@
 from uuid import UUID
-from datetime import datetime
 from pydantic import Field, BaseModel, ConfigDict
 from src.models.types import DatabaseSSLMode
-from src.models.users import UserSummary
 from src.models.resources import OrganizationApplicationSummary
 from src.models.infrastructure import DatabaseConfiguration
 
@@ -54,11 +52,3 @@ class DatabaseRegistryResponse(BaseModel):
     port: int
     sslmode: DatabaseSSLMode
     username: str
-
-    # Audit
-    created_at: datetime
-    created_by: UserSummary
-    updated_at: datetime
-    updated_by: UserSummary
-    deleted_at: datetime | None = None
-    deleted_by: UserSummary | None = None

@@ -2,6 +2,7 @@ from src.utils import jobs
 from src.utils.jobs import operation
 from src.environments import env
 from packaging.version import Version
+from src.models.statuses import ComputeStatus
 from src.database.services import compute, applications
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayTLSMaterial
@@ -26,11 +27,12 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes) -> R
             raise RuntimeError("Compute registry disappeared while staging gateway TLS")
 
     # Routes contain only running Applications and stable Organization Namespace identities.
-    route_rows = [] if registry.deleted_at is not None else await applications.gateway_routes(registry.id)
+    deleting = registry.status == ComputeStatus.deleting
+    route_rows = [] if deleting else await applications.gateway_routes(registry.id)
     desired = DesiredCompute(
         id=registry.id,
         routes=tuple(DesiredGatewayRoute(id=item[0], namespace=item[1]) for item in route_rows),
-        deleting=registry.deleted_at is not None,
+        deleting=deleting,
     )
 
     # Pass persisted TLS only when all certificate material is available.
@@ -55,7 +57,7 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     """Reconcile one compute's gateway and cluster-bootstrap resources."""
 
     # Load the compute root without loading provider or tenant lifecycle relationships.
-    registry = await compute.get(claimed.target_id, include_deleted=True)
+    registry = await compute.get(claimed.target_id, include_deleting=True)
     if registry is None:
         return jobs.fail("Compute registry not found")
     if claimed.platform_version != env.VERSION:

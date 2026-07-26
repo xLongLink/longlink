@@ -12,10 +12,10 @@ router = APIRouter()
 
 
 @router.post("/api/computes", response_model=ComputeRegistryMutationResponse, status_code=202)
-async def create_compute_registry(payload: ComputeRegistryCreate, user: User = Depends(authadmin)):
+async def create_compute_registry(payload: ComputeRegistryCreate, _user: User = Depends(authadmin)):
     """Register a compute target and queue its initial reconciliation."""
 
-    registry, operation = await compute.create(payload.name, names.slugify(payload.name), payload.kubeconfig, user)
+    registry, operation = await compute.create(payload.name, names.slugify(payload.name), payload.kubeconfig)
     return {"compute": registry, "operation": operation}
 
 
@@ -38,10 +38,10 @@ async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)
 
 
 @router.delete("/api/computes/{registry_id}", response_model=ComputeRegistryMutationResponse, status_code=202)
-async def delete_compute_registry(registry_id: UUID, user: User = Depends(authadmin)):
+async def delete_compute_registry(registry_id: UUID, _user: User = Depends(authadmin)):
     """Queue cleanup of one unused compute target."""
 
-    result = await compute.delete(registry_id, user)
+    result = await compute.delete(registry_id)
     if result is None:
         raise HTTPException(status_code=404, detail="Compute registry not found")
     registry, operation = result

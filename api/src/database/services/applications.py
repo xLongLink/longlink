@@ -211,7 +211,6 @@ async def create(
     user: User,
     description: str | None = None,
     icon: str | None = None,
-    envs: dict[str, str] | None = None,
 ) -> tuple[Application, Operation]:
     """Create an Organization-owned LongLink Application and queue its deployment lifecycle."""
 
@@ -232,7 +231,7 @@ async def create(
         ).scalar_one_or_none()
         if compute is None or organization is None:
             raise HTTPException(status_code=404, detail="Organization not found")
-        if compute.deleted_at is not None or compute.status != ComputeStatus.ready:
+        if compute.status != ComputeStatus.ready:
             raise HTTPException(status_code=409, detail="Compute registry is not ready")
         if organization.deleted_at is not None or organization.status != OrganizationStatus.running:
             raise HTTPException(status_code=409, detail="Organization is not ready")
@@ -246,7 +245,6 @@ async def create(
             description=description,
             image=image.value,
             icon=icon,
-            envs=dict(envs or {}),
             database_password=secrets.token_urlsafe(24),
         )
         application.created_id = user.id
@@ -270,13 +268,13 @@ async def create(
                 updated_id=user.id,
             )
         )
-        compute.updated_id = user.id
         operation = await operations.enqueue_in_session(
             session,
             compute.id,
             locked_compute=compute,
             kind=OperationKind.application_create,
             target_id=application.id,
+            delay_seconds=30,
         )
         await session.commit()
 
@@ -471,7 +469,6 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
                 membership.updated_id = user.id
 
         # Application tombstone and reconciliation request are one Platform transaction.
-        compute.updated_id = user.id
         operation = await operations.enqueue_in_session(
             session,
             compute.id,

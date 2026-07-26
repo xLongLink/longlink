@@ -56,14 +56,14 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
         return jobs.complete()
 
     # Resolve the immutable database and storage assignments selected at creation.
-    database_registry = await database.get(organization.database_id, include_deleted=True)
+    database_registry = await database.get(organization.database_id)
     if database_registry is None:
         return jobs.fail("Database registry not found")
-    storage_registry = await storage.get(organization.storage_id, include_deleted=True)
+    storage_registry = await storage.get(organization.storage_id)
     if storage_registry is None:
         return jobs.fail("Storage registry not found")
-    compute_registry = await compute.get(organization.compute_id, include_deleted=True)
-    if compute_registry is None or compute_registry.deleted_at is not None:
+    compute_registry = await compute.get(organization.compute_id)
+    if compute_registry is None:
         return jobs.fail("Compute registry not found")
 
     # Create the database, apply shared-schema migrations, and seed the initial users.
@@ -85,10 +85,7 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
 
     # Install the Organization Namespace exactly once as part of its creation lifecycle.
     cluster = Kubernetes(compute_registry.kubeconfig)
-    await cluster.organizations.apply(
-        DesiredOrganization(id=organization.id, slug=organization.slug),
-        str(compute_registry.id),
-    )
+    await cluster.organizations.apply(DesiredOrganization(id=organization.id, slug=organization.slug))
 
     # Publish readiness only after every initial Organization dependency and boundary exists.
     await organizations.set_runtime(organization.id, OrganizationStatus.running)
@@ -105,10 +102,10 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
         return jobs.complete()
 
     # Resolve the Organization's immutable database and storage assignments.
-    database_registry = await database.get(organization.database_id, include_deleted=True)
+    database_registry = await database.get(organization.database_id)
     if database_registry is None:
         return jobs.fail("Database registry not found")
-    storage_registry = await storage.get(organization.storage_id, include_deleted=True)
+    storage_registry = await storage.get(organization.storage_id)
     if storage_registry is None:
         return jobs.fail("Storage registry not found")
 
@@ -141,11 +138,11 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         return jobs.complete()
     if organization.deleted_at is None:
         return jobs.fail("Active Organizations cannot be deleted by lifecycle cleanup")
-    compute_registry = await compute.get(organization.compute_id, include_deleted=True)
+    compute_registry = await compute.get(organization.compute_id)
     if compute_registry is None:
         return jobs.fail("Compute registry not found")
-    database_registry = await database.get(organization.database_id, include_deleted=True)
-    storage_registry = await storage.get(organization.storage_id, include_deleted=True)
+    database_registry = await database.get(organization.database_id)
+    storage_registry = await storage.get(organization.storage_id)
     if database_registry is None or storage_registry is None:
         return jobs.fail("Organization provider registry not found")
     cluster = Kubernetes(compute_registry.kubeconfig)
@@ -164,9 +161,7 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
     for application in application_rows:
         await cluster.applications.delete(
             application.id,
-            organization.id,
             organization.slug,
-            str(compute_registry.id),
         )
         await db.delete_schema(organization.id, application.id)
         await object_storage.revoke(application.id.hex)
@@ -177,10 +172,7 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         await applications.purge(application.id)
 
     # Delete the known Organization Namespace only after all child workloads terminate.
-    await cluster.organizations.delete(
-        DesiredOrganization(id=organization.id, slug=organization.slug),
-        str(compute_registry.id),
-    )
+    await cluster.organizations.delete(DesiredOrganization(id=organization.id, slug=organization.slug))
     await db.delete_database(organization.id)
     await object_storage.delete(organization.id.hex)
     if not await compute.record_success(

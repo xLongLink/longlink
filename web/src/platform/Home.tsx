@@ -1,4 +1,3 @@
-import { Button } from '@astryxdesign/core/Button';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { Grid } from '@astryxdesign/core/Grid';
 import { Heading } from '@astryxdesign/core/Heading';
@@ -17,7 +16,6 @@ import {
     HardDrive,
     KeyRound,
     Logs,
-    Mail,
     PackageCheck,
     Palette,
     PanelTop,
@@ -637,11 +635,7 @@ export default function Home() {
                         </div>
                         <div className="homepage-hands-description">
                             <p className="homepage-hands-description-title">Designed for Human and Agents</p>
-                            <p className="homepage-hands-description-copy">
-                                LongLink gives agents the same governed application layer people use: structured
-                                workflows, permissions, data, and APIs they can act on without brittle dashboard
-                                automation.
-                            </p>
+                            <p className="homepage-hands-description-copy">Coming Soon</p>
                         </div>
                     </div>
                 </div>
@@ -654,7 +648,7 @@ export default function Home() {
             >
                 <Stack className="mx-auto" width="100%" maxWidth={1000} gap={8}>
                     <Text className="text-xs font-medium uppercase tracking-widest" color="secondary">
-                        Application paths
+                        Next step
                     </Text>
                     <Grid columns={{ minWidth: 260, max: 3, repeat: 'fit' }} gap={0} width="100%">
                         {paths.map(({ title, description, action, href }) => (
@@ -706,36 +700,6 @@ export default function Home() {
                     </Grid>
                 </Stack>
             </Section>
-            <section className="homepage-tertiary-section relative z-10 px-6 py-24 text-center sm:py-28">
-                <div className="mx-auto flex max-w-2xl flex-col items-center gap-8">
-                    <div className="space-y-3">
-                        <p className="text-xs font-medium uppercase tracking-[0.18em] text-secondary">Next step</p>
-                        <h2 className="text-2xl font-medium tracking-tight text-primary sm:text-4xl">
-                            Start building on LongLink
-                        </h2>
-                        <p className="text-sm leading-6 text-secondary sm:text-base">
-                            Explore LongLink, build an app, or talk to us.
-                        </p>
-                    </div>
-
-                    <div className="flex flex-wrap justify-center gap-3">
-                        <Button
-                            href="/docs/sdk"
-                            label="Read the SDK guide"
-                            size="lg"
-                            variant="primary"
-                            endContent={<ArrowRight className="size-4" aria-hidden="true" />}
-                        />
-                        <Button
-                            href="mailto:info@longlink.dev"
-                            label="Contact us"
-                            size="lg"
-                            variant="secondary"
-                            icon={<Mail className="size-4" aria-hidden="true" />}
-                        />
-                    </div>
-                </div>
-            </section>
             <div className="homepage-tertiary-section relative z-10">
                 <Footer />
             </div>

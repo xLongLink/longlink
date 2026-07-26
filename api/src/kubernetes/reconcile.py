@@ -10,16 +10,7 @@ from src.kubernetes import gateway
 from collections.abc import Callable, Awaitable
 from src.environments import env
 from kr8s.asyncio.objects import Pod, Secret, Service, APIObject, ConfigMap, Namespace, Deployment, NetworkPolicy
-from src.kubernetes.resources import (
-    ResourceScope,
-    KubernetesResources,
-    uid,
-    metadata,
-    string_map,
-    pod_is_active,
-    resource_version,
-    set_pod_annotation,
-)
+from src.kubernetes.resources import KubernetesResources, uid, metadata, string_map, pod_is_active, resource_version, set_pod_annotation
 
 LOAD_BALANCER_TIMEOUT_SECONDS = 300
 GATEWAY_ROLLOUT_TIMEOUT_SECONDS = 300
@@ -84,11 +75,10 @@ class Reconciler:
 
         # Compute deletion never recreates a missing system Namespace and never sweeps tenant resources.
         if desired.deleting:
-            system_namespace = await self._resources.read_owned(
+            system_namespace = await self._resources.read_platform_owned(
                 Namespace,
                 gateway.GATEWAY_NAMESPACE,
                 compute_id,
-                ResourceScope.platform,
             )
             if system_namespace is None:
                 return ReconcileResult(None, None, None, None)
@@ -98,12 +88,12 @@ class Reconciler:
             return ReconcileResult(None, None, None, None)
 
         # The system Namespace is the immutable compute claim for gateway and bootstrap resources.
-        system_namespace = await self._resources.apply(self._gateway.system_namespace(compute_id, platform_version))
+        system_namespace = await self._resources.apply_platform(self._gateway.system_namespace(compute_id, platform_version))
         if not isinstance(system_namespace, Namespace):
             raise TypeError("Kubernetes Namespace apply returned an unexpected resource kind")
 
         # Create the public Service before workloads because cloud address allocation is asynchronous.
-        await self._resources.apply(self._gateway.service(compute_id, platform_version))
+        await self._resources.apply_platform(self._gateway.service(compute_id, platform_version))
         endpoint = await self._wait_for_gateway_endpoint()
         tls = self._gateway.tls(compute_id, endpoint, existing_tls)
         if tls != existing_tls and stage_tls is not None:
@@ -112,14 +102,14 @@ class Reconciler:
         # Gateway routes target stable Application Service DNS names without discovering tenant resources.
         envoy_config = self._gateway.config(desired.routes)
         manifests = self._gateway.manifests(compute_id, proxy_secret, tls, envoy_config, platform_version)
-        auth_secret = await self._resources.replace_secret(manifests.auth_secret)
-        tls_secret = await self._resources.replace_secret(manifests.tls_secret)
-        config_map = await self._resources.apply(manifests.config_map)
+        auth_secret = await self._resources.replace_platform_secret(manifests.auth_secret)
+        tls_secret = await self._resources.replace_platform_secret(manifests.tls_secret)
+        config_map = await self._resources.apply_platform(manifests.config_map)
         set_pod_annotation(manifests.deployment, "longlink.io/auth-resource-version", resource_version(auth_secret))
         set_pod_annotation(manifests.deployment, "longlink.io/tls-resource-version", resource_version(tls_secret))
         set_pod_annotation(manifests.deployment, "longlink.io/config-resource-version", resource_version(config_map))
-        await self._resources.apply_deployment(manifests.deployment)
-        await self._resources.apply(manifests.network_policy)
+        await self._resources.apply_platform_deployment(manifests.deployment)
+        await self._resources.apply_platform(manifests.network_policy)
 
         # Prune only obsolete Platform-owned gateway resources after the desired rollout is ready.
         await self._wait_for_gateway_rollout(manifests.runtime_revision)
@@ -230,10 +220,9 @@ class Reconciler:
             (NetworkPolicy, {"longlink-gateway-ingress"}),
         )
         for resource_class, active_names in gateway_resources:
-            resources = await self._resources.list_owned(
+            resources = await self._resources.list_platform_owned(
                 resource_class,
                 compute_id,
-                ResourceScope.platform,
                 gateway.GATEWAY_NAMESPACE,
             )
             for resource in resources:

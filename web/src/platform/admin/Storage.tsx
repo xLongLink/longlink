@@ -14,8 +14,7 @@ import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useStorages } from '@/data/storage';
 import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/use-user';
-import { fetchApiJson } from '@/lib/api';
-import { apiStorageRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
+import { fetchApiVoid } from '@/lib/api';
 import { storagesQueryKey } from '@/lib/query-keys';
 import type { ApiStorageRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
@@ -55,10 +54,9 @@ export default function AdminStorage() {
     const queryClient = useQueryClient();
     const canManage = role === 'administrator';
     const deleteStorage = useMutation({
-        mutationFn: async (storageId: string) =>
-            fetchApiJson(`/api/storages/${storageId}`, { method: 'DELETE' }, (value) =>
-                parseApiResponse(apiStorageRegistrySchema, value)
-            ),
+        mutationFn: async (storageId: string) => {
+            await fetchApiVoid(`/api/storages/${storageId}`, { method: 'DELETE' });
+        },
         onSuccess: async () => {
             await queryClient.invalidateQueries({ queryKey: storagesQueryKey() });
             toast({ body: t('admin.storageDeleted') });

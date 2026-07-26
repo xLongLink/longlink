@@ -14,7 +14,7 @@ async def test_get_me_returns_authenticated_user_profile_and_separate_org_member
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
+    infrastructure = await create_ready_infrastructure()
     organization = await create_organization(
         infrastructure,
         user,
@@ -52,7 +52,7 @@ async def test_get_my_organizations_excludes_soft_deleted_organizations(
 
     # Arrange
     user = users[0]
-    infrastructure = await create_ready_infrastructure(user)
+    infrastructure = await create_ready_infrastructure()
     active = await create_organization(infrastructure, user, name="active", slug="active")
     deleted = await create_organization(infrastructure, user, name="deleted", slug="deleted")
     deleted_result = await organization_service.soft_delete(deleted.id, user)

@@ -2,7 +2,6 @@ from uuid import UUID, uuid4
 from typing import TYPE_CHECKING, ClassVar, Optional
 from datetime import datetime
 from sqlmodel import Field, SQLModel, Relationship
-from sqlalchemy import JSON
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Column, UniqueConstraint
 from longlink.utils.time import utcnow
@@ -42,9 +41,6 @@ class Application(SQLModel, table=True):
     digest: str | None = Field(default=None, max_length=255)
     version: str | None = Field(default=None, max_length=128)
     description: str | None = Field(default=None, max_length=255)
-
-    # Configuration
-    envs: dict[str, str] = Field(default_factory=dict, sa_column=Column(JSON, nullable=False))
 
     # Database
     database_password: str = Field(max_length=255)

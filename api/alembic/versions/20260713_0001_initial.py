@@ -77,7 +77,7 @@ def upgrade() -> None:
     op.create_index("ix_access_tokens_created_at", "access_tokens", ["created_at"])
     op.create_index("ix_access_tokens_user_id", "access_tokens", ["user_id"])
 
-    # Create compute registries after their user dependencies.
+    # Create compute registries.
     op.create_table(
         "compute_registries",
         sa.Column("id", sa.Uuid(), nullable=False),
@@ -96,39 +96,16 @@ def upgrade() -> None:
         sa.Column("gateway_previous_ca_certificate", sa.Text(), nullable=True),
         sa.Column("gateway_tls_certificate", sa.Text(), nullable=True),
         sa.Column("gateway_tls_private_key", sa.Text(), nullable=True),
-        sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("created_id", sa.Uuid(), nullable=True),
-        sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("updated_id", sa.Uuid(), nullable=True),
-        sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column("deleted_id", sa.Uuid(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["created_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["deleted_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["updated_id"],
-            ["users.id"],
-        ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
         sa.UniqueConstraint("slug"),
     )
-    # Create database registries after their user dependencies.
+    # Create database registries.
     op.create_table(
         "database_registries",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(length=128), nullable=False),
         sa.Column("slug", sa.String(length=128), nullable=False),
-        sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("created_id", sa.Uuid(), nullable=True),
-        sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("updated_id", sa.Uuid(), nullable=True),
-        sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("host", sa.String(length=255), nullable=False),
         sa.Column("port", sa.Integer(), nullable=False),
         sa.Column("password", sa.String(length=255), nullable=False),
@@ -138,25 +115,12 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("username", sa.String(length=255), nullable=False),
-        sa.Column("deleted_id", sa.Uuid(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["created_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["deleted_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["updated_id"],
-            ["users.id"],
-        ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
         sa.UniqueConstraint("slug"),
     )
 
-    # Create storage registries after their user dependencies.
+    # Create storage registries.
     op.create_table(
         "storage_registries",
         sa.Column("id", sa.Uuid(), nullable=False),
@@ -167,24 +131,6 @@ def upgrade() -> None:
         sa.Column("runtime_endpoint_url", sa.String(length=255), nullable=False),
         sa.Column("access_key_id", sa.String(length=255), nullable=False),
         sa.Column("secret_access_key", sa.String(length=255), nullable=False),
-        sa.Column("created_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("created_id", sa.Uuid(), nullable=True),
-        sa.Column("updated_at", longlink.database.types.UTCDateTime(), nullable=False),
-        sa.Column("updated_id", sa.Uuid(), nullable=True),
-        sa.Column("deleted_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.Column("deleted_id", sa.Uuid(), nullable=True),
-        sa.ForeignKeyConstraint(
-            ["created_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["deleted_id"],
-            ["users.id"],
-        ),
-        sa.ForeignKeyConstraint(
-            ["updated_id"],
-            ["users.id"],
-        ),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("name"),
         sa.UniqueConstraint("slug"),
@@ -235,7 +181,6 @@ def upgrade() -> None:
         sa.Column("digest", sa.String(length=255), nullable=True),
         sa.Column("version", sa.String(length=128), nullable=True),
         sa.Column("description", sa.String(length=255), nullable=True),
-        sa.Column("envs", sa.JSON(), nullable=False),
         sa.Column("database_password", sa.String(length=255), nullable=False),
         sa.Column("storage_access_key_id", sa.String(length=255), nullable=True),
         sa.Column("storage_secret_access_key", sa.String(length=255), nullable=True),

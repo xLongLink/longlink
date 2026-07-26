@@ -29,7 +29,8 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
     routes = config["static_resources"]["listeners"][0]["filter_chains"][0]["filters"][0]["typed_config"]["route_config"]["virtual_hosts"][0]["routes"]
     clusters = config["static_resources"]["clusters"]
     assert routes[0]["match"] == {"path": "/ready"}
-    assert routes[-1]["direct_response"]["status"] == 404
+    assert routes[0]["direct_response"] == {"status": 200}
+    assert len(routes) == 3
     assert routes[1]["route"]["cluster"] == "acme-20000000-0000-4000-8000-000000000001"
     assert routes[2]["route"]["cluster"] == "beta-20000000-0000-4000-8000-000000000002"
     assert routes[1]["match"]["headers"][0]["name"] == "x-longlink-gateway-secret"
@@ -57,7 +58,7 @@ def test_gateway_manifests_include_exact_auth_tls_and_config_resources() -> None
     assert service["metadata"]["annotations"]["longlink.io/runtime-revision"] != manifests.runtime_revision
     assert manifests.auth_secret["kind"] == "Secret"
     assert manifests.auth_secret["stringData"] == {"gateway-secret": "proxy-secret"}
-    assert manifests.tls_secret["stringData"] == {"ca.crt": "ca", "tls.crt": "certificate", "tls.key": "private-key"}
+    assert manifests.tls_secret["stringData"] == {"tls.crt": "certificate", "tls.key": "private-key"}
     assert manifests.config_map["data"] == {"envoy.yaml": "envoy-config"}
     assert manifests.deployment["metadata"]["labels"]["longlink.io/resource-scope"] == "platform"
     assert manifests.deployment["metadata"]["annotations"]["longlink.io/runtime-revision"] == manifests.runtime_revision
