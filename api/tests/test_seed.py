@@ -10,7 +10,7 @@ from src.environments import env
 from src.models.roles import PlatformRoles, ApplicationRoles, OrganizationRoles
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
-from src.models.operations import OperationStatus, ReconciliationScope
+from src.models.operations import OperationKind, OperationStatus, ReconciliationScope
 from src.database.models.users import User
 from src.database.models.operations import Operation
 from src.database.models.association import UserApplication, UserOrganization
@@ -78,6 +78,7 @@ def successful_seed_boundaries(
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
     monkeypatch.setattr(seed, "local_database_host", local_database_host)
     monkeypatch.setattr(seed.operation_computes, "reconcile", reconcile)
+    monkeypatch.setitem(seed.jobs.handlers, OperationKind.compute, reconcile)
     return reconciliations
 
 
@@ -88,9 +89,10 @@ async def test_reconcile_until_complete_drains_until_target_operation(monkeypatc
     # Arrange
     target_compute_id = UUID("22222222-2222-2222-2222-222222222222")
     other_compute_id = UUID("33333333-3333-3333-3333-333333333333")
-    unrelated_operation = fake_resource(compute_id=other_compute_id)
-    target_operation = fake_resource(compute_id=target_compute_id)
-    claims: list[SimpleNamespace | None] = [None, unrelated_operation, target_operation]
+    unrelated_operation = fake_resource(kind=OperationKind.compute, compute_id=other_compute_id)
+    migration_operation = fake_resource(kind=OperationKind.database, compute_id=target_compute_id)
+    target_operation = fake_resource(kind=OperationKind.compute, compute_id=target_compute_id)
+    claims: list[SimpleNamespace | None] = [None, unrelated_operation, migration_operation, target_operation]
     executed: list[SimpleNamespace] = []
     sleeps: list[float] = []
 
@@ -104,9 +106,19 @@ async def test_reconcile_until_complete_drains_until_target_operation(monkeypatc
     async def execute_operation(claimed_operation: SimpleNamespace, handler: object) -> SimpleNamespace:
         """Complete each claimed operation without invoking infrastructure providers."""
 
-        assert handler is seed.operation_computes.reconcile
+        expected_handlers = {
+            OperationKind.compute: seed.operation_computes.reconcile,
+            OperationKind.database: seed._operation_databases.reconcile,
+            OperationKind.storage: seed._operation_storages.reconcile,
+        }
+        assert handler is expected_handlers[claimed_operation.kind]
         executed.append(claimed_operation)
-        return fake_resource(compute_id=claimed_operation.compute_id, stopped_at=object(), failed=False)
+        return fake_resource(
+            kind=claimed_operation.kind,
+            compute_id=claimed_operation.compute_id,
+            stopped_at=object(),
+            failed=False,
+        )
 
     async def sleep(seconds: float) -> None:
         """Record queue polling backoff without slowing the test."""
@@ -121,7 +133,7 @@ async def test_reconcile_until_complete_drains_until_target_operation(monkeypatc
     await seed.reconcile_until_complete(target_compute_id)
 
     # Assert
-    assert executed == [unrelated_operation, target_operation]
+    assert executed == [unrelated_operation, migration_operation, target_operation]
     assert sleeps == [1]
     assert claims == []
 

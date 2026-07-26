@@ -2,10 +2,11 @@ from src import adapters, projections
 from uuid import UUID
 from typing import cast
 from src.utils import jobs, names, images
-from src.version import platform_version_key
+from src.utils.jobs import operation
 from collections.abc import Callable, Awaitable
 from src.environments import env
 from src.models.types import Image
+from packaging.version import Version
 from src.models.statuses import ApplicationStatus, OrganizationStatus
 from src.database.services import compute, operations, applications, organizations
 from src.kubernetes.client import Kubernetes
@@ -282,6 +283,7 @@ async def reconcile_applications(
     return result, pending_applications
 
 
+@operation("compute")
 async def reconcile(operation: Operation) -> jobs.OperationOutcome:
     """Dispatch one leased compute Operation to Platform or Application orchestration."""
 
@@ -318,9 +320,7 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
         return jobs.fail("Compute registry not found")
     if operation.platform_version != env.VERSION:
         return jobs.retry("Operation targets a different Platform release")
-    if compute_registry.version is not None and platform_version_key(compute_registry.version) > platform_version_key(
-        operation.platform_version
-    ):
+    if compute_registry.version is not None and Version(compute_registry.version) > Version(operation.platform_version):
         return jobs.retry("Compute target was already reconciled by a newer Platform release")
     organization_rows = await organizations.for_compute(compute_registry.id)
     application_rows = await applications.for_compute(compute_registry.id)

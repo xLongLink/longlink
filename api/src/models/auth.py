@@ -1,8 +1,18 @@
 from typing import Annotated
-from pydantic import Field, EmailStr, BaseModel, StringConstraints
+from pydantic import Field, EmailStr, BaseModel, BeforeValidator, StringConstraints
+
+
+def normalize_email(value: object) -> object:
+    """Normalize string email input before address validation."""
+
+    # Authentication identity comparisons use one lowercase, whitespace-free representation.
+    if isinstance(value, str):
+        return value.strip().lower()
+    return value
 
 TrimmedName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=127)]
 TrimmedToken = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=4096)]
+NormalizedEmail = Annotated[EmailStr, BeforeValidator(normalize_email), Field(max_length=254)]
 LocalPath = Annotated[
     str,
     StringConstraints(min_length=1, max_length=2048, pattern=r"^/(?:$|[^/\\\x00-\x1f\x7f][^\\\x00-\x1f\x7f]*)$"),
@@ -13,7 +23,7 @@ class PasswordLogin(BaseModel):
     """Validate one local password login request."""
 
     # Credentials
-    email: EmailStr = Field(max_length=254)
+    email: NormalizedEmail
     password: str = Field(min_length=1, max_length=1024)
 
 
@@ -21,7 +31,7 @@ class RegistrationRequest(BaseModel):
     """Validate a stateless email registration request."""
 
     # Identity
-    email: EmailStr = Field(max_length=254)
+    email: NormalizedEmail
 
     # Navigation
     next: LocalPath = "/organizations"
@@ -49,7 +59,7 @@ class RegistrationComplete(BaseModel):
 
     # Profile
     name: TrimmedName
-    email: EmailStr = Field(max_length=254)
+    email: NormalizedEmail
     surname: TrimmedName
 
     # Authentication
@@ -60,7 +70,7 @@ class PasswordResetRequest(BaseModel):
     """Validate a non-enumerating password reset request."""
 
     # Identity
-    email: EmailStr = Field(max_length=254)
+    email: NormalizedEmail
 
     # Navigation
     next: LocalPath = "/organizations"

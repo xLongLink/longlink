@@ -2,9 +2,9 @@ import secrets
 from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy import select
-from src.version import platform_version_key
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
+from packaging.version import Version
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus
 from src.database.session import session_scope
@@ -175,7 +175,7 @@ async def record_success(
             )
             if lease.scalar_one_or_none() is None:
                 return False
-        if registry.version is not None and platform_version_key(registry.version) > platform_version_key(platform_version):
+        if registry.version is not None and Version(registry.version) > Version(platform_version):
             return False
         registry.gateway_url = gateway_url
         registry.gateway_ca_certificate = gateway_ca_certificate

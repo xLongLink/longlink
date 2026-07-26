@@ -2,6 +2,7 @@ from httpx2 import AsyncClient
 from factories import create_ready_infrastructure
 from src.environments import env
 from src.database.services import operations
+from src.models.operations import OperationKind
 from src.database.models.users import User
 
 
@@ -25,6 +26,8 @@ async def test_operations_endpoint_returns_compute_scoped_operations(
     payload = response.json()
     assert len(payload) == 1
     assert payload[0]["id"] == str(operation.id)
+    assert payload[0]["kind"] == OperationKind.compute
+    assert payload[0]["target_id"] == str(infrastructure.compute.id)
     assert payload[0]["compute_id"] == str(infrastructure.compute.id)
     assert payload[0]["scope"] == operation.scope
     assert payload[0]["status"] == operation.status

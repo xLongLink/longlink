@@ -13,6 +13,14 @@ class OperationStatus(StrEnum):
     scheduled = "scheduled"
 
 
+class OperationKind(StrEnum):
+    """Supported registered operation handlers."""
+
+    compute = "compute"
+    database = "database"
+    storage = "storage"
+
+
 class ReconciliationScope(StrEnum):
     """Select Platform-only work or Application work with its Platform dependencies."""
 
@@ -21,7 +29,7 @@ class ReconciliationScope(StrEnum):
 
 
 class OperationResponse(BaseModel):
-    """Expose asynchronous reconciliation for one compute target's desired state."""
+    """Expose asynchronous reconciliation for one Platform resource target."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -29,6 +37,8 @@ class OperationResponse(BaseModel):
     id: UUID
 
     # Reference
+    kind: OperationKind
+    target_id: UUID
     compute_id: UUID
 
     # State

@@ -213,6 +213,7 @@ down:
 api:
 	cd api && uv sync --locked --extra dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
+	cd api && DEVELOPMENT=true uv run --locked python setup.py
 	cd api && DEVELOPMENT=true uv run --locked uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 
 
@@ -226,6 +227,7 @@ seed: up
 	@docker buildx inspect "$(DEV_DOCKER_BUILDER)" --bootstrap >/dev/null
 	cd sdk/dev && uv run longlink build --builder "$(DEV_DOCKER_BUILDER)" --registry localhost:15000 --push --tag dev
 	cd api && DEVELOPMENT=true uv run --locked alembic upgrade head
+	cd api && DEVELOPMENT=true uv run --locked python setup.py
 	cd api && DEVELOPMENT=true uv run --locked python seed.py
 
 

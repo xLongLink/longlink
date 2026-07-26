@@ -4,21 +4,22 @@ from datetime import datetime
 from sqlmodel import Field, SQLModel
 from sqlalchemy import JSON, Enum, Index, Column, text
 from longlink.utils.time import utcnow
-from src.models.operations import OperationStatus, ReconciliationScope
+from src.models.operations import OperationKind, OperationStatus, ReconciliationScope
 from longlink.database.types import UTCDateTime
 
 
 class Operation(SQLModel, table=True):
-    """Persist one durable compute reconciliation request and its renewable worker lease.
+    """Persist one durable Platform reconciliation request and its renewable worker lease.
 
-    Each compute target admits one open request; its target release and attempt generation coordinate and fence API replicas.
+    Each kind and target pair admits one open request; its release and attempt generation coordinate and fence API replicas.
     """
 
     __tablename__: ClassVar[str] = "operations"
     __table_args__ = (
         Index(
-            "uq_operations_open_compute_id",
-            "compute_id",
+            "uq_operations_open_kind_target_id",
+            "kind",
+            "target_id",
             unique=True,
             postgresql_where=text("stopped_at IS NULL"),
             sqlite_where=text("stopped_at IS NULL"),
@@ -29,6 +30,10 @@ class Operation(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
 
     # Reference
+    kind: OperationKind = Field(
+        sa_column=Column(Enum(OperationKind, name="operation_kind_enum", native_enum=False), nullable=False)
+    )
+    target_id: UUID = Field(nullable=False)
     compute_id: UUID = Field(foreign_key="compute_registries.id")
     application_ids: list[str] | None = Field(default=None, sa_column=Column(JSON, nullable=True))
 

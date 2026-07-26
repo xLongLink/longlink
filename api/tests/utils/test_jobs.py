@@ -4,7 +4,7 @@ from uuid import UUID
 from datetime import datetime, timedelta
 from src.utils import jobs as operation_worker
 from longlink.utils.time import utcnow
-from src.models.operations import OperationStatus, ReconciliationScope
+from src.models.operations import OperationKind, OperationStatus, ReconciliationScope
 from src.database.models.operations import Operation
 
 pytestmark = pytest.mark.no_db
@@ -19,6 +19,8 @@ def leased_operation(attempt_count: int = 1) -> Operation:
 
     return Operation(
         id=UUID("55555555-5555-5555-5555-555555555555"),
+        kind=OperationKind.compute,
+        target_id=UUID("22222222-2222-2222-2222-222222222222"),
         compute_id=UUID("22222222-2222-2222-2222-222222222222"),
         scope=ReconciliationScope.application,
         platform_version="v1.2.3",
@@ -74,10 +76,11 @@ async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytes
     monkeypatch.setattr(operation_worker, "execute", fake_execute)
     monkeypatch.setattr(operation_worker, "renew_operation_lease", fake_renew_operation_lease)
     monkeypatch.setattr(operation_worker.asyncio, "sleep", fake_sleep)
+    monkeypatch.setitem(operation_worker.handlers, OperationKind.compute, handler)
 
     # Act
     with pytest.raises(StopScheduler):
-        await operation_worker.run_operation_scheduler(handler)
+        await operation_worker.run_operation_scheduler()
 
     # Assert
     assert executed == [operation]
@@ -104,6 +107,8 @@ async def test_execute_retries_location_work_with_exponential_backoff(monkeypatc
         transitions.append((operation_id, attempt_count, delay))
         return Operation(
             id=operation_id,
+            kind=operation.kind,
+            target_id=operation.target_id,
             compute_id=operation.compute_id,
             scope=operation.scope,
             platform_version=operation.platform_version,
@@ -173,6 +178,8 @@ async def test_execute_fails_retry_at_attempt_limit(monkeypatch: pytest.MonkeyPa
         transitions.append((operation_id, attempt_count))
         return Operation(
             id=operation_id,
+            kind=operation.kind,
+            target_id=operation.target_id,
             compute_id=operation.compute_id,
             failed=True,
             scope=operation.scope,

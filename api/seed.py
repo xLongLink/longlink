@@ -9,6 +9,8 @@ from sqlmodel import col
 from src.utils import jobs, names, passwords
 from sqlalchemy import text, select, inspect
 from src.operations import computes as operation_computes
+from src.operations import storages as _operation_storages
+from src.operations import databases as _operation_databases
 from src.environments import env
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.types import Image, StorageKind, DatabaseSSLMode
@@ -23,7 +25,7 @@ from src.database.services import database as database_service
 from src.database.services import operations
 from src.database.services import applications as application_service
 from src.database.services import organizations as organization_service
-from src.models.operations import ReconciliationScope
+from src.models.operations import OperationKind, ReconciliationScope
 from src.models.applications import ApplicationCreate
 from src.database.models.users import User
 from src.models.infrastructure import exoscale_zone
@@ -161,8 +163,8 @@ async def reconcile_until_complete(compute_id: UUID) -> None:
         if operation is None:
             await asyncio.sleep(1)
             continue
-        result = await jobs.run_claimed_operation(operation, operation_computes.reconcile)
-        if result.compute_id != compute_id:
+        result = await jobs.run_claimed_operation(operation, jobs.get_handler(operation.kind))
+        if result.kind != OperationKind.compute or result.compute_id != compute_id:
             continue
         if result.stopped_at is not None:
             if result.failed:

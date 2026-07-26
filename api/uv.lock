@@ -184,6 +184,15 @@ wheels = [
 ]
 
 [[package]]
+name = "aiosmtplib"
+version = "5.1.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b9/25/d36d056e62a1dc3dd51ce76e7647c62966702193dc91eafa7fd4e1006a91/aiosmtplib-5.1.2.tar.gz", hash = "sha256:04a0ea3c678f5b719f998f290dce010ca512e1385836d3944206299df03b060f", size = 71031, upload-time = "2026-06-20T15:00:48.269Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d5/ec/c5a415cd1309eaac28ad3c599458194d25ba07189bb07a1bac2c6713c17e/aiosmtplib-5.1.2-py3-none-any.whl", hash = "sha256:070d467cc329dafd0af59108ba5d217d973cba10309910fed359a2a7bfb52d7a", size = 28394, upload-time = "2026-06-20T15:00:47.299Z" },
+]
+
+[[package]]
 name = "aiosqlite"
 version = "0.22.1"
 source = { registry = "https://pypi.org/simple" }
@@ -781,6 +790,15 @@ wheels = [
 ]
 
 [[package]]
+name = "elementpath"
+version = "5.1.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/64/18/32c3a5cb3d1e5ce691757cd627bd15ae19aafb45a7c966fce16022ff6b70/elementpath-5.1.3.tar.gz", hash = "sha256:35e98cc2e26332305a49b32eaaebfb7289d1963c88d3989ff5ccb02c46809820", size = 378039, upload-time = "2026-06-28T11:24:02.666Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/37/11/317824213350e6bf7af8aa4238cb78bec9ca014b89fdd5e25283f1c40d98/elementpath-5.1.3-py3-none-any.whl", hash = "sha256:c46f5e0e36c149b892308843e1e394bdee17ceafbc18cfa39250403dd8475a4e", size = 260297, upload-time = "2026-06-28T11:24:00.522Z" },
+]
+
+[[package]]
 name = "email-validator"
 version = "2.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1129,6 +1147,7 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "sqlmodel" },
     { name = "uvicorn" },
+    { name = "xmlschema" },
 ]
 
 [package.metadata]
@@ -1146,6 +1165,7 @@ requires-dist = [
     { name = "sqlalchemy", specifier = ">=2.0.51" },
     { name = "sqlmodel", specifier = ">=0.0.39" },
     { name = "uvicorn", specifier = ">=0.51.0" },
+    { name = "xmlschema", specifier = ">=4.3.2" },
 ]
 
 [package.metadata.requires-dev]
@@ -1166,6 +1186,7 @@ name = "longlink-api"
 source = { editable = "." }
 dependencies = [
     { name = "aioboto3" },
+    { name = "aiosmtplib" },
     { name = "aiosqlite" },
     { name = "alembic" },
     { name = "botocore" },
@@ -1178,6 +1199,7 @@ dependencies = [
     { name = "kr8s" },
     { name = "longlink" },
     { name = "mjml" },
+    { name = "packaging" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pwdlib", extra = ["argon2", "bcrypt"] },
     { name = "pydantic" },
@@ -1205,6 +1227,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aioboto3", specifier = ">=15.5.0" },
+    { name = "aiosmtplib", specifier = ">=5.1.2" },
     { name = "aiosqlite", specifier = ">=0.22.1" },
     { name = "alembic", specifier = ">=1.18.5" },
     { name = "botocore", specifier = ">=1.40.61" },
@@ -1219,6 +1242,7 @@ requires-dist = [
     { name = "kr8s", specifier = ">=0.20.15" },
     { name = "longlink", editable = "../sdk" },
     { name = "mjml", specifier = ">=0.12.0" },
+    { name = "packaging", specifier = ">=26.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.4" },
     { name = "pwdlib", extras = ["argon2", "bcrypt"], specifier = ">=0.3.0,<1" },
     { name = "pydantic", specifier = ">=2.13.4" },
@@ -2331,6 +2355,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c7/79/12135bdf8b9c9367b8701c2c19a14c913c120b882d50b014ca0d38083c2c/wsproto-1.3.2.tar.gz", hash = "sha256:b86885dcf294e15204919950f666e06ffc6c7c114ca900b060d6e16293528294", size = 50116, upload-time = "2025-11-20T18:18:01.871Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a4/f5/10b68b7b1544245097b2a1b8238f66f2fc6dcaeb24ba5d917f52bd2eed4f/wsproto-1.3.2-py3-none-any.whl", hash = "sha256:61eea322cdf56e8cc904bd3ad7573359a242ba65688716b0710a5eb12beab584", size = 24405, upload-time = "2025-11-20T18:18:00.454Z" },
+]
+
+[[package]]
+name = "xmlschema"
+version = "4.3.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "elementpath" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/55/f0/2431c2c8f77326757f2e2b1d79226c17b2abfe44a78a41c7d7b944e90732/xmlschema-4.3.2.tar.gz", hash = "sha256:f3b33a21a2b2cdc404ddc3fb599d8bc1dee90b155d547370672e6e684746b8d6", size = 682724, upload-time = "2026-06-30T06:11:50.744Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5c/fb/8be39dc47b0ed9bbc80f384906eed87fa974c9b377a7a430118c3b405550/xmlschema-4.3.2-py3-none-any.whl", hash = "sha256:cf5c970a30f6ebcb3da35260e694704cc0b6794d8ace46125bb2a95e38ed9307", size = 504613, upload-time = "2026-06-30T06:11:47.462Z" },
 ]
 
 [[package]]

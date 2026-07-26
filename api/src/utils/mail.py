@@ -1,6 +1,5 @@
-import asyncio
 import logging
-import smtplib
+import aiosmtplib
 from html import escape
 from mjml import mjml_to_html
 from string import Template
@@ -11,9 +10,6 @@ from src.environments import env
 from src.models.roles import OrganizationRoles
 
 logger = logging.getLogger("longlink.mail")
-TEMPLATES = Path(__file__).with_name("templates")
-ORGANIZATION_INVITATION_TEMPLATE = "organization_invitation.mjml"
-SIGNUP_VERIFICATION_TEMPLATE = "signup_verification.mjml"
 
 
 def sender_address() -> str:
@@ -35,7 +31,7 @@ def render_mjml_template(template_name: str, **context: object) -> str:
     """Render one bundled MJML template to HTML."""
 
     # Render the MJML source with escaped string context values.
-    template = Template((TEMPLATES / template_name).read_text(encoding="utf-8"))
+    template = Template((Path(__file__).with_name("templates") / template_name).read_text(encoding="utf-8"))
     escaped_context = {name: escape(str(value), quote=True) for name, value in context.items()}
     source = template.substitute(**escaped_context)
 
@@ -47,23 +43,6 @@ def render_mjml_template(template_name: str, **context: object) -> str:
     return result.html
 
 
-def send_smtp_message(message: EmailMessage) -> None:
-    """Send one prepared message through configured SMTP."""
-
-    # Require delivery configuration outside the development logging path.
-    if env.SMTP_HOST is None:
-        raise RuntimeError("SMTP_HOST is not configured")
-
-    # Open the configured SMTP transport and upgrade it with STARTTLS when requested.
-    smtp_type = smtplib.SMTP_SSL if env.SMTP_USE_TLS else smtplib.SMTP
-    with smtp_type(env.SMTP_HOST, env.SMTP_PORT, timeout=15) as client:
-        if env.SMTP_START_TLS:
-            client.starttls()
-        if env.SMTP_USERNAME is not None:
-            client.login(env.SMTP_USERNAME, env.SMTP_PASSWORD or "")
-        client.send_message(message)
-
-
 async def send_mail(recipient: str, subject: str, text: str, html: str | None = None) -> None:
     """Deliver one email or log it during local development."""
 
@@ -71,6 +50,10 @@ async def send_mail(recipient: str, subject: str, text: str, html: str | None = 
     if env.SMTP_HOST is None and env.DEVELOPMENT:
         logger.warning("Development email to %s: %s\n%s", recipient, subject, text)
         return
+
+    # Require delivery configuration outside the development logging path.
+    if env.SMTP_HOST is None:
+        raise RuntimeError("SMTP_HOST is not configured")
 
     # Build a multipart email when HTML is available and always keep a plain-text fallback.
     message = EmailMessage()
@@ -81,15 +64,30 @@ async def send_mail(recipient: str, subject: str, text: str, html: str | None = 
     if html is not None:
         message.add_alternative(html, subtype="html")
 
-    # SMTP is synchronous, so isolate it from the API event loop.
-    await asyncio.to_thread(send_smtp_message, message)
+    # Deliver through an asynchronous SMTP connection with explicit transport selection.
+    await aiosmtplib.send(
+        message,
+        hostname=env.SMTP_HOST,
+        port=env.SMTP_PORT,
+        username=env.SMTP_USERNAME,
+        password=env.SMTP_PASSWORD,
+        use_tls=env.SMTP_USE_TLS,
+        start_tls=env.SMTP_START_TLS,
+        timeout=15,
+    )
 
 
-async def send_authentication_email(recipient: str, subject: str, body: str) -> None:
-    """Deliver one plain authentication email."""
+async def send_password_reset_email(recipient: str, credential: str, next_path: str) -> None:
+    """Deliver one password-reset link email."""
 
-    # Password reset emails still use the generic plain-text delivery path.
-    await send_mail(recipient, subject, body)
+    # Keep bearer proof in the fragment so it is not sent in the initial HTTP request.
+    query = urlencode({"next": next_path})
+    fragment = urlencode({"token": credential})
+    reset_url = f"{env.PUBLIC_URL.rstrip('/')}/auth/reset-password?{query}#{fragment}"
+    subject = "Reset your LongLink password"
+    text = f"Reset your password:\n\n{reset_url}\n"
+    html = render_mjml_template("password_reset.mjml", reset_url=reset_url)
+    await send_mail(recipient, subject, text, html)
 
 
 async def send_organization_invitation_email(recipient: str, organization_name: str, role: OrganizationRoles) -> None:
@@ -111,7 +109,7 @@ async def send_organization_invitation_email(recipient: str, organization_name: 
         "Contact: info@longlink.dev\n"
     )
     html = render_mjml_template(
-        ORGANIZATION_INVITATION_TEMPLATE,
+        "organization_invitation.mjml",
         invitation_url=invitation_url,
         organization_name=organization_name,
         role_label=role_label,
@@ -136,7 +134,7 @@ async def send_signup_verification_email(recipient: str, token: str) -> None:
         "Contact: info@longlink.dev\n"
     )
     html = render_mjml_template(
-        SIGNUP_VERIFICATION_TEMPLATE,
+        "signup_verification.mjml",
         verification_url=verification_url,
     )
 

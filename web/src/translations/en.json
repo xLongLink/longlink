@@ -125,6 +125,9 @@
     "admin.databaseDescription": {
         "defaultMessage": "Monitor platform data, schema health, and persistence state."
     },
+    "admin.databaseMigration": {
+        "defaultMessage": "Shared database migration"
+    },
     "admin.deleteComputeDescription": {
         "defaultMessage": "Delete compute {slug}?"
     },
@@ -169,6 +172,9 @@
     },
     "admin.computeReconciliation": {
         "defaultMessage": "Compute reconciliation"
+    },
+    "admin.storageMigration": {
+        "defaultMessage": "Shared storage migration"
     },
     "admin.operationsTitle": {
         "defaultMessage": "Operations"
@@ -496,6 +502,9 @@
     },
     "columns.namespace": {
         "defaultMessage": "Namespace"
+    },
+    "columns.target": {
+        "defaultMessage": "Target"
     },
     "columns.node": {
         "defaultMessage": "Node"

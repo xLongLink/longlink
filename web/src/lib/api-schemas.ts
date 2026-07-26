@@ -194,6 +194,8 @@ export const apiComputeRegistrySchema = z.object({
 
 export const apiOperationSchema = z.object({
     id: z.string(),
+    kind: z.enum(['compute', 'database', 'storage']),
+    target_id: z.string(),
     compute_id: z.string(),
     scope: z.enum(['platform', 'application']),
     status: z.enum(['scheduled', 'active', 'completed', 'failed']),

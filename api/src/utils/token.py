@@ -36,11 +36,10 @@ def password_fingerprint(hashed_password: str) -> str:
 def create_registration_token(email: str, next_path: str) -> str:
     """Create one signed, expiring proof of email ownership."""
 
-    # Normalize the only account identifier carried by the stateless registration token.
-    normalized_email = email.strip().lower()
+    # Sign the already-normalized request identity into immutable registration proof.
     return jwt.encode(
         {
-            "email": normalized_email,
+            "email": email,
             "next": next_path,
             "aud": REGISTRATION_TOKEN_AUDIENCE,
             "exp": utcnow() + timedelta(seconds=REGISTRATION_TOKEN_LIFETIME_SECONDS),

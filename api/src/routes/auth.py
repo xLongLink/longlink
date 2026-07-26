@@ -1,13 +1,10 @@
 import jwt
-import time
 from fastapi import Cookie, Depends, Request, Response, APIRouter, HTTPException, BackgroundTasks
 from sqlmodel import col, select
 from src.auth import (AUTH_COOKIE, REGISTRATION_COOKIE, PASSWORD_RESET_COOKIE, PASSWORD_RESET_COOKIE_LIFETIME_SECONDS,
                       SessionAccountsService, get_auth_session)
 from src.utils import mail, token, passwords
-from threading import Lock
 from sqlalchemy import func
-from urllib.parse import urlencode
 from sqlalchemy.exc import IntegrityError
 from src.models.auth import (PasswordLogin, RegistrationRequest, PasswordResetRequest, RegistrationComplete, RegistrationVerified,
                              PasswordResetComplete, RegistrationTokenConfirm, PasswordResetTokenConfirm)
@@ -19,47 +16,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 
 router = APIRouter()
-PASSWORD_RESET_THROTTLE_WINDOW_SECONDS = 900.0
-PASSWORD_RESET_IP_LIMIT = 10
-PASSWORD_RESET_EMAIL_LIMIT = 3
-PASSWORD_RESET_THROTTLE_MAX_KEYS = 10_000
-password_reset_attempts: dict[tuple[str, str], tuple[float, int]] = {}
-password_reset_attempts_lock = Lock()
-
-
-def allow_password_reset_request(client_ip: str, email: str) -> bool:
-    """Apply fixed-window in-process limits to one client IP and normalized email."""
-
-    now = time.monotonic()
-    keys = ((("ip", client_ip), PASSWORD_RESET_IP_LIMIT), (("email", email), PASSWORD_RESET_EMAIL_LIMIT))
-
-    # Check both dimensions before recording an accepted attempt.
-    with password_reset_attempts_lock:
-        current: dict[tuple[str, str], tuple[float, int]] = {}
-        for key, limit in keys:
-            started_at, count = password_reset_attempts.get(key, (now, 0))
-            if now - started_at >= PASSWORD_RESET_THROTTLE_WINDOW_SECONDS:
-                started_at, count = now, 0
-            if count >= limit:
-                return False
-            current[key] = (started_at, count)
-
-        # Bound process memory while retaining active windows whenever practical.
-        if len(password_reset_attempts) >= PASSWORD_RESET_THROTTLE_MAX_KEYS:
-            expired = [
-                key
-                for key, (started_at, _) in password_reset_attempts.items()
-                if now - started_at >= PASSWORD_RESET_THROTTLE_WINDOW_SECONDS
-            ]
-            for key in expired:
-                password_reset_attempts.pop(key, None)
-            while len(password_reset_attempts) >= PASSWORD_RESET_THROTTLE_MAX_KEYS:
-                password_reset_attempts.pop(next(iter(password_reset_attempts)))
-
-        # Count accepted requests against both the source and destination limits.
-        for key, (started_at, count) in current.items():
-            password_reset_attempts[key] = (started_at, count + 1)
-    return True
 
 
 @router.post("/api/auth/password/login", status_code=204, tags=["auth"])
@@ -71,10 +27,10 @@ async def password_login(
 ):
     """Authenticate a local account and create one revocable browser session."""
 
-    normalized_email = str(payload.email).strip().lower()
+    email = str(payload.email)
 
     # Load the case-insensitive account identity before verifying its credential.
-    statement = select(User).where(func.lower(col(User.email)) == normalized_email)
+    statement = select(User).where(func.lower(col(User.email)) == email)
     user = (await session.execute(statement)).scalar_one_or_none()
     if user is None:
         passwords.hash(payload.password)
@@ -109,36 +65,28 @@ async def password_login(
 @router.post("/api/auth/forgot-password", status_code=202, response_model=None, tags=["auth"])
 async def request_password_reset(
     payload: PasswordResetRequest,
-    request: Request,
     background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_auth_session),
 ):
     """Queue password reset delivery without disclosing account existence."""
 
-    normalized_email = str(payload.email).strip().lower()
-    client_ip = request.client.host if request.client is not None else "unknown"
-
-    # Throttled requests receive the same accepted response without a database lookup or email.
-    if not allow_password_reset_request(client_ip, normalized_email):
-        return
+    email = str(payload.email)
 
     # Missing and inactive accounts receive the same response as eligible accounts.
-    statement = select(User).where(func.lower(col(User.email)) == normalized_email, col(User.deleted_at).is_(None))
+    statement = select(User).where(func.lower(col(User.email)) == email, col(User.deleted_at).is_(None))
     user = (await session.execute(statement)).scalar_one_or_none()
     if user is None:
         return
 
     # Generate signed proof and perform SMTP delivery only after the response has been sent.
-    query = urlencode({"next": payload.next})
-    fragment = urlencode({"token": token.create_password_reset_token(user)})
-    url = f"{env.PUBLIC_URL.rstrip('/')}/auth/reset-password?{query}#{fragment}"
-    email = user.email
+    credential = token.create_password_reset_token(user)
+    recipient = user.email
     await session.rollback()
     background_tasks.add_task(
-        mail.send_authentication_email,
-        email,
-        "Reset your LongLink password",
-        f"Reset your password:\n\n{url}\n",
+        mail.send_password_reset_email,
+        recipient,
+        credential,
+        payload.next,
     )
 
 
@@ -222,10 +170,10 @@ async def request_registration(
 ):
     """Send a stateless registration link when the email has no account."""
 
-    normalized_email = str(payload.email).lower()
+    email = str(payload.email)
 
     # Keep the response non-enumerating while avoiding registration mail for existing accounts.
-    statement = select(User.id).where(func.lower(col(User.email)) == normalized_email)
+    statement = select(User.id).where(func.lower(col(User.email)) == email)
     if (await session.execute(statement)).scalar_one_or_none() is not None:
         return
 
@@ -233,8 +181,8 @@ async def request_registration(
     await session.rollback()
 
     # Email proof contains no password or pending user identifier.
-    credential = token.create_registration_token(normalized_email, payload.next)
-    background_tasks.add_task(mail.send_signup_verification_email, normalized_email, credential)
+    credential = token.create_registration_token(email, payload.next)
+    background_tasks.add_task(mail.send_signup_verification_email, email, credential)
 
 
 @router.post("/api/auth/verify", response_model=RegistrationVerified, tags=["auth"])
@@ -292,7 +240,7 @@ async def complete_registration(
         raise HTTPException(status_code=400, detail="VERIFY_USER_BAD_TOKEN") from exc
 
     # Prevent another browser tab's setup cookie from changing the displayed account identity.
-    if str(payload.email).lower() != email:
+    if str(payload.email) != email:
         raise HTTPException(status_code=400, detail="REGISTER_SETUP_MISMATCH")
 
     # Reject token replay and concurrent account creation before expensive password hashing.

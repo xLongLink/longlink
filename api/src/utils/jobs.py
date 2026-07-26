@@ -6,6 +6,7 @@ from src.logger import logger
 from dataclasses import dataclass
 from collections.abc import Callable, Awaitable
 from src.database.services import operations
+from src.models.operations import OperationKind
 from src.database.models.operations import Operation
 
 OPERATION_HEARTBEAT_SECONDS = 30
@@ -45,6 +46,49 @@ class OperationOutcome:
 
 JobHandler = Callable[[Operation], Awaitable[OperationOutcome]]
 
+handlers: dict[str, JobHandler] = {}
+
+
+def operation(name: str) -> Callable[[JobHandler], JobHandler]:
+    """Return a decorator that registers an operation handler by name."""
+
+    # Reject empty names before they can create unreachable registry entries.
+    if not name.strip():
+        raise ValueError("Operation name cannot be empty")
+
+    def decorator(handler: JobHandler) -> JobHandler:
+        """Register one operation handler while preserving the decorated function."""
+
+        # Refuse duplicates so operation dispatch remains deterministic.
+        if name in handlers:
+            raise ValueError(f"Operation handler already registered for '{name}'")
+        handlers[name] = handler
+        return handler
+
+    return decorator
+
+
+def validate_handlers() -> None:
+    """Require one registered handler for every persisted operation kind."""
+
+    # Fail startup when a handler is missing or registered under an unsupported name.
+    expected = {kind.value for kind in OperationKind}
+    registered = set(handlers)
+    if registered != expected:
+        missing = sorted(expected - registered)
+        unsupported = sorted(registered - expected)
+        raise RuntimeError(f"Invalid operation handlers; missing={missing}, unsupported={unsupported}")
+
+
+def get_handler(name: str) -> JobHandler:
+    """Return the registered handler for one persisted operation name."""
+
+    # Claimed rows must never execute through an implicit fallback handler.
+    handler = handlers.get(name)
+    if handler is None:
+        raise ValueError(f"Operation handler '{name}' is not registered")
+    return handler
+
 
 def complete() -> OperationOutcome:
     """Return an outcome that completes the operation."""
@@ -75,7 +119,7 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
     if attempt_count < 1 or operation.lease_expires_at is None:
         raise ValueError("Operation must be claimed before execution")
 
-    logger.info("Running compute reconciliation %s", operation.id)
+    logger.info("Running %s operation %s", operation.kind, operation.id)
 
     # Convert expected handler failures into explicit outcomes without wrapping database transitions.
     try:
@@ -156,7 +200,7 @@ async def run_claimed_operation(operation: Operation, handler: JobHandler) -> Op
         await asyncio.gather(action, heartbeat, return_exceptions=True)
 
 
-async def run_operation_scheduler(handler: JobHandler) -> None:
+async def run_operation_scheduler() -> None:
     """Run this replica's serial queue worker for Operations targeting its LongLink Platform release.
 
     Leases coordinate replicas and make crashed work reclaimable, while polling survives transient failures.
@@ -176,10 +220,11 @@ async def run_operation_scheduler(handler: JobHandler) -> None:
             await asyncio.sleep(1)
             continue
 
-        logger.info("Executing compute reconciliation %s", operation.id)
+        logger.info("Executing %s operation %s", operation.kind, operation.id)
 
         # Run one complete leased attempt before claiming more work.
         try:
+            handler = get_handler(operation.kind)
             result = await run_claimed_operation(operation, handler)
 
             # Yield after a retry so immediately due work cannot monopolize the scheduler.

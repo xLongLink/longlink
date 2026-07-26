@@ -91,6 +91,8 @@ longlink/
 - Test the actual implementation rather than duplicating production logic, and do not add new test cases unless explicitly requested.
 - Avoid mocks and global runtime-state modifications where practical, preferring real implementations and explicit dependency boundaries.
 - Prefer simple, maintainable, conventional solutions over clever hacks.
+- If a constant is used only once, then hardcode the value instead.
+
 
 ## JavaScript / TypeScript Guidelines
 

@@ -19,6 +19,11 @@ function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
         completed: t('admin.operationStatus.completed'),
         failed: t('admin.operationStatus.failed'),
     };
+    const kindLabels: Record<ApiOperation['kind'], string> = {
+        compute: t('admin.computeReconciliation'),
+        database: t('admin.databaseMigration'),
+        storage: t('admin.storageMigration'),
+    };
 
     return [
         {
@@ -27,7 +32,7 @@ function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
             width: proportional(1),
             renderCell: (operation) => (
                 <VStack gap={1}>
-                    <Text weight="semibold">{t('admin.computeReconciliation')}</Text>
+                    <Text weight="semibold">{kindLabels[operation.kind]}</Text>
                     <Text type="supporting">{statusLabels[operation.status]}</Text>
                 </VStack>
             ),
@@ -66,6 +71,10 @@ function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
                 <VStack gap={1}>
                     <Text>
                         <Text type="supporting">{t('columns.id')}</Text> <Text type="code">{operation.id}</Text>
+                    </Text>
+                    <Text>
+                        <Text type="supporting">{t('columns.target')}</Text>{' '}
+                        <Text type="code">{operation.target_id}</Text>
                     </Text>
                     <Text>
                         <Text type="supporting">{t('admin.computeTitle')}</Text>{' '}

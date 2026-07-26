@@ -62,8 +62,11 @@ Any job that is too long to run in a endpoint, is schedjused as `operation`:
 ## Release 
 
 - Release is trigged with `vX.Y.Z` and a container is created
-- Alembic migrations + migrations operations are schedjusted
-- Each API replica start.
+- Alembic migrations run, then `setup.py` schedules release migration Operations:
+  - One compute synchronization for every outdated compute.
+  - One shared-schema synchronization for every Organization.
+  - One shared-folder synchronization for every Organization bucket.
+- Each API replica starts (`main.py`).
   - `FastAPI` manage user request.
   - `lifespan` claim and execute the operations.
 
@@ -85,6 +88,7 @@ Run from `api/`:
 ```bash
 uv sync --extra dev
 uv run alembic upgrade head
+uv run python setup.py
 uv run python seed.py
 DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```

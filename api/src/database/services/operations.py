@@ -2,11 +2,11 @@ from uuid import UUID
 from datetime import timedelta
 from sqlalchemy import or_, select, update
 from src.logger import logger
-from src.version import platform_version_key, latest_platform_version
 from src.environments import env
+from packaging.version import Version
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
-from src.models.operations import ReconciliationScope
+from src.models.operations import OperationKind, ReconciliationScope
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
@@ -25,43 +25,31 @@ async def fetch() -> list[Operation]:
         return result.scalars().all()
 
 
-async def reject_platform_downgrade() -> None:
-    """Reject an API binary older than any persisted LongLink Platform release target or observation."""
-
-    # Operation history and observed compute targets form the forward-only release watermark.
-    async with session_scope() as session:
-        compute_versions = (
-            (await session.execute(select(ComputeRegistry.version).where(ComputeRegistry.version.is_not(None)).distinct()))
-            .scalars()
-            .all()
-        )
-        operation_versions = (await session.execute(select(Operation.platform_version).distinct())).scalars().all()
-    versions = [*compute_versions, *operation_versions]
-    if not versions:
-        return
-    latest_version = latest_platform_version(*versions)
-
-    # Older binaries cannot claim newer-target Operations, so fail before accepting traffic.
-    if platform_version_key(env.VERSION) < platform_version_key(latest_version):
-        raise RuntimeError(
-            f"LongLink Platform downgrade from {latest_version} to {env.VERSION} is not supported; deploy {latest_version} or newer"
-        )
-
-
 async def enqueue_in_session(
     session: AsyncSession,
     compute_id: UUID,
     scope: ReconciliationScope,
     locked_compute: ComputeRegistry | None = None,
     *,
+    kind: OperationKind = OperationKind.compute,
+    target_id: UUID | None = None,
     desired_change: bool = True,
     application_ids: set[UUID] | None = None,
 ) -> Operation:
-    """Coalesce scoped compute reconciliation inside the caller's desired-state transaction.
+    """Coalesce scoped Platform reconciliation inside the caller's desired-state transaction.
 
     Compute locking keeps the release target monotonic and queueing atomic across LongLink Platform replicas. Callers
     that already locked the compute in this transaction can supply it to avoid selecting the same row again.
     """
+
+    # Resolve and validate the registered resource target before queueing work.
+    target = target_id or compute_id
+    if kind == OperationKind.compute and target != compute_id:
+        raise ValueError("Compute operations must target their compute registry")
+    if kind != OperationKind.compute and target_id is None:
+        raise ValueError("Migration operations require an explicit resource target")
+    if kind != OperationKind.compute and scope != ReconciliationScope.platform:
+        raise ValueError("Migration operations require Platform reconciliation scope")
 
     # Platform work cannot target Applications, and an explicit target set must contain work.
     if scope == ReconciliationScope.platform and application_ids is not None:
@@ -85,16 +73,26 @@ async def enqueue_in_session(
         if compute is None:
             raise ValueError("Operation compute registry not found")
     versions = (
-        (await session.execute(select(Operation.platform_version).where(Operation.compute_id == compute_id).distinct()))
+        (
+            await session.execute(
+                select(Operation.platform_version)
+                .where(Operation.kind == kind, Operation.target_id == target)
+                .distinct()
+            )
+        )
         .scalars()
         .all()
     )
-    platform_version = latest_platform_version(env.VERSION, *versions, *([compute.version] if compute.version is not None else []))
+    platform_version = max(
+        [env.VERSION, *versions, *([compute.version] if compute.version is not None else [])],
+        key=Version,
+    )
     existing = (
         await session.execute(
             select(Operation)
             .where(
-                Operation.compute_id == compute_id,
+                Operation.kind == kind,
+                Operation.target_id == target,
                 Operation.stopped_at.is_(None),
             )
             .with_for_update()
@@ -117,7 +115,7 @@ async def enqueue_in_session(
 
     # Desired-state changes and release upgrades supersede active attempts and remove inherited retry delays.
     if existing is not None:
-        version_changed = platform_version_key(platform_version) > platform_version_key(existing.platform_version)
+        version_changed = Version(platform_version) > Version(existing.platform_version)
         work_changed = existing.scope != effective_scope or existing.application_ids != effective_application_ids
         if not desired_change and not version_changed and not work_changed:
             return existing
@@ -141,7 +139,9 @@ async def enqueue_in_session(
 
     # New work starts ready for the Platform release that owns the compute target.
     operation = Operation(
+        kind=kind,
         scope=effective_scope,
+        target_id=target,
         application_ids=effective_application_ids,
         platform_version=platform_version,
         compute_id=compute_id,
@@ -156,70 +156,100 @@ async def enqueue(
     compute_id: UUID,
     scope: ReconciliationScope = ReconciliationScope.application,
     *,
+    kind: OperationKind = OperationKind.compute,
+    target_id: UUID | None = None,
     application_ids: set[UUID] | None = None,
 ) -> Operation:
-    """Queue one compute reconciliation in a dedicated transaction."""
+    """Queue one registered Platform operation in a dedicated transaction."""
 
     # Convenience callers use the same transactional enqueue implementation as domain services.
     async with session_scope() as session:
-        operation = await enqueue_in_session(session, compute_id, scope, application_ids=application_ids)
+        operation = await enqueue_in_session(
+            session,
+            compute_id,
+            scope,
+            kind=kind,
+            target_id=target_id,
+            application_ids=application_ids,
+        )
         await session.commit()
         return operation
-
-
-async def enqueue_platform_reconciliation() -> None:
-    """Queue release reconciliation for computes not yet observed at this Platform release."""
-
-    # Serialize concurrent API replica startup through stable compute locks.
-    async with session_scope() as session:
-        statement = (
-            select(ComputeRegistry)
-            .where(or_(ComputeRegistry.version.is_(None), ComputeRegistry.version != env.VERSION))
-            .order_by(ComputeRegistry.id)
-            .with_for_update()
-        )
-        computes = (await session.execute(statement)).scalars().all()
-
-        # Repeated startup scans preserve current work, while deleted computes retain complete cleanup scope.
-        for compute in computes:
-            scope = ReconciliationScope.application if compute.deleted_at is not None else ReconciliationScope.platform
-            await enqueue_in_session(
-                session,
-                compute.id,
-                scope,
-                locked_compute=compute,
-                desired_change=False,
-            )
-        await session.commit()
 
 
 async def claim_next() -> Operation | None:
     """Claim the oldest due Operation targeting this LongLink Platform release and start its next fenced lease.
 
-    Row locking coordinates replicas, stale leases are reclaimable, and exhausted work becomes terminal.
+    Compute locking serializes related resource handlers across replicas, stale leases are reclaimable, and exhausted work
+    becomes terminal.
     """
 
-    # Skip exhausted crash recovery rows while selecting one attempt this worker may execute.
+    # Skip computes with active work while selecting the oldest due candidate without reversing aggregate lock order.
     while True:
         async with session_scope() as session:
             now = utcnow()
-            statement = (
-                select(Operation)
-                .where(
-                    Operation.stopped_at.is_(None),
-                    Operation.platform_version == env.VERSION,
-                    Operation.scheduled_at <= now,
-                    or_(Operation.lease_expires_at.is_(None), Operation.lease_expires_at <= now),
-                )
-                .order_by(Operation.created_at.asc())
-                .limit(1)
-                .with_for_update(skip_locked=True)
+            active_compute_ids = select(Operation.compute_id).where(
+                Operation.stopped_at.is_(None),
+                Operation.started_at.is_not(None),
+                Operation.lease_expires_at > now,
             )
-            operation = (await session.execute(statement)).scalars().first()
+            candidate = (
+                await session.execute(
+                    select(Operation.id, Operation.compute_id)
+                    .where(
+                        Operation.stopped_at.is_(None),
+                        Operation.platform_version == env.VERSION,
+                        Operation.scheduled_at <= now,
+                        or_(Operation.lease_expires_at.is_(None), Operation.lease_expires_at <= now),
+                        Operation.compute_id.not_in(active_compute_ids),
+                    )
+                    .order_by(Operation.created_at.asc())
+                    .limit(1)
+                )
+            ).first()
 
             # Return nothing when no operation is ready to run.
-            if operation is None:
+            if candidate is None:
                 return None
+            operation_id, compute_id = candidate
+
+            # Follow the aggregate-first lock order used by desired-state mutations and completion.
+            compute = (
+                await session.execute(select(ComputeRegistry.id).where(ComputeRegistry.id == compute_id).with_for_update())
+            ).scalar_one_or_none()
+            if compute is None:
+                return None
+            operation = (
+                await session.execute(
+                    select(Operation)
+                    .where(
+                        Operation.id == operation_id,
+                        Operation.stopped_at.is_(None),
+                        Operation.platform_version == env.VERSION,
+                        Operation.scheduled_at <= now,
+                        or_(Operation.lease_expires_at.is_(None), Operation.lease_expires_at <= now),
+                    )
+                    .with_for_update()
+                )
+            ).scalar_one_or_none()
+            if operation is None:
+                continue
+
+            # Another claimant may have activated related work before this transaction acquired the compute lock.
+            active_operation = (
+                await session.execute(
+                    select(Operation.id)
+                    .where(
+                        Operation.compute_id == compute_id,
+                        Operation.id != operation.id,
+                        Operation.stopped_at.is_(None),
+                        Operation.started_at.is_not(None),
+                        Operation.lease_expires_at > now,
+                    )
+                    .limit(1)
+                )
+            ).scalar_one_or_none()
+            if active_operation is not None:
+                continue
 
             # A worker that crashed on its final attempt leaves terminal failure for the next claimant to record.
             if operation.attempt_count >= OPERATION_ATTEMPT_LIMIT:
