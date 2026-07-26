@@ -10,6 +10,7 @@ depends_on = None
 def upgrade() -> None:
     """Apply the initial purchase request schema."""
 
+    # Create the Application-owned purchase request table.
     op.create_table(
         "purchase_requests",
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
@@ -34,4 +35,5 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Remove the initial purchase request schema."""
 
+    # Remove the Application-owned purchase request table.
     op.drop_table("purchase_requests")

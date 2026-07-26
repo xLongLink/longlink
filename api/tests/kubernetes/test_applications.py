@@ -9,7 +9,7 @@ pytestmark = pytest.mark.no_db
 def test_application_manifests_include_labels_and_secret_envs() -> None:
     """Render one application's workload resources without a cluster connection."""
 
-    # Arrange
+    # Define one desired Application with explicit runtime environment values.
     organization_id = UUID("10000000-0000-4000-8000-000000000001")
     application = DesiredApplication(
         id=UUID("20000000-0000-4000-8000-000000000001"),
@@ -18,7 +18,7 @@ def test_application_manifests_include_labels_and_secret_envs() -> None:
     )
     renderer = Applications(KubernetesResources("unused"))
 
-    # Act
+    # Render the Application resources without contacting a cluster.
     manifests = renderer.manifests(
         application,
         envs={
@@ -42,8 +42,7 @@ def test_application_manifests_include_labels_and_secret_envs() -> None:
         },
     )
 
-    # Assert
-    labels = manifests.secret["metadata"]["labels"]
+    # Verify manifests expose runtime configuration without leaking secrets.
     assert manifests.secret["kind"] == "Secret"
     assert manifests.secret["metadata"]["name"] == str(application.id)
     assert manifests.secret["stringData"] == {
@@ -65,7 +64,7 @@ def test_application_manifests_include_labels_and_secret_envs() -> None:
         "LONGLINK_STORAGE_USERNAME": "storage-user",
         "PORT": "8000",
     }
-    assert labels == {"longlink.io/application-id": str(application.id)}
+    assert "labels" not in manifests.secret["metadata"]
     assert "annotations" not in manifests.secret["metadata"]
     assert manifests.deployment["kind"] == "Deployment"
     assert manifests.service["kind"] == "Service"
@@ -74,9 +73,18 @@ def test_application_manifests_include_labels_and_secret_envs() -> None:
     assert manifests.deployment["spec"]["template"]["metadata"]["labels"] == {"longlink.io/application-id": str(application.id)}
     container = manifests.deployment["spec"]["template"]["spec"]["containers"][0]
     assert "imagePullPolicy" not in container
-    assert container["startupProbe"]["httpGet"] == container["readinessProbe"]["httpGet"]
+    assert "ports" not in container
+    assert "startupProbe" not in container
+    assert container["readinessProbe"]["httpGet"] == {"path": "/health", "port": 8000}
+    assert "strategy" not in manifests.deployment["spec"]
     assert "labels" not in manifests.service["metadata"]
     assert manifests.service["spec"]["selector"] == {"longlink.io/application-id": str(application.id)}
+    assert "targetPort" not in manifests.service["spec"]["ports"][0]
+    pod_security = manifests.deployment["spec"]["template"]["spec"]["securityContext"]
+    assert "runAsNonRoot" not in pod_security
+    assert "runAsUser" not in pod_security
+    assert "runAsGroup" not in pod_security
+    assert "fsGroup" not in pod_security
     assert "annotations" not in manifests.deployment["metadata"]
     assert "annotations" not in manifests.deployment["spec"]["template"]["metadata"]
     assert "annotations" not in manifests.service["metadata"]

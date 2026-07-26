@@ -8,15 +8,13 @@ from src.utils import names
 from dataclasses import dataclass
 from src.kubernetes import gateway
 from collections.abc import Callable, Awaitable
-from src.environments import env
-from kr8s.asyncio.objects import Pod, Secret, Service, APIObject, ConfigMap, Namespace, Deployment, NetworkPolicy
-from src.kubernetes.resources import KubernetesResources, uid, metadata, string_map, pod_is_active, resource_version, set_pod_annotation
+from kr8s.asyncio.objects import Service, Namespace, Deployment
+from src.kubernetes.resources import KubernetesResources, uid, resource_version, set_pod_annotation
 
 LOAD_BALANCER_TIMEOUT_SECONDS = 300
 GATEWAY_ROLLOUT_TIMEOUT_SECONDS = 300
 RESOURCE_TIMEOUT_SECONDS = 300
 POLL_INTERVAL_SECONDS = 2
-GATEWAY_LABEL = "app"
 PROXY_SECRET = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
@@ -70,38 +68,38 @@ class Reconciler:
 
         # Validate the complete gateway input before connecting to or changing the cluster.
         self._validate(desired, proxy_secret)
-        compute_id = str(desired.id)
-        platform_version = env.VERSION
 
         # Compute deletion never recreates a missing system Namespace and never sweeps tenant resources.
         if desired.deleting:
             system_namespace = await self._resources.read_platform_owned(
                 Namespace,
                 gateway.GATEWAY_NAMESPACE,
-                compute_id,
             )
             if system_namespace is None:
                 return ReconcileResult(None, None, None, None)
-            await self._prune(desired)
             await self._resources.delete(Namespace, system_namespace.name, uid=uid(system_namespace))
-            await self._wait_for_namespace_deletion(system_namespace.name)
+
+            # Wait for all namespaced gateway resources and finalizers before dropping the compute registry.
+            deadline = time.monotonic() + RESOURCE_TIMEOUT_SECONDS
+            while await self._resources.read(Namespace, system_namespace.name) is not None:
+                if time.monotonic() >= deadline:
+                    raise TimeoutError(f"Kubernetes Namespace {system_namespace.name!r} did not terminate before deletion")
+                await asyncio.sleep(POLL_INTERVAL_SECONDS)
             return ReconcileResult(None, None, None, None)
 
-        # The system Namespace is the immutable compute claim for gateway and bootstrap resources.
-        system_namespace = await self._resources.apply_platform(self._gateway.system_namespace(compute_id, platform_version))
-        if not isinstance(system_namespace, Namespace):
-            raise TypeError("Kubernetes Namespace apply returned an unexpected resource kind")
+        # The system Namespace owns gateway and bootstrap resources.
+        await self._resources.apply_platform(self._gateway.system_namespace())
 
         # Create the public Service before workloads because cloud address allocation is asynchronous.
-        await self._resources.apply_platform(self._gateway.service(compute_id, platform_version))
+        await self._resources.apply_platform(self._gateway.service())
         endpoint = await self._wait_for_gateway_endpoint()
-        tls = self._gateway.tls(compute_id, endpoint, existing_tls)
+        tls = self._gateway.tls(str(desired.id), endpoint, existing_tls)
         if tls != existing_tls and stage_tls is not None:
             await stage_tls(tls)
 
         # Gateway routes target stable Application Service DNS names without discovering tenant resources.
         envoy_config = self._gateway.config(desired.routes)
-        manifests = self._gateway.manifests(compute_id, proxy_secret, tls, envoy_config, platform_version)
+        manifests = self._gateway.manifests(proxy_secret, tls, envoy_config)
         auth_secret = await self._resources.replace_platform_secret(manifests.auth_secret)
         tls_secret = await self._resources.replace_platform_secret(manifests.tls_secret)
         config_map = await self._resources.apply_platform(manifests.config_map)
@@ -111,9 +109,8 @@ class Reconciler:
         await self._resources.apply_platform_deployment(manifests.deployment)
         await self._resources.apply_platform(manifests.network_policy)
 
-        # Prune only obsolete Platform-owned gateway resources after the desired rollout is ready.
+        # Confirm the desired gateway revision is serving before publishing its connection material.
         await self._wait_for_gateway_rollout(manifests.runtime_revision)
-        await self._prune(desired)
         try:
             parsed_endpoint = ipaddress.ip_address(endpoint)
         except ValueError:
@@ -173,7 +170,7 @@ class Reconciler:
     async def _wait_for_gateway_rollout(self, runtime_revision: str) -> None:
         """Wait boundedly for the desired gateway Deployment revision to become ready."""
 
-        # A ready old ReplicaSet is insufficient; metadata and pod template revisions must both match.
+        # A ready old ReplicaSet is insufficient; the pod template revision and observed generation must match.
         deadline = time.monotonic() + GATEWAY_ROLLOUT_TIMEOUT_SECONDS
         while True:
             deployment = await self._resources.read(Deployment, gateway.GATEWAY_NAME, gateway.GATEWAY_NAMESPACE)
@@ -184,7 +181,6 @@ class Reconciler:
                 current_metadata = body.get("metadata", {})
                 spec = body.get("spec", {})
                 status = body.get("status", {})
-                annotations = current_metadata.get("annotations", {}) if isinstance(current_metadata, dict) else {}
                 template = spec.get("template", {}) if isinstance(spec, dict) else {}
                 template_metadata = template.get("metadata", {}) if isinstance(template, dict) else {}
                 template_annotations = template_metadata.get("annotations", {}) if isinstance(template_metadata, dict) else {}
@@ -196,7 +192,6 @@ class Reconciler:
                     and isinstance(replicas, int)
                     and isinstance(observed_generation, int)
                     and observed_generation >= generation
-                    and annotations.get("longlink.io/runtime-revision") == runtime_revision
                     and template_annotations.get("longlink.io/runtime-revision") == runtime_revision
                     and status.get("updatedReplicas") == replicas
                     and status.get("readyReplicas") == replicas
@@ -205,50 +200,4 @@ class Reconciler:
                     return
             if time.monotonic() >= deadline:
                 raise TimeoutError("Gateway Deployment did not become ready before the reconciliation timeout")
-            await asyncio.sleep(POLL_INTERVAL_SECONDS)
-
-    async def _prune(self, desired: DesiredCompute) -> None:
-        """Prune only obsolete Platform-owned gateway resources."""
-
-        # Platform resources require the gateway label and a canonical kind and name.
-        compute_id = str(desired.id)
-        gateway_resources: tuple[tuple[type[APIObject], set[str]], ...] = (
-            (ConfigMap, {gateway.GATEWAY_NAME}),
-            (Secret, {gateway.GATEWAY_AUTH_SECRET_NAME, gateway.GATEWAY_TLS_SECRET_NAME}),
-            (Deployment, {gateway.GATEWAY_NAME}),
-            (Service, {gateway.GATEWAY_NAME}),
-            (NetworkPolicy, {"longlink-gateway-ingress"}),
-        )
-        for resource_class, active_names in gateway_resources:
-            resources = await self._resources.list_platform_owned(
-                resource_class,
-                compute_id,
-                gateway.GATEWAY_NAMESPACE,
-            )
-            for resource in resources:
-                labels = string_map(metadata(resource), "labels")
-                if labels.get(GATEWAY_LABEL) != gateway.GATEWAY_NAME:
-                    continue
-                if not desired.deleting and resource.name in active_names:
-                    continue
-                await self._resources.delete(resource_class, resource.name, gateway.GATEWAY_NAMESPACE, uid(resource))
-
-        # Compute deletion waits until no gateway Pod can continue serving requests.
-        if desired.deleting:
-            deadline = time.monotonic() + RESOURCE_TIMEOUT_SECONDS
-            while True:
-                pods = await self._resources.list(Pod, gateway.GATEWAY_NAMESPACE, {GATEWAY_LABEL: gateway.GATEWAY_NAME})
-                if not any(pod_is_active(pod) for pod in pods):
-                    return
-                if time.monotonic() >= deadline:
-                    raise TimeoutError("Gateway Pods did not terminate before compute deletion")
-                await asyncio.sleep(POLL_INTERVAL_SECONDS)
-
-    async def _wait_for_namespace_deletion(self, namespace: str) -> None:
-        """Wait boundedly for one deleted Namespace and its finalizers."""
-
-        deadline = time.monotonic() + RESOURCE_TIMEOUT_SECONDS
-        while await self._resources.read(Namespace, namespace) is not None:
-            if time.monotonic() >= deadline:
-                raise TimeoutError(f"Kubernetes Namespace {namespace!r} did not terminate before deletion")
             await asyncio.sleep(POLL_INTERVAL_SECONDS)

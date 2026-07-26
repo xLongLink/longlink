@@ -6,8 +6,6 @@ metadata:
     name: $application_id
     namespace: $namespace
 spec:
-    strategy:
-        type: Recreate
     selector:
         matchLabels:
             longlink.io/application-id: $application_id
@@ -18,26 +16,15 @@ spec:
         spec:
             automountServiceAccountToken: false
             securityContext:
-                runAsNonRoot: true
-                runAsUser: 10001
-                runAsGroup: 10001
-                fsGroup: 10001
                 seccompProfile:
                     type: RuntimeDefault
             containers:
                 - name: application
                   image: $image
-                  ports:
-                      - name: http
-                        containerPort: 8000
-                  startupProbe:
-                      httpGet: &health-check
-                          path: /health
-                          port: http
-                      periodSeconds: 2
-                      failureThreshold: 60
                   readinessProbe:
-                      httpGet: *health-check
+                      httpGet:
+                          path: /health
+                          port: 8000
                       periodSeconds: 5
                       failureThreshold: 3
                   envFrom:
@@ -65,6 +52,4 @@ spec:
     selector:
         longlink.io/application-id: $application_id
     ports:
-        - name: http
-          port: 8000
-          targetPort: http
+        - port: 8000

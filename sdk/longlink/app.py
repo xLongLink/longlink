@@ -78,8 +78,11 @@ class LongLink(FastAPI):
 
     def __init__(self, env: Envs | None = None, i18n: str | None = "/i18n", pages: str | None = "/pages", **kwargs: Any) -> None:
         """Build app, initialize managed services, mount routes, and serve the frontend."""
+
+        # Initialize FastAPI and SDK-managed runtime state.
         super().__init__(**kwargs)
 
+        # Prepare environment settings and the mutable page registry.
         environments = env if isinstance(env, Envs) else Envs()
         page_registry: list[PageDefinition] = []
         self.state.page_registry = page_registry
@@ -101,25 +104,27 @@ class LongLink(FastAPI):
         for router in routes:
             super().include_router(router)
 
+        # Bind audit context across downstream request handling.
         install_audit_middleware(self)
 
+        # Resolve the embedded frontend bundle used by the final fallback mount.
         frontend_directory = ROOT / ".static" / "web"
 
         # Optional translation mounts can be disabled.
         if i18n is not None:
             i18n_path = normalize_mount_path(i18n)
-            translations_directory = default_source_directory(i18n_path)
 
-            # Serve the bundled translation catalog from the application itself.
+            # Resolve the Application translation directory and mount it when present.
+            translations_directory = default_source_directory(i18n_path)
             if translations_directory.exists():
                 self.mount(i18n_path, StaticFiles(directory=translations_directory), name="translations")
 
         # Optional page discovery can be disabled.
         if pages is not None:
+
+            # Resolve the page directory and register it only when it exists.
             pages_path = normalize_mount_path(pages)
             pages_directory = default_source_directory(pages_path)
-
-            # Register pages only when the source directory exists.
             if pages_directory.exists():
                 self.register_page_directory(pages_path, pages_directory)
 
@@ -211,6 +216,7 @@ class LongLink(FastAPI):
     def register_page_directory(self, route_prefix: str, pages_directory: Path) -> None:
         """Register XML files from a directory as SDK pages."""
 
+        # Prepare normalized route state for replacing pages under this directory.
         normalized_prefix = normalize_mount_path(route_prefix)
         registered_pages: list[PageDefinition] = self.state.page_registry
         stale_page_prefix = "/" if normalized_prefix == "/" else f"{normalized_prefix}/"
@@ -234,6 +240,7 @@ class LongLink(FastAPI):
                 route for route in self.router.routes if getattr(route, "path", None) not in stale_page_paths
             ]
 
+        # Remove stale page metadata before discovering replacement files.
         registered_pages[:] = [
             page for page in registered_pages if page.path not in stale_page_paths
         ]
@@ -247,6 +254,7 @@ class LongLink(FastAPI):
             page_name, page_icon = extract_longlink_metadata(page.content)
             page_endpoint = bind_page(page_file)
 
+            # Register page metadata and its normalized API route together.
             registered_path = normalize_page_path(route_path)
             registered_pages.append(
                 PageDefinition(

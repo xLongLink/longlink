@@ -34,6 +34,7 @@ router = APIRouter()
 async def list_infrastructure_options(_user: User = Depends(current_authenticated_user)):
     """Return assignable registry identities without exposing connection metadata."""
 
+    # Return only ready computes alongside the available database and storage registries.
     computes = [registry for registry in await compute.fetch() if registry.status == ComputeStatus.ready]
     databases = await database.fetch()
     storages = await storage.fetch()
@@ -60,6 +61,7 @@ async def get_organization(organization_id: UUID, user: User = Depends(authuser)
     if membership is None:
         raise HTTPException(status_code=403, detail="Access required")
 
+    # Resolve the active Organization before assembling its related response data.
     organization = await organizations.get(organization_id)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -100,6 +102,7 @@ async def update_organization(organization_id: UUID, payload: OrganizationUpdate
     if not roles.atleast(membership.role, OrganizationRoles.admin):
         raise HTTPException(status_code=403, detail="Permission required")
 
+    # Persist mutable metadata only while the Organization remains active.
     organization = await organizations.update(organization_id, str(payload.avatar), user)
     if organization is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -229,12 +232,12 @@ async def update_organization_member(
     if payload.role == OrganizationRoles.owner and not can_manage_owner_role:
         raise HTTPException(status_code=403, detail="Owner management permissions required")
 
-    target_role = await organizations.membership_role(membership.organization_id, member_id)
-
     # Allow only owners to change existing owners.
+    target_role = await organizations.membership_role(membership.organization_id, member_id)
     if target_role == OrganizationRoles.owner and not can_manage_owner_role:
         raise HTTPException(status_code=403, detail="Owner management permissions required")
 
+    # Persist the requested role only for an active Organization member.
     updated = await organizations.update_member_role(membership.organization_id, member_id, payload.role, user)
     if not updated:
         raise HTTPException(status_code=404, detail="Organization member not found")
@@ -263,6 +266,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
         if not roles.atleast(membership.role, OrganizationRoles.owner):
             raise HTTPException(status_code=403, detail="Permission required")
 
+    # Tombstone the Organization and queue its lifecycle cleanup atomically.
     result = await organizations.soft_delete(organization_id, user)
     if result is None:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -292,10 +296,9 @@ async def _database_usage_rows(organization: Organization, registry: DatabaseReg
 
     rows: list[dict[str, object]] = []
 
+    # Include the shared schema when it exists in the backend.
     usage_by_name = {item["name"]: item for item in schemas}
     shared = usage_by_name.get(SHARED_SCHEMA)
-
-    # Include the shared schema when it exists in the backend.
     if shared is not None:
         rows.append(
             {
@@ -309,6 +312,7 @@ async def _database_usage_rows(organization: Organization, registry: DatabaseReg
 
     # List active application schemas before orphaned schemas.
     for app in sorted(apps, key=lambda item: item.name):
+
         # Skip applications whose schema is not present.
         schema = app.id.hex
         usage = usage_by_name.get(schema)
@@ -327,6 +331,7 @@ async def _database_usage_rows(organization: Organization, registry: DatabaseReg
 
     # Include unmanaged schemas that still exist in the database.
     for usage in sorted(schemas, key=lambda item: item["name"]):
+
         # Skip schemas already represented by managed resources.
         if usage["name"] in app_by_schema or usage["name"] == SHARED_SCHEMA:
             continue

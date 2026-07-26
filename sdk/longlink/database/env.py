@@ -6,6 +6,7 @@ from longlink.database.base import create_engine, database_metadata
 from longlink.utils.settings import Envs
 from longlink.database.migrations import include_object
 
+# Initialize the migration engine and shared Alembic context options.
 settings = Envs()
 engine = create_engine(settings)
 target_metadata = database_metadata
@@ -16,13 +17,15 @@ migration_context_options: dict[str, Any] = {
     "render_as_batch": True,
 }
 
-# Keep app migration state out of the shared schema resolved by the production search path.
+# Keep Application migration state out of the shared schema resolved by the production search path.
 if settings.DATABASE_SCHEMA and str(engine.url).startswith("postgresql+"):
     migration_context_options["version_table_schema"] = settings.DATABASE_SCHEMA
 
 
 def run_migrations_offline() -> None:
     """Run Alembic migrations in offline mode."""
+
+    # Configure Alembic to emit migration SQL without a live connection.
     context.configure(
         url=str(engine.url),
         literal_binds=True,
@@ -36,6 +39,8 @@ def run_migrations_offline() -> None:
 
 def do_run_migrations(connection: Connection) -> None:
     """Run Alembic migrations using a synchronous migration connection."""
+
+    # Configure Alembic with the synchronous connection exposed by SQLAlchemy.
     context.configure(
         connection=connection,
         **migration_context_options,
@@ -53,6 +58,7 @@ async def run_migrations_online() -> None:
     async with engine.connect() as connection:
         await connection.run_sync(do_run_migrations)
 
+    # Release migration-engine resources after the online run completes.
     await engine.dispose()
 
 

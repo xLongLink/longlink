@@ -29,9 +29,9 @@ async def update(
     """Patch one LongLink Platform user profile by local identifier."""
 
     async with session_scope() as session:
-        user = await session.get(User, user_id)
 
         # Reject stale authenticated users rather than recreating profile state.
+        user = await session.get(User, user_id)
         if user is None:
             raise ValueError("User not found")
 

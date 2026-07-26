@@ -7,13 +7,11 @@ import asyncio
 from uuid import UUID
 from containers import DockerRuntimeContainer, require_docker_daemon, wait_for_container_log
 from collections.abc import Iterator
-from src.environments import env
 from kr8s.asyncio.objects import Pod, Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayTLSMaterial
 from src.kubernetes.reconcile import DesiredCompute, DesiredGatewayRoute
 from src.kubernetes.applications import DesiredApplication
-from src.kubernetes.organizations import DesiredOrganization
 
 pytestmark = pytest.mark.no_db
 K3S_IMAGE = "rancher/k3s:v1.31.5-k3s1"
@@ -51,6 +49,7 @@ class K3SRuntimeContainer(DockerRuntimeContainer):
             wait_for_container_log(self, "Node controller sync successful", 120)
             ready = True
         finally:
+
             # Remove a failed k3s container without hiding its startup or readiness error.
             if not ready:
                 self.stop()
@@ -60,10 +59,12 @@ class K3SRuntimeContainer(DockerRuntimeContainer):
     def config_yaml(self) -> str:
         """Return kubeconfig content that points at the published host port."""
 
+        # Read and validate the kubeconfig command result from the k3s server.
         exit_code, output = self.execute(["cat", "/etc/rancher/k3s/k3s.yaml"])
         if exit_code:
             raise RuntimeError(f"Failed reading k3s kubeconfig: {output}")
 
+        # Rewrite the container loopback endpoint to the published host port.
         return output.replace(
             f"https://127.0.0.1:{K3S_PORT}",
             f"https://{self.host()}:{self.port(K3S_PORT)}",
@@ -90,7 +91,7 @@ def kubernetes_compute() -> Iterator[tuple[Kubernetes, int]]:
 async def test_kubernetes_namespaces_filters_system_namespaces() -> None:
     """Return only non-system namespaces from the resource boundary."""
 
-    # Arrange
+    # Provide mixed tenant and system namespaces through a fake resource boundary.
     class NamespaceResource:
         """Minimal namespace resource for client delegation tests."""
 
@@ -127,10 +128,10 @@ async def test_kubernetes_namespaces_filters_system_namespaces() -> None:
     client = Kubernetes("unused")
     client._resources = resources
 
-    # Act
+    # Request the namespaces visible to Platform callers.
     namespaces = await client.namespaces()
 
-    # Assert
+    # Verify system namespaces are filtered from the delegated result.
     assert namespaces == ["acme", "globex"]
     assert resources.calls == [(Namespace, None, None)]
 
@@ -138,7 +139,7 @@ async def test_kubernetes_namespaces_filters_system_namespaces() -> None:
 async def test_kubernetes_pods_delegates_to_namespace_listing() -> None:
     """List pods through the shared resource boundary for one namespace."""
 
-    # Arrange
+    # Provide fake pods and record resource boundary calls.
     class Resources:
         """Return fake pods from the requested namespace."""
 
@@ -163,10 +164,10 @@ async def test_kubernetes_pods_delegates_to_namespace_listing() -> None:
     client = Kubernetes("unused")
     client._resources = resources
 
-    # Act
+    # Request pods for one Organization namespace.
     pods = await client.pods("acme")
 
-    # Assert
+    # Verify pod listing delegates with the requested namespace.
     assert pods == resources.pods
     assert resources.calls == [(Pod, "acme", None)]
 
@@ -177,17 +178,13 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
 ) -> None:
     """Reconcile, repair, prune, serve HTTPS, enforce ownership, and clean a real k3s compute target."""
 
-    # Arrange
+    # Define active and stale resources for the real-cluster lifecycle.
     compute, gateway_port = kubernetes_compute
     compute_id = UUID("00000000-0000-4000-8000-000000000001")
-    other_compute_id = UUID("00000000-0000-4000-8000-000000000002")
     organization_id = UUID("10000000-0000-4000-8000-000000000001")
-    retired_organization_id = UUID("10000000-0000-4000-8000-000000000002")
     application_id = UUID("20000000-0000-4000-8000-000000000001")
     stale_application_id = UUID("20000000-0000-4000-8000-000000000002")
     proxy_secret = "shared-secret"
-    active_organization = DesiredOrganization(id=organization_id, slug="acme")
-    retired_organization = DesiredOrganization(id=retired_organization_id, slug="retired")
     active_application = DesiredApplication(
         id=application_id,
         namespace="acme",
@@ -224,9 +221,10 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
     cleanup_requested = False
 
     try:
+
         # Act: install explicit tenant resources once, then reconcile only the gateway route graph.
-        await compute.organizations.apply(active_organization)
-        await compute.organizations.apply(retired_organization)
+        await compute.organizations.apply("acme")
+        await compute.organizations.apply("retired")
         await compute.applications.stage_envs(application_id, "acme", {"LONG_LINK_REQUIRED": "value", "PORT": "8000"})
         assert await compute.applications.read_envs(application_id, "acme") == {"LONG_LINK_REQUIRED": "value", "PORT": "8000"}
         await compute.applications.apply(
@@ -284,7 +282,6 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
                     "namespace": "longlink-system",
                     "labels": {
                         "app.kubernetes.io/managed-by": "longlink-platform",
-                        "longlink.io/compute-id": str(compute_id),
                         "longlink.io/resource-scope": "platform",
                     },
                 },
@@ -298,7 +295,6 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
                 "metadata": {
                     "name": str(application_id),
                     "namespace": "acme",
-                    "labels": {"longlink.io/application-id": str(application_id)},
                 },
                 "type": "Opaque",
                 "stringData": {"STALE": "value"},
@@ -309,7 +305,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         current = DesiredCompute(id=compute_id, routes=(DesiredGatewayRoute(id=application_id, namespace="acme"),))
         second = await compute.reconcile(current, proxy_secret, tls_material)
         await compute.applications.delete(stale_application_id, "acme")
-        await compute.organizations.delete(retired_organization)
+        await compute.organizations.delete("retired")
 
         # Assert: synchronization reused TLS and removed stale resources without repairing the live workload.
         assert second.gateway_url == first.gateway_url
@@ -348,9 +344,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
             )
 
         assert system_namespace is not None
-        assert system_namespace.labels["longlink.io/compute-id"] == str(compute_id)
         assert organization_namespace is not None
-        assert organization_namespace.labels["longlink.io/organization-id"] == str(organization_id)
         assert retired_deleting
         assert gateway_config_map is not None
         gateway_config = gateway_config_map.data["envoy.yaml"]
@@ -380,19 +374,6 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         assert stale_deployment is None
         assert stale_service is None
 
-        # Only retained Platform resources identify the Platform release that rendered them.
-        platform_resources = (
-            system_namespace,
-            gateway_config_map,
-            gateway_auth_secret,
-            gateway_tls_secret,
-            gateway_deployment,
-            gateway_service,
-            gateway_policy,
-        )
-        for resource in platform_resources:
-            assert resource.raw["metadata"]["annotations"]["longlink.io/platform-version"] == env.VERSION
-
         # Tenant resources carry ownership metadata without Platform revision annotations.
         tenant_resources = (
             organization_namespace,
@@ -402,8 +383,10 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
             application_secret,
         )
         for resource in tenant_resources:
-            assert resource.raw["metadata"].get("annotations", {}) == {}
-        assert gateway_deployment.raw["spec"]["template"]["metadata"]["annotations"]["longlink.io/platform-version"] == env.VERSION
+            annotations = resource.raw["metadata"].get("annotations", {})
+            assert set(annotations).isdisjoint(
+                {"longlink.io/platform-version", "longlink.io/runtime-revision", "longlink.io/template-revision"}
+            )
         assert set(application_deployment.raw["spec"]["template"]["metadata"]["annotations"]) == {"longlink.io/secret-resource-version"}
 
         # Wait for the retained workload before exercising the CA-verified HTTPS gateway.
@@ -431,17 +414,10 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         logs = await compute.applications.logs(str(application_id), "acme", lines=50)
         assert any("Listening on port 8000." in line for line in logs)
 
-        # A cluster claimed by one compute target must reject another target before adoption.
-        with pytest.raises(ValueError, match=f"not owned by compute {other_compute_id}"):
-            await compute.reconcile(
-                DesiredCompute(id=other_compute_id, routes=()),
-                "other-secret",
-            )
-
         # Explicit tenant cleanup precedes compute deletion, which owns only gateway and bootstrap resources.
         await compute.reconcile(DesiredCompute(id=compute_id, routes=()), proxy_secret, tls_material)
         await compute.applications.delete(application_id, "acme")
-        await compute.organizations.delete(active_organization)
+        await compute.organizations.delete("acme")
         deleted = await compute.reconcile(cleanup, proxy_secret, tls_material)
         cleanup_requested = True
         assert deleted.gateway_url is None
@@ -485,6 +461,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         else:
             pytest.fail("k3s resources did not enter the deleted state before the cleanup timeout")
     finally:
+
         # Keep the shared Docker daemon clean when an assertion interrupts reconciliation.
         if not cleanup_requested:
             await compute.reconcile(cleanup, proxy_secret)

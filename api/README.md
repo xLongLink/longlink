@@ -2,11 +2,9 @@
 
 <img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
 
-# Platform
-
+The Platform manages authentication, permissions, organizations, infrastructure resources, deployments, routing, and operational state while Applications run independently as Python services built with the LongLink SDK.
 </div>
 
-The LongLink Platform manages authentication, permissions, organizations, infrastructure resources, deployments, routing, and operational state while Applications run independently as Python services built with the LongLink SDK.
 
 <br />
 
@@ -98,6 +96,7 @@ DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
 
+<br />
 <br />
 
 ---

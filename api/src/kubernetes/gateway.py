@@ -23,8 +23,6 @@ PLATFORM_TEMPLATES = files("src.kubernetes.templates").joinpath("platform")
 TEMPLATE_REVISION = "2026-07-24.1"
 GATEWAY_NAME = "longlink-gateway"
 GATEWAY_NAMESPACE = "longlink-system"
-GATEWAY_AUTH_SECRET_NAME = "longlink-gateway-auth"
-GATEWAY_TLS_SECRET_NAME = "longlink-gateway-tls"
 
 EnvoyDocument = dict[str, Any]
 
@@ -59,35 +57,20 @@ class Gateway:
     Routing inputs come from desired state rather than cluster discovery.
     """
 
-    def system_namespace(self, compute_id: str, platform_version: str) -> KubernetesDocument:
-        """Render the exclusively claimed LongLink system Namespace."""
+    def system_namespace(self) -> KubernetesDocument:
+        """Render the LongLink system Namespace."""
 
-        # Hash the source so edits to namespace metadata are visible in desired state.
-        source = PLATFORM_TEMPLATES.joinpath("system_namespace.yml")
-        runtime_revision = hashlib.sha256(source.read_bytes()).hexdigest()
-        return templates.readyml_list(
-            source,
-            compute_id=compute_id,
-            platform_version=platform_version,
-            runtime_revision=runtime_revision,
-            template_revision=TEMPLATE_REVISION,
-        )[0]
+        # Render the static Platform ownership boundary.
+        return templates.readyml_list(PLATFORM_TEMPLATES.joinpath("system_namespace.yml"))[0]
 
-    def service(self, compute_id: str, platform_version: str) -> KubernetesDocument:
+    def service(self) -> KubernetesDocument:
         """Render the stable public LoadBalancer Service that establishes the compute endpoint.
 
         Reconciliation applies it before TLS generation because the endpoint determines the certificate SAN.
         """
 
-        # Service changes are independent from gateway Pod configuration and must not trigger a workload rollout.
-        runtime_revision = hashlib.sha256(PLATFORM_TEMPLATES.joinpath("gateway_service.yml").read_bytes()).hexdigest()
-        return templates.readyml_list(
-            PLATFORM_TEMPLATES.joinpath("gateway_service.yml"),
-            compute_id=compute_id,
-            platform_version=platform_version,
-            runtime_revision=runtime_revision,
-            template_revision=TEMPLATE_REVISION,
-        )[0]
+        # Render the stable endpoint independently from gateway Pod revisions.
+        return templates.readyml_list(PLATFORM_TEMPLATES.joinpath("gateway_service.yml"))[0]
 
     def config(self, desired_routes: "tuple[DesiredGatewayRoute, ...]") -> str:
         """Render deterministic authenticated Envoy routes from the authoritative route snapshot.
@@ -256,11 +239,9 @@ class Gateway:
 
     def manifests(
         self,
-        compute_id: str,
         proxy_secret: str,
         tls: GatewayTLSMaterial,
         envoy_config: str,
-        platform_version: str,
     ) -> GatewayManifests:
         """Render exact gateway Secrets and applied resources under one revision derived from behavior and secret inputs.
 
@@ -289,8 +270,6 @@ class Gateway:
             PLATFORM_TEMPLATES.joinpath("gateway.yml"),
             envoy_config=json.dumps(envoy_config),
             gateway_secret=json.dumps(proxy_secret),
-            compute_id=compute_id,
-            platform_version=platform_version,
             runtime_revision=runtime_revision,
             template_revision=TEMPLATE_REVISION,
             tls_certificate=json.dumps(tls.certificate),

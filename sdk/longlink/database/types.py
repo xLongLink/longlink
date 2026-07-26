@@ -15,6 +15,7 @@ class UTCDateTime(TypeDecorator[datetime]):
 
         return dialect.type_descriptor(DateTime(timezone=True))
 
+
     def process_bind_param(self, value: datetime | None, dialect: Dialect) -> datetime | None:
         """Normalize outbound datetime values before writing them."""
 
@@ -27,6 +28,7 @@ class UTCDateTime(TypeDecorator[datetime]):
             return value.replace(tzinfo=UTC)
 
         return value.astimezone(UTC)
+
 
     def process_result_value(self, value: datetime | None, dialect: Dialect) -> datetime | None:
         """Normalize inbound database timestamp values after loading them."""

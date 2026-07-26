@@ -127,33 +127,33 @@ def _validate_docker_image_path(image_path: str) -> None:
 def read_env_spec(root: Path) -> dict[str, list[dict[str, object]]]:
     """Parse the configured environment class and return environment specs."""
 
+    # Initialize an empty result and the conventional environment import path.
     empty_spec: dict[str, list[dict[str, object]]] = {"environments": []}
     environment_import = DEFAULT_ENVIRONMENT_IMPORT
 
     # Read an explicit environment class location from project configuration.
     if (root / "pyproject.toml").is_file():
         pyproject_data = read_pyproject(root)
-        tool_data = pyproject_data.get("tool", {})
 
-        # Ignore malformed tool tables.
+        # Read the tool table while ignoring malformed values.
+        tool_data = pyproject_data.get("tool", {})
         if not isinstance(tool_data, dict):
             tool_data = {}
 
+        # Read the LongLink table while ignoring malformed values.
         longlink_data = tool_data.get("longlink", {})
-
-        # Ignore malformed LongLink tables.
         if not isinstance(longlink_data, dict):
             longlink_data = {}
 
-        configured_environment = longlink_data.get("environment")
-
         # Use the configured environment import string when provided.
+        configured_environment = longlink_data.get("environment")
         if configured_environment is not None:
             if not isinstance(configured_environment, str) or not configured_environment.strip():
                 raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
 
             environment_import = configured_environment.strip()
 
+    # Parse and validate the configured module and class names without importing them.
     module_name, separator, class_name = environment_import.partition(":")
     module_name = module_name.strip()
     class_name = class_name.strip()
@@ -163,14 +163,14 @@ def read_env_spec(root: Path) -> dict[str, list[dict[str, object]]]:
     if separator != ":" or not all(part.isidentifier() for part in module_parts) or not class_name.isidentifier():
         raise click.ClickException("[tool.longlink].environment must be a module:Class import string")
 
+    # Resolve the configured environment module and return early when it is absent.
     module_path = root.joinpath(*module_parts)
     envs_path = module_path.with_suffix(".py")
-
     if not envs_path.is_file():
         return empty_spec
 
+    # Locate the configured settings class without executing application code.
     module = ast.parse(envs_path.read_text())
-    # Treat files without the configured settings class as no requirements.
     class_node = next((node for node in module.body if isinstance(node, ast.ClassDef) and node.name == class_name), None)
     if class_node is None:
         return empty_spec
@@ -210,9 +210,8 @@ def read_env_spec(root: Path) -> dict[str, list[dict[str, object]]]:
 def read_pyproject(root: Path) -> dict[str, object]:
     """Read and parse the application `pyproject.toml`."""
 
+    # Resolve and require the project file before parsing metadata.
     pyproject = root / "pyproject.toml"
-
-    # Require a project file before parsing metadata.
     if not pyproject.is_file():
         raise click.ClickException(f"Project file not found: {pyproject}")
 
@@ -298,6 +297,7 @@ def encode_label_value(value: object) -> str:
 def render_longlink_labels(metadata: Mapping[str, object], env_spec: Mapping[str, Sequence[Mapping[str, object]]]) -> str:
     """Render the LongLink metadata labels for a Dockerfile."""
 
+    # Render the core labels in a stable order while omitting missing values.
     label_items = [
         ("longlink.name", metadata.get("name")),
         ("longlink.sdk", metadata.get("sdk")),
@@ -305,14 +305,15 @@ def render_longlink_labels(metadata: Mapping[str, object], env_spec: Mapping[str
         ("longlink.description", metadata.get("description")),
     ]
 
+    # Encode the available core metadata as Dockerfile label statements.
     rendered_labels = [f"LABEL {key}={encode_label_value(value)}" for key, value in label_items if value is not None]
 
-    environments = env_spec.get("environments") or []
-
     # Include environment requirements only when declared.
+    environments = env_spec.get("environments") or []
     if environments:
         rendered_labels.append(f"LABEL longlink.environments={encode_label_value(environments)}")
 
+    # Append optional presentation and legal metadata in a stable order.
     rendered_labels.extend(
         [
             f"LABEL {key}={encode_label_value(value)}"
@@ -332,6 +333,7 @@ def render_longlink_labels(metadata: Mapping[str, object], env_spec: Mapping[str
 def resolve_docker_paths(root: Path) -> tuple[Path, str]:
     """Resolve Docker build context and in-container working directory."""
 
+    # Validate the application root and initialize local dependency traversal.
     read_pyproject(root)
     source_paths: list[Path] = [root]
     pending_paths: list[Path] = [root]
@@ -346,28 +348,26 @@ def resolve_docker_paths(root: Path) -> tuple[Path, str]:
             continue
 
         seen_paths.add(source_root)
-        pyproject_path = source_root / "pyproject.toml"
 
         # Skip source roots without pyproject files.
+        pyproject_path = source_root / "pyproject.toml"
         if not pyproject_path.is_file():
             continue
 
         pyproject_data = read_pyproject(source_root)
-        tool_data = pyproject_data.get("tool", {})
 
-        # Ignore malformed tool tables.
+        # Read the tool table while ignoring malformed values.
+        tool_data = pyproject_data.get("tool", {})
         if not isinstance(tool_data, dict):
             tool_data = {}
 
+        # Read the uv table while ignoring malformed values.
         uv_data = tool_data.get("uv", {})
-
-        # Ignore malformed uv tables.
         if not isinstance(uv_data, dict):
             uv_data = {}
 
+        # Read the source table while ignoring malformed values.
         uv_sources = uv_data.get("sources", {})
-
-        # Ignore malformed uv source tables.
         if not isinstance(uv_sources, dict):
             uv_sources = {}
 
@@ -376,9 +376,9 @@ def resolve_docker_paths(root: Path) -> tuple[Path, str]:
 
             # Only mapping source entries can contain paths.
             if isinstance(source_config, dict):
-                source_path = source_config.get("path")
 
                 # Follow only string path sources.
+                source_path = source_config.get("path")
                 if isinstance(source_path, str):
                     resolved_source_path = (source_root / source_path).resolve()
                     source_paths.append(resolved_source_path)
@@ -409,6 +409,7 @@ def render_dockerfile(workdir: str, labels: str, sdk_version: str) -> str:
 def build_app(build_context: Path, base_path: Path | None = None, tag: str | None = None) -> tuple[Path, str, str]:
     """Create Docker build artifacts for the current app."""
 
+    # Resolve build paths and collect project metadata for the image.
     root = (base_path or Path.cwd()).resolve()
     source_root, workdir = resolve_docker_paths(root)
     repo_root = next((candidate for candidate in (root, *root.parents) if (candidate / ".git").exists()), None)
@@ -422,6 +423,7 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
     except PackageNotFoundError:
         metadata["sdk"] = "0.0.0"
 
+    # Resolve the image version and render its LongLink metadata labels.
     version = tag or project_metadata.version
     labels = render_longlink_labels(metadata, env_spec)
 
@@ -442,28 +444,28 @@ def build_app(build_context: Path, base_path: Path | None = None, tag: str | Non
         except ValueError:
             git_target = build_context / ".git"
 
-        git_source = repo_root / ".git"
-
         # Copy safe metadata from real Git directories.
+        git_source = repo_root / ".git"
         if git_source.is_dir():
             git_target.mkdir(parents=True, exist_ok=True)
 
             # Copy allowed Git files.
             for file_name in SAFE_GIT_FILE_NAMES:
-                source_file = git_source / file_name
 
                 # Skip Git files that are absent.
+                source_file = git_source / file_name
                 if source_file.is_file():
                     shutil.copy2(source_file, git_target / file_name)
 
             # Copy allowed Git directories.
             for directory_name in SAFE_GIT_DIRECTORY_NAMES:
-                source_directory = git_source / directory_name
 
                 # Skip Git directories that are absent.
+                source_directory = git_source / directory_name
                 if source_directory.is_dir():
                     shutil.copytree(source_directory, git_target / directory_name, dirs_exist_ok=True)
 
+    # Write the generated Dockerfile into the temporary build context.
     dockerfile_path = build_context / "Dockerfile"
     dockerfile_path.write_text(render_dockerfile(workdir, labels, str(metadata["sdk"])))
 

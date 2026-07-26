@@ -5,6 +5,8 @@ from longlink.database.migrations import make_migrations, apply_migrations
 @click.command(name="migrate")
 def migrate_command() -> None:
     """Generate and apply database migrations for the current app."""
+
+    # Bring the database current before generating a new metadata revision.
     apply_migrations()
     migration_created = make_migrations()
 

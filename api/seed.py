@@ -93,11 +93,10 @@ def local_database_host(settings: SeedSettings) -> str:
 async def seed_local_administrator(settings: SeedSettings) -> tuple[User, bool]:
     """Create or repair the local administrator and report shared user changes."""
 
+    # Create the local account or repair its development credentials and role.
     async with session_scope() as session:
         result = await session.execute(select(User).where(col(User.email) == settings.LOCAL_ADMIN_EMAIL))
         user = result.scalar_one_or_none()
-
-        # Create the local account or repair its development credentials and role.
         if user is None:
             user = User(
                 name=settings.LOCAL_ADMIN_NAME,
@@ -177,10 +176,10 @@ async def seed_local_development(settings: SeedSettings) -> None:
     """Create or repair local infrastructure, Organization, and sample Application desired state."""
 
     admin, administrator_changed = await seed_local_administrator(settings)
-    compute_registry = next((item for item in await compute_service.fetch() if item.slug == "local-compute"), None)
-    compute_ready = compute_registry is not None and compute_registry.status == ComputeStatus.ready
 
     # Reconcile the local compute target before assigning Organizations to it.
+    compute_registry = next((item for item in await compute_service.fetch() if item.slug == "local-compute"), None)
+    compute_ready = compute_registry is not None and compute_registry.status == ComputeStatus.ready
     if compute_registry is None:
         compute_registry, operation = await compute_service.create(
             "local compute",
@@ -222,6 +221,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
 
     organization = next((item for item in await organization_service.fetch() if item.slug == settings.LOCAL_ORG), None)
     if organization is None:
+
         # Repair an existing compute before a new Organization requires its ready state.
         if not compute_ready:
             operation = await operations.enqueue(compute_registry.id)
@@ -258,6 +258,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
         (item for item in await organization_service.applications(organization.id) if item.slug == settings.LOCAL_APP_NAME), None
     )
     if application is None:
+
         # Repair an existing compute before Application creation checks its ready state.
         if not compute_ready:
             operation = await operations.enqueue(compute_registry.id)

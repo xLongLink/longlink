@@ -6,6 +6,7 @@ def test_component_docs_resolve_case_insensitively_and_render_props() -> None:
 
     assert resolve_component_schema("button").name == "Button.xsd"
 
+    # Render another component's documented properties.
     docs = render_component_docs("State")
 
     assert "- id (required): string" in docs

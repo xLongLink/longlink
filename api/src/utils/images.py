@@ -35,8 +35,10 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
 
     # Fetch registry data with TLS matching the registry URL.
     async with httpx2.AsyncClient(verify=registry_url.startswith("https://"), follow_redirects=False, timeout=5.0) as client:
+
         # LongLink labels are stored in the image config blob, reached through the image manifest.
         try:
+
             # Stop when the manifest cannot be resolved.
             manifest_result = await _fetch_manifest(
                 client,
@@ -48,9 +50,9 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
                 return None
 
             manifest, digest = manifest_result
-            manifest_config = manifest.get("config", {})
 
-            # Require a config object in the manifest.
+            # Require the manifest config lookup to yield a string-keyed object.
+            manifest_config = manifest.get("config", {})
             if not isinstance(manifest_config, dict) or not all(isinstance(key, str) for key in manifest_config):
                 return None
             manifest_config = cast(dict[str, object], manifest_config)
@@ -60,9 +62,8 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
             if not isinstance(config_digest, str) or not IMAGE_DIGEST_PATTERN.fullmatch(config_digest):
                 return None
 
-            blob_response = await client.get(f"{registry_url}/v2/{image.repository}/blobs/{config_digest}")
-
             # Stop when the config blob cannot be fetched.
+            blob_response = await client.get(f"{registry_url}/v2/{image.repository}/blobs/{config_digest}")
             if not blob_response.is_success:
                 return None
 
@@ -98,15 +99,13 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
                 description=labels.get("longlink.description"),
             )
 
-            environments = labels.get("longlink.environments")
-
             # Decode environment requirements when present.
+            environments = labels.get("longlink.environments")
             if environments is not None:
-                # Parse the encoded environment label.
+
+                # Parse and require a list from the encoded environment label.
                 try:
                     parsed_environments = json.loads(environments)
-
-                    # Require the environment label to be a list.
                     if not isinstance(parsed_environments, list):
                         return None
 
@@ -156,9 +155,9 @@ async def _fetch_manifest(
     """Fetch an image manifest, resolving manifest lists to a single platform manifest."""
 
     url = f"{registry_url}/v2/{repository}/manifests/{reference}"
-    manifest_response = await client.get(url, headers={"Accept": IMAGE_MANIFEST_ACCEPT})
 
     # Stop when the registry does not return a manifest.
+    manifest_response = await client.get(url, headers={"Accept": IMAGE_MANIFEST_ACCEPT})
     if not manifest_response.is_success:
         return None
 
@@ -178,9 +177,9 @@ async def _fetch_manifest(
     # Resolve multi-arch manifest list to a single platform manifest.
     manifests = data.get("manifests")
     if isinstance(manifests, list) and manifests:
-        manifest_entries = [item for item in manifests if isinstance(item, dict)]
 
         # Require at least one manifest object.
+        manifest_entries = [item for item in manifests if isinstance(item, dict)]
         if not manifest_entries:
             return None
 
@@ -203,12 +202,11 @@ async def _fetch_manifest(
         if not IMAGE_DIGEST_PATTERN.fullmatch(manifest_digest):
             return None
 
+        # Stop when the platform manifest cannot be fetched.
         manifest_response = await client.get(
             f"{registry_url}/v2/{repository}/manifests/{manifest_digest}",
             headers={"Accept": media_type},
         )
-
-        # Stop when the platform manifest cannot be fetched.
         if not manifest_response.is_success:
             return None
 

@@ -17,6 +17,7 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes) -> R
     async def stage_tls(material: GatewayTLSMaterial) -> None:
         """Stage gateway trust before Kubernetes can begin serving a rotated certificate."""
 
+        # Persist the complete replacement trust material before cluster rollout.
         staged = await compute.stage_gateway_tls(
             registry.id,
             material.ca_certificate,
@@ -67,6 +68,7 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     cluster = Kubernetes(registry.kubeconfig)
 
     try:
+
         # Compute reconciliation is structurally unable to deploy or delete tenant resources.
         result = await reconcile_gateway(registry, cluster)
         if not await compute.record_success(
@@ -80,6 +82,7 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
             return jobs.retry("Compute gateway state was not recorded")
         return jobs.complete()
     except Exception:
+
         # Record failed compute state while the worker logs detailed diagnostics.
         await compute.record_failure(registry.id)
         raise

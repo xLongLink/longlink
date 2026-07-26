@@ -74,10 +74,9 @@ def include_object(object_: object, _name: str | None, type_: str, _reflected: b
 def iter_application_model_files() -> list[Path]:
     """Return application model files that should be loaded for metadata."""
 
+    # Resolve the application model directory and return early when it is absent.
     root = Path.cwd()
     model_path = root / "src" / "database" / "models"
-
-    # Ignore applications without database models.
     if not model_path.exists():
         return []
 
@@ -97,13 +96,12 @@ def load_application_models() -> None:
         if module_name in sys.modules:
             continue
 
-        # Import from file paths so migrations work even without package __init__.py files.
+        # Build an import spec from the file path and verify it can load the module.
         spec = importlib.util.spec_from_file_location(module_name, py_file)
-
-        # Ignore files that cannot produce an importable module spec.
         if spec is None or spec.loader is None:
             continue
 
+        # Execute the application model module to populate database metadata.
         module = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
@@ -115,11 +113,15 @@ def make_migrations() -> bool:
     Returns:
         bool: True when a new migration file is created, otherwise False.
     """
+
+    # Load application models before comparing their metadata with the database.
     load_application_models()
 
+    # Prepare the application migration directory.
     migrations_path = Path.cwd() / MIGRATIONS_DIRECTORY
     migrations_path.mkdir(exist_ok=True)
 
+    # Configure Alembic to generate revisions in the application directory.
     cfg = Config()
     cfg.set_main_option("script_location", str(CURRENT_FILE.parent))
     cfg.set_main_option("version_locations", str(migrations_path))
@@ -142,6 +144,7 @@ def make_migrations() -> bool:
             directives[:] = []
             migration_created = False
 
+    # Invoke Alembic while suppressing revisions with no schema operations.
     command.revision(
         cfg,
         autogenerate=True,
@@ -153,9 +156,11 @@ def make_migrations() -> bool:
 def apply_migrations() -> None:
     """Apply all pending Alembic migrations."""
 
+    # Prepare the application migration directory.
     migrations_path = Path.cwd() / MIGRATIONS_DIRECTORY
     migrations_path.mkdir(exist_ok=True)
 
+    # Configure Alembic to apply revisions from the application directory.
     cfg = Config()
     cfg.set_main_option("script_location", str(CURRENT_FILE.parent))
     cfg.set_main_option("version_locations", str(migrations_path))

@@ -19,8 +19,10 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
     class AuditLifecycleItem(database_base.Table, table=True):
         """Temporary SDK table used to verify the complete audit lifecycle."""
 
+        # Table metadata
         __tablename__: ClassVar[str] = "audit_lifecycle_items"
 
+        # Item fields
         id: int | None = Field(default=None, primary_key=True)
         name: str
 
@@ -47,6 +49,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
     monkeypatch.setattr(database_base, "Session", None)
 
     try:
+
         # Insert through AsyncSession so the registered sync before_flush listener runs.
         async with database_base.get_session() as session:
             item = AuditLifecycleItem(name="draft", created_at=None, updated_at=None)
@@ -101,6 +104,7 @@ async def test_audit_hook_persists_fields_and_converts_soft_deletes(monkeypatch:
             assert item.updated_id == deleter_id
             assert item.deleted_id == deleter_id
     finally:
+
         # Release test metadata and engine resources.
         try:
             database_base.database_metadata.remove(getattr(AuditLifecycleItem, "__table__"))
@@ -121,6 +125,7 @@ def test_audit_middleware_binds_x_user_id_header(
 ) -> None:
     """Bind valid audit user headers and ignore malformed values."""
 
+    # Install audit middleware around a route that exposes request-local state.
     app = FastAPI()
     install_audit_middleware(app)
 
@@ -131,7 +136,9 @@ def test_audit_middleware_binds_x_user_id_header(
         user_id = database_audit._current_user_id.get()
         return {"user_id": str(user_id) if user_id is not None else None}
 
+    # Send the candidate audit identity through the HTTP boundary.
     response = TestClient(app).get("/", headers={"x-user-id": header_value})
 
+    # Verify request binding and cleanup after the response.
     assert response.json() == {"user_id": expected_user_id}
     assert database_audit._current_user_id.get() is None

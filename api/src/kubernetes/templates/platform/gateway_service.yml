@@ -4,14 +4,9 @@ kind: Service
 metadata:
     name: longlink-gateway
     namespace: longlink-system
-    annotations:
-        longlink.io/platform-version: '$platform_version'
-        longlink.io/runtime-revision: '$runtime_revision'
-        longlink.io/template-revision: '$template_revision'
     labels:
         app: longlink-gateway
         app.kubernetes.io/managed-by: longlink-platform
-        longlink.io/compute-id: '$compute_id'
         longlink.io/resource-scope: platform
 spec:
     type: LoadBalancer

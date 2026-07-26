@@ -25,6 +25,7 @@ class SessionAccountsService:
     def list(self) -> list[UUID]:
         """Return valid saved local user identifiers."""
 
+        # Validate the signed session value before parsing saved account identifiers.
         raw_accounts = self.request.session.get("account_ids", [])
         if not isinstance(raw_accounts, list):
             return []
@@ -43,9 +44,8 @@ class SessionAccountsService:
     def remember(self, user_id: UUID) -> None:
         """Save one account as the most recently authenticated account."""
 
-        accounts = self.list()
-
         # Keep a bounded account list so the signed session cookie remains small.
+        accounts = self.list()
         if user_id in accounts:
             accounts.remove(user_id)
         accounts.append(user_id)
@@ -54,9 +54,8 @@ class SessionAccountsService:
     def remove(self, user_id: UUID) -> None:
         """Remove one account from the signed saved-account list."""
 
-        accounts = self.list()
-
         # Persist the remaining account identifiers in their current order.
+        accounts = self.list()
         if user_id in accounts:
             accounts.remove(user_id)
         self.request.session["account_ids"] = [str(account) for account in accounts]
@@ -112,9 +111,8 @@ async def current_authenticated_user(authentication: tuple[User | None, str | No
 async def authuser(authenticated: User = Depends(current_authenticated_user)) -> User:
     """Load the authenticated user with current LongLink resource access."""
 
-    user = await users.get(authenticated.id, include_access=True)
-
     # Reject stale or soft-deleted accounts after token authentication.
+    user = await users.get(authenticated.id, include_access=True)
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return user

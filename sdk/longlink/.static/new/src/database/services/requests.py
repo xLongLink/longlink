@@ -7,8 +7,8 @@ from src.database.models.requests import PurchaseRequest
 async def list_requests() -> list[PurchaseRequest]:
     """Return purchase requests with their platform-managed audit users."""
 
+    # Query requests and eagerly load their shared audit users for display.
     async with get_session() as session:
-        # Load audit relationships from LongLink's shared organization users for display.
         statement = (
             select(PurchaseRequest)
             .options(
@@ -26,8 +26,8 @@ async def list_requests() -> list[PurchaseRequest]:
 async def get_request(request_id: int) -> PurchaseRequest | None:
     """Return one purchase request with its platform-managed audit users."""
 
+    # Query the request and eagerly load its shared audit users for display.
     async with get_session() as session:
-        # Load audit relationships from LongLink's shared organization users for display.
         statement = (
             select(PurchaseRequest)
             .options(
@@ -48,6 +48,7 @@ async def get_request(request_id: int) -> PurchaseRequest | None:
 async def create_request(title: str, amount: float, vendor: str, justification: str) -> PurchaseRequest:
     """Persist a purchase request and return it with its audit users."""
 
+    # Build the submitted request from the validated route values.
     request = PurchaseRequest(
         title=title,
         amount=amount,
@@ -56,6 +57,7 @@ async def create_request(title: str, amount: float, vendor: str, justification: 
         justification=justification,
     )
 
+    # Persist the request and refresh its generated fields.
     async with get_session() as session:
         session.add(request)
         await session.commit()
@@ -72,13 +74,16 @@ async def create_request(title: str, amount: float, vendor: str, justification: 
 async def update_request_status(request_id: int, status: str) -> PurchaseRequest | None:
     """Update one purchase request workflow status."""
 
+    # Load the request and return immediately when it does not exist.
     async with get_session() as session:
         request = await session.get(PurchaseRequest, request_id)
         if request is None:
             return None
 
+        # Persist the requested workflow status.
         request.status = status
         session.add(request)
         await session.commit()
 
+    # Reload the request with the audit relationships used by API responses.
     return await get_request(request_id)

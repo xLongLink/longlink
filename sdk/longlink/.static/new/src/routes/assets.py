@@ -11,6 +11,7 @@ router = Router()
 async def organization_logo_get_endpoint() -> Response:
     """Return the organization logo loaded from LongLink organization assets."""
 
+    # Load the organization logo while translating a missing asset into a public 404.
     try:
         logo = assets.logo(env, shared_fs)
     except FileNotFoundError as exc:

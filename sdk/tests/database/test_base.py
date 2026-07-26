@@ -9,14 +9,18 @@ from longlink.utils.settings import Envs
 def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> None:
     """Add audit timestamps, soft-delete fields, user foreign keys, and relationships."""
 
+    # Define an isolated mapped table with inherited audit fields.
     class FeatureAuditItem(database_base.Table, table=True):
         """Temporary SDK table used to inspect inherited database fields."""
 
+        # Table metadata
         __tablename__: ClassVar[str] = "feature_audit_items"
 
+        # Item fields
         id: int | None = Field(default=None, primary_key=True)
         name: str
 
+    # Inspect the inherited columns and their foreign-key targets.
     try:
         table = getattr(FeatureAuditItem, "__table__")
         foreign_key_targets = {
@@ -24,6 +28,7 @@ def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> Non
             for column_name in ("created_id", "updated_id", "deleted_id")
         }
 
+        # Verify audit fields and user relationships are available to Applications.
         assert {"created_at", "updated_at", "deleted_at"} <= set(table.c.keys())
         assert foreign_key_targets == {
             "created_id": {"users.id"},
@@ -34,6 +39,8 @@ def test_table_base_model_adds_audit_soft_delete_and_user_relationships() -> Non
         assert hasattr(FeatureAuditItem, "updated_by")
         assert hasattr(FeatureAuditItem, "deleted_by")
     finally:
+
+        # Remove the temporary table from shared metadata.
         database_base.database_metadata.remove(getattr(FeatureAuditItem, "__table__"))
 
 
@@ -99,7 +106,7 @@ def test_create_engine_selects_database_url_and_options(
 ) -> None:
     """Use environment-specific database URLs and engine options."""
 
-    # Arrange
+    # Capture engine settings without opening a database connection.
     captured: dict[str, object] = {}
 
     def fake_create_async_engine(database_url: str, **kwargs: object) -> object:
@@ -112,8 +119,8 @@ def test_create_engine_selects_database_url_and_options(
     monkeypatch.setattr(database_base, "create_async_engine", fake_create_async_engine)
     monkeypatch.setattr(database_base, "_engine", None)
 
-    # Act
+    # Create the environment-specific engine.
     database_base.create_engine(env)
 
-    # Assert
+    # Verify the selected URL and connection options.
     assert captured == {"database_url": expected_url, "kwargs": expected_kwargs}

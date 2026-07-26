@@ -16,12 +16,14 @@ from longlink.constants import ROOT
 def init_command(folder: str, ci_provider: str | None) -> None:
     """Initialize a new longlink project."""
 
+    # Resolve the bundled scaffold and prepare its requested parent directory.
     source = ROOT / ".static" / "new"
     target = Path(folder)
     target.parent.mkdir(parents=True, exist_ok=True)
 
     # Refuse unsafe targets so scaffold generation cannot silently merge with user files.
     if target.exists():
+
         # Reject file targets because the scaffold must be a directory.
         if not target.is_dir():
             raise click.ClickException(f"Target already exists and is not a directory: {target}")

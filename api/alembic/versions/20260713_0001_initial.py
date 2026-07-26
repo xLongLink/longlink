@@ -100,6 +100,7 @@ def upgrade() -> None:
         sa.UniqueConstraint("name"),
         sa.UniqueConstraint("slug"),
     )
+
     # Create database registries.
     op.create_table(
         "database_registries",
@@ -316,6 +317,7 @@ def upgrade() -> None:
         sa.Column("stopped_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
+
     # Create application memberships after applications, organizations, and users.
     op.create_table(
         "user_applications",

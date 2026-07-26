@@ -114,6 +114,7 @@ class Postgres:
 
         # Ensure the operation-scoped engine is disposed after use.
         try:
+
             # Use explicit connections for autocommit operations and transactions for normal operations.
             connection_context = engine.connect() if autocommit else engine.begin()
 
@@ -133,10 +134,11 @@ class Postgres:
 
         # Create the organization database from the maintenance database when it is missing.
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
-            result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
 
             # Create the database only when PostgreSQL does not already list it.
+            result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
             if result.scalar_one_or_none() is None:
+
                 # CREATE DATABASE needs a quoted identifier, so compile it with SQLAlchemy's dialect preparer.
                 quoted_database_name = self.quote(conn, organization.hex)
                 await conn.exec_driver_sql(f"CREATE DATABASE {quoted_database_name}")
@@ -220,9 +222,9 @@ class Postgres:
 
         # Skip cleanup when the organization database was already removed.
         async with self._connection(self._maintenance_database, autocommit=True) as conn:
-            result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
 
             # Stop once PostgreSQL confirms the organization database is absent.
+            result = await conn.execute(text("SELECT 1 FROM pg_database WHERE datname = :name"), {"name": organization.hex})
             if result.scalar_one_or_none() is None:
                 return
 
@@ -232,10 +234,10 @@ class Postgres:
         async with self._connection(organization.hex) as conn:
             schema = self.quote(conn, application.hex)
             role = self.quote(conn, runtime_username)
-            role_exists = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
-            await conn.exec_driver_sql(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
 
             # DROP OWNED is only valid when the runtime role still exists.
+            role_exists = await conn.execute(text("SELECT 1 FROM pg_roles WHERE rolname = :role"), {"role": runtime_username})
+            await conn.exec_driver_sql(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
             if role_exists.scalar_one_or_none() is not None:
                 await conn.exec_driver_sql(f"DROP OWNED BY {role}")
 

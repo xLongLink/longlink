@@ -2,7 +2,7 @@ import httpx2
 from types import SimpleNamespace
 from httpx2 import AsyncClient
 from factories import create_application, create_organization, create_ready_infrastructure
-from src.routes import applications as application_routes
+from src.routes import proxy as proxy_routes
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
 from src.database.session import get_session
@@ -19,7 +19,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
 ) -> None:
     """Forward an authenticated request through the Organization's compute gateway."""
 
-    # Arrange
+    # Prepare a running remote Application and capture gateway traffic.
     user = users[0]
     await create_ready_infrastructure(slug="local", name="Local testing")
     remote_infrastructure = await create_ready_infrastructure(slug="remote", name="Remote testing")
@@ -55,6 +55,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
         async def aiter_bytes(self):
             """Yield the fake response body."""
 
+            # Emit one upstream chunk through the proxy response stream.
             yield b"proxied"
 
         async def aclose(self) -> None:
@@ -76,6 +77,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
         async def send(self, request: SimpleNamespace, stream: bool) -> FakeProxyResponse:
             """Capture the forwarded application request and return a stream."""
 
+            # Drain the forwarded request stream into the captured gateway request.
             content = b"".join([chunk async for chunk in request.content])
             captured["request"] = {
                 "method": request.method,
@@ -91,11 +93,11 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
         async def aclose(self) -> None:
             """Close the fake client."""
 
-    monkeypatch.setattr("src.routes.applications.ssl.create_default_context", fake_ssl_context)
-    monkeypatch.setattr("src.routes.applications.httpx2.AsyncClient", FakeProxyClient)
+    monkeypatch.setattr("src.routes.proxy.ssl.create_default_context", fake_ssl_context)
+    monkeypatch.setattr("src.routes.proxy.httpx2.AsyncClient", FakeProxyClient)
     client = clients[0]
 
-    # Act
+    # Proxy a request carrying trusted and untrusted browser headers.
     response = await client.post(
         f"/api/applications/{app.id}/proxy/anything?answer=42",
         content=b"payload",
@@ -110,7 +112,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
         },
     )
 
-    # Assert
+    # Verify safe response metadata and authenticated upstream request fields.
     assert response.status_code == 201
     assert response.text == "proxied"
     assert response.headers["cache-control"] == "no-store"
@@ -154,7 +156,7 @@ async def test_application_proxy_rejects_oversized_request_body(
 ) -> None:
     """Reject request bodies larger than the configured proxy limit."""
 
-    # Arrange
+    # Prepare a running Application and a client that consumes its request stream.
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
@@ -182,6 +184,7 @@ async def test_application_proxy_rejects_oversized_request_body(
         async def send(self, request: SimpleNamespace, stream: bool) -> SimpleNamespace:
             """Consume the content so the route enforces the body limit."""
 
+            # Consume the fake stream so the route's byte limit executes.
             async for _chunk in request.content:
                 pass
             raise AssertionError("oversized request should fail before upstream send completes")
@@ -189,16 +192,16 @@ async def test_application_proxy_rejects_oversized_request_body(
         async def aclose(self) -> None:
             """Close the fake client."""
 
-    monkeypatch.setattr("src.routes.applications.ssl.create_default_context", fake_ssl_context)
-    monkeypatch.setattr("src.routes.applications.httpx2.AsyncClient", FakeProxyClient)
-    assert application_routes.PROXY_REQUEST_MAX_BYTES == 16 * 1024 * 1024
-    monkeypatch.setattr(application_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
+    monkeypatch.setattr("src.routes.proxy.ssl.create_default_context", fake_ssl_context)
+    monkeypatch.setattr("src.routes.proxy.httpx2.AsyncClient", FakeProxyClient)
+    assert proxy_routes.PROXY_REQUEST_MAX_BYTES == 16 * 1024 * 1024
+    monkeypatch.setattr(proxy_routes, "PROXY_REQUEST_MAX_BYTES", 1024)
     client = clients[0]
 
-    # Act
+    # Proxy a body one byte beyond the test limit.
     response = await client.post(f"/api/applications/{app.id}/proxy/upload", content=b"x" * 1025)
 
-    # Assert
+    # Verify the request is rejected before upstream delivery completes.
     assert response.status_code == 413
     assert response.json() == {"detail": "Application proxy request body is too large"}
 
@@ -209,7 +212,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
 ) -> None:
     """Return unavailable when the compute gateway configuration is incomplete."""
 
-    # Arrange
+    # Prepare a running Application with incomplete gateway TLS state.
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
@@ -223,10 +226,10 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
         await session.commit()
     client = clients[0]
 
-    # Act
+    # Request an Application resource through the unavailable gateway.
     response = await client.get(f"/api/applications/{app.id}/proxy/pages.json")
 
-    # Assert
+    # Verify incomplete gateway configuration returns service unavailable.
     assert response.status_code == 503
     assert response.json() == {"detail": "Application gateway is not ready"}
 
@@ -237,7 +240,7 @@ async def test_application_proxy_requires_application_role_for_regular_member(
 ) -> None:
     """Reject app proxy access for regular organization members without an app role."""
 
-    # Arrange
+    # Give a regular Organization member no direct Application role.
     owner = users[0]
     user = users[1]
     infrastructure = await create_ready_infrastructure()
@@ -256,10 +259,10 @@ async def test_application_proxy_requires_application_role_for_regular_member(
         await session.commit()
     client = clients[1]
 
-    # Act
+    # Request the Application through the member's Organization access.
     response = await client.get(f"/api/applications/{app.id}/proxy/pages.json")
 
-    # Assert
+    # Verify Organization read access does not grant runtime access.
     assert response.status_code == 403
     assert response.json() == {"detail": "Application read access required"}
 
@@ -271,7 +274,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
 ) -> None:
     """Return unavailable when the authenticated cluster gateway request fails."""
 
-    # Arrange
+    # Prepare a running Application and a gateway client that fails transport.
     user = users[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, user)
@@ -309,14 +312,14 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
         async def aclose(self) -> None:
             """Close the fake client."""
 
-    monkeypatch.setattr("src.routes.applications.ssl.create_default_context", fake_ssl_context)
-    monkeypatch.setattr("src.routes.applications.httpx2.AsyncClient", FailingProxyClient)
+    monkeypatch.setattr("src.routes.proxy.ssl.create_default_context", fake_ssl_context)
+    monkeypatch.setattr("src.routes.proxy.httpx2.AsyncClient", FailingProxyClient)
     client = clients[0]
 
-    # Act
+    # Proxy a request through the failing gateway client.
     response = await client.get(f"/api/applications/{app.id}/proxy/i18n/en.json")
 
-    # Assert
+    # Verify transport failure is translated without losing the target URL.
     assert response.status_code == 503
     assert response.json() == {"detail": "Application proxy request failed"}
     assert captured["client_kwargs"] == {"follow_redirects": False, "timeout": 300.0, "verify": tls}
@@ -331,7 +334,7 @@ async def test_application_proxy_enforces_method_role(
 ) -> None:
     """Reject mutating proxy requests when the runtime role is read-only."""
 
-    # Arrange
+    # Restrict the caller to read access at both role boundaries.
     user = users[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, user)
@@ -357,10 +360,10 @@ async def test_application_proxy_enforces_method_role(
 
     client = clients[0]
 
-    # Act
+    # Attempt a mutating Application proxy request.
     response = await client.post(f"/api/applications/{app.id}/proxy/api/tasks")
 
-    # Assert
+    # Verify the HTTP method requires Application write access.
     assert response.status_code == 403
     assert response.json() == {"detail": "Application write access required"}
 
@@ -371,17 +374,17 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
 ) -> None:
     """Return a loading response while application reconciliation is pending."""
 
-    # Arrange
+    # Prepare an Application whose reconciliation is still pending.
     owner = users[0]
     infrastructure = await create_ready_infrastructure()
     organization = await create_organization(infrastructure, owner)
     app = await create_application(organization, owner)
     client = clients[0]
 
-    # Act
+    # Request runtime content before the Application is ready.
     response = await client.get(f"/api/applications/{app.id}/proxy/pages.json")
 
-    # Assert
+    # Verify the loading response is empty and cannot be cached.
     assert response.status_code == 503
     assert response.text == ""
     assert response.headers["content-length"] == "0"

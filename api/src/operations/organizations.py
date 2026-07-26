@@ -6,7 +6,6 @@ from longlink.shared import users as shared_users
 from src.models.statuses import OrganizationStatus
 from src.database.services import compute, storage, database, applications, organizations
 from src.kubernetes.client import Kubernetes
-from src.kubernetes.organizations import DesiredOrganization
 from src.database.models.operations import Operation
 from src.database.models.organizations import Organization
 
@@ -48,7 +47,7 @@ async def sync_users(organization: Organization) -> None:
 async def create(claimed: Operation) -> jobs.OperationOutcome:
     """Create one Organization database, shared schema, initial users, and shared storage."""
 
-    # Ignore removed Organizations and reject mismatched compute ownership.
+    # Ignore removed or already-running Organizations.
     organization = await organizations.get(claimed.target_id, include_deleted=True)
     if organization is None or organization.deleted_at is not None:
         return jobs.complete()
@@ -85,7 +84,7 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
 
     # Install the Organization Namespace exactly once as part of its creation lifecycle.
     cluster = Kubernetes(compute_registry.kubeconfig)
-    await cluster.organizations.apply(DesiredOrganization(id=organization.id, slug=organization.slug))
+    await cluster.organizations.apply(organization.slug)
 
     # Publish readiness only after every initial Organization dependency and boundary exists.
     await organizations.set_runtime(organization.id, OrganizationStatus.running)
@@ -96,7 +95,7 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
 async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     """Reconcile one Organization's shared database and storage resources."""
 
-    # Release migrations skip removed Organizations and reject mismatched ownership.
+    # Skip reconciliation for removed Organizations.
     organization = await organizations.get(claimed.target_id, include_deleted=True)
     if organization is None or organization.deleted_at is not None:
         return jobs.complete()
@@ -172,7 +171,7 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         await applications.purge(application.id)
 
     # Delete the known Organization Namespace only after all child workloads terminate.
-    await cluster.organizations.delete(DesiredOrganization(id=organization.id, slug=organization.slug))
+    await cluster.organizations.delete(organization.slug)
     await db.delete_database(organization.id)
     await object_storage.delete(organization.id.hex)
     if not await compute.record_success(

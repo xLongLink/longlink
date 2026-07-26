@@ -2,6 +2,7 @@ import copy
 import logging
 from uvicorn.config import LOGGING_CONFIG
 
+# Copy uvicorn's logging defaults before applying LongLink-specific policies.
 log_config = copy.deepcopy(LOGGING_CONFIG)
 
 
@@ -39,6 +40,7 @@ class ApiAccessFilter(logging.Filter):
         if not isinstance(record.args, tuple) or len(record.args) < 3:
             return True
 
+        # Extract normalized request metadata from uvicorn access-log arguments.
         method = str(record.args[1]).upper()
         path = str(record.args[2]).split("?", 1)[0]
 
@@ -56,21 +58,21 @@ class ApiAccessFilter(logging.Filter):
 def configure_logger(name: str) -> logging.Logger:
     """Return a stream-configured LongLink logger."""
 
-    # Resolve the requested logger so SDK and API entrypoints share one setup path.
+    # Resolve the requested logger and install a fallback handler when needed.
     configured = logging.getLogger(name)
-
-    # Install a fallback handler only when the logger has not already been configured.
     if not configured.handlers:
         handler = logging.StreamHandler()
         handler.setFormatter(ColorFormatter("%(levelname)s:     %(message)s"))
         configured.addHandler(handler)
 
+    # Finalize the logger's level and propagation policy.
     configured.setLevel(logging.INFO)
     configured.propagate = False
 
     return configured
 
 
+# Configure uvicorn's default and access-log formatting.
 log_config["formatters"]["default"] = {
     "()": ColorFormatter,
     "fmt": "%(levelname)s:     %(message)s",
@@ -79,8 +81,11 @@ log_config["formatters"]["access"] = {
     "()": ColorFormatter,
     "fmt": "%(levelname)s:     %(message)s",
 }
+
+# Keep uvicorn access logs focused on application API traffic.
 log_config.setdefault("filters", {})["api_access"] = {"()": ApiAccessFilter}
 log_config["handlers"]["access"]["filters"] = ["api_access"]
 
 
+# Configure the shared LongLink application logger.
 logger = configure_logger("longlink")

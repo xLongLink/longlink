@@ -19,6 +19,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 class Table(Base):
     """Base SQLModel for DB tables with common timestamp and audit fields."""
 
+    # SQLAlchemy configuration
     __allow_unmapped__ = True
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -27,13 +28,17 @@ class Table(Base):
         cls.__allow_unmapped__ = True
         super().__init_subclass__(**kwargs)
 
+    # Audit timestamps
     created_at: datetime | None = Field(default_factory=utcnow, nullable=True, sa_type=UTCDateTime)
     updated_at: datetime | None = Field(default_factory=utcnow, nullable=True, sa_type=UTCDateTime)
     deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
+
+    # Audit user identifiers
     created_id: UUID | None = Field(default=None, foreign_key="users.id", nullable=True)
     updated_id: UUID | None = Field(default=None, foreign_key="users.id", nullable=True)
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id", nullable=True)
 
+    # Audit user relationships
     created_by = declared_attr(lambda cls: relationship(User, foreign_keys=[cls.created_id], lazy="selectin"))
     updated_by = declared_attr(lambda cls: relationship(User, foreign_keys=[cls.updated_id], lazy="selectin"))
     deleted_by = declared_attr(lambda cls: relationship(User, foreign_keys=[cls.deleted_id], lazy="selectin"))
@@ -61,6 +66,7 @@ def create_engine(env: Envs) -> AsyncEngine:
 
     # Production builds the URL from injected database settings.
     else:
+
         # Production runtimes receive database connection components from the LongLink Platform.
         dburl = URL.create(
             "postgresql+asyncpg",
@@ -71,6 +77,7 @@ def create_engine(env: Envs) -> AsyncEngine:
             database=env.DATABASE_NAME,
         ).render_as_string(hide_password=False)
 
+    # Configure connection health checks for every database backend.
     engine_kwargs: dict[str, Any] = {
         "pool_pre_ping": True,
         "pool_recycle": 20,
@@ -91,6 +98,7 @@ def create_engine(env: Envs) -> AsyncEngine:
             }
         engine_kwargs["connect_args"] = connect_args
 
+    # Cache the configured engine for subsequent session requests.
     _engine = create_async_engine(dburl, **engine_kwargs)
     return _engine
 
@@ -121,10 +129,12 @@ async def get_session_maker() -> async_sessionmaker[AsyncSession]:
     async with _engine.connect() as connection:
         await connection.run_sync(lambda _: None)
 
+    # Cache the session factory after the engine connection succeeds.
     Session = async_sessionmaker(_engine, class_=AsyncSession, expire_on_commit=False)
 
     # Auto-create tables for SQLite only.
     if str(_engine.url).startswith("sqlite+"):
+
         # Create tables through a transactional SQLite connection.
         async with _engine.begin() as conn:
             await conn.run_sync(database_metadata.create_all)

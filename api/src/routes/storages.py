@@ -35,6 +35,7 @@ async def list_storage_registries(_user: User = Depends(authsupport)):
 async def get_storage_registry(registry_id: UUID, _user: User = Depends(authsupport)):
     """Return one storage backend registration."""
 
+    # Resolve the requested storage registry.
     registry = await storage.get(registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Storage registry not found")
@@ -46,5 +47,6 @@ async def get_storage_registry(registry_id: UUID, _user: User = Depends(authsupp
 async def delete_storage_registry(registry_id: UUID, _user: User = Depends(authadmin)):
     """Delete one unused Exoscale SOS backend registration."""
 
+    # Delete only a registry that is not assigned to an Organization.
     if not await storage.delete(registry_id):
         raise HTTPException(status_code=404, detail="Storage registry not found")

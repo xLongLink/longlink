@@ -6,8 +6,10 @@ from sqlmodel import Field
 class PurchaseRequest(Table, table=True):
     """Purchase request table owned by this application schema."""
 
+    # Table metadata
     __tablename__: ClassVar[str] = "purchase_requests"
 
+    # Request fields
     id: int | None = Field(default=None, primary_key=True)
     title: str = Field(max_length=255)
     amount: float = Field(default=0, ge=0)

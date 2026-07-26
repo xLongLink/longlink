@@ -10,7 +10,7 @@ pytestmark = pytest.mark.no_db
 def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_order() -> None:
     """Render Envoy routes from desired Applications without cluster discovery."""
 
-    # Arrange
+    # Define unsorted routes for two Applications.
     routes = (
         DesiredGatewayRoute(
             id=UUID("20000000-0000-4000-8000-000000000002"),
@@ -22,10 +22,10 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
         ),
     )
 
-    # Act
+    # Render and parse the Envoy gateway configuration.
     config = yaml.safe_load(Gateway().config(routes))
 
-    # Assert
+    # Verify authenticated routes and clusters have deterministic ordering.
     routes = config["static_resources"]["listeners"][0]["filter_chains"][0]["filters"][0]["typed_config"]["route_config"]["virtual_hosts"][0]["routes"]
     clusters = config["static_resources"]["clusters"]
     assert routes[0]["match"] == {"path": "/ready"}
@@ -44,18 +44,18 @@ def test_gateway_config_routes_applications_with_auth_headers_in_deterministic_o
 def test_gateway_manifests_include_exact_auth_tls_and_config_resources() -> None:
     """Render gateway resources with exact Secrets and rollout annotations."""
 
-    # Arrange
+    # Define gateway TLS and authentication inputs.
     gateway = Gateway()
     tls = GatewayTLSMaterial(ca_certificate="ca", certificate="certificate", private_key="private-key")
 
-    # Act
-    service = gateway.service("compute-id", "v1.2.3")
-    manifests = gateway.manifests("compute-id", "proxy-secret", tls, "envoy-config", "v1.2.3")
+    # Render the gateway Service and supporting resources.
+    service = gateway.service()
+    manifests = gateway.manifests("proxy-secret", tls, "envoy-config")
 
-    # Assert
+    # Verify exact platform metadata, secrets, and rollout configuration.
     assert service["kind"] == "Service"
     assert service["metadata"]["labels"]["longlink.io/resource-scope"] == "platform"
-    assert service["metadata"]["annotations"]["longlink.io/runtime-revision"] != manifests.runtime_revision
+    assert "annotations" not in service["metadata"]
     assert manifests.auth_secret["kind"] == "Secret"
     assert manifests.auth_secret["stringData"] == {"gateway-secret": "proxy-secret"}
     assert manifests.tls_secret["stringData"] == {"tls.crt": "certificate", "tls.key": "private-key"}
@@ -73,30 +73,28 @@ def test_gateway_manifests_include_exact_auth_tls_and_config_resources() -> None
 def test_gateway_tls_reuses_valid_material_for_same_endpoint() -> None:
     """Reuse persisted gateway TLS material while it still matches the compute and endpoint."""
 
-    # Arrange
+    # Generate valid TLS material for one compute endpoint.
     gateway = Gateway()
     material = gateway.tls("compute-id", "gateway.example")
 
-    # Act
+    # Request TLS material for the unchanged endpoint.
     reused = gateway.tls("compute-id", "gateway.example", material)
 
-    # Assert
+    # Verify the persisted material is reused unchanged.
     assert reused == material
 
 
 def test_gateway_tls_rotates_when_endpoint_changes() -> None:
     """Generate new gateway TLS material when the endpoint SAN no longer matches."""
 
-    # Arrange
+    # Generate valid TLS material for the original endpoint.
     gateway = Gateway()
     material = gateway.tls("compute-id", "gateway.example")
 
-
-    # Act
+    # Request TLS material for a different endpoint.
     rotated = gateway.tls("compute-id", "other.example", material)
 
-
-    # Assert
+    # Verify endpoint drift rotates to reusable material.
     assert rotated != material
     assert gateway.tls("compute-id", "other.example", rotated) == rotated
 
@@ -104,12 +102,12 @@ def test_gateway_tls_rotates_when_endpoint_changes() -> None:
 def test_gateway_tls_rotates_malformed_material() -> None:
     """Generate new gateway TLS material when persisted PEM data is malformed."""
 
-    # Arrange
+    # Provide malformed persisted gateway TLS material.
     material = GatewayTLSMaterial(ca_certificate="bad-ca", certificate="bad-cert", private_key="bad-key")
 
-    # Act
+    # Request valid material for the compute endpoint.
     rotated = Gateway().tls("compute-id", "gateway.example", material)
 
-    # Assert
+    # Verify malformed PEM values are replaced.
     assert rotated != material
     assert "BEGIN CERTIFICATE" in rotated.ca_certificate

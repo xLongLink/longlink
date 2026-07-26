@@ -49,6 +49,7 @@ def test_migrations_execute_against_postgresql_and_match_current_metadata(monkey
 
     engine: Engine | None = None
     try:
+
         # Wait for PostgreSQL connection readiness without hiding migration or schema failures.
         wait_for_postgres(container, "longlink", password, "longlink", POSTGRES_PORT)
 
@@ -80,6 +81,7 @@ def test_migrations_execute_against_postgresql_and_match_current_metadata(monkey
 
         assert remaining_tables.isdisjoint(model_columns)
     finally:
+
         # Dispose database and container resources even when migration assertions fail.
         try:
             if engine is not None:

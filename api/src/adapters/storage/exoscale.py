@@ -42,6 +42,7 @@ class Exoscale(Storage):
         api = AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url)
         try:
             async with api:
+
                 # Bind the runtime policy to the organization authenticated by the provisioning key.
                 organization = await api.get_organization()
                 try:
@@ -66,6 +67,7 @@ class Exoscale(Storage):
                     "secret_access_key": self._string(key, "secret"),
                 }
         except Exception:
+
             # Name-scoped compensation is safe because credential generation holds the Application row lock.
             with suppress(Exception):
                 await self.revoke(name)
@@ -81,6 +83,7 @@ class Exoscale(Storage):
         # Keep credential cleanup in one managed async client session.
         api = AsyncClient(self._access_key_id, self._secret_access_key, url=self._api_url)
         async with api:
+
             # Delete every matching API key before deleting roles they may reference.
             keys = await api.list_api_keys()
             api_keys = keys.get("api-keys")

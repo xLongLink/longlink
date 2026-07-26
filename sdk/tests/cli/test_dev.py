@@ -7,6 +7,7 @@ from click.testing import CliRunner
 def test_dev_command_runs_uvicorn(monkeypatch: pytest.MonkeyPatch) -> None:
     """Run the development server through Uvicorn's reload supervisor."""
 
+    # Capture Uvicorn startup without running the development server.
     calls: list[dict[str, object]] = []
 
     def run(app: str, **kwargs: object) -> None:
@@ -16,8 +17,10 @@ def test_dev_command_runs_uvicorn(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(cli_dev.uvicorn, "run", run)
 
+    # Invoke the development CLI with its default options.
     result = CliRunner().invoke(cli_dev.dev_command)
 
+    # Verify the reload server receives the expected Application target.
     assert result.exit_code == 0
     assert calls == [
         {

@@ -64,9 +64,6 @@ class Applications:
             "metadata": {
                 "name": canonical_id,
                 "namespace": namespace,
-                "labels": {
-                    APPLICATION_ID_LABEL: canonical_id,
-                },
             },
             "type": "Opaque",
             "stringData": sorted_envs,
@@ -102,14 +99,9 @@ class Applications:
     async def read_envs(self, application_id: UUID, namespace: str) -> dict[str, str] | None:
         """Read user-owned values from one canonical Application Secret."""
 
-        # Require the exact Application identity before reading Secret values.
+        # Read the canonical Secret from the Organization Namespace.
         canonical_id = str(application_id)
-        secret = await self._resources.read_application(
-            Secret,
-            canonical_id,
-            namespace,
-            {APPLICATION_ID_LABEL: canonical_id},
-        )
+        secret = await self._resources.read(Secret, canonical_id, namespace)
         if secret is None:
             return None
 
@@ -177,7 +169,6 @@ class Applications:
             Secret,
             canonical_id,
             namespace,
-            {APPLICATION_ID_LABEL: canonical_id},
         )
 
         # Provider cleanup must not race a terminating Pod that still holds runtime credentials.
@@ -213,6 +204,7 @@ class Applications:
     async def wait_ready(self, application_id: str, namespace: str) -> None:
         """Wait boundedly for one explicitly deployed Application to become ready."""
 
+        # Poll the canonical Deployment until its observed rollout is ready or the lifecycle deadline expires.
         deadline = time.monotonic() + RESOURCE_TIMEOUT_SECONDS
         while not await self.ready(application_id, namespace):
             if time.monotonic() >= deadline:

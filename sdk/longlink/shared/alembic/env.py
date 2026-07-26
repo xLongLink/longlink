@@ -91,6 +91,7 @@ def run_migrations_online() -> None:
         do_run_migrations(connection)
 
 
+# Select migration execution from the active Alembic context.
 if context.is_offline_mode():
     run_migrations_offline()
 else:

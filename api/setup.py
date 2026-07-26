@@ -74,6 +74,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+
     # Setuptools executes this conventional filename with build arguments; direct execution schedules migrations.
     if len(sys.argv) > 1:
         from setuptools import setup

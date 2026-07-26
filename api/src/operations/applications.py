@@ -17,6 +17,7 @@ from src.database.models.operations import Operation
 async def create(claimed: Operation) -> jobs.OperationOutcome:
     """Provision and deploy one Application once, then publish its gateway route."""
 
+    # Defer lifecycle work until the replica matches the Operation's Platform release.
     if claimed.platform_version != env.VERSION:
         return jobs.retry("Operation targets a different Platform release")
 
@@ -35,6 +36,7 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
 
     # A retry after deployment reached running state skips workload deployment.
     if application.status == ApplicationStatus.creating:
+
         # Kubernetes is the only durable source for user-owned environment values.
         try:
             staged_envs = await cluster.applications.read_envs(application.id, organization.slug)
@@ -159,6 +161,7 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
 async def delete(claimed: Operation) -> jobs.OperationOutcome:
     """Remove one Application route, runtime, provider state, and tombstone."""
 
+    # Defer lifecycle work until the replica matches the Operation's Platform release.
     if claimed.platform_version != env.VERSION:
         return jobs.retry("Operation targets a different Platform release")
 

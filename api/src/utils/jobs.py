@@ -102,6 +102,7 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
         async with asyncio.timeout(OPERATION_HANDLER_TIMEOUT_SECONDS):
             outcome = await handler(operation)
     except asyncio.CancelledError:
+
         # Graceful shutdown unlocks the interrupted work immediately for another replica.
         await operations.defer(operation.id, attempt_count, 0)
         raise

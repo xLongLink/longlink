@@ -37,6 +37,7 @@ async def list_database_registries(_user: User = Depends(authsupport)):
 async def get_database_registry(registry_id: UUID, _user: User = Depends(authsupport)):
     """Return one database backend registration."""
 
+    # Resolve the requested database registry.
     registry = await database.get(registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Database registry not found")
@@ -48,6 +49,7 @@ async def get_database_registry(registry_id: UUID, _user: User = Depends(authsup
 async def delete_database_registry(registry_id: UUID, _user: User = Depends(authadmin)):
     """Delete one unused database backend registration."""
 
+    # Delete only a registry that is not assigned to an Organization.
     if not await database.delete(registry_id):
         raise HTTPException(status_code=404, detail="Database registry not found")
 
@@ -59,6 +61,7 @@ async def get_database_usage(registry_id: UUID, _user: User = Depends(authsuppor
     The result is diagnostic and depends on backend availability.
     """
 
+    # Resolve the requested database registry before connecting to its backend.
     registry = await database.get(registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Database registry not found")

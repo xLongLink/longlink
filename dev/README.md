@@ -1,8 +1,10 @@
 <div align="center">
 
-# Development tools
+<img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
 
+Development tools
 </div>
+
 
 <br />
 
@@ -74,3 +76,18 @@ production PostgreSQL contract without provisioning a remote database.
 
 `make down` stops on cleanup or infrastructure errors and preserves `api/dev.db` and `api/kubeconfig.yaml` for recovery.
 Retry the command after resolving the reported error.
+
+
+<br/>
+<br/>
+
+---
+
+<div align="center">
+LongLink 2026
+
+[License](./LICENSE) &nbsp; - &nbsp; [Contributing](./CONTRIBUTING.md) &nbsp; - &nbsp; [Contact](mailto:info@longlink.dev)
+
+</div>
+
+---

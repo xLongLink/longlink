@@ -59,6 +59,8 @@ async def enqueue_in_session(
         ).scalar_one_or_none()
         if compute is None:
             raise ValueError("Operation compute registry not found")
+
+    # Select the newest release observed for this target and its compute aggregate.
     versions = (
         (
             await session.execute(
@@ -172,6 +174,7 @@ async def claim_next() -> Operation | None:
                 if queue_lock is None:
                     return None
 
+            # Refuse a new claim while another Operation retains an active lease.
             active = (
                 await session.execute(
                     select(Operation.id)
@@ -286,9 +289,9 @@ async def defer(operation_id: UUID, attempt_count: int, delay_seconds: float) ->
             .returning(Operation)
         )
         result = await session.execute(statement)
-        operation = result.scalar_one_or_none()
 
         # A missing row means the worker no longer holds this attempt's lock.
+        operation = result.scalar_one_or_none()
         if operation is None:
             return None
 
@@ -319,9 +322,9 @@ async def fail(operation_id: UUID, attempt_count: int) -> Operation | None:
             .returning(Operation)
         )
         result = await session.execute(statement)
-        operation = result.scalar_one_or_none()
 
         # A missing row means the worker no longer holds this attempt's lock.
+        operation = result.scalar_one_or_none()
         if operation is None:
             return None
 

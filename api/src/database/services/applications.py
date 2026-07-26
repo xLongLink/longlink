@@ -116,6 +116,7 @@ async def members(application_id: UUID, organization_id: UUID) -> list[tuple[Use
 
     # Query organization members and app roles together.
     async with session_scope() as session:
+
         # Start from organization memberships so users without app access are visible.
         statement = (
             select(User, UserOrganization, UserApplication)
@@ -145,6 +146,8 @@ async def set_member_role(application_id: UUID, organization_id: UUID, member_id
 
     # Update membership rows in one transaction.
     async with session_scope() as session:
+
+        # Require an active organization membership first.
         membership_result = await session.execute(
             select(UserOrganization.user_id)
             .join(User, User.id == UserOrganization.user_id)
@@ -155,11 +158,10 @@ async def set_member_role(application_id: UUID, organization_id: UUID, member_id
                 User.deleted_at.is_(None),
             )
         )
-
-        # Require an active organization membership first.
         if membership_result.scalar_one_or_none() is None:
             return False
 
+        # Load any current Application membership before applying the requested role.
         application_membership = await session.get(
             UserApplication,
             {
@@ -172,6 +174,7 @@ async def set_member_role(application_id: UUID, organization_id: UUID, member_id
 
         # Remove application access when no role is provided.
         if role is None:
+
             # Soft-delete an existing active application membership.
             if application_membership is not None and application_membership.deleted_at is None:
                 application_membership.deleted_at = now
@@ -219,6 +222,7 @@ async def create(
 
     # Create the application and owner membership transactionally.
     async with session_scope() as session:
+
         # Resolve the parent before taking locks in aggregate order.
         current = await session.get(Organization, organization_id)
         if current is None:
@@ -258,6 +262,7 @@ async def create(
             await session.rollback()
             raise HTTPException(status_code=409, detail="Application slug already exists") from exc
 
+        # Grant the creator administration and queue the delayed deployment lifecycle.
         session.add(
             UserApplication(
                 application_id=application.id,
@@ -278,6 +283,7 @@ async def create(
         )
         await session.commit()
 
+        # Reload the Application relationships required by the mutation response.
         statement = (
             select(Application)
             .options(
@@ -316,6 +322,7 @@ async def provision_storage_credentials(
 
     generated: StorageRuntimeCredentials | None = None
     try:
+
         # Lock the Application first to match desired-state mutation lock ordering.
         async with session_scope() as session:
             application = (
@@ -336,6 +343,7 @@ async def provision_storage_credentials(
             await session.commit()
             return application, generated
     except Exception:
+
         # Delete only a definitely unpersisted key; preserve it when a lost commit response actually stored it.
         if generated is not None:
             with suppress(Exception):
@@ -400,9 +408,9 @@ async def update_runtime(
 
     # Update runtime metadata in one session.
     async with session_scope() as session:
-        application = await session.get(Application, application_id)
 
         # Ignore missing or deleted applications.
+        application = await session.get(Application, application_id)
         if application is None or application.deleted_at is not None:
             return None
 
@@ -423,14 +431,16 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
 
     # Soft-delete the application and memberships together.
     async with session_scope() as session:
-        current = await session.get(Application, application_id)
 
         # Resolve parents before taking locks in aggregate order.
+        current = await session.get(Application, application_id)
         if current is None:
             return None
         current_organization = await session.get(Organization, current.organization_id)
         if current_organization is None:
             return None
+
+        # Lock the aggregate resources and stop if any disappear during acquisition.
         compute = (
             await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == current_organization.compute_id).with_for_update())
         ).scalar_one_or_none()
@@ -440,8 +450,6 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
         application = (
             await session.execute(select(Application).where(Application.id == application_id).with_for_update())
         ).scalar_one_or_none()
-
-        # Ignore resources that disappeared while locks were acquired.
         if compute is None or organization is None or application is None:
             return None
 
@@ -478,6 +486,8 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
         )
 
         await session.commit()
+
+        # Reload the Application relationships required by the mutation response.
         statement = (
             select(Application)
             .options(

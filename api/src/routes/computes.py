@@ -30,6 +30,7 @@ async def list_compute_registries(_user: User = Depends(authsupport)):
 async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)):
     """Return one compute backend registration."""
 
+    # Resolve the requested active compute registry.
     registry = await compute.get(registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Compute registry not found")
@@ -41,6 +42,7 @@ async def get_compute_registry(registry_id: UUID, _: User = Depends(authsupport)
 async def delete_compute_registry(registry_id: UUID, _user: User = Depends(authadmin)):
     """Queue cleanup of one unused compute target."""
 
+    # Delete only a registered compute that is not assigned to an Organization.
     result = await compute.delete(registry_id)
     if result is None:
         raise HTTPException(status_code=404, detail="Compute registry not found")
@@ -55,6 +57,7 @@ async def list_compute_namespaces(registry_id: UUID, _: User = Depends(authsuppo
     Results may include unmanaged or not-yet-reconciled namespaces.
     """
 
+    # Resolve the requested active compute registry before connecting to its cluster.
     registry = await compute.get(registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Compute registry not found")
@@ -78,6 +81,7 @@ async def list_namespace_pods(registry_id: UUID, namespace: str, _: User = Depen
     Pod phase and node placement may differ from persisted desired state during reconciliation.
     """
 
+    # Resolve the requested active compute registry before connecting to its cluster.
     registry = await compute.get(registry_id)
     if registry is None:
         raise HTTPException(status_code=404, detail="Compute registry not found")

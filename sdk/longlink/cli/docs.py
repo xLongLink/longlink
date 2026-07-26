@@ -42,6 +42,7 @@ def resolve_component_schema(component: str) -> Path:
 
     # Prefer direct schema filename matches.
     for schema_path in adapters.glob("*.xsd"):
+
         # Compare filenames without case sensitivity.
         if schema_path.stem.casefold() == normalized:
             return schema_path
@@ -60,13 +61,11 @@ def summarize_component_schema(schema_path: Path, component: str) -> ComponentDe
 
     schema = load_schema(schema_path)
     normalized = component.casefold()
-    element = next((candidate for name, candidate in schema.elements.items() if name.casefold() == normalized), None)
 
-    # Use the first element when the requested name is absent.
+    # Resolve the requested element, falling back to the schema's first root element.
+    element = next((candidate for name, candidate in schema.elements.items() if name.casefold() == normalized), None)
     if element is None:
         element = next(iter(schema.elements.values()), None)
-
-    # Require at least one root element in the schema.
     if element is None:
         raise click.ClickException(f"Schema does not define a root element: {schema_path.name}")
 
@@ -131,10 +130,11 @@ def render_component_docs(component: str) -> str:
         lines.append("Attributes: additional arbitrary fields are allowed")
 
     lines.append("Props:")
-    props = details["props"]
 
     # List known props when present.
+    props = details["props"]
     if props:
+
         # Render each prop with its metadata.
         for prop in props:
             prop_bits = ["required" if prop["required"] else "optional"]
@@ -165,6 +165,7 @@ def docs_command(component: str | None) -> None:
         click.echo(render_component_docs(component))
         return
 
+    # Prepare the adapter directory and collected documentation output.
     adapters = ROOT / ".static" / "xsd" / "adapters"
     docs = []
 

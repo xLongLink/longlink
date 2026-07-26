@@ -204,6 +204,8 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
 
         # Protect organizations from losing their last owner.
         if membership.role == OrganizationRoles.owner and role != OrganizationRoles.owner:
+
+            # Reject demotion when this is the only owner.
             owner_statement = (
                 select(UserOrganization.user_id)
                 .where(
@@ -214,11 +216,10 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
                 .with_for_update()
             )
             owner_result = await session.execute(owner_statement)
-
-            # Reject demotion when this is the only owner.
             if len(owner_result.scalars().all()) <= 1:
                 raise HTTPException(status_code=409, detail="Organization must have at least one owner")
 
+        # Persist the role change and queue reconciliation on the Organization's compute.
         membership.updated_at = utcnow()
         membership.updated_id = user.id
         membership.role = role
@@ -259,6 +260,7 @@ async def create(
 
     # Create the organization and owner membership together.
     async with session_scope() as session:
+
         # Lock an explicitly selected compute or assign the first available reconciliation root.
         compute_statement = select(ComputeRegistry)
         if compute_id is None:
@@ -310,6 +312,7 @@ async def create(
         )
         shared_schema_url = db.shared_schema_url(organization_id)
 
+        # Build the Organization with its immutable infrastructure assignments.
         organization = Organization(
             id=organization_id,
             name=name,
@@ -351,6 +354,7 @@ async def create(
             await session.rollback()
             raise HTTPException(status_code=409, detail="Organization already exists") from exc
 
+        # Reload audit relationships required by the mutation response.
         statement = (
             select(Organization)
             .options(
@@ -399,19 +403,19 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
 
     # Soft-delete organization data in one transaction.
     async with session_scope() as session:
-        current = await session.get(Organization, organization_id)
 
         # Resolve the parent before taking locks in aggregate order.
+        current = await session.get(Organization, organization_id)
         if current is None:
             return None
+
+        # Lock the aggregate resources and stop if any disappear during acquisition.
         compute = (
             await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == current.compute_id).with_for_update())
         ).scalar_one_or_none()
         organization = (
             await session.execute(select(Organization).where(Organization.id == organization_id).with_for_update())
         ).scalar_one_or_none()
-
-        # Ignore resources that disappeared while locks were acquired.
         if compute is None or organization is None:
             return None
 
@@ -474,6 +478,8 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
         )
 
         await session.commit()
+
+        # Reload audit relationships required by the mutation response.
         statement = (
             select(Organization)
             .options(

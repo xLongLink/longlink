@@ -21,40 +21,22 @@ _model_modules = (
     organizations,
 )
 
-# this is the Alembic Config object, which provides
-# access to the values within the .ini file in use.
+# Configure Alembic with the current Platform database URL.
 config = context.config
 config.set_main_option("sqlalchemy.url", env.DATABASE_URL.replace("%", "%%"))
 
-# Interpret the config file for Python logging.
-# This line sets up loggers basically.
+# Apply configured migration logging when Alembic has an ini file.
 if config.config_file_name is not None:
     logging.config.fileConfig(config.config_file_name)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
+# Expose all imported SQLModel tables to migration autogeneration.
 target_metadata = SQLModel.metadata
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 
 
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode.
+    """Emit migrations without opening a database connection."""
 
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
-
-    Calls to context.execute() here emit the given string to the
-    script output.
-
-    """
+    # Configure deterministic SQL generation from the database URL.
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -63,17 +45,15 @@ def run_migrations_offline() -> None:
         dialect_opts={"paramstyle": "named"},
     )
 
+    # Emit all pending migrations within one Alembic transaction.
     with context.begin_transaction():
         context.run_migrations()
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
+    """Run migrations through a live database connection."""
 
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-
-    """
+    # Validate and normalize the configured database URL.
     configured_url = config.get_main_option("sqlalchemy.url")
     if configured_url is None:
         raise RuntimeError("Alembic sqlalchemy.url is not configured")
@@ -86,31 +66,39 @@ def run_migrations_online() -> None:
         async def run_async_migrations() -> None:
             """Run Alembic migrations through an async SQLAlchemy engine."""
 
+            # Create one unpooled async engine for the migration run.
             connectable = create_async_engine(database_url, poolclass=pool.NullPool)
 
             def do_run_migrations(sync_connection: Connection) -> None:
                 """Configure Alembic against the synchronous bridge connection."""
 
+                # Bind Alembic to the bridge and execute migrations transactionally.
                 context.configure(connection=sync_connection, target_metadata=target_metadata)
 
                 with context.begin_transaction():
                     context.run_migrations()
 
             try:
+
+                # Run synchronous Alembic operations through the async connection.
                 async with connectable.connect() as connection:
                     await connection.run_sync(do_run_migrations)
             finally:
+
+                # Release engine resources after every migration attempt.
                 await connectable.dispose()
 
         asyncio.run(run_async_migrations())
         return
 
+    # Create an unpooled synchronous engine from the Alembic configuration.
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
 
+    # Run migrations against one transactional synchronous connection.
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
 
