@@ -224,13 +224,12 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
 
     try:
         # Act: install explicit tenant resources once, then reconcile only the gateway route graph.
-        await compute.organizations.apply(active_organization, str(compute_id), env.VERSION)
-        await compute.organizations.apply(retired_organization, str(compute_id), env.VERSION)
+        await compute.organizations.apply(active_organization, str(compute_id))
+        await compute.organizations.apply(retired_organization, str(compute_id))
         await compute.applications.apply(
             active_application,
             str(compute_id),
             proxy_secret,
-            env.VERSION,
             envs={"LONG_LINK_REQUIRED": "value", "PORT": "8000"},
             connection=connection,
             storage_endpoint_url="https://sos-ch-gva-2.exo.io",
@@ -240,7 +239,6 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
             stale_application,
             str(compute_id),
             proxy_secret,
-            env.VERSION,
             envs={"PORT": "8000"},
             connection=connection,
             storage_endpoint_url="https://sos-ch-gva-2.exo.io",
@@ -380,23 +378,29 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         assert stale_deployment is None
         assert stale_service is None
 
-        # Every retained LongLink resource identifies the Platform release that rendered it.
-        retained_resources = (
+        # Only retained Platform resources identify the Platform release that rendered them.
+        platform_resources = (
             system_namespace,
-            organization_namespace,
             gateway_config_map,
             gateway_auth_secret,
             gateway_tls_secret,
             gateway_deployment,
             gateway_service,
             gateway_policy,
+        )
+        for resource in platform_resources:
+            assert resource.raw["metadata"]["annotations"]["longlink.io/platform-version"] == env.VERSION
+
+        # Tenant resources depend only on their own lifecycle and template revisions.
+        tenant_resources = (
+            organization_namespace,
             organization_policy,
             application_deployment,
             application_service,
+            application_secret,
         )
-        for resource in retained_resources:
-            assert resource.raw["metadata"]["annotations"]["longlink.io/platform-version"] == env.VERSION
-        assert application_secret.raw["metadata"].get("annotations", {}) == {}
+        for resource in tenant_resources:
+            assert "longlink.io/platform-version" not in resource.raw["metadata"].get("annotations", {})
         assert gateway_deployment.raw["spec"]["template"]["metadata"]["annotations"]["longlink.io/platform-version"] == env.VERSION
         assert "longlink.io/platform-version" not in application_deployment.raw["spec"]["template"]["metadata"]["annotations"]
 

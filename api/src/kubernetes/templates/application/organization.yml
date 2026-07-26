@@ -5,7 +5,6 @@ kind: Namespace
 metadata:
     name: $namespace
     annotations:
-        longlink.io/platform-version: '$platform_version'
         longlink.io/runtime-revision: '$runtime_revision'
         longlink.io/template-revision: '$template_revision'
     labels:
@@ -20,7 +19,6 @@ metadata:
     name: longlink-gateway-ingress
     namespace: $namespace
     annotations:
-        longlink.io/platform-version: '$platform_version'
         longlink.io/runtime-revision: '$runtime_revision'
         longlink.io/template-revision: '$template_revision'
     labels:

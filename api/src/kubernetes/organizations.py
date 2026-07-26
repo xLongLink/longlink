@@ -11,7 +11,7 @@ from src.kubernetes.resources import ResourceScope, KubernetesDocument, Kubernet
 from src.kubernetes.applications import ORGANIZATION_ID_LABEL
 
 APPLICATION_TEMPLATES = files("src.kubernetes.templates").joinpath("application")
-TEMPLATE_REVISION = "2026-07-20.1"
+TEMPLATE_REVISION = "2026-07-26.1"
 NETWORK_POLICY_NAME = "longlink-gateway-ingress"
 RESOURCE_TIMEOUT_SECONDS = 300
 POLL_INTERVAL_SECONDS = 2
@@ -41,7 +41,7 @@ class Organizations:
 
         self._resources = resources
 
-    def manifests(self, organization: DesiredOrganization, compute_id: str, platform_version: str) -> OrganizationManifests:
+    def manifests(self, organization: DesiredOrganization, compute_id: str) -> OrganizationManifests:
         """Render one Organization Namespace and gateway-only ingress policy."""
 
         # Include template source and identity in the revision applied once to both resources.
@@ -58,7 +58,6 @@ class Organizations:
             compute_id=compute_id,
             namespace=organization.slug,
             organization_id=str(organization.id),
-            platform_version=platform_version,
             runtime_revision=runtime_revision,
             template_revision=TEMPLATE_REVISION,
         )
@@ -68,11 +67,11 @@ class Organizations:
             raise ValueError("Organization template resources are incomplete or out of order")
         return OrganizationManifests(namespace=manifests[0], network_policy=manifests[1])
 
-    async def apply(self, organization: DesiredOrganization, compute_id: str, platform_version: str) -> None:
+    async def apply(self, organization: DesiredOrganization, compute_id: str) -> None:
         """Create one Organization Namespace boundary for its explicit lifecycle."""
 
         # Apply only the requested Organization and never inspect unrelated Namespaces.
-        manifests = self.manifests(organization, compute_id, platform_version)
+        manifests = self.manifests(organization, compute_id)
         namespace = await self._resources.apply(manifests.namespace)
         if not isinstance(namespace, Namespace):
             raise TypeError("Kubernetes Namespace apply returned an unexpected resource kind")

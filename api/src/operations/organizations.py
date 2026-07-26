@@ -88,7 +88,6 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
     await cluster.organizations.apply(
         DesiredOrganization(id=organization.id, slug=organization.slug),
         str(compute_registry.id),
-        claimed.platform_version,
     )
 
     # Publish readiness only after every initial Organization dependency and boundary exists.

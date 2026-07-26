@@ -35,7 +35,6 @@ def test_application_manifests_include_labels_annotations_and_secret_envs() -> N
         application,
         "compute-id",
         "revision-secret",
-        "v1.2.3",
         envs={"PORT": "8000", "API_KEY": "secret"},
         connection=connection,
         storage_endpoint_url="https://sos-ch-gva-2.exo.io",
@@ -72,4 +71,6 @@ def test_application_manifests_include_labels_annotations_and_secret_envs() -> N
     assert set(annotations) == {"longlink.io/runtime-revision"}
     assert manifests.deployment["kind"] == "Deployment"
     assert manifests.service["kind"] == "Service"
+    assert "longlink.io/platform-version" not in manifests.deployment["metadata"]["annotations"]
+    assert "longlink.io/platform-version" not in manifests.service["metadata"]["annotations"]
     assert "database-secret" not in repr(manifests)

@@ -10,19 +10,6 @@ from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
 
-def gateway_tls(registry: ComputeRegistry) -> GatewayTLSMaterial | None:
-    """Return complete persisted gateway TLS material when available."""
-
-    # Partial material cannot identify a usable persisted gateway certificate.
-    if registry.gateway_ca_certificate is None or registry.gateway_tls_certificate is None or registry.gateway_tls_private_key is None:
-        return None
-    return GatewayTLSMaterial(
-        ca_certificate=registry.gateway_ca_certificate,
-        certificate=registry.gateway_tls_certificate,
-        private_key=registry.gateway_tls_private_key,
-    )
-
-
 async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes) -> ReconcileResult:
     """Apply only compute bootstrap and gateway state from the current routable Application inventory."""
 
@@ -42,10 +29,25 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes) -> R
     route_rows = [] if registry.deleted_at is not None else await applications.gateway_routes(registry.id)
     desired = DesiredCompute(
         id=registry.id,
-        routes=() if registry.deleted_at is not None else tuple(DesiredGatewayRoute(id=item[0], namespace=item[1]) for item in route_rows),
+        routes=tuple(DesiredGatewayRoute(id=item[0], namespace=item[1]) for item in route_rows),
         deleting=registry.deleted_at is not None,
     )
-    return await cluster.reconcile(desired, registry.proxy_secret, gateway_tls(registry), stage_tls)
+
+    # Pass persisted TLS only when all certificate material is available.
+    return await cluster.reconcile(
+        desired,
+        registry.proxy_secret,
+        GatewayTLSMaterial(
+            ca_certificate=registry.gateway_ca_certificate,
+            certificate=registry.gateway_tls_certificate,
+            private_key=registry.gateway_tls_private_key,
+        )
+        if registry.gateway_ca_certificate is not None
+        and registry.gateway_tls_certificate is not None
+        and registry.gateway_tls_private_key is not None
+        else None,
+        stage_tls,
+    )
 
 
 @operation("compute.reconcile")

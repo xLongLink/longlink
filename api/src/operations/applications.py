@@ -93,7 +93,6 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
             ),
             str(registry.id),
             registry.proxy_secret,
-            claimed.platform_version,
             envs=application.envs,
             connection=connection,
             storage_endpoint_url=storage_registry.runtime_endpoint_url,

@@ -25,7 +25,7 @@ from src.adapters.storage.base import StorageRuntimeCredentials
 from src.models.infrastructure import exoscale_zone
 
 APPLICATION_TEMPLATES = files("src.kubernetes.templates").joinpath("application")
-TEMPLATE_REVISION = "2026-07-20.1"
+TEMPLATE_REVISION = "2026-07-26.1"
 APPLICATION_ID_LABEL = "longlink.io/application-id"
 ORGANIZATION_ID_LABEL = "longlink.io/organization-id"
 ENVIRONMENT_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -66,7 +66,6 @@ class Applications:
         application: DesiredApplication,
         compute_id: str,
         revision_key: str,
-        platform_version: str,
         *,
         envs: Mapping[str, str],
         connection: DatabaseRuntimeConnection,
@@ -144,7 +143,6 @@ class Applications:
             compute_id=compute_id,
             namespace=application.namespace,
             organization_id=str(application.organization_id),
-            platform_version=platform_version,
             runtime_revision=runtime_revision,
             template_revision=TEMPLATE_REVISION,
         )
@@ -159,7 +157,6 @@ class Applications:
         application: DesiredApplication,
         compute_id: str,
         revision_key: str,
-        platform_version: str,
         *,
         envs: Mapping[str, str],
         connection: DatabaseRuntimeConnection,
@@ -178,7 +175,6 @@ class Applications:
             application,
             compute_id,
             revision_key,
-            platform_version,
             envs=envs,
             connection=connection,
             storage_endpoint_url=storage_endpoint_url,
