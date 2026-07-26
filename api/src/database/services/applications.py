@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from contextlib import suppress
 from sqlalchemy import and_, delete, select, update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import joinedload, contains_eager
 from collections.abc import Callable, Awaitable
 from src.models.roles import ApplicationRoles
 from src.models.types import Image
@@ -31,12 +31,12 @@ async def fetch() -> list[Application]:
             select(Application)
             .join(Application.organization)
             .options(
-                selectinload(Application.organization).selectinload(Organization.created_by),
-                selectinload(Application.organization).selectinload(Organization.updated_by),
-                selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.created_by),
-                selectinload(Application.updated_by),
-                selectinload(Application.deleted_by),
+                contains_eager(Application.organization).joinedload(Organization.created_by),
+                contains_eager(Application.organization).joinedload(Organization.updated_by),
+                contains_eager(Application.organization).joinedload(Organization.deleted_by),
+                joinedload(Application.created_by),
+                joinedload(Application.updated_by),
+                joinedload(Application.deleted_by),
             )
             .where(Application.deleted_at.is_(None))
             .order_by(Organization.name, Application.name)
@@ -278,12 +278,12 @@ async def create(
         statement = (
             select(Application)
             .options(
-                selectinload(Application.organization).selectinload(Organization.created_by),
-                selectinload(Application.organization).selectinload(Organization.updated_by),
-                selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.created_by),
-                selectinload(Application.updated_by),
-                selectinload(Application.deleted_by),
+                joinedload(Application.organization).joinedload(Organization.created_by),
+                joinedload(Application.organization).joinedload(Organization.updated_by),
+                joinedload(Application.organization).joinedload(Organization.deleted_by),
+                joinedload(Application.created_by),
+                joinedload(Application.updated_by),
+                joinedload(Application.deleted_by),
             )
             .where(Application.id == application.id)
         )
@@ -481,12 +481,12 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
         statement = (
             select(Application)
             .options(
-                selectinload(Application.organization).selectinload(Organization.created_by),
-                selectinload(Application.organization).selectinload(Organization.updated_by),
-                selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.created_by),
-                selectinload(Application.updated_by),
-                selectinload(Application.deleted_by),
+                joinedload(Application.organization).joinedload(Organization.created_by),
+                joinedload(Application.organization).joinedload(Organization.updated_by),
+                joinedload(Application.organization).joinedload(Organization.deleted_by),
+                joinedload(Application.created_by),
+                joinedload(Application.updated_by),
+                joinedload(Application.deleted_by),
             )
             .where(Application.id == application_id)
         )

@@ -2,10 +2,19 @@ import seed
 import pytest
 from uuid import UUID
 from types import SimpleNamespace
+from pathlib import Path
+from sqlmodel import col
+from src.utils import passwords
+from sqlalchemy import select
 from src.environments import env
-from src.models.statuses import ComputeStatus
-
-pytestmark = pytest.mark.no_db
+from src.models.roles import PlatformRoles, ApplicationRoles, OrganizationRoles
+from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
+from src.database.session import session_scope
+from src.models.operations import OperationStatus, ReconciliationScope
+from src.database.models.users import User
+from src.database.models.operations import Operation
+from src.database.models.association import UserApplication, UserOrganization
+from src.database.models.applications import Application
 
 
 def fake_resource(**fields: object) -> SimpleNamespace:
@@ -14,6 +23,65 @@ def fake_resource(**fields: object) -> SimpleNamespace:
     return SimpleNamespace(**fields)
 
 
+@pytest.fixture
+def successful_seed_boundaries(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> list[tuple[ReconciliationScope, set[UUID] | None]]:
+    """Replace local machine and provider boundaries while retaining database orchestration."""
+
+    reconciliations: list[tuple[ReconciliationScope, set[UUID] | None]] = []
+
+    def local_database_host() -> str:
+        """Return a deterministic host without inspecting Docker."""
+
+        return "172.19.0.1"
+
+    async def reconcile(operation: Operation) -> seed.jobs.OperationOutcome:
+        """Persist successful provider observations without contacting Kubernetes or providers."""
+
+        # Record the compute observation through the lease-fenced production service.
+        recorded = await seed.compute_service.record_success(
+            operation.compute_id,
+            operation.platform_version,
+            "https://gateway.example",
+            "test-ca",
+            "test-certificate",
+            "test-private-key",
+            operation.id,
+            operation.attempt_count,
+        )
+        if not recorded:
+            return seed.jobs.fail("Test reconciliation lost its operation lease")
+
+        # Mirror statuses that successful complete Application reconciliation observes from providers.
+        application_ids = (
+            {UUID(application_id) for application_id in operation.application_ids}
+            if operation.application_ids is not None
+            else None
+        )
+        if operation.scope == ReconciliationScope.application:
+            if application_ids is None:
+                for organization in await seed.organization_service.for_compute(operation.compute_id):
+                    if organization.deleted_at is None:
+                        await seed.organization_service.set_runtime(organization.id, OrganizationStatus.running)
+            for application in await seed.application_service.for_compute(operation.compute_id):
+                if application.deleted_at is None and (application_ids is None or application.id in application_ids):
+                    await seed.application_service.set_status(application.id, ApplicationStatus.running)
+
+        reconciliations.append((operation.scope, application_ids))
+        return seed.jobs.complete()
+
+    # Supply local seed inputs without depending on generated developer-machine state.
+    kubeconfig = tmp_path / "kubeconfig.yaml"
+    kubeconfig.write_text("apiVersion: v1\nclusters: []\n", encoding="utf-8")
+    monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
+    monkeypatch.setattr(seed, "local_database_host", local_database_host)
+    monkeypatch.setattr(seed.operation_computes, "reconcile", reconcile)
+    return reconciliations
+
+
+@pytest.mark.no_db
 async def test_reconcile_until_complete_drains_until_target_operation(monkeypatch: pytest.MonkeyPatch) -> None:
     """Drain local seed operations until the requested compute reconciliation finishes."""
 
@@ -58,291 +126,165 @@ async def test_reconcile_until_complete_drains_until_target_operation(monkeypatc
     assert claims == []
 
 
-async def test_seed_local_development_creates_registries_and_drains_reconciliation(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path,
+async def test_seed_local_development_persists_complete_desired_state(
+    successful_seed_boundaries: list[tuple[ReconciliationScope, set[UUID] | None]],
 ) -> None:
-    """Create local desired state and drain each queued compute reconciliation."""
+    """Persist local desired state and drain each reconciliation through the durable queue."""
 
     # Arrange
-    user = fake_resource(id=UUID("11111111-1111-1111-1111-111111111111"))
-    compute = fake_resource(id=UUID("22222222-2222-2222-2222-222222222222"), slug="local-compute")
-    database = fake_resource(id=UUID("55555555-5555-5555-5555-555555555555"), slug="local-database")
-    storage = fake_resource(id=UUID("66666666-6666-6666-6666-666666666666"), slug="local-storage")
-    organization = fake_resource(id=UUID("33333333-3333-3333-3333-333333333333"), slug=seed.LOCAL_ORG)
-    application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
-    operation = fake_resource(compute_id=compute.id, platform_version=env.VERSION)
-    completed = fake_resource(compute_id=compute.id, platform_version=env.VERSION, stopped_at=object(), failed=False)
-    kubeconfig = tmp_path / "kubeconfig.yaml"
-    kubeconfig.write_text("apiVersion: v1\nclusters: []\n", encoding="utf-8")
     settings = seed.SeedSettings(
         EXOSCALE_API_KEY="access-key",
         EXOSCALE_API_SECRET="secret-key",
         EXOSCALE_STORAGE_ENDPOINT_URL="https://sos-ch-gva-2.exo.io",
     )
-    calls: dict[str, object] = {}
-    claimed = [operation, operation, operation]
-    executed: list[object] = []
-
-    async def seed_administrator() -> tuple[SimpleNamespace, bool]:
-        """Return the fixed local administrator."""
-
-        calls["administrator"] = seed.LOCAL_ADMIN_EMAIL
-        return user, False
-
-    def local_database_host() -> str:
-        """Return a deterministic host without inspecting Docker."""
-
-        return "172.19.0.1"
-
-    async def fetch_no_resources() -> list[object]:
-        """Return no existing infrastructure or tenant resources."""
-
-        return []
-
-    async def create_compute(name: str, slug: str, kubeconfig_value: str, user_argument: object):
-        """Record local compute registration."""
-
-        calls["compute"] = (name, slug, kubeconfig_value, user_argument)
-        return compute, operation
-
-    async def create_database(*args: object) -> SimpleNamespace:
-        """Record local database registration."""
-
-        calls["database"] = args
-        return database
-
-    async def create_storage(*args: object) -> SimpleNamespace:
-        """Record local object-storage registration."""
-
-        calls["storage"] = args
-        return storage
-
-    async def create_organization(*args: object, **fields: object) -> tuple[SimpleNamespace, SimpleNamespace]:
-        """Record local Organization desired-state creation."""
-
-        calls["organization"] = (args, fields)
-        return organization, operation
-
-    async def list_no_applications(organization_id: UUID) -> list[object]:
-        """Return no existing sample Application."""
-
-        calls["application_lookup"] = organization_id
-        return []
-
-    async def create_application(*args: object, **fields: object) -> tuple[SimpleNamespace, SimpleNamespace]:
-        """Record sample Application desired-state creation."""
-
-        calls["application"] = (args, fields)
-        return application, operation
-
-    async def claim_operation() -> SimpleNamespace:
-        """Return one terminally executable Operation for each seed mutation."""
-
-        if not claimed:
-            raise AssertionError("Seed attempted to claim unexpected reconciliation work")
-        return claimed.pop(0)
-
-    async def execute_operation(claimed_operation: object, handler: object) -> SimpleNamespace:
-        """Complete reconciliation without invoking infrastructure providers."""
-
-        assert handler is seed.operation_computes.reconcile
-        executed.append(claimed_operation)
-        return completed
-
-    monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
-    monkeypatch.setattr(seed, "local_database_host", local_database_host)
-    monkeypatch.setattr(seed, "seed_local_administrator", seed_administrator)
-    monkeypatch.setattr(seed.compute_service, "fetch", fetch_no_resources)
-    monkeypatch.setattr(seed.compute_service, "create", create_compute)
-    monkeypatch.setattr(seed.database_service, "fetch", fetch_no_resources)
-    monkeypatch.setattr(seed.database_service, "create", create_database)
-    monkeypatch.setattr(seed.storage_service, "fetch", fetch_no_resources)
-    monkeypatch.setattr(seed.storage_service, "create", create_storage)
-    monkeypatch.setattr(seed.organization_service, "fetch", fetch_no_resources)
-    monkeypatch.setattr(seed.organization_service, "create", create_organization)
-    monkeypatch.setattr(seed.organization_service, "applications", list_no_applications)
-    monkeypatch.setattr(seed.application_service, "create", create_application)
-    monkeypatch.setattr(seed.operations, "claim_next", claim_operation)
-    monkeypatch.setattr(seed.jobs, "run_claimed_operation", execute_operation)
 
     # Act
     await seed.seed_local_development(settings)
+    computes = await seed.compute_service.fetch()
+    databases = await seed.database_service.fetch()
+    storages = await seed.storage_service.fetch()
+    organizations = await seed.organization_service.fetch()
+    applications = await seed.application_service.fetch()
+    operations = await seed.operations.fetch()
+
+    # Load the administrator and memberships from the same SQLite database as the services.
+    async with session_scope() as session:
+        administrator = (
+            await session.execute(select(User).where(col(User.email) == seed.LOCAL_ADMIN_EMAIL))
+        ).scalar_one()
+        organization_membership = await session.get(
+            UserOrganization,
+            {"user_id": administrator.id, "organization_id": organizations[0].id},
+        )
+        application_membership = await session.get(
+            UserApplication,
+            {
+                "user_id": administrator.id,
+                "organization_id": organizations[0].id,
+                "application_id": applications[0].id,
+            },
+        )
 
     # Assert
-    assert calls["administrator"] == seed.LOCAL_ADMIN_EMAIL
-    assert calls["compute"] == ("local compute", "local-compute", "apiVersion: v1\nclusters: []\n", user)
-    assert calls["database"] == (
-        "local database",
-        "local-database",
-        "172.19.0.1",
-        seed.LOCAL_DATABASE_PORT,
-        "admin",
-        "admin",
-        seed.DatabaseSSLMode.disable,
-        user,
-    )
-    assert calls["storage"] == (
-        "local storage",
-        "local-storage",
-        seed.StorageKind.exoscale,
-        "https://sos-ch-gva-2.exo.io",
-        None,
-        "access-key",
-        "secret-key",
-        user,
-    )
-    assert calls["organization"] == (
-        (seed.LOCAL_ORG, seed.LOCAL_ORG, compute.id, database.id, storage.id, user),
-        {"avatar": seed.LOCAL_ORG_AVATAR},
-    )
-    assert calls["application_lookup"] == organization.id
-    assert calls["application"] == (
-        (organization.id, seed.LOCAL_APP_NAME, seed.LOCAL_APP_NAME, seed.LOCAL_APPLICATION_IMAGE, user),
-        {
-            "description": "Local SDK development application",
-            "icon": None,
-            "envs": {"REQUIRED": "local-development"},
-        },
-    )
-    assert executed == [operation, operation, operation]
-    assert claimed == []
+    assert administrator.name == seed.LOCAL_ADMIN_NAME
+    assert administrator.role == PlatformRoles.administrator
+    assert passwords.verify(seed.LOCAL_ADMIN_PASSWORD, administrator.hashed_password)[0] is True
+
+    assert len(computes) == 1
+    assert computes[0].name == "local compute"
+    assert computes[0].slug == "local-compute"
+    assert computes[0].kubeconfig == "apiVersion: v1\nclusters: []\n"
+    assert computes[0].status == ComputeStatus.ready
+    assert computes[0].version == env.VERSION
+
+    assert len(databases) == 1
+    assert databases[0].name == "local database"
+    assert databases[0].slug == "local-database"
+    assert databases[0].host == "172.19.0.1"
+    assert databases[0].port == seed.LOCAL_DATABASE_PORT
+    assert databases[0].username == "admin"
+    assert databases[0].password == "admin"
+    assert databases[0].sslmode == seed.DatabaseSSLMode.disable
+
+    assert len(storages) == 1
+    assert storages[0].name == "local storage"
+    assert storages[0].slug == "local-storage"
+    assert storages[0].kind == seed.StorageKind.exoscale
+    assert storages[0].endpoint_url == settings.EXOSCALE_STORAGE_ENDPOINT_URL
+    assert storages[0].runtime_endpoint_url == settings.EXOSCALE_STORAGE_ENDPOINT_URL
+    assert storages[0].access_key_id == settings.EXOSCALE_API_KEY
+    assert storages[0].secret_access_key == settings.EXOSCALE_API_SECRET
+
+    assert len(organizations) == 1
+    assert organizations[0].name == seed.LOCAL_ORG
+    assert organizations[0].slug == seed.LOCAL_ORG
+    assert organizations[0].avatar == seed.LOCAL_ORG_AVATAR
+    assert organizations[0].status == OrganizationStatus.running
+    assert organizations[0].compute_id == computes[0].id
+    assert organizations[0].database_id == databases[0].id
+    assert organizations[0].storage_id == storages[0].id
+    assert organizations[0].id.hex in organizations[0].shared_schema_url
+    assert organization_membership is not None
+    assert organization_membership.role == OrganizationRoles.owner
+
+    assert len(applications) == 1
+    assert applications[0].name == seed.LOCAL_APP_NAME
+    assert applications[0].slug == seed.LOCAL_APP_NAME
+    assert applications[0].image == seed.LOCAL_APPLICATION_IMAGE
+    assert applications[0].description == "Local SDK development application"
+    assert applications[0].envs == {"REQUIRED": "local-development"}
+    assert applications[0].status == ApplicationStatus.running
+    assert application_membership is not None
+    assert application_membership.role == ApplicationRoles.admin
+
+    assert len(operations) == 3
+    assert all(operation.status == OperationStatus.completed for operation in operations)
+    assert successful_seed_boundaries == [
+        (ReconciliationScope.platform, None),
+        (ReconciliationScope.application, None),
+        (ReconciliationScope.application, {applications[0].id}),
+    ]
 
 
-async def test_seed_local_development_refreshes_existing_sample_application(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reuse local infrastructure and reconcile the rebuilt sample Application image."""
+async def test_seed_local_development_refreshes_existing_sample_application(
+    successful_seed_boundaries: list[tuple[ReconciliationScope, set[UUID] | None]],
+) -> None:
+    """Reuse persisted local state and reconcile refreshed sample Application metadata."""
 
     # Arrange
-    user = fake_resource(id=UUID("11111111-1111-1111-1111-111111111111"))
-    compute = fake_resource(
-        id=UUID("22222222-2222-2222-2222-222222222222"),
-        slug="local-compute",
-        status=ComputeStatus.ready,
-        version=env.VERSION,
-    )
-    database = fake_resource(id=UUID("55555555-5555-5555-5555-555555555555"), slug="local-database")
-    storage = fake_resource(
-        id=UUID("66666666-6666-6666-6666-666666666666"),
-        slug="local-storage",
-        endpoint_url="https://sos-ch-gva-2.exo.io",
-        access_key_id="access-key",
-        secret_access_key="secret-key",
-    )
-    organization = fake_resource(id=UUID("33333333-3333-3333-3333-333333333333"), slug=seed.LOCAL_ORG)
-    application = fake_resource(id=UUID("44444444-4444-4444-4444-444444444444"), slug=seed.LOCAL_APP_NAME)
-    operation = fake_resource(compute_id=compute.id, platform_version=env.VERSION)
-    completed = fake_resource(compute_id=compute.id, platform_version=env.VERSION, stopped_at=object(), failed=False)
     settings = seed.SeedSettings(
         EXOSCALE_API_KEY="access-key",
         EXOSCALE_API_SECRET="secret-key",
         EXOSCALE_STORAGE_ENDPOINT_URL="https://sos-ch-gva-2.exo.io",
     )
-    calls: dict[str, object] = {}
-    executed: list[object] = []
+    await seed.seed_local_development(settings)
+    initial_computes = await seed.compute_service.fetch()
+    initial_databases = await seed.database_service.fetch()
+    initial_storages = await seed.storage_service.fetch()
+    initial_organizations = await seed.organization_service.fetch()
+    initial_applications = await seed.application_service.fetch()
+    application_id = initial_applications[0].id
+    initial_ids = (
+        initial_computes[0].id,
+        initial_databases[0].id,
+        initial_storages[0].id,
+        initial_organizations[0].id,
+        application_id,
+    )
+    successful_seed_boundaries.clear()
 
-    async def seed_administrator() -> tuple[SimpleNamespace, bool]:
-        """Return the fixed local administrator."""
-
-        return user, False
-
-    async def fetch_compute() -> list[SimpleNamespace]:
-        """Return the existing compute registry."""
-
-        return [compute]
-
-    async def fetch_database() -> list[SimpleNamespace]:
-        """Return the existing database registry."""
-
-        return [database]
-
-    async def fetch_storage() -> list[SimpleNamespace]:
-        """Return the existing storage registry."""
-
-        return [storage]
-
-    async def fetch_organizations() -> list[SimpleNamespace]:
-        """Return the existing local Organization."""
-
-        return [organization]
-
-    async def ensure_owner(organization_id: UUID, user_id: UUID) -> bool:
-        """Record owner repair for reused local data."""
-
-        calls["owner"] = (organization_id, user_id)
-        return False
-
-    async def list_applications(organization_id: UUID) -> list[SimpleNamespace]:
-        """Return the existing sample Application."""
-
-        calls["application_lookup"] = organization_id
-        return [application]
-
-    async def fail_create(*args: object, **kwargs: object) -> None:
-        """Reject any mutation while reusing complete desired state."""
-
-        raise AssertionError(f"Unexpected seed creation: {args}, {kwargs}")
-
-    async def update_application(*args: object, **fields: object) -> SimpleNamespace:
-        """Record the sample Application image refresh."""
-
-        calls["application_update"] = (args, fields)
-        return application
-
-    async def enqueue_operation(
-        compute_id: UUID,
-        scope: object,
-        *,
-        application_ids: set[UUID] | None = None,
-    ) -> SimpleNamespace:
-        """Record the reconciliation requested for the refreshed image."""
-
-        calls["enqueue"] = (compute_id, scope, application_ids)
-        return operation
-
-    async def claim_operation() -> SimpleNamespace:
-        """Return the reconciliation queued for the refreshed image."""
-
-        return operation
-
-    async def execute_operation(claimed_operation: object, handler: object) -> SimpleNamespace:
-        """Complete reconciliation without invoking infrastructure providers."""
-
-        assert handler is seed.operation_computes.reconcile
-        executed.append(claimed_operation)
-        return completed
-
-    monkeypatch.setattr(seed, "seed_local_administrator", seed_administrator)
-    monkeypatch.setattr(seed.compute_service, "fetch", fetch_compute)
-    monkeypatch.setattr(seed.compute_service, "create", fail_create)
-    monkeypatch.setattr(seed.database_service, "fetch", fetch_database)
-    monkeypatch.setattr(seed.database_service, "create", fail_create)
-    monkeypatch.setattr(seed.storage_service, "fetch", fetch_storage)
-    monkeypatch.setattr(seed.storage_service, "create", fail_create)
-    monkeypatch.setattr(seed.organization_service, "fetch", fetch_organizations)
-    monkeypatch.setattr(seed.organization_service, "create", fail_create)
-    monkeypatch.setattr(seed, "ensure_local_organization_owner", ensure_owner)
-    monkeypatch.setattr(seed.organization_service, "applications", list_applications)
-    monkeypatch.setattr(seed.application_service, "create", fail_create)
-    monkeypatch.setattr(seed.application_service, "update_runtime", update_application)
-    monkeypatch.setattr(seed.operations, "enqueue", enqueue_operation)
-    monkeypatch.setattr(seed.operations, "claim_next", claim_operation)
-    monkeypatch.setattr(seed.jobs, "run_claimed_operation", execute_operation)
+    # Simulate runtime metadata left by the previous image before reseeding the mutable local tag.
+    async with session_scope() as session:
+        application = await session.get(Application, application_id)
+        assert application is not None
+        application.image = "registry.example/longlink-app:old"
+        application.sdk = "0.0.1"
+        application.digest = "sha256:stale"
+        application.version = "0.0.1"
+        application.description = "Stale description"
+        application.envs = {"STALE": "true"}
+        application.status = ApplicationStatus.failed
+        await session.commit()
 
     # Act
     await seed.seed_local_development(settings)
+    computes = await seed.compute_service.fetch()
+    databases = await seed.database_service.fetch()
+    storages = await seed.storage_service.fetch()
+    organizations = await seed.organization_service.fetch()
+    applications = await seed.application_service.fetch()
+    operations = await seed.operations.fetch()
 
     # Assert
-    assert calls["owner"] == (organization.id, user.id)
-    assert calls["application_lookup"] == organization.id
-    assert calls["application_update"] == (
-        (application.id,),
-        {
-            "image": seed.LOCAL_APPLICATION_IMAGE,
-            "user": user,
-            "description": "Local SDK development application",
-            "icon": None,
-            "envs": {"REQUIRED": "local-development"},
-        },
-    )
-    assert calls["enqueue"] == (compute.id, seed.ReconciliationScope.application, {application.id})
-    assert executed == [operation]
+    assert len(computes) == len(databases) == len(storages) == len(organizations) == len(applications) == 1
+    assert (computes[0].id, databases[0].id, storages[0].id, organizations[0].id, applications[0].id) == initial_ids
+    assert applications[0].image == seed.LOCAL_APPLICATION_IMAGE
+    assert applications[0].sdk is None
+    assert applications[0].digest is None
+    assert applications[0].version is None
+    assert applications[0].description == "Local SDK development application"
+    assert applications[0].envs == {"REQUIRED": "local-development"}
+    assert applications[0].status == ApplicationStatus.running
+    assert len(operations) == 4
+    assert all(operation.status == OperationStatus.completed for operation in operations)
+    assert successful_seed_boundaries == [(ReconciliationScope.application, {application_id})]

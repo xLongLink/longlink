@@ -5,7 +5,7 @@ from src.utils import names
 from sqlalchemy import delete, select
 from sqlalchemy import update as sql_update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload
 from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
@@ -31,9 +31,9 @@ async def fetch() -> list[Organization]:
         statement = (
             select(Organization)
             .options(
-                selectinload(Organization.created_by),
-                selectinload(Organization.updated_by),
-                selectinload(Organization.deleted_by),
+                joinedload(Organization.created_by),
+                joinedload(Organization.updated_by),
+                joinedload(Organization.deleted_by),
             )
             .where(Organization.deleted_at.is_(None))
         )
@@ -112,12 +112,12 @@ async def applications(organization_id: UUID, include_deleted: bool = False) -> 
         statement = (
             select(Application)
             .options(
-                selectinload(Application.organization).selectinload(Organization.created_by),
-                selectinload(Application.organization).selectinload(Organization.updated_by),
-                selectinload(Application.organization).selectinload(Organization.deleted_by),
-                selectinload(Application.created_by),
-                selectinload(Application.updated_by),
-                selectinload(Application.deleted_by),
+                joinedload(Application.organization).joinedload(Organization.created_by),
+                joinedload(Application.organization).joinedload(Organization.updated_by),
+                joinedload(Application.organization).joinedload(Organization.deleted_by),
+                joinedload(Application.created_by),
+                joinedload(Application.updated_by),
+                joinedload(Application.deleted_by),
             )
             .where(*conditions)
             .order_by(Application.created_at.asc())
@@ -157,9 +157,9 @@ async def get(organization_id: UUID, include_deleted: bool = False) -> Organizat
         statement = (
             select(Organization)
             .options(
-                selectinload(Organization.created_by),
-                selectinload(Organization.updated_by),
-                selectinload(Organization.deleted_by),
+                joinedload(Organization.created_by),
+                joinedload(Organization.updated_by),
+                joinedload(Organization.deleted_by),
             )
             .where(*conditions)
         )
@@ -368,9 +368,9 @@ async def create(
         statement = (
             select(Organization)
             .options(
-                selectinload(Organization.created_by),
-                selectinload(Organization.updated_by),
-                selectinload(Organization.deleted_by),
+                joinedload(Organization.created_by),
+                joinedload(Organization.updated_by),
+                joinedload(Organization.deleted_by),
             )
             .where(Organization.id == organization.id)
         )
@@ -401,9 +401,9 @@ async def update(organization_id: UUID, avatar: str, user: User) -> Organization
         statement = (
             select(Organization)
             .options(
-                selectinload(Organization.created_by),
-                selectinload(Organization.updated_by),
-                selectinload(Organization.deleted_by),
+                joinedload(Organization.created_by),
+                joinedload(Organization.updated_by),
+                joinedload(Organization.deleted_by),
             )
             .where(Organization.id == organization.id)
         )
@@ -508,9 +508,9 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
         statement = (
             select(Organization)
             .options(
-                selectinload(Organization.created_by),
-                selectinload(Organization.updated_by),
-                selectinload(Organization.deleted_by),
+                joinedload(Organization.created_by),
+                joinedload(Organization.updated_by),
+                joinedload(Organization.deleted_by),
             )
             .where(Organization.id == organization.id)
         )

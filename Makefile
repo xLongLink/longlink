@@ -25,7 +25,7 @@ sdk\:install:
 
 # Install web JavaScript dependencies.
 web\:install:
-	bun i --cwd web
+	bun install --cwd web --frozen-lockfile
 
 
 # Format API, SDK, and web/docs code.
@@ -230,7 +230,7 @@ seed: up
 
 # Run the Vite web app.
 web: 
-	bun i --cwd web
+	bun install --cwd web --frozen-lockfile
 	bun run --cwd web dev --host 127.0.0.1 --port 5173
 
 

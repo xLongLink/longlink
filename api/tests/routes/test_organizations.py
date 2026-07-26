@@ -1,7 +1,7 @@
 import pytest
 from uuid import UUID
 from httpx2 import AsyncClient
-from factories import create_organization, mark_organization_running, create_ready_infrastructure
+from factories import create_application, create_organization, create_ready_infrastructure
 from src.utils import mail as mail_module
 from src.utils import names
 from urllib.parse import urlencode
@@ -94,14 +94,7 @@ async def test_get_organization_returns_member_payload(
         owner,
         avatar="https://example.com/organizations/acme.png",
     )
-    await mark_organization_running(organization)
-    application, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    application = await create_application(organization, owner)
 
     client = clients[0]
 
@@ -137,14 +130,7 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
         owner,
         organization_id=organization_id,
     )
-    await mark_organization_running(organization)
-    await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    await create_application(organization, owner)
 
     # Act
     response = await client.delete(f"/api/organizations/{organization.id}")
@@ -207,14 +193,7 @@ async def test_other_organization_user_cannot_manage_application_members_or_dele
     infrastructure = await create_ready_infrastructure(target_owner)
     target_organization = await create_organization(infrastructure, target_owner)
     await create_organization(infrastructure, other_owner, name="globex", slug="globex")
-    await mark_organization_running(target_organization)
-    target_application, _ = await applications.create(
-        target_organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=target_owner,
-    )
+    target_application = await create_application(target_organization, target_owner)
     operation_ids = [operation.id for operation in await operations.fetch()]
     client = clients[1]
 
@@ -249,23 +228,19 @@ async def test_organization_database_endpoint_returns_schemas_and_shared_users(
     client = clients[0]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
     registry = infrastructure.database
-    dashboard, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
+    dashboard = await create_application(
+        organization,
+        owner,
         description="Dashboard app",
         icon="layout-dashboard",
-        user=owner,
     )
-    reports, _ = await applications.create(
-        organization.id,
-        "reports",
+    reports = await create_application(
+        organization,
+        owner,
+        name="reports",
         slug="reports",
         image="ghcr.io/longlink/reports:latest",
-        user=owner,
     )
     dashboard_schema = dashboard.id.hex
 
@@ -333,14 +308,7 @@ async def test_organization_database_endpoint_returns_unavailable_rows_when_back
     client = clients[0]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    await create_application(organization, owner)
 
     class FakePostgres:
         def __init__(self, host: str, port: int, username: str, password: str, sslmode: str) -> None:
@@ -382,23 +350,19 @@ async def test_organization_storage_endpoint_returns_organization_prefixes(
     client = clients[0]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
     registry = infrastructure.storage
-    dashboard, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
+    dashboard = await create_application(
+        organization,
+        owner,
         description="Dashboard app",
         icon="layout-dashboard",
-        user=owner,
     )
-    reports, _ = await applications.create(
-        organization.id,
-        "reports",
+    reports = await create_application(
+        organization,
+        owner,
+        name="reports",
         slug="reports",
         image="ghcr.io/longlink/reports:latest",
-        user=owner,
     )
 
     class FakeStorage:
@@ -461,15 +425,8 @@ async def test_organization_storage_endpoint_returns_unavailable_rows_when_backe
     client = clients[0]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
     registry = infrastructure.storage
-    await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    await create_application(organization, owner)
 
     class FakeStorage:
         """Provide a failing storage adapter."""
@@ -607,14 +564,7 @@ async def test_organization_access_rejects_soft_deleted_membership(
     owner, user = users[0], users[1]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    await create_application(organization, owner)
 
     Session = await get_session()
     async with Session() as session:

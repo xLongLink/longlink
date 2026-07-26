@@ -1,6 +1,6 @@
 from uuid import UUID
 from httpx2 import AsyncClient
-from factories import create_organization, mark_organization_running, create_ready_infrastructure
+from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.database.session import get_session
@@ -21,14 +21,7 @@ async def test_list_organization_apps_returns_app_membership_role(
     user = users[1]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    app = await create_application(organization, owner)
 
     Session = await get_session()
     async with Session() as session:
@@ -73,21 +66,13 @@ async def test_list_apps_without_organization_returns_all_apps_for_admin(
     infrastructure = await create_ready_infrastructure(user)
     acme = await create_organization(infrastructure, user)
     globex = await create_organization(infrastructure, user, name="globex", slug="globex")
-    await mark_organization_running(acme)
-    await mark_organization_running(globex)
-    dashboard, _ = await applications.create(
-        acme.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=user,
-    )
-    console, _ = await applications.create(
-        globex.id,
-        "console",
+    dashboard = await create_application(acme, user)
+    console = await create_application(
+        globex,
+        user,
+        name="console",
         slug="console",
         image="ghcr.io/longlink/console:latest",
-        user=user,
     )
     client = clients[0]
 
@@ -128,14 +113,7 @@ async def test_list_organization_apps_returns_403_for_non_member(
     owner = users[0]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    await create_application(organization, owner)
     client = clients[1]
 
     # Act
@@ -241,14 +219,7 @@ async def test_get_app_logs_returns_pod_logs(
     user = users[0]
     infrastructure = await create_ready_infrastructure(user)
     organization = await create_organization(infrastructure, user)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=user,
-    )
+    app = await create_application(organization, user)
     registry = infrastructure.compute
     captured: dict[str, object] = {}
 
@@ -296,14 +267,7 @@ async def test_app_logs_require_maintainer_access(
     owner, member = users[0], users[1]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    app = await create_application(organization, owner)
     Session = await get_session()
     async with Session() as session:
         session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.write))
@@ -329,14 +293,7 @@ async def test_app_logs_return_unavailable_when_backend_fails(
     owner = users[0]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    app = await create_application(organization, owner)
 
     class FailingCompute:
         """Fail the log request through the Kubernetes adapter boundary."""
@@ -375,14 +332,7 @@ async def test_application_member_routes_list_update_remove_and_reject_missing_m
     owner, member, non_member = users
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    app = await create_application(organization, owner)
     Session = await get_session()
     async with Session() as session:
         session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
@@ -395,9 +345,7 @@ async def test_application_member_routes_list_update_remove_and_reject_missing_m
     created_role = await applications.membership_role(app.id, member.id)
     remove_response = await client.patch(f"/api/applications/{app.id}/members/{member.id}", json={"role": None})
     removed_role = await applications.membership_role(app.id, member.id)
-    missing_response = await client.patch(
-        f"/api/applications/{app.id}/members/{non_member.id}", json={"role": "read"}
-    )
+    missing_response = await client.patch(f"/api/applications/{app.id}/members/{non_member.id}", json={"role": "read"})
 
     # Assert
     assert list_response.status_code == 200
@@ -420,14 +368,7 @@ async def test_application_member_update_rejects_regular_member(
     owner, member = users[0], users[1]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    app = await create_application(organization, owner)
     Session = await get_session()
     async with Session() as session:
         session.add(UserOrganization(user_id=member.id, organization_id=organization.id, role=OrganizationRoles.read))
@@ -453,14 +394,7 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
     user = users[0]
     infrastructure = await create_ready_infrastructure(user)
     organization = await create_organization(infrastructure, user)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=user,
-    )
+    app = await create_application(organization, user)
     client = clients[0]
 
     # Act

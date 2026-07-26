@@ -11,6 +11,7 @@ from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
 from src.database.models.databases import DatabaseRegistry
+from src.database.models.applications import Application
 from src.database.models.organizations import Organization
 
 
@@ -103,7 +104,33 @@ async def mark_organization_running(organization: Organization) -> None:
 
     # Organization Application creation is valid only after runtime reconciliation succeeds.
     async with session_scope() as session:
-        await session.execute(
-            update(Organization).where(col(Organization.id) == organization.id).values(status=OrganizationStatus.running)
-        )
+        await session.execute(update(Organization).where(col(Organization.id) == organization.id).values(status=OrganizationStatus.running))
         await session.commit()
+
+
+async def create_application(
+    organization: Organization,
+    owner: User,
+    name: str = "dashboard",
+    slug: str = "dashboard",
+    image: str = "ghcr.io/longlink/dashboard:latest",
+    description: str | None = None,
+    icon: str | None = None,
+) -> Application:
+    """Create one Application after making its Organization ready."""
+
+    # Import lazily so tests can share this factory without introducing service import cycles.
+    from src.database.services import applications
+
+    # Application creation requires the parent Organization to be running.
+    await mark_organization_running(organization)
+    application, _ = await applications.create(
+        organization.id,
+        name,
+        slug=slug,
+        image=image,
+        description=description,
+        icon=icon,
+        user=owner,
+    )
+    return application

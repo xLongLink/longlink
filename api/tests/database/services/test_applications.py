@@ -2,7 +2,7 @@ import pytest
 from uuid import uuid4
 from fastapi import HTTPException
 from datetime import timedelta
-from factories import create_organization, mark_organization_running, create_ready_infrastructure
+from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from longlink.utils.time import utcnow
@@ -29,14 +29,7 @@ async def create_application_context(prefix: str) -> tuple[User, Organization, A
         name=f"{prefix}-org",
         slug=f"{prefix}-org",
     )
-    await mark_organization_running(organization)
-    application, _ = await applications.create(
-        organization.id,
-        "Dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=user,
-    )
+    application = await create_application(organization, user, name="Dashboard")
     return user, organization, application
 
 
@@ -177,14 +170,7 @@ async def test_list_members_includes_organization_members_with_optional_applicat
     owner, member = users[0], users[1]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    application, _ = await applications.create(
-        organization.id,
-        "Dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    application = await create_application(organization, owner, name="Dashboard")
 
     Session = await get_session()
     async with Session() as session:
@@ -222,14 +208,7 @@ async def test_set_member_role_creates_updates_removes_and_restores_memberships(
     owner, member, non_member = users
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    application, _ = await applications.create(
-        organization.id,
-        "Dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    application = await create_application(organization, owner, name="Dashboard")
 
     Session = await get_session()
     async with Session() as session:

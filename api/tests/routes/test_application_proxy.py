@@ -1,7 +1,7 @@
 import httpx2
 from types import SimpleNamespace
 from httpx2 import AsyncClient
-from factories import create_organization, mark_organization_running, create_ready_infrastructure
+from factories import create_application, create_organization, create_ready_infrastructure
 from src.routes import applications as application_routes
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
@@ -24,14 +24,7 @@ async def test_application_proxy_forwards_safe_content_and_rejects_active_conten
     await create_ready_infrastructure(user, slug="local", name="Local testing")
     remote_infrastructure = await create_ready_infrastructure(user, slug="remote", name="Remote testing")
     organization = await create_organization(remote_infrastructure, user)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/xlonglink/sample:latest",
-        user=user,
-    )
+    app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, ApplicationStatus.running)
     registry = remote_infrastructure.compute
     Session = await get_session()
@@ -165,14 +158,7 @@ async def test_application_proxy_rejects_oversized_request_body(
     owner = users[0]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/xlonglink/sample:latest",
-        user=owner,
-    )
+    app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, ApplicationStatus.running)
     tls = object()
 
@@ -227,14 +213,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_is_not_ready(
     owner = users[0]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/xlonglink/sample:latest",
-        user=owner,
-    )
+    app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, ApplicationStatus.running)
     Session = await get_session()
     async with Session() as session:
@@ -263,14 +242,7 @@ async def test_application_proxy_requires_application_role_for_regular_member(
     user = users[1]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/xlonglink/sample:latest",
-        user=owner,
-    )
+    app = await create_application(organization, owner, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, ApplicationStatus.running)
     Session = await get_session()
     async with Session() as session:
@@ -303,14 +275,7 @@ async def test_application_proxy_returns_unavailable_when_gateway_request_fails(
     user = users[0]
     infrastructure = await create_ready_infrastructure(user)
     organization = await create_organization(infrastructure, user)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/xlonglink/sample:latest",
-        user=user,
-    )
+    app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, ApplicationStatus.running)
     registry = infrastructure.compute
     captured: dict[str, object] = {}
@@ -370,14 +335,7 @@ async def test_application_proxy_enforces_method_role(
     user = users[0]
     infrastructure = await create_ready_infrastructure(user)
     organization = await create_organization(infrastructure, user)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/xlonglink/sample:latest",
-        user=user,
-    )
+    app = await create_application(organization, user, image="ghcr.io/xlonglink/sample:latest")
     await applications.set_status(app.id, ApplicationStatus.running)
 
     Session = await get_session()
@@ -417,14 +375,7 @@ async def test_application_proxy_shows_loading_when_app_is_not_ready(
     owner = users[0]
     infrastructure = await create_ready_infrastructure(owner)
     organization = await create_organization(infrastructure, owner)
-    await mark_organization_running(organization)
-    app, _ = await applications.create(
-        organization.id,
-        "dashboard",
-        slug="dashboard",
-        image="ghcr.io/longlink/dashboard:latest",
-        user=owner,
-    )
+    app = await create_application(organization, owner)
     client = clients[0]
 
     # Act
