@@ -36,7 +36,6 @@ class OperationResponse(BaseModel):
     # Reference
     kind: OperationKind
     target_id: UUID
-    compute_id: UUID
 
     # State
     status: OperationStatus

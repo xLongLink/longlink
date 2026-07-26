@@ -8,10 +8,13 @@ from uuid import UUID
 from containers import DockerRuntimeContainer, require_docker_daemon, wait_for_container_log
 from collections.abc import Iterator
 from src.environments import env
+from src.models.types import DatabaseSSLMode
 from kr8s.asyncio.objects import Pod, Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
+from src.adapters.postgres import DatabaseRuntimeConnection
 from src.kubernetes.client import Kubernetes
 from src.kubernetes.gateway import GatewayTLSMaterial
 from src.kubernetes.reconcile import DesiredCompute, DesiredGatewayRoute
+from src.adapters.storage.base import StorageRuntimeCredentials
 from src.kubernetes.applications import DesiredApplication
 from src.kubernetes.organizations import DesiredOrganization
 
@@ -193,15 +196,22 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         organization_id=organization_id,
         namespace="acme",
         image=ECHO_SERVER_IMAGE,
-        envs={"LONG_LINK_REQUIRED": "value", "PORT": "8000"},
     )
     stale_application = DesiredApplication(
         id=stale_application_id,
         organization_id=organization_id,
         namespace="acme",
         image=ECHO_SERVER_IMAGE,
-        envs={"PORT": "8000"},
     )
+    connection = DatabaseRuntimeConnection(
+        host="database.internal",
+        port=5432,
+        password="database-secret",
+        sslmode=DatabaseSSLMode.require,
+        username="application-user",
+        database_name="organization-database",
+    )
+    storage_credentials = StorageRuntimeCredentials(access_key_id="storage-user", secret_access_key="storage-secret")
     desired = DesiredCompute(
         id=compute_id,
         routes=(
@@ -216,8 +226,26 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         # Act: install explicit tenant resources once, then reconcile only the gateway route graph.
         await compute.organizations.apply(active_organization, str(compute_id), env.VERSION)
         await compute.organizations.apply(retired_organization, str(compute_id), env.VERSION)
-        await compute.applications.apply(active_application, str(compute_id), proxy_secret, env.VERSION)
-        await compute.applications.apply(stale_application, str(compute_id), proxy_secret, env.VERSION)
+        await compute.applications.apply(
+            active_application,
+            str(compute_id),
+            proxy_secret,
+            env.VERSION,
+            envs={"LONG_LINK_REQUIRED": "value", "PORT": "8000"},
+            connection=connection,
+            storage_endpoint_url="https://sos-ch-gva-2.exo.io",
+            storage_credentials=storage_credentials,
+        )
+        await compute.applications.apply(
+            stale_application,
+            str(compute_id),
+            proxy_secret,
+            env.VERSION,
+            envs={"PORT": "8000"},
+            connection=connection,
+            storage_endpoint_url="https://sos-ch-gva-2.exo.io",
+            storage_credentials=storage_credentials,
+        )
         await compute.applications.wait_ready(str(application_id), "acme")
         await compute.applications.wait_ready(str(stale_application_id), "acme")
         try:

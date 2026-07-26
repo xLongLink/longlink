@@ -12,21 +12,6 @@ from src.models.roles import OrganizationRoles
 logger = logging.getLogger("longlink.mail")
 
 
-def sender_address() -> str:
-    """Return the configured email sender header value."""
-
-    # Prefer an explicit sender override for providers with non-email SMTP usernames.
-    if env.SMTP_FROM is not None:
-        return env.SMTP_FROM
-
-    # Use the SMTP username as the sender address for mailbox-based SMTP providers.
-    if env.SMTP_USERNAME is not None:
-        return f"LongLink <{env.SMTP_USERNAME}>"
-
-    # Keep development logging and unauthenticated SMTP usable without a configured mailbox.
-    return "LongLink <no-reply@longlink.dev>"
-
-
 def render_mjml_template(template_name: str, **context: object) -> str:
     """Render one bundled MJML template to HTML."""
 
@@ -57,7 +42,7 @@ async def send_mail(recipient: str, subject: str, text: str, html: str | None = 
 
     # Build a multipart email when HTML is available and always keep a plain-text fallback.
     message = EmailMessage()
-    message["From"] = sender_address()
+    message["From"] = f"LongLink <{env.SMTP_USERNAME}>"
     message["To"] = recipient
     message["Subject"] = subject
     message.set_content(text)

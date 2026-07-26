@@ -10,7 +10,7 @@ from kr8s.asyncio.objects import Namespace, NetworkPolicy
 from src.kubernetes.resources import ResourceScope, KubernetesDocument, KubernetesResources
 from src.kubernetes.applications import ORGANIZATION_ID_LABEL
 
-TEMPLATES = files("src.kubernetes.templates")
+APPLICATION_TEMPLATES = files("src.kubernetes.templates").joinpath("application")
 TEMPLATE_REVISION = "2026-07-20.1"
 NETWORK_POLICY_NAME = "longlink-gateway-ingress"
 RESOURCE_TIMEOUT_SECONDS = 300
@@ -46,7 +46,7 @@ class Organizations:
 
         # Include template source and identity in the revision applied once to both resources.
         names.knames(organization.slug)
-        source = TEMPLATES.joinpath("application_network_policy.yml")
+        source = APPLICATION_TEMPLATES.joinpath("application_network_policy.yml")
         revision_input = json.dumps(
             {"id": str(organization.id), "slug": organization.slug},
             sort_keys=True,
@@ -68,12 +68,7 @@ class Organizations:
             raise ValueError("Organization template resources are incomplete or out of order")
         return OrganizationManifests(namespace=manifests[0], network_policy=manifests[1])
 
-    async def apply(
-        self,
-        organization: DesiredOrganization,
-        compute_id: str,
-        platform_version: str,
-    ) -> None:
+    async def apply(self, organization: DesiredOrganization, compute_id: str, platform_version: str) -> None:
         """Create one Organization Namespace boundary for its explicit lifecycle."""
 
         # Apply only the requested Organization and never inspect unrelated Namespaces.
@@ -83,11 +78,7 @@ class Organizations:
             raise TypeError("Kubernetes Namespace apply returned an unexpected resource kind")
         await self._resources.apply(manifests.network_policy)
 
-    async def delete(
-        self,
-        organization: DesiredOrganization,
-        compute_id: str,
-    ) -> None:
+    async def delete(self, organization: DesiredOrganization, compute_id: str) -> None:
         """Delete one exact Organization boundary after its Applications are gone."""
 
         # Identity checks prevent a reused Namespace slug from being deleted as the old Organization.

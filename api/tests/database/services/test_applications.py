@@ -89,7 +89,10 @@ async def test_create_requires_running_organization_and_queues_application_lifec
     assert reloaded_compute.version == env.VERSION
     assert len(open_before) == 1
     assert {item.id for item in open_after} == {open_before[0].id, operation.id}
-    assert all(item.compute_id == infrastructure.compute.id for item in open_after)
+    assert {(item.kind, item.target_id) for item in open_after} == {
+        (OperationKind.organization_create, organization.id),
+        (OperationKind.application_create, application.id),
+    }
     assert all(item.platform_version == env.VERSION for item in open_after)
     assert all(item.status == OperationStatus.scheduled for item in open_after)
 
@@ -378,6 +381,6 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     }
     deletion = next(item for item in open_operations if item.id == operation.id)
     assert deletion.kind == OperationKind.application_delete
-    assert deletion.compute_id == organization.compute_id
+    assert deletion.target_id == application.id
     assert deletion.platform_version == env.VERSION
     assert deletion.status == OperationStatus.scheduled

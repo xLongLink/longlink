@@ -5,8 +5,8 @@ import pytest
 import pytest_asyncio
 from uuid import UUID
 from httpx2 import Cookies, AsyncClient, ASGITransport
+from pwdlib import PasswordHash
 from pathlib import Path
-from src.utils import passwords
 from itsdangerous import TimestampSigner
 from collections.abc import AsyncIterator
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -98,7 +98,7 @@ def authenticated_cookies(user_id: UUID, accounts: list[UUID] | None = None) -> 
 def password_hash() -> str:
     """Hash the shared fixture credential once for the test session."""
 
-    return passwords.hash(TEST_PASSWORD)
+    return PasswordHash.recommended().hash(TEST_PASSWORD)
 
 
 @pytest_asyncio.fixture

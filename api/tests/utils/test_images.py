@@ -117,6 +117,7 @@ async def test_metadata_fetches_tagged_and_digest_image_references(
     # Assert
     assert image_metadata is not None
     assert image_metadata.model_dump(mode="json") == LongLinkMetadata(
+        image=expected_image,
         sdk="0.1.0",
         title="dashboard",
         version=version,

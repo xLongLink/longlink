@@ -559,13 +559,7 @@ class KubernetesResources:
             return
         await self.delete(resource_class, name, namespace, uid(resource))
 
-    async def delete(
-        self,
-        resource_class: type[APIObject],
-        name: str,
-        namespace: str | None = None,
-        uid: str | None = None,
-    ) -> None:
+    async def delete(self, resource_class: type[APIObject], name: str, namespace: str | None = None, uid: str | None = None) -> None:
         """Delete one resource, optionally only when its UID still matches."""
 
         api = await self.api()

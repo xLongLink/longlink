@@ -185,11 +185,7 @@ async def list_organization_storage_resources(organization_id: UUID, user: User 
 
 
 @router.post("/api/organizations/{organization_id}/invitations", status_code=204)
-async def create_organization_invitation(
-    organization_id: UUID,
-    payload: OrganizationInvitationCreate,
-    user: User = Depends(authuser),
-):
+async def create_organization_invitation(organization_id: UUID, payload: OrganizationInvitationCreate, user: User = Depends(authuser)):
     """Create one invitation for an organization member."""
 
     # Load organization access before creating invitations.
@@ -275,11 +271,7 @@ async def delete_organization(organization_id: UUID, user: User = Depends(authus
     return {"organization": deleted, "operation": operation}
 
 
-async def _database_usage_rows(
-    organization: Organization,
-    registry: DatabaseRegistry,
-    apps: list[Application],
-) -> list[dict[str, object]]:
+async def _database_usage_rows(organization: Organization, registry: DatabaseRegistry, apps: list[Application]) -> list[dict[str, object]]:
     """Join live schema usage with active LongLink Applications in one Organization database.
 
     Shared and orphaned schemas remain unassociated so backend drift stays visible.
@@ -352,17 +344,13 @@ async def _database_usage_rows(
     return rows
 
 
-async def _storage_usage_rows(
-    organization: Organization,
-    registry: StorageRegistry,
-    apps: list[Application],
-) -> list[dict[str, object]]:
+async def _storage_usage_rows(organization: Organization, registry: StorageRegistry, apps: list[Application]) -> list[dict[str, object]]:
     """Join one Organization bucket's prefix usage with its active Applications.
 
     Logical prefix rows remain visible with zero usage even before their first object is written.
     """
 
-    bucket = names.organization_bucket(organization.id)
+    bucket = organization.id.hex
 
     # Return no logical resources until the Organization bucket exists.
     try:
@@ -381,12 +369,12 @@ async def _storage_usage_rows(
 
     # Fetch shared and Application usage by exact non-overlapping prefixes.
     resources = [
-        (OrganizationStorageResourceKind.shared_prefix, "shared", names.shared_storage_prefix(), None),
+        (OrganizationStorageResourceKind.shared_prefix, "shared", "shared/", None),
         *[
             (
                 OrganizationStorageResourceKind.application_prefix,
                 app.name,
-                names.application_storage_prefix(app.id),
+                f"applications/{app.id.hex}/",
                 app,
             )
             for app in sorted(apps, key=lambda item: item.name)

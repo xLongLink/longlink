@@ -110,10 +110,7 @@ def install_audit_middleware(app: FastAPI) -> None:
     Middleware keeps the user context active for the whole request lifecycle.
     """
 
-    async def audit_context_middleware(
-        request: Request,
-        call_next: Callable[[Request], Awaitable[Response]],
-    ) -> Response:
+    async def audit_context_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         """Bind the request user ID for the duration of the request."""
 
         user_id: UUID | None = None

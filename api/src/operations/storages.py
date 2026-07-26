@@ -1,5 +1,5 @@
 from src import adapters
-from src.utils import jobs, names
+from src.utils import jobs
 from src.utils.jobs import operation
 from src.database.services import storage, organizations
 from src.database.models.operations import Operation
@@ -13,17 +13,15 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
     organization = await organizations.get(operation.target_id, include_deleted=True)
     if organization is None or organization.deleted_at is not None:
         return jobs.complete()
-    if organization.compute_id != operation.compute_id:
-        return jobs.fail("Organization does not match operation compute")
 
     # Resolve the immutable storage assignment used by this Organization.
     registry = await storage.get(organization.storage_id, include_deleted=True)
     if registry is None:
         return jobs.fail("Storage registry not found")
     object_storage = adapters.storage(registry)
-    bucket = names.organization_bucket(organization.id)
+    bucket = organization.id.hex
 
     # Converge the bucket and idempotent shared folder marker independently.
     await object_storage.create(bucket)
-    await object_storage.create_prefix(bucket, names.shared_storage_prefix())
+    await object_storage.create_prefix(bucket, "shared/")
     return jobs.complete()

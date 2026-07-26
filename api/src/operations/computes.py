@@ -48,25 +48,12 @@ async def reconcile_gateway(registry: ComputeRegistry, cluster: Kubernetes) -> R
     return await cluster.reconcile(desired, registry.proxy_secret, gateway_tls(registry), stage_tls)
 
 
-async def record_gateway(claimed: Operation, registry: ComputeRegistry, result: ReconcileResult) -> bool:
-    """Persist gateway state without regressing the observed Platform release."""
-
-    return await compute.record_success(
-        registry.id,
-        claimed.platform_version,
-        result.gateway_url,
-        result.gateway_ca_certificate,
-        result.gateway_tls_certificate,
-        result.gateway_tls_private_key,
-    )
-
-
 @operation("compute")
 async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     """Reconcile one compute's gateway and cluster-bootstrap resources."""
 
     # Load the compute root without loading provider or tenant lifecycle relationships.
-    registry = await compute.get(claimed.compute_id, include_deleted=True)
+    registry = await compute.get(claimed.target_id, include_deleted=True)
     if registry is None:
         return jobs.fail("Compute registry not found")
     if claimed.platform_version != env.VERSION:
@@ -78,7 +65,14 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     try:
         # Compute reconciliation is structurally unable to deploy or delete tenant resources.
         result = await reconcile_gateway(registry, cluster)
-        if not await record_gateway(claimed, registry, result):
+        if not await compute.record_success(
+            registry.id,
+            claimed.platform_version,
+            result.gateway_url,
+            result.gateway_ca_certificate,
+            result.gateway_tls_certificate,
+            result.gateway_tls_private_key,
+        ):
             return jobs.retry("Compute gateway state was not recorded")
         return jobs.complete()
     except Exception:

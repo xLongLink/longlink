@@ -6,11 +6,11 @@ from src.models.operations import OperationKind
 from src.database.models.users import User
 
 
-async def test_operations_endpoint_returns_compute_scoped_operations(
+async def test_operations_endpoint_returns_targeted_operations(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Return compute-scoped reconciliation Operations for admin views."""
+    """Return targeted Operations for admin views."""
 
     # Arrange
     client = clients[0]
@@ -28,7 +28,7 @@ async def test_operations_endpoint_returns_compute_scoped_operations(
     assert payload[0]["id"] == str(operation.id)
     assert payload[0]["kind"] == OperationKind.compute
     assert payload[0]["target_id"] == str(infrastructure.compute.id)
-    assert payload[0]["compute_id"] == str(infrastructure.compute.id)
+    assert "compute_id" not in payload[0]
     assert payload[0]["status"] == operation.status
     assert payload[0]["platform_version"] == env.VERSION
     assert "error" not in payload[0]

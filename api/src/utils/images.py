@@ -90,13 +90,13 @@ async def metadata(image: Image, envs: Mapping[str, str] | None = None) -> LongL
                 return None
 
             result = LongLinkMetadata(
+                image=f"{image.registry}/{image.repository}@{digest}",
                 sdk=labels.get("longlink.sdk"),
                 title=labels.get("longlink.name"),
                 digest=digest,
                 version=labels.get("longlink.version"),
                 description=labels.get("longlink.description"),
             )
-            result.image = f"{image.registry}/{image.repository}@{digest}"
 
             environments = labels.get("longlink.environments")
 

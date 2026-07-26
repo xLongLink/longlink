@@ -7,9 +7,8 @@ pytestmark = pytest.mark.no_db
 def test_longlink_metadata_tracks_runtime_image_outside_serialized_payload() -> None:
     """Keep resolved runtime image references out of public metadata serialization."""
 
-    # Runtime image references are assigned after label parsing and should not appear in the API payload.
-    metadata = LongLinkMetadata(title="Dashboard")
-    metadata.image = "ghcr.io/longlink/dashboard@sha256:manifest"
+    # Runtime image references are required after resolution but should not appear in the API payload.
+    metadata = LongLinkMetadata(image="ghcr.io/longlink/dashboard@sha256:manifest", title="Dashboard")
 
     assert metadata.image == "ghcr.io/longlink/dashboard@sha256:manifest"
     assert "image" not in metadata.model_dump(mode="json")
@@ -20,6 +19,7 @@ def test_longlink_metadata_serializes_environment_metadata() -> None:
 
     # Environment metadata keeps required runtime configuration visible to deploy forms.
     metadata = LongLinkMetadata(
+        image="ghcr.io/longlink/dashboard@sha256:manifest",
         title="Dashboard",
         environments=[EnvironmentMetadata(name="API_KEY", type="str", required=True, description="API key")],
     )

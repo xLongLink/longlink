@@ -76,13 +76,7 @@ def user_router_prefix(prefix: str) -> str:
 class LongLink(FastAPI):
     """FastAPI app that owns SDK service creation and shared request state."""
 
-    def __init__(
-        self,
-        env: Envs | None = None,
-        i18n: str | None = "/i18n",
-        pages: str | None = "/pages",
-        **kwargs: Any,
-    ) -> None:
+    def __init__(self, env: Envs | None = None, i18n: str | None = "/i18n", pages: str | None = "/pages", **kwargs: Any) -> None:
         """Build app, initialize managed services, mount routes, and serve the frontend."""
         super().__init__(**kwargs)
 

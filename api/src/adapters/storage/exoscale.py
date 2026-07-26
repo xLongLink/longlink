@@ -27,13 +27,7 @@ class Exoscale(Storage):
         # Configure the async control-plane client for the SOS endpoint's zone.
         self._api_url = f"https://api-{zone}.exoscale.com/v2"
 
-    async def credentials(
-        self,
-        name: str,
-        bucket: str,
-        read_prefixes: tuple[str, ...],
-        write_prefix: str,
-    ) -> StorageRuntimeCredentials:
+    async def credentials(self, name: str, bucket: str, read_prefixes: tuple[str, ...], write_prefix: str) -> StorageRuntimeCredentials:
         """Replace prior IAM material and issue a key scoped to one Application's prefixes.
 
         Cleanup-first provisioning makes retries converge without accumulating active keys or roles.

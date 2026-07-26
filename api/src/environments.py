@@ -29,7 +29,6 @@ class Env(BaseSettings):
     SMTP_PASSWORD: str | None = None
     SMTP_START_TLS: bool = True
     SMTP_USE_TLS: bool = False
-    SMTP_FROM: str | None = None
 
     # Control plane database URL
     DATABASE_URL: str

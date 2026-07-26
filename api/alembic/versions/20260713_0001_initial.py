@@ -362,7 +362,6 @@ def upgrade() -> None:
             nullable=False,
         ),
         sa.Column("target_id", sa.Uuid(), nullable=False),
-        sa.Column("compute_id", sa.Uuid(), nullable=False),
         sa.Column("failed", sa.Boolean(), nullable=False),
         sa.Column("attempt_count", sa.Integer(), nullable=False),
         sa.Column("platform_version", sa.String(length=128), nullable=False),
@@ -371,7 +370,6 @@ def upgrade() -> None:
         sa.Column("scheduled_at", longlink.database.types.UTCDateTime(), nullable=False),
         sa.Column("started_at", longlink.database.types.UTCDateTime(), nullable=True),
         sa.Column("stopped_at", longlink.database.types.UTCDateTime(), nullable=True),
-        sa.ForeignKeyConstraint(["compute_id"], ["compute_registries.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
     # Create application memberships after applications, organizations, and users.

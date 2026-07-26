@@ -38,7 +38,6 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     assert len(open_operations) == 1
     assert open_operations[0].kind == OperationKind.organization_create
     assert open_operations[0].target_id == organization.id
-    assert open_operations[0].compute_id == infrastructure.compute.id
     assert open_operations[0].platform_version == env.VERSION
     assert open_operations[0].status == OperationStatus.scheduled
 
@@ -170,7 +169,6 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
     }
     projection = next(item for item in open_operations if item.kind == OperationKind.organization_reconcile)
     assert projection.target_id == organization.id
-    assert open_operations[0].compute_id == infrastructure.compute.id
     assert open_operations[0].platform_version == env.VERSION
     assert open_operations[0].status == OperationStatus.scheduled
 
@@ -353,6 +351,6 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     }
     deletion = next(item for item in open_operations if item.id == operation.id)
     assert deletion.kind == OperationKind.organization_delete
-    assert deletion.compute_id == infrastructure.compute.id
+    assert deletion.target_id == organization.id
     assert deletion.platform_version == env.VERSION
     assert deletion.status == OperationStatus.scheduled

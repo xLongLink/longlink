@@ -21,12 +21,7 @@ def logo_path() -> str:
     return LOGO_PATH
 
 
-def organization_asset(
-    path: str,
-    content: bytes,
-    *,
-    default_content_type: str = "application/octet-stream",
-) -> OrganizationAsset:
+def organization_asset(path: str, content: bytes, *, default_content_type: str = "application/octet-stream") -> OrganizationAsset:
     """Return normalized organization asset data."""
 
     asset_path = normalize_asset_path(path)

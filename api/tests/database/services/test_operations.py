@@ -97,7 +97,11 @@ async def test_operations_service_enqueue_coalesces_each_kind_and_target() -> No
     assert replacement.id == application.id
     assert replacement.attempt_count == 1
     assert len(fetched) == 3
-    assert all(item.compute_id == compute.id for item in fetched)
+    assert {(item.kind, item.target_id) for item in fetched} == {
+        (OperationKind.compute, compute.id),
+        (OperationKind.application_create, first_application_id),
+        (OperationKind.organization_create, organization_id),
+    }
 
 
 async def test_operations_service_enqueue_separates_computes_and_reopens_completed_work() -> None:
@@ -113,7 +117,7 @@ async def test_operations_service_enqueue_separates_computes_and_reopens_complet
     claimed = await operations.claim_next()
     assert claimed is not None
     completed = await operations.complete(claimed.id, claimed.attempt_count)
-    replacement = await operations.enqueue(claimed.compute_id)
+    replacement = await operations.enqueue(claimed.target_id)
     open_operations = [operation for operation in await operations.fetch() if operation.stopped_at is None]
 
     # Assert
@@ -154,17 +158,22 @@ async def test_operations_service_claim_next_claims_oldest_available_operation()
 
 
 async def test_operations_service_claim_ignores_active_and_stopped_operations() -> None:
-    """Do not claim compute work with a current lease, terminal state, or exhausted budget."""
+    """Globally serialize active work and skip terminal or exhausted Operations."""
 
     # Arrange
     compute = await create_compute("local")
+    waiting_compute = await create_compute("waiting")
     await operations.enqueue(compute.id)
+    waiting = await operations.enqueue(waiting_compute.id)
 
     # Act
     active_claim = await operations.claim_next()
     second_active_claim = await operations.claim_next()
     assert active_claim is not None
     await operations.complete(active_claim.id, active_claim.attempt_count)
+    waiting_claim = await operations.claim_next()
+    assert waiting_claim is not None
+    await operations.complete(waiting_claim.id, waiting_claim.attempt_count)
     stopped_claim = await operations.claim_next()
 
     exhausted_compute = await create_compute("exhausted")
@@ -181,6 +190,7 @@ async def test_operations_service_claim_ignores_active_and_stopped_operations() 
 
     # Assert
     assert second_active_claim is None
+    assert waiting_claim.id == waiting.id
     assert stopped_claim is None
     assert exhausted_claim is None
     assert exhausted_row.status == OperationStatus.failed
@@ -303,7 +313,11 @@ async def test_operations_service_platform_upgrade_queues_after_locked_work(monk
     monkeypatch.setattr(env, "VERSION", "v1.1.0")
     await platform_setup.schedule_migrations()
     await platform_setup.schedule_migrations()
-    upgraded = next(item for item in await operations.fetch() if item.compute_id == compute.id and item.stopped_at is None)
+    upgraded = next(
+        item
+        for item in await operations.fetch()
+        if item.kind == OperationKind.compute and item.target_id == compute.id and item.stopped_at is None
+    )
     completed = await operations.complete(operation.id, claimed.attempt_count)
     replacement = await operations.claim_next()
     monkeypatch.setattr(env, "VERSION", "v1.0.0")

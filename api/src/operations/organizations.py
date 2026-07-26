@@ -1,5 +1,5 @@
 from src import adapters
-from src.utils import jobs, names
+from src.utils import jobs
 from src.operations import computes
 from src.utils.jobs import operation
 from longlink.shared import users as shared_users
@@ -52,8 +52,6 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
     organization = await organizations.get(claimed.target_id, include_deleted=True)
     if organization is None or organization.deleted_at is not None:
         return jobs.complete()
-    if organization.compute_id != claimed.compute_id:
-        return jobs.fail("Organization does not match operation compute")
     if organization.status == OrganizationStatus.running:
         return jobs.complete()
 
@@ -64,7 +62,7 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
     storage_registry = await storage.get(organization.storage_id, include_deleted=True)
     if storage_registry is None:
         return jobs.fail("Storage registry not found")
-    compute_registry = await compute.get(claimed.compute_id, include_deleted=True)
+    compute_registry = await compute.get(organization.compute_id, include_deleted=True)
     if compute_registry is None or compute_registry.deleted_at is not None:
         return jobs.fail("Compute registry not found")
 
@@ -81,9 +79,9 @@ async def create(claimed: Operation) -> jobs.OperationOutcome:
 
     # Initialize shared storage before Applications can be created for the Organization.
     object_storage = adapters.storage(storage_registry)
-    bucket = names.organization_bucket(organization.id)
+    bucket = organization.id.hex
     await object_storage.create(bucket)
-    await object_storage.create_prefix(bucket, names.shared_storage_prefix())
+    await object_storage.create_prefix(bucket, "shared/")
 
     # Install the Organization Namespace exactly once as part of its creation lifecycle.
     cluster = Kubernetes(compute_registry.kubeconfig)
@@ -106,8 +104,6 @@ async def reconcile(claimed: Operation) -> jobs.OperationOutcome:
     organization = await organizations.get(claimed.target_id, include_deleted=True)
     if organization is None or organization.deleted_at is not None:
         return jobs.complete()
-    if organization.compute_id != claimed.compute_id:
-        return jobs.fail("Organization does not match operation compute")
 
     # Apply idempotent SDK migrations before updating Platform-owned user rows.
     registry = await database.get(organization.database_id, include_deleted=True)
@@ -129,9 +125,7 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         return jobs.complete()
     if organization.deleted_at is None:
         return jobs.fail("Active Organizations cannot be deleted by lifecycle cleanup")
-    if organization.compute_id != claimed.compute_id:
-        return jobs.fail("Organization does not match operation compute")
-    compute_registry = await compute.get(claimed.compute_id, include_deleted=True)
+    compute_registry = await compute.get(organization.compute_id, include_deleted=True)
     if compute_registry is None:
         return jobs.fail("Compute registry not found")
     database_registry = await database.get(organization.database_id, include_deleted=True)
@@ -161,8 +155,8 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         await db.delete_schema(organization.id, application.id)
         await object_storage.revoke(application.id.hex)
         await object_storage.delete_prefix(
-            names.organization_bucket(organization.id),
-            names.application_storage_prefix(application.id),
+            organization.id.hex,
+            f"applications/{application.id.hex}/",
         )
         await applications.purge(application.id)
 
@@ -172,8 +166,15 @@ async def delete(claimed: Operation) -> jobs.OperationOutcome:
         str(compute_registry.id),
     )
     await db.delete_database(organization.id)
-    await object_storage.delete(names.organization_bucket(organization.id))
-    if not await computes.record_gateway(claimed, compute_registry, gateway_result):
+    await object_storage.delete(organization.id.hex)
+    if not await compute.record_success(
+        compute_registry.id,
+        claimed.platform_version,
+        gateway_result.gateway_url,
+        gateway_result.gateway_ca_certificate,
+        gateway_result.gateway_tls_certificate,
+        gateway_result.gateway_tls_private_key,
+    ):
         return jobs.retry("Organization gateway state was not recorded")
     await organizations.purge(organization.id)
     return jobs.complete()

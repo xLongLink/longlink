@@ -1,7 +1,7 @@
 import secrets
 from uuid import UUID
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from packaging.version import Version
@@ -9,6 +9,7 @@ from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus
 from src.database.session import session_scope
 from src.database.services import operations
+from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
@@ -148,6 +149,7 @@ async def record_success(
     gateway_ca_certificate: str | None,
     gateway_tls_certificate: str | None,
     gateway_tls_private_key: str | None,
+    satisfy_pending: bool = False,
 ) -> bool:
     """Persist successful compute state without allowing a Platform release regression."""
 
@@ -167,6 +169,20 @@ async def record_success(
         registry.gateway_tls_private_key = gateway_tls_private_key
         registry.version = platform_version
         registry.status = ComputeStatus.deleting if registry.deleted_at is not None else ComputeStatus.ready
+
+        # Inline reconciliation can atomically retire fallback work that it fully satisfied.
+        if satisfy_pending:
+            await session.execute(
+                update(Operation)
+                .where(
+                    Operation.kind == OperationKind.compute,
+                    Operation.target_id == compute_id,
+                    Operation.platform_version == platform_version,
+                    Operation.started_at.is_(None),
+                    Operation.stopped_at.is_(None),
+                )
+                .values(stopped_at=utcnow())
+            )
         await session.commit()
         return True
 
@@ -185,12 +201,7 @@ async def record_failure(compute_id: UUID) -> None:
         await session.commit()
 
 
-async def stage_gateway_tls(
-    compute_id: UUID,
-    ca_certificate: str,
-    certificate: str,
-    private_key: str,
-) -> bool:
+async def stage_gateway_tls(compute_id: UUID, ca_certificate: str, certificate: str, private_key: str) -> bool:
     """Persist new gateway trust while retaining the previously served CA during rollout."""
 
     # Lock the compute while staging replacement trust.

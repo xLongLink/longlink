@@ -1,6 +1,6 @@
 from uuid import UUID
 from datetime import timedelta
-from sqlalchemy import or_, select, update
+from sqlalchemy import or_, text, select, update
 from src.logger import logger
 from src.environments import env
 from packaging.version import Version
@@ -63,7 +63,6 @@ async def enqueue_in_session(
             await session.execute(
                 select(Operation.platform_version)
                 .where(
-                    Operation.compute_id == compute_id,
                     Operation.kind == kind,
                     Operation.target_id == target,
                 )
@@ -84,7 +83,6 @@ async def enqueue_in_session(
             await session.execute(
                 select(Operation)
                 .where(
-                    Operation.compute_id == compute_id,
                     Operation.kind == kind,
                     Operation.target_id == target,
                     Operation.stopped_at.is_(None),
@@ -110,7 +108,6 @@ async def enqueue_in_session(
         kind=kind,
         target_id=target,
         platform_version=platform_version,
-        compute_id=compute_id,
         scheduled_at=now,
     )
     session.add(operation)
@@ -118,12 +115,7 @@ async def enqueue_in_session(
     return operation
 
 
-async def enqueue(
-    compute_id: UUID,
-    *,
-    kind: OperationKind = OperationKind.compute,
-    target_id: UUID | None = None,
-) -> Operation:
+async def enqueue(compute_id: UUID, *, kind: OperationKind = OperationKind.compute, target_id: UUID | None = None) -> Operation:
     """Queue one registered Platform operation in a dedicated transaction."""
 
     # Convenience callers use the same transactional enqueue implementation as domain services.
@@ -139,68 +131,61 @@ async def enqueue(
 
 
 async def claim_next() -> Operation | None:
-    """Lock the oldest due Operation targeting this LongLink Platform release.
+    """Lock the oldest due Operation while globally serializing Platform work."""
 
-    Compute locking serializes related resource handlers across replicas, while lock expiry recovers crashed workers.
-    """
-
-    # Skip computes with active work while selecting the oldest due candidate without reversing aggregate lock order.
+    # A single active lease prevents conflicting provider and gateway mutations across Platform replicas.
     while True:
         async with session_scope() as session:
             now = utcnow()
-            active_compute_ids = select(Operation.compute_id).where(
-                Operation.stopped_at.is_(None),
-                Operation.started_at.is_not(None),
-                Operation.lease_expires_at > now,
-            )
-            candidate = (
+
+            # Use an immutable transaction mutex in PostgreSQL; local SQLite runs one scheduler process.
+            connection = await session.connection()
+            if connection.dialect.name == "postgresql":
+                await session.execute(text("SELECT pg_advisory_xact_lock(1280263244)"))
+            else:
+                queue_lock = (
+                    await session.execute(select(ComputeRegistry.id).order_by(ComputeRegistry.id).limit(1).with_for_update())
+                ).scalar_one_or_none()
+                if queue_lock is None:
+                    return None
+
+            active = (
                 await session.execute(
-                    select(Operation.id, Operation.compute_id)
+                    select(Operation.id)
                     .where(
                         Operation.stopped_at.is_(None),
-                        Operation.platform_version == env.VERSION,
-                        Operation.scheduled_at <= now,
-                        or_(Operation.lease_expires_at.is_(None), Operation.lease_expires_at <= now),
-                        Operation.compute_id.not_in(active_compute_ids),
+                        Operation.started_at.is_not(None),
+                        Operation.lease_expires_at > now,
                     )
-                    .order_by(Operation.created_at.asc())
                     .limit(1)
                 )
-            ).first()
-
-            # Return nothing when no operation is ready to run.
-            if candidate is None:
-                return None
-            operation_id, compute_id = candidate
-
-            # Follow the aggregate-first lock order used by desired-state mutations.
-            compute = (
-                await session.execute(select(ComputeRegistry.id).where(ComputeRegistry.id == compute_id).with_for_update())
             ).scalar_one_or_none()
-            if compute is None:
+            if active is not None:
                 return None
+
+            # Concurrent claimers contend for the same deterministic oldest due row.
             operation = (
                 await session.execute(
                     select(Operation)
                     .where(
-                        Operation.id == operation_id,
                         Operation.stopped_at.is_(None),
                         Operation.platform_version == env.VERSION,
                         Operation.scheduled_at <= now,
                         or_(Operation.lease_expires_at.is_(None), Operation.lease_expires_at <= now),
                     )
+                    .order_by(Operation.created_at.asc(), Operation.id.asc())
+                    .limit(1)
                     .with_for_update()
                 )
             ).scalar_one_or_none()
             if operation is None:
-                continue
+                return None
 
-            # Another claimant may have activated related work before this transaction acquired the compute lock.
+            # Recheck after candidate contention in case an external writer activated different work.
             active_operation = (
                 await session.execute(
                     select(Operation.id)
                     .where(
-                        Operation.compute_id == compute_id,
                         Operation.id != operation.id,
                         Operation.stopped_at.is_(None),
                         Operation.started_at.is_not(None),
@@ -210,7 +195,7 @@ async def claim_next() -> Operation | None:
                 )
             ).scalar_one_or_none()
             if active_operation is not None:
-                continue
+                return None
 
             # A worker that crashed on its final attempt leaves terminal failure for the next claimant to record.
             if operation.attempt_count >= OPERATION_ATTEMPT_LIMIT:
@@ -255,11 +240,7 @@ async def complete(operation_id: UUID, attempt_count: int) -> Operation | None:
         return operation
 
 
-async def defer(
-    operation_id: UUID,
-    attempt_count: int,
-    delay_seconds: float,
-) -> Operation | None:
+async def defer(operation_id: UUID, attempt_count: int, delay_seconds: float) -> Operation | None:
     """Unlock one operation and schedule a transient retry."""
 
     # Schedule the next attempt only while this worker still holds the lock.

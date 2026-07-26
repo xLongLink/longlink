@@ -3,7 +3,6 @@ from uuid import UUID
 from httpx2 import AsyncClient
 from factories import create_application, create_organization, create_ready_infrastructure
 from src.utils import mail as mail_module
-from src.utils import names
 from urllib.parse import urlencode
 from src.environments import env
 from src.models.roles import OrganizationRoles
@@ -45,7 +44,7 @@ async def test_create_organization_persists_desired_state_and_queues_creation(
     assert payload["organization"]["storage_id"] == str(infrastructure.storage.id)
     assert payload["operation"]["kind"] == OperationKind.organization_create
     assert payload["operation"]["target_id"] == str(organization_id)
-    assert payload["operation"]["compute_id"] == str(infrastructure.compute.id)
+    assert "compute_id" not in payload["operation"]
     assert payload["operation"]["platform_version"] == env.VERSION
     assert payload["operation"]["status"] == OperationStatus.scheduled
     persisted = await organizations.get(organization_id)
@@ -145,7 +144,7 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     assert retry_response.json()["operation"]["id"] == payload["operation"]["id"]
     assert payload["organization"]["id"] == str(organization.id)
     assert payload["organization"]["status"] == "deleting"
-    assert payload["operation"]["compute_id"] == str(infrastructure.compute.id)
+    assert "compute_id" not in payload["operation"]
     assert payload["operation"]["platform_version"] == env.VERSION
     assert payload["operation"]["status"] == OperationStatus.scheduled
     assert await organizations.get(organization.id) is None
@@ -161,7 +160,7 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     }
     deletion = next(item for item in recorded_operations if item.id == UUID(payload["operation"]["id"]))
     assert deletion.kind == OperationKind.organization_delete
-    assert deletion.compute_id == infrastructure.compute.id
+    assert deletion.target_id == organization.id
 
 
 async def test_delete_organization_requires_owner_or_platform_admin(
@@ -388,9 +387,9 @@ async def test_organization_storage_endpoint_returns_organization_prefixes(
 
             assert bucket_name == organization.id.hex
             assert prefix in {
-                names.shared_storage_prefix(),
-                names.application_storage_prefix(dashboard.id),
-                names.application_storage_prefix(reports.id),
+                "shared/",
+                f"applications/{dashboard.id.hex}/",
+                f"applications/{reports.id.hex}/",
             }
             return {"space_used": len(prefix), "object_count": 2}
 
@@ -417,9 +416,9 @@ async def test_organization_storage_endpoint_returns_organization_prefixes(
     assert payload[1]["application"]["icon"] == "layout-dashboard"
     assert payload[1]["application"]["description"] == "Dashboard app"
     assert payload[0]["bucket_name"] == organization.id.hex
-    assert payload[0]["prefix"] == names.shared_storage_prefix()
-    assert payload[1]["prefix"] == names.application_storage_prefix(dashboard.id)
-    assert payload[0]["space_used"] == len(names.shared_storage_prefix())
+    assert payload[0]["prefix"] == "shared/"
+    assert payload[1]["prefix"] == f"applications/{dashboard.id.hex}/"
+    assert payload[0]["space_used"] == len("shared/")
     assert payload[0]["object_count"] == 2
 
 
@@ -747,7 +746,6 @@ async def test_update_organization_member_changes_role(
     recorded_operations = await operations.fetch()
     assert len(recorded_operations) == 2
     projection = next(item for item in recorded_operations if item.kind == OperationKind.organization_reconcile)
-    assert projection.compute_id == infrastructure.compute.id
     assert projection.target_id == organization.id
 
 

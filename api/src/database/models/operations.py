@@ -29,7 +29,6 @@ class Operation(SQLModel, table=True):
         )
     )
     target_id: UUID = Field(nullable=False)
-    compute_id: UUID = Field(foreign_key="compute_registries.id")
 
     # State
     failed: bool = Field(default=False, nullable=False)

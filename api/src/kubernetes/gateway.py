@@ -19,7 +19,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 if TYPE_CHECKING:
     from src.kubernetes.reconcile import DesiredGatewayRoute
 
-TEMPLATES = files("src.kubernetes.templates")
+PLATFORM_TEMPLATES = files("src.kubernetes.templates").joinpath("platform")
 TEMPLATE_REVISION = "2026-07-24.1"
 GATEWAY_NAME = "longlink-gateway"
 GATEWAY_NAMESPACE = "longlink-system"
@@ -63,7 +63,7 @@ class Gateway:
         """Render the exclusively claimed LongLink system Namespace."""
 
         # Hash the source so edits to namespace metadata are visible in desired state.
-        source = TEMPLATES.joinpath("system_namespace.yml")
+        source = PLATFORM_TEMPLATES.joinpath("system_namespace.yml")
         runtime_revision = hashlib.sha256(source.read_bytes()).hexdigest()
         return templates.readyml_list(
             source,
@@ -80,9 +80,9 @@ class Gateway:
         """
 
         # Service changes are independent from gateway Pod configuration and must not trigger a workload rollout.
-        runtime_revision = hashlib.sha256(TEMPLATES.joinpath("gateway_service.yml").read_bytes()).hexdigest()
+        runtime_revision = hashlib.sha256(PLATFORM_TEMPLATES.joinpath("gateway_service.yml").read_bytes()).hexdigest()
         return templates.readyml_list(
-            TEMPLATES.joinpath("gateway_service.yml"),
+            PLATFORM_TEMPLATES.joinpath("gateway_service.yml"),
             compute_id=compute_id,
             platform_version=platform_version,
             runtime_revision=runtime_revision,
@@ -163,7 +163,7 @@ class Gateway:
             },
         ]
         config = templates.readyml_list(
-            TEMPLATES.joinpath("envoy.yml"),
+            PLATFORM_TEMPLATES.joinpath("envoy.yml"),
             routes=json.dumps(rendered_routes, separators=(",", ":")),
             clusters=json.dumps(clusters, separators=(",", ":")),
         )[0]
@@ -273,7 +273,7 @@ class Gateway:
         """
 
         # Hash rendered behavior and secret material so every relevant change rolls the gateway pods.
-        sources = "".join(TEMPLATES.joinpath(name).read_text(encoding="utf-8") for name in ("envoy.yml", "gateway.yml"))
+        sources = "".join(PLATFORM_TEMPLATES.joinpath(name).read_text(encoding="utf-8") for name in ("envoy.yml", "gateway.yml"))
         revision_input = json.dumps(
             {
                 "ca_certificate": tls.ca_certificate,
@@ -291,7 +291,7 @@ class Gateway:
             hashlib.sha256,
         ).hexdigest()
         manifests = templates.readyml_list(
-            TEMPLATES.joinpath("gateway.yml"),
+            PLATFORM_TEMPLATES.joinpath("gateway.yml"),
             ca_certificate=json.dumps(tls.ca_certificate),
             envoy_config=json.dumps(envoy_config),
             gateway_secret=json.dumps(proxy_secret),

@@ -1,8 +1,9 @@
 import jwt
+from pwdlib import PasswordHash
 from fastapi import Cookie, Depends, Request, Response, APIRouter, HTTPException, BackgroundTasks
 from sqlmodel import col, select
 from src.auth import SessionAccountsService, get_auth_session
-from src.utils import mail, token, passwords
+from src.utils import mail, token
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from src.models.auth import EmailPayload, TokenPayload, PasswordLogin, RegistrationComplete, PasswordResetComplete
@@ -17,12 +18,7 @@ router = APIRouter()
 
 
 @router.post("/api/auth/password/login", status_code=204, tags=["auth"])
-async def password_login(
-    payload: PasswordLogin,
-    request: Request,
-    response: Response,
-    session: AsyncSession = Depends(get_auth_session),
-):
+async def password_login(payload: PasswordLogin, request: Request, response: Response, session: AsyncSession = Depends(get_auth_session)):
     """Authenticate a local account and create one revocable browser session."""
 
     email = str(payload.email)
@@ -31,15 +27,13 @@ async def password_login(
     statement = select(User).where(func.lower(col(User.email)) == func.lower(email))
     user = (await session.execute(statement)).scalar_one_or_none()
     if user is None:
-        passwords.hash(payload.password)
+        PasswordHash.recommended().hash(payload.password)
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
 
-    # Verify the supplied password and upgrade a successful legacy hash in the same transaction.
-    verified, updated_hash = passwords.verify(payload.password, user.hashed_password)
+    # Verify the supplied password before issuing a session.
+    verified = PasswordHash.recommended().verify(payload.password, user.hashed_password)
     if not verified or user.deleted_at is not None:
         raise HTTPException(status_code=400, detail="LOGIN_BAD_CREDENTIALS")
-    if updated_hash is not None:
-        user.hashed_password = updated_hash
 
     # Issue the session and accept email-bound Organization access atomically.
     credential = token.create_access_token(session, user)
@@ -88,11 +82,7 @@ async def request_password_reset(
 
 
 @router.post("/api/auth/reset-password/verify", status_code=204, tags=["auth"])
-async def verify_password_reset_token(
-    payload: TokenPayload,
-    response: Response,
-    session: AsyncSession = Depends(get_auth_session),
-):
+async def verify_password_reset_token(payload: TokenPayload, response: Response, session: AsyncSession = Depends(get_auth_session)):
     """Exchange an emailed reset bearer token for browser-only proof."""
 
     # Validate the bearer credential before moving it into a restricted cookie.
@@ -144,7 +134,7 @@ async def reset_password(
         raise HTTPException(status_code=400, detail="RESET_PASSWORD_BAD_TOKEN") from exc
 
     # Replace the credential and revoke every existing browser session atomically.
-    user.hashed_password = passwords.hash(payload.password)
+    user.hashed_password = PasswordHash.recommended().hash(payload.password)
     await token.revoke_user_access_tokens(session, user.id)
     await session.commit()
 
@@ -160,11 +150,7 @@ async def reset_password(
 
 
 @router.post("/api/auth/register", status_code=202, tags=["auth"])
-async def request_registration(
-    payload: EmailPayload,
-    background_tasks: BackgroundTasks,
-    session: AsyncSession = Depends(get_auth_session),
-):
+async def request_registration(payload: EmailPayload, background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_auth_session)):
     """Send a stateless registration link when the email has no account."""
 
     email = str(payload.email)
@@ -205,10 +191,7 @@ async def verify_registration_token(payload: TokenPayload, response: Response):
 
 
 @router.get("/api/auth/register/setup", response_model=EmailPayload, tags=["auth"])
-async def get_registration_setup(
-    response: Response,
-    registration_token: str | None = Cookie(default=None, alias="longlink_registration"),
-):
+async def get_registration_setup(response: Response, registration_token: str | None = Cookie(default=None, alias="longlink_registration")):
     """Restore verified registration state from its browser-only cookie."""
 
     # Refreshes never need the emailed credential after its initial exchange.
@@ -250,7 +233,7 @@ async def complete_registration(
     user = User(
         name=f"{payload.name} {payload.surname}",
         email=email,
-        hashed_password=passwords.hash(payload.password),
+        hashed_password=PasswordHash.recommended().hash(payload.password),
         role=PlatformRoles.administrator if is_initial_admin else PlatformRoles.user,
     )
     session.add(user)

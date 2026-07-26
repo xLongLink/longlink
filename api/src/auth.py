@@ -99,9 +99,7 @@ async def current_optional_user_token(
     return user, credential
 
 
-async def current_authenticated_user(
-    authentication: tuple[User | None, str | None] = Depends(current_optional_user_token),
-) -> User:
+async def current_authenticated_user(authentication: tuple[User | None, str | None] = Depends(current_optional_user_token)) -> User:
     """Require and return one active authenticated LongLink user."""
 
     # Convert missing, expired, and revoked sessions into one stable authentication error.

@@ -80,10 +80,6 @@ function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
                         <Text type="supporting">{t('columns.target')}</Text>{' '}
                         <Text type="code">{operation.target_id}</Text>
                     </Text>
-                    <Text>
-                        <Text type="supporting">{t('admin.computeTitle')}</Text>{' '}
-                        <Text type="code">{operation.compute_id}</Text>
-                    </Text>
                     <HStack gap={3}>
                         <Text type="supporting">Platform {operation.platform_version}</Text>
                         <Text type="supporting">Attempts {operation.attempt_count}</Text>

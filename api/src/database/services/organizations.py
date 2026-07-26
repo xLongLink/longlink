@@ -41,23 +41,6 @@ async def fetch() -> list[Organization]:
         return result.scalars().all()
 
 
-async def for_compute(compute_id: UUID) -> list[Organization]:
-    """Return all Organizations assigned to one compute target."""
-
-    # Reconciliation requires active and pending-removal rows in one snapshot.
-    async with session_scope() as session:
-        statement = (
-            select(Organization)
-            .options(
-                joinedload(Organization.database),
-                joinedload(Organization.storage),
-            )
-            .where(Organization.compute_id == compute_id)
-        )
-        result = await session.execute(statement)
-        return result.scalars().all()
-
-
 async def set_runtime(organization_id: UUID, status: OrganizationStatus) -> None:
     """Persist organization runtime state observed by reconciliation."""
 
@@ -444,62 +427,45 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
             organization.updated_at = now
             organization.updated_id = user.id
 
-            applications_result = await session.execute(
-                select(Application).where(
+            # Apply the same deletion audit state to every active nested row without loading each object.
+            tombstone = {
+                "deleted_at": now,
+                "deleted_id": user.id,
+                "updated_at": now,
+                "updated_id": user.id,
+            }
+            await session.execute(
+                sql_update(Application)
+                .where(
                     Application.organization_id == organization_id,
                     Application.deleted_at.is_(None),
                 )
+                .values(status=ApplicationStatus.deleting, **tombstone)
             )
-
-            # Mark active Applications as deleted.
-            for application in applications_result.scalars().all():
-                application.status = ApplicationStatus.deleting
-                application.deleted_at = now
-                application.deleted_id = user.id
-                application.updated_at = now
-                application.updated_id = user.id
-
-            user_applications_result = await session.execute(
-                select(UserApplication).where(
+            await session.execute(
+                sql_update(UserApplication)
+                .where(
                     UserApplication.organization_id == organization_id,
                     UserApplication.deleted_at.is_(None),
                 )
+                .values(**tombstone)
             )
-
-            # Mark Application memberships as deleted.
-            for membership in user_applications_result.scalars().all():
-                membership.deleted_at = now
-                membership.deleted_id = user.id
-                membership.updated_at = now
-                membership.updated_id = user.id
-
-            user_organizations_result = await session.execute(
-                select(UserOrganization).where(
+            await session.execute(
+                sql_update(UserOrganization)
+                .where(
                     UserOrganization.organization_id == organization_id,
                     UserOrganization.deleted_at.is_(None),
                 )
+                .values(**tombstone)
             )
-
-            # Mark Organization memberships as deleted.
-            for membership in user_organizations_result.scalars().all():
-                membership.deleted_at = now
-                membership.deleted_id = user.id
-                membership.updated_at = now
-                membership.updated_id = user.id
-
-            invitations_result = await session.execute(
-                select(OrganizationInvitation).where(
+            await session.execute(
+                sql_update(OrganizationInvitation)
+                .where(
                     OrganizationInvitation.organization_id == organization_id,
                     OrganizationInvitation.deleted_at.is_(None),
                 )
+                .values(**tombstone)
             )
-
-            # Mark active invitations as deleted.
-            for invitation in invitations_result.scalars().all():
-                invitation.deleted_at = now
-                invitation.deleted_id = user.id
-                invitation.updated_at = now
-                invitation.updated_id = user.id
 
         # Tombstones and their reconciliation request commit atomically.
         compute.updated_id = user.id

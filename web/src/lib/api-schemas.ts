@@ -203,7 +203,6 @@ export const apiOperationSchema = z.object({
         'organization.reconcile',
     ]),
     target_id: z.string(),
-    compute_id: z.string(),
     status: z.enum(['scheduled', 'active', 'completed', 'failed']),
     platform_version: z.string(),
     attempt_count: z.number().int().nonnegative(),

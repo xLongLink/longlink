@@ -45,20 +45,6 @@ async def fetch() -> list[Application]:
         return result.scalars().all()
 
 
-async def for_compute(compute_id: UUID) -> list[Application]:
-    """Return all Applications belonging to Organizations on one compute target."""
-
-    # Reconciliation requires active and pending-removal rows in one snapshot.
-    async with session_scope() as session:
-        statement = (
-            select(Application)
-            .join(Organization, Organization.id == Application.organization_id)
-            .where(Organization.compute_id == compute_id)
-        )
-        result = await session.execute(statement)
-        return result.scalars().all()
-
-
 async def gateway_routes(compute_id: UUID) -> list[tuple[UUID, str]]:
     """Return stable Service route identities for running Applications on one compute."""
 
@@ -412,7 +398,6 @@ async def update_runtime(
     description: str | None = None,
     digest: str | None = None,
     icon: str | None = None,
-    envs: dict[str, str] | None = None,
 ) -> Application | None:
     """Persist runtime metadata resolved by lifecycle deployment without reviving a deleted Application."""
 
@@ -434,10 +419,6 @@ async def update_runtime(
         application.status = ApplicationStatus.creating
         application.image = image
         application.icon = icon
-
-        # Preserve existing environment configuration when callers do not replace it.
-        if envs is not None:
-            application.envs = dict(envs)
         await session.commit()
         return application
 

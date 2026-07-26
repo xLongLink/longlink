@@ -1,4 +1,4 @@
-from pydantic import Field, BaseModel, PrivateAttr
+from pydantic import Field, BaseModel
 
 
 class EnvironmentMetadata(BaseModel):
@@ -15,7 +15,7 @@ class LongLinkMetadata(BaseModel):
     """Structured metadata extracted from a built image's LongLink labels."""
 
     # Runtime
-    _image: str | None = PrivateAttr(default=None)
+    image: str = Field(exclude=True)
 
     # Metadata
     sdk: str | None = None
@@ -26,15 +26,3 @@ class LongLinkMetadata(BaseModel):
 
     # Relationships
     environments: list[EnvironmentMetadata] = Field(default_factory=list)
-
-    @property
-    def image(self) -> str | None:
-        """Return the resolved runtime image reference."""
-
-        return self._image
-
-    @image.setter
-    def image(self, value: str | None) -> None:
-        """Set the resolved runtime image reference."""
-
-        self._image = value

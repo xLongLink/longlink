@@ -159,7 +159,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     assert application["status"] == "creating"
     assert application["description"] == "Dashboard app"
     assert application["image"] == "ghcr.io/longlink/dashboard:latest"
-    assert operation["compute_id"] == str(infrastructure.compute.id)
+    assert "compute_id" not in operation
     assert operation["kind"] == OperationKind.application_create
     assert operation["platform_version"] == env.VERSION
     assert operation["status"] == OperationStatus.scheduled
@@ -415,7 +415,7 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
     assert retry_response.json()["operation"]["id"] == payload["operation"]["id"]
     assert payload["application"]["id"] == str(app.id)
     assert payload["application"]["status"] == "deleting"
-    assert payload["operation"]["compute_id"] == str(infrastructure.compute.id)
+    assert "compute_id" not in payload["operation"]
     assert payload["operation"]["kind"] == OperationKind.application_delete
     assert payload["operation"]["platform_version"] == env.VERSION
     assert payload["operation"]["status"] == OperationStatus.scheduled
