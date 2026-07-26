@@ -72,7 +72,13 @@ async def enqueue_in_session(
         if compute is None:
             raise ValueError("Operation compute registry not found")
     versions = (
-        (await session.execute(select(Operation.platform_version).where(Operation.kind == kind, Operation.target_id == target).distinct()))
+        (
+            await session.execute(
+                select(Operation.platform_version)
+                .where(Operation.kind == kind, Operation.target_id == target, Operation.scope == scope)
+                .distinct()
+            )
+        )
         .scalars()
         .all()
     )
@@ -86,20 +92,17 @@ async def enqueue_in_session(
             .where(
                 Operation.kind == kind,
                 Operation.target_id == target,
+                Operation.scope == scope,
                 Operation.stopped_at.is_(None),
             )
             .with_for_update()
         )
     ).scalar_one_or_none()
 
-    # Application reconciliation dominates Platform work; complete work dominates and targeted work is unioned.
-    effective_scope = scope
+    # Organization lifecycle work dominates targeted Application work, while targeted IDs are unioned.
     effective_application_ids: list[str] | None = requested_ids
-    if existing is not None and (existing.scope == ReconciliationScope.application or scope == ReconciliationScope.application):
-        effective_scope = ReconciliationScope.application
-        if (existing.scope == ReconciliationScope.application and existing.application_ids is None) or (
-            scope == ReconciliationScope.application and requested_ids is None
-        ):
+    if existing is not None and scope == ReconciliationScope.application:
+        if existing.application_ids is None or requested_ids is None:
             effective_application_ids = None
         else:
             effective_application_ids = sorted(set(existing.application_ids or []) | set(requested_ids or []))
@@ -107,7 +110,7 @@ async def enqueue_in_session(
     # Desired-state changes and release upgrades supersede active attempts and remove inherited retry delays.
     if existing is not None:
         version_changed = Version(platform_version) > Version(existing.platform_version)
-        work_changed = existing.scope != effective_scope or existing.application_ids != effective_application_ids
+        work_changed = existing.application_ids != effective_application_ids
         if not desired_change and not version_changed and not work_changed:
             return existing
         now = utcnow()
@@ -119,7 +122,6 @@ async def enqueue_in_session(
             existing.stopped_at = now
             existing.lease_expires_at = None
         else:
-            existing.scope = effective_scope
             existing.application_ids = effective_application_ids
             if version_changed:
                 existing.platform_version = platform_version
@@ -131,7 +133,7 @@ async def enqueue_in_session(
     # New work starts ready for the Platform release that owns the compute target.
     operation = Operation(
         kind=kind,
-        scope=effective_scope,
+        scope=scope,
         target_id=target,
         application_ids=effective_application_ids,
         platform_version=platform_version,

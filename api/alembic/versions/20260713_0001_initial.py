@@ -342,7 +342,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("user_id", "organization_id"),
     )
 
-    # Create one coalesced reconciliation operation per kind and resource target.
+    # Create one coalesced reconciliation operation per kind, resource target, and scope.
     op.create_table(
         "operations",
         sa.Column("id", sa.Uuid(), nullable=False),
@@ -371,9 +371,9 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
-        "uq_operations_open_kind_target_id",
+        "uq_operations_open_kind_target_scope",
         "operations",
-        ["kind", "target_id"],
+        ["kind", "target_id", "scope"],
         unique=True,
         postgresql_where=sa.text("stopped_at IS NULL"),
         sqlite_where=sa.text("stopped_at IS NULL"),

@@ -44,19 +44,23 @@ def test_gateway_manifests_include_exact_auth_tls_and_config_resources() -> None
     """Render gateway resources with exact Secrets and rollout annotations."""
 
     # Arrange
+    gateway = Gateway()
     tls = GatewayTLSMaterial(ca_certificate="ca", certificate="certificate", private_key="private-key")
 
     # Act
-    manifests = Gateway().manifests("compute-id", "proxy-secret", tls, "envoy-config", "v1.2.3")
+    service = gateway.service("compute-id", "v1.2.3")
+    manifests = gateway.manifests("compute-id", "proxy-secret", tls, "envoy-config", "v1.2.3")
 
     # Assert
+    assert service["kind"] == "Service"
+    assert service["metadata"]["labels"]["longlink.io/resource-scope"] == "platform"
+    assert service["metadata"]["annotations"]["longlink.io/runtime-revision"] != manifests.runtime_revision
     assert manifests.auth_secret["kind"] == "Secret"
     assert manifests.auth_secret["stringData"] == {"gateway-secret": "proxy-secret"}
     assert manifests.tls_secret["stringData"] == {"ca.crt": "ca", "tls.crt": "certificate", "tls.key": "private-key"}
     assert manifests.config_map["data"] == {"envoy.yaml": "envoy-config"}
     assert manifests.deployment["metadata"]["labels"]["longlink.io/resource-scope"] == "platform"
     assert manifests.deployment["metadata"]["annotations"]["longlink.io/runtime-revision"] == manifests.runtime_revision
-    assert manifests.service["metadata"]["annotations"]["longlink.io/runtime-revision"] == manifests.runtime_revision
     container = manifests.deployment["spec"]["template"]["spec"]["containers"][0]
     assert container["startupProbe"] == {
         "httpGet": {"path": "/ready", "port": "gateway", "scheme": "HTTPS"},

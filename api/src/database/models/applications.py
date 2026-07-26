@@ -59,16 +59,11 @@ class Application(SQLModel, table=True):
         sa_column=Column(SAEnum(ApplicationStatus, name="application_status_enum", native_enum=False), nullable=False),
     )
 
-    # User
+    # Audit
     created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
     created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Application.created_id"})
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    updated_at: datetime = Field(
-        default_factory=utcnow,
-        nullable=False,
-        sa_type=UTCDateTime,
-        sa_column_kwargs={"onupdate": utcnow},
-    )
+    updated_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime, sa_column_kwargs={"onupdate": utcnow})
     updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "Application.updated_id"})
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)

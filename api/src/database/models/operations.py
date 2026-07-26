@@ -11,15 +11,16 @@ from longlink.database.types import UTCDateTime
 class Operation(SQLModel, table=True):
     """Persist one durable Platform reconciliation request and its worker lock.
 
-    Each kind and target pair admits one open request; lock expiry and attempt generations fence API replicas.
+    Each kind, target, and scope admits one open request; lock expiry and attempt generations fence API replicas.
     """
 
     __tablename__: ClassVar[str] = "operations"
     __table_args__ = (
         Index(
-            "uq_operations_open_kind_target_id",
+            "uq_operations_open_kind_target_scope",
             "kind",
             "target_id",
+            "scope",
             unique=True,
             postgresql_where=text("stopped_at IS NULL"),
             sqlite_where=text("stopped_at IS NULL"),

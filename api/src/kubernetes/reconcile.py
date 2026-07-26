@@ -55,7 +55,7 @@ class DesiredApplication:
 class DesiredCompute:
     """Describe one scoped desired-state snapshot for a compute target.
 
-    Complete Application snapshots prune omitted tenant resources, targeted snapshots prune only selected Application IDs, and Platform
+    Application snapshots mutate only explicit lifecycle targets, Organization-complete snapshots manage tenant boundaries, and Platform
     snapshots leave tenant resources untouched. Deleting snapshots must be empty.
     """
 
@@ -65,6 +65,7 @@ class DesiredCompute:
     applications: tuple[DesiredApplication, ...]
     application_ids: tuple[UUID, ...] | None = None
     deleting: bool = False
+    organizations_complete: bool = False
     scope: ReconciliationScope = ReconciliationScope.application
 
 
@@ -212,7 +213,7 @@ def _deployment_shape_matches(desired: KubernetesDocument, actual: APIObject) ->
 
 
 class Reconciler:
-    """Converge one connected cluster to a compute target's complete desired state."""
+    """Converge one compute's gateway and only its explicitly scoped Application resources."""
 
     def __init__(self, resources: KubernetesResources) -> None:
         """Initialize reconciliation with one cluster resource boundary."""
@@ -260,17 +261,17 @@ class Reconciler:
             )
 
         # Create the standard public Service before workloads because cloud address allocation is asynchronous.
-        initial_service = self._gateway.service(compute_id, self._gateway.initial_service_revision(), platform_version)
-        await self._apply(initial_service, fence)
+        gateway_service = self._gateway.service(compute_id, platform_version)
+        await self._apply(gateway_service, fence)
         endpoint = await self._wait_for_gateway_endpoint()
         tls = self._gateway.tls(compute_id, endpoint, existing_tls)
         if tls != existing_tls and stage_tls is not None:
             await self._check_fence(fence)
             await stage_tls(tls)
 
-        # Complete Application work owns Organization boundaries; targeted work assumes its parents are already ready.
+        # Application lifecycle work owns workloads; Organization lifecycle work also owns Namespace boundaries.
         if desired.scope == ReconciliationScope.application:
-            if desired.application_ids is None:
+            if desired.organizations_complete:
                 organization_manifests = [
                     self._applications.organization_manifests(organization, compute_id, platform_version)
                     for organization in sorted(desired.organizations, key=lambda item: item.slug)
@@ -297,7 +298,6 @@ class Reconciler:
         _set_pod_annotation(gateway_manifests.deployment, "longlink.io/tls-resource-version", _resource_version(tls_secret))
         _set_pod_annotation(gateway_manifests.deployment, "longlink.io/config-resource-version", _resource_version(config_map))
         await self._apply_deployment(gateway_manifests.deployment, fence)
-        await self._apply(gateway_manifests.service, fence)
         await self._apply(gateway_manifests.network_policy, fence)
 
         # Pruning starts only after the desired gateway revision is observed and fully ready.
@@ -319,20 +319,32 @@ class Reconciler:
         """Validate desired identities, relationships, and Kubernetes-safe values."""
 
         # A deleting compute target must present an empty desired graph.
-        if desired.deleting and (desired.routes or desired.organizations or desired.applications or desired.application_ids is not None):
+        if desired.deleting and (
+            desired.routes
+            or desired.organizations
+            or desired.applications
+            or desired.application_ids is not None
+            or desired.organizations_complete
+        ):
             raise ValueError("Deleting compute desired state must not contain routes or resources")
         if desired.deleting and desired.scope != ReconciliationScope.application:
             raise ValueError("Deleting compute desired state requires Application scope")
 
         # Platform snapshots carry gateway routes only and cannot hide ignored Application desired state.
         if desired.scope == ReconciliationScope.platform and (
-            desired.organizations or desired.applications or desired.application_ids is not None
+            desired.organizations or desired.applications or desired.application_ids is not None or desired.organizations_complete
         ):
             raise ValueError("Platform desired state must not contain Organization or Application resources")
 
-        # Explicit Application targets must be non-empty and unique.
+        # Non-deleting Application work must identify exactly which workloads it may mutate.
+        if desired.scope == ReconciliationScope.application and not desired.deleting and desired.application_ids is None:
+            raise ValueError("Application desired state requires explicit lifecycle targets")
+
+        # Explicit Application targets must be unique and can be empty only for Organization lifecycle work.
         target_ids = set(desired.application_ids or ())
-        if desired.application_ids is not None and (not target_ids or len(target_ids) != len(desired.application_ids)):
+        if desired.application_ids is not None and (
+            len(target_ids) != len(desired.application_ids) or (not target_ids and not desired.organizations_complete)
+        ):
             raise ValueError("Targeted Application desired state requires unique Application IDs")
 
         # Active gateways use the platform's URL-safe generated bearer secret in an init substitution.
@@ -381,12 +393,9 @@ class Reconciler:
                 raise TypeError(f"Desired application {application.id} environment values must be strings")
             application_ids.add(application.id)
 
-        # Complete work publishes exactly its workloads; targeted work preserves unrelated routes.
+        # Lifecycle work publishes only its targeted workloads while preserving unrelated routes.
         if desired.scope == ReconciliationScope.application:
             expected_routes = {(application.id, application.namespace) for application in desired.applications}
-            routes = {(route.id, route.namespace) for route in desired.routes}
-            if desired.application_ids is None and routes != expected_routes:
-                raise ValueError("Application desired state must provide exactly one gateway route per Application")
             if desired.application_ids is not None:
                 targeted_routes = {(route.id, route.namespace) for route in desired.routes if route.id in target_ids}
                 if not application_ids.issubset(target_ids) or targeted_routes != expected_routes:
@@ -540,7 +549,7 @@ class Reconciler:
         desired: DesiredCompute,
         fence: Callable[[], Awaitable[None]] | None,
     ) -> tuple[set[tuple[str, str]], set[str]]:
-        """Prune selected Application omissions or the complete omitted tenant graph."""
+        """Prune explicit Application lifecycle targets and Organization boundary omissions."""
 
         compute_id = str(desired.id)
         desired_namespaces = {organization.slug for organization in desired.organizations}
@@ -595,8 +604,8 @@ class Reconciler:
                     await self._resources.delete(resource_class, resource.name, namespace.name, _uid(resource))
 
         removed_namespaces: set[str] = set()
-        if desired.application_ids is None:
-            # Full reconciliation prunes Organization policies and Namespaces omitted from desired state.
+        if desired.organizations_complete or desired.deleting:
+            # Organization lifecycle and compute deletion prune omitted policies and Namespaces.
             for namespace in organization_namespaces:
                 policies = await self._resources.list_owned(
                     NetworkPolicy,

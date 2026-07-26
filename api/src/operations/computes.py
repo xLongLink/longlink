@@ -24,38 +24,7 @@ Fence = Callable[[], Awaitable[None]]
 StageTLS = Callable[[GatewayTLSMaterial], Awaitable[None]]
 
 
-async def reconcile_platform(
-    compute_registry: ComputeRegistry,
-    organization_rows: list[Organization],
-    application_rows: list[Application],
-    cluster: Kubernetes,
-    existing_tls: GatewayTLSMaterial | None,
-    fence: Fence,
-    stage_tls: StageTLS,
-) -> ReconcileResult:
-    """Reconcile Platform resources while preserving the complete active gateway route set."""
-
-    # Platform routes use persisted, resolved Applications without provisioning their runtime resources.
-    active_organizations = {item.id: item for item in organization_rows if item.deleted_at is None}
-    routes = tuple(
-        DesiredGatewayRoute(id=application.id, namespace=active_organizations[application.organization_id].slug)
-        for application in sorted(application_rows, key=lambda item: (item.organization_id, item.slug))
-        if application.deleted_at is None
-        and application.digest is not None
-        and application.organization_id in active_organizations
-    )
-    desired = DesiredCompute(
-        id=compute_registry.id,
-        routes=routes,
-        organizations=(),
-        applications=(),
-        deleting=compute_registry.deleted_at is not None,
-        scope=ReconciliationScope.platform,
-    )
-    return await cluster.reconcile(desired, compute_registry.proxy_secret, existing_tls, fence, stage_tls)
-
-
-async def reconcile_applications(
+async def apply_application_lifecycle(
     operation: Operation,
     compute_registry: ComputeRegistry,
     organization_rows: list[Organization],
@@ -66,19 +35,38 @@ async def reconcile_applications(
     fence: Fence,
     stage_tls: StageTLS,
 ) -> tuple[ReconcileResult, list[UUID]]:
-    """Reconcile complete or explicitly targeted Application state and its Platform dependencies."""
+    """Provision creating Applications and clean explicit Application or Organization tombstones."""
 
-    # Complete work owns the full tenant graph; targeted work selects only requested rows and parent providers.
-    complete = application_ids is None
+    # Organization lifecycle work owns tenant boundaries; targeted work owns only requested Application lifecycles.
+    organization_lifecycle = application_ids is None
     organizations_by_id = {item.id: item for item in organization_rows}
     active_organizations = {item.id: item for item in organization_rows if item.deleted_at is None}
     selected_applications = [
-        item for item in application_rows if complete or (application_ids is not None and item.id in application_ids)
+        item
+        for item in application_rows
+        if (item.status == ApplicationStatus.creating or item.deleted_at is not None)
+        and (organization_lifecycle or (application_ids is not None and item.id in application_ids))
     ]
+    lifecycle_ids = {item.id for item in selected_applications}
+    if application_ids is not None:
+        persisted_ids = {item.id for item in application_rows}
+        lifecycle_ids.update(application_ids - persisted_ids)
     selected_organization_ids = {item.organization_id for item in selected_applications}
     provider_organizations = (
-        organization_rows if complete else [item for item in organization_rows if item.id in selected_organization_ids]
+        organization_rows if organization_lifecycle else [item for item in organization_rows if item.id in selected_organization_ids]
     )
+
+    # A repeated request for an already-live Application has no runtime work.
+    if not organization_lifecycle and not lifecycle_ids:
+        return (
+            ReconcileResult(
+                gateway_url=compute_registry.gateway_url,
+                gateway_ca_certificate=compute_registry.gateway_ca_certificate,
+                gateway_tls_certificate=compute_registry.gateway_tls_certificate,
+                gateway_tls_private_key=compute_registry.gateway_tls_private_key,
+            ),
+            [],
+        )
 
     # Resolve provider adapters only for Organizations included by this Application operation.
     databases: dict[UUID, adapters.Postgres] = {}
@@ -95,16 +83,14 @@ async def reconcile_applications(
         )
         object_storages[organization.id] = adapters.storage(storage_registry)
 
-    # Complete reconciliation prepares shared Organization resources before any Application resources depend on them.
-    if complete:
-        for organization in sorted(active_organizations.values(), key=lambda item: item.slug):
+    # Prepare only newly created Organizations before their first Application can depend on them.
+    creating_organizations = [item for item in active_organizations.values() if item.status == OrganizationStatus.creating]
+    if organization_lifecycle:
+        for organization in sorted(creating_organizations, key=lambda item: item.slug):
             db = databases[organization.id]
             object_storage = object_storages[organization.id]
             await fence()
             await db.prepare_organization_database(organization.id, organization.shared_schema_url)
-            if organization.status != OrganizationStatus.running:
-                await fence()
-                await organizations.set_runtime(organization.id, OrganizationStatus.creating)
             await fence()
             await projections.sync_organization_users(organization)
             await fence()
@@ -200,9 +186,7 @@ async def reconcile_applications(
 
     # Targeted snapshots carry selected parent identities for validation without reconciling shared Organization resources.
     desired_organization_ids = (
-        set(active_organizations)
-        if complete
-        else {application.organization_id for application in desired_applications}
+        set(active_organizations) if organization_lifecycle else {application.organization_id for application in desired_applications}
     )
     desired_organizations = tuple(
         DesiredOrganization(id=organization.id, slug=organization.slug)
@@ -210,14 +194,14 @@ async def reconcile_applications(
         if organization.id in desired_organization_ids
     )
 
-    # Gateway routes remain complete while selected failures and deletions are omitted.
+    # Gateway routes remain complete while failed creations and explicit deletions are omitted.
     desired_by_id = {application.id: application for application in desired_applications}
     routes: list[DesiredGatewayRoute] = []
     for application in sorted(application_rows, key=lambda item: (item.organization_id, item.slug)):
         organization = active_organizations.get(application.organization_id)
         if organization is None or application.deleted_at is not None:
             continue
-        selected = complete or (application_ids is not None and application.id in application_ids)
+        selected = application.id in lifecycle_ids
         if selected:
             desired_application = desired_by_id.get(application.id)
             if desired_application is not None:
@@ -225,13 +209,15 @@ async def reconcile_applications(
         elif application.digest is not None:
             routes.append(DesiredGatewayRoute(id=application.id, namespace=organization.slug))
 
+    deleting = compute_registry.deleted_at is not None
     desired = DesiredCompute(
         id=compute_registry.id,
-        routes=tuple(routes),
-        organizations=desired_organizations,
-        applications=tuple(desired_applications),
-        application_ids=tuple(sorted(application_ids, key=str)) if application_ids is not None else None,
-        deleting=compute_registry.deleted_at is not None,
+        routes=() if deleting else tuple(routes),
+        organizations=() if deleting else desired_organizations,
+        applications=() if deleting else tuple(desired_applications),
+        application_ids=None if deleting else tuple(sorted(lifecycle_ids, key=str)),
+        deleting=deleting,
+        organizations_complete=organization_lifecycle and not deleting,
         scope=ReconciliationScope.application,
     )
     result = await cluster.reconcile(desired, compute_registry.proxy_secret, existing_tls, fence, stage_tls)
@@ -244,8 +230,8 @@ async def reconcile_applications(
             await applications.set_status(application.id, ApplicationStatus.running)
         else:
             pending_applications.append(application.id)
-    if complete:
-        for organization in active_organizations.values():
+    if organization_lifecycle:
+        for organization in creating_organizations:
             await fence()
             await organizations.set_runtime(organization.id, OrganizationStatus.running)
 
@@ -267,8 +253,8 @@ async def reconcile_applications(
         await fence()
         await applications.purge(application.id)
 
-    # Organization deletion remains a complete reconciliation responsibility.
-    if complete:
+    # Organization lifecycle work owns provider cleanup for Organization tombstones.
+    if organization_lifecycle:
         for organization in organization_rows:
             if organization.deleted_at is None:
                 continue
@@ -340,25 +326,29 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
     cluster = Kubernetes(compute_registry.kubeconfig)
 
     try:
-        # Dispatch without allowing Platform work to enter Application provider orchestration.
+        # Compute release synchronization updates only Platform resources while preserving active gateway routes.
         pending_applications: list[UUID] = []
         if operation.scope == ReconciliationScope.platform:
-            result = await reconcile_platform(
-                compute_registry,
-                organization_rows,
-                application_rows,
-                cluster,
-                existing_tls,
-                fence,
-                stage_tls,
+            active_organizations = {item.id: item for item in organization_rows if item.deleted_at is None}
+            routes = tuple(
+                DesiredGatewayRoute(id=application.id, namespace=active_organizations[application.organization_id].slug)
+                for application in sorted(application_rows, key=lambda item: (item.organization_id, item.slug))
+                if application.deleted_at is None and application.digest is not None and application.organization_id in active_organizations
             )
+            desired = DesiredCompute(
+                id=compute_registry.id,
+                routes=routes,
+                organizations=(),
+                applications=(),
+                deleting=compute_registry.deleted_at is not None,
+                scope=ReconciliationScope.platform,
+            )
+            result = await cluster.reconcile(desired, compute_registry.proxy_secret, existing_tls, fence, stage_tls)
         else:
             application_ids = (
-                {UUID(application_id) for application_id in operation.application_ids}
-                if operation.application_ids is not None
-                else None
+                {UUID(application_id) for application_id in operation.application_ids} if operation.application_ids is not None else None
             )
-            result, pending_applications = await reconcile_applications(
+            result, pending_applications = await apply_application_lifecycle(
                 operation,
                 compute_registry,
                 organization_rows,

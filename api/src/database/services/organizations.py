@@ -11,7 +11,7 @@ from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.database.services import operations
-from src.models.operations import ReconciliationScope
+from src.models.operations import OperationKind, ReconciliationScope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -251,8 +251,10 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
         await operations.enqueue_in_session(
             session,
             compute.id,
-            ReconciliationScope.application,
+            ReconciliationScope.platform,
             locked_compute=compute,
+            kind=OperationKind.database,
+            target_id=organization.id,
         )
         await session.commit()
         return True
@@ -279,10 +281,14 @@ async def create(
         # Lock an explicitly selected compute or assign the oldest available reconciliation root.
         compute_statement = select(ComputeRegistry)
         if compute_id is None:
-            compute_statement = compute_statement.where(
-                ComputeRegistry.deleted_at.is_(None),
-                ComputeRegistry.status == ComputeStatus.ready,
-            ).order_by(ComputeRegistry.created_at, ComputeRegistry.id).limit(1)
+            compute_statement = (
+                compute_statement.where(
+                    ComputeRegistry.deleted_at.is_(None),
+                    ComputeRegistry.status == ComputeStatus.ready,
+                )
+                .order_by(ComputeRegistry.created_at, ComputeRegistry.id)
+                .limit(1)
+            )
         else:
             compute_statement = compute_statement.where(ComputeRegistry.id == compute_id)
         compute = (await session.execute(compute_statement.with_for_update())).scalar_one_or_none()
@@ -385,9 +391,7 @@ async def update(organization_id: UUID, avatar: str, user: User) -> Organization
     async with session_scope() as session:
         organization = (
             await session.execute(
-                select(Organization)
-                .where(Organization.id == organization_id, Organization.deleted_at.is_(None))
-                .with_for_update()
+                select(Organization).where(Organization.id == organization_id, Organization.deleted_at.is_(None)).with_for_update()
             )
         ).scalar_one_or_none()
         if organization is None:

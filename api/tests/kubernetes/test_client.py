@@ -10,6 +10,7 @@ from collections.abc import Iterator
 from src.environments import env
 from kr8s.asyncio.objects import Pod, Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
 from src.kubernetes.client import Kubernetes
+from src.models.operations import ReconciliationScope
 from src.kubernetes.gateway import GatewayTLSMaterial
 from src.kubernetes.reconcile import DesiredCompute, DesiredApplication, DesiredGatewayRoute, DesiredOrganization
 
@@ -107,12 +108,19 @@ async def test_kubernetes_namespaces_filters_system_namespaces() -> None:
 
             self.calls = []
 
-        async def list(self, resource_class: object, namespace: str | None = None, label_selector: dict[str, str] | None = None) -> list[NamespaceResource]:
+        async def list(
+            self, resource_class: object, namespace: str | None = None, label_selector: dict[str, str] | None = None
+        ) -> list[NamespaceResource]:
             """Return fake namespaces for the requested resource class."""
 
             self.calls.append((resource_class, namespace, label_selector))
             assert resource_class is Namespace
-            return [NamespaceResource("acme"), NamespaceResource("kube-system"), NamespaceResource("longlink-system"), NamespaceResource("globex")]
+            return [
+                NamespaceResource("acme"),
+                NamespaceResource("kube-system"),
+                NamespaceResource("longlink-system"),
+                NamespaceResource("globex"),
+            ]
 
     resources = Resources()
     client = Kubernetes("unused")
@@ -141,7 +149,9 @@ async def test_kubernetes_pods_delegates_to_namespace_listing() -> None:
             self.calls = []
             self.pods = [object(), object()]
 
-        async def list(self, resource_class: object, namespace: str | None = None, label_selector: dict[str, str] | None = None) -> list[object]:
+        async def list(
+            self, resource_class: object, namespace: str | None = None, label_selector: dict[str, str] | None = None
+        ) -> list[object]:
             """Return fake pod resources."""
 
             self.calls.append((resource_class, namespace, label_selector))
@@ -201,6 +211,8 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
                 envs={"PORT": "8000"},
             ),
         ),
+        application_ids=(application_id, stale_application_id),
+        organizations_complete=True,
     )
     cleanup = DesiredCompute(id=compute_id, routes=(), organizations=(), applications=(), deleting=True)
     cleanup_requested = False
@@ -264,24 +276,18 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
             }
         )
 
-        # Act: reconcile a reduced graph with persisted TLS to repair drift and prune obsolete state.
+        # Act: remove explicit lifecycle targets without resynchronizing the retained Application.
         current = DesiredCompute(
             id=compute_id,
             routes=(DesiredGatewayRoute(id=application_id, namespace="acme"),),
             organizations=(DesiredOrganization(id=organization_id, slug="acme"),),
-            applications=(
-                DesiredApplication(
-                    id=application_id,
-                    organization_id=organization_id,
-                    namespace="acme",
-                    image=ECHO_SERVER_IMAGE,
-                    envs={"LONG_LINK_REQUIRED": "value", "PORT": "8000"},
-                ),
-            ),
+            applications=(),
+            application_ids=(stale_application_id,),
+            organizations_complete=True,
         )
         second = await compute.reconcile(current, proxy_secret, tls_material)
 
-        # Assert: reconciliation reused TLS, repaired exact state, and removed stale resources.
+        # Assert: synchronization reused TLS and removed stale resources without repairing the live workload.
         assert second.gateway_url == first.gateway_url
         assert second.gateway_ca_certificate == first.gateway_ca_certificate
         assert second.gateway_tls_certificate == first.gateway_tls_certificate
@@ -345,7 +351,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         assert application_deployment is not None
         assert application_service is not None
         assert application_secret is not None
-        assert set(application_secret.data) == {"LONG_LINK_REQUIRED", "PORT"}
+        assert set(application_secret.data) == {"STALE"}
         assert stale_secret is None
         assert stale_deployment is None
         assert stale_service is None
@@ -366,7 +372,7 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         )
         for resource in retained_resources:
             assert resource.raw["metadata"]["annotations"]["longlink.io/platform-version"] == env.VERSION
-        assert set(application_secret.raw["metadata"]["annotations"]) == {"longlink.io/runtime-revision"}
+        assert application_secret.raw["metadata"].get("annotations", {}) == {}
         assert gateway_deployment.raw["spec"]["template"]["metadata"]["annotations"]["longlink.io/platform-version"] == env.VERSION
         assert "longlink.io/platform-version" not in application_deployment.raw["spec"]["template"]["metadata"]["annotations"]
 
@@ -398,7 +404,13 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         # A cluster claimed by one compute target must reject another target before adoption.
         with pytest.raises(ValueError, match=f"not owned by compute {other_compute_id}"):
             await compute.reconcile(
-                DesiredCompute(id=other_compute_id, routes=(), organizations=(), applications=()),
+                DesiredCompute(
+                    id=other_compute_id,
+                    routes=(),
+                    organizations=(),
+                    applications=(),
+                    scope=ReconciliationScope.platform,
+                ),
                 "other-secret",
             )
 

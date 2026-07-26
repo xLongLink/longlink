@@ -10,7 +10,7 @@ from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.database.session import get_session
 from src.database.services import compute, operations, invitations, applications, organizations
-from src.models.operations import OperationStatus
+from src.models.operations import OperationKind, OperationStatus, ReconciliationScope
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 
@@ -735,8 +735,11 @@ async def test_update_organization_member_changes_role(
     updated_member = next(membership for membership in updated_members if membership.user.id == member.id)
     assert updated_member.role == OrganizationRoles.admin
     recorded_operations = await operations.fetch()
-    assert len(recorded_operations) == 1
-    assert recorded_operations[0].compute_id == infrastructure.compute.id
+    assert len(recorded_operations) == 2
+    projection = next(item for item in recorded_operations if item.kind == OperationKind.database)
+    assert projection.compute_id == infrastructure.compute.id
+    assert projection.scope == ReconciliationScope.platform
+    assert projection.target_id == organization.id
 
 
 async def test_update_organization_member_rejects_owner_escalation_from_admin(

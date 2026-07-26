@@ -47,16 +47,9 @@ class ComputeRegistry(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime)
     created_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "ComputeRegistry.created_id"})
     created_id: UUID | None = Field(default=None, foreign_key="users.id")
-    updated_at: datetime = Field(
-        default_factory=utcnow,
-        nullable=False,
-        sa_type=UTCDateTime,
-        sa_column_kwargs={"onupdate": utcnow},
-    )
+    updated_at: datetime = Field(default_factory=utcnow, nullable=False, sa_type=UTCDateTime, sa_column_kwargs={"onupdate": utcnow})
     updated_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "ComputeRegistry.updated_id"})
     updated_id: UUID | None = Field(default=None, foreign_key="users.id")
     deleted_at: datetime | None = Field(default=None, nullable=True, sa_type=UTCDateTime)
-
-    # User
     deleted_by: Optional["User"] = Relationship(sa_relationship_kwargs={"foreign_keys": "ComputeRegistry.deleted_id"})
     deleted_id: UUID | None = Field(default=None, foreign_key="users.id")

@@ -150,8 +150,8 @@ async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) 
         return True
 
 
-async def reconcile_until_complete(compute_id: UUID) -> None:
-    """Drain the durable queue until the target compute reconciliation succeeds or fails."""
+async def reconcile_until_complete(operation_id: UUID) -> None:
+    """Drain the durable queue until the target Operation succeeds or fails."""
 
     # The seed process has no lifespan worker, so it drains the same durable queue explicitly.
     while True:
@@ -160,11 +160,11 @@ async def reconcile_until_complete(compute_id: UUID) -> None:
             await asyncio.sleep(1)
             continue
         result = await jobs.execute(operation, jobs.handlers[operation.kind])
-        if result.kind != OperationKind.compute or result.compute_id != compute_id:
+        if result.id != operation_id:
             continue
         if result.stopped_at is not None:
             if result.failed:
-                raise RuntimeError(f"Compute reconciliation {result.id} failed; see the Platform logs")
+                raise RuntimeError(f"Operation {result.id} failed; see the Platform logs")
             return
         await asyncio.sleep(1)
 
@@ -183,13 +183,13 @@ async def seed_local_development(settings: SeedSettings) -> None:
 
     # Reconcile the local compute target before assigning Organizations to it.
     if compute_registry is None:
-        compute_registry, _ = await compute_service.create(
+        compute_registry, operation = await compute_service.create(
             "local compute",
             "local-compute",
             KUBECONFIG.read_text(encoding="utf-8"),
             admin,
         )
-        await reconcile_until_complete(compute_registry.id)
+        await reconcile_until_complete(operation.id)
         compute_ready = True
 
     # Register the local database and storage backends independently.
@@ -224,15 +224,14 @@ async def seed_local_development(settings: SeedSettings) -> None:
     ):
         raise ValueError("Local storage registry uses different Exoscale settings; run make down before changing them")
 
-    organization_changed = False
     organization = next((item for item in await organization_service.fetch() if item.slug == LOCAL_ORG), None)
     if organization is None:
         # Repair an existing compute before a new Organization requires its ready state.
         if not compute_ready:
-            await operations.enqueue(compute_registry.id, ReconciliationScope.platform)
-            await reconcile_until_complete(compute_registry.id)
+            operation = await operations.enqueue(compute_registry.id, ReconciliationScope.platform)
+            await reconcile_until_complete(operation.id)
             compute_ready = True
-        organization, _ = await organization_service.create(
+        organization, operation = await organization_service.create(
             LOCAL_ORG,
             LOCAL_ORG,
             compute_registry.id,
@@ -241,10 +240,17 @@ async def seed_local_development(settings: SeedSettings) -> None:
             admin,
             avatar=LOCAL_ORG_AVATAR,
         )
-        await reconcile_until_complete(compute_registry.id)
+        await reconcile_until_complete(operation.id)
     else:
         owner_changed = await ensure_local_organization_owner(organization.id, admin.id)
-        organization_changed = administrator_changed or owner_changed
+        if administrator_changed or owner_changed:
+            operation = await operations.enqueue(
+                compute_registry.id,
+                ReconciliationScope.platform,
+                kind=OperationKind.database,
+                target_id=organization.id,
+            )
+            await reconcile_until_complete(operation.id)
 
     # The sample application follows the same desired-state service used by the API route.
     payload = ApplicationCreate(
@@ -257,9 +263,9 @@ async def seed_local_development(settings: SeedSettings) -> None:
     if application is None:
         # Repair an existing compute before Application creation checks its ready state.
         if not compute_ready:
-            await operations.enqueue(compute_registry.id, ReconciliationScope.platform)
-            await reconcile_until_complete(compute_registry.id)
-        await application_service.create(
+            operation = await operations.enqueue(compute_registry.id, ReconciliationScope.platform)
+            await reconcile_until_complete(operation.id)
+        _, operation = await application_service.create(
             organization.id,
             payload.name,
             names.slugify(payload.name),
@@ -269,26 +275,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
             icon=payload.icon.value if payload.icon is not None else None,
             envs=payload.envs,
         )
-        if organization_changed:
-            await operations.enqueue(compute_registry.id, ReconciliationScope.application)
-    else:
-        # Resolve the rebuilt local tag again instead of retaining a prior immutable digest.
-        application = await application_service.update_runtime(
-            application.id,
-            image=payload.image,
-            user=admin,
-            description=payload.description,
-            icon=payload.icon.value if payload.icon is not None else None,
-            envs=payload.envs,
-        )
-        if application is None:
-            raise RuntimeError("Local sample Application no longer exists")
-        await operations.enqueue(
-            compute_registry.id,
-            ReconciliationScope.application,
-            application_ids=None if organization_changed else {application.id},
-        )
-    await reconcile_until_complete(compute_registry.id)
+        await reconcile_until_complete(operation.id)
 
 
 async def cleanup_local_development() -> None:

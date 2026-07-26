@@ -54,8 +54,8 @@ async def test_operations_service_fetch_returns_newest_operations_first() -> Non
     assert all(operation.platform_version == env.VERSION for operation in fetched)
 
 
-async def test_operations_service_enqueue_coalesces_and_expires_active_lease() -> None:
-    """Coalesce compute work and immediately supersede an active attempt after a desired change."""
+async def test_operations_service_enqueue_keeps_platform_and_application_work_separate() -> None:
+    """Coalesce Application lifecycle work without superseding active Platform work."""
 
     # Arrange
     compute = await create_compute("local")
@@ -83,19 +83,18 @@ async def test_operations_service_enqueue_coalesces_and_expires_active_lease() -
     # Assert
     assert targeted.application_ids == [str(first_application_id)]
     assert combined.application_ids == sorted([str(first_application_id), str(second_application_id)])
-    assert changed.id == first.id
+    assert changed.id == targeted.id
     assert changed.scope == ReconciliationScope.application
     assert changed.application_ids is None
-    assert changed.lease_expires_at is not None
-    assert changed.lease_expires_at <= utcnow()
-    assert stale_completion is None
+    assert changed.lease_expires_at is None
+    assert stale_completion is not None
     assert replacement is not None
-    assert replacement.id == first.id
-    assert replacement.attempt_count == 2
-    assert len(fetched) == 1
-    assert fetched[0].kind == OperationKind.compute
-    assert fetched[0].target_id == compute.id
-    assert fetched[0].compute_id == compute.id
+    assert replacement.id == targeted.id
+    assert replacement.attempt_count == 1
+    assert len(fetched) == 2
+    assert all(item.kind == OperationKind.compute for item in fetched)
+    assert all(item.target_id == compute.id for item in fetched)
+    assert all(item.compute_id == compute.id for item in fetched)
 
 
 async def test_operations_service_enqueue_separates_computes_and_reopens_completed_work() -> None:

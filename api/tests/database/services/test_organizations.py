@@ -8,7 +8,7 @@ from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, OrganizationStatus
 from src.database.session import get_session
 from src.database.services import compute, operations, invitations, applications, organizations
-from src.models.operations import OperationStatus
+from src.models.operations import OperationKind, OperationStatus, ReconciliationScope
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 
@@ -162,7 +162,10 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
     assert reloaded_compute is not None
     assert reloaded_compute.status == ComputeStatus.ready
     assert reloaded_compute.version == env.VERSION
-    assert len(open_operations) == 1
+    assert len(open_operations) == 2
+    projection = next(item for item in open_operations if item.kind == OperationKind.database)
+    assert projection.scope == ReconciliationScope.platform
+    assert projection.target_id == organization.id
     assert open_operations[0].compute_id == infrastructure.compute.id
     assert open_operations[0].platform_version == env.VERSION
     assert open_operations[0].status == OperationStatus.scheduled

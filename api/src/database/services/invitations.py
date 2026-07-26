@@ -7,7 +7,7 @@ from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.services import operations
-from src.models.operations import ReconciliationScope
+from src.models.operations import OperationKind, ReconciliationScope
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -103,7 +103,7 @@ async def accept_in_session(session: AsyncSession, user: User) -> int:
         organization_computes[invitation.organization_id] = compute_id
 
     now = utcnow()
-    changed_compute_ids: set[UUID] = set()
+    changed_organization_ids: set[UUID] = set()
 
     # Create or restore access within each invitation's Organization without changing active roles.
     for organization_id, pending in organization_invitations.items():
@@ -128,14 +128,14 @@ async def accept_in_session(session: AsyncSession, user: User) -> int:
                     updated_id=user.id,
                 )
             )
-            changed_compute_ids.add(organization_computes[organization_id])
+            changed_organization_ids.add(organization_id)
         elif membership.deleted_at is not None:
             membership.role = invitation.role
             membership.updated_at = now
             membership.updated_id = user.id
             membership.deleted_at = None
             membership.deleted_id = None
-            changed_compute_ids.add(organization_computes[organization_id])
+            changed_organization_ids.add(organization_id)
 
         # Consume every matching invitation, including safe duplicate rows.
         for item in pending:
@@ -145,8 +145,14 @@ async def accept_in_session(session: AsyncSession, user: User) -> int:
             item.deleted_id = user.id
 
     # Publish new Organization access to managed runtimes after the transaction commits.
-    for compute_id in sorted(changed_compute_ids, key=str):
-        await operations.enqueue_in_session(session, compute_id, ReconciliationScope.application)
+    for organization_id in sorted(changed_organization_ids, key=str):
+        await operations.enqueue_in_session(
+            session,
+            organization_computes[organization_id],
+            ReconciliationScope.platform,
+            kind=OperationKind.database,
+            target_id=organization_id,
+        )
 
     return len(rows)
 

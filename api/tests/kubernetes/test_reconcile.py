@@ -1,5 +1,6 @@
 import pytest
 from uuid import UUID
+from src.models.operations import ReconciliationScope
 from src.kubernetes.reconcile import Reconciler, DesiredCompute, DesiredApplication, DesiredGatewayRoute, DesiredOrganization
 from src.kubernetes.resources import KubernetesResources
 
@@ -75,6 +76,8 @@ def route(
                 routes=(),
                 organizations=(organization(slug="acme"), organization("10000000-0000-4000-8000-000000000002", "acme")),
                 applications=(),
+                application_ids=(),
+                organizations_complete=True,
             ),
             "proxy-secret",
             "Duplicate desired organization namespace",
@@ -85,6 +88,7 @@ def route(
                 routes=(route(namespace="wrong"),),
                 organizations=(organization(),),
                 applications=(application(namespace="wrong"),),
+                application_ids=(UUID("20000000-0000-4000-8000-000000000001"),),
             ),
             "proxy-secret",
             "namespace does not match",
@@ -95,12 +99,19 @@ def route(
                 routes=(route(),),
                 organizations=(organization(),),
                 applications=(application(envs={"BAD-NAME": "x"}),),
+                application_ids=(UUID("20000000-0000-4000-8000-000000000001"),),
             ),
             "proxy-secret",
             "invalid environment names",
         ),
         (
-            DesiredCompute(id=UUID("00000000-0000-4000-8000-000000000001"), routes=(), organizations=(), applications=()),
+            DesiredCompute(
+                id=UUID("00000000-0000-4000-8000-000000000001"),
+                routes=(),
+                organizations=(),
+                applications=(),
+                scope=ReconciliationScope.platform,
+            ),
             "bad secret",
             "Gateway proxy secret",
         ),

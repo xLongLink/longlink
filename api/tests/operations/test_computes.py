@@ -94,13 +94,14 @@ async def test_execute_compute_reconcile_operation_converges_targeted_applicatio
         database_password="database-password",
         envs={"CUSTOM_VALUE": "configured"},
     )
-    unselected_application = Application(
+    running_application = Application(
         organization_id=active_organization.id,
         name="Reports",
         slug="reports",
         image="ghcr.io/longlink/reports@sha256:resolved",
         digest="sha256:resolved",
         database_password="reports-password",
+        status=ApplicationStatus.running,
     )
     deleted_application = Application(
         organization_id=deleted_organization.id,
@@ -112,9 +113,7 @@ async def test_execute_compute_reconcile_operation_converges_targeted_applicatio
         deleted_at=deleted_at,
     )
     async with session_scope() as session:
-        session.add_all(
-            [active_organization, deleted_organization, active_application, unselected_application, deleted_application]
-        )
+        session.add_all([active_organization, deleted_organization, active_application, running_application, deleted_application])
         await session.commit()
 
     events: list[tuple[object, ...]] = []
@@ -267,7 +266,7 @@ async def test_execute_compute_reconcile_operation_converges_targeted_applicatio
     monkeypatch.setattr(compute_operations, "Kubernetes", FakeKubernetes)
     operation = await operations.enqueue(
         compute_registry.id,
-        application_ids={active_application.id, deleted_application.id},
+        application_ids={active_application.id, running_application.id, deleted_application.id},
     )
     claimed = await operations.claim_next()
     assert claimed is not None
@@ -288,7 +287,7 @@ async def test_execute_compute_reconcile_operation_converges_targeted_applicatio
     assert [(item.id, item.slug) for item in desired.organizations] == [(active_organization.id, "acme")]
     assert [(item.id, item.namespace) for item in desired.routes] == [
         (active_application.id, "acme"),
-        (unselected_application.id, "acme"),
+        (running_application.id, "acme"),
     ]
     assert len(desired.applications) == 1
     desired_application = desired.applications[0]
@@ -314,7 +313,7 @@ async def test_execute_compute_reconcile_operation_converges_targeted_applicatio
         "LONGLINK_STORAGE_SHARED_PREFIX": names.shared_storage_prefix(),
         "LONGLINK_STORAGE_USERNAME": "runtime-access",
     }
-    assert ("application-ready", str(unselected_application.id)) not in events
+    assert ("application-ready", str(running_application.id)) not in events
     assert proxy_secret == "proxy-secret"
     assert existing_tls is None
     assert (
@@ -411,9 +410,7 @@ async def test_execute_compute_reconcile_operation_retries_transient_failure(mon
     assert deferred.started_at is None
     assert deferred.stopped_at is None
     assert deferred.attempt_count == 1
-    assert errors == [
-        f"Operation {operation.id} failed: RuntimeError('https://admin:password@db.example?token=secret')"
-    ]
+    assert errors == [f"Operation {operation.id} failed: RuntimeError('https://admin:password@db.example?token=secret')"]
     refreshed_compute = await compute.get(compute_registry.id)
     assert refreshed_compute is not None
     assert refreshed_compute.status == ComputeStatus.failed

@@ -43,13 +43,12 @@ class GatewayTLSMaterial:
 
 @dataclass(frozen=True, slots=True)
 class GatewayManifests:
-    """Hold ordered gateway manifests with exact Secrets identified explicitly."""
+    """Hold gateway Pod dependencies and exact Secrets identified explicitly."""
 
     auth_secret: KubernetesDocument
     tls_secret: KubernetesDocument
     config_map: KubernetesDocument
     deployment: KubernetesDocument
-    service: KubernetesDocument
     network_policy: KubernetesDocument
     runtime_revision: str
 
@@ -74,12 +73,14 @@ class Gateway:
             template_revision=TEMPLATE_REVISION,
         )[0]
 
-    def service(self, compute_id: str, runtime_revision: str, platform_version: str) -> KubernetesDocument:
+    def service(self, compute_id: str, platform_version: str) -> KubernetesDocument:
         """Render the stable public LoadBalancer Service that establishes the compute endpoint.
 
         Reconciliation applies it before TLS generation because the endpoint determines the certificate SAN.
         """
 
+        # Service changes are independent from gateway Pod configuration and must not trigger a workload rollout.
+        runtime_revision = hashlib.sha256(TEMPLATES.joinpath("gateway_service.yml").read_bytes()).hexdigest()
         return templates.readyml_list(
             TEMPLATES.joinpath("gateway_service.yml"),
             compute_id=compute_id,
@@ -87,11 +88,6 @@ class Gateway:
             runtime_revision=runtime_revision,
             template_revision=TEMPLATE_REVISION,
         )[0]
-
-    def initial_service_revision(self) -> str:
-        """Return a deterministic revision for the service applied before endpoint discovery."""
-
-        return hashlib.sha256(TEMPLATES.joinpath("gateway_service.yml").read_bytes()).hexdigest()
 
     def config(self, desired_routes: "tuple[DesiredGatewayRoute, ...]") -> str:
         """Render deterministic authenticated Envoy routes from the authoritative route snapshot.
@@ -277,9 +273,7 @@ class Gateway:
         """
 
         # Hash rendered behavior and secret material so every relevant change rolls the gateway pods.
-        sources = "".join(
-            TEMPLATES.joinpath(name).read_text(encoding="utf-8") for name in ("envoy.yml", "gateway.yml", "gateway_service.yml")
-        )
+        sources = "".join(TEMPLATES.joinpath(name).read_text(encoding="utf-8") for name in ("envoy.yml", "gateway.yml"))
         revision_input = json.dumps(
             {
                 "ca_certificate": tls.ca_certificate,
@@ -318,7 +312,6 @@ class Gateway:
             tls_secret=manifests[1],
             config_map=manifests[2],
             deployment=manifests[3],
-            service=self.service(compute_id, runtime_revision, platform_version),
             network_policy=manifests[4],
             runtime_revision=runtime_revision,
         )

@@ -54,7 +54,7 @@ def successful_seed_boundaries(
         if not recorded:
             return seed.jobs.fail("Test reconciliation lost its operation lease")
 
-        # Mirror statuses that successful complete Application reconciliation observes from providers.
+        # Mirror statuses that successful Application lifecycle Operations observe from providers.
         application_ids = (
             {UUID(application_id) for application_id in operation.application_ids} if operation.application_ids is not None else None
         )
@@ -82,14 +82,19 @@ def successful_seed_boundaries(
 
 @pytest.mark.no_db
 async def test_reconcile_until_complete_drains_until_target_operation(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Drain local seed operations until the requested compute reconciliation finishes."""
+    """Drain local seed operations until the requested Operation finishes."""
 
     # Arrange
+    target_operation_id = UUID("11111111-1111-1111-1111-111111111111")
     target_compute_id = UUID("22222222-2222-2222-2222-222222222222")
     other_compute_id = UUID("33333333-3333-3333-3333-333333333333")
-    unrelated_operation = fake_resource(kind=OperationKind.compute, compute_id=other_compute_id)
-    migration_operation = fake_resource(kind=OperationKind.database, compute_id=target_compute_id)
-    target_operation = fake_resource(kind=OperationKind.compute, compute_id=target_compute_id)
+    unrelated_operation = fake_resource(
+        id=UUID("44444444-4444-4444-4444-444444444444"), kind=OperationKind.compute, compute_id=other_compute_id
+    )
+    migration_operation = fake_resource(
+        id=UUID("55555555-5555-5555-5555-555555555555"), kind=OperationKind.database, compute_id=target_compute_id
+    )
+    target_operation = fake_resource(id=target_operation_id, kind=OperationKind.compute, compute_id=target_compute_id)
     claims: list[SimpleNamespace | None] = [None, unrelated_operation, migration_operation, target_operation]
     executed: list[SimpleNamespace] = []
     sleeps: list[float] = []
@@ -112,6 +117,7 @@ async def test_reconcile_until_complete_drains_until_target_operation(monkeypatc
         assert handler is expected_handlers[claimed_operation.kind]
         executed.append(claimed_operation)
         return fake_resource(
+            id=claimed_operation.id,
             kind=claimed_operation.kind,
             compute_id=claimed_operation.compute_id,
             stopped_at=object(),
@@ -128,7 +134,7 @@ async def test_reconcile_until_complete_drains_until_target_operation(monkeypatc
     monkeypatch.setattr(seed.asyncio, "sleep", sleep)
 
     # Act
-    await seed.reconcile_until_complete(target_compute_id)
+    await seed.reconcile_until_complete(target_operation_id)
 
     # Assert
     assert executed == [unrelated_operation, migration_operation, target_operation]
@@ -234,10 +240,10 @@ async def test_seed_local_development_persists_complete_desired_state(
     ]
 
 
-async def test_seed_local_development_refreshes_existing_sample_application(
+async def test_seed_local_development_preserves_existing_sample_application(
     successful_seed_boundaries: list[tuple[ReconciliationScope, set[UUID] | None]],
 ) -> None:
-    """Reuse persisted local state and reconcile refreshed sample Application metadata."""
+    """Reuse persisted local state without synchronizing an existing sample Application."""
 
     # Arrange
     settings = seed.SeedSettings(
@@ -286,13 +292,13 @@ async def test_seed_local_development_refreshes_existing_sample_application(
     # Assert
     assert len(computes) == len(databases) == len(storages) == len(organizations) == len(applications) == 1
     assert (computes[0].id, databases[0].id, storages[0].id, organizations[0].id, applications[0].id) == initial_ids
-    assert applications[0].image == seed.LOCAL_APPLICATION_IMAGE
-    assert applications[0].sdk is None
-    assert applications[0].digest is None
-    assert applications[0].version is None
-    assert applications[0].description == "Local SDK development application"
-    assert applications[0].envs == {"REQUIRED": "local-development"}
-    assert applications[0].status == ApplicationStatus.running
-    assert len(operations) == 4
+    assert applications[0].image == "registry.example/longlink-app:old"
+    assert applications[0].sdk == "0.0.1"
+    assert applications[0].digest == "sha256:stale"
+    assert applications[0].version == "0.0.1"
+    assert applications[0].description == "Stale description"
+    assert applications[0].envs == {"STALE": "true"}
+    assert applications[0].status == ApplicationStatus.failed
+    assert len(operations) == 3
     assert all(operation.status == OperationStatus.completed for operation in operations)
-    assert successful_seed_boundaries == [(ReconciliationScope.application, {application_id})]
+    assert successful_seed_boundaries == []
