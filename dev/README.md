@@ -44,6 +44,12 @@ k3d kubeconfig get compute > api/kubeconfig.yaml
 
 ## Local seed setup
 
+Create the ignored seed configuration from the tracked sample:
+
+```bash
+cp api/.env.seed.sample api/.env.seed
+```
+
 Configure the Exoscale provisioning identity and select the development SOS zone in `api/.env.seed`:
 
 ```bash

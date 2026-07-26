@@ -97,8 +97,8 @@ celerybeat.pid
 .env.*
 !.env.sample
 !**/.env.sample
-!.env.seed
-!**/.env.seed
+!.env.seed.sample
+!**/.env.seed.sample
 .venv
 .direnv/
 env/

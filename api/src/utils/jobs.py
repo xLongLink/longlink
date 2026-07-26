@@ -8,7 +8,6 @@ from collections.abc import Callable, Awaitable
 from src.database.services import operations
 from src.database.models.operations import Operation
 
-OPERATION_POLL_SECONDS = 1
 OPERATION_HEARTBEAT_SECONDS = 30
 OPERATION_RETRY_BASE_SECONDS = 5
 OPERATION_RETRY_MAX_SECONDS = 5 * 60
@@ -169,12 +168,12 @@ async def run_operation_scheduler(handler: JobHandler) -> None:
             operation = await operations.claim_next()
         except Exception as exc:
             logger.exception("Operation scheduler polling failed: %r", exc)
-            await asyncio.sleep(OPERATION_POLL_SECONDS)
+            await asyncio.sleep(1)
             continue
 
         # Sleep briefly when the queue has no claimable work.
         if operation is None:
-            await asyncio.sleep(OPERATION_POLL_SECONDS)
+            await asyncio.sleep(1)
             continue
 
         logger.info("Executing compute reconciliation %s", operation.id)
@@ -185,7 +184,7 @@ async def run_operation_scheduler(handler: JobHandler) -> None:
 
             # Yield after a retry so immediately due work cannot monopolize the scheduler.
             if result.started_at is None and result.stopped_at is None:
-                await asyncio.sleep(OPERATION_POLL_SECONDS)
+                await asyncio.sleep(1)
         except OperationLeaseLost as exc:
             logger.warning("%s", exc)
         except Exception as exc:

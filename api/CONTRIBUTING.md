@@ -12,6 +12,8 @@ DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 uv run isort .                     # Format imports
 ```
 
+Production images start the Platform API without applying schema changes. The deployment pipeline must run `alembic upgrade head` once with the target image and shared database before rolling out API replicas.
+
 ## Architecture
 
 The combined repository architecture is maintained in `../AGENTS.md`.
