@@ -43,7 +43,6 @@
     },
     "devDependencies": {
         "@astryxdesign/cli": "0.1.8",
-        "@happy-dom/global-registrator": "^20.10.6",
         "@react-router/dev": "8.3.0",
         "@types/d3-geo": "^3.1.0",
         "@types/lodash": "^4.17.24",

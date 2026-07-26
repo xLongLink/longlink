@@ -1,8 +1,8 @@
 import pytest
 from uuid import UUID
-from src.kubernetes.reconcile import DesiredApplication, DesiredOrganization
 from src.kubernetes.resources import KubernetesResources
-from src.kubernetes.applications import Applications
+from src.kubernetes.applications import Applications, DesiredApplication
+from src.kubernetes.organizations import Organizations, DesiredOrganization
 
 pytestmark = pytest.mark.no_db
 
@@ -42,10 +42,10 @@ def test_organization_manifests_include_namespace_and_network_policy() -> None:
 
     # Arrange
     organization = DesiredOrganization(id=UUID("10000000-0000-4000-8000-000000000001"), slug="acme")
-    renderer = Applications(KubernetesResources("unused"))
+    renderer = Organizations(KubernetesResources("unused"))
 
     # Act
-    manifests = renderer.organization_manifests(organization, "compute-id", "v1.2.3")
+    manifests = renderer.manifests(organization, "compute-id", "v1.2.3")
 
     # Assert
     assert manifests.namespace["kind"] == "Namespace"

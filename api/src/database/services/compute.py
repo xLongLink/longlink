@@ -9,7 +9,6 @@ from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus
 from src.database.session import session_scope
 from src.database.services import operations
-from src.models.operations import ReconciliationScope
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
@@ -73,7 +72,7 @@ async def create(name: str, slug: str, kubeconfig: str, user: User) -> tuple[Com
 
         # Translate unique registry names and slugs to one stable API conflict.
         try:
-            operation = await operations.enqueue_in_session(session, registry.id, ReconciliationScope.platform)
+            operation = await operations.enqueue_in_session(session, registry.id)
             await session.commit()
         except IntegrityError as exc:
             await session.rollback()
@@ -100,7 +99,7 @@ async def delete(registry_id: UUID, user: User) -> tuple[ComputeRegistry, Operat
         registry = (
             await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == registry_id).with_for_update())
         ).scalar_one_or_none()
-        if registry is None or registry.deleted_at is not None:
+        if registry is None:
             return None
 
         # Tombstoned Organizations still need this target until provider cleanup finishes.
@@ -110,20 +109,23 @@ async def delete(registry_id: UUID, user: User) -> tuple[ComputeRegistry, Operat
         if organization_id is not None:
             raise HTTPException(status_code=409, detail="Compute registry is used by organizations")
 
-        now = utcnow()
-        registry.status = ComputeStatus.deleting
-        registry.version = None
-        registry.deleted_at = now
-        registry.deleted_id = user.id
-        registry.updated_at = now
-        registry.updated_id = user.id
+        # The first request records the tombstone and receives a fresh cleanup attempt budget.
+        fresh = registry.deleted_at is None
+        if fresh:
+            now = utcnow()
+            registry.status = ComputeStatus.deleting
+            registry.version = None
+            registry.deleted_at = now
+            registry.deleted_id = user.id
+            registry.updated_at = now
+            registry.updated_id = user.id
 
-        # Complete compute deletion uses Application scope so orphaned resources are removed before the Platform Namespace.
+        # Compute deletion owns only gateway and cluster-bootstrap resources after Organizations are gone.
         operation = await operations.enqueue_in_session(
             session,
             registry.id,
-            ReconciliationScope.application,
             locked_compute=registry,
+            fresh=fresh,
         )
         await session.commit()
         statement = (
@@ -146,35 +148,16 @@ async def record_success(
     gateway_ca_certificate: str | None,
     gateway_tls_certificate: str | None,
     gateway_tls_private_key: str | None,
-    operation_id: UUID | None = None,
-    attempt_count: int | None = None,
 ) -> bool:
     """Persist successful compute state without allowing a Platform release regression."""
 
-    # Update release observation and TLS material in one Platform transaction.
+    # Lock the compute while updating its observed release.
     async with session_scope() as session:
         registry = (
             await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
         ).scalar_one_or_none()
         if registry is None:
             return False
-        if operation_id is not None and attempt_count is not None:
-            now = utcnow()
-            lease = await session.execute(
-                select(Operation.id)
-                .where(
-                    Operation.id == operation_id,
-                    Operation.compute_id == compute_id,
-                    Operation.attempt_count == attempt_count,
-                    Operation.platform_version == platform_version,
-                    Operation.lease_expires_at > now,
-                    Operation.started_at.is_not(None),
-                    Operation.stopped_at.is_(None),
-                )
-                .with_for_update()
-            )
-            if lease.scalar_one_or_none() is None:
-                return False
         if registry.version is not None and Version(registry.version) > Version(platform_version):
             return False
         registry.gateway_url = gateway_url
@@ -188,38 +171,16 @@ async def record_success(
         return True
 
 
-async def record_failure(
-    compute_id: UUID,
-    operation_id: UUID | None = None,
-    attempt_count: int | None = None,
-    platform_version: str | None = None,
-) -> None:
-    """Mark a compute target failed when the caller still owns its reconciliation attempt."""
+async def record_failure(compute_id: UUID) -> None:
+    """Mark a compute target failed."""
 
-    # Lock the compute before checking optional operation ownership and updating its state.
+    # Lock the compute while updating its observed state.
     async with session_scope() as session:
         registry = (
             await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
         ).scalar_one_or_none()
         if registry is None:
             return
-        if operation_id is not None and attempt_count is not None and platform_version is not None:
-            now = utcnow()
-            lease = await session.execute(
-                select(Operation.id)
-                .where(
-                    Operation.id == operation_id,
-                    Operation.compute_id == compute_id,
-                    Operation.attempt_count == attempt_count,
-                    Operation.platform_version == platform_version,
-                    Operation.lease_expires_at > now,
-                    Operation.started_at.is_not(None),
-                    Operation.stopped_at.is_(None),
-                )
-                .with_for_update()
-            )
-            if lease.scalar_one_or_none() is None:
-                return
         registry.status = ComputeStatus.failed
         await session.commit()
 
@@ -229,35 +190,18 @@ async def stage_gateway_tls(
     ca_certificate: str,
     certificate: str,
     private_key: str,
-    operation_id: UUID,
-    attempt_count: int,
-    platform_version: str,
 ) -> bool:
     """Persist new gateway trust while retaining the previously served CA during rollout."""
 
-    # Proxy clients trust both CA versions until reconciliation verifies the new gateway rollout.
+    # Lock the compute while staging replacement trust.
     async with session_scope() as session:
         registry = (
             await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
         ).scalar_one_or_none()
-        now = utcnow()
-        lease = (
-            await session.execute(
-                select(Operation.id)
-                .where(
-                    Operation.id == operation_id,
-                    Operation.compute_id == compute_id,
-                    Operation.attempt_count == attempt_count,
-                    Operation.platform_version == platform_version,
-                    Operation.lease_expires_at > now,
-                    Operation.started_at.is_not(None),
-                    Operation.stopped_at.is_(None),
-                )
-                .with_for_update()
-            )
-        ).scalar_one_or_none()
-        if registry is None or lease is None:
+        if registry is None:
             return False
+
+        # Proxy clients trust both CA versions until reconciliation verifies the new gateway rollout.
         if registry.gateway_ca_certificate != ca_certificate:
             registry.gateway_previous_ca_certificate = registry.gateway_ca_certificate
         registry.gateway_ca_certificate = ca_certificate

@@ -7,7 +7,7 @@ from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.services import operations
-from src.models.operations import OperationKind, ReconciliationScope
+from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
@@ -149,8 +149,7 @@ async def accept_in_session(session: AsyncSession, user: User) -> int:
         await operations.enqueue_in_session(
             session,
             organization_computes[organization_id],
-            ReconciliationScope.platform,
-            kind=OperationKind.database,
+            kind=OperationKind.organization_reconcile,
             target_id=organization_id,
         )
 

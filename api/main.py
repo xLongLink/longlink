@@ -8,7 +8,8 @@ from src.routes import operations as operations_route
 from src.routes import applications, organizations
 from src.operations import computes as _operation_computes
 from src.operations import storages as _operation_storages
-from src.operations import databases as _operation_databases
+from src.operations import applications as _operation_applications
+from src.operations import organizations as _operation_organizations
 from collections.abc import AsyncGenerator
 from src.environments import env
 from fastapi.responses import FileResponse
@@ -68,7 +69,6 @@ app.include_router(users.router)
 
 static_dir = Path(__file__).resolve().parent / "src" / ".static" / "web"
 if static_dir.exists():
-
     # Serve the prerendered home document before registering the generic SPA fallback.
     @app.get("/", response_class=FileResponse, include_in_schema=False)
     async def frontend_root():

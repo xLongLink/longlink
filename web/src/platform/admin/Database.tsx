@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
 import { apiDatabaseRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
-import { databasesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
+import { databasesQueryKey } from '@/lib/query-keys';
 import type { ApiDatabaseRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
@@ -67,10 +67,7 @@ export default function AdminDatabase() {
                 parseApiResponse(apiDatabaseRegistrySchema, value)
             ),
         onSuccess: async () => {
-            await Promise.all([
-                queryClient.invalidateQueries({ queryKey: databasesQueryKey() }),
-                queryClient.invalidateQueries({ queryKey: infrastructureOptionsQueryKey() }),
-            ]);
+            await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
             toast({ body: t('admin.databaseDeleted') });
         },
     });

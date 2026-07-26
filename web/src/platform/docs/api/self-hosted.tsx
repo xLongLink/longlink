@@ -32,12 +32,11 @@ export const content = (
             .
         </Text>
         <Text as="p">
-            Release images carry an immutable <Code>vX.Y.Z</Code> LongLink Platform version. Desired-state changes
-            enqueue compute reconciliation Operations for the current release, which is recorded only after Kubernetes,
-            database, and storage work succeeds. Operation history reports failures and retry progress. Platform
-            releases are forward-only for now: a binary older than any recorded compute or Operation release refuses to
-            start. Recover by deploying the recorded release or a newer release, or by restoring a database backup that
-            matches the older binary.
+            Release images carry an immutable <Code>vX.Y.Z</Code> LongLink Platform version. Desired-state changes queue
+            typed compute, Organization, and Application Operations. Each compute executes one Operation at a time;
+            active work finishes while newer changes remain queued. Operation history reports failures and retry
+            progress. Platform releases are forward-only: deploy the recorded release or a newer release, or restore a
+            database backup that matches an older binary.
         </Text>
         <Heading id="api-environment-variables" level={2}>
             API Environment Variables

@@ -342,24 +342,28 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("user_id", "organization_id"),
     )
 
-    # Create one coalesced reconciliation operation per kind, resource target, and scope.
+    # Create durable typed operations with expiring worker locks.
     op.create_table(
         "operations",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column(
             "kind",
-            sa.Enum("compute", "database", "storage", name="operation_kind_enum", native_enum=False),
+            sa.Enum(
+                "compute",
+                "storage",
+                "application.create",
+                "application.delete",
+                "organization.create",
+                "organization.delete",
+                "organization.reconcile",
+                name="operation_kind_enum",
+                native_enum=False,
+            ),
             nullable=False,
         ),
         sa.Column("target_id", sa.Uuid(), nullable=False),
         sa.Column("compute_id", sa.Uuid(), nullable=False),
-        sa.Column("application_ids", sa.JSON(), nullable=True),
         sa.Column("failed", sa.Boolean(), nullable=False),
-        sa.Column(
-            "scope",
-            sa.Enum("platform", "application", name="reconciliation_scope_enum", native_enum=False),
-            nullable=False,
-        ),
         sa.Column("attempt_count", sa.Integer(), nullable=False),
         sa.Column("platform_version", sa.String(length=128), nullable=False),
         sa.Column("lease_expires_at", longlink.database.types.UTCDateTime(), nullable=True),
@@ -370,15 +374,6 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["compute_id"], ["compute_registries.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(
-        "uq_operations_open_kind_target_scope",
-        "operations",
-        ["kind", "target_id", "scope"],
-        unique=True,
-        postgresql_where=sa.text("stopped_at IS NULL"),
-        sqlite_where=sa.text("stopped_at IS NULL"),
-    )
-
     # Create application memberships after applications, organizations, and users.
     op.create_table(
         "user_applications",

@@ -1,18 +1,15 @@
 import pytest
 from uuid import uuid4
 from fastapi import HTTPException
-from datetime import timedelta
 from factories import create_application, create_organization, mark_organization_running, create_ready_infrastructure
 from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
-from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, ApplicationStatus
 from src.database.session import get_session
 from src.database.services import compute, operations, applications, organizations
-from src.models.operations import OperationStatus
+from src.models.operations import OperationKind, OperationStatus
 from src.adapters.storage.base import StorageRuntimeCredentials
 from src.database.models.users import User
-from src.database.models.operations import Operation
 from src.database.models.association import UserOrganization
 from src.database.models.applications import Application
 from src.database.models.organizations import Organization
@@ -50,8 +47,8 @@ async def create_user(prefix: str) -> User:
         return user
 
 
-async def test_create_requires_running_organization_and_coalesces_compute_reconciliation() -> None:
-    """Create Applications only for running Organizations and coalesce compute work."""
+async def test_create_requires_running_organization_and_queues_application_lifecycle() -> None:
+    """Create Applications only for running Organizations and queue separate lifecycle work."""
 
     # Arrange
     user = await create_user("app")
@@ -84,15 +81,17 @@ async def test_create_requires_running_organization_and_coalesces_compute_reconc
     assert exc.value.detail == "Organization is not ready"
     assert application.name == "Dashboard"
     assert application.organization_id == organization.id
-    assert operation.id == open_before[0].id
+    assert operation.id != open_before[0].id
+    assert operation.kind == OperationKind.application_create
+    assert open_before[0].kind == OperationKind.organization_create
     assert reloaded_compute is not None
     assert reloaded_compute.status == ComputeStatus.ready
     assert reloaded_compute.version == env.VERSION
     assert len(open_before) == 1
-    assert [item.id for item in open_after] == [open_before[0].id]
-    assert open_after[0].compute_id == infrastructure.compute.id
-    assert open_after[0].platform_version == env.VERSION
-    assert open_after[0].status == OperationStatus.scheduled
+    assert {item.id for item in open_after} == {open_before[0].id, operation.id}
+    assert all(item.compute_id == infrastructure.compute.id for item in open_after)
+    assert all(item.platform_version == env.VERSION for item in open_after)
+    assert all(item.status == OperationStatus.scheduled for item in open_after)
 
 
 async def test_create_rejects_duplicate_application_slug_within_organization() -> None:
@@ -310,46 +309,36 @@ async def test_set_status_and_update_runtime_modify_active_applications() -> Non
     assert deleted_runtime is None
 
 
-async def test_provision_storage_credentials_rejects_stale_operation_lease() -> None:
-    """Do not persist generated storage credentials from a stale worker lease."""
+async def test_provision_storage_credentials_persists_generated_credentials() -> None:
+    """Persist generated storage credentials for reuse by later attempts."""
 
     # Arrange
-    user, organization, application = await create_application_context("storage-lease")
-    operation = await operations.enqueue(organization.compute_id)
-    claimed = await operations.claim_next()
-    assert claimed is not None
-    Session = await get_session()
-    async with Session() as session:
-        row = await session.get(Operation, operation.id)
-        assert row is not None
-        row.lease_expires_at = utcnow() - timedelta(seconds=1)
-        await session.commit()
+    _, _, application = await create_application_context("storage-credentials")
+    generated = StorageRuntimeCredentials(access_key_id="runtime-key", secret_access_key="runtime-secret")
 
     async def provision() -> StorageRuntimeCredentials:
-        """Fail if stale lease validation reaches credential provisioning."""
+        """Return deterministic provider credentials."""
 
-        raise AssertionError("stale workers must not provision credentials")
+        return generated
 
     async def discard(credentials: StorageRuntimeCredentials) -> None:
-        """Fail if no credentials were generated."""
+        """Fail because successfully persisted credentials must not be discarded."""
 
         raise AssertionError(f"unexpected credentials: {credentials}")
 
     # Act
     result = await applications.provision_storage_credentials(
         application.id,
-        operation.id,
-        claimed.attempt_count,
-        env.VERSION,
         provision,
         discard,
     )
     reloaded = await applications.get(application.id)
 
     # Assert
-    assert result is None
+    assert result is not None
+    assert result[1] == generated
     assert reloaded is not None
-    assert applications.storage_credentials(reloaded) is None
+    assert applications.storage_credentials(reloaded) == generated
 
 
 async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
@@ -376,13 +365,19 @@ async def test_soft_delete_marks_application_and_memberships_deleted() -> None:
     assert deleted_application is not None
     assert deleted_application.deleted_id == user.id
     assert role is None
-    assert second_delete is None
+    assert second_delete is not None
+    assert second_delete[1].id == operation.id
     assert missing_delete is None
     assert compute_after is not None
     assert compute_after.status == ComputeStatus.ready
     assert compute_after.version == env.VERSION
-    assert len(open_operations) == 1
-    assert open_operations[0].id == operation.id
-    assert open_operations[0].compute_id == organization.compute_id
-    assert open_operations[0].platform_version == env.VERSION
-    assert open_operations[0].status == OperationStatus.scheduled
+    assert {item.kind for item in open_operations} == {
+        OperationKind.application_create,
+        OperationKind.application_delete,
+        OperationKind.organization_create,
+    }
+    deletion = next(item for item in open_operations if item.id == operation.id)
+    assert deletion.kind == OperationKind.application_delete
+    assert deletion.compute_id == organization.compute_id
+    assert deletion.platform_version == env.VERSION
+    assert deletion.status == OperationStatus.scheduled

@@ -39,7 +39,6 @@ function renderArticleNavigationItem(item: ArticleNavigationItem, currentPath: s
             icon={item.icon}
             isSelected={isSelected}
             label={item.title}
-            size="sm"
         >
             {item.children?.map((child) => renderArticleNavigationItem(child, currentPath))}
         </SideNavItem>
@@ -63,11 +62,13 @@ export function Sidebar({ currentPath, groups }: SidebarProps) {
                 </Stack>
             }
         >
-            {groups.map((group) => (
-                <SideNavSection key={group.title} title={group.title}>
-                    {group.items.map((item) => renderArticleNavigationItem(item, currentPath))}
-                </SideNavSection>
-            ))}
+            <Stack paddingInline={2}>
+                {groups.map((group) => (
+                    <SideNavSection key={group.title} title={group.title}>
+                        {group.items.map((item) => renderArticleNavigationItem(item, currentPath))}
+                    </SideNavSection>
+                ))}
+            </Stack>
         </AstryxSideNav>
     );
 }

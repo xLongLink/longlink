@@ -17,13 +17,11 @@ type XmlLayoutTab = {
 
 type XmlLayoutProps = {
     tabs?: Record<string, string | XmlLayoutTab>;
-    brandOnly?: boolean;
-    brandHref?: string;
     children: ReactNode;
 };
 
 /** Renders the XML build shell with SDK-specific header chrome. */
-export default function XmlLayout({ tabs, brandOnly = false, brandHref = '/organizations', children }: XmlLayoutProps) {
+export default function XmlLayout({ tabs, children }: XmlLayoutProps) {
     const t = useTranslator();
     const location = useLocation();
     const tabEntries = Object.entries(tabs ?? {});
@@ -69,15 +67,11 @@ export default function XmlLayout({ tabs, brandOnly = false, brandHref = '/organ
                     >
                         <Wordmark />
                     </Link>
-                ) : brandOnly ? (
-                    <Link href={brandHref} label={t('common.longlinkHome')} color="inherit">
-                        <Wordmark />
-                    </Link>
                 ) : (
                     <Breadcrumb />
                 )
             }
-            tabs={brandOnly ? [] : resolvedTabs.map((tab) => ({ ...tab, value: tab.href }))}
+            tabs={resolvedTabs.map((tab) => ({ ...tab, value: tab.href }))}
             topNavClassName="px-7"
         >
             <PageContainer minHeight={isSdkMode ? '100%' : undefined}>{children}</PageContainer>

@@ -82,6 +82,8 @@ select = ["UP", "D300"]
 from_first = false
 line_length = 140
 no_sections = true
+multi_line_output = 3
+include_trailing_comma = true
 lines_between_types = 0
 length_sort = true
 

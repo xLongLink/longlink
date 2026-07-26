@@ -125,8 +125,20 @@
     "admin.databaseDescription": {
         "defaultMessage": "Monitor platform data, schema health, and persistence state."
     },
-    "admin.databaseMigration": {
-        "defaultMessage": "Shared database migration"
+    "admin.organizationCreation": {
+        "defaultMessage": "Organization creation"
+    },
+    "admin.organizationDeletion": {
+        "defaultMessage": "Organization deletion"
+    },
+    "admin.organizationReconciliation": {
+        "defaultMessage": "Organization reconciliation"
+    },
+    "admin.applicationCreation": {
+        "defaultMessage": "Application creation"
+    },
+    "admin.applicationDeletion": {
+        "defaultMessage": "Application deletion"
     },
     "admin.deleteComputeDescription": {
         "defaultMessage": "Delete compute {slug}?"

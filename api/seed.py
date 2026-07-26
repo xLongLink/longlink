@@ -10,7 +10,8 @@ from src.utils import jobs, names, passwords
 from sqlalchemy import text, select, inspect
 from src.operations import computes as operation_computes
 from src.operations import storages as _operation_storages
-from src.operations import databases as _operation_databases
+from src.operations import applications as _operation_applications
+from src.operations import organizations as operation_organizations
 from src.environments import env
 from src.models.roles import PlatformRoles, OrganizationRoles
 from src.models.types import Image, StorageKind, DatabaseSSLMode
@@ -25,7 +26,7 @@ from src.database.services import database as database_service
 from src.database.services import operations
 from src.database.services import applications as application_service
 from src.database.services import organizations as organization_service
-from src.models.operations import OperationKind, ReconciliationScope
+from src.models.operations import OperationKind
 from src.models.applications import ApplicationCreate
 from src.database.models.users import User
 from src.models.infrastructure import exoscale_zone
@@ -228,7 +229,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     if organization is None:
         # Repair an existing compute before a new Organization requires its ready state.
         if not compute_ready:
-            operation = await operations.enqueue(compute_registry.id, ReconciliationScope.platform)
+            operation = await operations.enqueue(compute_registry.id)
             await reconcile_until_complete(operation.id)
             compute_ready = True
         organization, operation = await organization_service.create(
@@ -246,8 +247,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
         if administrator_changed or owner_changed:
             operation = await operations.enqueue(
                 compute_registry.id,
-                ReconciliationScope.platform,
-                kind=OperationKind.database,
+                kind=OperationKind.organization_reconcile,
                 target_id=organization.id,
             )
             await reconcile_until_complete(operation.id)
@@ -263,7 +263,7 @@ async def seed_local_development(settings: SeedSettings) -> None:
     if application is None:
         # Repair an existing compute before Application creation checks its ready state.
         if not compute_ready:
-            operation = await operations.enqueue(compute_registry.id, ReconciliationScope.platform)
+            operation = await operations.enqueue(compute_registry.id)
             await reconcile_until_complete(operation.id)
         _, operation = await application_service.create(
             organization.id,

@@ -10,7 +10,7 @@ from src.environments import env
 from src.models.roles import PlatformRoles, ApplicationRoles, OrganizationRoles
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
-from src.models.operations import OperationKind, OperationStatus, ReconciliationScope
+from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 from src.database.models.operations import Operation
 from src.database.models.association import UserApplication, UserOrganization
@@ -27,10 +27,10 @@ def fake_resource(**fields: object) -> SimpleNamespace:
 def successful_seed_boundaries(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
-) -> list[tuple[ReconciliationScope, set[UUID] | None]]:
+) -> list[OperationKind]:
     """Replace local machine and provider boundaries while retaining database orchestration."""
 
-    reconciliations: list[tuple[ReconciliationScope, set[UUID] | None]] = []
+    executed_kinds: list[OperationKind] = []
 
     def local_database_host() -> str:
         """Return a deterministic host without inspecting Docker."""
@@ -40,7 +40,7 @@ def successful_seed_boundaries(
     async def reconcile(operation: Operation) -> seed.jobs.OperationOutcome:
         """Persist successful provider observations without contacting Kubernetes or providers."""
 
-        # Record the compute observation through the lease-fenced production service.
+        # Record the compute observation through the production service.
         recorded = await seed.compute_service.record_success(
             operation.compute_id,
             operation.platform_version,
@@ -48,26 +48,31 @@ def successful_seed_boundaries(
             "test-ca",
             "test-certificate",
             "test-private-key",
-            operation.id,
-            operation.attempt_count,
         )
         if not recorded:
-            return seed.jobs.fail("Test reconciliation lost its operation lease")
+            return seed.jobs.fail("Test reconciliation could not record compute state")
 
-        # Mirror statuses that successful Application lifecycle Operations observe from providers.
-        application_ids = (
-            {UUID(application_id) for application_id in operation.application_ids} if operation.application_ids is not None else None
-        )
-        if operation.scope == ReconciliationScope.application:
-            if application_ids is None:
-                for organization in await seed.organization_service.for_compute(operation.compute_id):
-                    if organization.deleted_at is None:
-                        await seed.organization_service.set_runtime(organization.id, OrganizationStatus.running)
-            for application in await seed.application_service.for_compute(operation.compute_id):
-                if application.deleted_at is None and (application_ids is None or application.id in application_ids):
-                    await seed.application_service.set_status(application.id, ApplicationStatus.running)
+        executed_kinds.append(operation.kind)
+        return seed.jobs.complete()
 
-        reconciliations.append((operation.scope, application_ids))
+    async def create_organization(operation: Operation) -> seed.jobs.OperationOutcome:
+        """Complete initial Organization dependencies without contacting providers."""
+
+        await seed.organization_service.set_runtime(operation.target_id, OrganizationStatus.running)
+        executed_kinds.append(operation.kind)
+        return seed.jobs.complete()
+
+    async def reconcile_organization(operation: Operation) -> seed.jobs.OperationOutcome:
+        """Complete shared-schema migration without contacting PostgreSQL."""
+
+        executed_kinds.append(operation.kind)
+        return seed.jobs.complete()
+
+    async def create_application(operation: Operation) -> seed.jobs.OperationOutcome:
+        """Complete one Application deployment without contacting providers."""
+
+        await seed.application_service.set_status(operation.target_id, ApplicationStatus.running)
+        executed_kinds.append(operation.kind)
         return seed.jobs.complete()
 
     # Supply local seed inputs without depending on generated developer-machine state.
@@ -76,8 +81,14 @@ def successful_seed_boundaries(
     monkeypatch.setattr(seed, "KUBECONFIG", kubeconfig)
     monkeypatch.setattr(seed, "local_database_host", local_database_host)
     monkeypatch.setattr(seed.operation_computes, "reconcile", reconcile)
+    monkeypatch.setattr(seed.operation_organizations, "create", create_organization)
+    monkeypatch.setattr(seed.operation_organizations, "reconcile", reconcile_organization)
+    monkeypatch.setattr(seed._operation_applications, "create", create_application)
     monkeypatch.setitem(seed.jobs.handlers, OperationKind.compute, reconcile)
-    return reconciliations
+    monkeypatch.setitem(seed.jobs.handlers, OperationKind.organization_create, create_organization)
+    monkeypatch.setitem(seed.jobs.handlers, OperationKind.organization_reconcile, reconcile_organization)
+    monkeypatch.setitem(seed.jobs.handlers, OperationKind.application_create, create_application)
+    return executed_kinds
 
 
 @pytest.mark.no_db
@@ -92,7 +103,9 @@ async def test_reconcile_until_complete_drains_until_target_operation(monkeypatc
         id=UUID("44444444-4444-4444-4444-444444444444"), kind=OperationKind.compute, compute_id=other_compute_id
     )
     migration_operation = fake_resource(
-        id=UUID("55555555-5555-5555-5555-555555555555"), kind=OperationKind.database, compute_id=target_compute_id
+        id=UUID("55555555-5555-5555-5555-555555555555"),
+        kind=OperationKind.organization_reconcile,
+        compute_id=target_compute_id,
     )
     target_operation = fake_resource(id=target_operation_id, kind=OperationKind.compute, compute_id=target_compute_id)
     claims: list[SimpleNamespace | None] = [None, unrelated_operation, migration_operation, target_operation]
@@ -111,7 +124,7 @@ async def test_reconcile_until_complete_drains_until_target_operation(monkeypatc
 
         expected_handlers = {
             OperationKind.compute: seed.operation_computes.reconcile,
-            OperationKind.database: seed._operation_databases.reconcile,
+            OperationKind.organization_reconcile: seed.operation_organizations.reconcile,
             OperationKind.storage: seed._operation_storages.reconcile,
         }
         assert handler is expected_handlers[claimed_operation.kind]
@@ -143,7 +156,7 @@ async def test_reconcile_until_complete_drains_until_target_operation(monkeypatc
 
 
 async def test_seed_local_development_persists_complete_desired_state(
-    successful_seed_boundaries: list[tuple[ReconciliationScope, set[UUID] | None]],
+    successful_seed_boundaries: list[OperationKind],
 ) -> None:
     """Persist local desired state and drain each reconciliation through the durable queue."""
 
@@ -234,14 +247,14 @@ async def test_seed_local_development_persists_complete_desired_state(
     assert len(operations) == 3
     assert all(operation.status == OperationStatus.completed for operation in operations)
     assert successful_seed_boundaries == [
-        (ReconciliationScope.platform, None),
-        (ReconciliationScope.application, None),
-        (ReconciliationScope.application, {applications[0].id}),
+        OperationKind.compute,
+        OperationKind.organization_create,
+        OperationKind.application_create,
     ]
 
 
 async def test_seed_local_development_preserves_existing_sample_application(
-    successful_seed_boundaries: list[tuple[ReconciliationScope, set[UUID] | None]],
+    successful_seed_boundaries: list[OperationKind],
 ) -> None:
     """Reuse persisted local state without synchronizing an existing sample Application."""
 

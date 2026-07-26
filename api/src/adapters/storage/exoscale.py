@@ -72,7 +72,7 @@ class Exoscale(Storage):
                     "secret_access_key": self._string(key, "secret"),
                 }
         except Exception:
-            # Name-scoped compensation is safe because reconciliation holds the credential-generation lease lock.
+            # Name-scoped compensation is safe because credential generation holds the Application row lock.
             with suppress(Exception):
                 await self.revoke(name)
             raise

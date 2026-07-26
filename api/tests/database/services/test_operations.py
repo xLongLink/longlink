@@ -6,7 +6,7 @@ from src.environments import env
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
 from src.database.services import operations
-from src.models.operations import OperationKind, OperationStatus, ReconciliationScope
+from src.models.operations import OperationKind, OperationStatus
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
@@ -54,46 +54,49 @@ async def test_operations_service_fetch_returns_newest_operations_first() -> Non
     assert all(operation.platform_version == env.VERSION for operation in fetched)
 
 
-async def test_operations_service_enqueue_keeps_platform_and_application_work_separate() -> None:
-    """Coalesce Application lifecycle work without superseding active Platform work."""
+async def test_operations_service_enqueue_coalesces_each_kind_and_target() -> None:
+    """Keep compute and explicit resource lifecycle Operations independently coalesced."""
 
     # Arrange
     compute = await create_compute("local")
     first_application_id = uuid4()
-    second_application_id = uuid4()
-    first = await operations.enqueue(compute.id, ReconciliationScope.platform)
+    organization_id = uuid4()
+    first = await operations.enqueue(compute.id)
     claimed = await operations.claim_next()
     assert claimed is not None
     assert claimed.lease_expires_at is not None
 
     # Act
-    targeted = await operations.enqueue(
+    application = await operations.enqueue(
         compute.id,
-        application_ids={first_application_id},
+        kind=OperationKind.application_create,
+        target_id=first_application_id,
     )
-    combined = await operations.enqueue(
+    duplicate = await operations.enqueue(
         compute.id,
-        application_ids={second_application_id},
+        kind=OperationKind.application_create,
+        target_id=first_application_id,
     )
-    changed = await operations.enqueue(compute.id)
+    organization = await operations.enqueue(
+        compute.id,
+        kind=OperationKind.organization_create,
+        target_id=organization_id,
+    )
     stale_completion = await operations.complete(claimed.id, claimed.attempt_count)
     replacement = await operations.claim_next()
     fetched = await operations.fetch()
 
     # Assert
-    assert targeted.application_ids == [str(first_application_id)]
-    assert combined.application_ids == sorted([str(first_application_id), str(second_application_id)])
-    assert changed.id == targeted.id
-    assert changed.scope == ReconciliationScope.application
-    assert changed.application_ids is None
-    assert changed.lease_expires_at is None
+    assert duplicate.id == application.id
+    assert application.kind == OperationKind.application_create
+    assert application.target_id == first_application_id
+    assert organization.kind == OperationKind.organization_create
+    assert organization.target_id == organization_id
     assert stale_completion is not None
     assert replacement is not None
-    assert replacement.id == targeted.id
+    assert replacement.id == application.id
     assert replacement.attempt_count == 1
-    assert len(fetched) == 2
-    assert all(item.kind == OperationKind.compute for item in fetched)
-    assert all(item.target_id == compute.id for item in fetched)
+    assert len(fetched) == 3
     assert all(item.compute_id == compute.id for item in fetched)
 
 
@@ -184,8 +187,8 @@ async def test_operations_service_claim_ignores_active_and_stopped_operations() 
     assert exhausted_row.attempt_count == operations.OPERATION_ATTEMPT_LIMIT
 
 
-async def test_operations_service_lease_updates_reject_stale_attempts() -> None:
-    """Require the current unexpired attempt generation for every worker state mutation."""
+async def test_operations_service_transitions_reject_stale_attempts() -> None:
+    """Require the current unexpired attempt generation for worker state transitions."""
 
     # Arrange
     compute = await create_compute("local")
@@ -205,11 +208,9 @@ async def test_operations_service_lease_updates_reject_stale_attempts() -> None:
     assert reclaimed is not None
     assert reclaimed.attempt_count == claimed.attempt_count + 1
     # Act
-    stale_lease = await operations.lease_is_current(operation.id, claimed.attempt_count)
     stale_defer = await operations.defer(operation.id, claimed.attempt_count, 0)
     stale_completion = await operations.complete(operation.id, claimed.attempt_count)
     stale_failure = await operations.fail(operation.id, claimed.attempt_count)
-    current_lease = await operations.lease_is_current(operation.id, reclaimed.attempt_count)
 
     async with session_scope() as session:
         row = await session.get(Operation, operation.id)
@@ -218,18 +219,14 @@ async def test_operations_service_lease_updates_reject_stale_attempts() -> None:
         row.lease_expires_at = utcnow() - timedelta(seconds=1)
         await session.commit()
 
-    expired_lease = await operations.lease_is_current(operation.id, reclaimed.attempt_count)
     expired_defer = await operations.defer(operation.id, reclaimed.attempt_count, 0)
     expired_completion = await operations.complete(operation.id, reclaimed.attempt_count)
     expired_failure = await operations.fail(operation.id, reclaimed.attempt_count)
 
     # Assert
-    assert stale_lease is False
     assert stale_defer is None
     assert stale_completion is None
     assert stale_failure is None
-    assert current_lease is True
-    assert expired_lease is False
     assert expired_defer is None
     assert expired_completion is None
     assert expired_failure is None
@@ -292,40 +289,32 @@ async def test_operations_service_defers_and_retries_compute_work() -> None:
     assert retried.lease_expires_at is not None
 
 
-async def test_operations_service_platform_upgrade_supersedes_leased_work(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Supersede a leased operation when a newer Platform release becomes the target."""
+async def test_operations_service_platform_upgrade_queues_after_locked_work(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Queue a newer Platform release without interrupting locked work."""
 
     # Arrange
     monkeypatch.setattr(env, "VERSION", "v1.0.0")
     compute = await create_compute("local")
-    operation = await operations.enqueue(compute.id, ReconciliationScope.platform)
+    operation = await operations.enqueue(compute.id)
     claimed = await operations.claim_next()
     assert claimed is not None
-
-    # Exhaust this row's attempt budget so the newer release receives a fresh operation.
-    async with session_scope() as session:
-        row = await session.get(Operation, operation.id)
-        assert row is not None
-        row.attempt_count = operations.OPERATION_ATTEMPT_LIMIT
-        await session.commit()
-    claimed.attempt_count = operations.OPERATION_ATTEMPT_LIMIT
 
     # Act
     monkeypatch.setattr(env, "VERSION", "v1.1.0")
     await platform_setup.schedule_migrations()
     await platform_setup.schedule_migrations()
     upgraded = next(item for item in await operations.fetch() if item.compute_id == compute.id and item.stopped_at is None)
-    stale_completion = await operations.complete(operation.id, claimed.attempt_count)
+    completed = await operations.complete(operation.id, claimed.attempt_count)
     replacement = await operations.claim_next()
     monkeypatch.setattr(env, "VERSION", "v1.0.0")
 
     # Assert
     assert upgraded.id != operation.id
     assert upgraded.platform_version == "v1.1.0"
-    assert upgraded.scope == ReconciliationScope.platform
     assert upgraded.attempt_count == 0
     assert upgraded.lease_expires_at is None
-    assert stale_completion is None
+    assert completed is not None
+    assert completed.status == OperationStatus.completed
     assert replacement is not None
     assert replacement.id == upgraded.id
     assert replacement.platform_version == "v1.1.0"

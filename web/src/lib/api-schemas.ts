@@ -193,10 +193,17 @@ export const apiComputeRegistrySchema = z.object({
 
 export const apiOperationSchema = z.object({
     id: z.string(),
-    kind: z.enum(['compute', 'database', 'storage']),
+    kind: z.enum([
+        'compute',
+        'storage',
+        'application.create',
+        'application.delete',
+        'organization.create',
+        'organization.delete',
+        'organization.reconcile',
+    ]),
     target_id: z.string(),
     compute_id: z.string(),
-    scope: z.enum(['platform', 'application']),
     status: z.enum(['scheduled', 'active', 'completed', 'failed']),
     platform_version: z.string(),
     attempt_count: z.number().int().nonnegative(),
@@ -225,18 +232,6 @@ export const apiComputePodSchema = z.object({
     name: z.string(),
     status: z.string(),
     node: z.string().nullable(),
-});
-
-export const apiRegistryOptionSchema = z.object({
-    id: z.string(),
-    name: z.string(),
-    slug: z.string(),
-});
-
-export const apiInfrastructureOptionsSchema = z.object({
-    computes: z.array(apiRegistryOptionSchema),
-    databases: z.array(apiRegistryOptionSchema),
-    storages: z.array(apiRegistryOptionSchema),
 });
 
 export const apiOrganizationDatabaseResourceSchema = z.object({

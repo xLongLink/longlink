@@ -44,21 +44,23 @@ export function Navbar() {
                                     <Stack direction="horizontal" gap={4} vAlign="center">
                                         <Link
                                             href="/docs"
-                                            className="group"
+                                            className="group hover:no-underline"
                                             color="secondary"
                                             isStandalone
                                             weight="normal"
                                         >
-                                            <span className="group-hover:text-accent">Documentation</span>
+                                            <span className="transition-colors group-hover:text-accent">
+                                                Documentation
+                                            </span>
                                         </Link>
                                         <Link
                                             href="/pricing"
-                                            className="group"
+                                            className="group hover:no-underline"
                                             color="secondary"
                                             isStandalone
                                             weight="normal"
                                         >
-                                            <span className="group-hover:text-accent">Pricing</span>
+                                            <span className="transition-colors group-hover:text-accent">Pricing</span>
                                         </Link>
                                         <Link
                                             as="a"

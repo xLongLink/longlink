@@ -12,7 +12,7 @@ from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.database.services import operations
-from src.models.operations import ReconciliationScope
+from src.models.operations import OperationKind
 from src.adapters.storage.base import StorageRuntimeCredentials
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
@@ -57,6 +57,25 @@ async def for_compute(compute_id: UUID) -> list[Application]:
         )
         result = await session.execute(statement)
         return result.scalars().all()
+
+
+async def gateway_routes(compute_id: UUID) -> list[tuple[UUID, str]]:
+    """Return stable Service route identities for running Applications on one compute."""
+
+    # Gateway reconciliation needs no provider credentials or Application runtime configuration.
+    async with session_scope() as session:
+        statement = (
+            select(Application.id, Organization.slug)
+            .join(Organization, Organization.id == Application.organization_id)
+            .where(
+                Organization.compute_id == compute_id,
+                Organization.deleted_at.is_(None),
+                Application.deleted_at.is_(None),
+                Application.status == ApplicationStatus.running,
+            )
+            .order_by(Organization.slug, Application.id)
+        )
+        return list((await session.execute(statement)).tuples().all())
 
 
 async def purge(application_id: UUID) -> None:
@@ -208,7 +227,7 @@ async def create(
     icon: str | None = None,
     envs: dict[str, str] | None = None,
 ) -> tuple[Application, Operation]:
-    """Create an Organization-owned LongLink Application and queue compute reconciliation."""
+    """Create an Organization-owned LongLink Application and queue its deployment lifecycle."""
 
     # Validate direct service callers while preserving already-validated API values.
     image = Image(image)
@@ -269,9 +288,9 @@ async def create(
         operation = await operations.enqueue_in_session(
             session,
             compute.id,
-            ReconciliationScope.application,
             locked_compute=compute,
-            application_ids={application.id},
+            kind=OperationKind.application_create,
+            target_id=application.id,
         )
         await session.commit()
 
@@ -306,13 +325,10 @@ def storage_credentials(application: Application) -> StorageRuntimeCredentials |
 
 async def provision_storage_credentials(
     application_id: UUID,
-    operation_id: UUID,
-    attempt_count: int,
-    platform_version: str,
     provision: Callable[[], Awaitable[StorageRuntimeCredentials]],
     discard: Callable[[StorageRuntimeCredentials], Awaitable[None]],
 ) -> tuple[Application, StorageRuntimeCredentials] | None:
-    """Provision and persist credentials while holding the Application and reconciliation lease locks."""
+    """Provision and persist stable storage credentials for one Application."""
 
     generated: StorageRuntimeCredentials | None = None
     try:
@@ -324,31 +340,12 @@ async def provision_storage_credentials(
             if application is None:
                 return None
 
-            # Lock and validate the current lease before starting the external IAM operation.
-            now = utcnow()
-            lease = (
-                await session.execute(
-                    select(Operation.id)
-                    .where(
-                        Operation.id == operation_id,
-                        Operation.attempt_count == attempt_count,
-                        Operation.platform_version == platform_version,
-                        Operation.lease_expires_at > now,
-                        Operation.started_at.is_not(None),
-                        Operation.stopped_at.is_(None),
-                    )
-                    .with_for_update()
-                )
-            ).scalar_one_or_none()
-            if lease is None:
-                return None
-
             # Reuse credentials committed by a prior attempt that completed before these locks were acquired.
             credentials = storage_credentials(application)
             if credentials is not None:
                 return application, credentials
 
-            # Keep deterministic provider replacement and persistence inside the same lease ownership window.
+            # Keep deterministic provider replacement and persistence inside the Application lock.
             generated = await provision()
             application.storage_access_key_id = generated["access_key_id"]
             application.storage_secret_access_key = generated["secret_access_key"]
@@ -380,6 +377,32 @@ async def set_status(application_id: UUID, status: ApplicationStatus) -> None:
         await session.commit()
 
 
+async def mark_running(application_id: UUID, compute_id: UUID) -> Operation | None:
+    """Publish Application readiness and queue fallback gateway reconciliation atomically."""
+
+    # Lock the compute aggregate before updating the Application and its outbox entry.
+    async with session_scope() as session:
+        compute = (
+            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == compute_id).with_for_update())
+        ).scalar_one_or_none()
+        application = (
+            await session.execute(select(Application).where(Application.id == application_id).with_for_update())
+        ).scalar_one_or_none()
+        if compute is None or application is None or application.deleted_at is not None:
+            return None
+
+        # A fresh compute entry preserves a complete gateway retry budget after deployment succeeds.
+        application.status = ApplicationStatus.running
+        operation = await operations.enqueue_in_session(
+            session,
+            compute.id,
+            locked_compute=compute,
+            fresh=True,
+        )
+        await session.commit()
+        return operation
+
+
 async def update_runtime(
     application_id: UUID,
     image: str,
@@ -391,7 +414,7 @@ async def update_runtime(
     icon: str | None = None,
     envs: dict[str, str] | None = None,
 ) -> Application | None:
-    """Persist runtime metadata resolved by reconciliation without reviving a deleted LongLink Application."""
+    """Persist runtime metadata resolved by lifecycle deployment without reviving a deleted Application."""
 
     # Update runtime metadata in one session.
     async with session_scope() as session:
@@ -420,7 +443,7 @@ async def update_runtime(
 
 
 async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Operation] | None:
-    """Tombstone a LongLink Application and atomically queue compute cleanup."""
+    """Tombstone a LongLink Application and atomically queue lifecycle cleanup."""
 
     # Soft-delete the application and memberships together.
     async with session_scope() as session:
@@ -442,39 +465,41 @@ async def soft_delete(application_id: UUID, user: User) -> tuple[Application, Op
             await session.execute(select(Application).where(Application.id == application_id).with_for_update())
         ).scalar_one_or_none()
 
-        # Ignore missing or already-deleted applications.
-        if compute is None or organization is None or application is None or application.deleted_at is not None:
+        # Ignore resources that disappeared while locks were acquired.
+        if compute is None or organization is None or application is None:
             return None
 
-        now = utcnow()
-        application.status = ApplicationStatus.deleting
-        application.deleted_at = now
-        application.deleted_id = user.id
-        application.updated_at = now
-        application.updated_id = user.id
+        # Record the tombstone once; repeated requests only ensure cleanup remains queued.
+        if application.deleted_at is None:
+            now = utcnow()
+            application.status = ApplicationStatus.deleting
+            application.deleted_at = now
+            application.deleted_id = user.id
+            application.updated_at = now
+            application.updated_id = user.id
 
-        memberships = await session.execute(
-            select(UserApplication).where(
-                UserApplication.application_id == application_id,
-                UserApplication.deleted_at.is_(None),
+            memberships = await session.execute(
+                select(UserApplication).where(
+                    UserApplication.application_id == application_id,
+                    UserApplication.deleted_at.is_(None),
+                )
             )
-        )
 
-        # Mark active application memberships as deleted.
-        for membership in memberships.scalars().all():
-            membership.deleted_at = now
-            membership.deleted_id = user.id
-            membership.updated_at = now
-            membership.updated_id = user.id
+            # Mark active Application memberships as deleted.
+            for membership in memberships.scalars().all():
+                membership.deleted_at = now
+                membership.deleted_id = user.id
+                membership.updated_at = now
+                membership.updated_id = user.id
 
         # Application tombstone and reconciliation request are one Platform transaction.
         compute.updated_id = user.id
         operation = await operations.enqueue_in_session(
             session,
             compute.id,
-            ReconciliationScope.application,
             locked_compute=compute,
-            application_ids={application.id},
+            kind=OperationKind.application_delete,
+            target_id=application.id,
         )
 
         await session.commit()

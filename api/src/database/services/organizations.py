@@ -11,7 +11,7 @@ from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, ApplicationStatus, OrganizationStatus
 from src.database.session import session_scope
 from src.database.services import operations
-from src.models.operations import OperationKind, ReconciliationScope
+from src.models.operations import OperationKind
 from src.database.models.users import User
 from src.database.models.computes import ComputeRegistry
 from src.database.models.storages import StorageRegistry
@@ -251,9 +251,8 @@ async def update_member_role(organization_id: UUID, member_id: UUID, role: Organ
         await operations.enqueue_in_session(
             session,
             compute.id,
-            ReconciliationScope.platform,
             locked_compute=compute,
-            kind=OperationKind.database,
+            kind=OperationKind.organization_reconcile,
             target_id=organization.id,
         )
         await session.commit()
@@ -361,8 +360,9 @@ async def create(
             operation = await operations.enqueue_in_session(
                 session,
                 compute.id,
-                ReconciliationScope.application,
                 locked_compute=compute,
+                kind=OperationKind.organization_create,
+                target_id=organization.id,
             )
             await session.commit()
 
@@ -431,81 +431,84 @@ async def soft_delete(organization_id: UUID, user: User) -> tuple[Organization, 
             await session.execute(select(Organization).where(Organization.id == organization_id).with_for_update())
         ).scalar_one_or_none()
 
-        # Ignore missing or already-deleted organizations.
-        if compute is None or organization is None or organization.deleted_at is not None:
+        # Ignore resources that disappeared while locks were acquired.
+        if compute is None or organization is None:
             return None
 
-        now = utcnow()
-        organization.status = OrganizationStatus.deleting
-        organization.deleted_at = now
-        organization.deleted_id = user.id
-        organization.updated_at = now
-        organization.updated_id = user.id
+        # Record nested tombstones once; repeated requests only ensure cleanup remains queued.
+        if organization.deleted_at is None:
+            now = utcnow()
+            organization.status = OrganizationStatus.deleting
+            organization.deleted_at = now
+            organization.deleted_id = user.id
+            organization.updated_at = now
+            organization.updated_id = user.id
 
-        applications_result = await session.execute(
-            select(Application).where(
-                Application.organization_id == organization_id,
-                Application.deleted_at.is_(None),
+            applications_result = await session.execute(
+                select(Application).where(
+                    Application.organization_id == organization_id,
+                    Application.deleted_at.is_(None),
+                )
             )
-        )
 
-        # Mark active applications as deleted.
-        for application in applications_result.scalars().all():
-            application.status = ApplicationStatus.deleting
-            application.deleted_at = now
-            application.deleted_id = user.id
-            application.updated_at = now
-            application.updated_id = user.id
+            # Mark active Applications as deleted.
+            for application in applications_result.scalars().all():
+                application.status = ApplicationStatus.deleting
+                application.deleted_at = now
+                application.deleted_id = user.id
+                application.updated_at = now
+                application.updated_id = user.id
 
-        user_applications_result = await session.execute(
-            select(UserApplication).where(
-                UserApplication.organization_id == organization_id,
-                UserApplication.deleted_at.is_(None),
+            user_applications_result = await session.execute(
+                select(UserApplication).where(
+                    UserApplication.organization_id == organization_id,
+                    UserApplication.deleted_at.is_(None),
+                )
             )
-        )
 
-        # Mark application memberships as deleted.
-        for membership in user_applications_result.scalars().all():
-            membership.deleted_at = now
-            membership.deleted_id = user.id
-            membership.updated_at = now
-            membership.updated_id = user.id
+            # Mark Application memberships as deleted.
+            for membership in user_applications_result.scalars().all():
+                membership.deleted_at = now
+                membership.deleted_id = user.id
+                membership.updated_at = now
+                membership.updated_id = user.id
 
-        user_organizations_result = await session.execute(
-            select(UserOrganization).where(
-                UserOrganization.organization_id == organization_id,
-                UserOrganization.deleted_at.is_(None),
+            user_organizations_result = await session.execute(
+                select(UserOrganization).where(
+                    UserOrganization.organization_id == organization_id,
+                    UserOrganization.deleted_at.is_(None),
+                )
             )
-        )
 
-        # Mark organization memberships as deleted.
-        for membership in user_organizations_result.scalars().all():
-            membership.deleted_at = now
-            membership.deleted_id = user.id
-            membership.updated_at = now
-            membership.updated_id = user.id
+            # Mark Organization memberships as deleted.
+            for membership in user_organizations_result.scalars().all():
+                membership.deleted_at = now
+                membership.deleted_id = user.id
+                membership.updated_at = now
+                membership.updated_id = user.id
 
-        invitations_result = await session.execute(
-            select(OrganizationInvitation).where(
-                OrganizationInvitation.organization_id == organization_id,
-                OrganizationInvitation.deleted_at.is_(None),
+            invitations_result = await session.execute(
+                select(OrganizationInvitation).where(
+                    OrganizationInvitation.organization_id == organization_id,
+                    OrganizationInvitation.deleted_at.is_(None),
+                )
             )
-        )
 
-        # Mark active invitations as deleted.
-        for invitation in invitations_result.scalars().all():
-            invitation.deleted_at = now
-            invitation.deleted_id = user.id
-            invitation.updated_at = now
-            invitation.updated_id = user.id
+            # Mark active invitations as deleted.
+            for invitation in invitations_result.scalars().all():
+                invitation.deleted_at = now
+                invitation.deleted_id = user.id
+                invitation.updated_at = now
+                invitation.updated_id = user.id
 
         # Tombstones and their reconciliation request commit atomically.
         compute.updated_id = user.id
         operation = await operations.enqueue_in_session(
             session,
             compute.id,
-            ReconciliationScope.application,
             locked_compute=compute,
+            kind=OperationKind.organization_delete,
+            target_id=organization.id,
         )
 
         await session.commit()

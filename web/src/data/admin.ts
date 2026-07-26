@@ -1,30 +1,12 @@
-import { useApiQuery } from '@/hooks/use-api';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import {
     apiApplicationResponseSchema,
-    apiInfrastructureOptionsSchema,
     apiOperationSchema,
     apiOrganizationSummarySchema,
     apiUserListItemSchema,
     parseApiCollection,
-    parseApiResponse,
 } from '@/lib/api-schemas';
-import type {
-    ApiApplicationResponse,
-    ApiInfrastructureOptions,
-    ApiOperation,
-    ApiOrganizationSummary,
-    ApiUserListItem,
-} from '@/lib/types';
-
-/** Fetches assignable infrastructure identities without connection secrets. */
-export function useInfrastructureOptions(enabled = true) {
-    return useApiQuery<ApiInfrastructureOptions>(enabled ? '/api/infrastructure/options' : null, {
-        enabled,
-        refetchInterval: enabled ? 5000 : false,
-        parse: (value) => parseApiResponse(apiInfrastructureOptionsSchema, value),
-    });
-}
+import type { ApiApplicationResponse, ApiOperation, ApiOrganizationSummary, ApiUserListItem } from '@/lib/types';
 
 /** Fetches the application list for admin views. */
 export function useApplications() {

@@ -90,7 +90,7 @@ def fail(reason: str) -> OperationOutcome:
 async def execute(operation: Operation, handler: JobHandler) -> Operation:
     """Execute one claimed operation and persist the outcome that releases its lock."""
 
-    # Claimed operations must carry the attempt generation needed for fenced state transitions.
+    # Claimed operations must carry the current worker lock.
     attempt_count = operation.attempt_count
     if attempt_count < 1 or operation.lease_expires_at is None:
         raise ValueError("Operation must be claimed before execution")
@@ -101,6 +101,10 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
     try:
         async with asyncio.timeout(OPERATION_HANDLER_TIMEOUT_SECONDS):
             outcome = await handler(operation)
+    except asyncio.CancelledError:
+        # Graceful shutdown unlocks the interrupted work immediately for another replica.
+        await operations.defer(operation.id, attempt_count, 0)
+        raise
     except TimeoutError as exc:
         detail = str(exc) or "Operation attempt timed out"
         outcome = retry(detail)
@@ -136,9 +140,9 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
         case _:
             raise ValueError(f"Unsupported operation outcome '{outcome.state}'")
 
-    # Never return a stale in-memory row when the requested transition lost ownership.
+    # Never return a stale in-memory row when the worker could not unlock its attempt.
     if updated is None:
-        raise RuntimeError(f"Operation '{operation.id}' lease was lost")
+        raise RuntimeError(f"Operation '{operation.id}' lock was lost")
 
     return updated
 

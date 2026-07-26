@@ -1,13 +1,15 @@
 import json
 import kr8s
+import time
 import yaml
 import base64
+import asyncio
 import builtins
 from copy import deepcopy
+from enum import StrEnum
 from typing import Any, TypeVar
 from kr8s.asyncio import Api
-from kr8s.asyncio.objects import Secret, APIObject, object_from_spec
-from src.models.operations import ReconciliationScope
+from kr8s.asyncio.objects import Pod, Secret, APIObject, Deployment, object_from_spec
 
 KubernetesDocument = dict[str, Any]
 KubernetesResource = TypeVar("KubernetesResource", bound=APIObject)
@@ -18,6 +20,8 @@ COMPUTE_ID_LABEL = "longlink.io/compute-id"
 RESOURCE_SCOPE_LABEL = "longlink.io/resource-scope"
 LONG_LINK_METADATA_PREFIX = "longlink.io/"
 SECRET_REPLACE_ATTEMPTS = 3
+RESOURCE_TIMEOUT_SECONDS = 300
+POLL_INTERVAL_SECONDS = 2
 SERVER_METADATA_FIELDS = {
     "creationTimestamp",
     "deletionGracePeriodSeconds",
@@ -29,6 +33,143 @@ SERVER_METADATA_FIELDS = {
     "selfLink",
     "uid",
 }
+
+
+class ResourceScope(StrEnum):
+    """Separate gateway ownership from explicit tenant lifecycle resources."""
+
+    platform = "platform"
+    application = "application"
+
+
+def metadata(resource: APIObject) -> dict[str, Any]:
+    """Return validated Kubernetes object metadata at the external document boundary."""
+
+    body: Any = resource.to_dict()
+    if not isinstance(body, dict):
+        raise TypeError(f"Kubernetes {resource.kind} response must be a mapping")
+    value = body.get("metadata")
+    if not isinstance(value, dict):
+        raise TypeError(f"Kubernetes {resource.kind} response must include metadata")
+    return value
+
+
+def string_map(value: dict[str, Any], field: str) -> dict[str, str]:
+    """Return one validated string metadata mapping from a Kubernetes response."""
+
+    items = value.get(field, {})
+    if not isinstance(items, dict) or not all(isinstance(key, str) and isinstance(item, str) for key, item in items.items()):
+        raise TypeError(f"Kubernetes metadata.{field} must map strings to strings")
+    return items
+
+
+def uid(resource: APIObject) -> str:
+    """Return the UID required for a conditional deletion."""
+
+    value = metadata(resource).get("uid")
+    if not isinstance(value, str) or not value:
+        raise TypeError(f"Kubernetes {resource.kind} response did not include metadata.uid")
+    return value
+
+
+def resource_version(resource: APIObject) -> str:
+    """Return the resource version used to trigger a dependent workload rollout."""
+
+    value = metadata(resource).get("resourceVersion")
+    if not isinstance(value, str) or not value:
+        raise TypeError(f"Kubernetes {resource.kind} response did not include metadata.resourceVersion")
+    return value
+
+
+def pod_is_active(pod: Pod) -> bool:
+    """Return whether one Pod can still start or execute Application code."""
+
+    body: Any = pod.to_dict()
+    status = body.get("status") if isinstance(body, dict) else None
+    phase = status.get("phase") if isinstance(status, dict) else None
+    return phase not in {"Succeeded", "Failed"}
+
+
+def set_pod_annotation(body: KubernetesDocument, name: str, value: str) -> None:
+    """Set one validated pod-template annotation on a desired Deployment."""
+
+    # Deployment templates are internal manifests, but validate their shape before mutation.
+    spec = body.get("spec")
+    template = spec.get("template") if isinstance(spec, dict) else None
+    template_metadata = template.get("metadata") if isinstance(template, dict) else None
+    if not isinstance(template_metadata, dict):
+        raise TypeError("Desired Deployment must include spec.template.metadata")
+    annotations = template_metadata.setdefault("annotations", {})
+    if not isinstance(annotations, dict):
+        raise TypeError("Desired Deployment pod annotations must be a mapping")
+    annotations[name] = value
+
+
+def _named_items(document: dict[str, Any], field: str) -> dict[str, dict[str, Any]]:
+    """Return one pod-spec list indexed by required unique item names."""
+
+    items = document.get(field, [])
+    if not isinstance(items, list):
+        raise TypeError(f"Kubernetes pod spec {field} must be a list")
+    indexed: dict[str, dict[str, Any]] = {}
+    for item in items:
+        if not isinstance(item, dict) or not isinstance(item.get("name"), str):
+            raise TypeError(f"Kubernetes pod spec {field} entries must have names")
+        indexed[item["name"]] = item
+    return indexed
+
+
+def _deployment_shape_matches(desired: KubernetesDocument, actual: APIObject) -> bool:
+    """Return whether security-critical pod lists exactly match the desired Deployment shape."""
+
+    actual_body: Any = actual.to_dict()
+    desired_spec = desired.get("spec")
+    actual_spec = actual_body.get("spec") if isinstance(actual_body, dict) else None
+    desired_template = desired_spec.get("template") if isinstance(desired_spec, dict) else None
+    actual_template = actual_spec.get("template") if isinstance(actual_spec, dict) else None
+    desired_pod = desired_template.get("spec") if isinstance(desired_template, dict) else None
+    actual_pod = actual_template.get("spec") if isinstance(actual_template, dict) else None
+    if not isinstance(desired_pod, dict) or not isinstance(actual_pod, dict):
+        return False
+    for field in ("containers", "initContainers", "volumes"):
+        desired_items = _named_items(desired_pod, field)
+        actual_items = _named_items(actual_pod, field)
+        if desired_items.keys() != actual_items.keys():
+            return False
+        if field == "volumes":
+            continue
+        for name, desired_container in desired_items.items():
+            actual_container = actual_items[name]
+            for list_field in ("env", "envFrom", "ports", "volumeMounts"):
+                desired_list = desired_container.get(list_field, [])
+                actual_list = actual_container.get(list_field, [])
+                if not isinstance(desired_list, list) or not isinstance(actual_list, list):
+                    return False
+                if list_field == "env":
+                    desired_values = sorted(
+                        (item.get("name"), item.get("value"), json.dumps(item.get("valueFrom"), sort_keys=True))
+                        for item in desired_list
+                        if isinstance(item, dict)
+                    )
+                    actual_values = sorted(
+                        (item.get("name"), item.get("value"), json.dumps(item.get("valueFrom"), sort_keys=True))
+                        for item in actual_list
+                        if isinstance(item, dict)
+                    )
+                elif list_field == "envFrom":
+                    desired_values = sorted(json.dumps(item, sort_keys=True) for item in desired_list)
+                    actual_values = sorted(json.dumps(item, sort_keys=True) for item in actual_list)
+                elif list_field == "ports":
+                    desired_values = sorted(
+                        (item.get("name"), item.get("containerPort")) for item in desired_list if isinstance(item, dict)
+                    )
+                    actual_values = sorted((item.get("name"), item.get("containerPort")) for item in actual_list if isinstance(item, dict))
+                else:
+                    desired_values = sorted((item.get("name"), item.get("mountPath")) for item in desired_list if isinstance(item, dict))
+                    actual_values = sorted((item.get("name"), item.get("mountPath")) for item in actual_list if isinstance(item, dict))
+                if desired_values != actual_values or len(desired_values) != len(desired_list) or len(actual_values) != len(actual_list):
+                    return False
+    return True
 
 
 def _resource_from_body(body: KubernetesDocument, api: Api) -> APIObject:
@@ -100,7 +241,7 @@ def _desired_ownership(body: KubernetesDocument) -> dict[str, str]:
     scope = labels.get(RESOURCE_SCOPE_LABEL)
     if labels.get(MANAGED_BY_LABEL) != FIELD_MANAGER or not isinstance(compute_id, str) or not compute_id:
         raise ValueError("Desired Kubernetes resource has invalid ownership labels")
-    if scope not in {item.value for item in ReconciliationScope}:
+    if scope not in {item.value for item in ResourceScope}:
         raise ValueError("Desired Kubernetes resource has invalid ownership scope")
     return {
         MANAGED_BY_LABEL: FIELD_MANAGER,
@@ -175,6 +316,28 @@ class KubernetesResources:
             if not isinstance(document, dict):
                 raise TypeError("Kubernetes apply response must be a mapping")
             return type(resource)(document, api=api)
+
+    async def apply_deployment(self, body: KubernetesDocument) -> Deployment:
+        """Apply one Deployment and recreate it when foreign pod-list entries survive server-side apply."""
+
+        # Apply the requested Deployment and verify its security-critical list shape.
+        applied = await self.apply(body)
+        if not isinstance(applied, Deployment):
+            raise TypeError("Kubernetes Deployment apply returned an unexpected resource kind")
+        if _deployment_shape_matches(body, applied):
+            return applied
+
+        # Recreate exclusively owned Deployments so injected list entries cannot survive lifecycle deployment.
+        await self.delete(Deployment, applied.name, applied.namespace, uid(applied))
+        deadline = time.monotonic() + RESOURCE_TIMEOUT_SECONDS
+        while await self.read(Deployment, applied.name, applied.namespace) is not None:
+            if time.monotonic() >= deadline:
+                raise TimeoutError(f"Kubernetes Deployment {applied.name!r} did not terminate before recreation")
+            await asyncio.sleep(POLL_INTERVAL_SECONDS)
+        recreated = await self.apply(body)
+        if not isinstance(recreated, Deployment) or not _deployment_shape_matches(body, recreated):
+            raise RuntimeError(f"Kubernetes Deployment {applied.name!r} retained unexpected pod entries")
+        return recreated
 
     async def replace_secret(self, body: KubernetesDocument) -> Secret:
         """Create or replace a Secret with authoritative data, so omitted keys are removed rather than retained by field ownership.
@@ -337,7 +500,7 @@ class KubernetesResources:
         self,
         resource_class: type[KubernetesResource],
         compute_id: str,
-        scope: ReconciliationScope,
+        scope: ResourceScope,
         namespace: str | None = None,
     ) -> builtins.list[KubernetesResource]:
         """List resources only when all LongLink ownership labels match."""
@@ -352,6 +515,49 @@ class KubernetesResources:
                 RESOURCE_SCOPE_LABEL: scope.value,
             },
         )
+
+    async def read_owned(
+        self,
+        resource_class: type[KubernetesResource],
+        name: str,
+        compute_id: str,
+        scope: ResourceScope,
+        namespace: str | None = None,
+        labels: dict[str, str] | None = None,
+    ) -> KubernetesResource | None:
+        """Read one exact resource only when all ownership and lifecycle identity labels match."""
+
+        # Keep the exact lookup and ownership check in one security boundary.
+        resource = await self.read(resource_class, name, namespace)
+        if resource is None:
+            return None
+        expected = {
+            MANAGED_BY_LABEL: FIELD_MANAGER,
+            COMPUTE_ID_LABEL: compute_id,
+            RESOURCE_SCOPE_LABEL: scope.value,
+        }
+        _validate_existing_ownership(resource, expected)
+        existing_labels = string_map(metadata(resource), "labels")
+        if labels is not None and any(existing_labels.get(key) != value for key, value in labels.items()):
+            raise ValueError(f"Kubernetes {resource.kind} {resource.name!r} has invalid lifecycle identity labels")
+        return resource
+
+    async def delete_owned(
+        self,
+        resource_class: type[KubernetesResource],
+        name: str,
+        compute_id: str,
+        scope: ResourceScope,
+        namespace: str | None = None,
+        labels: dict[str, str] | None = None,
+    ) -> None:
+        """Delete one exact owned resource by UID, treating an absent resource as complete."""
+
+        # Validate current ownership immediately before the conditional deletion.
+        resource = await self.read_owned(resource_class, name, compute_id, scope, namespace, labels)
+        if resource is None:
+            return
+        await self.delete(resource_class, name, namespace, uid(resource))
 
     async def delete(
         self,

@@ -10,8 +10,15 @@ from src.models.storages import OrganizationStorageResourceKind, OrganizationSto
 from src.models.databases import OrganizationDatabaseResourceResponse
 from src.database.services import compute, storage, database, invitations, organizations
 from src.models.applications import ApplicationAccessResponse
-from src.models.organizations import (OrganizationCreate, OrganizationUpdate, OrganizationDetails, OrganizationSummary,
-                                      OrganizationMemberUpdate, OrganizationInvitationCreate, OrganizationMutationResponse)
+from src.models.organizations import (
+    OrganizationCreate,
+    OrganizationUpdate,
+    OrganizationDetails,
+    OrganizationSummary,
+    OrganizationMemberUpdate,
+    OrganizationInvitationCreate,
+    OrganizationMutationResponse,
+)
 from longlink.shared.constants import SHARED_SCHEMA
 from src.database.models.users import User
 from src.models.infrastructure import InfrastructureOptionsResponse
@@ -239,10 +246,19 @@ async def update_organization_member(
 
 @router.delete("/api/organizations/{organization_id}", status_code=202, response_model=OrganizationMutationResponse)
 async def delete_organization(organization_id: UUID, user: User = Depends(authuser)):
-    """Mark one Organization absent and queue compute reconciliation."""
+    """Mark one Organization absent and queue lifecycle cleanup."""
 
-    # Require organization ownership unless the caller is a platform administrator.
-    if user.role != PlatformRoles.administrator:
+    # The initiating owner or a Platform administrator may retry cleanup after memberships are removed.
+    tombstone = await organizations.get(organization_id, include_deleted=True)
+    if tombstone is not None and tombstone.deleted_at is not None:
+        retry = True
+        if user.role != PlatformRoles.administrator and tombstone.deleted_id != user.id:
+            raise HTTPException(status_code=403, detail="Access required")
+    else:
+        retry = False
+
+    # Require active Organization ownership for the first deletion request.
+    if not retry and user.role != PlatformRoles.administrator:
         membership = roles.access(user, organization_id, "organization")
         if membership is None:
             raise HTTPException(status_code=403, detail="Access required")
@@ -405,7 +421,7 @@ async def _storage_usage_rows(
 
 @router.post("/api/organizations", response_model=OrganizationMutationResponse, status_code=202)
 async def create_organization(payload: OrganizationCreate, user: User = Depends(current_authenticated_user)):
-    """Create Organization desired state and queue compute reconciliation."""
+    """Create Organization desired state and queue infrastructure creation."""
 
     # Derive the Organization's runtime namespace from its display name.
     slug = names.slugify(payload.name)

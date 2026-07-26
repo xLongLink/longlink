@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
 import { apiStorageRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
-import { infrastructureOptionsQueryKey, storagesQueryKey } from '@/lib/query-keys';
+import { storagesQueryKey } from '@/lib/query-keys';
 
 const schema = z.object({
     name: z.string().trim().min(1),
@@ -63,10 +63,7 @@ export default function CreateStorage() {
         onSuccess: async () => {
             setOpen(false);
             resetDialogState();
-            await Promise.all([
-                queryClient.invalidateQueries({ queryKey: storagesQueryKey() }),
-                queryClient.invalidateQueries({ queryKey: infrastructureOptionsQueryKey() }),
-            ]);
+            await queryClient.invalidateQueries({ queryKey: storagesQueryKey() });
         },
     });
 

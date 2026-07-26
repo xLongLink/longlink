@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
 import { apiComputeMutationResponseSchema, parseApiResponse } from '@/lib/api-schemas';
-import { computesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
+import { computesQueryKey } from '@/lib/query-keys';
 
 const schema = z.object({
     name: z.string().trim().min(1),
@@ -51,10 +51,7 @@ export default function CreateCompute() {
         onSuccess: async () => {
             setOpen(false);
             resetDialogState();
-            await Promise.all([
-                queryClient.invalidateQueries({ queryKey: computesQueryKey() }),
-                queryClient.invalidateQueries({ queryKey: infrastructureOptionsQueryKey() }),
-            ]);
+            await queryClient.invalidateQueries({ queryKey: computesQueryKey() });
         },
     });
 

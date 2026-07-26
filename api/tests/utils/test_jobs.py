@@ -4,7 +4,7 @@ from uuid import UUID
 from datetime import datetime, timedelta
 from src.utils import jobs as operation_worker
 from longlink.utils.time import utcnow
-from src.models.operations import OperationKind, OperationStatus, ReconciliationScope
+from src.models.operations import OperationKind, OperationStatus
 from src.database.models.operations import Operation
 
 pytestmark = pytest.mark.no_db
@@ -22,7 +22,6 @@ def leased_operation(attempt_count: int = 1) -> Operation:
         kind=OperationKind.compute,
         target_id=UUID("22222222-2222-2222-2222-222222222222"),
         compute_id=UUID("22222222-2222-2222-2222-222222222222"),
-        scope=ReconciliationScope.application,
         platform_version="v1.2.3",
         attempt_count=attempt_count,
         started_at=datetime.fromisoformat("2026-07-01T09:00:00+00:00"),
@@ -99,7 +98,6 @@ async def test_execute_retries_location_work_with_exponential_backoff(monkeypatc
             kind=operation.kind,
             target_id=operation.target_id,
             compute_id=operation.compute_id,
-            scope=operation.scope,
             platform_version=operation.platform_version,
             attempt_count=operation.attempt_count,
         )
@@ -171,7 +169,6 @@ async def test_execute_fails_retry_at_attempt_limit(monkeypatch: pytest.MonkeyPa
             target_id=operation.target_id,
             compute_id=operation.compute_id,
             failed=True,
-            scope=operation.scope,
             platform_version=operation.platform_version,
             attempt_count=attempt_count,
             stopped_at=utcnow(),

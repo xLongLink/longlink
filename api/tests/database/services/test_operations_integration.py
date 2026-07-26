@@ -55,7 +55,7 @@ async def test_claim_next_leases_one_operation_to_one_concurrent_worker(monkeypa
             session.add(compute)
             await session.commit()
 
-        # Race independent enqueue transactions against the partial unique index.
+        # Race independent enqueue transactions through the compute aggregate lock.
         enqueue_tasks = [asyncio.create_task(operations.enqueue(compute.id)) for _ in range(2)]
         enqueued = await asyncio.gather(*enqueue_tasks)
 

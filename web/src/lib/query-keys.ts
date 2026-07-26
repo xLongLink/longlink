@@ -35,11 +35,6 @@ export function computesQueryKey() {
     return apiQueryKey('/api/computes');
 }
 
-/** Builds the assignable infrastructure options query key. */
-export function infrastructureOptionsQueryKey() {
-    return apiQueryKey('/api/infrastructure/options');
-}
-
 /** Builds the storages list query key. */
 export function storagesQueryKey() {
     return apiQueryKey('/api/storages');

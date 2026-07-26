@@ -70,41 +70,6 @@ export function formatBytes(bytes: number): string {
     return `${formatNumber(Math.round(value))} ${units[unit]}`;
 }
 
-/** Returns compact avatar initials for a display name. */
-export function getInitials(value: string | null | undefined): string {
-    // Fall back when no display name is available.
-    const name = value?.trim() ?? '';
-    if (!name) return '--';
-
-    const words = name.split(/\s+/).filter(Boolean);
-    const segmenter =
-        typeof Intl.Segmenter === 'function' ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
-
-    // Use up to two words when available.
-    if (words.length > 1) {
-        return words
-            .slice(0, 2)
-            .map((word) => {
-                // Use grapheme segmentation when the browser supports it.
-                if (segmenter) {
-                    const [first] = segmenter.segment(word);
-
-                    return first?.segment ?? '';
-                }
-
-                return Array.from(word)[0] ?? '';
-            })
-            .join('')
-            .toUpperCase();
-    }
-
-    const letters = segmenter
-        ? Array.from(segmenter.segment(words[0]), (entry) => entry.segment)
-        : Array.from(words[0]);
-
-    return letters.slice(0, 2).join('').toUpperCase();
-}
-
 /** Manages the shared delete confirmation dialog state and confirm action. */
 export function useDeleteDialog<TItem>({
     title,
@@ -125,7 +90,6 @@ export function useDeleteDialog<TItem>({
     }
 
     return {
-        target,
         openFor: (item: TItem) => {
             setTargetId(getId(item));
         },

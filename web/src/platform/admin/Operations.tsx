@@ -21,8 +21,12 @@ function createOperationColumns(t: TranslatorFn): TableColumn<ApiOperation>[] {
     };
     const kindLabels: Record<ApiOperation['kind'], string> = {
         compute: t('admin.computeReconciliation'),
-        database: t('admin.databaseMigration'),
         storage: t('admin.storageMigration'),
+        'application.create': t('admin.applicationCreation'),
+        'application.delete': t('admin.applicationDeletion'),
+        'organization.create': t('admin.organizationCreation'),
+        'organization.delete': t('admin.organizationDeletion'),
+        'organization.reconcile': t('admin.organizationReconciliation'),
     };
 
     return [

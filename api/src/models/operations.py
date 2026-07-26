@@ -17,15 +17,12 @@ class OperationKind(StrEnum):
     """Supported registered operation handlers."""
 
     compute = "compute"
-    database = "database"
     storage = "storage"
-
-
-class ReconciliationScope(StrEnum):
-    """Select Platform-only work or Application work with its Platform dependencies."""
-
-    platform = "platform"
-    application = "application"
+    application_create = "application.create"
+    application_delete = "application.delete"
+    organization_create = "organization.create"
+    organization_delete = "organization.delete"
+    organization_reconcile = "organization.reconcile"
 
 
 class OperationResponse(BaseModel):
@@ -42,7 +39,6 @@ class OperationResponse(BaseModel):
     compute_id: UUID
 
     # State
-    scope: ReconciliationScope
     status: OperationStatus
     attempt_count: int
     platform_version: str

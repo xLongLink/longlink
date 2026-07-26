@@ -6,13 +6,18 @@ from src.auth import authuser, authadmin
 from src.utils import names, roles
 from src.logger import logger
 from collections.abc import AsyncIterator
-from src.models.roles import APPLICATION_PROXY_METHODS, APPLICATION_PROXY_METHOD_ROLES, ApplicationRoles, OrganizationRoles
+from src.models.roles import APPLICATION_PROXY_METHODS, APPLICATION_PROXY_METHOD_ROLES, PlatformRoles, ApplicationRoles, OrganizationRoles
 from src.models.statuses import ApplicationStatus
 from starlette.responses import StreamingResponse
 from src.database.services import compute, applications
 from src.kubernetes.client import Kubernetes
-from src.models.applications import (ApplicationCreate, ApplicationResponse, ApplicationMemberUpdate, ApplicationMemberResponse,
-                                     ApplicationMutationResponse)
+from src.models.applications import (
+    ApplicationCreate,
+    ApplicationResponse,
+    ApplicationMemberUpdate,
+    ApplicationMemberResponse,
+    ApplicationMutationResponse,
+)
 from src.database.models.users import User
 from src.database.models.association import UserApplication
 
@@ -35,7 +40,7 @@ async def list_applications(_user: User = Depends(authadmin)):
 
 @router.post("/api/organizations/{organization_id}/applications", response_model=ApplicationMutationResponse, status_code=202)
 async def create_application(organization_id: UUID, payload: ApplicationCreate, user: User = Depends(authuser)):
-    """Create Application desired state and queue compute reconciliation."""
+    """Create Application state and queue its explicit deployment lifecycle."""
 
     # Resolve access inside the handler so body validation can reject malformed payloads first.
     membership = roles.access(user, organization_id, "organization")
@@ -78,6 +83,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     if isinstance(membership, UserApplication):
         application = membership.application
         compute_id = membership.organization.compute_id
+        namespace = membership.organization.slug
         organization_membership = roles.access(user, membership.organization_id, "organization")
         organization_role = organization_membership.role if organization_membership is not None else None
 
@@ -87,6 +93,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
     else:
         application = next(item for item in membership.organization.applications if item.id == application_id)
         compute_id = membership.organization.compute_id
+        namespace = membership.organization.slug
 
         # Organization memberships must satisfy the organization role requirement.
         if not roles.atleast(membership.role, OrganizationRoles.maintain):
@@ -101,7 +108,7 @@ async def get_application_logs(application_id: UUID, user: User = Depends(authus
 
     # Map adapter errors to a service-unavailable response for the API client.
     try:
-        logs = await compute_client.applications.logs(str(application.id))
+        logs = await compute_client.applications.logs(str(application.id), namespace, str(compute_id))
     except Exception as exc:
         logger.exception("Failed to load logs for application '%s': %r", application.id, exc)
         raise HTTPException(status_code=503, detail="Application logs unavailable") from exc
@@ -189,12 +196,18 @@ async def update_application_member(
 
 @router.delete("/api/applications/{application_id}", status_code=202, response_model=ApplicationMutationResponse)
 async def delete_application(application_id: UUID, user: User = Depends(authuser)):
-    """Mark one Application absent and queue compute reconciliation."""
+    """Mark one Application absent and queue explicit lifecycle cleanup."""
 
-    # Load application access before deleting the application.
-    membership = roles.access(user, application_id, "application")
-    if membership is None:
-        raise HTTPException(status_code=403, detail="Access required")
+    # The initiating user or a Platform administrator may retry cleanup after memberships are removed.
+    tombstone = await applications.get(application_id, include_deleted=True)
+    if tombstone is not None and tombstone.deleted_at is not None:
+        if user.role != PlatformRoles.administrator and tombstone.deleted_id != user.id:
+            raise HTTPException(status_code=403, detail="Access required")
+        membership = None
+    else:
+        membership = roles.access(user, application_id, "application")
+        if membership is None:
+            raise HTTPException(status_code=403, detail="Access required")
 
     # Direct application memberships provide application role access.
     if isinstance(membership, UserApplication):
@@ -204,7 +217,7 @@ async def delete_application(application_id: UUID, user: User = Depends(authuser
         if not roles.atleast(membership.role, ApplicationRoles.maintain):
             if not roles.atleast(organization_role, OrganizationRoles.maintain):
                 raise HTTPException(status_code=403, detail="Permission required")
-    else:
+    elif membership is not None:
         # Organization memberships must satisfy the organization role requirement.
         if not roles.atleast(membership.role, OrganizationRoles.maintain):
             raise HTTPException(status_code=403, detail="Permission required")

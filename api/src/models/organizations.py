@@ -89,7 +89,7 @@ class OrganizationSummary(BaseModel):
 
 
 class OrganizationMutationResponse(BaseModel):
-    """Pair an accepted Organization desired-state change with its compute reconciliation operation.
+    """Pair an accepted Organization desired-state change with its infrastructure Operation.
 
     The operation must complete before the desired state is confirmed in managed infrastructure.
     """

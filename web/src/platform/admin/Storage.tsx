@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
 import { apiStorageRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
-import { infrastructureOptionsQueryKey, storagesQueryKey } from '@/lib/query-keys';
+import { storagesQueryKey } from '@/lib/query-keys';
 import type { ApiStorageRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
@@ -60,10 +60,7 @@ export default function AdminStorage() {
                 parseApiResponse(apiStorageRegistrySchema, value)
             ),
         onSuccess: async () => {
-            await Promise.all([
-                queryClient.invalidateQueries({ queryKey: storagesQueryKey() }),
-                queryClient.invalidateQueries({ queryKey: infrastructureOptionsQueryKey() }),
-            ]);
+            await queryClient.invalidateQueries({ queryKey: storagesQueryKey() });
             toast({ body: t('admin.storageDeleted') });
         },
     });

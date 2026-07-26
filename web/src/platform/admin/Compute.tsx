@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiJson } from '@/lib/api';
 import { apiComputeMutationResponseSchema, parseApiResponse } from '@/lib/api-schemas';
-import { computesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
+import { computesQueryKey } from '@/lib/query-keys';
 import type { ApiComputeRegistry } from '@/lib/types';
 import { useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
@@ -65,7 +65,6 @@ export default function AdminCompute() {
         onSuccess: async () => {
             await Promise.all([
                 queryClient.invalidateQueries({ queryKey: computesQueryKey() }),
-                queryClient.invalidateQueries({ queryKey: infrastructureOptionsQueryKey() }),
                 queryClient.invalidateQueries({ queryKey: apiQueryKey('/api/operations') }),
             ]);
             toast({ body: t('admin.computeDeleted') });

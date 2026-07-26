@@ -10,16 +10,16 @@ from src.models.roles import OrganizationRoles
 from longlink.utils.time import utcnow
 from src.database.session import get_session
 from src.database.services import compute, operations, invitations, applications, organizations
-from src.models.operations import OperationKind, OperationStatus, ReconciliationScope
+from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 from src.database.models.association import UserOrganization
 
 
-async def test_create_organization_persists_desired_state_and_queues_reconciliation(
+async def test_create_organization_persists_desired_state_and_queues_creation(
     clients: tuple[AsyncClient, AsyncClient, AsyncClient],
     users: tuple[User, User, User],
 ) -> None:
-    """Persist organization desired state and return its reconciliation operation."""
+    """Persist Organization desired state and return its infrastructure creation Operation."""
 
     # Arrange
     owner = users[0]
@@ -43,6 +43,8 @@ async def test_create_organization_persists_desired_state_and_queues_reconciliat
     assert payload["organization"]["compute_id"] == str(infrastructure.compute.id)
     assert payload["organization"]["database_id"] == str(infrastructure.database.id)
     assert payload["organization"]["storage_id"] == str(infrastructure.storage.id)
+    assert payload["operation"]["kind"] == OperationKind.organization_create
+    assert payload["operation"]["target_id"] == str(organization_id)
     assert payload["operation"]["compute_id"] == str(infrastructure.compute.id)
     assert payload["operation"]["platform_version"] == env.VERSION
     assert payload["operation"]["status"] == OperationStatus.scheduled
@@ -134,10 +136,13 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
 
     # Act
     response = await client.delete(f"/api/organizations/{organization.id}")
+    retry_response = await client.delete(f"/api/organizations/{organization.id}")
 
     # Assert
     assert response.status_code == 202
     payload = response.json()
+    assert retry_response.status_code == 202
+    assert retry_response.json()["operation"]["id"] == payload["operation"]["id"]
     assert payload["organization"]["id"] == str(organization.id)
     assert payload["organization"]["status"] == "deleting"
     assert payload["operation"]["compute_id"] == str(infrastructure.compute.id)
@@ -149,9 +154,14 @@ async def test_delete_organization_soft_deletes_and_returns_reconciliation_opera
     assert deleted.deleted_at is not None
     assert await organizations.applications(organization.id) == []
     recorded_operations = await operations.fetch()
-    assert len(recorded_operations) == 1
-    assert recorded_operations[0].id == UUID(payload["operation"]["id"])
-    assert recorded_operations[0].compute_id == infrastructure.compute.id
+    assert {item.kind for item in recorded_operations} == {
+        OperationKind.application_create,
+        OperationKind.organization_create,
+        OperationKind.organization_delete,
+    }
+    deletion = next(item for item in recorded_operations if item.id == UUID(payload["operation"]["id"]))
+    assert deletion.kind == OperationKind.organization_delete
+    assert deletion.compute_id == infrastructure.compute.id
 
 
 async def test_delete_organization_requires_owner_or_platform_admin(
@@ -736,9 +746,8 @@ async def test_update_organization_member_changes_role(
     assert updated_member.role == OrganizationRoles.admin
     recorded_operations = await operations.fetch()
     assert len(recorded_operations) == 2
-    projection = next(item for item in recorded_operations if item.kind == OperationKind.database)
+    projection = next(item for item in recorded_operations if item.kind == OperationKind.organization_reconcile)
     assert projection.compute_id == infrastructure.compute.id
-    assert projection.scope == ReconciliationScope.platform
     assert projection.target_id == organization.id
 
 

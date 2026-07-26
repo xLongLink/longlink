@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/use-user';
 import { fetchApiJson } from '@/lib/api';
 import { apiDatabaseRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
-import { databasesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
+import { databasesQueryKey } from '@/lib/query-keys';
 
 const schema = z.object({
     name: z.string().trim().min(1),
@@ -67,10 +67,7 @@ export default function CreateDatabase() {
         onSuccess: async () => {
             setOpen(false);
             resetDialogState();
-            await Promise.all([
-                queryClient.invalidateQueries({ queryKey: databasesQueryKey() }),
-                queryClient.invalidateQueries({ queryKey: infrastructureOptionsQueryKey() }),
-            ]);
+            await queryClient.invalidateQueries({ queryKey: databasesQueryKey() });
         },
     });
 

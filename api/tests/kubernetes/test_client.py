@@ -10,9 +10,10 @@ from collections.abc import Iterator
 from src.environments import env
 from kr8s.asyncio.objects import Pod, Secret, Service, ConfigMap, Namespace, Deployment, NetworkPolicy
 from src.kubernetes.client import Kubernetes
-from src.models.operations import ReconciliationScope
 from src.kubernetes.gateway import GatewayTLSMaterial
-from src.kubernetes.reconcile import DesiredCompute, DesiredApplication, DesiredGatewayRoute, DesiredOrganization
+from src.kubernetes.reconcile import DesiredCompute, DesiredGatewayRoute
+from src.kubernetes.applications import DesiredApplication
+from src.kubernetes.organizations import DesiredOrganization
 
 pytestmark = pytest.mark.no_db
 K3S_IMAGE = "rancher/k3s:v1.31.5-k3s1"
@@ -185,40 +186,40 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
     application_id = UUID("20000000-0000-4000-8000-000000000001")
     stale_application_id = UUID("20000000-0000-4000-8000-000000000002")
     proxy_secret = "shared-secret"
+    active_organization = DesiredOrganization(id=organization_id, slug="acme")
+    retired_organization = DesiredOrganization(id=retired_organization_id, slug="retired")
+    active_application = DesiredApplication(
+        id=application_id,
+        organization_id=organization_id,
+        namespace="acme",
+        image=ECHO_SERVER_IMAGE,
+        envs={"LONG_LINK_REQUIRED": "value", "PORT": "8000"},
+    )
+    stale_application = DesiredApplication(
+        id=stale_application_id,
+        organization_id=organization_id,
+        namespace="acme",
+        image=ECHO_SERVER_IMAGE,
+        envs={"PORT": "8000"},
+    )
     desired = DesiredCompute(
         id=compute_id,
         routes=(
             DesiredGatewayRoute(id=application_id, namespace="acme"),
             DesiredGatewayRoute(id=stale_application_id, namespace="acme"),
         ),
-        organizations=(
-            DesiredOrganization(id=organization_id, slug="acme"),
-            DesiredOrganization(id=retired_organization_id, slug="retired"),
-        ),
-        applications=(
-            DesiredApplication(
-                id=application_id,
-                organization_id=organization_id,
-                namespace="acme",
-                image=ECHO_SERVER_IMAGE,
-                envs={"LONG_LINK_REQUIRED": "value", "PORT": "8000"},
-            ),
-            DesiredApplication(
-                id=stale_application_id,
-                organization_id=organization_id,
-                namespace="acme",
-                image=ECHO_SERVER_IMAGE,
-                envs={"PORT": "8000"},
-            ),
-        ),
-        application_ids=(application_id, stale_application_id),
-        organizations_complete=True,
     )
-    cleanup = DesiredCompute(id=compute_id, routes=(), organizations=(), applications=(), deleting=True)
+    cleanup = DesiredCompute(id=compute_id, routes=(), deleting=True)
     cleanup_requested = False
 
     try:
-        # Act: apply the complete graph once, then introduce owned resource drift.
+        # Act: install explicit tenant resources once, then reconcile only the gateway route graph.
+        await compute.organizations.apply(active_organization, str(compute_id), env.VERSION)
+        await compute.organizations.apply(retired_organization, str(compute_id), env.VERSION)
+        await compute.applications.apply(active_application, str(compute_id), proxy_secret, env.VERSION)
+        await compute.applications.apply(stale_application, str(compute_id), proxy_secret, env.VERSION)
+        await compute.applications.wait_ready(str(application_id), "acme")
+        await compute.applications.wait_ready(str(stale_application_id), "acme")
         try:
             first = await compute.reconcile(desired, proxy_secret)
         except TimeoutError:
@@ -277,15 +278,10 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         )
 
         # Act: remove explicit lifecycle targets without resynchronizing the retained Application.
-        current = DesiredCompute(
-            id=compute_id,
-            routes=(DesiredGatewayRoute(id=application_id, namespace="acme"),),
-            organizations=(DesiredOrganization(id=organization_id, slug="acme"),),
-            applications=(),
-            application_ids=(stale_application_id,),
-            organizations_complete=True,
-        )
+        current = DesiredCompute(id=compute_id, routes=(DesiredGatewayRoute(id=application_id, namespace="acme"),))
         second = await compute.reconcile(current, proxy_secret, tls_material)
+        await compute.applications.delete(stale_application_id, organization_id, "acme", str(compute_id))
+        await compute.organizations.delete(retired_organization, str(compute_id))
 
         # Assert: synchronization reused TLS and removed stale resources without repairing the live workload.
         assert second.gateway_url == first.gateway_url
@@ -379,11 +375,11 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
         # Wait for the retained workload before exercising the CA-verified HTTPS gateway.
         deadline = time.monotonic() + 180
         while time.monotonic() < deadline:
-            if await compute.applications.ready(str(application_id)):
+            if await compute.applications.ready(str(application_id), "acme"):
                 break
             await asyncio.sleep(2)
         else:
-            pod = await compute.applications.pod(str(application_id))
+            pod = await compute.applications.pod(str(application_id), "acme", str(compute_id))
             pod_status = pod.raw.get("status", {}) if pod is not None else None
             pytest.fail(f"k3s application did not become ready before timeout: {pod_status}")
 
@@ -398,23 +394,20 @@ async def test_kubernetes_manages_real_namespace_application_gateway_and_cleanup
             else:
                 pytest.fail(f"k3s gateway did not become reachable over HTTPS: {response.status_code} {response.text}")
 
-        logs = await compute.applications.logs(str(application_id), lines=50)
+        logs = await compute.applications.logs(str(application_id), "acme", str(compute_id), lines=50)
         assert any("Listening on port 8000." in line for line in logs)
 
         # A cluster claimed by one compute target must reject another target before adoption.
         with pytest.raises(ValueError, match=f"not owned by compute {other_compute_id}"):
             await compute.reconcile(
-                DesiredCompute(
-                    id=other_compute_id,
-                    routes=(),
-                    organizations=(),
-                    applications=(),
-                    scope=ReconciliationScope.platform,
-                ),
+                DesiredCompute(id=other_compute_id, routes=()),
                 "other-secret",
             )
 
-        # Deleting desired state prunes all owned children before releasing the system Namespace claim.
+        # Explicit tenant cleanup precedes compute deletion, which owns only gateway and bootstrap resources.
+        await compute.reconcile(DesiredCompute(id=compute_id, routes=()), proxy_secret, tls_material)
+        await compute.applications.delete(application_id, organization_id, "acme", str(compute_id))
+        await compute.organizations.delete(active_organization, str(compute_id))
         deleted = await compute.reconcile(cleanup, proxy_secret, tls_material)
         cleanup_requested = True
         assert deleted.gateway_url is None

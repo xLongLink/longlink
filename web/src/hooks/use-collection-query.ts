@@ -7,7 +7,6 @@ type UseCollectionQueryOptions<TData> = {
     refetchOnMount?: boolean | 'always';
     enabled?: boolean;
     parse?: (value: unknown) => TData[];
-    request?: RequestInit;
 };
 
 type UseCollectionQueryResult<TData> = UseQueryResult<Array<TData>, Error> & {
@@ -28,7 +27,6 @@ export function useCollectionQuery<TData>(
         refetchInterval: options.refetchInterval,
         enabled: options.enabled,
         parse: options.parse,
-        request: options.request,
     });
 
     return {

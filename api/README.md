@@ -53,9 +53,14 @@ Each application has:
 
 ## Operations
 
-Any job that is too long to run in a endpoint, is schedjused as `operation`:
-- Each API replica runs a `lifespan` that claim and run 1 operation at the time.
-- Designed to be stable across re-deployments, so that operations are not left uncompleted.
+Work that is too long for an API request is queued as a durable, typed Operation:
+
+- `compute` reconciles only cluster-bootstrap and gateway resources, including routes for running Applications. It never deploys, deletes, or repairs Organization or Application resources.
+- `organization.create` and `organization.delete` own one Organization's provider resources and Kubernetes Namespace lifecycle.
+- `application.create` and `application.delete` own one Application's provider resources and Kubernetes workload lifecycle.
+- `organization.reconcile` and `storage` synchronize shared Organization state during releases and membership changes.
+- Each API replica claims and executes one Operation at a time. Expiring worker locks and bounded retries recover work across Platform redeployments.
+- Lifecycle retries reuse persisted state and skip deployment after an Application or Organization reaches `running`.
 
 <br />
 
@@ -63,12 +68,12 @@ Any job that is too long to run in a endpoint, is schedjused as `operation`:
 
 - Release is trigged with `vX.Y.Z` and a container is created
 - Alembic migrations run, then `setup.py` schedules release migration Operations:
-  - One compute synchronization for every outdated compute.
+  - One gateway and cluster-bootstrap synchronization for every outdated compute.
   - One shared-schema synchronization for every Organization.
   - One shared-folder synchronization for every Organization bucket.
 - Each API replica starts (`main.py`).
   - `FastAPI` manage user request.
-  - `lifespan` claim and execute the operations.
+  - `lifespan` claims and executes Operations.
 
 <br />
 

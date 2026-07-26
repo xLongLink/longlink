@@ -6,7 +6,7 @@ from src.environments import env
 from packaging.version import Version
 from longlink.utils.time import utcnow
 from src.database.session import session_scope
-from src.models.operations import OperationKind, ReconciliationScope
+from src.models.operations import OperationKind
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
@@ -27,15 +27,13 @@ async def fetch() -> list[Operation]:
 async def enqueue_in_session(
     session: AsyncSession,
     compute_id: UUID,
-    scope: ReconciliationScope,
     locked_compute: ComputeRegistry | None = None,
     *,
     kind: OperationKind = OperationKind.compute,
     target_id: UUID | None = None,
-    desired_change: bool = True,
-    application_ids: set[UUID] | None = None,
+    fresh: bool = False,
 ) -> Operation:
-    """Coalesce scoped Platform reconciliation inside the caller's desired-state transaction.
+    """Append one typed Platform operation inside the caller's state transaction.
 
     Compute locking keeps the release target monotonic and queueing atomic across LongLink Platform replicas. Callers
     that already locked the compute in this transaction can supply it to avoid selecting the same row again.
@@ -46,18 +44,7 @@ async def enqueue_in_session(
     if kind == OperationKind.compute and target != compute_id:
         raise ValueError("Compute operations must target their compute registry")
     if kind != OperationKind.compute and target_id is None:
-        raise ValueError("Migration operations require an explicit resource target")
-    if kind != OperationKind.compute and scope != ReconciliationScope.platform:
-        raise ValueError("Migration operations require Platform reconciliation scope")
-
-    # Platform work cannot target Applications, and an explicit target set must contain work.
-    if scope == ReconciliationScope.platform and application_ids is not None:
-        raise ValueError("Platform reconciliation cannot target Applications")
-    if application_ids is not None and not application_ids:
-        raise ValueError("Application reconciliation targets cannot be empty")
-    requested_ids: list[str] | None = (
-        sorted(str(application_id) for application_id in application_ids) if application_ids is not None else None
-    )
+        raise ValueError("Resource operations require an explicit target")
 
     # Reuse a caller-owned aggregate lock when available.
     compute = locked_compute
@@ -75,7 +62,11 @@ async def enqueue_in_session(
         (
             await session.execute(
                 select(Operation.platform_version)
-                .where(Operation.kind == kind, Operation.target_id == target, Operation.scope == scope)
+                .where(
+                    Operation.compute_id == compute_id,
+                    Operation.kind == kind,
+                    Operation.target_id == target,
+                )
                 .distinct()
             )
         )
@@ -86,59 +77,41 @@ async def enqueue_in_session(
         [env.VERSION, *versions, *([compute.version] if compute.version is not None else [])],
         key=Version,
     )
+
+    # Reuse queued work and lock every matching open row before deciding whether a follow-up is required.
     existing = (
-        await session.execute(
-            select(Operation)
-            .where(
-                Operation.kind == kind,
-                Operation.target_id == target,
-                Operation.scope == scope,
-                Operation.stopped_at.is_(None),
+        (
+            await session.execute(
+                select(Operation)
+                .where(
+                    Operation.compute_id == compute_id,
+                    Operation.kind == kind,
+                    Operation.target_id == target,
+                    Operation.stopped_at.is_(None),
+                )
+                .order_by(Operation.created_at)
+                .with_for_update()
             )
-            .with_for_update()
         )
-    ).scalar_one_or_none()
+        .scalars()
+        .all()
+    )
+    current_version = Version(platform_version)
+    queued = next(
+        (item for item in existing if item.started_at is None and Version(item.platform_version) == current_version),
+        None,
+    )
+    if queued is not None and (not fresh or queued.attempt_count == 0):
+        return queued
 
-    # Organization lifecycle work dominates targeted Application work, while targeted IDs are unioned.
-    effective_application_ids: list[str] | None = requested_ids
-    if existing is not None and scope == ReconciliationScope.application:
-        if existing.application_ids is None or requested_ids is None:
-            effective_application_ids = None
-        else:
-            effective_application_ids = sorted(set(existing.application_ids or []) | set(requested_ids or []))
-
-    # Desired-state changes and release upgrades supersede active attempts and remove inherited retry delays.
-    if existing is not None:
-        version_changed = Version(platform_version) > Version(existing.platform_version)
-        work_changed = existing.application_ids != effective_application_ids
-        if not desired_change and not version_changed and not work_changed:
-            return existing
-        now = utcnow()
-
-        # A fresh desired target receives a complete attempt budget after the previous row exhausted its own.
-        if existing.attempt_count >= OPERATION_ATTEMPT_LIMIT:
-            logger.error("Operation %s was superseded after exhausting its attempt budget", existing.id)
-            existing.failed = True
-            existing.stopped_at = now
-            existing.lease_expires_at = None
-        else:
-            existing.application_ids = effective_application_ids
-            if version_changed:
-                existing.platform_version = platform_version
-            existing.scheduled_at = now
-            if existing.lease_expires_at is not None:
-                existing.lease_expires_at = now
-            return existing
-
-    # New work starts ready for the Platform release that owns the compute target.
+    # Active work is immutable and receives a separate follow-up without losing its worker lock.
+    now = utcnow()
     operation = Operation(
         kind=kind,
-        scope=scope,
         target_id=target,
-        application_ids=effective_application_ids,
         platform_version=platform_version,
         compute_id=compute_id,
-        scheduled_at=utcnow(),
+        scheduled_at=now,
     )
     session.add(operation)
     await session.flush()
@@ -147,11 +120,9 @@ async def enqueue_in_session(
 
 async def enqueue(
     compute_id: UUID,
-    scope: ReconciliationScope = ReconciliationScope.application,
     *,
     kind: OperationKind = OperationKind.compute,
     target_id: UUID | None = None,
-    application_ids: set[UUID] | None = None,
 ) -> Operation:
     """Queue one registered Platform operation in a dedicated transaction."""
 
@@ -160,10 +131,8 @@ async def enqueue(
         operation = await enqueue_in_session(
             session,
             compute_id,
-            scope,
             kind=kind,
             target_id=target_id,
-            application_ids=application_ids,
         )
         await session.commit()
         return operation
@@ -204,7 +173,7 @@ async def claim_next() -> Operation | None:
                 return None
             operation_id, compute_id = candidate
 
-            # Follow the aggregate-first lock order used by desired-state mutations and completion.
+            # Follow the aggregate-first lock order used by desired-state mutations.
             compute = (
                 await session.execute(select(ComputeRegistry.id).where(ComputeRegistry.id == compute_id).with_for_update())
             ).scalar_one_or_none()
@@ -263,57 +232,27 @@ async def claim_next() -> Operation | None:
 async def complete(operation_id: UUID, attempt_count: int) -> Operation | None:
     """Complete one operation while the caller owns its current attempt."""
 
-    # Resolve the compute target before locking in the same aggregate-first order used by desired-state mutations.
+    # Complete only the currently locked attempt.
     async with session_scope() as session:
-        snapshot = (await session.execute(select(Operation).where(Operation.id == operation_id))).scalar_one_or_none()
-        if snapshot is None:
-            return None
-        compute = (
-            await session.execute(select(ComputeRegistry).where(ComputeRegistry.id == snapshot.compute_id).with_for_update())
-        ).scalar_one_or_none()
-        if compute is None:
-            return None
-
-        # Lock and revalidate the leased operation after the compute prevents concurrent desired-state changes.
         now = utcnow()
-        operation = (
-            await session.execute(
-                select(Operation)
-                .where(
-                    Operation.id == operation_id,
-                    Operation.attempt_count == attempt_count,
-                    Operation.lease_expires_at > now,
-                    Operation.started_at.is_not(None),
-                    Operation.stopped_at.is_(None),
-                )
-                .with_for_update()
+        statement = (
+            update(Operation)
+            .where(
+                Operation.id == operation_id,
+                Operation.attempt_count == attempt_count,
+                Operation.lease_expires_at > now,
+                Operation.started_at.is_not(None),
+                Operation.stopped_at.is_(None),
             )
-        ).scalar_one_or_none()
+            .values(stopped_at=now, lease_expires_at=None)
+            .returning(Operation)
+        )
+        operation = (await session.execute(statement)).scalar_one_or_none()
         if operation is None:
             return None
 
-        # Terminal completion releases the lease while preserving the final attempt timestamps.
-        operation.stopped_at = now
-        operation.lease_expires_at = None
-
         await session.commit()
         return operation
-
-
-async def lease_is_current(operation_id: UUID, attempt_count: int) -> bool:
-    """Return whether one worker still owns an unexpired operation lease."""
-
-    # External mutation phases call this fence after awaits and before issuing provider writes.
-    async with session_scope() as session:
-        now = utcnow()
-        statement = select(Operation.id).where(
-            Operation.id == operation_id,
-            Operation.attempt_count == attempt_count,
-            Operation.lease_expires_at > now,
-            Operation.started_at.is_not(None),
-            Operation.stopped_at.is_(None),
-        )
-        return (await session.execute(statement)).scalar_one_or_none() is not None
 
 
 async def defer(
@@ -321,9 +260,9 @@ async def defer(
     attempt_count: int,
     delay_seconds: float,
 ) -> Operation | None:
-    """Release an unexpired lease and schedule one transient retry."""
+    """Unlock one operation and schedule a transient retry."""
 
-    # Schedule the next attempt only while this worker still owns the current one.
+    # Schedule the next attempt only while this worker still holds the lock.
     async with session_scope() as session:
         now = utcnow()
         statement = (
@@ -345,7 +284,7 @@ async def defer(
         result = await session.execute(statement)
         operation = result.scalar_one_or_none()
 
-        # A missing returned row means the attempt was superseded or its lease expired.
+        # A missing row means the worker no longer holds this attempt's lock.
         if operation is None:
             return None
 
@@ -354,9 +293,9 @@ async def defer(
 
 
 async def fail(operation_id: UUID, attempt_count: int) -> Operation | None:
-    """Fail an operation while the caller owns its unexpired lease."""
+    """Fail and unlock one operation while the caller holds its current attempt."""
 
-    # Persist terminal failure only for the current leased attempt.
+    # Persist terminal failure only for the current locked attempt.
     async with session_scope() as session:
         now = utcnow()
         statement = (
@@ -378,7 +317,7 @@ async def fail(operation_id: UUID, attempt_count: int) -> Operation | None:
         result = await session.execute(statement)
         operation = result.scalar_one_or_none()
 
-        # A missing returned row means the attempt was superseded or its lease expired.
+        # A missing row means the worker no longer holds this attempt's lock.
         if operation is None:
             return None
 

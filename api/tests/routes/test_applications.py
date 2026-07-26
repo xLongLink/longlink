@@ -5,7 +5,7 @@ from src.environments import env
 from src.models.roles import ApplicationRoles, OrganizationRoles
 from src.database.session import get_session
 from src.database.services import operations, applications, organizations
-from src.models.operations import OperationStatus
+from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 
@@ -160,6 +160,7 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     assert application["description"] == "Dashboard app"
     assert application["image"] == "ghcr.io/longlink/dashboard:latest"
     assert operation["compute_id"] == str(infrastructure.compute.id)
+    assert operation["kind"] == OperationKind.application_create
     assert operation["platform_version"] == env.VERSION
     assert operation["status"] == OperationStatus.scheduled
 
@@ -168,8 +169,8 @@ async def test_create_app_persists_desired_state_and_queues_reconciliation(
     assert persisted.organization_id == organization.id
     assert persisted.envs == {"API_KEY": "secret-value", "PORT": "8080"}
     queued = await operations.fetch()
-    assert len(queued) == 1
-    assert str(queued[0].id) == operation["id"]
+    assert len(queued) == 2
+    assert any(str(item.id) == operation["id"] for item in queued)
 
 
 async def test_create_app_returns_403_for_regular_member(
@@ -232,11 +233,13 @@ async def test_get_app_logs_returns_pod_logs(
             self.applications = self
             captured["kubeconfig"] = kubeconfig
 
-        async def logs(self, application_id: str, lines: int = 200) -> list[str]:
+        async def logs(self, application_id: str, namespace: str, compute_id: str, lines: int = 200) -> list[str]:
             """Record the log request and return fake pod logs."""
 
             captured["logs"] = {
                 "application_id": application_id,
+                "namespace": namespace,
+                "compute_id": compute_id,
                 "lines": lines,
             }
             return ["line 1", "line 2"]
@@ -253,6 +256,8 @@ async def test_get_app_logs_returns_pod_logs(
     assert captured["kubeconfig"] == registry.kubeconfig
     assert captured["logs"] == {
         "application_id": str(app.id),
+        "namespace": organization.slug,
+        "compute_id": str(registry.id),
         "lines": 200,
     }
 
@@ -304,10 +309,12 @@ async def test_app_logs_return_unavailable_when_backend_fails(
             assert kubeconfig == infrastructure.compute.kubeconfig
             self.applications = self
 
-        async def logs(self, application_id: str, lines: int = 200) -> list[str]:
+        async def logs(self, application_id: str, namespace: str, compute_id: str, lines: int = 200) -> list[str]:
             """Raise the backend error expected by the test."""
 
             assert application_id == str(app.id)
+            assert namespace == organization.slug
+            assert compute_id == str(infrastructure.compute.id)
             assert lines == 200
             raise RuntimeError("logs unavailable")
 
@@ -399,13 +406,17 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
 
     # Act
     response = await client.delete(f"/api/applications/{app.id}")
+    retry_response = await client.delete(f"/api/applications/{app.id}")
 
     # Assert
     assert response.status_code == 202
     payload = response.json()
+    assert retry_response.status_code == 202
+    assert retry_response.json()["operation"]["id"] == payload["operation"]["id"]
     assert payload["application"]["id"] == str(app.id)
     assert payload["application"]["status"] == "deleting"
     assert payload["operation"]["compute_id"] == str(infrastructure.compute.id)
+    assert payload["operation"]["kind"] == OperationKind.application_delete
     assert payload["operation"]["platform_version"] == env.VERSION
     assert payload["operation"]["status"] == OperationStatus.scheduled
     assert await applications.get(app.id) is None
@@ -413,5 +424,9 @@ async def test_delete_application_soft_deletes_and_returns_reconciliation_operat
     assert deleted is not None
     assert deleted.deleted_id == user.id
     recorded_operations = await operations.fetch()
-    assert len(recorded_operations) == 1
-    assert str(recorded_operations[0].id) == payload["operation"]["id"]
+    assert {item.kind for item in recorded_operations} == {
+        OperationKind.application_create,
+        OperationKind.application_delete,
+        OperationKind.organization_create,
+    }
+    assert any(str(item.id) == payload["operation"]["id"] for item in recorded_operations)

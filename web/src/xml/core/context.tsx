@@ -32,7 +32,7 @@ export function useXmlContext(): { ctx: ExecutionContext } {
 }
 
 /** Resolves top-level State and Query nodes before rendering the page tree. */
-export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUrl: string): Promise<ExecutionContext> {
+export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUrl: string): Promise<void> {
     const setups = ctx.setups;
 
     async function walk(nodes: ASTNode[]): Promise<void> {
@@ -108,8 +108,6 @@ export async function setupContext(ast: ASTNode[], ctx: ExecutionContext, baseUr
     }
 
     await walk(ast);
-
-    return ctx;
 }
 
 /** Validates setup-only runtime declarations before they are initialized. */

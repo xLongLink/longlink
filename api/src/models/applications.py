@@ -92,7 +92,7 @@ class ApplicationResponse(BaseModel):
 
 
 class ApplicationMutationResponse(BaseModel):
-    """Pair an accepted LongLink Application desired-state change with its compute reconciliation operation.
+    """Pair an accepted LongLink Application change with its lifecycle Operation.
 
     The operation must complete before the desired state is confirmed in the runtime.
     """

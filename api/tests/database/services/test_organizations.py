@@ -8,7 +8,7 @@ from longlink.utils.time import utcnow
 from src.models.statuses import ComputeStatus, OrganizationStatus
 from src.database.session import get_session
 from src.database.services import compute, operations, invitations, applications, organizations
-from src.models.operations import OperationKind, OperationStatus, ReconciliationScope
+from src.models.operations import OperationKind, OperationStatus
 from src.database.models.users import User
 from src.database.models.association import UserApplication, UserOrganization
 
@@ -36,6 +36,8 @@ async def test_create_persists_org_and_owner_membership(users: tuple[User, User,
     assert reloaded_compute.status == ComputeStatus.ready
     assert reloaded_compute.version == env.VERSION
     assert len(open_operations) == 1
+    assert open_operations[0].kind == OperationKind.organization_create
+    assert open_operations[0].target_id == organization.id
     assert open_operations[0].compute_id == infrastructure.compute.id
     assert open_operations[0].platform_version == env.VERSION
     assert open_operations[0].status == OperationStatus.scheduled
@@ -162,9 +164,11 @@ async def test_update_member_role_updates_existing_memberships(users: tuple[User
     assert reloaded_compute is not None
     assert reloaded_compute.status == ComputeStatus.ready
     assert reloaded_compute.version == env.VERSION
-    assert len(open_operations) == 2
-    projection = next(item for item in open_operations if item.kind == OperationKind.database)
-    assert projection.scope == ReconciliationScope.platform
+    assert {item.kind for item in open_operations} == {
+        OperationKind.organization_create,
+        OperationKind.organization_reconcile,
+    }
+    projection = next(item for item in open_operations if item.kind == OperationKind.organization_reconcile)
     assert projection.target_id == organization.id
     assert open_operations[0].compute_id == infrastructure.compute.id
     assert open_operations[0].platform_version == env.VERSION
@@ -331,7 +335,8 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert active_application is None
     assert deleted_application is not None
     assert deleted_application.deleted_id == owner.id
-    assert second_delete is None
+    assert second_delete is not None
+    assert second_delete[1].id == operation.id
     assert missing_delete is None
     assert await organizations.membership_role(organization.id, owner.id) is None
     assert await organizations.membership_role(organization.id, member.id) is None
@@ -341,8 +346,13 @@ async def test_soft_delete_cascades_nested_organization_rows(users: tuple[User, 
     assert reloaded_compute is not None
     assert reloaded_compute.status == ComputeStatus.ready
     assert reloaded_compute.version == env.VERSION
-    assert len(open_operations) == 1
-    assert open_operations[0].id == operation.id
-    assert open_operations[0].compute_id == infrastructure.compute.id
-    assert open_operations[0].platform_version == env.VERSION
-    assert open_operations[0].status == OperationStatus.scheduled
+    assert {item.kind for item in open_operations} == {
+        OperationKind.application_create,
+        OperationKind.organization_create,
+        OperationKind.organization_delete,
+    }
+    deletion = next(item for item in open_operations if item.id == operation.id)
+    assert deletion.kind == OperationKind.organization_delete
+    assert deletion.compute_id == infrastructure.compute.id
+    assert deletion.platform_version == env.VERSION
+    assert deletion.status == OperationStatus.scheduled

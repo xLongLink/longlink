@@ -27,8 +27,6 @@ type UserQueryResult = UseQueryResult<User | null, Error>;
 
 type AccountsState = {
     items: ApiUserListItem[];
-    isLoading: boolean;
-    error: Error | null;
 };
 
 type UserProfileState = {
@@ -146,8 +144,6 @@ export function useSavedAccounts(): AccountsState {
 
     return {
         items: accountsQuery.items,
-        isLoading: accountsQuery.isLoading || accountsQuery.isFetching,
-        error: accountsQuery.error ?? null,
     };
 }
 

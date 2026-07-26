@@ -29,7 +29,6 @@ async def test_operations_endpoint_returns_compute_scoped_operations(
     assert payload[0]["kind"] == OperationKind.compute
     assert payload[0]["target_id"] == str(infrastructure.compute.id)
     assert payload[0]["compute_id"] == str(infrastructure.compute.id)
-    assert payload[0]["scope"] == operation.scope
     assert payload[0]["status"] == operation.status
     assert payload[0]["platform_version"] == env.VERSION
     assert "error" not in payload[0]

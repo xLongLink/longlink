@@ -1,24 +1,13 @@
 from src import adapters
 from src.utils import jobs, names
 from src.utils.jobs import operation
-from src.database.services import storage, operations, organizations
+from src.database.services import storage, organizations
 from src.database.models.operations import Operation
 
 
 @operation("storage")
 async def reconcile(operation: Operation) -> jobs.OperationOutcome:
     """Synchronize one Organization shared storage folder."""
-
-    # Every external mutation is fenced by the unexpired lease claimed for this attempt.
-    attempt_count = operation.attempt_count
-    if attempt_count < 1 or operation.lease_expires_at is None:
-        raise ValueError("Storage migration requires a claimed operation")
-
-    async def fence() -> None:
-        """Reject provider work after another worker can own this operation."""
-
-        if not await operations.lease_is_current(operation.id, attempt_count):
-            raise RuntimeError(f"Operation '{operation.id}' lease was lost")
 
     # Deleted Organizations are cleanup work, not release migration targets.
     organization = await organizations.get(operation.target_id, include_deleted=True)
@@ -35,8 +24,6 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
     bucket = names.organization_bucket(organization.id)
 
     # Converge the bucket and idempotent shared folder marker independently.
-    await fence()
     await object_storage.create(bucket)
-    await fence()
     await object_storage.create_prefix(bucket, names.shared_storage_prefix())
     return jobs.complete()

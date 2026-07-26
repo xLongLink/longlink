@@ -5,6 +5,7 @@ from src.kubernetes.gateway import GatewayTLSMaterial
 from src.kubernetes.reconcile import Reconciler, DesiredCompute, ReconcileResult
 from src.kubernetes.resources import KubernetesResources
 from src.kubernetes.applications import Applications
+from src.kubernetes.organizations import Organizations
 
 
 class Kubernetes:
@@ -16,21 +17,21 @@ class Kubernetes:
         self._resources = KubernetesResources(kubeconfig)
         self._reconciler = Reconciler(self._resources)
         self.applications = Applications(self._resources)
+        self.organizations = Organizations(self._resources)
 
     async def reconcile(
         self,
         desired: DesiredCompute,
         proxy_secret: str,
         existing_tls: GatewayTLSMaterial | None = None,
-        fence: Callable[[], Awaitable[None]] | None = None,
         stage_tls: Callable[[GatewayTLSMaterial], Awaitable[None]] | None = None,
     ) -> ReconcileResult:
         """Forward an authoritative compute snapshot to the cluster reconciler and return gateway connection material.
 
-        Optional fencing and TLS staging preserve operation ownership and trust ordering.
+        Optional TLS staging preserves trust ordering during certificate rotation.
         """
 
-        return await self._reconciler.reconcile(desired, proxy_secret, existing_tls, fence, stage_tls)
+        return await self._reconciler.reconcile(desired, proxy_secret, existing_tls, stage_tls)
 
     async def namespaces(self) -> list[str]:
         """List non-core namespaces for cluster diagnostics without mutating them."""
