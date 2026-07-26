@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { proxy } from 'valtio';
+import { describe, expect, it } from 'vitest';
 import { parseXML } from '@/xml/core/parser';
 import { RenderXML } from '@/xml/renderers.tsx';
 import type { ExecutionContext } from '@/xml/types';

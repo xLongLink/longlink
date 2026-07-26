@@ -59,7 +59,8 @@ vp run dev         # Starts the Platform development server
 vp run dev:sdk     # Starts the embedded Application development server
 vp run build:api   # Builds the Platform web bundle
 vp run build:sdk   # Builds the embedded Application web bundle
-vp lint            # Lints and type-checks the code
+vp check           # Checks formatting, linting, and Vite+ types
+vp run typecheck   # Checks both React Router bundle modes
 vp fmt --write     # Formats the code
 ```
 

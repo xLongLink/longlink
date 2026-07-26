@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { evaluate } from '@/xml/expressions';
 import type { ExecutionContext } from '@/xml/types';
 

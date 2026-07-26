@@ -87,14 +87,13 @@ sdk\:coverage: sdk\:install sdk\:build
 	cd sdk && uv run --locked pytest -m "not integration" --cov=longlink --cov-report=term-missing tests
 
 
-# Run web formatting, linting, tests, typechecks, and bundle builds.
+# Run web static checks, tests, typechecks, and bundle builds.
 web\:tests: web\:install
-	cd web && vp fmt --check
-	cd web && vp lint
-	bun run --cwd web test
-	bun run --cwd web typecheck
-	bun run --cwd web build:api:bundle --logLevel warn
-	bun run --cwd web build:sdk:bundle --logLevel warn
+	cd web && vp check
+	cd web && vp run test
+	cd web && vp run typecheck
+	cd web && vp run build:api:bundle --logLevel warn
+	cd web && vp run build:sdk:bundle --logLevel warn
 
 
 # Run API and SDK ty checks.
@@ -113,19 +112,19 @@ sdk\:ty:
 
 # Typecheck and build both web bundle modes.
 build: web\:install
-	bun run --cwd web typecheck
-	bun run --cwd web build:api:bundle --logLevel warn
-	bun run --cwd web build:sdk:bundle --logLevel warn
+	cd web && vp run typecheck
+	cd web && vp run build:api:bundle --logLevel warn
+	cd web && vp run build:sdk:bundle --logLevel warn
 
 
 # Build the API web bundle.
 api\:build: web\:install
-	bun run --cwd web build:api:bundle --logLevel warn
+	cd web && vp run build:api:bundle --logLevel warn
 
 
 # Build the embedded SDK web bundle.
 sdk\:build: web\:install
-	bun run --cwd web build:sdk:bundle --logLevel warn
+	cd web && vp run build:sdk:bundle --logLevel warn
 
 
 # Remove generated build and test artifacts for every workspace.
@@ -231,9 +230,8 @@ seed: up
 
 
 # Run the Vite web app.
-web: 
-	bun install --cwd web --frozen-lockfile
-	bun run --cwd web dev --host 127.0.0.1 --port 5173
+web: web\:install
+	cd web && vp run dev --host 127.0.0.1 --port 5173
 
 
 # Build the SDK web bundle, then recreate and run the generated SDK development app.

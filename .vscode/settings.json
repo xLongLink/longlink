@@ -1,24 +1,37 @@
 {
-  "python.defaultInterpreterPath": "${workspaceFolder}/api/.venv/bin/python",
-  "python.analysis.typeCheckingMode": "basic",
-  "python.analysis.ignore": [
-    "api/src/database/models",
-    "api/src/database/services"
-  ],
-  "python.analysis.extraPaths": [
-    "${workspaceFolder}/api/src",
-    "${workspaceFolder}/sdk",
-    "${workspaceFolder}/api/.venv/lib/python3.14/site-packages",
-    "${workspaceFolder}/sdk/.venv/lib/python3.14/site-packages",
-    "${workspaceFolder}/sdk/dev/.venv/lib/python3.14/site-packages"
-  ],
-  "terminal.integrated.env.linux": {
-    "DEVELOPMENT": "true"
-  },
-  "terminal.integrated.env.osx": {
-    "DEVELOPMENT": "true"
-  },
-  "terminal.integrated.env.windows": {
-    "DEVELOPMENT": "true"
-  }
+    "[javascript]": {
+        "editor.defaultFormatter": "oxc.oxc-vscode",
+        "editor.formatOnSave": true
+    },
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "oxc.oxc-vscode",
+        "editor.formatOnSave": true
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "oxc.oxc-vscode",
+        "editor.formatOnSave": true
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "oxc.oxc-vscode",
+        "editor.formatOnSave": true
+    },
+    "editor.codeActionsOnSave": {
+        "source.fixAll.oxc": "explicit"
+    },
+    "editor.formatOnSaveMode": "file",
+    "npm.scriptRunner": "vp",
+    "oxc.fmt.configPath": "./web/vite.config.ts",
+    "python.defaultInterpreterPath": "${workspaceFolder}/api/.venv/bin/python",
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.ignore": ["api/src/database/models", "api/src/database/services"],
+    "python.analysis.extraPaths": ["${workspaceFolder}/api/src", "${workspaceFolder}/sdk"],
+    "terminal.integrated.env.linux": {
+        "DEVELOPMENT": "true"
+    },
+    "terminal.integrated.env.osx": {
+        "DEVELOPMENT": "true"
+    },
+    "terminal.integrated.env.windows": {
+        "DEVELOPMENT": "true"
+    }
 }

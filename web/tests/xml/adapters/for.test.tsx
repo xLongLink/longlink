@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { parseXML } from '@/xml/core/parser';
 import type { ASTNode, ExecutionContext } from '@/xml/types';
 import { renderXmlToMarkup } from '../helpers';

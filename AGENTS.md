@@ -120,7 +120,7 @@ longlink/
 
 <!-- ASTRYX:START -->
 
-CLI: run every command as `bunx astryx <cmd>` (shown below as `astryx ...`).
+CLI: run every command from `web/` as `vp exec astryx <cmd>` (shown below as `astryx ...`).
 
 SETUP (once, in your app entry e.g. main.tsx) — without these, components render unstyled:
 import "@astryxdesign/core/reset.css";

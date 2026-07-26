@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { isAppRelativeUrl, resolveAnchorUrl, resolveRequestUrl, resolveUrl } from '@/xml/core/url';
 
 describe('resolveUrl', () => {

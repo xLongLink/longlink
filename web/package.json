@@ -4,19 +4,17 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "astryx": "node node_modules/@astryxdesign/cli/bin/astryx.mjs",
-        "theme:build": "bun run astryx theme build src/lib/default-theme.ts --out src/lib/generated/longlink-neutral-default.css",
-        "typecheck": "bun run typecheck:api && bun run typecheck:sdk",
-        "typecheck:api": "react-router typegen --mode api && node node_modules/@typescript/native/bin/tsc -b",
-        "typecheck:sdk": "react-router typegen --mode sdk && node node_modules/@typescript/native/bin/tsc -b",
-        "typecheck:ts6": "tsc6 -b",
-        "build:api": "bun run typecheck:api && react-router build --mode api",
+        "theme:build": "vp exec astryx theme build src/lib/default-theme.ts --out src/lib/generated/longlink-neutral-default.css",
+        "typecheck": "vp run typecheck:api && vp run typecheck:sdk",
+        "typecheck:api": "react-router typegen --mode api && tsc -b",
+        "typecheck:sdk": "react-router typegen --mode sdk && tsc -b",
+        "build:api": "vp run typecheck:api && react-router build --mode api",
         "build:api:bundle": "react-router build --mode api",
-        "build:sdk": "bun run typecheck:sdk && react-router build --mode sdk",
+        "build:sdk": "vp run typecheck:sdk && react-router build --mode sdk",
         "build:sdk:bundle": "react-router build --mode sdk",
         "dev": "react-router dev --mode api",
         "dev:sdk": "react-router dev --mode sdk",
-        "test": "bun test tests/xml"
+        "test": "vp test tests/xml"
     },
     "dependencies": {
         "@astryxdesign/core": "0.1.8",
@@ -47,16 +45,13 @@
         "@astryxdesign/cli": "0.1.8",
         "@happy-dom/global-registrator": "^20.10.6",
         "@react-router/dev": "8.3.0",
-        "@types/bun": "^1.3.14",
         "@types/d3-geo": "^3.1.0",
         "@types/lodash": "^4.17.24",
         "@types/node": "^26.1.1",
         "@types/react": "^19.2.17",
         "@types/react-dom": "^19.2.3",
         "@types/topojson-client": "^3.1.5",
-        "@typescript/native": "npm:typescript@^7.0.2",
-        "@typescript/typescript6": "^6.0.2",
-        "typescript": "^6.0.2",
+        "typescript": "^7.0.2",
         "vite": "npm:@voidzero-dev/vite-plus-core@0.2.6",
         "vite-plus": "0.2.6"
     },
@@ -74,6 +69,11 @@
         "packageManager": {
             "name": "bun",
             "version": "1.3.14",
+            "onFail": "download"
+        },
+        "runtime": {
+            "name": "node",
+            "version": "24.18.0",
             "onFail": "download"
         }
     }

@@ -14,6 +14,8 @@ Install [Vite+](https://viteplus.dev) before running the web commands:
 
 ```bash
 curl -fsSL https://vite.plus | bash
+. "$HOME/.vite-plus/env"
+vp env setup
 ```
 
 ```bash

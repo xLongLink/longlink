@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { query } from '@/xml/core/query';
 import type { ExecutionContext } from '@/xml/types';
 import { withGlobalValue } from '../../helpers/globals';

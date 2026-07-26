@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'bun:test';
 import { proxy } from 'valtio';
+import { describe, expect, it } from 'vitest';
 import { appendButtonItem } from '@/xml/adapters/Button';
 import type { ExecutionContext } from '@/xml/types';
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { createScopeProxy, resolvePath, resolveValue } from '@/xml/expressions';
 import type { ExecutionContext } from '@/xml/types';
 

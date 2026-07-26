@@ -56,6 +56,10 @@ export default defineConfig(({ mode }) => {
             },
         },
 
+        test: {
+            setupFiles: ['./tests/preload.ts'],
+        },
+
         envPrefix: ['VITE_', 'VERSION'],
 
         resolve: {

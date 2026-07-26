@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { executeAction } from '@/xml/adapters/Action';
 import type { ExecutionContext } from '@/xml/types';
 

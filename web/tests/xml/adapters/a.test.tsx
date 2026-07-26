@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { parseXML } from '@/xml/core/parser';
 import { renderXmlToMarkup } from '../helpers';
 

@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
 import { ContextProvider, setupContext } from '@/xml/core/context';
 import { renderNode } from '@/xml/core/node';
 import type { ASTNode, ExecutionContext } from '@/xml/types';

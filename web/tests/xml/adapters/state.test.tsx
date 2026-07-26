@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it } from 'vitest';
 import { setupContext } from '@/xml/core/context';
 import type { ASTNode, ExecutionContext } from '@/xml/types';
 

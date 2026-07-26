@@ -1,47 +1,52 @@
 <div align="center">
 
-# LongLink Platform API
+<img src="https://www.longlink.dev/logo.svg" alt="LongLink logo" />
 
-[Website](https://longlink.dev) &nbsp; - &nbsp; [Docs](https://longlink.dev/docs) &nbsp; - &nbsp; [Issues](https://github.com/xLongLink/longlink/issues)
+# Platform
 
 </div>
 
-## Introduction
+TODO: Introduction
 
-The API folder contains the LongLink Platform API. It manages authentication, permissions, organizations, applications, infrastructure connections, operations, and application routing.
+<br />
 
-```
-┌───────────────────────────────────┐
-│        LONGLINK PLATFORM          │
-├───────────────────────────────────┤
-│ • Authentication                  │
-│ • Permissions                     │
-│ • Roles                           │
-│ • Routing                         │
-│ • Logging                         │
-└───────────────────────────────────┘
-                  ▼
-┌───────────────────────────────────┐
-│           ORGANIZATIONS           │
-├───────────────────────────────────┤
-│ • Users                           │
-│ • Shared data                     │
-└───────────────────────────────────┘
-                  ▼
-┌───────────────────────────────────┐
-│          APPLICATIONS             │
-├───────────────────────────────────┤
-│ • Logic                           │
-│ • Storage                         │
-└───────────────────────────────────┘
-```
+## Resources
 
+Managed resources can be connected to the platform.
+
+- Compute as `KaaS` (Kubernetes as a Service)
+- Database as `DBaaS` (Database as a Service)
+- Storage as `STaaS` (Storage as a Service)
+
+<br />
+
+## Organizations
+
+Each organization gets:
+- A `namespace` in the compute
+- A `table` in the database
+- A `bucket` in the storage
+
+<br />
+
+## Applications
+
+Each application is deployed using the organization resources
+- A `pod` in the organization namespace
+- A `schema` in the organization table
+- A `folder` in the organization folder
+  
 <br />
 
 ## Development
 
-Configure `api/.env.seed` with `EXOSCALE_API_KEY`, `EXOSCALE_API_SECRET`, and `EXOSCALE_STORAGE_ENDPOINT_URL`. The endpoint
-selects the development SOS zone explicitly so storage provisioning follows the same SOS and IAM path as production.
+<br />
+
+```
+make seed
+make api
+```
+
 
 Run from `api/`:
 
@@ -52,27 +57,6 @@ uv run python seed.py
 DEVELOPMENT=true uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for migration, seeding, testing, and contribution details.
-
-<br />
-
-## Roles
-
-- Platform roles: apply across the LongLink Platform.
-- Organization roles: scope permissions within an organization.
-- Application roles: scope permissions within a single application.
-
-<br />
-
-## Organizations
-
-Organizations are tenant boundaries for users, shared data, applications, and managed runtime resources. Organization creation owns database creation, executes SDK-owned shared-schema migrations with control-plane credentials, synchronizes shared users, and provisions shared storage.
-
-<br />
-
-## Applications
-
-Applications are LongLink SDK services deployed into an organization. Application creation owns application schema creation, runtime role provisioning, application storage setup, and deployment rollout.
 
 <br />
 
