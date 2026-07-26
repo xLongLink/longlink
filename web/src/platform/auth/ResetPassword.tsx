@@ -12,7 +12,6 @@ import { AuthPage } from '@/components/AuthPage';
 import { PasswordInput } from '@/components/PasswordInput';
 import { useToast } from '@/hooks/use-toast';
 import { ApiError, fetchApiVoid } from '@/lib/api';
-import { sanitizeRedirectPath } from '@/lib/redirects';
 
 type ResetPasswordValues = {
     password: string;
@@ -25,14 +24,11 @@ export default function ResetPassword() {
     const t = useTranslator();
     const showToast = useToast();
     const location = useLocation();
-    const search = new URLSearchParams(location.search);
     const [fragmentToken] = useState(
         () => new URLSearchParams(location.hash.replace(/^#/, '')).get('token')?.trim() ?? ''
     );
     const [token] = useState(() => fragmentToken || sessionStorage.getItem(PASSWORD_RESET_TOKEN_KEY) || '');
     const verificationStarted = useRef(false);
-    const nextPath = sanitizeRedirectPath(search.get('next'));
-    const nextQuery = new URLSearchParams({ next: nextPath }).toString();
     const schema = z.object({
         password: z.string().min(1, t('auth.passwordRequired')).max(1024, t('auth.passwordTooLong')),
     });
@@ -123,7 +119,7 @@ export default function ResetPassword() {
                 <Stack gap={4}>
                     <Banner status="error" title={t('auth.invalidResetLink')} />
                     <Button
-                        href={`/auth/forgot-password?${nextQuery}`}
+                        href="/auth/forgot-password"
                         label={t('auth.requestAnotherReset')}
                         variant="primary"
                     />
@@ -155,7 +151,7 @@ export default function ResetPassword() {
             {resetPassword.isSuccess ? (
                 <Stack gap={4}>
                     <Banner status="success" title={t('auth.passwordReset')} />
-                    <Button href={`/organizations?${nextQuery}`} label={t('auth.backToSignIn')} variant="primary" />
+                    <Button href="/organizations" label={t('auth.backToSignIn')} variant="primary" />
                 </Stack>
             ) : (
                 <Stack as="form" gap={4} onSubmit={form.handleSubmit(handleResetPassword)}>

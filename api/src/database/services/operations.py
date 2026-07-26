@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.computes import ComputeRegistry
 from src.database.models.operations import Operation
 
-OPERATION_LEASE_SECONDS = 120
 OPERATION_ATTEMPT_LIMIT = 6
 
 
@@ -73,13 +72,7 @@ async def enqueue_in_session(
         if compute is None:
             raise ValueError("Operation compute registry not found")
     versions = (
-        (
-            await session.execute(
-                select(Operation.platform_version)
-                .where(Operation.kind == kind, Operation.target_id == target)
-                .distinct()
-            )
-        )
+        (await session.execute(select(Operation.platform_version).where(Operation.kind == kind, Operation.target_id == target).distinct()))
         .scalars()
         .all()
     )
@@ -102,9 +95,7 @@ async def enqueue_in_session(
     # Application reconciliation dominates Platform work; complete work dominates and targeted work is unioned.
     effective_scope = scope
     effective_application_ids: list[str] | None = requested_ids
-    if existing is not None and (
-        existing.scope == ReconciliationScope.application or scope == ReconciliationScope.application
-    ):
+    if existing is not None and (existing.scope == ReconciliationScope.application or scope == ReconciliationScope.application):
         effective_scope = ReconciliationScope.application
         if (existing.scope == ReconciliationScope.application and existing.application_ids is None) or (
             scope == ReconciliationScope.application and requested_ids is None
@@ -177,10 +168,9 @@ async def enqueue(
 
 
 async def claim_next() -> Operation | None:
-    """Claim the oldest due Operation targeting this LongLink Platform release and start its next fenced lease.
+    """Lock the oldest due Operation targeting this LongLink Platform release.
 
-    Compute locking serializes related resource handlers across replicas, stale leases are reclaimable, and exhausted work
-    becomes terminal.
+    Compute locking serializes related resource handlers across replicas, while lock expiry recovers crashed workers.
     """
 
     # Skip computes with active work while selecting the oldest due candidate without reversing aggregate lock order.
@@ -260,39 +250,12 @@ async def claim_next() -> Operation | None:
                 await session.commit()
                 continue
 
-            # Claim the next generation and begin its renewable lease.
+            # Keep the crash-recovery lock beyond the bounded handler execution.
             operation.started_at = now
             operation.attempt_count += 1
-            operation.lease_expires_at = now + timedelta(seconds=OPERATION_LEASE_SECONDS)
+            operation.lease_expires_at = now + timedelta(minutes=30)
             await session.commit()
             return operation
-
-
-async def renew_lease(operation_id: UUID, attempt_count: int) -> bool:
-    """Extend a matching operation lease only while it remains unexpired."""
-
-    # Include the current attempt in the ownership check so expired workers cannot revive their lease.
-    async with session_scope() as session:
-        now = utcnow()
-        statement = (
-            update(Operation)
-            .where(
-                Operation.id == operation_id,
-                Operation.attempt_count == attempt_count,
-                Operation.lease_expires_at > now,
-                Operation.started_at.is_not(None),
-                Operation.stopped_at.is_(None),
-            )
-            .values(lease_expires_at=now + timedelta(seconds=OPERATION_LEASE_SECONDS))
-        )
-        result = await session.execute(statement)
-
-        # A non-matching update means the caller has lost exclusive ownership.
-        if result.rowcount == 0:
-            return False
-
-        await session.commit()
-        return True
 
 
 async def complete(operation_id: UUID, attempt_count: int) -> Operation | None:

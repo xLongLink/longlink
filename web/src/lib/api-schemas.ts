@@ -15,7 +15,6 @@ const databaseSslModeSchema = z.enum(['disable', 'allow', 'prefer', 'require', '
 
 export const apiRegistrationVerifiedSchema = z.object({
     email: z.email(),
-    next: z.string(),
 });
 
 export const apiUserIdentitySchema = z.object({

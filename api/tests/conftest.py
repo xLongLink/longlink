@@ -27,7 +27,6 @@ from src.environments import env
 from src.models.roles import PlatformRoles
 from src.database.models.users import User, AccessToken
 
-AUTH_COOKIE = "longlink_auth"
 SESSION_COOKIE = "longlink_session"
 TEST_PASSWORD = "longlink-test-password"
 
@@ -91,7 +90,7 @@ def authenticated_cookies(user_id: UUID, accounts: list[UUID] | None = None) -> 
     if user_id not in saved_accounts:
         saved_accounts.append(user_id)
     cookies = session_cookie(saved_accounts)
-    cookies.set(AUTH_COOKIE, str(user_id), domain="testserver.local", path="/")
+    cookies.set("longlink_auth", str(user_id), domain="testserver.local", path="/")
     return cookies
 
 

@@ -167,7 +167,7 @@ async def reconcile_applications(
                 lambda generated: object_storage.discard(generated["access_key_id"]),
             )
             if provisioned is None:
-                raise jobs.OperationLeaseLost(operation.id)
+                raise RuntimeError(f"Operation '{operation.id}' lease was lost")
             application, credentials = provisioned
 
         envs = {
@@ -296,7 +296,7 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
         """Reject provider work after another worker can own this operation."""
 
         if not await operations.lease_is_current(operation.id, attempt_count):
-            raise jobs.OperationLeaseLost(operation.id)
+            raise RuntimeError(f"Operation '{operation.id}' lease was lost")
 
     async def stage_tls(material: GatewayTLSMaterial) -> None:
         """Stage gateway trust before Kubernetes can begin serving a rotated certificate."""
@@ -312,7 +312,7 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
             operation.platform_version,
         )
         if not staged:
-            raise jobs.OperationLeaseLost(operation.id)
+            raise RuntimeError(f"Operation '{operation.id}' lease was lost")
 
     # Load the compute reconciliation root and complete route inventory.
     compute_registry = await compute.get(operation.compute_id, include_deleted=True)
@@ -399,8 +399,6 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
         if not applied:
             return jobs.retry("Compute reconciliation was superseded")
         return jobs.complete()
-    except jobs.OperationLeaseLost:
-        raise
     except Exception:
         # Record the failed state while the worker logs detailed diagnostics.
         await fence()

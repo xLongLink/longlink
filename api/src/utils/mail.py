@@ -77,13 +77,12 @@ async def send_mail(recipient: str, subject: str, text: str, html: str | None = 
     )
 
 
-async def send_password_reset_email(recipient: str, credential: str, next_path: str) -> None:
+async def send_password_reset_email(recipient: str, credential: str) -> None:
     """Deliver one password-reset link email."""
 
     # Keep bearer proof in the fragment so it is not sent in the initial HTTP request.
-    query = urlencode({"next": next_path})
     fragment = urlencode({"token": credential})
-    reset_url = f"{env.PUBLIC_URL.rstrip('/')}/auth/reset-password?{query}#{fragment}"
+    reset_url = f"{env.PUBLIC_URL.rstrip('/')}/auth/reset-password#{fragment}"
     subject = "Reset your LongLink password"
     text = f"Reset your password:\n\n{reset_url}\n"
     html = render_mjml_template("password_reset.mjml", reset_url=reset_url)

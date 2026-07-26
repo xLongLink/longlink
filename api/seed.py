@@ -139,11 +139,7 @@ async def ensure_local_organization_owner(organization_id: UUID, user_id: UUID) 
                 )
             )
         else:
-            if (
-                membership.role == OrganizationRoles.owner
-                and membership.deleted_at is None
-                and membership.deleted_id is None
-            ):
+            if membership.role == OrganizationRoles.owner and membership.deleted_at is None and membership.deleted_id is None:
                 return False
             membership.role = OrganizationRoles.owner
             membership.deleted_at = None
@@ -163,7 +159,7 @@ async def reconcile_until_complete(compute_id: UUID) -> None:
         if operation is None:
             await asyncio.sleep(1)
             continue
-        result = await jobs.run_claimed_operation(operation, jobs.get_handler(operation.kind))
+        result = await jobs.execute(operation, jobs.handlers[operation.kind])
         if result.kind != OperationKind.compute or result.compute_id != compute_id:
             continue
         if result.stopped_at is not None:

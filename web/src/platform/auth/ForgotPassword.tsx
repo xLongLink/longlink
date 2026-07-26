@@ -8,12 +8,10 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
-import { useLocation } from 'react-router';
 import { z } from 'zod';
 import { AuthPage } from '@/components/AuthPage';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
-import { sanitizeRedirectPath } from '@/lib/redirects';
 
 type ForgotPasswordValues = {
     email: string;
@@ -25,9 +23,6 @@ const emailInputAttributes = { autoComplete: 'email' };
 export default function ForgotPassword() {
     const t = useTranslator();
     const showToast = useToast();
-    const location = useLocation();
-    const nextPath = sanitizeRedirectPath(new URLSearchParams(location.search).get('next'));
-    const nextQuery = new URLSearchParams({ next: nextPath }).toString();
     const schema = z.object({
         email: z.string().trim().min(1, t('auth.emailRequired')).email(t('auth.emailInvalid')),
     });
@@ -40,7 +35,7 @@ export default function ForgotPassword() {
             await fetchApiVoid('/api/auth/forgot-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...payload, next: nextPath }),
+                body: JSON.stringify(payload),
             });
         },
     });
@@ -62,7 +57,7 @@ export default function ForgotPassword() {
             {requestReset.isSuccess ? (
                 <Stack gap={4}>
                     <Banner status="success" title={t('auth.resetEmailSent')} />
-                    <Button href={`/organizations?${nextQuery}`} label={t('auth.backToSignIn')} variant="primary" />
+                    <Button href="/organizations" label={t('auth.backToSignIn')} variant="primary" />
                 </Stack>
             ) : (
                 <Stack as="form" gap={4} onSubmit={form.handleSubmit(handleRequestReset)}>
@@ -98,7 +93,7 @@ export default function ForgotPassword() {
             )}
             {!requestReset.isSuccess ? (
                 <Text as="p" color="secondary" justify="center" type="supporting">
-                    <Link href={`/organizations?${nextQuery}`} type="inherit" weight="medium">
+                    <Link href="/organizations" type="inherit" weight="medium">
                         {t('auth.backToSignIn')}
                     </Link>
                 </Text>

@@ -1,6 +1,5 @@
 import { Center } from '@astryxdesign/core/Center';
 import type { ReactElement } from 'react';
-import { useLocation } from 'react-router';
 import { SignInCard } from '@/components/SignInCard';
 import { useUserProfile } from '@/hooks/use-user';
 import { hasMinimumRole, type PlatformRole } from '@/lib/roles';
@@ -10,7 +9,6 @@ import NotFound from '@/platform/NotFound';
 /** Protects routes and optionally requires a platform role. */
 export function Auth({ children, requiredRole }: { children: ReactElement; requiredRole?: PlatformRole }) {
     const { user, role, isLoading } = useUserProfile();
-    const location = useLocation();
 
     // Wait for profile loading before deciding access.
     if (isLoading) {
@@ -22,7 +20,7 @@ export function Auth({ children, requiredRole }: { children: ReactElement; requi
         return (
             <PlatformLayout brandOnly brandHref="/" fillViewport reserveTabSpace>
                 <Center height="100%" width="100%">
-                    <SignInCard redirectTo={`${location.pathname}${location.search}${location.hash}`} />
+                    <SignInCard />
                 </Center>
             </PlatformLayout>
         );

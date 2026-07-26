@@ -9,12 +9,6 @@ from src.models.statuses import ApplicationStatus
 from src.models.operations import OperationResponse
 from src.models.organizations import OrganizationSummary
 
-APPLICATION_ENVIRONMENT_COUNT_MAX = 100
-APPLICATION_ENVIRONMENT_BYTES_MAX = 512 * 1024
-APPLICATION_ENVIRONMENT_NAME_MAX_LENGTH = 253
-APPLICATION_ENVIRONMENT_VALUE_MAX_LENGTH = 32768
-APPLICATION_ENVIRONMENT_NAME_PATTERN = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-
 
 class ApplicationCreate(BaseModel):
     """Validate application creation payloads."""
@@ -34,17 +28,17 @@ class ApplicationCreate(BaseModel):
         """Validate application environment names, ownership, and bounded value sizes."""
 
         # Limit the number of environment values accepted per application.
-        if len(envs) > APPLICATION_ENVIRONMENT_COUNT_MAX:
-            raise ValueError(f"Application environment variables must be at most {APPLICATION_ENVIRONMENT_COUNT_MAX}")
+        if len(envs) > 100:
+            raise ValueError("Application environment contains too many variables")
 
         # Validate each environment name and value independently.
         for name, value in envs.items():
             # Bound environment variable names to the supported label size.
-            if len(name) > APPLICATION_ENVIRONMENT_NAME_MAX_LENGTH:
+            if len(name) > 253:
                 raise ValueError(f"Environment variable '{name}' is too long")
 
             # Environment names must be shell-compatible identifiers.
-            if not APPLICATION_ENVIRONMENT_NAME_PATTERN.fullmatch(name):
+            if not re.fullmatch(r"^[A-Za-z_][A-Za-z0-9_]*$", name):
                 raise ValueError(f"Environment variable '{name}' is invalid")
 
             # Reserve Platform-managed runtime variables for reconciliation.
@@ -52,13 +46,13 @@ class ApplicationCreate(BaseModel):
                 raise ValueError(f"Environment variable '{name}' is reserved for the LongLink Platform")
 
             # Bound environment values to avoid oversized runtime secrets.
-            if len(value) > APPLICATION_ENVIRONMENT_VALUE_MAX_LENGTH:
+            if len(value) > 32768:
                 raise ValueError(f"Environment variable '{name}' value is too long")
 
         # Leave room for base64 expansion, Kubernetes metadata, and Platform-managed runtime values.
         environment_bytes = sum(len(name.encode("utf-8")) + len(value.encode("utf-8")) for name, value in envs.items())
-        if environment_bytes > APPLICATION_ENVIRONMENT_BYTES_MAX:
-            raise ValueError(f"Application environment must be at most {APPLICATION_ENVIRONMENT_BYTES_MAX} bytes")
+        if environment_bytes > 512 * 1024:
+            raise ValueError("Application environment is too large")
 
         return envs
 

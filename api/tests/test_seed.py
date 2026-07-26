@@ -56,9 +56,7 @@ def successful_seed_boundaries(
 
         # Mirror statuses that successful complete Application reconciliation observes from providers.
         application_ids = (
-            {UUID(application_id) for application_id in operation.application_ids}
-            if operation.application_ids is not None
-            else None
+            {UUID(application_id) for application_id in operation.application_ids} if operation.application_ids is not None else None
         )
         if operation.scope == ReconciliationScope.application:
             if application_ids is None:
@@ -126,7 +124,7 @@ async def test_reconcile_until_complete_drains_until_target_operation(monkeypatc
         sleeps.append(seconds)
 
     monkeypatch.setattr(seed.operations, "claim_next", claim_operation)
-    monkeypatch.setattr(seed.jobs, "run_claimed_operation", execute_operation)
+    monkeypatch.setattr(seed.jobs, "execute", execute_operation)
     monkeypatch.setattr(seed.asyncio, "sleep", sleep)
 
     # Act
@@ -161,9 +159,7 @@ async def test_seed_local_development_persists_complete_desired_state(
 
     # Load the administrator and memberships from the same SQLite database as the services.
     async with session_scope() as session:
-        administrator = (
-            await session.execute(select(User).where(col(User.email) == seed.LOCAL_ADMIN_EMAIL))
-        ).scalar_one()
+        administrator = (await session.execute(select(User).where(col(User.email) == seed.LOCAL_ADMIN_EMAIL))).scalar_one()
         organization_membership = await session.get(
             UserOrganization,
             {"user_id": administrator.id, "organization_id": organizations[0].id},

@@ -33,14 +33,13 @@ def password_fingerprint(hashed_password: str) -> str:
     return hmac.new(env.SESSION_KEY.encode("utf-8"), message, hashlib.sha256).hexdigest()
 
 
-def create_registration_token(email: str, next_path: str) -> str:
+def create_registration_token(email: str) -> str:
     """Create one signed, expiring proof of email ownership."""
 
-    # Sign the already-normalized request identity into immutable registration proof.
+    # Sign the request identity into immutable registration proof.
     return jwt.encode(
         {
             "email": email,
-            "next": next_path,
             "aud": REGISTRATION_TOKEN_AUDIENCE,
             "exp": utcnow() + timedelta(seconds=REGISTRATION_TOKEN_LIFETIME_SECONDS),
         },
@@ -49,17 +48,16 @@ def create_registration_token(email: str, next_path: str) -> str:
     )
 
 
-def registration_claims(token: str) -> tuple[str, str]:
-    """Return the identity and navigation carried by one registration token."""
+def registration_claims(token: str) -> str:
+    """Return the identity carried by one registration token."""
 
     # Reject invalid, expired, or wrong-purpose tokens before account setup.
     data = jwt.decode(token, env.SESSION_KEY, audience=REGISTRATION_TOKEN_AUDIENCE, algorithms=[JWT_ALGORITHM])
 
     email = data.get("email")
-    next_path = data.get("next")
-    if not isinstance(email, str) or not email or not isinstance(next_path, str):
+    if not isinstance(email, str) or not email:
         raise jwt.InvalidTokenError("Invalid registration token claims")
-    return email, next_path
+    return email
 
 
 def create_password_reset_token(user: User) -> str:

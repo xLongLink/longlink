@@ -19,7 +19,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useSavedAccounts } from '@/hooks/use-user';
 import { fetchApiVoid } from '@/lib/api';
 import { userProfileQueryKey } from '@/lib/query-keys';
-import { sanitizeRedirectPath } from '@/lib/redirects';
 
 type LoginValues = {
     email: string;
@@ -27,13 +26,12 @@ type LoginValues = {
 };
 
 /** Renders the shared LongLink sign-in form and saved account selector. */
-export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: string; initialEmail?: string }) {
+export function SignInCard({ initialEmail = '' }: { initialEmail?: string }) {
     const t = useTranslator();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const accounts = useSavedAccounts();
     const showToast = useToast();
-    const safeRedirectTo = sanitizeRedirectPath(redirectTo);
     const loginSchema = z.object({
         email: z.string().trim().min(1, t('auth.emailRequired')).email(t('auth.emailInvalid')),
         password: z.string().min(1, t('auth.passwordRequired')).max(1024, t('auth.passwordTooLong')),
@@ -43,8 +41,8 @@ export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: stri
         resolver: zodResolver(loginSchema),
     });
     const email = useWatch({ control: form.control, name: 'email' }).trim();
-    const nextQuery = new URLSearchParams({ next: safeRedirectTo }).toString();
-    const registerQuery = new URLSearchParams({ next: safeRedirectTo, ...(email ? { email } : {}) }).toString();
+    const registerQuery = email ? new URLSearchParams({ email }).toString() : '';
+    const registerHref = registerQuery ? `/auth/register?${registerQuery}` : '/auth/register';
     const login = useMutation({
         mutationFn: (payload: LoginValues) =>
             fetchApiVoid('/api/auth/password/login', {
@@ -65,7 +63,7 @@ export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: stri
         try {
             await login.mutateAsync(payload);
             await queryClient.invalidateQueries({ queryKey: userProfileQueryKey() });
-            navigate(safeRedirectTo, { replace: true });
+            navigate('/organizations', { replace: true });
         } catch (loginError) {
             showToast({
                 body: loginError instanceof Error ? loginError.message : t('auth.loginFailed'),
@@ -135,7 +133,7 @@ export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: stri
                 <Stack gap={1}>
                     <Stack direction="horizontal" hAlign="between" vAlign="center">
                         <Text type="label">{t('labels.password')}</Text>
-                        <Link href={`/auth/forgot-password?${nextQuery}`} type="supporting">
+                        <Link href="/auth/forgot-password" type="supporting">
                             {t('auth.forgotPassword')}
                         </Link>
                     </Stack>
@@ -175,7 +173,7 @@ export function SignInCard({ redirectTo, initialEmail = '' }: { redirectTo: stri
                 label={
                     <>
                         {t('auth.noAccount')}{' '}
-                        <Link href={`/auth/register?${registerQuery}`} type="inherit" weight="medium">
+                        <Link href={registerHref} type="inherit" weight="medium">
                             {t('auth.createAccount')}
                         </Link>
                     </>

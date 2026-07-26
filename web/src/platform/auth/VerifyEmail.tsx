@@ -21,7 +21,6 @@ import { ApiError, fetchApiJson } from '@/lib/api';
 import { apiRegistrationVerifiedSchema, apiUserProfileSchema, parseApiResponse } from '@/lib/api-schemas';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { clearSessionQueries } from '@/lib/react-query';
-import { sanitizeRedirectPath } from '@/lib/redirects';
 
 type RegistrationCompleteValues = {
     name: string;
@@ -116,7 +115,7 @@ export default function VerifyEmail() {
             await clearSessionQueries(queryClient, [profileKey]);
             queryClient.setQueryData(profileKey, user);
             sessionStorage.removeItem(REGISTRATION_TOKEN_KEY);
-            navigate(sanitizeRedirectPath(verification.data?.next), { replace: true });
+            navigate('/organizations', { replace: true });
         } catch (error) {
             // Expired setup cookies move the page into the terminal replacement-link state.
             if (error instanceof ApiError && error.code === 'VERIFY_USER_BAD_TOKEN') {
@@ -154,11 +153,9 @@ export default function VerifyEmail() {
     }, [token, verifyRegistration]);
 
     const recoverySetup = verification.data ?? lastVerifiedSetup;
-    const recoveryNextPath = sanitizeRedirectPath(recoverySetup?.next);
-    const recoveryQuery = new URLSearchParams({
-        next: recoveryNextPath,
-        ...(recoverySetup?.email ? { email: recoverySetup.email } : {}),
-    }).toString();
+    const recoveryQuery = recoverySetup?.email ? new URLSearchParams({ email: recoverySetup.email }).toString() : '';
+    const recoveryRegisterHref = recoveryQuery ? `/auth/register?${recoveryQuery}` : '/auth/register';
+    const recoverySignInHref = recoveryQuery ? `/organizations?${recoveryQuery}` : '/organizations';
 
     // Keep transient verification failures retryable while expired credentials remain terminal.
     if (verification.error) {
@@ -180,7 +177,7 @@ export default function VerifyEmail() {
                             variant="primary"
                         />
                     )}
-                    <Button href={`/auth/register?${recoveryQuery}`} label={t('auth.requestVerificationLink')} />
+                    <Button href={recoveryRegisterHref} label={t('auth.requestVerificationLink')} />
                 </Stack>
             </AuthPage>
         );
@@ -205,12 +202,12 @@ export default function VerifyEmail() {
                 <Stack gap={3}>
                     {accountExists ? (
                         <Button
-                            href={`/organizations?${recoveryQuery}`}
+                            href={recoverySignInHref}
                             label={t('auth.backToSignIn')}
                             variant="primary"
                         />
                     ) : null}
-                    <Button href={`/auth/register?${recoveryQuery}`} label={t('auth.requestVerificationLink')} />
+                    <Button href={recoveryRegisterHref} label={t('auth.requestVerificationLink')} />
                 </Stack>
             </AuthPage>
         );

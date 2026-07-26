@@ -14,7 +14,6 @@ import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { PageContainer } from '@/components/PageContainer';
 import { SignInCard } from '@/components/SignInCard';
 import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
-import { sanitizeRedirectPath } from '@/lib/redirects';
 import type { ApiUserOrganizationMembership } from '@/lib/types';
 import PlatformLayout from '@/platform/layout';
 
@@ -25,8 +24,6 @@ export default function Organizations() {
     const { memberships, isLoading: areOrganizationsLoading, error: organizationsError } = useUserOrganizations();
     const location = useLocation();
     const search = new URLSearchParams(location.search);
-    const nextPath = search.get('next');
-    const redirectTo = sanitizeRedirectPath(nextPath);
     const initialEmail = search.get('email') ?? '';
     const isLoading = isProfileLoading || areOrganizationsLoading;
     const error = profileError ?? organizationsError;
@@ -36,7 +33,7 @@ export default function Organizations() {
         return (
             <PlatformLayout brandOnly brandHref="/" fillViewport reserveTabSpace>
                 <VStack height="100%" justify="center" align="center" width="100%">
-                    <SignInCard redirectTo={redirectTo} initialEmail={initialEmail} />
+                    <SignInCard initialEmail={initialEmail} />
                 </VStack>
             </PlatformLayout>
         );

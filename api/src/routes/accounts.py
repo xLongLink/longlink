@@ -1,5 +1,5 @@
 from fastapi import Depends, Request, Response, APIRouter
-from src.auth import AUTH_COOKIE, SessionAccountsService, get_auth_session, current_optional_user_token
+from src.auth import SessionAccountsService, get_auth_session, current_optional_user_token
 from src.utils import token
 from src.environments import env
 from src.models.users import UserListItem
@@ -36,7 +36,7 @@ async def deactivate_account(
 
     # Match the session-cookie scope so browsers reliably remove the credential.
     response.delete_cookie(
-        AUTH_COOKIE,
+        "longlink_auth",
         path="/",
         secure=not env.DEVELOPMENT,
         httponly=True,
@@ -79,7 +79,7 @@ async def logout(
     # Return a response that removes the browser credential at its original scope.
     response = Response(status_code=204)
     response.delete_cookie(
-        AUTH_COOKIE,
+        "longlink_auth",
         path="/",
         secure=not env.DEVELOPMENT,
         httponly=True,

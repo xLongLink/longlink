@@ -13,11 +13,6 @@ from src.database.services import users
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.models.users import User, AccessToken
 
-AUTH_COOKIE = "longlink_auth"
-REGISTRATION_COOKIE = "longlink_registration"
-PASSWORD_RESET_COOKIE = "longlink_password_reset"
-PASSWORD_RESET_COOKIE_LIFETIME_SECONDS = 900
-
 
 class SessionAccountsService:
     """Manage saved local accounts in one signed browser session."""
@@ -78,7 +73,7 @@ async def get_auth_session() -> AsyncIterator[AsyncSession]:
 
 
 async def current_optional_user_token(
-    credential: str | None = Cookie(default=None, alias=AUTH_COOKIE),
+    credential: str | None = Cookie(default=None, alias="longlink_auth"),
     session: AsyncSession = Depends(get_auth_session),
 ) -> tuple[User | None, str | None]:
     """Return the active user and credential for one valid optional browser session."""

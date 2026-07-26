@@ -30,8 +30,8 @@ def leased_operation(attempt_count: int = 1) -> Operation:
     )
 
 
-async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Claim compute work, renew its lease during execution, and keep polling."""
+async def test_operation_scheduler_claims_and_executes(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Claim compute work, execute it, and keep polling."""
 
     # Arrange
     operation = leased_operation()
@@ -39,8 +39,6 @@ async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytes
     completed.stopped_at = datetime.fromisoformat("2026-07-01T09:01:00+00:00")
     claims = [operation, None]
     executed: list[Operation] = []
-    renewals: list[tuple[UUID, int]] = []
-    real_sleep = asyncio.sleep
 
     async def handler(claimed: Operation) -> operation_worker.OperationOutcome:
         """Return the scheduler handler outcome if the real executor invokes it."""
@@ -58,14 +56,7 @@ async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytes
 
         assert supplied_handler is handler
         executed.append(claimed)
-        await real_sleep(0)
         return completed
-
-    async def fake_renew_operation_lease(operation_id: UUID, attempt_count: int) -> None:
-        """Record heartbeat setup and wait until cancelled."""
-
-        renewals.append((operation_id, attempt_count))
-        await real_sleep(3600)
 
     async def fake_sleep(seconds: float) -> None:
         """Stop the scheduler once it reaches the idle polling sleep."""
@@ -74,7 +65,6 @@ async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytes
 
     monkeypatch.setattr(operation_worker.operations, "claim_next", fake_claim_next)
     monkeypatch.setattr(operation_worker, "execute", fake_execute)
-    monkeypatch.setattr(operation_worker, "renew_operation_lease", fake_renew_operation_lease)
     monkeypatch.setattr(operation_worker.asyncio, "sleep", fake_sleep)
     monkeypatch.setitem(operation_worker.handlers, OperationKind.compute, handler)
 
@@ -84,7 +74,6 @@ async def test_operation_scheduler_claims_executes_and_renews(monkeypatch: pytes
 
     # Assert
     assert executed == [operation]
-    assert renewals == [(operation.id, operation.attempt_count)]
 
 
 async def test_execute_retries_location_work_with_exponential_backoff(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -154,7 +143,7 @@ async def test_execute_raises_when_location_lease_is_lost(monkeypatch: pytest.Mo
     monkeypatch.setattr(operation_worker.operations, "complete", fake_complete)
 
     # Act and assert
-    with pytest.raises(operation_worker.OperationLeaseLost, match=str(operation.id)):
+    with pytest.raises(RuntimeError, match=str(operation.id)):
         await operation_worker.execute(operation, complete_handler)
 
 
@@ -204,48 +193,3 @@ async def test_execute_fails_retry_at_attempt_limit(monkeypatch: pytest.MonkeyPa
     assert operation_worker.OPERATION_ATTEMPT_LIMIT == 6
     assert transitions == [(operation.id, 6)]
     assert errors == [f"Operation {operation.id} failed after 6 attempts: workloads are still starting"]
-
-
-async def test_run_claimed_operation_cancels_action_when_heartbeat_loses_lease(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Cancel the handler task when the heartbeat detects a lost operation lease first."""
-
-    # Arrange
-    operation = leased_operation()
-    started = asyncio.Event()
-    cancelled = False
-
-    async def handler(claimed: Operation) -> operation_worker.OperationOutcome:
-        """Return a completion outcome if the action is allowed to finish."""
-
-        assert claimed is operation
-        return operation_worker.complete()
-
-    async def fake_execute(claimed: Operation, supplied_handler: operation_worker.JobHandler) -> Operation:
-        """Wait until cancellation so the heartbeat wins the race."""
-
-        nonlocal cancelled
-        assert claimed is operation
-        assert supplied_handler is handler
-        started.set()
-        try:
-            await asyncio.sleep(3600)
-        except asyncio.CancelledError:
-            cancelled = True
-            raise
-        raise AssertionError("action should not finish after lease loss")
-
-    async def fake_renew_operation_lease(operation_id: UUID, attempt_count: int) -> None:
-        """Raise lease loss after the action task has started."""
-
-        assert operation_id == operation.id
-        assert attempt_count == operation.attempt_count
-        await started.wait()
-        raise operation_worker.OperationLeaseLost(operation_id)
-
-    monkeypatch.setattr(operation_worker, "execute", fake_execute)
-    monkeypatch.setattr(operation_worker, "renew_operation_lease", fake_renew_operation_lease)
-
-    # Act and assert
-    with pytest.raises(operation_worker.OperationLeaseLost, match=str(operation.id)):
-        await operation_worker.run_claimed_operation(operation, handler)
-    assert cancelled is True

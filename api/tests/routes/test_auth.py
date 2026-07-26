@@ -1,7 +1,7 @@
 import pytest
 from main import app
 from httpx2 import AsyncClient, ASGITransport
-from conftest import AUTH_COOKIE, TEST_PASSWORD, authenticated_cookies
+from conftest import TEST_PASSWORD, authenticated_cookies
 from sqlmodel import col, select
 from src.utils import mail as mail_module
 from urllib.parse import parse_qs, urlparse
@@ -42,7 +42,7 @@ async def test_verify_email_rejects_invalid_token_without_cookie(client: AsyncCl
     # Assert
     assert response.status_code == 400
     assert response.json() == {"detail": "VERIFY_USER_BAD_TOKEN"}
-    assert client.cookies.get(AUTH_COOKIE) is None
+    assert client.cookies.get("longlink_auth") is None
 
 
 @pytest.mark.no_db
@@ -54,7 +54,7 @@ async def test_verify_email_rejects_blank_token_payload(client: AsyncClient) -> 
 
     # Assert
     assert response.status_code == 422
-    assert client.cookies.get(AUTH_COOKIE) is None
+    assert client.cookies.get("longlink_auth") is None
 
 
 async def test_register_verify_and_password_login(client: AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -62,7 +62,7 @@ async def test_register_verify_and_password_login(client: AsyncClient, monkeypat
 
     # Arrange
     email = "registered@example.com"
-    registration_payload = {"email": email, "next": "/orgs/example"}
+    registration_payload = {"email": email}
     completion_payload = {
         "name": "Registered",
         "email": email,
@@ -114,9 +114,9 @@ async def test_register_verify_and_password_login(client: AsyncClient, monkeypat
         verified_pending_user = (await session.execute(select(User).where(col(User.email) == email))).scalar_one_or_none()
 
     assert verify_response.status_code == 200
-    assert verify_response.json() == {"email": email, "next": "/orgs/example"}
+    assert verify_response.json() == {"email": email}
     assert verified_pending_user is None
-    assert client.cookies.get(AUTH_COOKIE) is None
+    assert client.cookies.get("longlink_auth") is None
 
     # Complete profile and password setup in the same transaction as the first session.
     unauthenticated_login = await client.post("/api/auth/password/login", json=login_payload)
@@ -135,14 +135,14 @@ async def test_register_verify_and_password_login(client: AsyncClient, monkeypat
     assert unauthenticated_login.status_code == 400
     assert unauthenticated_login.json() == {"detail": "LOGIN_BAD_CREDENTIALS"}
     assert restored_setup.status_code == 200
-    assert restored_setup.json() == {"email": email, "next": "/orgs/example"}
+    assert restored_setup.json() == {"email": email}
     assert mismatched_setup.status_code == 400
     assert mismatched_setup.json() == {"detail": "REGISTER_SETUP_MISMATCH"}
     assert complete_response.status_code == 201
     registered_user = complete_response.json()
     assert registered_user["name"] == "Registered User"
     assert registered_user["email"] == email
-    assert client.cookies.get(AUTH_COOKIE)
+    assert client.cookies.get("longlink_auth")
     assert client.cookies.get("longlink_registration") is None
     assert accounts_response.status_code == 200
     assert [account["id"] for account in accounts_response.json()] == [registered_user["id"]]
@@ -160,7 +160,7 @@ async def test_register_verify_and_password_login(client: AsyncClient, monkeypat
     assert repeat_verify_response.status_code == 200
     assert repeat_response.status_code == 400
     assert repeat_response.json() == {"detail": "REGISTER_USER_ALREADY_EXISTS"}
-    assert repeat_client.cookies.get(AUTH_COOKIE) is None
+    assert repeat_client.cookies.get("longlink_auth") is None
 
     # Password login still works after the verification-link login path.
     login_response = await client.post("/api/auth/password/login", json=login_payload)
@@ -188,7 +188,7 @@ async def test_forgot_and_reset_password(
     missing_response = await client.post("/api/auth/forgot-password", json={"email": "missing@example.com"})
     forgot_response = await client.post(
         "/api/auth/forgot-password",
-        json={"email": user.email.upper(), "next": "/orgs/example"},
+        json={"email": user.email.upper()},
     )
 
     assert missing_response.status_code == 202
@@ -196,7 +196,7 @@ async def test_forgot_and_reset_password(
     assert messages[0][:2] == (user.email, "Reset your LongLink password")
     reset_url = next(line for line in messages[0][2].splitlines() if line.startswith("http"))
     parsed_reset_url = urlparse(reset_url)
-    assert parse_qs(parsed_reset_url.query) == {"next": ["/orgs/example"]}
+    assert parse_qs(parsed_reset_url.query) == {}
     assert "token" not in parse_qs(parsed_reset_url.query)
 
     # Exchange fragment proof for an HTTP-only cookie before replacing the credential.

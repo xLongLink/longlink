@@ -18,7 +18,7 @@ async def reconcile(operation: Operation) -> jobs.OperationOutcome:
         """Reject provider work after another worker can own this operation."""
 
         if not await operations.lease_is_current(operation.id, attempt_count):
-            raise jobs.OperationLeaseLost(operation.id)
+            raise RuntimeError(f"Operation '{operation.id}' lease was lost")
 
     # Deleted Organizations are cleanup work, not release migration targets.
     organization = await organizations.get(operation.target_id, include_deleted=True)

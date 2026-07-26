@@ -13,7 +13,6 @@ import { AuthPage } from '@/components/AuthPage';
 import { Wordmark } from '@/components/Wordmark';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiVoid } from '@/lib/api';
-import { sanitizeRedirectPath } from '@/lib/redirects';
 
 type RegisterValues = {
     email: string;
@@ -27,7 +26,6 @@ export default function Register() {
     const location = useLocation();
     const showToast = useToast();
     const search = new URLSearchParams(location.search);
-    const nextPath = sanitizeRedirectPath(search.get('next'));
     const initialEmail = search.get('email') ?? '';
     const welcomeTitle = (
         <span className="inline-flex flex-wrap items-baseline justify-center gap-2">
@@ -43,13 +41,14 @@ export default function Register() {
         resolver: zodResolver(schema),
     });
     const email = useWatch({ control: form.control, name: 'email' }).trim();
-    const signInQuery = new URLSearchParams({ next: nextPath, ...(email ? { email } : {}) });
+    const signInQuery = email ? new URLSearchParams({ email }).toString() : '';
+    const signInHref = signInQuery ? `/organizations?${signInQuery}` : '/organizations';
     const registration = useMutation({
         mutationFn: async (payload: RegisterValues) => {
             await fetchApiVoid('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...payload, next: nextPath }),
+                body: JSON.stringify(payload),
             });
         },
     });
@@ -105,7 +104,7 @@ export default function Register() {
                     label={
                         <>
                             {t('auth.haveAccount')}{' '}
-                            <Link href={`/organizations?${signInQuery.toString()}`} type="inherit" weight="medium">
+                            <Link href={signInHref} type="inherit" weight="medium">
                                 {t('actions.login')}
                             </Link>
                         </>

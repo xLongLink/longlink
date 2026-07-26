@@ -1,6 +1,5 @@
 import asyncio
 from enum import StrEnum
-from uuid import UUID
 from fastapi import HTTPException
 from src.logger import logger
 from dataclasses import dataclass
@@ -9,23 +8,10 @@ from src.database.services import operations
 from src.models.operations import OperationKind
 from src.database.models.operations import Operation
 
-OPERATION_HEARTBEAT_SECONDS = 30
 OPERATION_RETRY_BASE_SECONDS = 5
 OPERATION_RETRY_MAX_SECONDS = 5 * 60
 OPERATION_HANDLER_TIMEOUT_SECONDS = 20 * 60
 OPERATION_ATTEMPT_LIMIT = operations.OPERATION_ATTEMPT_LIMIT
-
-
-class OperationLeaseLost(RuntimeError):
-    """Raised when a worker no longer owns an operation attempt."""
-
-    operation_id: UUID
-
-    def __init__(self, operation_id: UUID) -> None:
-        """Record the operation whose lease was lost."""
-
-        self.operation_id = operation_id
-        super().__init__(f"Operation '{operation_id}' lease was lost")
 
 
 class OperationOutcomeState(StrEnum):
@@ -80,16 +66,6 @@ def validate_handlers() -> None:
         raise RuntimeError(f"Invalid operation handlers; missing={missing}, unsupported={unsupported}")
 
 
-def get_handler(name: str) -> JobHandler:
-    """Return the registered handler for one persisted operation name."""
-
-    # Claimed rows must never execute through an implicit fallback handler.
-    handler = handlers.get(name)
-    if handler is None:
-        raise ValueError(f"Operation handler '{name}' is not registered")
-    return handler
-
-
 def complete() -> OperationOutcome:
     """Return an outcome that completes the operation."""
 
@@ -112,7 +88,7 @@ def fail(reason: str) -> OperationOutcome:
 
 
 async def execute(operation: Operation, handler: JobHandler) -> Operation:
-    """Run one claimed attempt and persist exactly one lease-fenced outcome. Handler exceptions and timeouts retry with bounded backoff, while explicit failures and exhausted attempts are terminal."""
+    """Execute one claimed operation and persist the outcome that releases its lock."""
 
     # Claimed operations must carry the attempt generation needed for fenced state transitions.
     attempt_count = operation.attempt_count
@@ -125,8 +101,6 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
     try:
         async with asyncio.timeout(OPERATION_HANDLER_TIMEOUT_SECONDS):
             outcome = await handler(operation)
-    except OperationLeaseLost:
-        raise
     except TimeoutError as exc:
         detail = str(exc) or "Operation attempt timed out"
         outcome = retry(detail)
@@ -137,7 +111,7 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
         logger.exception("Operation %s failed: %r", operation.id, exc)
         outcome = retry()
 
-    # Persist exactly one transition while the claim's lease remains valid.
+    # Persist exactly one transition that releases the claimed operation.
     match outcome.state:
         case OperationOutcomeState.complete:
             updated = await operations.complete(operation.id, attempt_count)
@@ -164,47 +138,13 @@ async def execute(operation: Operation, handler: JobHandler) -> Operation:
 
     # Never return a stale in-memory row when the requested transition lost ownership.
     if updated is None:
-        raise OperationLeaseLost(operation.id)
+        raise RuntimeError(f"Operation '{operation.id}' lease was lost")
 
     return updated
 
 
-async def renew_operation_lease(operation_id: UUID, attempt_count: int) -> None:
-    """Keep one operation lease alive and raise as soon as ownership is lost."""
-
-    # Keep extending the lease until execution finishes or another worker owns the row.
-    while True:
-        await asyncio.sleep(max(1, OPERATION_HEARTBEAT_SECONDS))
-        renewed = await operations.renew_lease(operation_id, attempt_count)
-
-        # Signal the scheduler so it can cancel the stale handler immediately.
-        if not renewed:
-            raise OperationLeaseLost(operation_id)
-
-
-async def run_claimed_operation(operation: Operation, handler: JobHandler) -> Operation:
-    """Execute one claimed operation while renewing its lease in parallel."""
-
-    # The action and heartbeat share one lifetime so neither survives a completed or lost attempt.
-    action = asyncio.create_task(execute(operation, handler))
-    heartbeat = asyncio.create_task(renew_operation_lease(operation.id, operation.attempt_count))
-    try:
-        done, _ = await asyncio.wait({action, heartbeat}, return_when=asyncio.FIRST_COMPLETED)
-        if action in done:
-            return await action
-        await heartbeat
-        raise OperationLeaseLost(operation.id)
-    finally:
-        action.cancel()
-        heartbeat.cancel()
-        await asyncio.gather(action, heartbeat, return_exceptions=True)
-
-
 async def run_operation_scheduler() -> None:
-    """Run this replica's serial queue worker for Operations targeting its LongLink Platform release.
-
-    Leases coordinate replicas and make crashed work reclaimable, while polling survives transient failures.
-    """
+    """Run this replica's serial Operation worker while polling through transient failures."""
 
     # Keep polling after transient database failures so the worker remains available.
     while True:
@@ -222,15 +162,12 @@ async def run_operation_scheduler() -> None:
 
         logger.info("Executing %s operation %s", operation.kind, operation.id)
 
-        # Run one complete leased attempt before claiming more work.
+        # Execute and release one claimed operation before locking more work.
         try:
-            handler = get_handler(operation.kind)
-            result = await run_claimed_operation(operation, handler)
+            result = await execute(operation, handlers[operation.kind])
 
             # Yield after a retry so immediately due work cannot monopolize the scheduler.
             if result.started_at is None and result.stopped_at is None:
                 await asyncio.sleep(1)
-        except OperationLeaseLost as exc:
-            logger.warning("%s", exc)
         except Exception as exc:
             logger.exception("Operation scheduler failed for %s: %r", operation.id, exc)

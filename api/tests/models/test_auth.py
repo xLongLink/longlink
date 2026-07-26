@@ -1,6 +1,6 @@
 import pytest
 from pydantic import ValidationError
-from src.models.auth import RegistrationRequest, RegistrationComplete, RegistrationTokenConfirm
+from src.models.auth import EmailPayload, TokenPayload, RegistrationComplete
 
 pytestmark = pytest.mark.no_db
 
@@ -9,21 +9,21 @@ def test_registration_models_accept_complete_account_flow() -> None:
     """Accept email proof followed by profile and password setup."""
 
     # Validate each browser payload at its API boundary.
-    request = RegistrationRequest.model_validate({"email": "registered@example.com"})
-    confirmation = RegistrationTokenConfirm.model_validate({"token": "signed-token"})
+    request = EmailPayload.model_validate({"email": "Registered@EXAMPLE.com"})
+    confirmation = TokenPayload.model_validate({"token": " signed-token "})
     completion = RegistrationComplete.model_validate(
         {
-            "name": "Registered",
-            "email": "registered@example.com",
-            "surname": "User",
+            "name": " Registered ",
+            "email": "Registered@EXAMPLE.com",
+            "surname": " User ",
             "password": "x",
         }
     )
 
-    assert request.email == "registered@example.com"
-    assert confirmation.token == "signed-token"
-    assert completion.name == "Registered"
-    assert completion.surname == "User"
+    assert request.email == "Registered@EXAMPLE.com"
+    assert confirmation.token == " signed-token "
+    assert completion.name == " Registered "
+    assert completion.surname == " User "
     assert completion.password == "x"
 
 
@@ -31,7 +31,7 @@ def test_registration_models_accept_complete_account_flow() -> None:
     "payload",
     [
         {"name": "", "email": "registered@example.com", "surname": "User", "password": "longlink-test-password"},
-        {"name": "Registered", "email": "not-email", "surname": "User", "password": "longlink-test-password"},
+        {"name": "Registered", "email": "", "surname": "User", "password": "longlink-test-password"},
         {"name": "Registered", "email": "registered@example.com", "surname": "", "password": "longlink-test-password"},
         {"name": "Registered", "email": "registered@example.com", "surname": "User", "password": ""},
     ],

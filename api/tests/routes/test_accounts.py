@@ -1,6 +1,6 @@
 from uuid import uuid4
 from httpx2 import AsyncClient
-from conftest import AUTH_COOKIE, session_cookie, authenticated_cookies
+from conftest import session_cookie, authenticated_cookies
 from src.models.users import UserListItem
 from src.database.models.users import User
 
@@ -54,7 +54,7 @@ async def test_deactivate_account_clears_only_the_auth_cookie(client: AsyncClien
         UserListItem.model_validate(user_one).model_dump(mode="json"),
         UserListItem.model_validate(user_two).model_dump(mode="json"),
     ]
-    assert client.cookies.get(AUTH_COOKIE) is None
+    assert client.cookies.get("longlink_auth") is None
     accounts_response = await client.get("/api/auth/accounts")
     profile_response = await client.get("/api/me")
     assert accounts_response.status_code == 200
@@ -77,7 +77,7 @@ async def test_logout_clears_the_active_account(client: AsyncClient, users: tupl
 
     # Assert
     assert response.status_code == 204
-    assert client.cookies.get(AUTH_COOKIE) is None
+    assert client.cookies.get("longlink_auth") is None
     accounts_response = await client.get("/api/auth/accounts")
     me_response = await client.get("/api/me")
     assert accounts_response.status_code == 200
