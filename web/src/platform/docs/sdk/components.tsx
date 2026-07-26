@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react';
 import { Code } from '@astryxdesign/core/Code';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
 import { List, ListItem } from '@astryxdesign/core/List';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
+import type { ReactNode } from 'react';
 import { CodeBlock } from '@/components/CodeBlock';
 
 /** Renders paragraph text in the component reference. */

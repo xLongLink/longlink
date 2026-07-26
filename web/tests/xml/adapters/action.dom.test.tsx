@@ -1,7 +1,7 @@
-import { act } from 'react';
 import { expect, it } from 'bun:test';
-import { createRoot } from 'react-dom/client';
 import { LayerProvider } from '@astryxdesign/core/Layer';
+import { act } from 'react';
+import { createRoot } from 'react-dom/client';
 import { parseXML } from '@/xml/core/parser';
 import { RenderXML } from '@/xml/renderers.tsx';
 import { withGlobalValue } from '../../helpers/globals';

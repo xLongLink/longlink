@@ -1,11 +1,11 @@
+import { Center } from '@astryxdesign/core/Center';
 import type { ReactElement } from 'react';
 import { useLocation } from 'react-router';
-import { Center } from '@astryxdesign/core/Center';
-import NotFound from '@/platform/NotFound';
-import PlatformLayout from '@/platform/layout';
-import { useUserProfile } from '@/hooks/use-user';
 import { SignInCard } from '@/components/SignInCard';
+import { useUserProfile } from '@/hooks/use-user';
 import { hasMinimumRole, type PlatformRole } from '@/lib/roles';
+import PlatformLayout from '@/platform/layout';
+import NotFound from '@/platform/NotFound';
 
 /** Protects routes and optionally requires a platform role. */
 export function Auth({ children, requiredRole }: { children: ReactElement; requiredRole?: PlatformRole }) {

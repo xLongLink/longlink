@@ -1,12 +1,12 @@
-import { useParams } from 'react-router';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
-import { AppWindow, Settings2 } from 'lucide-react';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useTranslator } from '@astryxdesign/core/i18n';
-import PlatformLayout from '@/platform/layout';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
+import { AppWindow, Settings2 } from 'lucide-react';
+import { useParams } from 'react-router';
 import { PageContainer } from '@/components/PageContainer';
 import { useOrganization } from '@/hooks/use-organization';
+import PlatformLayout from '@/platform/layout';
 import NotFound from './NotFound';
 import Applications from './org/Applications';
 import OrganizationSettings, { type SettingsRouteSection } from './org/Settings';

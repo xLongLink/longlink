@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ICON_NAMES } from '@/lib/icons';
-import { ACCENT_VALUES, MAX_RADIUS, MIN_RADIUS, THEME_VALUES } from '@/lib/theme';
 import { APPLICATION_ROLE_NAMES, PLATFORM_ROLE_NAMES, ROLE_NAMES } from '@/lib/roles';
+import { ACCENT_VALUES, MAX_RADIUS, MIN_RADIUS, THEME_VALUES } from '@/lib/theme';
 
 const applicationStatusSchema = z.enum(['creating', 'running', 'failed', 'deleting']);
 const applicationRoleSchema = z.enum(APPLICATION_ROLE_NAMES);

@@ -1,10 +1,10 @@
-import { proxy } from 'valtio';
-import { createElement } from 'react';
 import { describe, expect, it } from 'bun:test';
+import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { ExecutionContext } from '@/xml/types';
+import { proxy } from 'valtio';
 import { parseXML } from '@/xml/core/parser';
 import { RenderXML } from '@/xml/renderers.tsx';
+import type { ExecutionContext } from '@/xml/types';
 
 describe('FileInput', () => {
     /* File inputs cannot be controlled with a value attribute in React. */

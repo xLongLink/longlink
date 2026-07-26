@@ -1,13 +1,13 @@
-import { Package } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
+import { Link } from '@astryxdesign/core/Link';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
+import { Package } from 'lucide-react';
+import { Wordmark } from '@/components/Wordmark';
 import { GitHub } from '@/svg/GitHub';
 import { LinkedIn } from '@/svg/LinkedIn';
-import { Wordmark } from '@/components/Wordmark';
 
 /** Scrolls public pages back to the top after internal navigation. */
 function scrollToTop() {

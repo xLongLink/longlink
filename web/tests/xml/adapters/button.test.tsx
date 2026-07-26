@@ -1,7 +1,7 @@
-import { proxy } from 'valtio';
 import { describe, expect, it } from 'bun:test';
-import type { ExecutionContext } from '@/xml/types';
+import { proxy } from 'valtio';
 import { appendButtonItem } from '@/xml/adapters/Button';
+import type { ExecutionContext } from '@/xml/types';
 
 describe('Button', () => {
     /* Append mode should push items into a named cart state slot. */

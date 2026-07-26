@@ -1,13 +1,13 @@
-import { useParams } from 'react-router';
-import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
-import { VStack } from '@astryxdesign/core/VStack';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
 import { useTranslator } from '@astryxdesign/core/i18n';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import type { ApiComputePod } from '@/lib/types';
+import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
+import { useParams } from 'react-router';
 import { useComputePods, useComputes } from '@/data/compute';
+import type { ApiComputePod } from '@/lib/types';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Renders pods in a namespace on a compute backend. */

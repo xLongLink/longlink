@@ -1,8 +1,8 @@
 import { Button as AstryxButton } from '@astryxdesign/core/Button';
-import type { Props } from '@/xml/types';
+import { useXmlContext } from '@/xml/core/context';
 import { renderNode } from '@/xml/core/node';
 import { resolvePath } from '@/xml/expressions';
-import { useXmlContext } from '@/xml/core/context';
+import type { Props } from '@/xml/types';
 import { useActionHandler } from './Action';
 import { resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel, resolveXmlString, resolveXmlValue } from './props';
 

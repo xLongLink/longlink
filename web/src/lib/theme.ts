@@ -1,5 +1,5 @@
-import { neutralTheme } from '@astryxdesign/theme-neutral';
 import { defineTheme, type DefinedTheme } from '@astryxdesign/core/theme';
+import { neutralTheme } from '@astryxdesign/theme-neutral';
 
 /** Theme mode values supported by the API and UI. */
 export const THEME_VALUES = ['light', 'dark', 'system'] as const;

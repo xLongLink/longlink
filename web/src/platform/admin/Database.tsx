@@ -1,26 +1,26 @@
-import { Copy } from 'lucide-react';
-import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import type { ApiDatabaseRegistry } from '@/lib/types';
-import { fetchApiJson } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
-import { PostgreSQL } from '@/svg/PostgreSQL';
-import { useDeleteDialog } from '@/lib/utils';
-import { useDatabases } from '@/data/database';
-import { useUserProfile } from '@/hooks/use-user';
-import { useAdminPagination } from '@/platform/admin/pagination';
+import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Copy } from 'lucide-react';
 import CreateDatabase from '@/components/dialogs/CreateDatabase';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { useDatabases } from '@/data/database';
+import { useToast } from '@/hooks/use-toast';
+import { useUserProfile } from '@/hooks/use-user';
+import { fetchApiJson } from '@/lib/api';
 import { apiDatabaseRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
 import { databasesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
+import type { ApiDatabaseRegistry } from '@/lib/types';
+import { useDeleteDialog } from '@/lib/utils';
+import { useAdminPagination } from '@/platform/admin/pagination';
+import { PostgreSQL } from '@/svg/PostgreSQL';
 
 /** Returns localized admin database table columns. */
 function createDatabaseColumns(t: TranslatorFn): TableColumn<ApiDatabaseRegistry>[] {

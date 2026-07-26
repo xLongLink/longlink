@@ -1,7 +1,7 @@
 import { Grid as AstryxGrid, type GridColumns } from '@astryxdesign/core/Grid';
-import type { Props } from '@/xml/types';
-import { renderNode } from '@/xml/core/node';
 import { useXmlContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { resolveXmlEnum, resolveXmlNumber, resolveXmlSizeValue, resolveXmlSpacing } from './props';
 
 /** Renders a fixed or responsive Astryx grid. */

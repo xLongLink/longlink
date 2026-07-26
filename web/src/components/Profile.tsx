@@ -1,14 +1,13 @@
-import { useState } from 'react';
-import { Item } from '@astryxdesign/core/Item';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
-import { Popover } from '@astryxdesign/core/Popover';
 import { useTranslator } from '@astryxdesign/core/i18n';
-import { List, ListItem } from '@astryxdesign/core/List';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { Item } from '@astryxdesign/core/Item';
+import { List, ListItem } from '@astryxdesign/core/List';
+import { Popover } from '@astryxdesign/core/Popover';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
 import {
     AppWindow,
     ArrowUpDown,
@@ -22,6 +21,7 @@ import {
     Users,
     Wrench,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useUserProfile, useUserSessionActions } from '@/hooks/use-user';
 

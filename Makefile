@@ -25,7 +25,7 @@ sdk\:install:
 
 # Install web JavaScript dependencies.
 web\:install:
-	bun install --cwd web --frozen-lockfile
+	cd web && vp install --frozen-lockfile
 
 
 # Format API, SDK, and web/docs code.
@@ -44,7 +44,7 @@ sdk\:format: sdk\:install
 
 # Format web code and repository docs.
 web\:format: web\:install
-	cd web && bunx prettier --log-level warn --write . $$(cd .. && find . -name '*.md' -o -name '*.yml' -o -name '*.yaml' | sed 's#^./#../#')
+	cd web && vp fmt --write . $$(git -C .. ls-files '*.md' '*.yml' '*.yaml' | sed "s#^#$$(cd .. && pwd)/#")
 
 
 # Run fast API, SDK, and web checks without infrastructure or scaffold smoke tests.
@@ -87,8 +87,10 @@ sdk\:coverage: sdk\:install sdk\:build
 	cd sdk && uv run --locked pytest -m "not integration" --cov=longlink --cov-report=term-missing tests
 
 
-# Run web tests, typecheck, and bundle builds.
+# Run web formatting, linting, tests, typechecks, and bundle builds.
 web\:tests: web\:install
+	cd web && vp fmt --check
+	cd web && vp lint
 	bun run --cwd web test
 	bun run --cwd web typecheck
 	bun run --cwd web build:api:bundle --logLevel warn

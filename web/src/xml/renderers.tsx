@@ -1,16 +1,15 @@
-/* eslint-disable react-hooks/immutability -- The XML execution context is an intentionally mutable runtime scope. */
-import { getVersion, subscribe } from 'valtio';
 import { Banner } from '@astryxdesign/core/Banner';
-import { useEffect, useState, type ReactNode } from 'react';
 import { InternationalizationProvider, useTranslator, type MessagesByLocale } from '@astryxdesign/core/i18n';
+import { useEffect, useState, type ReactNode } from 'react';
+import { getVersion, subscribe } from 'valtio';
 import { fetchApiJson } from '@/lib/api';
 import { translationCatalogs } from '@/lib/i18n';
-import type { ASTNode, ExecutionContext } from './types';
-import { renderNode } from './core/node';
-import { XmlErrorBoundary } from './core/errors';
-import { BaseUrlContext, resolveUrl } from './core/url';
-import { validateTranslationCatalog } from './core/i18n';
 import { ContextProvider, createContext, setupContext, validateSetupNodes } from './core/context';
+import { XmlErrorBoundary } from './core/errors';
+import { validateTranslationCatalog } from './core/i18n';
+import { renderNode } from './core/node';
+import { BaseUrlContext, resolveUrl } from './core/url';
+import type { ASTNode, ExecutionContext } from './types';
 
 type RenderXMLProps = {
     ast: ASTNode[];

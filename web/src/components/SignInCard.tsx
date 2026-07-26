@@ -1,25 +1,25 @@
-import { z } from 'zod';
-import { useNavigate } from 'react-router';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Heading } from '@astryxdesign/core/Heading';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslator } from '@astryxdesign/core/i18n';
+import { Link } from '@astryxdesign/core/Link';
 import { List, ListItem } from '@astryxdesign/core/List';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchApiVoid } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { useNavigate } from 'react-router';
+import { z } from 'zod';
+import { PasswordInput } from '@/components/PasswordInput';
 import { Wordmark } from '@/components/Wordmark';
+import { useToast } from '@/hooks/use-toast';
 import { useSavedAccounts } from '@/hooks/use-user';
+import { fetchApiVoid } from '@/lib/api';
 import { userProfileQueryKey } from '@/lib/query-keys';
 import { sanitizeRedirectPath } from '@/lib/redirects';
-import { PasswordInput } from '@/components/PasswordInput';
 
 type LoginValues = {
     email: string;

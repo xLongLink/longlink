@@ -1,22 +1,22 @@
-import { useLocation } from 'react-router';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { Banner } from '@astryxdesign/core/Banner';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
+import { useTranslator } from '@astryxdesign/core/i18n';
+import { Link } from '@astryxdesign/core/Link';
+import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
+import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Building2, Settings2 } from 'lucide-react';
-import { Heading } from '@astryxdesign/core/Heading';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Table, type TableColumn, proportional } from '@astryxdesign/core/Table';
+import { useLocation } from 'react-router';
+import CreateOrganization from '@/components/dialogs/CreateOrganization';
+import { PageContainer } from '@/components/PageContainer';
+import { SignInCard } from '@/components/SignInCard';
+import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
+import { sanitizeRedirectPath } from '@/lib/redirects';
 import type { ApiUserOrganizationMembership } from '@/lib/types';
 import PlatformLayout from '@/platform/layout';
-import { SignInCard } from '@/components/SignInCard';
-import { sanitizeRedirectPath } from '@/lib/redirects';
-import { PageContainer } from '@/components/PageContainer';
-import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
-import CreateOrganization from '@/components/dialogs/CreateOrganization';
 
 /** Renders the organizations landing page for signed-in and anonymous users. */
 export default function Organizations() {

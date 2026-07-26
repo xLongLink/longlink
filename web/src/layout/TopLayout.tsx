@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react';
-import type { LucideIcon } from 'lucide-react';
-import { Stack } from '@astryxdesign/core/Stack';
-import { TopNav } from '@astryxdesign/core/TopNav';
 import { AppShell } from '@astryxdesign/core/AppShell';
 import { useTranslator } from '@astryxdesign/core/i18n';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { TopNav } from '@astryxdesign/core/TopNav';
+import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { DevelopmentNotice } from '@/components/DevelopmentNotice';
 
 type TopLayoutTab = {

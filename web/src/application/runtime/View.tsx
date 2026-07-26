@@ -1,19 +1,18 @@
-import type { LucideIcon } from 'lucide-react';
-import startCase from 'lodash/startCase';
-import { Card } from '@astryxdesign/core/Card';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
 import { Center } from '@astryxdesign/core/Center';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { useTranslator } from '@astryxdesign/core/i18n';
+import { Stack } from '@astryxdesign/core/Stack';
+import startCase from 'lodash/startCase';
+import type { LucideIcon } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { generatePath, matchRoutes, useNavigate, useParams, type RouteObject } from 'react-router';
-import type { ApiOrganizationApplication } from '@/lib/types';
-import XmlLayout from '@/xml/layout';
-import NotFound from '@/platform/NotFound';
-import { getIconComponent } from '@/lib/icons';
-import { ApiError, fetchApiText } from '@/lib/api';
 import { usePages, type RuntimePage } from '@/hooks/use-pages';
+import { ApiError, fetchApiText } from '@/lib/api';
+import { getIconComponent } from '@/lib/icons';
+import type { ApiOrganizationApplication } from '@/lib/types';
+import NotFound from '@/platform/NotFound';
 import {
     createContext as createXmlContext,
     fromXml,
@@ -22,6 +21,7 @@ import {
     type ASTNode,
     type ExecutionContext,
 } from '@/xml';
+import XmlLayout from '@/xml/layout';
 
 type ViewProps = {
     applicationStatus?: ApiOrganizationApplication['application']['status'] | 'loading';

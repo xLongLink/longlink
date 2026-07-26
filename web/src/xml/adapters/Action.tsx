@@ -1,10 +1,10 @@
 import { createContext, useContext } from 'react';
-import type { Props } from '@/xml/types';
 import { useToast } from '@/hooks/use-toast';
 import { fetchApiResponse } from '@/lib/api';
-import { renderNode } from '@/xml/core/node';
 import { useXmlContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
 import { isAppRelativeUrl, resolveUrl, useUrl } from '@/xml/core/url';
+import type { Props } from '@/xml/types';
 import { resolveXmlExpression, resolveXmlString, resolveXmlStringArray } from './props';
 
 const ActionHandlerContext = createContext<(() => void | Promise<void>) | null>(null);

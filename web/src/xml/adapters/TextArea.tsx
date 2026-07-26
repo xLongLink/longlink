@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { TextArea as AstryxTextArea } from '@astryxdesign/core/TextArea';
-import type { Props } from '@/xml/types';
+import { useState } from 'react';
 import { useXmlContext } from '@/xml/core/context';
+import type { Props } from '@/xml/types';
 import { useBindableValue } from './binding';
 import {
     resolveXmlBoolean,

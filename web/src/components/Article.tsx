@@ -1,17 +1,17 @@
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
+import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Button } from '@astryxdesign/core/Button';
 import { Center } from '@astryxdesign/core/Center';
 import { Divider } from '@astryxdesign/core/Divider';
-import { Outline } from '@astryxdesign/core/Outline';
 import { useTranslator } from '@astryxdesign/core/i18n';
-import { Stack, StackItem } from '@astryxdesign/core/Stack';
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Layout, LayoutContent, LayoutHeader, LayoutPanel } from '@astryxdesign/core/Layout';
-import type { ArticlePage } from '@/platform/catalog';
-import { formatDate } from '@/lib/utils';
+import { Link } from '@astryxdesign/core/Link';
+import { Outline } from '@astryxdesign/core/Outline';
+import { Stack, StackItem } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
 import { PageContainer } from '@/components/PageContainer';
 import { useUserOrganizations, useUserProfile } from '@/hooks/use-user';
+import { formatDate } from '@/lib/utils';
+import type { ArticlePage } from '@/platform/catalog';
 
 type ArticleContentProps = Pick<ArticlePage, 'content' | 'metadata'>;
 

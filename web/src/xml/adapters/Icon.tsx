@@ -1,6 +1,6 @@
-import type { Props } from '@/xml/types';
 import { renderIcon } from '@/lib/icons';
 import { useXmlContext } from '@/xml/core/context';
+import type { Props } from '@/xml/types';
 import { requireXmlString, resolveXmlEnum } from './props';
 
 const ICON_SIZES = { xsm: 12, sm: 16, md: 20, lg: 24 } as const;

@@ -55,11 +55,12 @@ React Router Framework Mode builds two browser applications from the shared pack
 ```
 
 ```bash
-bun run dev         # Starts the Platform development server
-bun run dev:sdk     # Starts the embedded Application development server
-bun run build:api   # Builds the Platform web bundle
-bun run build:sdk   # Builds the embedded Application web bundle
-bun run format      # Formats the code
+vp run dev         # Starts the Platform development server
+vp run dev:sdk     # Starts the embedded Application development server
+vp run build:api   # Builds the Platform web bundle
+vp run build:sdk   # Builds the embedded Application web bundle
+vp lint            # Lints and type-checks the code
+vp fmt --write     # Formats the code
 ```
 
 ## Guidelines

@@ -1,5 +1,5 @@
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { CodeBlock as AstryxCodeBlock } from '@astryxdesign/core/CodeBlock';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { useToast } from '@/hooks/use-toast';
 
 /** Renders a syntax-highlighted code block for docs and examples. */

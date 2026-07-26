@@ -1,6 +1,6 @@
 import { useMatches } from 'react-router';
-import type { SettingsRouteSection } from '@/platform/org/Settings';
 import { Auth } from '@/components/Auth';
+import type { SettingsRouteSection } from '@/platform/org/Settings';
 import Organization from '@/platform/Organization';
 
 const sections: Record<string, SettingsRouteSection> = {

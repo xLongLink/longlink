@@ -1,25 +1,25 @@
-import { Copy } from 'lucide-react';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Avatar } from '@astryxdesign/core/Avatar';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { Banner } from '@astryxdesign/core/Banner';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { Link } from '@astryxdesign/core/Link';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import type { ApiOrganizationSummary } from '@/lib/types';
-import { fetchApiVoid } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Copy } from 'lucide-react';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useOrganizations } from '@/data/admin';
+import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/use-user';
+import { fetchApiVoid } from '@/lib/api';
 import { organizationsQueryKey } from '@/lib/query-keys';
+import type { ApiOrganizationSummary } from '@/lib/types';
 import { formatDateTime, useDeleteDialog } from '@/lib/utils';
 import { useAdminPagination } from '@/platform/admin/pagination';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 
 /** Returns localized admin organization table columns. */
 function createOrganizationColumns(t: TranslatorFn): TableColumn<ApiOrganizationSummary>[] {

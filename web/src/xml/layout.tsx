@@ -1,13 +1,13 @@
-import type { ReactNode } from 'react';
-import type { LucideIcon } from 'lucide-react';
-import { useLocation } from 'react-router';
-import { Link } from '@astryxdesign/core/Link';
 import { useTranslator } from '@astryxdesign/core/i18n';
-import TopLayout from '@/layout/TopLayout';
-import { Wordmark } from '@/components/Wordmark';
-import { UserProfile } from '@/components/Profile';
+import { Link } from '@astryxdesign/core/Link';
+import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { useLocation } from 'react-router';
 import { Breadcrumb } from '@/components/Breadcrumb';
 import { PageContainer } from '@/components/PageContainer';
+import { UserProfile } from '@/components/Profile';
+import { Wordmark } from '@/components/Wordmark';
+import TopLayout from '@/layout/TopLayout';
 
 type XmlLayoutTab = {
     href: string;

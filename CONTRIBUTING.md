@@ -10,6 +10,12 @@ The SDK owns shared-schema models, migrations, and synchronization helpers along
 
 ## Development
 
+Install [Vite+](https://viteplus.dev) before running the web commands:
+
+```bash
+curl -fsSL https://vite.plus | bash
+```
+
 ```bash
 make install        # Install all the dependencies
 make api:install    # Install API dependencies

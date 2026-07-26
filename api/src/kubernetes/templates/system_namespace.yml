@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: longlink-system
-  annotations:
-    longlink.io/platform-version: "$platform_version"
-    longlink.io/runtime-revision: "$runtime_revision"
-    longlink.io/template-revision: "$template_revision"
-  labels:
-    app.kubernetes.io/managed-by: longlink-platform
-    longlink.io/compute-id: "$compute_id"
-    longlink.io/resource-scope: platform
+    name: longlink-system
+    annotations:
+        longlink.io/platform-version: '$platform_version'
+        longlink.io/runtime-revision: '$runtime_revision'
+        longlink.io/template-revision: '$template_revision'
+    labels:
+        app.kubernetes.io/managed-by: longlink-platform
+        longlink.io/compute-id: '$compute_id'
+        longlink.io/resource-scope: platform

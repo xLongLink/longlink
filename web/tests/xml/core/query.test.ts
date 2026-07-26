@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import type { ExecutionContext } from '@/xml/types';
 import { query } from '@/xml/core/query';
+import type { ExecutionContext } from '@/xml/types';
 import { withGlobalValue } from '../../helpers/globals';
 
 describe('query', () => {

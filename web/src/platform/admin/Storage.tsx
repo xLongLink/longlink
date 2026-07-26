@@ -1,26 +1,26 @@
-import { Copy } from 'lucide-react';
-import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import type { ApiStorageRegistry } from '@/lib/types';
-import { S3 } from '@/svg/S3';
-import { fetchApiJson } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
-import { useStorages } from '@/data/storage';
-import { useDeleteDialog } from '@/lib/utils';
-import { useUserProfile } from '@/hooks/use-user';
+import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Copy } from 'lucide-react';
 import CreateStorage from '@/components/dialogs/CreateStorage';
-import { useAdminPagination } from '@/platform/admin/pagination';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { useStorages } from '@/data/storage';
+import { useToast } from '@/hooks/use-toast';
+import { useUserProfile } from '@/hooks/use-user';
+import { fetchApiJson } from '@/lib/api';
 import { apiStorageRegistrySchema, parseApiResponse } from '@/lib/api-schemas';
 import { infrastructureOptionsQueryKey, storagesQueryKey } from '@/lib/query-keys';
+import type { ApiStorageRegistry } from '@/lib/types';
+import { useDeleteDialog } from '@/lib/utils';
+import { useAdminPagination } from '@/platform/admin/pagination';
+import { S3 } from '@/svg/S3';
 
 /** Returns localized admin storage table columns. */
 function createStorageColumns(t: TranslatorFn): TableColumn<ApiStorageRegistry>[] {

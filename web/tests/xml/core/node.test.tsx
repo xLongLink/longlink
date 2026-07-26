@@ -1,9 +1,9 @@
-import { createElement } from 'react';
 import { describe, expect, it } from 'bun:test';
+import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { ASTNode, ExecutionContext } from '@/xml/types';
-import { renderNode } from '@/xml/core/node';
 import { ContextProvider, setupContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
+import type { ASTNode, ExecutionContext } from '@/xml/types';
 
 describe('renderNode', () => {
     it('rejects styling and event handler attributes on xml nodes', () => {

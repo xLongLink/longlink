@@ -1,28 +1,26 @@
-import { useState } from 'react';
-import { useLocation } from 'react-router';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Badge } from '@astryxdesign/core/Badge';
 import { Avatar } from '@astryxdesign/core/Avatar';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Slider } from '@astryxdesign/core/Slider';
+import { Badge } from '@astryxdesign/core/Badge';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
+import { useTranslator } from '@astryxdesign/core/i18n';
+import { Link } from '@astryxdesign/core/Link';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Selector } from '@astryxdesign/core/Selector';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { Building2, Paintbrush, Settings2, UserRound } from 'lucide-react';
 import { SideNav, SideNavItem, SideNavSection } from '@astryxdesign/core/SideNav';
+import { Slider } from '@astryxdesign/core/Slider';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import { useToast } from '@/hooks/use-toast';
-import { useDeleteDialog } from '@/lib/utils';
-import PlatformLayout from '@/platform/layout';
-import { PageContainer } from '@/components/PageContainer';
-import { useDeleteOrganization } from '@/hooks/use-organization';
+import { Text } from '@astryxdesign/core/Text';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Building2, Paintbrush, Settings2, UserRound } from 'lucide-react';
+import { useState } from 'react';
+import { useLocation } from 'react-router';
 import CreateOrganization from '@/components/dialogs/CreateOrganization';
 import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
+import { PageContainer } from '@/components/PageContainer';
+import { useDeleteOrganization } from '@/hooks/use-organization';
+import { useToast } from '@/hooks/use-toast';
 import { useUpdateUser, useUserOrganizations, useUserProfile } from '@/hooks/use-user';
 import {
     ACCENT_OPTIONS,
@@ -33,6 +31,8 @@ import {
     type Accent,
     type Theme,
 } from '@/lib/theme';
+import { useDeleteDialog } from '@/lib/utils';
+import PlatformLayout from '@/platform/layout';
 
 type SettingsSection = 'account' | 'appearance' | 'organizations';
 

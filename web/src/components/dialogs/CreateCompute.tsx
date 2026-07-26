@@ -1,21 +1,21 @@
-import { z } from 'zod';
-import { useId, useState } from 'react';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { TextArea } from '@astryxdesign/core/TextArea';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { fetchApiJson } from '@/lib/api';
+import { Stack } from '@astryxdesign/core/Stack';
+import { TextArea } from '@astryxdesign/core/TextArea';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useId, useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/use-user';
-import { computesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
+import { fetchApiJson } from '@/lib/api';
 import { apiComputeMutationResponseSchema, parseApiResponse } from '@/lib/api-schemas';
+import { computesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
 
 const schema = z.object({
     name: z.string().trim().min(1),

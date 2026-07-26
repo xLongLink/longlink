@@ -1,18 +1,18 @@
-import { z } from 'zod';
-import { useLocation } from 'react-router';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { useTranslator } from '@astryxdesign/core/i18n';
+import { Link } from '@astryxdesign/core/Link';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { fetchApiVoid } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'react-router';
+import { z } from 'zod';
 import { AuthPage } from '@/components/AuthPage';
+import { useToast } from '@/hooks/use-toast';
+import { fetchApiVoid } from '@/lib/api';
 import { sanitizeRedirectPath } from '@/lib/redirects';
 
 type ForgotPasswordValues = {

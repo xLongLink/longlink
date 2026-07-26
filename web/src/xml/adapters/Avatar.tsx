@@ -1,7 +1,7 @@
 import { Avatar as AstryxAvatar, type AvatarSize } from '@astryxdesign/core/Avatar';
-import type { Props } from '@/xml/types';
-import { useAnchorUrl } from '@/xml/core/url';
 import { useXmlContext } from '@/xml/core/context';
+import { useAnchorUrl } from '@/xml/core/url';
+import type { Props } from '@/xml/types';
 import { resolveXmlEnum, resolveXmlString } from './props';
 
 /** Renders a data-oriented Astryx avatar with safe image URLs. */

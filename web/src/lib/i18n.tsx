@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
 import { InternationalizationProvider, type MessagesByLocale } from '@astryxdesign/core/i18n';
+import type { ReactNode } from 'react';
 import englishCatalog from '@/translations/en.json';
 
 /** Complete locale catalogs used by platform React and exposed for XML runtime integration. */

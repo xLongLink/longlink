@@ -1,8 +1,8 @@
 import { useLocation, type MetaFunction } from 'react-router';
-import NotFound from '@/platform/NotFound';
-import LegalLayout from '@/platform/legal/layout';
-import { LEGAL_PAGES } from '@/platform/legal/catalog';
 import { noIndexMeta, publicSeoMeta } from '@/lib/seo';
+import { LEGAL_PAGES } from '@/platform/legal/catalog';
+import LegalLayout from '@/platform/legal/layout';
+import NotFound from '@/platform/NotFound';
 
 /** Returns metadata for the legal article matched by the current URL. */
 export const meta: MetaFunction = ({ location }) => {

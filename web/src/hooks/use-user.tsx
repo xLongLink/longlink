@@ -1,12 +1,8 @@
-import { createContext, useContext, useEffect } from 'react';
 import { useMutation, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
-import type { ApiUserListItem, ApiUserOrganizationMembership, ApiUserProfile } from '@/lib/types';
+import { createContext, useContext, useEffect } from 'react';
 import { useApiQuery } from '@/hooks/use-api';
-import { fetchApiJson, fetchApiVoid } from '@/lib/api';
-import { clearSessionQueries } from '@/lib/react-query';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
-import { accountsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
-import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
+import { fetchApiJson, fetchApiVoid } from '@/lib/api';
 import {
     apiUserListItemSchema,
     apiUserOrganizationMembershipSchema,
@@ -14,6 +10,10 @@ import {
     parseApiCollection,
     parseApiResponse,
 } from '@/lib/api-schemas';
+import { accountsQueryKey, userProfileQueryKey } from '@/lib/query-keys';
+import { clearSessionQueries } from '@/lib/react-query';
+import { DEFAULT_RADIUS, THEME_PREFERENCES_KEY, type Accent, type Theme } from '@/lib/theme';
+import type { ApiUserListItem, ApiUserOrganizationMembership, ApiUserProfile } from '@/lib/types';
 
 export type User = ApiUserProfile;
 

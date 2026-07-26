@@ -1,26 +1,26 @@
-import { Copy, Wrench } from 'lucide-react';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
 import { Banner } from '@astryxdesign/core/Banner';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Heading } from '@astryxdesign/core/Heading';
-import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { Link } from '@astryxdesign/core/Link';
+import { MoreMenu } from '@astryxdesign/core/MoreMenu';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
-import type { ApiComputeRegistry } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
+import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Copy, Wrench } from 'lucide-react';
+import CreateCompute from '@/components/dialogs/CreateCompute';
+import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
 import { useComputes } from '@/data/compute';
-import { useDeleteDialog } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/use-user';
 import { apiQueryKey, fetchApiJson } from '@/lib/api';
-import CreateCompute from '@/components/dialogs/CreateCompute';
-import { useAdminPagination } from '@/platform/admin/pagination';
-import { DeleteConfirmation } from '@/components/dialogs/DeleteConfirmation';
-import { computesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
 import { apiComputeMutationResponseSchema, parseApiResponse } from '@/lib/api-schemas';
+import { computesQueryKey, infrastructureOptionsQueryKey } from '@/lib/query-keys';
+import type { ApiComputeRegistry } from '@/lib/types';
+import { useDeleteDialog } from '@/lib/utils';
+import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Returns localized admin compute table columns. */
 function createComputeColumns(t: TranslatorFn): TableColumn<ApiComputeRegistry>[] {

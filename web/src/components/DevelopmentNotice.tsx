@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { Banner } from '@astryxdesign/core/Banner';
 import { Link } from '@astryxdesign/core/Link';
 import { Text } from '@astryxdesign/core/Text';
-import { Banner } from '@astryxdesign/core/Banner';
+import { useState } from 'react';
 
 let isDevelopmentNoticeDismissed = false;
 

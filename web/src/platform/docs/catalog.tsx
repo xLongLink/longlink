@@ -14,33 +14,33 @@ import {
     Waypoints,
 } from 'lucide-react';
 import type { ArticleBreadcrumb, ArticleNavigationGroup, ArticleNavigationItem, ArticlePage } from '@/platform/catalog';
-import { documentationPages } from '@/platform/public';
-import { pageElementDocPages } from '@/platform/docs/sdk/elements';
-import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/platform/docs/index';
+import {
+    content as docsApiApplicationsContent,
+    metadata as docsApiApplicationsMetadata,
+} from '@/platform/docs/api/applications';
 import { content as docsApiIndexContent, metadata as docsApiIndexMetadata } from '@/platform/docs/api/index';
+import {
+    content as docsApiOrganizationsContent,
+    metadata as docsApiOrganizationsMetadata,
+} from '@/platform/docs/api/organizations';
+import {
+    content as docsApiSelfHostedContent,
+    metadata as docsApiSelfHostedMetadata,
+} from '@/platform/docs/api/self-hosted';
+import { content as docsIndexContent, metadata as docsIndexMetadata } from '@/platform/docs/index';
+import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/platform/docs/sdk/building';
+import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/platform/docs/sdk/database';
+import { pageElementDocPages } from '@/platform/docs/sdk/elements';
+import {
+    content as docsSdkEnvironmentsContent,
+    metadata as docsSdkEnvironmentsMetadata,
+} from '@/platform/docs/sdk/environments';
 import { content as docsSdkIndexContent, metadata as docsSdkIndexMetadata } from '@/platform/docs/sdk/index';
 import { content as docsSdkPagesContent, metadata as docsSdkPagesMetadata } from '@/platform/docs/sdk/pages';
 import { content as docsSdkRoutesContent, metadata as docsSdkRoutesMetadata } from '@/platform/docs/sdk/routes';
 import { content as docsSdkStorageContent, metadata as docsSdkStorageMetadata } from '@/platform/docs/sdk/storage';
 import { content as docsSdkTestingContent, metadata as docsSdkTestingMetadata } from '@/platform/docs/sdk/testing';
-import { content as docsSdkBuildingContent, metadata as docsSdkBuildingMetadata } from '@/platform/docs/sdk/building';
-import { content as docsSdkDatabaseContent, metadata as docsSdkDatabaseMetadata } from '@/platform/docs/sdk/database';
-import {
-    content as docsApiSelfHostedContent,
-    metadata as docsApiSelfHostedMetadata,
-} from '@/platform/docs/api/self-hosted';
-import {
-    content as docsApiApplicationsContent,
-    metadata as docsApiApplicationsMetadata,
-} from '@/platform/docs/api/applications';
-import {
-    content as docsSdkEnvironmentsContent,
-    metadata as docsSdkEnvironmentsMetadata,
-} from '@/platform/docs/sdk/environments';
-import {
-    content as docsApiOrganizationsContent,
-    metadata as docsApiOrganizationsMetadata,
-} from '@/platform/docs/api/organizations';
+import { documentationPages } from '@/platform/public';
 
 type DocGroupTitle = 'Overview' | 'Platform' | 'Applications';
 

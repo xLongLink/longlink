@@ -1,11 +1,11 @@
-import type { LucideIcon } from 'lucide-react';
 import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { ArrowUp, CheckCircle, Columns, Copy, EyeOff, Wrench } from 'lucide-react';
+import { Stack } from '@astryxdesign/core/Stack';
 import { Table, TableBody, TableCell, TableHeader, TableHeaderCell, TableRow } from '@astryxdesign/core/Table';
+import { Text } from '@astryxdesign/core/Text';
+import type { LucideIcon } from 'lucide-react';
+import { ArrowUp, CheckCircle, Columns, Copy, EyeOff, Wrench } from 'lucide-react';
 
 const applicationRoles: { access: string; icon: LucideIcon; name: string }[] = [
     {

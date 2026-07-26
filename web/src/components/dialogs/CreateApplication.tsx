@@ -1,23 +1,23 @@
-import { z } from 'zod';
-import { useId, useState } from 'react';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Selector } from '@astryxdesign/core/Selector';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { TextInput } from '@astryxdesign/core/TextInput';
-import { FormLayout } from '@astryxdesign/core/FormLayout';
-import { FieldStatus } from '@astryxdesign/core/FieldStatus';
-import { Controller, useForm, useWatch } from 'react-hook-form';
 import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { FieldStatus } from '@astryxdesign/core/FieldStatus';
+import { FormLayout } from '@astryxdesign/core/FormLayout';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import type { ApiImageMetadata } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
+import { Selector } from '@astryxdesign/core/Selector';
+import { Stack } from '@astryxdesign/core/Stack';
+import { TextInput } from '@astryxdesign/core/TextInput';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useId, useState } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
+import { z } from 'zod';
 import { useApiQuery } from '@/hooks/use-api';
-import { ApiError, fetchApiJson } from '@/lib/api';
-import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
 import { useCreateOrganizationApplication } from '@/hooks/use-organization';
+import { useToast } from '@/hooks/use-toast';
+import { ApiError, fetchApiJson } from '@/lib/api';
 import { apiIconsSchema, apiImageMetadataSchema, parseApiResponse } from '@/lib/api-schemas';
+import { ICON_NAMES, isIconName, type IconName } from '@/lib/icons';
+import type { ApiImageMetadata } from '@/lib/types';
 
 const createApplicationFormSchema = z.object({
     image: z.string().trim().min(1),

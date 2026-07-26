@@ -1,5 +1,5 @@
-import { Copy } from 'lucide-react';
 import { MoreMenu } from '@astryxdesign/core/MoreMenu';
+import { Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 /** Renders the shared copy/delete action menu for admin tables. */

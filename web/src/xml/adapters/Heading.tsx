@@ -1,8 +1,8 @@
 import { Heading as AstryxHeading } from '@astryxdesign/core/Heading';
-import type { Props } from '@/xml/types';
-import { renderNode } from '@/xml/core/node';
 import { useXmlContext } from '@/xml/core/context';
 import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { resolveXmlEnum, resolveXmlNumber, resolveXmlValue } from './props';
 
 /** Renders an Astryx heading with explicit semantic level. */

@@ -1,18 +1,18 @@
-import { Wrench } from 'lucide-react';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
+import { Avatar } from '@astryxdesign/core/Avatar';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
-import { Avatar } from '@astryxdesign/core/Avatar';
-import { HStack } from '@astryxdesign/core/HStack';
-import { VStack } from '@astryxdesign/core/VStack';
-import { Heading } from '@astryxdesign/core/Heading';
 import { EmptyState } from '@astryxdesign/core/EmptyState';
+import { Heading } from '@astryxdesign/core/Heading';
+import { HStack } from '@astryxdesign/core/HStack';
 import { type TranslatorFn, useTranslator } from '@astryxdesign/core/i18n';
+import { Link } from '@astryxdesign/core/Link';
 import { Table, type TableColumn, pixel, proportional } from '@astryxdesign/core/Table';
+import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
+import { Wrench } from 'lucide-react';
+import { useApplications } from '@/data/admin';
 import type { ApiApplicationResponse } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils';
-import { useApplications } from '@/data/admin';
 import { useAdminPagination } from '@/platform/admin/pagination';
 
 /** Builds localized admin application table columns. */

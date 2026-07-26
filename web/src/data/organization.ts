@@ -1,10 +1,10 @@
-import type { ApiOrganizationDatabaseResource, ApiOrganizationStorageResource } from '@/lib/types';
 import { useCollectionQuery } from '@/hooks/use-collection-query';
 import {
     apiOrganizationDatabaseResourceSchema,
     apiOrganizationStorageResourceSchema,
     parseApiCollection,
 } from '@/lib/api-schemas';
+import type { ApiOrganizationDatabaseResource, ApiOrganizationStorageResource } from '@/lib/types';
 
 /** Fetches database resources for one organization. */
 export function useOrganizationDatabaseResources(organizationId: string) {

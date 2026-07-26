@@ -1,8 +1,8 @@
-import type { ReactNode } from 'react';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Center } from '@astryxdesign/core/Center';
 import { Heading } from '@astryxdesign/core/Heading';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
+import type { ReactNode } from 'react';
 import PlatformLayout from '@/platform/layout';
 
 /** Renders the shared shell for standalone account authentication pages. */

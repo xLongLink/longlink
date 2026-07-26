@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import type { ExecutionContext } from '@/xml/types';
 import { executeAction } from '@/xml/adapters/Action';
+import type { ExecutionContext } from '@/xml/types';
 
 describe('Action', () => {
     /* The action shell should send a request with a JSON payload. */

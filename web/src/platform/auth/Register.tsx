@@ -1,18 +1,18 @@
-import { z } from 'zod';
-import { useLocation } from 'react-router';
+import { Button } from '@astryxdesign/core/Button';
+import { Divider } from '@astryxdesign/core/Divider';
+import { useTranslator } from '@astryxdesign/core/i18n';
 import { Link } from '@astryxdesign/core/Link';
 import { Stack } from '@astryxdesign/core/Stack';
-import { Button } from '@astryxdesign/core/Button';
-import { useMutation } from '@tanstack/react-query';
-import { Divider } from '@astryxdesign/core/Divider';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslator } from '@astryxdesign/core/i18n';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { fetchApiVoid } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'react-router';
+import { z } from 'zod';
 import { AuthPage } from '@/components/AuthPage';
 import { Wordmark } from '@/components/Wordmark';
+import { useToast } from '@/hooks/use-toast';
+import { fetchApiVoid } from '@/lib/api';
 import { sanitizeRedirectPath } from '@/lib/redirects';
 
 type RegisterValues = {

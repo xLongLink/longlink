@@ -1,7 +1,7 @@
 import { FormLayout as AstryxFormLayout } from '@astryxdesign/core/FormLayout';
-import type { Props } from '@/xml/types';
-import { renderNode } from '@/xml/core/node';
 import { useXmlContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
+import type { Props } from '@/xml/types';
 import { resolveXmlEnum } from './props';
 
 /** Arranges Astryx fields with consistent form spacing. */

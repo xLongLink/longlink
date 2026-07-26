@@ -1,11 +1,10 @@
-import { Text } from '@astryxdesign/core/Text';
-import { Grid } from '@astryxdesign/core/Grid';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Button } from '@astryxdesign/core/Button';
-import { Section } from '@astryxdesign/core/Section';
-import { Heading } from '@astryxdesign/core/Heading';
-import { type PointerEvent, useEffect, useState } from 'react';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
+import { Grid } from '@astryxdesign/core/Grid';
+import { Heading } from '@astryxdesign/core/Heading';
+import { Section } from '@astryxdesign/core/Section';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
 import {
     Activity,
     ArrowRight,
@@ -31,14 +30,15 @@ import {
     Users,
     Wrench,
 } from 'lucide-react';
-import { Python } from '@/svg/Python';
-import { FastAPI } from '@/svg/FastAPI';
-import { Pydantic } from '@/svg/Pydantic';
+import { type PointerEvent, useEffect, useState } from 'react';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import { Wordmark } from '@/components/Wordmark';
 import { HeroGlobe } from '@/platform/HeroGlobe';
 import { CliWorkflowConnector } from '@/svg/CliWorkflowConnector';
+import { FastAPI } from '@/svg/FastAPI';
+import { Pydantic } from '@/svg/Pydantic';
+import { Python } from '@/svg/Python';
 import { WorkNetworkConnections } from '@/svg/WorkNetworkConnections';
 
 const homepageCards = [

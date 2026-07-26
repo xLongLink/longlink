@@ -1,11 +1,11 @@
-import { useState } from 'react';
 import { Stack } from '@astryxdesign/core/Stack';
 import { Tab as AstryxTab, TabList as AstryxTabList } from '@astryxdesign/core/TabList';
-import type { ASTNode, ExecutionContext, Props } from '@/xml/types';
-import { evaluate } from '@/xml/expressions';
-import { renderNode } from '@/xml/core/node';
+import { useState } from 'react';
 import { useXmlContext } from '@/xml/core/context';
+import { renderNode } from '@/xml/core/node';
 import { isAppRelativeUrl, resolveUrl } from '@/xml/core/url';
+import { evaluate } from '@/xml/expressions';
+import type { ASTNode, ExecutionContext, Props } from '@/xml/types';
 import { useBindableValue } from './binding';
 import { requireXmlString, resolveXmlBoolean, resolveXmlEnum, resolveXmlLabel, resolveXmlString } from './props';
 

@@ -1,10 +1,10 @@
 import { Code } from '@astryxdesign/core/Code';
-import { Link } from '@astryxdesign/core/Link';
-import { Text } from '@astryxdesign/core/Text';
-import { Stack } from '@astryxdesign/core/Stack';
 import { Heading } from '@astryxdesign/core/Heading';
-import { CodeTabs } from '@/components/CodeTabs';
+import { Link } from '@astryxdesign/core/Link';
+import { Stack } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
 import { CodeBlock } from '@/components/CodeBlock';
+import { CodeTabs } from '@/components/CodeTabs';
 
 export const metadata = {
     toc: [

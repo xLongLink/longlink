@@ -1,9 +1,9 @@
 import { FileText, Landmark, ShieldCheck } from 'lucide-react';
 import type { ArticleNavigationGroup, ArticlePage } from '@/platform/catalog';
-import { homePage, legalPages } from '@/platform/public';
-import { content as termsContent, metadata as termsMetadata } from '@/platform/legal/terms';
-import { content as privacyContent, metadata as privacyMetadata } from '@/platform/legal/privacy';
 import { content as impressumContent, metadata as impressumMetadata } from '@/platform/legal/impressum';
+import { content as privacyContent, metadata as privacyMetadata } from '@/platform/legal/privacy';
+import { content as termsContent, metadata as termsMetadata } from '@/platform/legal/terms';
+import { homePage, legalPages } from '@/platform/public';
 
 const homeBreadcrumb = { title: 'Home', path: homePage.path };
 

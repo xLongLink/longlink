@@ -1,13 +1,13 @@
+import { useTranslator } from '@astryxdesign/core/i18n';
+import { Link } from '@astryxdesign/core/Link';
+import { ExternalLink, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useLocation } from 'react-router';
-import { Link } from '@astryxdesign/core/Link';
-import { useTranslator } from '@astryxdesign/core/i18n';
-import { ExternalLink, type LucideIcon } from 'lucide-react';
-import TopLayout from '@/layout/TopLayout';
+import { Breadcrumb } from '@/components/Breadcrumb';
+import { UserProfile } from '@/components/Profile';
 import { Wordmark } from '@/components/Wordmark';
 import { useUserProfile } from '@/hooks/use-user';
-import { UserProfile } from '@/components/Profile';
-import { Breadcrumb } from '@/components/Breadcrumb';
+import TopLayout from '@/layout/TopLayout';
 
 type PlatformLayoutTab = {
     href: string;

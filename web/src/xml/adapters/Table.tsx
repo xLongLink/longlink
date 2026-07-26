@@ -1,17 +1,17 @@
-import type { ReactNode } from 'react';
-import { Text } from '@astryxdesign/core/Text';
 import {
     Table as AstryxTable,
     pixel,
     proportional,
     type TableColumn as AstryxTableColumn,
 } from '@astryxdesign/core/Table';
-import type { ASTNode, ExecutionContext, Props } from '@/xml/types';
-import { renderNode } from '@/xml/core/node';
+import { Text } from '@astryxdesign/core/Text';
+import type { ReactNode } from 'react';
+import { ContextProvider, useXmlContext } from '@/xml/core/context';
 import { resolveTranslation } from '@/xml/core/i18n';
+import { renderNode } from '@/xml/core/node';
 import { BaseUrlContext, useUrl } from '@/xml/core/url';
 import { evaluate, readSafeProperty } from '@/xml/expressions';
-import { ContextProvider, useXmlContext } from '@/xml/core/context';
+import type { ASTNode, ExecutionContext, Props } from '@/xml/types';
 import {
     readXmlProp,
     requireXmlString,
