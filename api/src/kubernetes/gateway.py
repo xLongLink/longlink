@@ -1,5 +1,6 @@
 import json
 import yaml
+import asyncio
 import hashlib
 import ipaddress
 from uuid import UUID
@@ -34,17 +35,6 @@ class GatewayTLSMaterial:
     ca_certificate: str
     certificate: str
     private_key: str
-
-
-@dataclass(frozen=True, slots=True)
-class GatewayManifests:
-    """Hold gateway Pod dependencies and exact Secrets identified explicitly."""
-
-    auth_secret: KubernetesDocument
-    tls_secret: KubernetesDocument
-    config_map: KubernetesDocument
-    deployment: KubernetesDocument
-    network_policy: KubernetesDocument
 
 
 def render_envoy_config(desired_routes: tuple[GatewayRoute, ...]) -> str:
@@ -200,8 +190,12 @@ def generate_gateway_tls(compute_id: UUID, address: ipaddress.IPv4Address | ipad
     )
 
 
-def render_gateway_manifests(proxy_secret: str, tls: GatewayTLSMaterial, envoy_config: str) -> GatewayManifests:
-    """Render exact gateway Secrets and applied resources under one runtime revision."""
+def render_gateway_manifests(
+    proxy_secret: str,
+    tls: GatewayTLSMaterial,
+    envoy_config: str,
+) -> tuple[KubernetesDocument, KubernetesDocument, KubernetesDocument]:
+    """Render gateway runtime resources under one Pod revision."""
 
     # Roll Pods only when mounted runtime content changes.
     runtime_revision = hashlib.sha256(
@@ -219,18 +213,9 @@ def render_gateway_manifests(proxy_secret: str, tls: GatewayTLSMaterial, envoy_c
     manifests = templates.readyml_list(
         PLATFORM_TEMPLATES.joinpath("gateway.yml"),
         envoy_config=json.dumps(envoy_config),
-        gateway_secret=json.dumps(proxy_secret),
         runtime_revision=runtime_revision,
-        tls_certificate=json.dumps(tls.certificate),
-        tls_private_key=json.dumps(tls.private_key),
     )
-    return GatewayManifests(
-        auth_secret=manifests[0],
-        tls_secret=manifests[1],
-        config_map=manifests[2],
-        deployment=manifests[3],
-        network_policy=manifests[4],
-    )
+    return manifests[0], manifests[1], manifests[2]
 
 
 class Gateway:
@@ -241,42 +226,47 @@ class Gateway:
 
         self._resources = resources
 
-    async def ip(self) -> ipaddress.IPv4Address | ipaddress.IPv6Address | None:
-        """Apply gateway endpoint resources and return the allocated IP when available."""
+    async def ip(self) -> ipaddress.IPv4Address | ipaddress.IPv6Address:
+        """Apply gateway endpoint resources and wait for the allocated IP."""
 
         # Establish the system Namespace before asking the provider for a public LoadBalancer endpoint.
-        namespace = templates.readyml_list(PLATFORM_TEMPLATES.joinpath("system_namespace.yml"))[0]
-        service_manifest = templates.readyml_list(PLATFORM_TEMPLATES.joinpath("gateway_service.yml"))[0]
+        namespace, service_manifest = templates.readyml_list(PLATFORM_TEMPLATES.joinpath("bootstrap.yml"))
         await self._resources.apply(Namespace, namespace)
-        service = await self._resources.apply(Service, service_manifest)
+        while True:
+            service = await self._resources.apply(Service, service_manifest)
 
-        # Parse the provider-owned Service status without blocking while allocation is pending.
-        body = service.to_dict()
-        status = body.get("status", {}) if isinstance(body, dict) else {}
-        load_balancer = status.get("loadBalancer", {}) if isinstance(status, dict) else {}
-        ingress = load_balancer.get("ingress", []) if isinstance(load_balancer, dict) else []
-        if not isinstance(ingress, list):
-            raise TypeError("Gateway LoadBalancer ingress must be a list")
-        for entry in ingress:
-            if not isinstance(entry, dict):
-                raise TypeError("Gateway LoadBalancer ingress entries must be mappings")
-            value = entry.get("ip")
-            if isinstance(value, str) and value.strip():
-                return ipaddress.ip_address(value.strip())
-        if ingress:
-            raise ValueError("Gateway LoadBalancer must publish an IP address")
-        return None
+            # Parse the provider-owned Service status while endpoint allocation is pending.
+            body = service.to_dict()
+            status = body.get("status", {}) if isinstance(body, dict) else {}
+            load_balancer = status.get("loadBalancer", {}) if isinstance(status, dict) else {}
+            ingress = load_balancer.get("ingress", []) if isinstance(load_balancer, dict) else []
+            if not isinstance(ingress, list):
+                raise TypeError("Gateway LoadBalancer ingress must be a list")
+            for entry in ingress:
+                if not isinstance(entry, dict):
+                    raise TypeError("Gateway LoadBalancer ingress entries must be mappings")
+                value = entry.get("ip")
+                if isinstance(value, str) and value.strip():
+                    return ipaddress.ip_address(value.strip())
+            if ingress:
+                raise ValueError("Gateway LoadBalancer must publish an IP address")
+            await asyncio.sleep(5)
 
-    async def apply(self, routes: tuple[GatewayRoute, ...], proxy_secret: str, tls: GatewayTLSMaterial) -> bool:
-        """Apply the desired gateway runtime and return whether its Deployment rollout is ready."""
+    async def apply(self, routes: tuple[GatewayRoute, ...], proxy_secret: str, tls: GatewayTLSMaterial) -> None:
+        """Apply the desired gateway runtime and wait for its Deployment rollout."""
 
         # Render the complete runtime before changing any gateway dependency.
-        manifests = render_gateway_manifests(proxy_secret, tls, render_envoy_config(routes))
+        config_map, deployment_manifest, network_policy = render_gateway_manifests(proxy_secret, tls, render_envoy_config(routes))
 
         # Install every Pod dependency and its ingress policy before updating the Deployment.
-        await self._resources.replace_secret(manifests.auth_secret)
-        await self._resources.replace_secret(manifests.tls_secret)
-        await self._resources.apply(ConfigMap, manifests.config_map)
-        await self._resources.apply(NetworkPolicy, manifests.network_policy)
-        deployment = await self._resources.apply(Deployment, manifests.deployment)
-        return deployment_is_ready(deployment)
+        await self._resources.replace_secret("longlink-gateway-auth", "longlink-system", {"gateway-secret": proxy_secret})
+        await self._resources.replace_secret(
+            "longlink-gateway-tls",
+            "longlink-system",
+            {"tls.crt": tls.certificate, "tls.key": tls.private_key},
+            "kubernetes.io/tls",
+        )
+        await self._resources.apply(ConfigMap, config_map)
+        await self._resources.apply(NetworkPolicy, network_policy)
+        while not deployment_is_ready(await self._resources.apply(Deployment, deployment_manifest)):
+            await asyncio.sleep(5)

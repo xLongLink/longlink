@@ -5,8 +5,6 @@ from alembic.config import Config
 from sqlalchemy.engine import URL
 from importlib.resources import files
 
-ALEMBIC_DIRECTORY = "alembic"
-
 
 def alembic_script_location(script_location: Path | None = None) -> Path:
     """Return the SDK-owned shared-schema Alembic directory."""
@@ -16,7 +14,7 @@ def alembic_script_location(script_location: Path | None = None) -> Path:
         return script_location
 
     # Shared migrations ship with the SDK package that defines the shared contract.
-    packaged_location = Path(str(files("longlink.shared").joinpath(ALEMBIC_DIRECTORY)))
+    packaged_location = Path(str(files("longlink.shared").joinpath("alembic")))
     if (packaged_location / "env.py").exists() and (packaged_location / "versions").is_dir():
         return packaged_location
 

@@ -53,7 +53,7 @@ jobs:
               working-directory: api
               run: ENVIRONMENT=testing uv run --locked pytest -m "not integration" tests
 
-            - name: Run ty
+            - name: Run type checks
               working-directory: api
               run: uv run --locked --extra dev ty check
 
@@ -98,7 +98,7 @@ jobs:
               working-directory: sdk
               run: uv run --locked pytest -m "not integration" tests
 
-            - name: Run ty
+            - name: Run type checks
               working-directory: sdk
               run: uv run --locked --group dev ty check
 
@@ -205,6 +205,6 @@ jobs:
               working-directory: web
               run: vp check
 
-            - name: Run typecheck
+            - name: Run type checks
               working-directory: web
               run: vp run typecheck

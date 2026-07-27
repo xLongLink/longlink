@@ -4,6 +4,7 @@ import yaml
 import base64
 from typing import TypeVar
 from kr8s.asyncio import Api
+from collections.abc import Mapping
 from kr8s.asyncio.objects import Secret, APIObject, Deployment, object_from_spec
 
 KubernetesDocument = dict[str, object]
@@ -73,7 +74,7 @@ class KubernetesResources:
         ) as response:
             return resource_class(response.json(), api=api)
 
-    async def merge_patch(
+    async def patch(
         self,
         resource_class: type[KubernetesResource],
         name: str,
@@ -85,111 +86,96 @@ class KubernetesResources:
         # Patch only the named resource fields without changing server-side apply ownership.
         api = await self.api()
         resource_namespace = namespace if resource_class.namespaced else None
-        async with api.call_api(
-            "PATCH",
-            version=resource_class.version,
-            url=f"{resource_class.endpoint}/{name}",
-            namespace=resource_namespace,
-            headers={"Content-Type": "application/merge-patch+json"},
-            content=json.dumps(body),
-        ) as response:
-            return resource_class(response.json(), api=api)
+        resource = resource_class(name, namespace=resource_namespace, api=api)
+        await resource.patch(body)
+        return resource
 
-    async def replace_secret(self, body: KubernetesDocument) -> Secret:
+    async def replace_secret(
+        self,
+        name: str,
+        namespace: str,
+        values: Mapping[str, str],
+        secret_type: str = "Opaque",
+    ) -> Secret:
         """Create or replace one exact Secret while avoiding unchanged writes."""
 
-        # Resolve the exact Secret identity before reading its current state.
+        # Resolve the exact Secret identity and normalized data before reading its current state.
         api = await self.api()
-        resource = object_from_spec(body, api=api)
-        if not isinstance(resource, Secret):
-            raise ValueError("Secret replacement requires a v1 Secret resource")
-        existing = await self.read(Secret, resource.name, resource.namespace)
-        metadata = body.get("metadata")
-        if not isinstance(metadata, dict):
-            raise ValueError("Secret replacement requires metadata")
-        replacement = {**body, "metadata": dict(metadata)}
+        desired_data = {key: base64.b64encode(value.encode("utf-8")).decode("ascii") for key, value in values.items()}
+        existing = await self.read(Secret, name, namespace)
 
         # Create a missing Secret without a preceding failed update.
         if existing is None:
-            return await self.create_secret(replacement)
+            return await self.create_secret(name, namespace, values, secret_type)
 
         # Compare the exact LongLink-owned data and metadata while ignoring server fields.
-        data = body.get("data", {})
-        string_data = body.get("stringData", {})
-        if not isinstance(data, dict) or not isinstance(string_data, dict):
-            raise ValueError("Secret data must be mappings")
-        if not all(isinstance(key, str) and isinstance(value, str) for key, value in data.items()) or not all(
-            isinstance(key, str) and isinstance(value, str) for key, value in string_data.items()
-        ):
-            raise ValueError("Secret data must contain string keys and values")
-        desired_data = {key: value for key, value in data.items() if isinstance(key, str) and isinstance(value, str)}
-        desired_data.update(
-            {
-                key: base64.b64encode(value.encode("utf-8")).decode("ascii")
-                for key, value in string_data.items()
-                if isinstance(key, str) and isinstance(value, str)
-            }
-        )
         existing_metadata = existing.raw["metadata"]
         if (
             existing.raw.get("data", {}) == desired_data
-            and existing.raw.get("type", "Opaque") == body.get("type", "Opaque")
-            and all(
-                existing_metadata.get(field, empty) == metadata.get(field, empty)
-                for field, empty in (("annotations", {}), ("finalizers", []), ("labels", {}))
-            )
+            and existing.raw.get("type", "Opaque") == secret_type
+            and all(existing_metadata.get(field, empty) == empty for field, empty in (("annotations", {}), ("finalizers", []), ("labels", {})))
         ):
             return existing
 
         # Replace changed content conditionally against the object that was just read.
-        replacement["metadata"]["resourceVersion"] = existing_metadata["resourceVersion"]
+        replacement = {
+            "apiVersion": "v1",
+            "kind": "Secret",
+            "metadata": {
+                "name": name,
+                "namespace": namespace,
+                "resourceVersion": existing_metadata["resourceVersion"],
+            },
+            "type": secret_type,
+            "stringData": dict(values),
+        }
         async with api.call_api(
             "PUT",
             version=Secret.version,
-            url=f"{Secret.endpoint}/{resource.name}",
-            namespace=resource.namespace,
+            url=f"{Secret.endpoint}/{name}",
+            namespace=namespace,
             content=json.dumps(replacement),
         ) as response:
             return Secret(response.json(), api=api)
 
-    async def create_secret(self, body: KubernetesDocument) -> Secret:
+    async def create_secret(
+        self,
+        name: str,
+        namespace: str,
+        values: Mapping[str, str],
+        secret_type: str = "Opaque",
+    ) -> Secret:
         """Create one Secret without reading or replacing an existing value."""
 
-        # Resolve and constrain the supplied resource before issuing the create request.
+        # Construct the exact typed Secret at the resource boundary.
         api = await self.api()
-        resource = object_from_spec(body, api=api)
-        if not isinstance(resource, Secret):
-            raise ValueError("Secret creation requires a v1 Secret resource")
+        resource = Secret(
+            {
+                "metadata": {"name": name, "namespace": namespace},
+                "stringData": dict(values),
+                "type": secret_type,
+            },
+            api=api,
+        )
 
         # Existing Secret state belongs to the lifecycle that created it and must not be overwritten.
-        async with api.call_api(
-            "POST",
-            version=Secret.version,
-            url=Secret.endpoint,
-            namespace=resource.namespace,
-            content=json.dumps(body),
-        ) as response:
-            return Secret(response.json(), api=api)
+        await resource.create()
+        return resource
 
     async def read(self, resource_class: type[KubernetesResource], name: str, namespace: str | None = None) -> KubernetesResource | None:
         """Read one resource, returning none when Kubernetes reports it missing."""
 
+        # Construct the named typed resource against the configured API.
         api = await self.api()
         resource_namespace = namespace if resource_class.namespaced else None
+        resource = resource_class(name, namespace=resource_namespace, api=api)
 
         # Normalize only missing resources into the lifecycle's absent state.
         try:
-            async with api.call_api(
-                "GET",
-                version=resource_class.version,
-                url=f"{resource_class.endpoint}/{name}",
-                namespace=resource_namespace,
-            ) as response:
-                return resource_class(response.json(), api=api)
-        except (kr8s.NotFoundError, kr8s.ServerError) as exc:
-            if isinstance(exc, kr8s.NotFoundError) or getattr(getattr(exc, "response", None), "status_code", None) == 404:
-                return None
-            raise
+            await resource.refresh()
+        except kr8s.NotFoundError:
+            return None
+        return resource
 
     async def list(
         self,
@@ -213,18 +199,13 @@ class KubernetesResources:
     async def delete(self, resource_class: type[APIObject], name: str, namespace: str | None = None) -> None:
         """Delete one named resource, treating absence as complete."""
 
+        # Construct the named typed resource against the configured API.
         api = await self.api()
         resource_namespace = namespace if resource_class.namespaced else None
+        resource = resource_class(name, namespace=resource_namespace, api=api)
 
         # Repeated lifecycle attempts may observe an already deleted resource.
         try:
-            async with api.call_api(
-                "DELETE",
-                version=resource_class.version,
-                url=f"{resource_class.endpoint}/{name}",
-                namespace=resource_namespace,
-            ):
-                return
-        except (kr8s.NotFoundError, kr8s.ServerError) as exc:
-            if not isinstance(exc, kr8s.NotFoundError) and getattr(getattr(exc, "response", None), "status_code", None) != 404:
-                raise
+            await resource.delete()
+        except kr8s.NotFoundError:
+            return

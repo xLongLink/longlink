@@ -1,141 +1,11 @@
-import time
 import pytest
-import shutil
-import asyncio
-import subprocess
-import pytest_asyncio
 from uuid import UUID, uuid4
 from datetime import UTC, datetime
 from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
-from collections.abc import AsyncIterator
 from longlink.shared import users as shared_users
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import create_async_engine
 from longlink.shared.migrations import migrate_database, alembic_script_location
-
-POSTGRES_PORT = 5432
-POSTGRES_IMAGE = "postgres:16-alpine"
-POSTGRES_USERNAME = "longlink"
-POSTGRES_PASSWORD = "secret"
-POSTGRES_DATABASE = "longlink"
-
-
-@pytest_asyncio.fixture
-async def postgresql_url() -> AsyncIterator[URL]:
-    """Run an isolated PostgreSQL container and return its async database URL."""
-
-    # Skip only when the Docker client or daemon cannot be reached.
-    docker = shutil.which("docker")
-    if docker is None:
-        pytest.skip("Docker is not available for PostgreSQL integration tests")
-    try:
-        daemon = subprocess.run(
-            [docker, "info", "--format", "{{.ServerVersion}}"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=False,
-        )
-    except subprocess.TimeoutExpired as exc:
-        pytest.skip(f"Docker daemon is not available for PostgreSQL integration tests: {exc}")
-    if daemon.returncode != 0:
-        pytest.skip(f"Docker daemon is not available for PostgreSQL integration tests: {daemon.stderr.strip()}")
-
-    # Start PostgreSQL on a Docker-assigned loopback port so parallel runs stay isolated.
-    container_name = f"longlink-sdk-shared-{uuid4().hex}"
-    container_started = False
-    try:
-        subprocess.run(
-            [
-                docker,
-                "run",
-                "--detach",
-                "--name",
-                container_name,
-                "--env",
-                f"POSTGRES_USER={POSTGRES_USERNAME}",
-                "--env",
-                f"POSTGRES_PASSWORD={POSTGRES_PASSWORD}",
-                "--env",
-                f"POSTGRES_DB={POSTGRES_DATABASE}",
-                "--publish",
-                f"127.0.0.1::{POSTGRES_PORT}",
-                POSTGRES_IMAGE,
-            ],
-            capture_output=True,
-            text=True,
-            timeout=120,
-            check=True,
-        )
-        container_started = True
-        port_result = subprocess.run(
-            [docker, "port", container_name, f"{POSTGRES_PORT}/tcp"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-            check=True,
-        )
-        binding = port_result.stdout.strip().splitlines()[0]
-        host, separator, port_value = binding.rpartition(":")
-        if separator == "" or host != "127.0.0.1":
-            pytest.fail(f"Docker returned an unexpected PostgreSQL port binding: {binding}")
-        database_url = URL.create(
-            "postgresql+asyncpg",
-            username=POSTGRES_USERNAME,
-            password=POSTGRES_PASSWORD,
-            host=host,
-            port=int(port_value),
-            database=POSTGRES_DATABASE,
-        )
-
-        # Wait for real SQL readiness while surfacing exited containers as startup failures.
-        engine = create_async_engine(database_url)
-        deadline = time.monotonic() + 60
-        last_error: OSError | SQLAlchemyError | None = None
-        try:
-            while time.monotonic() < deadline:
-                try:
-                    async with engine.connect() as connection:
-                        await connection.execute(text("SELECT 1"))
-                    break
-                except (OSError, SQLAlchemyError) as exc:
-                    last_error = exc
-                    state = subprocess.run(
-                        [docker, "inspect", "--format", "{{.State.Status}}", container_name],
-                        capture_output=True,
-                        text=True,
-                        timeout=10,
-                        check=True,
-                    ).stdout.strip()
-                    if state not in {"created", "running"}:
-                        logs = subprocess.run(
-                            [docker, "logs", container_name],
-                            capture_output=True,
-                            text=True,
-                            timeout=10,
-                            check=False,
-                        )
-                        pytest.fail(f"PostgreSQL container exited during startup: {logs.stdout}{logs.stderr}")
-                    await asyncio.sleep(0.5)
-            else:
-                pytest.fail(f"PostgreSQL container did not become ready: {last_error}")
-        finally:
-            await engine.dispose()
-
-        yield database_url
-    finally:
-
-        # Remove the named container even when startup or test execution fails.
-        cleanup = subprocess.run(
-            [docker, "rm", "--force", "--volumes", container_name],
-            capture_output=True,
-            text=True,
-            timeout=30,
-            check=False,
-        )
-        if container_started and cleanup.returncode != 0:
-            pytest.fail(f"PostgreSQL container cleanup failed: {cleanup.stderr.strip()}")
 
 
 def test_alembic_script_location_returns_sdk_owned_migrations() -> None:
@@ -159,7 +29,7 @@ async def test_shared_migrations_and_user_sync_use_postgresql_shared_schema(post
         async with setup_engine.begin() as connection:
             await connection.execute(text("CREATE SCHEMA application"))
             await connection.execute(
-                text(f"ALTER ROLE {POSTGRES_USERNAME} IN DATABASE {POSTGRES_DATABASE} SET search_path = application, public")
+                text(f"ALTER ROLE {postgresql_url.username} IN DATABASE {postgresql_url.database} SET search_path = application, public")
             )
     finally:
         await setup_engine.dispose()
@@ -186,7 +56,7 @@ async def test_shared_migrations_and_user_sync_use_postgresql_shared_schema(post
                 ).tuples()
             )
             await connection.execute(
-                text(f"ALTER ROLE {POSTGRES_USERNAME} IN DATABASE {POSTGRES_DATABASE} SET search_path = shared")
+                text(f"ALTER ROLE {postgresql_url.username} IN DATABASE {postgresql_url.database} SET search_path = shared")
             )
     finally:
         await engine.dispose()
@@ -230,17 +100,21 @@ async def test_shared_migrations_and_user_sync_use_postgresql_shared_schema(post
     try:
         async with verification_engine.connect() as connection:
             rows = (
-                await connection.execute(
-                    text(
-                        """
+                (
+                    await connection.execute(
+                        text(
+                            """
                         SELECT id, name, email, avatar, role, created_at, updated_at, deleted_at
                         FROM shared.users
                         WHERE id = :user_id
                         """
-                    ),
-                    {"user_id": user_id},
+                        ),
+                        {"user_id": user_id},
+                    )
                 )
-            ).mappings().all()
+                .mappings()
+                .all()
+            )
     finally:
         await verification_engine.dispose()
 

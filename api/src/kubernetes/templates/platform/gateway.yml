@@ -1,23 +1,4 @@
-# Template for per-compute Envoy gateway resources other than its early LoadBalancer Service.
----
-apiVersion: v1
-kind: Secret
-metadata:
-    name: longlink-gateway-auth
-    namespace: longlink-system
-stringData:
-    gateway-secret: $gateway_secret
----
-apiVersion: v1
-kind: Secret
-metadata:
-    name: longlink-gateway-tls
-    namespace: longlink-system
-type: kubernetes.io/tls
-stringData:
-    tls.crt: $tls_certificate
-    tls.key: $tls_private_key
----
+# Template for the per-compute Envoy gateway runtime.
 apiVersion: v1
 kind: ConfigMap
 metadata:
